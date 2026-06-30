@@ -203,7 +203,6 @@ function buildDemoRequestPayload(formData, metrics) {
     monthly_views: Math.round(getNumberFormValue(formData, "monthly_views")),
     monthly_budget: getNumberFormValue(formData, "monthly_budget"),
     reward_cost: getNumberFormValue(formData, "reward_cost"),
-    campaign_type: getTextFormValue(formData, "campaign_type") || null,
     context: getTextFormValue(formData, "context") || null,
     estimated_cpm: metrics.cpm,
     estimated_cpa: metrics.cpa,
