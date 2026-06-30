@@ -9,19 +9,6 @@ export const DEFAULT_POINT_RULES = {
   monthlyAmbassador: 350,
 };
 
-export const POINT_RULE_FIELDS = [
-  "validatedPublication",
-  "videoViewsPerThousand",
-  "validatedStory",
-  "storyViewsPerThousand",
-  "viralBonus",
-  "clubMention",
-  "qrCheckin",
-  "monthlyAmbassador",
-];
-
-export const POINT_RULES = DEFAULT_POINT_RULES;
-
 export const DEFAULT_REWARDS = [
   { key: "cloakroom", title: "Vestiaire offert", pointsRequired: 40 },
   { key: "softDrink", title: "Boisson soft ou shot", pointsRequired: 70 },

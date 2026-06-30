@@ -1,4 +1,4 @@
-import { DEFAULT_POINT_RULES, POINT_RULE_FIELDS, fallbackDashboardData, fetchDashboardData } from "./dashboardData.js";
+import { DEFAULT_POINT_RULES, fallbackDashboardData, fetchDashboardData } from "./dashboardData.js";
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 
 const navLinks = document.querySelectorAll("[data-view-link]");
@@ -229,9 +229,9 @@ function updatePointRuleExamples(rules = getPointRules()) {
 function renderPointRules(data) {
   const rules = getPointRules(data);
 
-  ruleInputs.forEach((input, index) => {
-    const key = input.dataset.rulePoints || POINT_RULE_FIELDS[index];
-    input.dataset.rulePoints = key;
+  ruleInputs.forEach((input) => {
+    const key = input.dataset.rulePoints;
+    if (!key) return;
     input.value = rules[key] ?? 0;
     input.disabled = false;
     input.title = "Bareme configurable par cet etablissement.";
