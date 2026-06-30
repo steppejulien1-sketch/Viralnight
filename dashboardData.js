@@ -22,6 +22,17 @@ export const POINT_RULE_FIELDS = [
 
 export const POINT_RULES = DEFAULT_POINT_RULES;
 
+export const DEFAULT_REWARDS = [
+  { key: "cloakroom", title: "Vestiaire offert", pointsRequired: 40 },
+  { key: "softDrink", title: "Boisson soft ou shot", pointsRequired: 70 },
+  { key: "premiumDrink", title: "Boisson premium", pointsRequired: 110 },
+  { key: "fastPass", title: "Coupe-file", pointsRequired: 160 },
+  { key: "freeEntry", title: "Entree gratuite", pointsRequired: 240 },
+  { key: "guestPass", title: "Bracelet +1 invite", pointsRequired: 330 },
+  { key: "tableUpgrade", title: "Surclassement table", pointsRequired: 500 },
+  { key: "vipAccess", title: "Acces VIP / backroom", pointsRequired: 700 },
+];
+
 const now = new Date();
 
 const daysAgo = (days) => {
@@ -30,18 +41,7 @@ const daysAgo = (days) => {
   return date.toISOString();
 };
 
-const rewardTemplates = [
-  ["Vestiaire offert", 40],
-  ["Boisson soft ou shot", 70],
-  ["Boisson premium", 110],
-  ["Coupe-file", 160],
-  ["Entree gratuite", 240],
-  ["Bracelet +1 invite", 330],
-  ["Surclassement table", 500],
-  ["Acces VIP / backroom", 700],
-];
-
-const fallbackRewards = rewardTemplates.map(([title, pointsRequired], index) => ({
+const fallbackRewards = DEFAULT_REWARDS.map(({ title, pointsRequired }, index) => ({
   id: `demo-reward-${index + 1}`,
   title,
   points_required: pointsRequired,
@@ -80,7 +80,7 @@ export const fallbackDashboardData = {
       content_type: "video",
       url: "https://tiktok.com/@demo/video/1",
       views_count: 12800,
-      points_awarded: 320,
+      points_awarded: 350,
       status: "pending",
       submitted_at: daysAgo(1),
     },
@@ -91,7 +91,7 @@ export const fallbackDashboardData = {
       content_type: "story",
       url: "https://instagram.com/stories/demo/2",
       views_count: 7240,
-      points_awarded: 580,
+      points_awarded: 639,
       status: "pending",
       submitted_at: daysAgo(2),
     },
@@ -102,7 +102,7 @@ export const fallbackDashboardData = {
       content_type: "video",
       url: "https://youtube.com/shorts/demo3",
       views_count: 3910,
-      points_awarded: 98,
+      points_awarded: 128,
       status: "rejected",
       submitted_at: daysAgo(3),
     },

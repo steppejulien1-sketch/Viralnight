@@ -1,3 +1,6 @@
+import { DEFAULT_POINT_RULES, DEFAULT_REWARDS } from "./dashboardData.js";
+import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+
 const header = document.querySelector("[data-header]");
 const menuToggle = document.querySelector("[data-menu-toggle]");
 const nav = document.querySelector("[data-nav]");
@@ -13,6 +16,7 @@ const currencyFormatter = new Intl.NumberFormat("fr-FR", {
   currency: "EUR",
   maximumFractionDigits: 2,
 });
+const rewardThresholds = Object.fromEntries(DEFAULT_REWARDS.map((reward) => [reward.key, reward.pointsRequired]));
 
 let currentPage = 0;
 
@@ -43,6 +47,32 @@ function setActivePage(id) {
 
   nav?.querySelectorAll("a").forEach((link) => {
     link.classList.toggle("is-active", link.getAttribute("href") === `#${id}`);
+  });
+}
+
+function formatPoints(value, options = {}) {
+  const { signed = true } = options;
+  const formatted = `${numberFormatter.format(Math.round(Number(value) || 0))} pts`;
+  return signed ? `+${formatted}` : formatted;
+}
+
+function getPointRule(key) {
+  return DEFAULT_POINT_RULES[key] ?? 0;
+}
+
+function getRewardThreshold(key) {
+  return rewardThresholds[key] ?? 0;
+}
+
+function renderPointScale() {
+  document.querySelectorAll("[data-point-rule]").forEach((element) => {
+    const value = getPointRule(element.dataset.pointRule);
+    element.textContent = formatPoints(value);
+  });
+
+  document.querySelectorAll("[data-reward-rule]").forEach((element) => {
+    const value = getRewardThreshold(element.dataset.rewardRule);
+    element.textContent = formatPoints(value, { signed: false });
   });
 }
 
@@ -110,6 +140,95 @@ function updateBriefEstimate() {
   document.querySelector('[data-brief-result="rewards"]').textContent = numberFormatter.format(availableRewards);
 }
 
+function getNumberFormValue(formData, name) {
+  const value = Number(formData.get(name) || 0);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function getTextFormValue(formData, name) {
+  return String(formData.get(name) || "").trim();
+}
+
+function buildDemoRequestPayload(formData, metrics) {
+  return {
+    club: getTextFormValue(formData, "club"),
+    city: getTextFormValue(formData, "city"),
+    social: getTextFormValue(formData, "social") || null,
+    contact_name: getTextFormValue(formData, "contact_name"),
+    email: getTextFormValue(formData, "email"),
+    role: getTextFormValue(formData, "role") || null,
+    objectives: formData.getAll("objectives").map((value) => String(value)),
+    extra_customers: Math.round(getNumberFormValue(formData, "extra_customers")),
+    monthly_views: Math.round(getNumberFormValue(formData, "monthly_views")),
+    monthly_budget: getNumberFormValue(formData, "monthly_budget"),
+    reward_cost: getNumberFormValue(formData, "reward_cost"),
+    campaign_type: getTextFormValue(formData, "campaign_type") || null,
+    context: getTextFormValue(formData, "context") || null,
+    estimated_cpm: metrics.cpm,
+    estimated_cpa: metrics.cpa,
+    estimated_rewards: metrics.availableRewards,
+  };
+}
+
+async function handleDemoSubmit(event) {
+  event.preventDefault();
+
+  const note = form.querySelector("[data-form-note]");
+  const submitButton = form.querySelector('button[type="submit"]');
+  const initialButtonText = submitButton?.textContent;
+  const formData = new FormData(form);
+  const club = getTextFormValue(formData, "club") || "votre établissement";
+  const budget = getNumberFormValue(formData, "monthly_budget");
+  const views = getNumberFormValue(formData, "monthly_views");
+  const customers = getNumberFormValue(formData, "extra_customers");
+  const rewardCost = getNumberFormValue(formData, "reward_cost");
+  const metrics = {
+    cpm: views > 0 ? Number(((budget / views) * 1000).toFixed(2)) : 0,
+    cpa: customers > 0 ? Number((budget / customers).toFixed(2)) : 0,
+    availableRewards: rewardCost > 0 ? Math.floor(budget / rewardCost) : 0,
+  };
+
+  if (note) {
+    note.textContent = "";
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    if (note) {
+      note.textContent =
+        "Impossible d'enregistrer la demande : Supabase n'est pas configuré. Ajoutez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans .env.local.";
+    }
+    return;
+  }
+
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = "Envoi en cours...";
+  }
+
+  try {
+    const { error } = await supabase.from("demo_requests").insert(buildDemoRequestPayload(formData, metrics));
+
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    if (note) {
+      note.textContent = `Impossible d'enregistrer la demande pour ${club} : ${error.message || "erreur inconnue"}`;
+    }
+    return;
+  } finally {
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = initialButtonText;
+    }
+  }
+
+  if (note) {
+    note.textContent = `Demande enregistrée pour ${club}. Projection actuelle : ${currencyFormatter.format(metrics.cpm)} pour 1 000 vues.`;
+  }
+}
+
+renderPointScale();
 setPage(getPageIndexFromHash(), { resetScroll: true, writeHistory: false });
 updateCalculator();
 updateBriefEstimate();
@@ -156,16 +275,4 @@ menuToggle?.addEventListener("click", () => {
   menuToggle.setAttribute("aria-expanded", String(isOpen));
 });
 
-form?.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const note = form.querySelector("[data-form-note]");
-  const formData = new FormData(form);
-  const club = formData.get("club") || "votre établissement";
-  const budget = Number(formData.get("monthly_budget") || 0);
-  const views = Number(formData.get("monthly_views") || 0);
-  const cpm = views > 0 ? (budget / views) * 1000 : 0;
-
-  if (note) {
-    note.textContent = `Demande prête pour ${club}. Projection actuelle : ${currencyFormatter.format(cpm)} pour 1 000 vues.`;
-  }
-});
+form?.addEventListener("submit", handleDemoSubmit);

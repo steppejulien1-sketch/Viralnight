@@ -149,21 +149,21 @@ function renderDataSource(data) {
   }
 
   if (data.reason === "missing_env") {
-    setDataStatus("Mode demo : ajoute VITE_SUPABASE_URL dans .env.local pour activer Supabase.", "warning");
+    setDataStatus("Mode demo : donnees locales affichees sur toutes les vues. Ajoute VITE_SUPABASE_URL dans .env.local pour activer Supabase.", "warning");
     return;
   }
 
   if (data.reason === "signed_out") {
-    setDataStatus("Mode demo : connecte-toi avec l'email owner pour voir les donnees Supabase.", "warning");
+    setDataStatus("Mode demo : donnees locales affichees sur toutes les vues. Connecte-toi avec l'email owner pour voir les donnees Supabase.", "warning");
     return;
   }
 
   if (data.reason === "query_error") {
-    setDataStatus(`Mode demo : Supabase a repondu avec une erreur (${data.error}).`, "error");
+    setDataStatus(`Mode demo : donnees locales affichees sur toutes les vues, car Supabase a repondu avec une erreur (${data.error}).`, "error");
     return;
   }
 
-  setDataStatus("Mode demo : donnees locales.", "warning");
+  setDataStatus("Mode demo : donnees locales affichees sur toutes les vues du dashboard.", "warning");
 }
 
 function renderEstablishment(data) {
@@ -349,7 +349,7 @@ async function persistPointRules() {
   const rules = getPointRules();
 
   if (dashboardState.source !== "supabase" || !supabase) {
-    setDataStatus("Mode demo : bareme modifie localement. Connecte Supabase pour sauvegarder.", "warning");
+    setDataStatus("Mode demo : bareme modifie localement, avec donnees locales visibles sur toutes les vues. Connecte Supabase pour sauvegarder.", "warning");
     return;
   }
 
