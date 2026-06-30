@@ -9,6 +9,11 @@ const pageDeck = document.querySelector("[data-page-deck]");
 const pageLinks = Array.from(document.querySelectorAll("[data-page-link]"));
 const pageSections = Array.from(document.querySelectorAll("[data-page-section]"));
 const briefInputs = document.querySelectorAll("[data-brief-input]");
+const formSteps = Array.from(document.querySelectorAll("[data-form-step]"));
+const formProgressLabel = document.querySelector("[data-form-progress-label]");
+const formProgressBar = document.querySelector("[data-form-progress-bar]");
+const formNext = document.querySelector("[data-form-next]");
+const formPrev = document.querySelector("[data-form-prev]");
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
 const currencyFormatter = new Intl.NumberFormat("fr-FR", {
@@ -19,6 +24,42 @@ const currencyFormatter = new Intl.NumberFormat("fr-FR", {
 const rewardThresholds = Object.fromEntries(DEFAULT_REWARDS.map((reward) => [reward.key, reward.pointsRequired]));
 
 let currentPage = 0;
+let currentFormStep = 0;
+
+function setFormStep(index) {
+  if (!formSteps.length) return;
+
+  currentFormStep = Math.max(0, Math.min(index, formSteps.length - 1));
+
+  formSteps.forEach((step, stepIndex) => {
+    const isActive = stepIndex === currentFormStep;
+    step.classList.toggle("is-active", isActive);
+    step.hidden = !isActive;
+  });
+
+  if (formProgressLabel) {
+    formProgressLabel.textContent = `Étape ${currentFormStep + 1}/${formSteps.length}`;
+  }
+
+  if (formProgressBar) {
+    formProgressBar.style.setProperty("--form-progress", `${((currentFormStep + 1) / formSteps.length) * 100}%`);
+  }
+}
+
+function validateFormStep(index) {
+  const step = formSteps[index];
+  if (!step) return true;
+
+  const fields = Array.from(step.querySelectorAll("input, select, textarea"));
+  for (const field of fields) {
+    if (!field.checkValidity()) {
+      field.reportValidity();
+      return false;
+    }
+  }
+
+  return true;
+}
 
 function clampPage(index) {
   return Math.max(0, Math.min(index, pageSections.length - 1));
@@ -173,6 +214,15 @@ function buildDemoRequestPayload(formData, metrics) {
 async function handleDemoSubmit(event) {
   event.preventDefault();
 
+  if (!form.checkValidity()) {
+    const invalidStepIndex = formSteps.findIndex((step) => step.querySelector(":invalid"));
+    if (invalidStepIndex >= 0) {
+      setFormStep(invalidStepIndex);
+    }
+    form.reportValidity();
+    return;
+  }
+
   const note = form.querySelector("[data-form-note]");
   const submitButton = form.querySelector('button[type="submit"]');
   const initialButtonText = submitButton?.textContent;
@@ -229,6 +279,7 @@ async function handleDemoSubmit(event) {
 }
 
 renderPointScale();
+setFormStep(0);
 setPage(getPageIndexFromHash(), { resetScroll: true, writeHistory: false });
 updateCalculator();
 updateBriefEstimate();
@@ -268,6 +319,16 @@ document.querySelectorAll("[data-input]").forEach((input) => {
 
 briefInputs.forEach((input) => {
   input.addEventListener("input", updateBriefEstimate);
+});
+
+formNext?.addEventListener("click", () => {
+  if (validateFormStep(currentFormStep)) {
+    setFormStep(currentFormStep + 1);
+  }
+});
+
+formPrev?.addEventListener("click", () => {
+  setFormStep(currentFormStep - 1);
 });
 
 menuToggle?.addEventListener("click", () => {

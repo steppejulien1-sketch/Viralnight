@@ -5,7 +5,6 @@ const navLinks = document.querySelectorAll("[data-view-link]");
 const views = document.querySelectorAll("[data-view]");
 const jumpButtons = document.querySelectorAll("[data-jump]");
 const ruleInputs = document.querySelectorAll("[data-rule-points]");
-const forecastInputs = document.querySelectorAll("[data-forecast]");
 const dataStatus = document.querySelector("[data-data-status]");
 const authForm = document.querySelector("[data-auth-form]");
 const signOutButton = document.querySelector("[data-sign-out]");
@@ -13,7 +12,6 @@ const rewardEditor = document.querySelector("[data-reward-editor]");
 const rewardPreview = document.querySelector("[data-reward-preview]");
 const totalRulePoints = document.querySelector("[data-total-rule-points]");
 const contentTable = document.querySelector("[data-content-table]");
-const clientGrid = document.querySelector("[data-client-grid]");
 const checkinStats = document.querySelector("[data-checkin-stats]");
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
@@ -457,83 +455,6 @@ function renderCheckins(data) {
   `;
 }
 
-function getClientSummaries(data) {
-  const summaries = new Map();
-
-  for (const submission of data.submissions || []) {
-    const id = submission.customer_id;
-    if (!id) continue;
-    const summary = summaries.get(id) || { id, points: 0, submissions: 0, redemptions: 0 };
-    summary.points += Number(submission.points_awarded || 0);
-    summary.submissions += 1;
-    summaries.set(id, summary);
-  }
-
-  for (const redemption of data.rewardRedemptions || []) {
-    const id = redemption.customer_id;
-    if (!id) continue;
-    const summary = summaries.get(id) || { id, points: 0, submissions: 0, redemptions: 0 };
-    summary.redemptions += 1;
-    summaries.set(id, summary);
-  }
-
-  return [...summaries.values()].sort((a, b) => b.points - a.points).slice(0, 3);
-}
-
-function getClientLevel(points) {
-  if (points >= 700) return "Niveau Gold";
-  if (points >= 300) return "Niveau Silver";
-  return "Nouveau";
-}
-
-function renderClients(data) {
-  const clients = getClientSummaries(data);
-
-  if (clients.length === 0) {
-    clientGrid.innerHTML = '<div class="empty-state">Aucun client actif pour le moment.</div>';
-    return;
-  }
-
-  clientGrid.innerHTML = clients
-    .map((client) => {
-      const shortId = client.id.split("-").pop()?.slice(-4) || "0000";
-      return `
-        <article class="client-card">
-          <span>${getClientLevel(client.points)}</span>
-          <strong>Client #VN-${escapeHtml(shortId)}</strong>
-          <p>${formatPoints(client.points)} - ${formatNumber(client.submissions)} publications qualifiees - ${formatNumber(client.redemptions)} recompenses utilisees</p>
-        </article>
-      `;
-    })
-    .join("");
-}
-
-function updateForecastFromData(data) {
-  const stats = getDashboardStats(data);
-  const budgetInput = document.querySelector('[data-forecast="budget"]');
-  const viewsInput = document.querySelector('[data-forecast="views"]');
-  const clientsInput = document.querySelector('[data-forecast="clients"]');
-
-  if (viewsInput && stats.reach > 0) viewsInput.value = String(stats.reach);
-  if (clientsInput && stats.activeCustomers > 0) clientsInput.value = String(stats.activeCustomers);
-  if (budgetInput && stats.estimatedBudget > 0) budgetInput.value = String(Math.max(stats.estimatedBudget, 300));
-
-  updateForecast();
-}
-
-function updateForecast() {
-  const budget = Number(document.querySelector('[data-forecast="budget"]')?.value || 0);
-  const viewsTarget = Number(document.querySelector('[data-forecast="views"]')?.value || 0);
-  const clients = Number(document.querySelector('[data-forecast="clients"]')?.value || 0);
-  const cpm = viewsTarget > 0 ? (budget / viewsTarget) * 1000 : 0;
-  const cpa = clients > 0 ? budget / clients : 0;
-  const score = cpm <= 5 ? "Fort" : cpm <= 8 ? "Correct" : "A optimiser";
-
-  setText('[data-forecast-result="cpm"]', currencyFormatter.format(cpm));
-  setText('[data-forecast-result="cpa"]', currencyFormatter.format(cpa));
-  setText('[data-forecast-result="score"]', score);
-}
-
 function renderDashboard(data) {
   dashboardState = data;
   renderDataSource(data);
@@ -544,8 +465,6 @@ function renderDashboard(data) {
   renderRewardEditor(data);
   renderContentTable(data);
   renderCheckins(data);
-  renderClients(data);
-  updateForecastFromData(data);
 }
 
 async function refreshDashboard() {
@@ -562,10 +481,6 @@ navLinks.forEach((link) => {
 
 jumpButtons.forEach((button) => {
   button.addEventListener("click", () => activateView(button.dataset.jump));
-});
-
-forecastInputs.forEach((input) => {
-  input.addEventListener("input", updateForecast);
 });
 
 ruleInputs.forEach((input) => {
