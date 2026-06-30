@@ -334,9 +334,9 @@ async function persistReward(input) {
 
 function pointRulesToRow(rules) {
   return {
-    validated_publication: Number(rules.validatedPublication || 0),
+    validated_publication: 0,
     video_views_per_thousand: Number(rules.videoViewsPerThousand || 0),
-    validated_story: Number(rules.validatedStory || 0),
+    validated_story: 0,
     story_views_per_thousand: Number(rules.storyViewsPerThousand || 0),
     viral_bonus: Number(rules.viralBonus || 0),
     club_mention: Number(rules.clubMention || 0),

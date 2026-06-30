@@ -24,6 +24,9 @@ Dans Supabase Dashboard :
 5. Coller ensuite le contenu de :
    `supabase/migrations/202606270002_establishment_point_rules.sql`
 6. Cliquer sur `Run`.
+7. Executer ensuite les migrations suivantes dans l'ordre :
+   `supabase/migrations/202606300001_demo_requests.sql`
+   `supabase/migrations/202606300002_remove_validation_point_rewards.sql`
 
 Le fichier crée :
 
@@ -90,9 +93,9 @@ insert into public.establishment_point_rules (
 )
 values (
   'ESTABLISHMENT_ID_RETOURNE',
-  30,
+  0,
   25,
-  60,
+  0,
   80,
   90,
   20,
@@ -100,6 +103,9 @@ values (
   350
 );
 ```
+
+Les champs `validated_publication` et `validated_story` restent presents pour compatibilite,
+mais la validation ne donne plus de points. Les points viennent des vues et des actions mesurables.
 
 Le dashboard peut aussi créer cette ligne automatiquement au premier changement de barème,
 tant que l'owner est connecté et que les policies RLS sont actives.

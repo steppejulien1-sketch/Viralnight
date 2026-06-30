@@ -1,7 +1,7 @@
 export const DEFAULT_POINT_RULES = {
-  validatedPublication: 30,
+  validatedPublication: 0,
   videoViewsPerThousand: 25,
-  validatedStory: 60,
+  validatedStory: 0,
   storyViewsPerThousand: 80,
   viralBonus: 90,
   clubMention: 20,
@@ -80,7 +80,7 @@ export const fallbackDashboardData = {
       content_type: "video",
       url: "https://tiktok.com/@demo/video/1",
       views_count: 12800,
-      points_awarded: 350,
+      points_awarded: 320,
       status: "pending",
       submitted_at: daysAgo(1),
     },
@@ -91,7 +91,7 @@ export const fallbackDashboardData = {
       content_type: "story",
       url: "https://instagram.com/stories/demo/2",
       views_count: 7240,
-      points_awarded: 639,
+      points_awarded: 579,
       status: "pending",
       submitted_at: daysAgo(2),
     },
@@ -126,9 +126,9 @@ function normalizePointRules(row) {
   if (!row) return { ...DEFAULT_POINT_RULES };
 
   return {
-    validatedPublication: Number(row.validated_publication ?? DEFAULT_POINT_RULES.validatedPublication),
+    validatedPublication: 0,
     videoViewsPerThousand: Number(row.video_views_per_thousand ?? DEFAULT_POINT_RULES.videoViewsPerThousand),
-    validatedStory: Number(row.validated_story ?? DEFAULT_POINT_RULES.validatedStory),
+    validatedStory: 0,
     storyViewsPerThousand: Number(row.story_views_per_thousand ?? DEFAULT_POINT_RULES.storyViewsPerThousand),
     viralBonus: Number(row.viral_bonus ?? DEFAULT_POINT_RULES.viralBonus),
     clubMention: Number(row.club_mention ?? DEFAULT_POINT_RULES.clubMention),
