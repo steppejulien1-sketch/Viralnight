@@ -8,12 +8,6 @@ const form = document.querySelector("[data-form]");
 const pageDeck = document.querySelector("[data-page-deck]");
 const pageLinks = Array.from(document.querySelectorAll("[data-page-link]"));
 const pageSections = Array.from(document.querySelectorAll("[data-page-section]"));
-const briefInputs = document.querySelectorAll("[data-brief-input]");
-const formSteps = Array.from(document.querySelectorAll("[data-form-step]"));
-const formProgressLabel = document.querySelector("[data-form-progress-label]");
-const formProgressBar = document.querySelector("[data-form-progress-bar]");
-const formNext = document.querySelector("[data-form-next]");
-const formPrev = document.querySelector("[data-form-prev]");
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
 const currencyFormatter = new Intl.NumberFormat("fr-FR", {
@@ -24,42 +18,6 @@ const currencyFormatter = new Intl.NumberFormat("fr-FR", {
 const rewardThresholds = Object.fromEntries(DEFAULT_REWARDS.map((reward) => [reward.key, reward.pointsRequired]));
 
 let currentPage = 0;
-let currentFormStep = 0;
-
-function setFormStep(index) {
-  if (!formSteps.length) return;
-
-  currentFormStep = Math.max(0, Math.min(index, formSteps.length - 1));
-
-  formSteps.forEach((step, stepIndex) => {
-    const isActive = stepIndex === currentFormStep;
-    step.classList.toggle("is-active", isActive);
-    step.hidden = !isActive;
-  });
-
-  if (formProgressLabel) {
-    formProgressLabel.textContent = `Étape ${currentFormStep + 1}/${formSteps.length}`;
-  }
-
-  if (formProgressBar) {
-    formProgressBar.style.setProperty("--form-progress", `${((currentFormStep + 1) / formSteps.length) * 100}%`);
-  }
-}
-
-function validateFormStep(index) {
-  const step = formSteps[index];
-  if (!step) return true;
-
-  const fields = Array.from(step.querySelectorAll("input, select, textarea"));
-  for (const field of fields) {
-    if (!field.checkValidity()) {
-      field.reportValidity();
-      return false;
-    }
-  }
-
-  return true;
-}
 
 function clampPage(index) {
   return Math.max(0, Math.min(index, pageSections.length - 1));
@@ -166,47 +124,16 @@ function updateCalculator() {
   document.querySelector('[data-result="cpm"]').textContent = currencyFormatter.format(cpm);
 }
 
-function updateBriefEstimate() {
-  const customers = Number(document.querySelector('[data-brief-input="customers"]')?.value || 0);
-  const views = Number(document.querySelector('[data-brief-input="views"]')?.value || 0);
-  const budget = Number(document.querySelector('[data-brief-input="budget"]')?.value || 0);
-  const rewardCost = Number(document.querySelector('[data-brief-input="rewardCost"]')?.value || 0);
-
-  const cpm = views > 0 ? (budget / views) * 1000 : 0;
-  const costPerExpectedCustomer = customers > 0 ? budget / customers : 0;
-  const availableRewards = rewardCost > 0 ? Math.floor(budget / rewardCost) : 0;
-
-  document.querySelector('[data-brief-result="cpm"]').textContent = currencyFormatter.format(cpm);
-  document.querySelector('[data-brief-result="cpa"]').textContent = currencyFormatter.format(costPerExpectedCustomer);
-  document.querySelector('[data-brief-result="rewards"]').textContent = numberFormatter.format(availableRewards);
-}
-
-function getNumberFormValue(formData, name) {
-  const value = Number(formData.get(name) || 0);
-  return Number.isFinite(value) ? value : 0;
-}
-
 function getTextFormValue(formData, name) {
   return String(formData.get(name) || "").trim();
 }
 
-function buildDemoRequestPayload(formData, metrics) {
+function buildDemoRequestPayload(formData) {
   return {
-    club: getTextFormValue(formData, "club"),
-    city: getTextFormValue(formData, "city"),
-    social: getTextFormValue(formData, "social") || null,
     contact_name: getTextFormValue(formData, "contact_name"),
     email: getTextFormValue(formData, "email"),
-    role: getTextFormValue(formData, "role") || null,
-    objectives: formData.getAll("objectives").map((value) => String(value)),
-    extra_customers: Math.round(getNumberFormValue(formData, "extra_customers")),
-    monthly_views: Math.round(getNumberFormValue(formData, "monthly_views")),
-    monthly_budget: getNumberFormValue(formData, "monthly_budget"),
-    reward_cost: getNumberFormValue(formData, "reward_cost"),
+    establishment_type: getTextFormValue(formData, "establishment_type"),
     context: getTextFormValue(formData, "context") || null,
-    estimated_cpm: metrics.cpm,
-    estimated_cpa: metrics.cpa,
-    estimated_rewards: metrics.availableRewards,
   };
 }
 
@@ -214,10 +141,6 @@ async function handleDemoSubmit(event) {
   event.preventDefault();
 
   if (!form.checkValidity()) {
-    const invalidStepIndex = formSteps.findIndex((step) => step.querySelector(":invalid"));
-    if (invalidStepIndex >= 0) {
-      setFormStep(invalidStepIndex);
-    }
     form.reportValidity();
     return;
   }
@@ -226,16 +149,7 @@ async function handleDemoSubmit(event) {
   const submitButton = form.querySelector('button[type="submit"]');
   const initialButtonText = submitButton?.textContent;
   const formData = new FormData(form);
-  const club = getTextFormValue(formData, "club") || "votre établissement";
-  const budget = getNumberFormValue(formData, "monthly_budget");
-  const views = getNumberFormValue(formData, "monthly_views");
-  const customers = getNumberFormValue(formData, "extra_customers");
-  const rewardCost = getNumberFormValue(formData, "reward_cost");
-  const metrics = {
-    cpm: views > 0 ? Number(((budget / views) * 1000).toFixed(2)) : 0,
-    cpa: customers > 0 ? Number((budget / customers).toFixed(2)) : 0,
-    availableRewards: rewardCost > 0 ? Math.floor(budget / rewardCost) : 0,
-  };
+  const contactName = getTextFormValue(formData, "contact_name") || "votre demande";
 
   if (note) {
     note.textContent = "";
@@ -255,14 +169,14 @@ async function handleDemoSubmit(event) {
   }
 
   try {
-    const { error } = await supabase.from("demo_requests").insert(buildDemoRequestPayload(formData, metrics));
+    const { error } = await supabase.from("demo_requests").insert(buildDemoRequestPayload(formData));
 
     if (error) {
       throw error;
     }
   } catch (error) {
     if (note) {
-      note.textContent = `Impossible d'enregistrer la demande pour ${club} : ${error.message || "erreur inconnue"}`;
+      note.textContent = `Impossible d'enregistrer la demande pour ${contactName} : ${error.message || "erreur inconnue"}`;
     }
     return;
   } finally {
@@ -273,15 +187,13 @@ async function handleDemoSubmit(event) {
   }
 
   if (note) {
-    note.textContent = `Demande enregistrée pour ${club}. Projection actuelle : ${currencyFormatter.format(metrics.cpm)} pour 1 000 vues.`;
+    note.textContent = `Demande enregistrée pour ${contactName}. Nous vous recontactons rapidement.`;
   }
 }
 
 renderPointScale();
-setFormStep(0);
 setPage(getPageIndexFromHash(), { resetScroll: true, writeHistory: false });
 updateCalculator();
-updateBriefEstimate();
 
 pageSections.forEach((section) => {
   section.addEventListener(
@@ -314,20 +226,6 @@ window.addEventListener("hashchange", () => {
 
 document.querySelectorAll("[data-input]").forEach((input) => {
   input.addEventListener("input", updateCalculator);
-});
-
-briefInputs.forEach((input) => {
-  input.addEventListener("input", updateBriefEstimate);
-});
-
-formNext?.addEventListener("click", () => {
-  if (validateFormStep(currentFormStep)) {
-    setFormStep(currentFormStep + 1);
-  }
-});
-
-formPrev?.addEventListener("click", () => {
-  setFormStep(currentFormStep - 1);
 });
 
 menuToggle?.addEventListener("click", () => {
