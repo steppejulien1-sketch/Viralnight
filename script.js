@@ -1,5 +1,4 @@
 import { DEFAULT_POINT_RULES, DEFAULT_REWARDS } from "./dashboardData.js";
-import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 
 const header = document.querySelector("[data-header]");
 const menuToggle = document.querySelector("[data-menu-toggle]");
@@ -136,6 +135,53 @@ function buildDemoRequestPayload(formData) {
   };
 }
 
+function isLocalHost() {
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+}
+
+async function insertDemoRequestLocally(payload) {
+  const { isSupabaseConfigured, supabase } = await import("./supabaseClient.js");
+
+  if (!isSupabaseConfigured || !supabase) {
+    throw new Error(
+      "Supabase n'est pas configuré. Ajoutez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans .env.local.",
+    );
+  }
+
+  const { error } = await supabase.from("demo_requests").insert(payload);
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function submitDemoRequest(payload) {
+  const response = await fetch("/api/demo-request", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status === 404 && isLocalHost()) {
+    await insertDemoRequestLocally(payload);
+    return;
+  }
+
+  let result = {};
+
+  try {
+    result = await response.json();
+  } catch {
+    result = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(result.message || "Impossible d'enregistrer la demande.");
+  }
+}
+
 async function handleDemoSubmit(event) {
   event.preventDefault();
 
@@ -149,17 +195,10 @@ async function handleDemoSubmit(event) {
   const initialButtonText = submitButton?.textContent;
   const formData = new FormData(form);
   const club = getTextFormValue(formData, "club") || "votre établissement";
+  const payload = buildDemoRequestPayload(formData);
 
   if (note) {
     note.textContent = "";
-  }
-
-  if (!isSupabaseConfigured || !supabase) {
-    if (note) {
-      note.textContent =
-        "Impossible d'enregistrer la demande : Supabase n'est pas configuré. Ajoutez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans .env.local.";
-    }
-    return;
   }
 
   if (submitButton) {
@@ -168,11 +207,7 @@ async function handleDemoSubmit(event) {
   }
 
   try {
-    const { error } = await supabase.from("demo_requests").insert(buildDemoRequestPayload(formData));
-
-    if (error) {
-      throw error;
-    }
+    await submitDemoRequest(payload);
   } catch (error) {
     if (note) {
       note.textContent = `Impossible d'enregistrer la demande pour ${club} : ${error.message || "erreur inconnue"}`;
