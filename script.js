@@ -130,10 +130,8 @@ function getTextFormValue(formData, name) {
 
 function buildDemoRequestPayload(formData) {
   return {
-    contact_name: getTextFormValue(formData, "contact_name"),
+    club: getTextFormValue(formData, "club"),
     email: getTextFormValue(formData, "email"),
-    establishment_type: getTextFormValue(formData, "establishment_type"),
-    context: getTextFormValue(formData, "context") || null,
   };
 }
 
@@ -149,7 +147,7 @@ async function handleDemoSubmit(event) {
   const submitButton = form.querySelector('button[type="submit"]');
   const initialButtonText = submitButton?.textContent;
   const formData = new FormData(form);
-  const contactName = getTextFormValue(formData, "contact_name") || "votre demande";
+  const club = getTextFormValue(formData, "club") || "votre établissement";
 
   if (note) {
     note.textContent = "";
@@ -176,7 +174,7 @@ async function handleDemoSubmit(event) {
     }
   } catch (error) {
     if (note) {
-      note.textContent = `Impossible d'enregistrer la demande pour ${contactName} : ${error.message || "erreur inconnue"}`;
+      note.textContent = `Impossible d'enregistrer la demande pour ${club} : ${error.message || "erreur inconnue"}`;
     }
     return;
   } finally {
@@ -187,7 +185,7 @@ async function handleDemoSubmit(event) {
   }
 
   if (note) {
-    note.textContent = `Demande enregistrée pour ${contactName}. Nous vous recontactons rapidement.`;
+    note.textContent = `Demande enregistrée pour ${club}. Nous vous recontactons rapidement.`;
   }
 }
 
