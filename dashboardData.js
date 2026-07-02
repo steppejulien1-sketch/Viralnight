@@ -14,10 +14,7 @@ export const DEFAULT_REWARDS = [
   { key: "softDrink", title: "Boisson soft ou shot", pointsRequired: 70 },
   { key: "premiumDrink", title: "Boisson premium", pointsRequired: 110 },
   { key: "fastPass", title: "Coupe-file", pointsRequired: 160 },
-  { key: "freeEntry", title: "Entree gratuite", pointsRequired: 240 },
-  { key: "guestPass", title: "Bracelet +1 invite", pointsRequired: 330 },
-  { key: "tableUpgrade", title: "Surclassement table", pointsRequired: 500 },
-  { key: "vipAccess", title: "Acces VIP / backroom", pointsRequired: 700 },
+  { key: "freeEntry", title: "Entrée gratuite", pointsRequired: 240 },
 ];
 
 const now = new Date();

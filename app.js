@@ -12,6 +12,9 @@ const rewardEditor = document.querySelector("[data-reward-editor]");
 const rewardPreview = document.querySelector("[data-reward-preview]");
 const totalRulePoints = document.querySelector("[data-total-rule-points]");
 const checkinStats = document.querySelector("[data-checkin-stats]");
+const addRewardButton = document.querySelector("[data-add-reward]");
+const INITIAL_REWARD_COUNT = 5;
+const LOCAL_REWARD_PREFIX = "local-reward-";
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
 const currencyFormatter = new Intl.NumberFormat("fr-FR", {
@@ -23,6 +26,7 @@ const currencyFormatter = new Intl.NumberFormat("fr-FR", {
 let dashboardState = {
   ...fallbackDashboardData,
 };
+let localAddedRewards = [];
 
 function getPointRules(data = dashboardState) {
   return {
@@ -123,31 +127,31 @@ function getDashboardStats(data) {
 
 function renderDataSource(data) {
   if (data.source === "supabase") {
-    setDataStatus("Connecte a Supabase : donnees reelles de l'etablissement.", "connected");
+    setDataStatus("Connecté à Supabase : données réelles de l'établissement.", "connected");
     return;
   }
 
   if (data.reason === "missing_env") {
-    setDataStatus("Mode demo : donnees locales affichees sur toutes les vues. Ajoute VITE_SUPABASE_URL dans .env.local pour activer Supabase.", "warning");
+    setDataStatus("Mode démo : données locales affichées sur toutes les vues. Ajoute VITE_SUPABASE_URL dans .env.local pour activer Supabase.", "warning");
     return;
   }
 
   if (data.reason === "signed_out") {
-    setDataStatus("Mode demo : donnees locales affichees sur toutes les vues. Connecte-toi avec l'email owner pour voir les donnees Supabase.", "warning");
+    setDataStatus("Mode démo : données locales affichées sur toutes les vues. Connecte-toi avec l'email owner pour voir les données Supabase.", "warning");
     return;
   }
 
   if (data.reason === "query_error") {
-    setDataStatus(`Mode demo : donnees locales affichees sur toutes les vues, car Supabase a repondu avec une erreur (${data.error}).`, "error");
+    setDataStatus(`Mode démo : données locales affichées sur toutes les vues, car Supabase a répondu avec une erreur (${data.error}).`, "error");
     return;
   }
 
-  setDataStatus("Mode demo : donnees locales affichees sur toutes les vues du dashboard.", "warning");
+  setDataStatus("Mode démo : données locales affichées sur toutes les vues du dashboard.", "warning");
 }
 
 function renderEstablishment(data) {
   const establishment = data.establishment || fallbackDashboardData.establishment;
-  setText("[data-establishment-name]", establishment.name || "Etablissement ViralNight");
+  setText("[data-establishment-name]", establishment.name || "Établissement ViralNight");
 
   const sidebarNote = document.querySelector(".sidebar-note");
   const plan = sidebarNote?.querySelector("strong");
@@ -166,16 +170,16 @@ function renderEstablishment(data) {
 function renderOverview(data) {
   const stats = getDashboardStats(data);
 
-  updateMetric("reach", formatNumber(stats.reach), `${stats.validatedCount} contenus valides`);
-  updateMetric("points", formatNumber(stats.points), "Bareme de l'etablissement applique");
-  updateMetric("rewards", formatNumber(stats.redemptions.length), `${stats.activeRewards.length} recompenses actives`);
-  updateMetric("cpm", currencyFormatter.format(stats.cpm), "Estimation basee sur les recompenses");
+  updateMetric("reach", formatNumber(stats.reach), `${stats.validatedCount} contenus validés`);
+  updateMetric("points", formatNumber(stats.points), "Barème de l'établissement appliqué");
+  updateMetric("rewards", formatNumber(stats.redemptions.length), `${stats.activeRewards.length} récompenses actives`);
+  updateMetric("cpm", currencyFormatter.format(stats.cpm), "Estimation basée sur les récompenses");
 
   const funnelRows = document.querySelectorAll(".funnel div");
   const rows = [
-    { label: "Contenus recus", value: stats.receivedCount, max: Math.max(stats.receivedCount, 1) },
-    { label: "Contenus qualifies", value: stats.validatedCount, max: Math.max(stats.receivedCount, 1) },
-    { label: "Clients recompenses", value: stats.rewardedCustomers, max: Math.max(stats.activeCustomers, 1) },
+    { label: "Contenus reçus", value: stats.receivedCount, max: Math.max(stats.receivedCount, 1) },
+    { label: "Contenus qualifiés", value: stats.validatedCount, max: Math.max(stats.receivedCount, 1) },
+    { label: "Clients récompensés", value: stats.rewardedCustomers, max: Math.max(stats.activeCustomers, 1) },
   ];
 
   funnelRows.forEach((row, index) => {
@@ -190,7 +194,7 @@ function renderOverview(data) {
 
   const pointsTask = document.querySelector('[data-jump="points"]');
   const checkinTask = document.querySelector('[data-jump="checkin"]');
-  if (pointsTask) pointsTask.textContent = `Verifier ${formatNumber(stats.activeRewards.length)} recompenses actives`;
+  if (pointsTask) pointsTask.textContent = `Vérifier ${formatNumber(stats.activeRewards.length)} récompenses actives`;
   if (checkinTask) checkinTask.textContent = "Preparer le QR check-in de vendredi";
 }
 
@@ -211,15 +215,23 @@ function renderPointRules(data) {
     if (!key) return;
     input.value = rules[key] ?? 0;
     input.disabled = false;
-    input.title = "Bareme configurable par cet etablissement.";
+    input.title = "Barème configurable par cet établissement.";
   });
 
   updatePointRuleExamples(rules);
 }
 
-function getRewardRows(rewards) {
+function isLocalRewardId(id) {
+  return String(id || "").startsWith(LOCAL_REWARD_PREFIX);
+}
+
+function getBaseRewardRows(rewards) {
   const activeRewards = getActiveRewards(rewards);
   return activeRewards.length > 0 ? activeRewards : fallbackDashboardData.rewards;
+}
+
+function getRewardRows(rewards) {
+  return [...getBaseRewardRows(rewards).slice(0, INITIAL_REWARD_COUNT), ...localAddedRewards];
 }
 
 function renderRewardEditor(data) {
@@ -229,12 +241,12 @@ function renderRewardEditor(data) {
     .map(
       (reward, index) => `
         <label>
-          <span>Recompense ${index + 1}</span>
-          <input type="text" value="${escapeHtml(reward.title)}" data-reward-name="${index}" data-reward-id="${escapeHtml(reward.id)}" />
+          <span>Récompense ${index + 1}</span>
+          <input type="text" value="${escapeHtml(reward.title)}" data-reward-name="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
         </label>
         <label>
           <span>Seuil</span>
-          <input type="number" value="${Number(reward.points_required || 0)}" min="0" step="10" data-reward-threshold="${index}" data-reward-id="${escapeHtml(reward.id)}" />
+          <input type="number" value="${Number(reward.points_required || 0)}" min="0" step="10" data-reward-threshold="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
         </label>
       `,
     )
@@ -251,18 +263,38 @@ function getEditedRewards() {
       const thresholdInput = document.querySelector(`[data-reward-threshold="${index}"]`);
       return {
         id: input.dataset.rewardId,
-        title: input.value || "Recompense",
+        title: input.value || "Récompense",
         points_required: Number(thresholdInput?.value || 0),
+        active: true,
+        added: input.dataset.rewardAdded === "true",
       };
     })
     .sort((a, b) => a.points_required - b.points_required);
+}
+
+function syncVisibleRewardEdits() {
+  const editedRewards = getEditedRewards();
+  const visibleBaseRewards = editedRewards.filter((reward) => !reward.added);
+  localAddedRewards = editedRewards.filter((reward) => reward.added);
+
+  const baseRewards = getBaseRewardRows(dashboardState.rewards || []);
+  const mergedRewards = baseRewards.map((reward, index) => ({
+    ...reward,
+    ...(visibleBaseRewards[index] || {}),
+    added: false,
+  }));
+
+  dashboardState = {
+    ...dashboardState,
+    rewards: mergedRewards,
+  };
 }
 
 function renderRewardPreview(rewards = getEditedRewards()) {
   const rules = getPointRules();
   const storyRate = rules.storyViewsPerThousand;
   const total = Object.values(rules).reduce((sum, value) => sum + Number(value || 0), 0);
-  totalRulePoints.textContent = `${formatNumber(total)} pts de bareme configure`;
+  totalRulePoints.textContent = `${formatNumber(total)} pts de barème configuré`;
 
   rewardPreview.innerHTML = rewards
     .map((reward) => {
@@ -272,7 +304,7 @@ function renderRewardPreview(rewards = getEditedRewards()) {
         <article>
           <strong>${escapeHtml(reward.title)}</strong>
           <span>${formatPoints(reward.points_required)}</span>
-          <small>${storyRate > 0 ? `environ ${formatNumber(storyCount)} ${storyLabel} de 1 000 vues` : "Seuil configure par le club"}</small>
+          <small>${storyRate > 0 ? `environ ${formatNumber(storyCount)} ${storyLabel} de 1 000 vues` : "Seuil configuré par le club"}</small>
         </article>
       `;
     })
@@ -281,7 +313,10 @@ function renderRewardPreview(rewards = getEditedRewards()) {
 
 function attachRewardHandlers() {
   document.querySelectorAll("[data-reward-name], [data-reward-threshold]").forEach((input) => {
-    input.addEventListener("input", () => renderRewardPreview());
+    input.addEventListener("input", () => {
+      syncVisibleRewardEdits();
+      renderRewardPreview();
+    });
     input.addEventListener("change", () => persistReward(input));
   });
 }
@@ -294,19 +329,60 @@ async function persistReward(input) {
   const nameInput = document.querySelector(`[data-reward-name="${index}"]`);
   const thresholdInput = document.querySelector(`[data-reward-threshold="${index}"]`);
 
-  if (!rewardId || !nameInput || !thresholdInput) return;
+  if (!nameInput || !thresholdInput) return;
+
+  const payload = {
+    title: nameInput.value || "Récompense",
+    points_required: Number(thresholdInput.value || 0),
+  };
+
+  if (!rewardId || isLocalRewardId(rewardId)) {
+    const establishmentId = dashboardState.establishment?.id;
+
+    if (!establishmentId) {
+      setDataStatus("Impossible d'ajouter la récompense : établissement introuvable.", "error");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("rewards")
+      .insert({
+        ...payload,
+        establishment_id: establishmentId,
+        active: true,
+      })
+      .select("id, title, points_required, active, created_at")
+      .single();
+
+    if (error) {
+      setDataStatus(`Erreur ajout récompense : ${error.message}`, "error");
+      return;
+    }
+
+    nameInput.dataset.rewardId = data.id;
+    thresholdInput.dataset.rewardId = data.id;
+    localAddedRewards = localAddedRewards.map((reward) =>
+      reward.id === rewardId ? { ...reward, ...data, added: true } : reward,
+    );
+    dashboardState = {
+      ...dashboardState,
+      rewards: [...(dashboardState.rewards || []), data],
+    };
+    setDataStatus("Récompense ajoutée pour cet établissement.", "connected");
+    return;
+  }
 
   const { error } = await supabase
     .from("rewards")
-    .update({
-      title: nameInput.value,
-      points_required: Number(thresholdInput.value || 0),
-    })
+    .update(payload)
     .eq("id", rewardId);
 
   if (error) {
-    setDataStatus(`Erreur sauvegarde recompense : ${error.message}`, "error");
+    setDataStatus(`Erreur sauvegarde récompense : ${error.message}`, "error");
+    return;
   }
+
+  setDataStatus("Récompense sauvegardée.", "connected");
 }
 
 function pointRulesToRow(rules) {
@@ -326,14 +402,14 @@ async function persistPointRules() {
   const rules = getPointRules();
 
   if (dashboardState.source !== "supabase" || !supabase) {
-    setDataStatus("Mode demo : bareme modifie localement, avec donnees locales visibles sur toutes les vues. Connecte Supabase pour sauvegarder.", "warning");
+    setDataStatus("Mode démo : barème modifié localement, avec données locales visibles sur toutes les vues. Connecte Supabase pour sauvegarder.", "warning");
     return;
   }
 
   const establishmentId = dashboardState.establishment?.id;
 
   if (!establishmentId) {
-    setDataStatus("Impossible de sauvegarder le bareme : etablissement introuvable.", "error");
+    setDataStatus("Impossible de sauvegarder le barème : établissement introuvable.", "error");
     return;
   }
 
@@ -346,11 +422,11 @@ async function persistPointRules() {
   );
 
   if (error) {
-    setDataStatus(`Erreur sauvegarde bareme : ${error.message}`, "error");
+    setDataStatus(`Erreur sauvegarde barème : ${error.message}`, "error");
     return;
   }
 
-  setDataStatus("Bareme de points sauvegarde pour cet etablissement.", "connected");
+  setDataStatus("Barème de points sauvegardé pour cet établissement.", "connected");
 }
 
 function renderCheckins(data) {
@@ -360,9 +436,9 @@ function renderCheckins(data) {
   const usedRewards = stats.redemptions.filter((redemption) => redemption.status === "used").length;
 
   checkinStats.innerHTML = `
-    <div><strong>${formatNumber(checkins)}</strong><span>check-ins estimes</span></div>
-    <div><strong>${formatNumber(presenceBonuses)}</strong><span>bonus de presence attribues</span></div>
-    <div><strong>${formatNumber(usedRewards)}</strong><span>recompenses utilisees</span></div>
+    <div><strong>${formatNumber(checkins)}</strong><span>check-ins estimés</span></div>
+    <div><strong>${formatNumber(presenceBonuses)}</strong><span>bonus de présence attribués</span></div>
+    <div><strong>${formatNumber(usedRewards)}</strong><span>récompenses utilisées</span></div>
   `;
 }
 
@@ -413,6 +489,22 @@ ruleInputs.forEach((input) => {
   input.addEventListener("change", persistPointRules);
 });
 
+addRewardButton?.addEventListener("click", () => {
+  const editedRewards = getEditedRewards();
+  const lastThreshold = editedRewards[editedRewards.length - 1]?.points_required || 240;
+  syncVisibleRewardEdits();
+
+  localAddedRewards.push({
+    id: `${LOCAL_REWARD_PREFIX}${Date.now()}`,
+    title: "Nouvelle récompense",
+    points_required: Math.ceil((lastThreshold + 50) / 10) * 10,
+    active: true,
+    added: true,
+  });
+
+  renderRewardEditor(dashboardState);
+});
+
 authForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -441,7 +533,7 @@ authForm?.addEventListener("submit", async (event) => {
     return;
   }
 
-  setDataStatus("Lien de connexion envoye par email. Ouvre-le pour charger les donnees reelles.", "connected");
+  setDataStatus("Lien de connexion envoyé par email. Ouvre-le pour charger les données réelles.", "connected");
 });
 
 signOutButton?.addEventListener("click", async () => {
