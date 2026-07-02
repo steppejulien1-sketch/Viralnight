@@ -7,6 +7,8 @@ const jumpButtons = document.querySelectorAll("[data-jump]");
 const ruleInputs = document.querySelectorAll("[data-rule-points]");
 const dataStatus = document.querySelector("[data-data-status]");
 const authForm = document.querySelector("[data-auth-form]");
+const passwordResetButton = document.querySelector("[data-password-reset]");
+const passwordUpdateForm = document.querySelector("[data-password-update]");
 const signOutButton = document.querySelector("[data-sign-out]");
 const rewardEditor = document.querySelector("[data-reward-editor]");
 const rewardPreview = document.querySelector("[data-reward-preview]");
@@ -739,6 +741,57 @@ authForm?.addEventListener("submit", async (event) => {
   setDataStatus("Connexion réussie. Chargement des données réelles du club.", "connected");
 });
 
+passwordResetButton?.addEventListener("click", async () => {
+  if (!supabase) {
+    setDataStatus("Supabase n'est pas configuré pour créer un mot de passe.", "warning");
+    return;
+  }
+
+  const formData = new FormData(authForm);
+  const email = String(formData.get("email") || "").trim();
+
+  if (!email) {
+    setDataStatus("Entre l'email du club avant de créer ou changer le mot de passe.", "warning");
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: new URL("./app.html", window.location.href).href,
+  });
+
+  setDataStatus(
+    error
+      ? `Impossible d'envoyer l'email de mot de passe : ${error.message}`
+      : "Email envoyé. Ouvre le lien reçu pour créer ou changer le mot de passe.",
+    error ? "error" : "connected",
+  );
+});
+
+passwordUpdateForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!supabase) return;
+
+  const formData = new FormData(passwordUpdateForm);
+  const password = String(formData.get("new_password") || "");
+
+  if (password.length < 8) {
+    setDataStatus("Le mot de passe doit contenir au moins 8 caractères.", "warning");
+    return;
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    setDataStatus(`Impossible d'enregistrer le mot de passe : ${error.message}`, "error");
+    return;
+  }
+
+  passwordUpdateForm.reset();
+  passwordUpdateForm.hidden = true;
+  setDataStatus("Mot de passe enregistré. Tu peux maintenant te connecter au dashboard.", "connected");
+});
+
 signOutButton?.addEventListener("click", async () => {
   if (!supabase) return;
   selectedClientEmail = "";
@@ -747,7 +800,11 @@ signOutButton?.addEventListener("click", async () => {
 });
 
 if (supabase) {
-  supabase.auth.onAuthStateChange(() => {
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === "PASSWORD_RECOVERY" && passwordUpdateForm) {
+      passwordUpdateForm.hidden = false;
+      setDataStatus("Choisis ton nouveau mot de passe pour activer l'accès au dashboard.", "connected");
+    }
     refreshDashboard();
   });
 }

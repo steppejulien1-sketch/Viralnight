@@ -80,6 +80,10 @@ const statusFilter = document.querySelector("[data-filter-status]");
 const authForm = document.querySelector("[data-admin-login]");
 const emailInput = document.querySelector("[data-admin-email]");
 const passwordInput = document.querySelector("[data-admin-password]");
+const passwordResetButton = document.querySelector("[data-admin-password-reset]");
+const passwordUpdateField = document.querySelector("[data-admin-password-update]");
+const newPasswordInput = document.querySelector("[data-admin-new-password]");
+const passwordSaveButton = document.querySelector("[data-admin-password-save]");
 const logoutButton = document.querySelector("[data-admin-logout]");
 const authStatus = document.querySelector("[data-admin-auth-status]");
 const clientDashboardForm = document.querySelector("[data-client-dashboard-form]");
@@ -351,6 +355,27 @@ authForm?.addEventListener("submit", async (event) => {
 
   const email = emailInput.value.trim().toLowerCase();
   const password = passwordInput?.value || "";
+  const newPassword = newPasswordInput?.value || "";
+
+  if (newPassword) {
+    if (newPassword.length < 8) {
+      setAuthStatus("Le nouveau mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    if (error) {
+      setAuthStatus("Impossible d'enregistrer le nouveau mot de passe admin.");
+      return;
+    }
+
+    authForm.reset();
+    if (passwordUpdateField) passwordUpdateField.hidden = true;
+    if (passwordSaveButton) passwordSaveButton.hidden = true;
+    setAuthStatus("Mot de passe admin enregistré. Tu peux te connecter.");
+    return;
+  }
 
   if (email !== ADMIN_EMAIL) {
     setAuthStatus(`Utilise le compte admin autorisé : ${ADMIN_EMAIL}.`);
@@ -374,6 +399,26 @@ authForm?.addEventListener("submit", async (event) => {
 
   authForm.reset();
   setAuthStatus("Connexion admin réussie.");
+});
+
+passwordResetButton?.addEventListener("click", async () => {
+  if (!supabase) {
+    setAuthStatus("Supabase n'est pas configuré sur cette page.");
+    return;
+  }
+
+  const email = emailInput.value.trim().toLowerCase();
+
+  if (email !== ADMIN_EMAIL) {
+    setAuthStatus(`Entre d'abord le compte admin autorisé : ${ADMIN_EMAIL}.`);
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: new URL("./admin.html", window.location.href).href,
+  });
+
+  setAuthStatus(error ? "Impossible d'envoyer l'email de mot de passe admin." : "Email envoyé. Ouvre le lien reçu pour créer ou changer le mot de passe admin.");
 });
 
 logoutButton?.addEventListener("click", async () => {
@@ -423,9 +468,14 @@ async function init() {
     await loadSupabaseSubmissions();
   }
 
-  supabase.auth.onAuthStateChange((_event, sessionState) => {
+  supabase.auth.onAuthStateChange((event, sessionState) => {
     state.session = sessionState;
     updateAuthUi();
+    if (event === "PASSWORD_RECOVERY" && passwordUpdateField) {
+      passwordUpdateField.hidden = false;
+      if (passwordSaveButton) passwordSaveButton.hidden = false;
+      setAuthStatus("Choisis ton nouveau mot de passe admin, puis clique sur Enregistrer le mot de passe.");
+    }
     if (sessionState) {
       loadSupabaseSubmissions();
     } else {
