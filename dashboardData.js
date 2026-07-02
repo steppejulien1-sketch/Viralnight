@@ -18,6 +18,7 @@ export const DEFAULT_REWARDS = [
 ];
 
 const now = new Date();
+const ADMIN_EMAIL = "viralnight001@gmail.com";
 
 const daysAgo = (days) => {
   const date = new Date(now);
@@ -123,7 +124,13 @@ function normalizePointRules(row) {
   };
 }
 
-export async function fetchDashboardData(supabase, isSupabaseConfigured) {
+function isViralNightAdmin(session) {
+  return String(session?.user?.email || "").toLowerCase() === ADMIN_EMAIL;
+}
+
+export async function fetchDashboardData(supabase, isSupabaseConfigured, options = {}) {
+  const ownerEmail = String(options.ownerEmail || "").trim().toLowerCase();
+
   if (!isSupabaseConfigured || !supabase) {
     return {
       ...fallbackDashboardData,
@@ -145,14 +152,61 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured) {
     };
   }
 
-  const [establishmentResult, pointRulesResult, customRulesResult, submissionsResult, rewardsResult, redemptionsResult] = await Promise.all([
-    supabase.from("establishments").select("*").single(),
-    supabase.from("establishment_point_rules").select("*").maybeSingle(),
-    supabase.from("establishment_point_rule_items").select("*").eq("active", true).order("created_at", { ascending: true }),
-    supabase.from("submissions").select("*").order("submitted_at", { ascending: false }),
-    supabase.from("rewards").select("*").order("points_required", { ascending: true }),
-    supabase.from("reward_redemptions").select("*").order("redeemed_at", { ascending: false }),
+  if (isViralNightAdmin(session) && !ownerEmail) {
+    return {
+      ...fallbackDashboardData,
+      reason: "admin_select_client",
+      session,
+    };
+  }
+
+  if (ownerEmail && !isViralNightAdmin(session)) {
+    return {
+      ...fallbackDashboardData,
+      reason: "admin_required",
+      session,
+    };
+  }
+
+  let establishmentId = "";
+
+  if (ownerEmail) {
+    const ownerResult = await supabase
+      .from("establishment_owners")
+      .select("email, establishment_id")
+      .ilike("email", ownerEmail)
+      .maybeSingle();
+
+    if (ownerResult.error || !ownerResult.data?.establishment_id) {
+      return {
+        ...fallbackDashboardData,
+        reason: "client_not_found",
+        session,
+        error: ownerResult.error?.message || ownerEmail,
+      };
+    }
+
+    establishmentId = ownerResult.data.establishment_id;
+  }
+
+  const byEstablishment = (query) => (establishmentId ? query.eq("establishment_id", establishmentId) : query);
+  const establishmentQuery = establishmentId
+    ? supabase.from("establishments").select("*").eq("id", establishmentId).single()
+    : supabase.from("establishments").select("*").single();
+
+  const [establishmentResult, pointRulesResult, customRulesResult, submissionsResult, rewardsResult] = await Promise.all([
+    establishmentQuery,
+    byEstablishment(supabase.from("establishment_point_rules").select("*")).maybeSingle(),
+    byEstablishment(supabase.from("establishment_point_rule_items").select("*")).eq("active", true).order("created_at", { ascending: true }),
+    byEstablishment(supabase.from("submissions").select("*")).order("submitted_at", { ascending: false }),
+    byEstablishment(supabase.from("rewards").select("*")).order("points_required", { ascending: true }),
   ]);
+
+  const rewardIds = (rewardsResult.data || []).map((reward) => reward.id).filter(Boolean);
+  const redemptionsResult =
+    rewardIds.length > 0
+      ? await supabase.from("reward_redemptions").select("*").in("reward_id", rewardIds).order("redeemed_at", { ascending: false })
+      : { data: [], error: null };
 
   const firstError =
     establishmentResult.error ||
@@ -173,8 +227,9 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured) {
 
   return {
     source: "supabase",
-    reason: "connected",
+    reason: ownerEmail ? "admin_client" : "connected",
     session,
+    selectedOwnerEmail: ownerEmail,
     establishment: establishmentResult.data,
     pointRules: normalizePointRules(pointRulesResult.data),
     pointRuleItems: customRulesResult.error ? [] : customRulesResult.data || [],

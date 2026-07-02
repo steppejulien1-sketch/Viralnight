@@ -8,6 +8,8 @@ const ruleInputs = document.querySelectorAll("[data-rule-points]");
 const dataStatus = document.querySelector("[data-data-status]");
 const authForm = document.querySelector("[data-auth-form]");
 const signOutButton = document.querySelector("[data-sign-out]");
+const adminClientForm = document.querySelector("[data-admin-client-form]");
+const adminClientClear = document.querySelector("[data-admin-client-clear]");
 const rewardEditor = document.querySelector("[data-reward-editor]");
 const rewardPreview = document.querySelector("[data-reward-preview]");
 const totalRulePoints = document.querySelector("[data-total-rule-points]");
@@ -18,6 +20,7 @@ const addPointRuleButton = document.querySelector("[data-add-point-rule]");
 const INITIAL_REWARD_COUNT = 5;
 const LOCAL_REWARD_PREFIX = "local-reward-";
 const LOCAL_POINT_RULE_PREFIX = "local-point-rule-";
+const ADMIN_EMAIL = "viralnight001@gmail.com";
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
 const currencyFormatter = new Intl.NumberFormat("fr-FR", {
@@ -31,6 +34,7 @@ let dashboardState = {
 };
 let localAddedRewards = [];
 let localAddedPointRules = [];
+let selectedClientEmail = "";
 
 function getPointRules(data = dashboardState) {
   return {
@@ -85,8 +89,10 @@ function updateMetric(name, value, caption) {
 
 function updateAuthUi(session) {
   const isConnected = Boolean(session);
+  const isAdmin = String(session?.user?.email || "").toLowerCase() === ADMIN_EMAIL;
   if (authForm) authForm.hidden = isConnected;
   if (signOutButton) signOutButton.hidden = !isConnected;
+  if (adminClientForm) adminClientForm.hidden = !isAdmin;
 }
 
 function getValidatedSubmissions(submissions) {
@@ -131,7 +137,27 @@ function getDashboardStats(data) {
 
 function renderDataSource(data) {
   if (data.source === "supabase") {
+    if (data.reason === "admin_client") {
+      setDataStatus(`Mode admin : données de ${data.establishment?.name || "ce client"} chargées via ${data.selectedOwnerEmail}.`, "connected");
+      return;
+    }
+
     setDataStatus("Connecté à Supabase : données réelles de l'établissement.", "connected");
+    return;
+  }
+
+  if (data.reason === "admin_select_client") {
+    setDataStatus("Mode admin : entre l'email d'un client pour afficher son dashboard.", "warning");
+    return;
+  }
+
+  if (data.reason === "admin_required") {
+    setDataStatus("Recherche client réservée au compte admin ViralNight.", "error");
+    return;
+  }
+
+  if (data.reason === "client_not_found") {
+    setDataStatus(`Aucun établissement trouvé pour cet email client (${data.error}).`, "error");
     return;
   }
 
@@ -622,7 +648,7 @@ function renderDashboard(data) {
 }
 
 async function refreshDashboard() {
-  const data = await fetchDashboardData(supabase, isSupabaseConfigured);
+  const data = await fetchDashboardData(supabase, isSupabaseConfigured, { ownerEmail: selectedClientEmail });
   renderDashboard(data);
 }
 
@@ -687,6 +713,25 @@ addRewardButton?.addEventListener("click", () => {
   renderRewardEditor(dashboardState);
 });
 
+adminClientForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formData = new FormData(adminClientForm);
+  selectedClientEmail = String(formData.get("client_email") || "").trim().toLowerCase();
+
+  if (!selectedClientEmail) {
+    setDataStatus("Entre l'email du client à afficher.", "warning");
+    return;
+  }
+
+  await refreshDashboard();
+});
+
+adminClientClear?.addEventListener("click", async () => {
+  selectedClientEmail = "";
+  adminClientForm?.reset();
+  await refreshDashboard();
+});
+
 authForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -720,6 +765,7 @@ authForm?.addEventListener("submit", async (event) => {
 
 signOutButton?.addEventListener("click", async () => {
   if (!supabase) return;
+  selectedClientEmail = "";
   await supabase.auth.signOut();
   await refreshDashboard();
 });
