@@ -1,4 +1,8 @@
-const submissions = [
+import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+
+const ADMIN_EMAIL = "viralnight001@gmail.com";
+
+const demoSubmissions = [
   {
     id: "vn-001",
     establishment: "Mirage Club Brussels",
@@ -7,6 +11,7 @@ const submissions = [
     views: 12800,
     points: 320,
     status: "pending",
+    url: "",
   },
   {
     id: "vn-002",
@@ -16,6 +21,7 @@ const submissions = [
     views: 4200,
     points: 336,
     status: "pending",
+    url: "",
   },
   {
     id: "vn-003",
@@ -25,6 +31,7 @@ const submissions = [
     views: 9100,
     points: 228,
     status: "review",
+    url: "",
   },
   {
     id: "vn-004",
@@ -34,6 +41,7 @@ const submissions = [
     views: 2600,
     points: 208,
     status: "validated",
+    url: "",
   },
   {
     id: "vn-005",
@@ -43,6 +51,7 @@ const submissions = [
     views: 6800,
     points: 170,
     status: "pending",
+    url: "",
   },
   {
     id: "vn-006",
@@ -52,18 +61,28 @@ const submissions = [
     views: 900,
     points: 0,
     status: "rejected",
+    url: "",
   },
 ];
 
 const state = {
-  submissions: [...submissions],
+  submissions: demoSubmissions.map((submission) => ({ ...submission })),
   establishment: "all",
   status: "all",
+  source: "demo",
+  session: null,
+  loading: false,
 };
 
 const table = document.querySelector("[data-admin-table]");
 const establishmentFilter = document.querySelector("[data-filter-establishment]");
 const statusFilter = document.querySelector("[data-filter-status]");
+const authForm = document.querySelector("[data-admin-login]");
+const emailInput = document.querySelector("[data-admin-email]");
+const logoutButton = document.querySelector("[data-admin-logout]");
+const authStatus = document.querySelector("[data-admin-auth-status]");
+const modeNotice = document.querySelector("[data-admin-mode]");
+const loginButton = authForm?.querySelector('button[type="submit"]');
 const numberFormatter = new Intl.NumberFormat("fr-FR");
 
 const statusLabels = {
@@ -73,6 +92,20 @@ const statusLabels = {
   rejected: "Rejeté",
 };
 
+const platformLabels = {
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+};
+
+const contentTypeLabels = {
+  story: "Story",
+  reel: "Reel",
+  post: "Post",
+  video: "Vidéo",
+  short: "Short",
+};
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -80,6 +113,28 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function safeHttpUrl(value) {
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function setAuthStatus(message) {
+  if (authStatus) authStatus.textContent = message;
+}
+
+function setModeNotice() {
+  if (!modeNotice) return;
+
+  modeNotice.textContent =
+    state.source === "supabase"
+      ? "Mode réel : données chargées depuis Supabase."
+      : "Mode démonstration : connecte-toi avec le compte admin ViralNight pour charger la vraie file.";
 }
 
 function getFilteredSubmissions() {
@@ -99,22 +154,26 @@ function updateMetrics() {
   const establishments = new Set(state.submissions.map((submission) => submission.establishment));
 
   setMetric("pending", state.submissions.filter((submission) => submission.status === "pending").length);
-  setMetric("review", state.submissions.filter((submission) => submission.status === "review").length);
+  setMetric("review", state.submissions.filter((submission) => ["review", "rejected"].includes(submission.status)).length);
   setMetric("validated", state.submissions.filter((submission) => submission.status === "validated").length);
   setMetric("establishments", establishments.size);
 }
 
 function renderEstablishmentOptions() {
+  const selectedValue = state.establishment;
   const establishments = [...new Set(state.submissions.map((submission) => submission.establishment))].sort();
+
   establishmentFilter.innerHTML =
     '<option value="all">Tous les établissements</option>' +
     establishments
       .map((establishment) => `<option value="${escapeHtml(establishment)}">${escapeHtml(establishment)}</option>`)
       .join("");
+
+  state.establishment = establishments.includes(selectedValue) ? selectedValue : "all";
+  establishmentFilter.value = state.establishment;
 }
 
 function renderTable() {
-  const rows = getFilteredSubmissions();
   const head = `
     <div class="admin-row admin-head">
       <span>Établissement</span>
@@ -126,6 +185,13 @@ function renderTable() {
     </div>
   `;
 
+  if (state.loading) {
+    table.innerHTML = `${head}<div class="empty-state">Chargement de la file Supabase...</div>`;
+    return;
+  }
+
+  const rows = getFilteredSubmissions();
+
   if (rows.length === 0) {
     table.innerHTML = `${head}<div class="empty-state">Aucun contenu dans cette file.</div>`;
     return;
@@ -136,11 +202,17 @@ function renderTable() {
     rows
       .map((submission) => {
         const isDone = ["validated", "rejected"].includes(submission.status);
+        const contentUrl = safeHttpUrl(submission.url);
+        const contentTitle = escapeHtml(submission.type);
+        const contentName = contentUrl
+          ? `<a href="${escapeHtml(contentUrl)}" target="_blank" rel="noreferrer"><strong>${contentTitle}</strong></a>`
+          : `<strong>${contentTitle}</strong>`;
+
         return `
           <div class="admin-row" data-submission-id="${escapeHtml(submission.id)}">
             <strong>${escapeHtml(submission.establishment)}</strong>
             <div>
-              <strong>${escapeHtml(submission.type)}</strong>
+              ${contentName}
               <span>${numberFormatter.format(submission.points)} pts proposés</span>
             </div>
             <span>${escapeHtml(submission.platform)}</span>
@@ -158,28 +230,145 @@ function renderTable() {
   attachActionHandlers();
 }
 
+function render() {
+  setModeNotice();
+  updateMetrics();
+  renderEstablishmentOptions();
+  renderTable();
+}
+
+function normalizeSubmission(row) {
+  const establishment = row.establishment || row.establishments || {};
+  const contentType = row.content_type || "video";
+  const platform = row.platform || "instagram";
+
+  return {
+    id: row.id,
+    establishment: establishment.name || "Établissement sans nom",
+    platform: platformLabels[platform] || platform,
+    type: contentTypeLabels[contentType] || contentType,
+    views: Number(row.views_count || 0),
+    points: Number(row.points_awarded || 0),
+    status: row.status || "pending",
+    url: row.url || "",
+  };
+}
+
+function useDemoData(message) {
+  state.source = "demo";
+  state.loading = false;
+  state.submissions = demoSubmissions.map((submission) => ({ ...submission }));
+  if (message) setAuthStatus(message);
+  render();
+}
+
+async function loadSupabaseSubmissions() {
+  if (!supabase) {
+    useDemoData("Supabase n'est pas configuré sur cette page.");
+    return;
+  }
+
+  state.loading = true;
+  renderTable();
+
+  const { data, error } = await supabase
+    .from("submissions")
+    .select("id, platform, content_type, url, views_count, points_awarded, status, submitted_at, establishment:establishments(name, city)")
+    .order("submitted_at", { ascending: false });
+
+  if (error) {
+    useDemoData("Lecture admin refusée par Supabase. Applique la migration RLS admin puis reconnecte-toi.");
+    return;
+  }
+
+  state.source = "supabase";
+  state.loading = false;
+  state.submissions = (data || []).map(normalizeSubmission);
+  setAuthStatus(`Connecté à Supabase avec ${state.session?.user?.email || ADMIN_EMAIL}.`);
+  render();
+}
+
+function updateAuthUi() {
+  const email = state.session?.user?.email || "";
+
+  if (emailInput && email) emailInput.value = email;
+  if (loginButton) loginButton.hidden = Boolean(state.session);
+  if (logoutButton) logoutButton.hidden = !state.session;
+
+  if (!isSupabaseConfigured || !supabase) {
+    setAuthStatus("Supabase n'est pas configuré côté front : affichage en mode démonstration.");
+  } else if (state.session) {
+    setAuthStatus(`Connecté avec ${email}.`);
+  } else {
+    setAuthStatus("Connecte-toi avec viralnight001@gmail.com pour charger les vraies validations.");
+  }
+}
+
+async function updateSubmissionStatus(id, nextStatus) {
+  const submission = state.submissions.find((item) => item.id === id);
+  if (!submission) return;
+
+  const previousStatus = submission.status;
+  submission.status = nextStatus;
+  updateMetrics();
+  renderTable();
+
+  if (state.source !== "supabase" || !supabase) return;
+
+  const { error } = await supabase.from("submissions").update({ status: nextStatus }).eq("id", id);
+
+  if (error) {
+    submission.status = previousStatus;
+    setAuthStatus("Impossible de mettre à jour Supabase : vérifie les droits admin RLS.");
+    updateMetrics();
+    renderTable();
+    return;
+  }
+
+  setAuthStatus(nextStatus === "validated" ? "Contenu validé dans Supabase." : "Contenu rejeté dans Supabase.");
+}
+
 function attachActionHandlers() {
   document.querySelectorAll("[data-admin-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const row = button.closest("[data-submission-id]");
-      const submission = state.submissions.find((item) => item.id === row?.dataset.submissionId);
-
-      if (!submission) return;
-
-      submission.status = button.dataset.adminAction === "validate" ? "validated" : "rejected";
-      updateMetrics();
-      renderTable();
+      const nextStatus = button.dataset.adminAction === "validate" ? "validated" : "rejected";
+      updateSubmissionStatus(row?.dataset.submissionId, nextStatus);
     });
   });
 }
 
-function render() {
-  updateMetrics();
-  renderTable();
-}
+authForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-renderEstablishmentOptions();
-render();
+  if (!supabase) {
+    setAuthStatus("Supabase n'est pas configuré sur cette page.");
+    return;
+  }
+
+  const email = emailInput.value.trim().toLowerCase();
+
+  if (email !== ADMIN_EMAIL) {
+    setAuthStatus(`Utilise le compte admin autorisé : ${ADMIN_EMAIL}.`);
+    return;
+  }
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: new URL("./admin.html", window.location.href).href,
+    },
+  });
+
+  setAuthStatus(error ? "Impossible d'envoyer le lien de connexion admin." : "Lien de connexion envoyé par email.");
+});
+
+logoutButton?.addEventListener("click", async () => {
+  if (supabase) await supabase.auth.signOut();
+  state.session = null;
+  updateAuthUi();
+  useDemoData("Déconnecté : retour au mode démonstration.");
+});
 
 establishmentFilter.addEventListener("change", () => {
   state.establishment = establishmentFilter.value;
@@ -190,3 +379,33 @@ statusFilter.addEventListener("change", () => {
   state.status = statusFilter.value;
   renderTable();
 });
+
+async function init() {
+  render();
+  updateAuthUi();
+
+  if (!supabase) return;
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  state.session = session;
+  updateAuthUi();
+
+  if (session) {
+    await loadSupabaseSubmissions();
+  }
+
+  supabase.auth.onAuthStateChange((_event, sessionState) => {
+    state.session = sessionState;
+    updateAuthUi();
+    if (sessionState) {
+      loadSupabaseSubmissions();
+    } else {
+      useDemoData("Déconnecté : affichage en mode démonstration.");
+    }
+  });
+}
+
+init();
