@@ -81,6 +81,7 @@ const authForm = document.querySelector("[data-admin-login]");
 const emailInput = document.querySelector("[data-admin-email]");
 const logoutButton = document.querySelector("[data-admin-logout]");
 const authStatus = document.querySelector("[data-admin-auth-status]");
+const clientDashboardForm = document.querySelector("[data-client-dashboard-form]");
 const modeNotice = document.querySelector("[data-admin-mode]");
 const loginButton = authForm?.querySelector('button[type="submit"]');
 const numberFormatter = new Intl.NumberFormat("fr-FR");
@@ -294,6 +295,7 @@ function updateAuthUi() {
   if (emailInput && email) emailInput.value = email;
   if (loginButton) loginButton.hidden = Boolean(state.session);
   if (logoutButton) logoutButton.hidden = !state.session;
+  if (clientDashboardForm) clientDashboardForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
 
   if (!isSupabaseConfigured || !supabase) {
     setAuthStatus("Supabase n'est pas configuré côté front : affichage en mode démonstration.");
@@ -368,6 +370,19 @@ logoutButton?.addEventListener("click", async () => {
   state.session = null;
   updateAuthUi();
   useDemoData("Déconnecté : retour au mode démonstration.");
+});
+
+clientDashboardForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const formData = new FormData(clientDashboardForm);
+  const clientEmail = String(formData.get("client_email") || "").trim().toLowerCase();
+
+  if (!clientEmail) {
+    setAuthStatus("Entre l'email owner du client à ouvrir.");
+    return;
+  }
+
+  window.location.href = `./app.html?client_email=${encodeURIComponent(clientEmail)}`;
 });
 
 establishmentFilter.addEventListener("change", () => {

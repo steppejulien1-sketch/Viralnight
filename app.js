@@ -8,8 +8,6 @@ const ruleInputs = document.querySelectorAll("[data-rule-points]");
 const dataStatus = document.querySelector("[data-data-status]");
 const authForm = document.querySelector("[data-auth-form]");
 const signOutButton = document.querySelector("[data-sign-out]");
-const adminClientForm = document.querySelector("[data-admin-client-form]");
-const adminClientClear = document.querySelector("[data-admin-client-clear]");
 const rewardEditor = document.querySelector("[data-reward-editor]");
 const rewardPreview = document.querySelector("[data-reward-preview]");
 const totalRulePoints = document.querySelector("[data-total-rule-points]");
@@ -20,7 +18,6 @@ const addPointRuleButton = document.querySelector("[data-add-point-rule]");
 const INITIAL_REWARD_COUNT = 5;
 const LOCAL_REWARD_PREFIX = "local-reward-";
 const LOCAL_POINT_RULE_PREFIX = "local-point-rule-";
-const ADMIN_EMAIL = "viralnight001@gmail.com";
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
 const currencyFormatter = new Intl.NumberFormat("fr-FR", {
@@ -34,7 +31,7 @@ let dashboardState = {
 };
 let localAddedRewards = [];
 let localAddedPointRules = [];
-let selectedClientEmail = "";
+let selectedClientEmail = new URLSearchParams(window.location.search).get("client_email")?.trim().toLowerCase() || "";
 
 function getPointRules(data = dashboardState) {
   return {
@@ -89,10 +86,8 @@ function updateMetric(name, value, caption) {
 
 function updateAuthUi(session) {
   const isConnected = Boolean(session);
-  const isAdmin = String(session?.user?.email || "").toLowerCase() === ADMIN_EMAIL;
   if (authForm) authForm.hidden = isConnected;
   if (signOutButton) signOutButton.hidden = !isConnected;
-  if (adminClientForm) adminClientForm.hidden = !isAdmin;
 }
 
 function getValidatedSubmissions(submissions) {
@@ -711,25 +706,6 @@ addRewardButton?.addEventListener("click", () => {
   });
 
   renderRewardEditor(dashboardState);
-});
-
-adminClientForm?.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const formData = new FormData(adminClientForm);
-  selectedClientEmail = String(formData.get("client_email") || "").trim().toLowerCase();
-
-  if (!selectedClientEmail) {
-    setDataStatus("Entre l'email du client à afficher.", "warning");
-    return;
-  }
-
-  await refreshDashboard();
-});
-
-adminClientClear?.addEventListener("click", async () => {
-  selectedClientEmail = "";
-  adminClientForm?.reset();
-  await refreshDashboard();
 });
 
 authForm?.addEventListener("submit", async (event) => {
