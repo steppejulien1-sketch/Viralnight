@@ -13,8 +13,11 @@ const rewardPreview = document.querySelector("[data-reward-preview]");
 const totalRulePoints = document.querySelector("[data-total-rule-points]");
 const checkinStats = document.querySelector("[data-checkin-stats]");
 const addRewardButton = document.querySelector("[data-add-reward]");
+const customRuleEditor = document.querySelector("[data-custom-rule-editor]");
+const addPointRuleButton = document.querySelector("[data-add-point-rule]");
 const INITIAL_REWARD_COUNT = 5;
 const LOCAL_REWARD_PREFIX = "local-reward-";
+const LOCAL_POINT_RULE_PREFIX = "local-point-rule-";
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
 const currencyFormatter = new Intl.NumberFormat("fr-FR", {
@@ -27,6 +30,7 @@ let dashboardState = {
   ...fallbackDashboardData,
 };
 let localAddedRewards = [];
+let localAddedPointRules = [];
 
 function getPointRules(data = dashboardState) {
   return {
@@ -218,7 +222,65 @@ function renderPointRules(data) {
     input.title = "Barème configurable par cet établissement.";
   });
 
+  renderCustomPointRules(data);
   updatePointRuleExamples(rules);
+}
+
+function isLocalPointRuleId(id) {
+  return String(id || "").startsWith(LOCAL_POINT_RULE_PREFIX);
+}
+
+function getCustomPointRules(data = dashboardState) {
+  return [...(data.pointRuleItems || []), ...localAddedPointRules];
+}
+
+function renderCustomPointRules(data = dashboardState) {
+  if (!customRuleEditor) return;
+  const rules = getCustomPointRules(data);
+
+  customRuleEditor.innerHTML = rules
+    .map(
+      (rule, index) => `
+        <label>
+          <span>Critère personnalisé ${index + 1}</span>
+          <input type="text" value="${escapeHtml(rule.title)}" data-custom-rule-name="${index}" data-custom-rule-id="${escapeHtml(rule.id)}" data-custom-rule-added="${rule.added ? "true" : "false"}" />
+        </label>
+        <label>
+          <span>Points</span>
+          <input type="number" value="${Number(rule.points || 0)}" min="0" step="5" data-custom-rule-points="${index}" data-custom-rule-id="${escapeHtml(rule.id)}" data-custom-rule-added="${rule.added ? "true" : "false"}" />
+        </label>
+      `,
+    )
+    .join("");
+
+  attachCustomRuleHandlers();
+}
+
+function getEditedCustomPointRules() {
+  return Array.from(document.querySelectorAll("[data-custom-rule-name]")).map((input) => {
+    const index = input.dataset.customRuleName;
+    const pointsInput = document.querySelector(`[data-custom-rule-points="${index}"]`);
+    return {
+      id: input.dataset.customRuleId,
+      title: input.value || "Nouveau critère",
+      points: Number(pointsInput?.value || 0),
+      active: true,
+      added: input.dataset.customRuleAdded === "true",
+    };
+  });
+}
+
+function syncCustomPointRuleEdits() {
+  const editedRules = getEditedCustomPointRules();
+  dashboardState = {
+    ...dashboardState,
+    pointRuleItems: editedRules.filter((rule) => !rule.added),
+  };
+  localAddedPointRules = editedRules.filter((rule) => rule.added);
+}
+
+function getCustomPointRuleTotal() {
+  return getCustomPointRules().reduce((sum, rule) => sum + Number(rule.points || 0), 0);
 }
 
 function isLocalRewardId(id) {
@@ -318,7 +380,7 @@ function renderRewardPreview(rewards = getEditedRewards()) {
   const rules = getPointRules();
   const storyRate = rules.storyViewsPerThousand;
   const usageMap = getRewardUsageMap();
-  const total = Object.values(rules).reduce((sum, value) => sum + Number(value || 0), 0);
+  const total = Object.values(rules).reduce((sum, value) => sum + Number(value || 0), 0) + getCustomPointRuleTotal();
   totalRulePoints.textContent = `${formatNumber(total)} pts de barème configuré`;
 
   rewardPreview.innerHTML = rewards
@@ -420,6 +482,77 @@ async function persistReward(input) {
   setDataStatus("Récompense sauvegardée.", "connected");
 }
 
+function attachCustomRuleHandlers() {
+  document.querySelectorAll("[data-custom-rule-name], [data-custom-rule-points]").forEach((input) => {
+    input.addEventListener("input", () => {
+      syncCustomPointRuleEdits();
+      renderRewardPreview();
+    });
+    input.addEventListener("change", () => persistCustomPointRule(input));
+  });
+}
+
+async function persistCustomPointRule(input) {
+  if (dashboardState.source !== "supabase" || !supabase) return;
+
+  const ruleId = input.dataset.customRuleId;
+  const index = input.dataset.customRuleName || input.dataset.customRulePoints;
+  const nameInput = document.querySelector(`[data-custom-rule-name="${index}"]`);
+  const pointsInput = document.querySelector(`[data-custom-rule-points="${index}"]`);
+
+  if (!nameInput || !pointsInput) return;
+
+  const payload = {
+    title: nameInput.value || "Nouveau critère",
+    points: Number(pointsInput.value || 0),
+  };
+
+  if (!ruleId || isLocalPointRuleId(ruleId)) {
+    const establishmentId = dashboardState.establishment?.id;
+
+    if (!establishmentId) {
+      setDataStatus("Impossible d'ajouter le critère : établissement introuvable.", "error");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("establishment_point_rule_items")
+      .insert({
+        ...payload,
+        establishment_id: establishmentId,
+        active: true,
+      })
+      .select("id, title, points, active, created_at")
+      .single();
+
+    if (error) {
+      setDataStatus(`Erreur ajout critère : ${error.message}`, "error");
+      return;
+    }
+
+    nameInput.dataset.customRuleId = data.id;
+    pointsInput.dataset.customRuleId = data.id;
+    localAddedPointRules = localAddedPointRules.map((rule) =>
+      rule.id === ruleId ? { ...rule, ...data, added: true } : rule,
+    );
+    dashboardState = {
+      ...dashboardState,
+      pointRuleItems: [...(dashboardState.pointRuleItems || []), data],
+    };
+    setDataStatus("Critère ajouté au barème.", "connected");
+    return;
+  }
+
+  const { error } = await supabase.from("establishment_point_rule_items").update(payload).eq("id", ruleId);
+
+  if (error) {
+    setDataStatus(`Erreur sauvegarde critère : ${error.message}`, "error");
+    return;
+  }
+
+  setDataStatus("Critère sauvegardé.", "connected");
+}
+
 function pointRulesToRow(rules) {
   return {
     validated_publication: 0,
@@ -427,7 +560,7 @@ function pointRulesToRow(rules) {
     validated_story: 0,
     story_views_per_thousand: Number(rules.storyViewsPerThousand || 0),
     viral_bonus: Number(rules.viralBonus || 0),
-    club_mention: Number(rules.clubMention || 0),
+    club_mention: 0,
     qr_checkin: Number(rules.qrCheckin || 0),
     monthly_ambassador: Number(rules.monthlyAmbassador || 0),
   };
@@ -522,6 +655,19 @@ ruleInputs.forEach((input) => {
   });
 
   input.addEventListener("change", persistPointRules);
+});
+
+addPointRuleButton?.addEventListener("click", () => {
+  syncCustomPointRuleEdits();
+  localAddedPointRules.push({
+    id: `${LOCAL_POINT_RULE_PREFIX}${Date.now()}`,
+    title: "Nouveau critère",
+    points: 10,
+    active: true,
+    added: true,
+  });
+  renderCustomPointRules(dashboardState);
+  renderRewardPreview();
 });
 
 addRewardButton?.addEventListener("click", () => {

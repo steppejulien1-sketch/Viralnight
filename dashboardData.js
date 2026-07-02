@@ -4,7 +4,7 @@ export const DEFAULT_POINT_RULES = {
   validatedStory: 0,
   storyViewsPerThousand: 80,
   viralBonus: 90,
-  clubMention: 20,
+  clubMention: 0,
   qrCheckin: 15,
   monthlyAmbassador: 350,
 };
@@ -48,6 +48,7 @@ export const fallbackDashboardData = {
   pointRules: {
     ...DEFAULT_POINT_RULES,
   },
+  pointRuleItems: [],
   establishment: {
     id: "demo-establishment",
     name: "Mirage Club Brussels",
@@ -116,7 +117,7 @@ function normalizePointRules(row) {
     validatedStory: 0,
     storyViewsPerThousand: Number(row.story_views_per_thousand ?? DEFAULT_POINT_RULES.storyViewsPerThousand),
     viralBonus: Number(row.viral_bonus ?? DEFAULT_POINT_RULES.viralBonus),
-    clubMention: Number(row.club_mention ?? DEFAULT_POINT_RULES.clubMention),
+    clubMention: 0,
     qrCheckin: Number(row.qr_checkin ?? DEFAULT_POINT_RULES.qrCheckin),
     monthlyAmbassador: Number(row.monthly_ambassador ?? DEFAULT_POINT_RULES.monthlyAmbassador),
   };
@@ -144,9 +145,10 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured) {
     };
   }
 
-  const [establishmentResult, pointRulesResult, submissionsResult, rewardsResult, redemptionsResult] = await Promise.all([
+  const [establishmentResult, pointRulesResult, customRulesResult, submissionsResult, rewardsResult, redemptionsResult] = await Promise.all([
     supabase.from("establishments").select("*").single(),
     supabase.from("establishment_point_rules").select("*").maybeSingle(),
+    supabase.from("establishment_point_rule_items").select("*").eq("active", true).order("created_at", { ascending: true }),
     supabase.from("submissions").select("*").order("submitted_at", { ascending: false }),
     supabase.from("rewards").select("*").order("points_required", { ascending: true }),
     supabase.from("reward_redemptions").select("*").order("redeemed_at", { ascending: false }),
@@ -175,6 +177,7 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured) {
     session,
     establishment: establishmentResult.data,
     pointRules: normalizePointRules(pointRulesResult.data),
+    pointRuleItems: customRulesResult.error ? [] : customRulesResult.data || [],
     submissions: submissionsResult.data || [],
     rewards: rewardsResult.data || [],
     rewardRedemptions: redemptionsResult.data || [],
