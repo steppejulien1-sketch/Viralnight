@@ -225,6 +225,25 @@ function isLocalRewardId(id) {
   return String(id || "").startsWith(LOCAL_REWARD_PREFIX);
 }
 
+function parseRewardLimit(value) {
+  if (value === "" || value === null || value === undefined) return null;
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? Math.max(0, Math.round(parsedValue)) : null;
+}
+
+function formatRewardLimitInput(value) {
+  const parsedValue = parseRewardLimit(value);
+  return parsedValue === null ? "" : String(parsedValue);
+}
+
+function getRewardUsageMap() {
+  return (dashboardState.rewardRedemptions || []).reduce((usage, redemption) => {
+    if (!redemption.reward_id) return usage;
+    usage.set(redemption.reward_id, (usage.get(redemption.reward_id) || 0) + 1);
+    return usage;
+  }, new Map());
+}
+
 function getBaseRewardRows(rewards) {
   const activeRewards = getActiveRewards(rewards);
   return activeRewards.length > 0 ? activeRewards : fallbackDashboardData.rewards;
@@ -248,6 +267,10 @@ function renderRewardEditor(data) {
           <span>Seuil</span>
           <input type="number" value="${Number(reward.points_required || 0)}" min="0" step="10" data-reward-threshold="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
         </label>
+        <label>
+          <span>Stock max</span>
+          <input type="number" value="${formatRewardLimitInput(reward.max_redemptions)}" min="0" step="1" placeholder="Illimité" data-reward-limit="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
+        </label>
       `,
     )
     .join("");
@@ -261,15 +284,16 @@ function getEditedRewards() {
     .map((input) => {
       const index = input.dataset.rewardName;
       const thresholdInput = document.querySelector(`[data-reward-threshold="${index}"]`);
+      const limitInput = document.querySelector(`[data-reward-limit="${index}"]`);
       return {
         id: input.dataset.rewardId,
         title: input.value || "Récompense",
         points_required: Number(thresholdInput?.value || 0),
+        max_redemptions: parseRewardLimit(limitInput?.value),
         active: true,
         added: input.dataset.rewardAdded === "true",
       };
-    })
-    .sort((a, b) => a.points_required - b.points_required);
+    });
 }
 
 function syncVisibleRewardEdits() {
@@ -293,6 +317,7 @@ function syncVisibleRewardEdits() {
 function renderRewardPreview(rewards = getEditedRewards()) {
   const rules = getPointRules();
   const storyRate = rules.storyViewsPerThousand;
+  const usageMap = getRewardUsageMap();
   const total = Object.values(rules).reduce((sum, value) => sum + Number(value || 0), 0);
   totalRulePoints.textContent = `${formatNumber(total)} pts de barème configuré`;
 
@@ -300,11 +325,18 @@ function renderRewardPreview(rewards = getEditedRewards()) {
     .map((reward) => {
       const storyCount = storyRate > 0 ? Math.ceil(Number(reward.points_required || 0) / storyRate) : 0;
       const storyLabel = storyCount > 1 ? "stories" : "story";
+      const maxRedemptions = parseRewardLimit(reward.max_redemptions);
+      const usedCount = usageMap.get(reward.id) || 0;
+      const stockLabel =
+        maxRedemptions === null
+          ? "Stock illimité"
+          : `${formatNumber(Math.max(maxRedemptions - usedCount, 0))} restants sur ${formatNumber(maxRedemptions)}`;
       return `
         <article>
           <strong>${escapeHtml(reward.title)}</strong>
           <span>${formatPoints(reward.points_required)}</span>
           <small>${storyRate > 0 ? `environ ${formatNumber(storyCount)} ${storyLabel} de 1 000 vues` : "Seuil configuré par le club"}</small>
+          <small>${escapeHtml(stockLabel)}</small>
         </article>
       `;
     })
@@ -312,7 +344,7 @@ function renderRewardPreview(rewards = getEditedRewards()) {
 }
 
 function attachRewardHandlers() {
-  document.querySelectorAll("[data-reward-name], [data-reward-threshold]").forEach((input) => {
+  document.querySelectorAll("[data-reward-name], [data-reward-threshold], [data-reward-limit]").forEach((input) => {
     input.addEventListener("input", () => {
       syncVisibleRewardEdits();
       renderRewardPreview();
@@ -325,15 +357,17 @@ async function persistReward(input) {
   if (dashboardState.source !== "supabase" || !supabase) return;
 
   const rewardId = input.dataset.rewardId;
-  const index = input.dataset.rewardName || input.dataset.rewardThreshold;
+  const index = input.dataset.rewardName || input.dataset.rewardThreshold || input.dataset.rewardLimit;
   const nameInput = document.querySelector(`[data-reward-name="${index}"]`);
   const thresholdInput = document.querySelector(`[data-reward-threshold="${index}"]`);
+  const limitInput = document.querySelector(`[data-reward-limit="${index}"]`);
 
-  if (!nameInput || !thresholdInput) return;
+  if (!nameInput || !thresholdInput || !limitInput) return;
 
   const payload = {
     title: nameInput.value || "Récompense",
     points_required: Number(thresholdInput.value || 0),
+    max_redemptions: parseRewardLimit(limitInput.value),
   };
 
   if (!rewardId || isLocalRewardId(rewardId)) {
@@ -351,7 +385,7 @@ async function persistReward(input) {
         establishment_id: establishmentId,
         active: true,
       })
-      .select("id, title, points_required, active, created_at")
+      .select("id, title, points_required, max_redemptions, active, created_at")
       .single();
 
     if (error) {
@@ -361,6 +395,7 @@ async function persistReward(input) {
 
     nameInput.dataset.rewardId = data.id;
     thresholdInput.dataset.rewardId = data.id;
+    limitInput.dataset.rewardId = data.id;
     localAddedRewards = localAddedRewards.map((reward) =>
       reward.id === rewardId ? { ...reward, ...data, added: true } : reward,
     );
@@ -498,6 +533,7 @@ addRewardButton?.addEventListener("click", () => {
     id: `${LOCAL_REWARD_PREFIX}${Date.now()}`,
     title: "Nouvelle récompense",
     points_required: Math.ceil((lastThreshold + 50) / 10) * 10,
+    max_redemptions: null,
     active: true,
     added: true,
   });
