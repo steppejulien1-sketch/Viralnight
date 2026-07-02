@@ -11,7 +11,6 @@ const signOutButton = document.querySelector("[data-sign-out]");
 const rewardEditor = document.querySelector("[data-reward-editor]");
 const rewardPreview = document.querySelector("[data-reward-preview]");
 const totalRulePoints = document.querySelector("[data-total-rule-points]");
-const contentTable = document.querySelector("[data-content-table]");
 const checkinStats = document.querySelector("[data-checkin-stats]");
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
@@ -20,24 +19,6 @@ const currencyFormatter = new Intl.NumberFormat("fr-FR", {
   currency: "EUR",
   maximumFractionDigits: 2,
 });
-
-const platformLabels = {
-  tiktok: "TT",
-  instagram: "IG",
-  youtube: "YT",
-};
-
-const statusLabels = {
-  pending: "A qualifier",
-  validated: "Valide",
-  rejected: "A revoir",
-};
-
-const statusClasses = {
-  pending: "pending",
-  validated: "approved",
-  rejected: "review",
-};
 
 let dashboardState = {
   ...fallbackDashboardData,
@@ -207,10 +188,8 @@ function renderOverview(data) {
     progress.max = dataRow.max;
   });
 
-  const contentTask = document.querySelector('[data-jump="content"]');
   const pointsTask = document.querySelector('[data-jump="points"]');
   const checkinTask = document.querySelector('[data-jump="checkin"]');
-  if (contentTask) contentTask.textContent = `Qualifier ${formatNumber(stats.pendingCount)} contenus en attente`;
   if (pointsTask) pointsTask.textContent = `Verifier ${formatNumber(stats.activeRewards.length)} recompenses actives`;
   if (checkinTask) checkinTask.textContent = "Preparer le QR check-in de vendredi";
 }
@@ -374,74 +353,6 @@ async function persistPointRules() {
   setDataStatus("Bareme de points sauvegarde pour cet etablissement.", "connected");
 }
 
-function renderContentTable(data) {
-  const submissions = [...(data.submissions || [])].sort(
-    (a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0),
-  );
-
-  const rows = submissions.slice(0, 12);
-  const tableHead = `
-    <div class="table-row table-head">
-      <span>Publication</span>
-      <span>Plateforme</span>
-      <span>Vues</span>
-      <span>Points</span>
-      <span>Statut</span>
-      <span>Action</span>
-    </div>
-  `;
-
-  if (rows.length === 0) {
-    contentTable.innerHTML = `${tableHead}<div class="empty-state">Aucun contenu soumis pour le moment.</div>`;
-    return;
-  }
-
-  contentTable.innerHTML =
-    tableHead +
-    rows
-      .map((submission) => {
-        const label = `${submission.content_type || "Publication"} ${statusLabels[submission.status] || ""}`.trim();
-        const statusClass = statusClasses[submission.status] || "pending";
-        const isValidated = submission.status === "validated";
-        return `
-          <div class="table-row" data-content-row data-content-id="${escapeHtml(submission.id)}">
-            <strong>${escapeHtml(label)}</strong>
-            <span>${escapeHtml(platformLabels[submission.platform] || submission.platform)}</span>
-            <span>${formatNumber(submission.views_count)}</span>
-            <span>${formatNumber(submission.points_awarded)}</span>
-            <span class="status ${statusClass}">${escapeHtml(statusLabels[submission.status] || submission.status)}</span>
-            <button type="button" data-approve-content ${isValidated ? "disabled" : ""}>${isValidated ? "Termine" : "Attribuer"}</button>
-          </div>
-        `;
-      })
-      .join("");
-
-  attachContentHandlers();
-}
-
-function attachContentHandlers() {
-  document.querySelectorAll("[data-approve-content]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const row = button.closest("[data-content-row]");
-      const contentId = row?.dataset.contentId;
-
-      if (dashboardState.source === "supabase" && supabase && contentId) {
-        const { error } = await supabase.from("submissions").update({ status: "validated" }).eq("id", contentId);
-        if (error) {
-          setDataStatus(`Erreur validation contenu : ${error.message}`, "error");
-          return;
-        }
-      }
-
-      const status = row.querySelector(".status");
-      status.textContent = statusLabels.validated;
-      status.className = "status approved";
-      button.textContent = "Termine";
-      button.disabled = true;
-    });
-  });
-}
-
 function renderCheckins(data) {
   const stats = getDashboardStats(data);
   const checkins = stats.activeCustomers + Math.max(40, Math.round(stats.activeCustomers * 0.6));
@@ -463,7 +374,6 @@ function renderDashboard(data) {
   renderOverview(data);
   renderPointRules(data);
   renderRewardEditor(data);
-  renderContentTable(data);
   renderCheckins(data);
 }
 
