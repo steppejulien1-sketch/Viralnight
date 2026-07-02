@@ -79,6 +79,7 @@ const establishmentFilter = document.querySelector("[data-filter-establishment]"
 const statusFilter = document.querySelector("[data-filter-status]");
 const authForm = document.querySelector("[data-admin-login]");
 const emailInput = document.querySelector("[data-admin-email]");
+const passwordInput = document.querySelector("[data-admin-password]");
 const logoutButton = document.querySelector("[data-admin-logout]");
 const authStatus = document.querySelector("[data-admin-auth-status]");
 const clientDashboardForm = document.querySelector("[data-client-dashboard-form]");
@@ -349,20 +350,30 @@ authForm?.addEventListener("submit", async (event) => {
   }
 
   const email = emailInput.value.trim().toLowerCase();
+  const password = passwordInput?.value || "";
 
   if (email !== ADMIN_EMAIL) {
     setAuthStatus(`Utilise le compte admin autorisé : ${ADMIN_EMAIL}.`);
     return;
   }
 
-  const { error } = await supabase.auth.signInWithOtp({
+  if (!password) {
+    setAuthStatus("Entre le mot de passe admin.");
+    return;
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
     email,
-    options: {
-      emailRedirectTo: new URL("./admin.html", window.location.href).href,
-    },
+    password,
   });
 
-  setAuthStatus(error ? "Impossible d'envoyer le lien de connexion admin." : "Lien de connexion envoyé par email.");
+  if (error) {
+    setAuthStatus("Connexion admin impossible. Vérifie l'email et le mot de passe.");
+    return;
+  }
+
+  authForm.reset();
+  setAuthStatus("Connexion admin réussie.");
 });
 
 logoutButton?.addEventListener("click", async () => {
@@ -378,7 +389,7 @@ clientDashboardForm?.addEventListener("submit", (event) => {
   const clientEmail = String(formData.get("client_email") || "").trim().toLowerCase();
 
   if (!clientEmail) {
-    setAuthStatus("Entre l'email owner du client à ouvrir.");
+    setAuthStatus("Entre l'email du club à ouvrir.");
     return;
   }
 

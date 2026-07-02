@@ -162,7 +162,7 @@ function renderDataSource(data) {
   }
 
   if (data.reason === "signed_out") {
-    setDataStatus("Mode démo : données locales affichées sur toutes les vues. Connecte-toi avec l'email owner pour voir les données Supabase.", "warning");
+    setDataStatus("Mode démo : données locales affichées sur toutes les vues. Connecte-toi avec l'email du club et son mot de passe pour voir les données Supabase.", "warning");
     return;
   }
 
@@ -718,17 +718,16 @@ authForm?.addEventListener("submit", async (event) => {
 
   const formData = new FormData(authForm);
   const email = String(formData.get("email") || "").trim();
+  const password = String(formData.get("password") || "");
 
-  if (!email) {
-    setDataStatus("Entre l'email owner pour recevoir le lien de connexion.", "warning");
+  if (!email || !password) {
+    setDataStatus("Entre l'email du club et le mot de passe.", "warning");
     return;
   }
 
-  const { error } = await supabase.auth.signInWithOtp({
+  const { error } = await supabase.auth.signInWithPassword({
     email,
-    options: {
-      emailRedirectTo: window.location.href,
-    },
+    password,
   });
 
   if (error) {
@@ -736,7 +735,8 @@ authForm?.addEventListener("submit", async (event) => {
     return;
   }
 
-  setDataStatus("Lien de connexion envoyé par email. Ouvre-le pour charger les données réelles.", "connected");
+  authForm.reset();
+  setDataStatus("Connexion réussie. Chargement des données réelles du club.", "connected");
 });
 
 signOutButton?.addEventListener("click", async () => {

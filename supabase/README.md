@@ -45,7 +45,7 @@ Le fichier crée :
 Dans Supabase Dashboard :
 
 1. Aller dans `Authentication > Users`.
-2. Créer un utilisateur avec l'email owner.
+2. Créer un utilisateur avec l'email owner et définir un mot de passe.
 3. Copier son `User UID`.
 
 Ensuite, dans `SQL Editor`, adapter et exécuter :
@@ -146,6 +146,5 @@ le dashboard reste en mode démo.
 
 Quand Supabase est configuré :
 
-1. Entrer l'email owner dans le champ de connexion.
-2. Ouvrir le lien reçu par email.
-3. Le dashboard charge les données filtrées par RLS pour cet établissement.
+1. Entrer l'email du club et son mot de passe dans le champ de connexion.
+2. Le dashboard charge les données filtrées par RLS pour cet établissement.
