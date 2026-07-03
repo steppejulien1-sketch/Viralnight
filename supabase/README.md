@@ -42,6 +42,22 @@ Le fichier crée :
 
 ## 3. Créer un premier owner
 
+Depuis l'admin ViralNight, le plus simple est d'utiliser le formulaire `Créer un client`.
+Il crée automatiquement l'établissement, le compte Auth, le lien `establishment_owners`,
+le barème par défaut, les premières récompenses et l'email de création du mot de passe.
+
+Pour que ce bouton fonctionne en production, ajouter dans Vercel :
+
+```text
+SUPABASE_SERVICE_ROLE_KEY=clé service_role du projet Supabase
+SITE_URL=https://viralnight-koif.vercel.app
+```
+
+La clé `service_role` doit rester côté serveur uniquement. Elle ne doit jamais être exposée
+dans `VITE_...` ni dans le navigateur.
+
+Création manuelle alternative :
+
 Dans Supabase Dashboard :
 
 1. Aller dans `Authentication > Users`.
