@@ -409,6 +409,8 @@ function syncVisibleRewardEdits() {
 }
 
 function renderRewardPreview(rewards = getEditedRewards()) {
+  if (!rewardPreview || !totalRulePoints) return;
+
   const rules = getPointRules();
   const storyRate = rules.storyViewsPerThousand;
   const usageMap = getRewardUsageMap();
