@@ -131,7 +131,6 @@ function buildDemoRequestPayload(formData) {
   return {
     club: getTextFormValue(formData, "club"),
     email: getTextFormValue(formData, "email"),
-    phone: getTextFormValue(formData, "phone"),
   };
 }
 
