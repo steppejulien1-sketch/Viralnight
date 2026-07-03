@@ -43,11 +43,10 @@ function getPointRules(data = dashboardState) {
 }
 
 function activateView(viewId) {
-  views.forEach((view) => view.classList.toggle("is-active", view.dataset.view === viewId));
   navLinks.forEach((link) => link.classList.toggle("is-active", link.dataset.viewLink === viewId));
   history.replaceState(null, "", `#${viewId}`);
-  requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
-  window.setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 80);
+  const target = document.querySelector(`[data-view="${viewId}"]`);
+  target?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function formatPoints(value) {
@@ -823,7 +822,7 @@ const initialView = window.location.hash.replace("#", "");
 if (initialView && document.querySelector(`[data-view="${initialView}"]`)) {
   activateView(initialView);
 } else if (initialView) {
-  activateView("overview");
+  navLinks.forEach((link) => link.classList.toggle("is-active", link.dataset.viewLink === "overview"));
 }
 
 window.addEventListener("hashchange", () => {
