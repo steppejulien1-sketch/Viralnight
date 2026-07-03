@@ -86,6 +86,11 @@ function updateMetric(name, value, caption) {
   if (note && caption) note.textContent = caption;
 }
 
+function updateTaskButton(button, label, text) {
+  if (!button) return;
+  button.innerHTML = `<span>${escapeHtml(label)}</span>${escapeHtml(text)}`;
+}
+
 function updateAuthUi(session) {
   const isConnected = Boolean(session);
   if (authForm) authForm.hidden = isConnected;
@@ -203,10 +208,12 @@ function renderOverview(data) {
   updateMetric("cpm", currencyFormatter.format(stats.cpm), "Estimation basée sur les récompenses");
 
   const funnelRows = document.querySelectorAll(".funnel div");
+  const estimatedScans = stats.activeCustomers + Math.max(40, Math.round(stats.activeCustomers * 0.6));
   const rows = [
-    { label: "Contenus reçus", value: stats.receivedCount, max: Math.max(stats.receivedCount, 1) },
-    { label: "Contenus qualifiés", value: stats.validatedCount, max: Math.max(stats.receivedCount, 1) },
-    { label: "Clients récompensés", value: stats.rewardedCustomers, max: Math.max(stats.activeCustomers, 1) },
+    { label: "QR scans", value: estimatedScans, max: Math.max(estimatedScans, 1) },
+    { label: "Contenus reçus", value: stats.receivedCount, max: Math.max(estimatedScans, stats.receivedCount, 1) },
+    { label: "Contenus validés", value: stats.validatedCount, max: Math.max(estimatedScans, stats.receivedCount, 1) },
+    { label: "Récompenses utilisées", value: stats.redemptions.length, max: Math.max(estimatedScans, stats.receivedCount, 1) },
   ];
 
   funnelRows.forEach((row, index) => {
@@ -219,10 +226,11 @@ function renderOverview(data) {
     progress.max = dataRow.max;
   });
 
-  const pointsTask = document.querySelector('[data-jump="points"]');
+  const pointTasks = document.querySelectorAll('[data-jump="points"]');
   const checkinTask = document.querySelector('[data-jump="checkin"]');
-  if (pointsTask) pointsTask.textContent = `Vérifier ${formatNumber(stats.activeRewards.length)} récompenses actives`;
-  if (checkinTask) checkinTask.textContent = "Preparer le QR check-in de vendredi";
+  updateTaskButton(pointTasks[0], "Stock", `Vérifier ${formatNumber(stats.activeRewards.length)} récompenses actives`);
+  updateTaskButton(pointTasks[1], "Points", "Ajuster les seuils avant vendredi");
+  updateTaskButton(checkinTask, "QR", "Préparer le check-in de la soirée");
 }
 
 function updatePointRuleExamples(rules = getPointRules()) {
@@ -344,18 +352,20 @@ function renderRewardEditor(data) {
   rewardEditor.innerHTML = rewards
     .map(
       (reward, index) => `
-        <label>
-          <span>Récompense ${index + 1}</span>
-          <input type="text" value="${escapeHtml(reward.title)}" data-reward-name="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
-        </label>
-        <label>
-          <span>Seuil</span>
-          <input type="number" value="${Number(reward.points_required || 0)}" min="0" step="10" data-reward-threshold="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
-        </label>
-        <label>
-          <span>Stock max</span>
-          <input type="number" value="${formatRewardLimitInput(reward.max_redemptions)}" min="0" step="1" placeholder="Illimité" data-reward-limit="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
-        </label>
+        <div class="reward-row">
+          <label>
+            <span>Récompense ${index + 1}</span>
+            <input type="text" value="${escapeHtml(reward.title)}" data-reward-name="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
+          </label>
+          <label>
+            <span>Seuil</span>
+            <input type="number" value="${Number(reward.points_required || 0)}" min="0" step="10" data-reward-threshold="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
+          </label>
+          <label>
+            <span>Stock max</span>
+            <input type="number" value="${formatRewardLimitInput(reward.max_redemptions)}" min="0" step="1" placeholder="Illimité" data-reward-limit="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
+          </label>
+        </div>
       `,
     )
     .join("");
