@@ -139,45 +139,45 @@ function getDashboardStats(data) {
 function renderDataSource(data) {
   if (data.source === "supabase") {
     if (data.reason === "admin_client") {
-      setDataStatus(`Mode admin : données de ${data.establishment?.name || "ce client"} chargées via ${data.selectedOwnerEmail}.`, "connected");
+      setDataStatus(`Admin · ${data.establishment?.name || "client"}`, "connected");
       return;
     }
 
-    setDataStatus("Connecté à Supabase : données réelles de l'établissement.", "connected");
+    setDataStatus("Données réelles", "connected");
     return;
   }
 
   if (data.reason === "admin_select_client") {
-    setDataStatus("Mode admin : entre l'email d'un client pour afficher son dashboard.", "warning");
+    setDataStatus("Admin · email client requis", "warning");
     return;
   }
 
   if (data.reason === "admin_required") {
-    setDataStatus("Recherche client réservée au compte admin ViralNight.", "error");
+    setDataStatus("Accès admin requis", "error");
     return;
   }
 
   if (data.reason === "client_not_found") {
-    setDataStatus(`Aucun établissement trouvé pour cet email client (${data.error}).`, "error");
+    setDataStatus("Client introuvable", "error");
     return;
   }
 
   if (data.reason === "missing_env") {
-    setDataStatus("Mode démo : données locales affichées sur toutes les vues. Ajoute VITE_SUPABASE_URL dans .env.local pour activer Supabase.", "warning");
+    setDataStatus("Mode démo", "warning");
     return;
   }
 
   if (data.reason === "signed_out") {
-    setDataStatus("Mode démo : données locales affichées sur toutes les vues. Connecte-toi avec l'email du club et son mot de passe pour voir les données Supabase.", "warning");
+    setDataStatus("Mode démo", "warning");
     return;
   }
 
   if (data.reason === "query_error") {
-    setDataStatus(`Mode démo : données locales affichées sur toutes les vues, car Supabase a répondu avec une erreur (${data.error}).`, "error");
+    setDataStatus("Erreur données", "error");
     return;
   }
 
-  setDataStatus("Mode démo : données locales affichées sur toutes les vues du dashboard.", "warning");
+  setDataStatus("Mode démo", "warning");
 }
 
 function renderEstablishment(data) {
