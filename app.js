@@ -7,6 +7,8 @@ const jumpButtons = document.querySelectorAll("[data-jump]");
 const ruleInputs = document.querySelectorAll("[data-rule-points]");
 const dataStatus = document.querySelector("[data-data-status]");
 const authForm = document.querySelector("[data-auth-form]");
+const accessMenu = document.querySelector("[data-access-menu]");
+const authFeedback = document.querySelector("[data-auth-feedback]");
 const passwordResetButton = document.querySelector("[data-password-reset]");
 const passwordUpdateForm = document.querySelector("[data-password-update]");
 const signOutButton = document.querySelector("[data-sign-out]");
@@ -98,6 +100,21 @@ function updateAuthUi(session) {
   const isConnected = Boolean(session);
   if (authForm) authForm.hidden = isConnected;
   if (signOutButton) signOutButton.hidden = !isConnected;
+}
+
+function setAuthFeedback(message = "", state = "") {
+  if (!authFeedback) return;
+  authFeedback.textContent = message;
+  authFeedback.dataset.state = state;
+}
+
+function openAccessMenu() {
+  if (accessMenu) accessMenu.open = true;
+}
+
+function showPasswordUpdateForm() {
+  openAccessMenu();
+  if (passwordUpdateForm) passwordUpdateForm.hidden = false;
 }
 
 function hasDashboardAccess(data) {
@@ -783,9 +800,10 @@ addRewardButton?.addEventListener("click", () => {
 
 authForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
+  setAuthFeedback();
 
   if (!supabase) {
-    setDataStatus("Ajoute VITE_SUPABASE_URL dans .env.local avant de te connecter.", "warning");
+    setAuthFeedback("Connexion indisponible pour le moment.", "error");
     return;
   }
 
@@ -794,7 +812,7 @@ authForm?.addEventListener("submit", async (event) => {
   const password = String(formData.get("password") || "");
 
   if (!email || !password) {
-    setDataStatus("Entre l'email du club et le mot de passe.", "warning");
+    setAuthFeedback("Entre l'email du club et le mot de passe.", "warning");
     return;
   }
 
@@ -804,17 +822,19 @@ authForm?.addEventListener("submit", async (event) => {
   });
 
   if (error) {
-    setDataStatus(`Erreur connexion : ${error.message}`, "error");
+    setAuthFeedback("Connexion impossible. Vérifie l'email et le mot de passe.", "error");
     return;
   }
 
   authForm.reset();
-  setDataStatus("Connexion réussie. Chargement des données réelles du club.", "connected");
+  setAuthFeedback("Connexion réussie.", "connected");
 });
 
 passwordResetButton?.addEventListener("click", async () => {
+  setAuthFeedback();
+
   if (!supabase) {
-    setDataStatus("Supabase n'est pas configuré pour créer un mot de passe.", "warning");
+    setAuthFeedback("Création du mot de passe indisponible pour le moment.", "error");
     return;
   }
 
@@ -822,7 +842,7 @@ passwordResetButton?.addEventListener("click", async () => {
   const email = String(formData.get("email") || "").trim();
 
   if (!email) {
-    setDataStatus("Entre l'email du club avant de créer ou changer le mot de passe.", "warning");
+    setAuthFeedback("Entre l'email du club pour recevoir le lien de création.", "warning");
     return;
   }
 
@@ -830,16 +850,17 @@ passwordResetButton?.addEventListener("click", async () => {
     redirectTo: new URL("./app.html", window.location.href).href,
   });
 
-  setDataStatus(
+  setAuthFeedback(
     error
-      ? `Impossible d'envoyer l'email de mot de passe : ${error.message}`
-      : "Email envoyé. Ouvre le lien reçu pour créer ou changer le mot de passe.",
+      ? "Impossible d'envoyer le lien pour le moment."
+      : "Lien envoyé. Ouvre l'email, puis enregistre ton nouveau mot de passe ici.",
     error ? "error" : "connected",
   );
 });
 
 passwordUpdateForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
+  setAuthFeedback();
 
   if (!supabase) return;
 
@@ -847,20 +868,20 @@ passwordUpdateForm?.addEventListener("submit", async (event) => {
   const password = String(formData.get("new_password") || "");
 
   if (password.length < 8) {
-    setDataStatus("Le mot de passe doit contenir au moins 8 caractères.", "warning");
+    setAuthFeedback("Le mot de passe doit contenir au moins 8 caractères.", "warning");
     return;
   }
 
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
-    setDataStatus(`Impossible d'enregistrer le mot de passe : ${error.message}`, "error");
+    setAuthFeedback("Impossible d'enregistrer le mot de passe.", "error");
     return;
   }
 
   passwordUpdateForm.reset();
   passwordUpdateForm.hidden = true;
-  setDataStatus("Mot de passe enregistré. Tu peux maintenant te connecter au dashboard.", "connected");
+  setAuthFeedback("Mot de passe enregistré.", "connected");
 });
 
 signOutButton?.addEventListener("click", async () => {
@@ -873,8 +894,8 @@ signOutButton?.addEventListener("click", async () => {
 if (supabase) {
   supabase.auth.onAuthStateChange((event) => {
     if (event === "PASSWORD_RECOVERY" && passwordUpdateForm) {
-      passwordUpdateForm.hidden = false;
-      setDataStatus("Choisis ton nouveau mot de passe pour activer l'accès au dashboard.", "connected");
+      showPasswordUpdateForm();
+      setAuthFeedback("Enregistre ton nouveau mot de passe ci-dessous.", "connected");
     }
     refreshDashboard();
   });

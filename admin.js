@@ -422,7 +422,7 @@ passwordResetButton?.addEventListener("click", async () => {
     redirectTo: new URL("./admin.html", window.location.href).href,
   });
 
-  setAuthStatus(error ? "Impossible d'envoyer l'email de mot de passe admin." : "Email envoyé. Ouvre le lien reçu pour créer ou changer le mot de passe admin.");
+  setAuthStatus(error ? "Impossible d'envoyer l'email de mot de passe admin." : "Lien envoyé. Ouvre l'email, puis enregistre le nouveau mot de passe admin.");
 });
 
 logoutButton?.addEventListener("click", async () => {
@@ -566,7 +566,7 @@ async function init() {
     if (event === "PASSWORD_RECOVERY" && passwordUpdateField) {
       passwordUpdateField.hidden = false;
       if (passwordSaveButton) passwordSaveButton.hidden = false;
-      setAuthStatus("Choisis ton nouveau mot de passe admin, puis clique sur Enregistrer le mot de passe.");
+      setAuthStatus("Enregistre le nouveau mot de passe admin ci-dessous.");
     }
     if (sessionState) {
       loadSupabaseSubmissions();
