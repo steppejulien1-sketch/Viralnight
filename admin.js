@@ -88,6 +88,7 @@ const logoutButton = document.querySelector("[data-admin-logout]");
 const authStatus = document.querySelector("[data-admin-auth-status]");
 const clientDashboardForm = document.querySelector("[data-client-dashboard-form]");
 const createClientForm = document.querySelector("[data-create-client-form]");
+const clientAccessForm = document.querySelector("[data-client-access-form]");
 const modeNotice = document.querySelector("[data-admin-mode]");
 const loginButton = authForm?.querySelector('button[type="submit"]');
 const numberFormatter = new Intl.NumberFormat("fr-FR");
@@ -303,6 +304,7 @@ function updateAuthUi() {
   if (logoutButton) logoutButton.hidden = !state.session;
   if (clientDashboardForm) clientDashboardForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
   if (createClientForm) createClientForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
+  if (clientAccessForm) clientAccessForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
 
   if (!isSupabaseConfigured || !supabase) {
     setAuthStatus("Supabase n'est pas configuré côté front : affichage en mode démonstration.");
@@ -489,6 +491,46 @@ createClientForm?.addEventListener("submit", async (event) => {
       ? `Client créé. Email de création du mot de passe envoyé à ${result.owner_email}.`
       : `Client créé, mais l'email de mot de passe n'a pas été envoyé : ${result.warning || "à vérifier"}.`,
   );
+});
+
+clientAccessForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!supabase || !state.session?.access_token) {
+    setAuthStatus("Connecte-toi en admin avant de modifier l'accès.");
+    return;
+  }
+
+  const formData = new FormData(clientAccessForm);
+  const payload = {
+    owner_email: String(formData.get("owner_email") || "").trim().toLowerCase(),
+    subscription_status: String(formData.get("subscription_status") || "essai").trim(),
+  };
+
+  if (!payload.owner_email) {
+    setAuthStatus("Ajoute l'email du client à modifier.");
+    return;
+  }
+
+  setAuthStatus("Mise à jour de l'accès client...");
+
+  const response = await fetch("/api/update-client-status", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${state.session.access_token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    setAuthStatus(`Impossible de modifier l'accès : ${result.error || response.statusText}`);
+    return;
+  }
+
+  setAuthStatus(`Accès mis à jour : ${result.establishment_name} est maintenant ${result.subscription_status}.`);
 });
 
 establishmentFilter.addEventListener("change", () => {
