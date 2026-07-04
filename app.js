@@ -9,6 +9,7 @@ const dataStatus = document.querySelector("[data-data-status]");
 const authForm = document.querySelector("[data-auth-form]");
 const accessMenu = document.querySelector("[data-access-menu]");
 const authFeedback = document.querySelector("[data-auth-feedback]");
+const openAccessButtons = document.querySelectorAll("[data-open-access]");
 const passwordResetButton = document.querySelector("[data-password-reset]");
 const passwordUpdateForm = document.querySelector("[data-password-update]");
 const signOutButton = document.querySelector("[data-sign-out]");
@@ -893,6 +894,13 @@ signOutButton?.addEventListener("click", async () => {
   selectedClientEmail = "";
   await supabase.auth.signOut();
   await refreshDashboard();
+});
+
+openAccessButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    openAccessMenu();
+    authForm?.querySelector('input[name="email"]')?.focus();
+  });
 });
 
 if (supabase) {
