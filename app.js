@@ -63,6 +63,10 @@ function formatNumber(value) {
   return numberFormatter.format(Math.round(value || 0));
 }
 
+function isStrongPassword(password) {
+  return password.length >= 8 && /\d/.test(password);
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -867,8 +871,8 @@ passwordUpdateForm?.addEventListener("submit", async (event) => {
   const formData = new FormData(passwordUpdateForm);
   const password = String(formData.get("new_password") || "");
 
-  if (password.length < 8) {
-    setAuthFeedback("Le mot de passe doit contenir au moins 8 caractères.", "warning");
+  if (!isStrongPassword(password)) {
+    setAuthFeedback("Le mot de passe doit contenir au moins 8 caractères et 1 chiffre.", "warning");
     return;
   }
 

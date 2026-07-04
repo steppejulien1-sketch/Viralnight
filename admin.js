@@ -123,6 +123,10 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function isStrongPassword(password) {
+  return password.length >= 8 && /\d/.test(password);
+}
+
 function safeHttpUrl(value) {
   try {
     const url = new URL(value);
@@ -362,8 +366,8 @@ authForm?.addEventListener("submit", async (event) => {
   const newPassword = newPasswordInput?.value || "";
 
   if (newPassword) {
-    if (newPassword.length < 8) {
-      setAuthStatus("Le nouveau mot de passe doit contenir au moins 8 caractères.");
+    if (!isStrongPassword(newPassword)) {
+      setAuthStatus("Le nouveau mot de passe doit contenir au moins 8 caractères et 1 chiffre.");
       return;
     }
 
