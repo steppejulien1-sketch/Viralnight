@@ -65,13 +65,17 @@ const demoSubmissions = [
   },
 ];
 
+const prospectStorageKey = "viralnight.prospects.v1";
+
 const state = {
   submissions: demoSubmissions.map((submission) => ({ ...submission })),
+  prospects: loadProspects(),
   establishment: "all",
   status: "all",
   source: "demo",
   session: null,
   loading: false,
+  prospectLoading: false,
 };
 
 const table = document.querySelector("[data-admin-table]");
@@ -89,6 +93,9 @@ const authStatus = document.querySelector("[data-admin-auth-status]");
 const clientDashboardForm = document.querySelector("[data-client-dashboard-form]");
 const createClientForm = document.querySelector("[data-create-client-form]");
 const clientAccessForm = document.querySelector("[data-client-access-form]");
+const prospectForm = document.querySelector("[data-prospect-form]");
+const prospectTable = document.querySelector("[data-prospect-table]");
+const prospectStatus = document.querySelector("[data-prospect-status]");
 const modeNotice = document.querySelector("[data-admin-mode]");
 const loginButton = authForm?.querySelector('button[type="submit"]');
 const numberFormatter = new Intl.NumberFormat("fr-FR");
@@ -147,6 +154,119 @@ function setModeNotice() {
     state.source === "supabase"
       ? "Mode réel : données chargées depuis Supabase."
       : "Mode démonstration : connecte-toi avec le compte admin ViralNight pour charger la vraie file.";
+}
+
+function loadProspects() {
+  try {
+    const raw = localStorage.getItem(prospectStorageKey);
+    const prospects = raw ? JSON.parse(raw) : [];
+    return Array.isArray(prospects) ? prospects : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveProspects() {
+  localStorage.setItem(prospectStorageKey, JSON.stringify(state.prospects.slice(0, 80)));
+}
+
+function cleanCell(value, fallback = "—") {
+  const text = String(value || "").trim();
+  return text ? escapeHtml(text) : `<span>${fallback}</span>`;
+}
+
+function socialCell(prospect, key) {
+  const social = prospect.socials?.[key];
+  const url = safeHttpUrl(social?.url);
+
+  if (!url) return "<span>Non trouvé</span>";
+
+  const confidence = social.confidence || "moyenne";
+  const followers = social.followers ? `${numberFormatter.format(social.followers)} abonnés` : "abonnés non publics";
+
+  return `
+    <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(new URL(url).hostname.replace(/^www\./, ""))}</a>
+    <small>Confiance ${escapeHtml(confidence)} · ${escapeHtml(followers)}</small>
+  `;
+}
+
+function linkCell(url, label = "Ouvrir") {
+  const safeUrl = safeHttpUrl(url);
+  return safeUrl ? `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>` : "<span>Non trouvé</span>";
+}
+
+function scoreClass(score) {
+  if (score >= 75) return "high";
+  if (score >= 50) return "medium";
+  return "low";
+}
+
+function capacitySourceCell(prospect) {
+  const url = safeHttpUrl(prospect.capacity_source);
+  const confidence = prospect.capacity_confidence ? `Confiance ${prospect.capacity_confidence}` : "";
+
+  if (url) {
+    return `
+      <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">Source</a>
+      ${confidence ? `<small>${escapeHtml(confidence)}</small>` : ""}
+    `;
+  }
+
+  return cleanCell(prospect.capacity_source || "Non trouvée");
+}
+
+function activityCell(prospect) {
+  const activity = prospect.social_activity || "faible";
+  const contentTypes = Array.isArray(prospect.content_types) && prospect.content_types.length > 0
+    ? prospect.content_types.join(", ")
+    : "contenu non confirmé";
+
+  return `${escapeHtml(activity)}<small>Contenu : ${escapeHtml(contentTypes)}</small>`;
+}
+
+function renderProspects() {
+  if (!prospectTable) return;
+
+  if (state.prospectLoading) {
+    prospectTable.innerHTML = '<tr><td colspan="19">Qualification en cours...</td></tr>';
+    return;
+  }
+
+  if (state.prospects.length === 0) {
+    prospectTable.innerHTML = '<tr><td colspan="19">Aucun club qualifié pour le moment.</td></tr>';
+    return;
+  }
+
+  prospectTable.innerHTML = state.prospects
+    .map((prospect) => {
+      const score = Number(prospect.score || 0);
+      const capacityMax = prospect.capacity_max ? `${numberFormatter.format(prospect.capacity_max)} pers.` : "Non trouvée";
+
+      return `
+        <tr>
+          <td><strong>${cleanCell(prospect.club)}</strong></td>
+          <td>${cleanCell(prospect.city)}</td>
+          <td>${cleanCell(prospect.address)}</td>
+          <td>${linkCell(prospect.site, "Site")}</td>
+          <td>${cleanCell(prospect.email, "Non trouvé")}</td>
+          <td>${cleanCell(prospect.phone, "Non trouvé")}</td>
+          <td>${socialCell(prospect, "instagram")}</td>
+          <td>${socialCell(prospect, "tiktok")}</td>
+          <td>${socialCell(prospect, "facebook")}</td>
+          <td>${socialCell(prospect, "linkedin")}</td>
+          <td>${socialCell(prospect, "youtube")}</td>
+          <td>${escapeHtml(capacityMax)}</td>
+          <td>${cleanCell(prospect.capacity_type || "inconnue")}</td>
+          <td>${capacitySourceCell(prospect)}</td>
+          <td>${cleanCell(prospect.size_category || "inconnue")}</td>
+          <td>${activityCell(prospect)}</td>
+          <td><span class="score-pill ${scoreClass(score)}">${score}/100</span></td>
+          <td>${cleanCell(prospect.message)}</td>
+          <td><span class="confidence-pill ${scoreClass(score)}">${cleanCell(prospect.status)}</span></td>
+        </tr>
+      `;
+    })
+    .join("");
 }
 
 function getFilteredSubmissions() {
@@ -247,6 +367,7 @@ function render() {
   updateMetrics();
   renderEstablishmentOptions();
   renderTable();
+  renderProspects();
 }
 
 function normalizeSubmission(row) {
@@ -309,6 +430,12 @@ function updateAuthUi() {
   if (clientDashboardForm) clientDashboardForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
   if (createClientForm) createClientForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
   if (clientAccessForm) clientAccessForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
+  if (prospectStatus) {
+    prospectStatus.textContent =
+      email.toLowerCase() === ADMIN_EMAIL
+        ? "Prêt : ajoute un club et son site officiel pour lancer la qualification."
+        : "Connecte-toi en admin pour lancer une qualification.";
+  }
 
   if (!isSupabaseConfigured || !supabase) {
     setAuthStatus("Supabase n'est pas configuré côté front : affichage en mode démonstration.");
@@ -535,6 +662,65 @@ clientAccessForm?.addEventListener("submit", async (event) => {
   }
 
   setAuthStatus(`Accès mis à jour : ${result.establishment_name} est maintenant ${result.subscription_status}.`);
+});
+
+prospectForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!state.session?.access_token) {
+    if (prospectStatus) prospectStatus.textContent = "Connecte-toi en admin avant de qualifier un club.";
+    return;
+  }
+
+  const formData = new FormData(prospectForm);
+  const payload = {
+    club: String(formData.get("club") || "").trim(),
+    city: String(formData.get("city") || "").trim(),
+    address: String(formData.get("address") || "").trim(),
+    site: String(formData.get("site") || "").trim(),
+    email: String(formData.get("email") || "").trim().toLowerCase(),
+    phone: String(formData.get("phone") || "").trim(),
+    socials: {
+      instagram: String(formData.get("instagram") || "").trim(),
+      tiktok: String(formData.get("tiktok") || "").trim(),
+      facebook: String(formData.get("facebook") || "").trim(),
+      linkedin: String(formData.get("linkedin") || "").trim(),
+      youtube: String(formData.get("youtube") || "").trim(),
+    },
+  };
+
+  if (!payload.club) {
+    if (prospectStatus) prospectStatus.textContent = "Ajoute au minimum le nom du club.";
+    return;
+  }
+
+  state.prospectLoading = true;
+  renderProspects();
+  if (prospectStatus) prospectStatus.textContent = "Qualification en cours : site, réseaux, capacité et score...";
+
+  const response = await fetch("/api/qualify-club", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${state.session.access_token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result = await response.json().catch(() => ({}));
+  state.prospectLoading = false;
+
+  if (!response.ok) {
+    renderProspects();
+    if (prospectStatus) prospectStatus.textContent = `Qualification impossible : ${result.error || response.statusText}`;
+    return;
+  }
+
+  state.prospects = [result.prospect, ...state.prospects].filter(Boolean);
+  saveProspects();
+  renderProspects();
+  prospectForm.reset();
+  if (prospectStatus) prospectStatus.textContent = `Club qualifié : ${result.prospect.club} · score ${result.prospect.score}/100.`;
 });
 
 establishmentFilter.addEventListener("change", () => {
