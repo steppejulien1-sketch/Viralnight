@@ -456,6 +456,7 @@ createClientForm?.addEventListener("submit", async (event) => {
     establishment_name: String(formData.get("establishment_name") || "").trim(),
     owner_email: String(formData.get("owner_email") || "").trim().toLowerCase(),
     city: String(formData.get("city") || "").trim(),
+    subscription_status: String(formData.get("subscription_status") || "essai").trim(),
     category: "club",
   };
 

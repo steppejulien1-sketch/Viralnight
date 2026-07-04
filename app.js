@@ -17,6 +17,10 @@ const checkinStats = document.querySelector("[data-checkin-stats]");
 const addRewardButton = document.querySelector("[data-add-reward]");
 const customRuleEditor = document.querySelector("[data-custom-rule-editor]");
 const addPointRuleButton = document.querySelector("[data-add-point-rule]");
+const dashboardContent = document.querySelectorAll("[data-dashboard-content]");
+const lockedDashboard = document.querySelector("[data-dashboard-locked]");
+const lockedTitle = document.querySelector("[data-locked-title]");
+const lockedMessage = document.querySelector("[data-locked-message]");
 const INITIAL_REWARD_COUNT = 5;
 const LOCAL_REWARD_PREFIX = "local-reward-";
 const LOCAL_POINT_RULE_PREFIX = "local-point-rule-";
@@ -94,6 +98,61 @@ function updateAuthUi(session) {
   const isConnected = Boolean(session);
   if (authForm) authForm.hidden = isConnected;
   if (signOutButton) signOutButton.hidden = !isConnected;
+}
+
+function hasDashboardAccess(data) {
+  if (data.source !== "supabase") return false;
+  if (data.reason === "admin_client") return true;
+  return data.establishment?.subscription_status === "actif";
+}
+
+function getLockedCopy(data) {
+  if (!data.session) {
+    return {
+      title: "Dashboard réservé aux clients actifs.",
+      message: "Connectez-vous avec l'email du club pour vérifier l'accès.",
+    };
+  }
+
+  if (data.reason === "admin_select_client") {
+    return {
+      title: "Sélectionne un client depuis l'admin.",
+      message: "Ajoute l'email du client dans l'URL ou ouvre son dashboard depuis l'espace admin.",
+    };
+  }
+
+  const status = data.establishment?.subscription_status || "essai";
+
+  if (status === "suspendu") {
+    return {
+      title: "Accès suspendu.",
+      message: "Ce dashboard est désactivé. Contacte ViralNight pour réactiver l'établissement.",
+    };
+  }
+
+  return {
+    title: "Dashboard réservé aux clients actifs.",
+    message: "L'espace est prêt, mais il s'ouvre seulement quand l'abonnement du club est actif.",
+  };
+}
+
+function renderAccessGate(data) {
+  const allowed = hasDashboardAccess(data);
+  dashboardContent.forEach((section) => {
+    section.hidden = !allowed;
+  });
+
+  if (lockedDashboard) {
+    lockedDashboard.hidden = allowed;
+  }
+
+  if (!allowed) {
+    const copy = getLockedCopy(data);
+    if (lockedTitle) lockedTitle.textContent = copy.title;
+    if (lockedMessage) lockedMessage.textContent = copy.message;
+  }
+
+  return allowed;
 }
 
 function getValidatedSubmissions(submissions) {
@@ -649,6 +708,7 @@ function renderDashboard(data) {
   renderDataSource(data);
   updateAuthUi(data.session);
   renderEstablishment(data);
+  if (!renderAccessGate(data)) return;
   renderOverview(data);
   renderPointRules(data);
   renderRewardEditor(data);

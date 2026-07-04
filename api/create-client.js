@@ -85,6 +85,8 @@ export default async function handler(request, response) {
   const ownerEmail = String(payload.owner_email || "").trim().toLowerCase();
   const city = String(payload.city || "").trim();
   const category = String(payload.category || "club").trim();
+  const allowedStatuses = new Set(["actif", "essai", "suspendu"]);
+  const subscriptionStatus = allowedStatuses.has(payload.subscription_status) ? payload.subscription_status : "essai";
 
   if (!establishmentName || !ownerEmail) {
     return json(response, { error: "Club name and email are required" }, 400);
@@ -129,7 +131,7 @@ export default async function handler(request, response) {
       name: establishmentName,
       city: city || null,
       category,
-      subscription_status: "essai",
+      subscription_status: subscriptionStatus,
     })
     .select("id, name")
     .single();
