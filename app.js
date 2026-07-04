@@ -123,9 +123,7 @@ function showPasswordUpdateForm() {
 }
 
 function hasDashboardAccess(data) {
-  if (data.source !== "supabase") return false;
-  if (data.reason === "admin_client") return true;
-  return data.establishment?.subscription_status === "actif";
+  return true;
 }
 
 function getLockedCopy(data) {
