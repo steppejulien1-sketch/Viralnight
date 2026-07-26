@@ -41,6 +41,7 @@ function getPayload(body) {
   const payload = {
     club: cleanText(body.club),
     email: cleanText(body.email).toLowerCase(),
+    phone: cleanText(body.phone),
   };
 
   if (!payload.club) {
@@ -49,6 +50,13 @@ function getPayload(body) {
 
   if (!emailRegex.test(payload.email)) {
     throw new Error("L'adresse email est invalide.");
+  }
+
+  // La policy RLS demo_requests_public_insert exige un phone non
+  // vide. On refuse ici plutot que de laisser Supabase renvoyer
+  // une erreur illisible.
+  if (!payload.phone) {
+    throw new Error("Le numéro de téléphone est obligatoire.");
   }
 
   return payload;
@@ -90,6 +98,7 @@ async function sendNotificationEmail(payload) {
 
   const safeClub = escapeHtml(payload.club);
   const safeEmail = escapeHtml(payload.email);
+  const safePhone = escapeHtml(payload.phone);
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -105,11 +114,13 @@ async function sendNotificationEmail(payload) {
         <h2>Nouvelle demande de démo ViralNight</h2>
         <p><strong>Club :</strong> ${safeClub}</p>
         <p><strong>Email :</strong> ${safeEmail}</p>
+        <p><strong>Téléphone :</strong> ${safePhone}</p>
       `,
       text: [
         "Nouvelle demande de démo ViralNight",
         `Club : ${payload.club}`,
         `Email : ${payload.email}`,
+        `Téléphone : ${payload.phone}`,
       ].join("\n"),
     }),
   });

@@ -35,41 +35,66 @@ Le texte sous le titre explique :
 ## Preferences utilisateur
 
 - Ne pas remettre de grosse banniere en haut.
-- Garder la navigation par pages sur le cote gauche.
-- Ne pas permettre de scroller tout le site d'un coup comme une landing classique.
-- Navigation page par page via les onglets lateraux.
-- Le bloc contact ne doit pas rester fixe quand on descend.
 - Corriger les fautes d'orthographe.
 - Eviter les mots flous ou trop jargon si l'utilisateur ne les comprend pas.
 - Eviter "Campagnes" et "Nouvelle campagne" dans le SaaS : ca ne sert a rien pour lui.
 - Garder le site tres professionnel.
 
+### Decision du 26/07/2026 : la landing passe en scroll classique
+
+Ancienne regle, maintenant ABANDONNEE pour la landing :
+
+- ~~Garder la navigation par pages sur le cote gauche.~~
+- ~~Ne pas permettre de scroller tout le site d'un coup comme une landing classique.~~
+- ~~Navigation page par page via les onglets lateraux.~~
+
+La refonte visuelle (dossier `05-refonte-wetransfer-julien`) est construite autour d'une
+landing scrollable : nav flottante en haut, sections empilees, apparitions au scroll,
+manifesto qui s'allume mot par mot. Le page-deck etait incompatible avec ce design.
+Julien a tranche en faveur du design de la refonte.
+
+Cette decision ne concerne QUE `index.html`. Le dashboard (`app.html`) garde sa
+navigation par onglets.
+
 ## Landing page actuelle
 
-Fichier principal :
+Refondue le 26/07/2026 sur le design system de `05-refonte-wetransfer-julien`.
+
+Fichiers :
 
 - `index.html`
-- `styles.css`
-- `script.js`
+- `base.css` : polices Inter locales + reset (inchange)
+- `theme.css` : design system partage — tokens, boutons, cartes, champs, halos
+- `theme.js` : runtime partage — apparitions au scroll, spotlight des cartes
+- `landing.css` : styles propres a la landing
+- `landing.js` : JS propre a la landing
 
-Sections :
+`styles.css` et `script.js` sont les fichiers de l'ANCIENNE landing page-deck.
+Plus rien ne les charge. A supprimer quand la refonte sera validee.
 
-- Accueil
-- Parcours
-- Points
-- Pilotage
-- Impact
+Sections, dans l'ordre de scroll :
+
+- Hero (avec maquette animee du dashboard)
+- Bandeau defilant
+- Manifesto
+- Fonctionnement (4 etapes)
+- Points & bareme
+- Simulateur d'impact
+- Bande controle
+- FAQ
 - Contact
 
 Elements importants :
 
-- Logo/badge ViralNight visible sur l'accueil.
-- Titre hero valide.
-- Carte produit a droite compacte sur desktop.
-- Carte produit cachee sur tablette/mobile pour eviter les bugs.
-- Navigation laterale gauche.
-- Pas de scroll global du site.
-- CSS charge avec `styles.css?v=5` pour forcer le navigateur a prendre la derniere version.
+- Titre hero valide, conserve mot pour mot.
+- Le bareme affiche vient de `dashboardData.js` (`DEFAULT_POINT_RULES`), pas de valeurs
+  ecrites en dur dans le HTML. Changer un point la-bas le change sur toute la landing.
+- Le formulaire de contact demande club + email + telephone. Les trois sont obligatoires
+  parce que la policy RLS `demo_requests_public_insert` les exige.
+- Les etats caches des animations sont scopes sous `.vn-js` / `.vn-reveal-ready` : si le JS
+  ne tourne pas, la page reste entierement lisible. Ne jamais mettre ces classes en dur
+  dans le HTML.
+- Plus de `?v=` sur les CSS : Vite gere le cache-busting au build.
 
 ## SaaS actuel
 

@@ -1,23 +1,61 @@
+/* ============================================================
+   VIRALNIGHT OS — Dashboard club
+   ------------------------------------------------------------
+   Se charge APRES theme.css, qui fournit le design system
+   « Raycast — midnight command center, coral neon ».
+
+   Les variables ci-dessous ne sont plus des couleurs autonomes :
+   ce sont des ALIAS vers les tokens de theme.css. L'ancienne
+   palette teal / violet / amber a ete retiree — elle ne
+   coexistait pas avec le design system.
+
+   Attention aux collisions de noms avec theme.css :
+   - `--ink` designe une SURFACE dans theme.css et designait le
+     TEXTE ici. La variable locale a ete renommee `--app-ink`.
+   - `--coral` appartient a theme.css. Ne pas le redefinir ici,
+     et ne pas s'en servir comme couleur fonctionnelle.
+   ============================================================ */
+
 :root {
-  --bg: #f5f7fa;
-  --night: #06080d;
-  --workspace: #0a0d13;
-  --panel: #10141c;
-  --panel-2: #141923;
-  --panel-3: #0d1118;
-  --ink: #f5f7fa;
-  --muted: #8b95a7;
-  --muted-2: rgba(245, 247, 250, 0.68);
-  --line: rgba(148, 163, 184, 0.16);
-  --line-strong: rgba(148, 163, 184, 0.26);
-  --teal: #00d6c9;
-  --teal-soft: rgba(0, 214, 201, 0.12);
-  --violet: #7c4dff;
-  --amber: #ffb357;
-  --coral: #ff624f;
-  --radius: 10px;
+  /* --- Surfaces, du fond vers l'avant-plan --- */
+  --night: var(--void);
+  --workspace: var(--void);
+  --panel: var(--ink);
+  --panel-2: var(--obsidian);
+  --panel-3: #060709;
+
+  /* --- Texte --- */
+  --app-ink: var(--white);
+  --muted: var(--smoke);
+  --muted-2: var(--ash);
+
+  /* --- Filets --- */
+  --line: var(--hairline-soft);
+  --line-strong: var(--hairline);
+
+  /* --- Accent unique.
+         `--teal` etait l'accent primaire de l'ancien dashboard.
+         Il pointe maintenant sur Mist : c'est la regle du design
+         system, aucun bouton ni etat actif chromatique. --- */
+  --teal: var(--mist);
+  --teal-soft: rgba(255, 255, 255, 0.08);
+  --violet: #4a4b4e;
+
+  /* --- Couleurs de STATUT.
+         Elles restent teintees parce qu'elles portent du sens
+         (a honorer / en attente / refuse) et qu'un dashboard
+         monochrome deviendrait illisible. Volontairement
+         desaturees pour ne pas concurrencer le corail. --- */
+  --amber: #d9a15f;
+  --danger: #ff8d8d;
+
+  /* --- Formes --- */
+  --radius: var(--r-btn);
   --radius-sm: 8px;
-  --shadow: 0 12px 32px rgba(0, 0, 0, 0.22), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+
+  /* Elevation : on adopte le stack "keyboard key" du design
+     system a la place de l'ancienne drop-shadow. */
+  --shadow: var(--key-shadow);
 }
 
 html {
@@ -29,7 +67,7 @@ html {
 }
 
 body {
-  color: var(--ink);
+  color: var(--app-ink);
   background: var(--night);
 }
 
@@ -52,8 +90,8 @@ a {
   gap: 32px;
   height: 100svh;
   padding: 24px 18px;
-  background: #06080d;
-  border-right: 1px solid rgba(148, 163, 184, 0.12);
+  background: var(--void);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .brand {
@@ -62,7 +100,7 @@ a {
   gap: 12px;
   min-height: 44px;
   padding: 0 6px;
-  font-weight: 950;
+  font-weight: 600;
   letter-spacing: 0;
 }
 
@@ -86,14 +124,14 @@ a {
   color: var(--muted);
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
-  font-weight: 850;
+  font-weight: 540;
 }
 
 .app-nav a span {
   width: 34px;
-  color: rgba(245, 247, 250, 0.42);
+  color: rgba(255, 255, 255, 0.42);
   font-size: 0.76rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .app-nav a::before {
@@ -109,9 +147,9 @@ a {
 .app-nav a:hover,
 .app-nav a:focus-visible,
 .app-nav a.is-active {
-  color: var(--ink);
-  background: rgba(245, 247, 250, 0.055);
-  border-color: rgba(148, 163, 184, 0.16);
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.16);
   outline: none;
 }
 
@@ -124,7 +162,7 @@ a {
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(245, 247, 250, 0.045);
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .sidebar-note span,
@@ -142,8 +180,8 @@ a {
   min-width: 0;
   padding: 24px;
   background:
-    linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
     linear-gradient(180deg, var(--workspace), var(--night) 78%);
   background-size: 34px 34px, 34px 34px, auto;
 }
@@ -158,8 +196,8 @@ a {
   gap: 24px;
   min-height: 66px;
   padding: 8px 0 12px;
-  background: rgba(10, 13, 19, 0.92);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(4, 5, 6, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(18px);
 }
 
@@ -172,7 +210,7 @@ a {
   margin: 0 0 6px;
   color: var(--amber);
   font-size: 0.74rem;
-  font-weight: 950;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -194,12 +232,12 @@ a {
   min-height: 24px;
   margin-top: 8px;
   padding: 0 9px;
-  color: #9ff7ee;
-  background: rgba(0, 214, 201, 0.1);
-  border: 1px solid rgba(0, 214, 201, 0.2);
+  color: var(--mist);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
   font-size: 0.74rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .topbar-actions {
@@ -213,7 +251,7 @@ a {
   margin: 0;
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 520;
 }
 
 .data-status[data-state="connected"] {
@@ -225,7 +263,7 @@ a {
 }
 
 .data-status[data-state="error"] {
-  color: #ff8d8d;
+  color: var(--danger);
 }
 
 .access-menu {
@@ -237,12 +275,12 @@ a {
   align-items: center;
   min-height: 38px;
   padding: 0 14px;
-  color: var(--ink);
-  background: rgba(245, 247, 250, 0.07);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   cursor: pointer;
-  font-weight: 900;
+  font-weight: 560;
   list-style: none;
 }
 
@@ -251,7 +289,7 @@ a {
 }
 
 .access-menu[open] summary {
-  background: rgba(245, 247, 250, 0.11);
+  background: rgba(255, 255, 255, 0.11);
 }
 
 .access-panel {
@@ -265,7 +303,7 @@ a {
   padding: 14px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  background: rgba(13, 17, 24, 0.98);
+  background: rgba(7, 8, 10, 0.98);
   box-shadow: var(--shadow);
 }
 
@@ -282,9 +320,9 @@ a {
 }
 
 .auth-form-title {
-  color: var(--ink);
+  color: var(--app-ink);
   font-size: 0.88rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .auth-feedback {
@@ -292,7 +330,7 @@ a {
   margin: 0;
   color: var(--muted);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 520;
   line-height: 1.35;
 }
 
@@ -309,7 +347,7 @@ a {
 }
 
 .auth-feedback[data-state="error"] {
-  color: #ff8d8d;
+  color: var(--danger);
 }
 
 select,
@@ -318,21 +356,21 @@ input {
   min-width: 0;
   min-height: 40px;
   padding: 0 12px;
-  color: var(--ink);
-  background: rgba(245, 247, 250, 0.07);
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.07);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   color-scheme: dark;
 }
 
 input::placeholder {
-  color: rgba(245, 247, 250, 0.38);
+  color: rgba(255, 255, 255, 0.38);
 }
 
 select:focus,
 input:focus {
-  border-color: rgba(0, 214, 201, 0.56);
-  box-shadow: 0 0 0 3px rgba(0, 214, 201, 0.12);
+  border-color: rgba(255, 255, 255, 0.56);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
   outline: none;
 }
 
@@ -344,19 +382,19 @@ input:focus {
   padding: 0 12px;
   border: 1px solid transparent;
   border-radius: 999px;
-  font-weight: 900;
+  font-weight: 560;
 }
 
 .button-primary {
-  color: #041011;
-  background: linear-gradient(135deg, #45f4e5, #9fe9ff);
+  color: #2a2b2c;
+  background: linear-gradient(135deg, #f2f2f2, #c9cacc);
 }
 
 .button-secondary,
 .button-ghost {
-  color: var(--ink);
-  background: rgba(245, 247, 250, 0.07);
-  border-color: rgba(148, 163, 184, 0.18);
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .button-ghost {
@@ -368,8 +406,8 @@ input:focus {
 .button-secondary:focus-visible,
 .button-ghost:hover,
 .button-ghost:focus-visible {
-  background: rgba(245, 247, 250, 0.11);
-  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.28);
   outline: none;
 }
 
@@ -385,7 +423,7 @@ input:focus {
 .view + .view {
   margin-top: 28px;
   padding-top: 24px;
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .locked-dashboard {
@@ -397,8 +435,8 @@ input:focus {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
-    radial-gradient(circle at 85% 0%, rgba(255, 179, 87, 0.12), transparent 30%),
-    linear-gradient(180deg, rgba(20, 25, 35, 0.98), rgba(13, 17, 24, 0.98));
+    radial-gradient(circle at 85% 0%, rgba(217, 161, 95, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(17, 18, 20, 0.98), rgba(7, 8, 10, 0.98));
   box-shadow: var(--shadow);
 }
 
@@ -423,11 +461,11 @@ input:focus {
   align-items: center;
   padding: 0 10px;
   color: var(--amber);
-  background: rgba(255, 179, 87, 0.1);
-  border: 1px solid rgba(255, 179, 87, 0.2);
+  background: rgba(217, 161, 95, 0.1);
+  border: 1px solid rgba(217, 161, 95, 0.2);
   border-radius: 999px;
   font-size: 0.78rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .locked-login-button {
@@ -484,7 +522,7 @@ input:focus {
 .checkin-stats-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: linear-gradient(180deg, rgba(20, 25, 35, 0.98), rgba(13, 17, 24, 0.98));
+  background: linear-gradient(180deg, rgba(17, 18, 20, 0.98), rgba(7, 8, 10, 0.98));
   box-shadow: var(--shadow);
 }
 
@@ -506,7 +544,7 @@ input:focus {
   right: 18px;
   left: 18px;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 179, 87, 0.78), transparent);
+  background: linear-gradient(90deg, transparent, rgba(217, 161, 95, 0.78), transparent);
 }
 
 .cost-card::before {
@@ -517,8 +555,8 @@ input:focus {
   min-height: 248px;
   padding: 26px;
   background:
-    radial-gradient(circle at 72% 12%, rgba(255, 179, 87, 0.14), transparent 32%),
-    linear-gradient(180deg, #151c29, #101722);
+    radial-gradient(circle at 72% 12%, rgba(217, 161, 95, 0.14), transparent 32%),
+    linear-gradient(180deg, #0b0d12, var(--ink));
 }
 
 .metric-card span,
@@ -530,9 +568,9 @@ input:focus {
 .metric-card strong {
   display: block;
   margin: 10px 0;
-  color: var(--ink);
+  color: var(--app-ink);
   font-size: clamp(2rem, 4vw, 3.05rem);
-  font-weight: 950;
+  font-weight: 600;
   letter-spacing: 0;
 }
 
@@ -554,7 +592,7 @@ input:focus {
   width: 100%;
   height: 35%;
   border-radius: 999px 999px 4px 4px;
-  background: linear-gradient(180deg, rgba(0, 214, 201, 0.9), rgba(124, 77, 255, 0.28));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(150, 152, 156, 0.28));
 }
 
 .sparkline i:nth-child(2) { height: 48%; }
@@ -610,13 +648,13 @@ input:focus {
 }
 
 .grid-line {
-  stroke: rgba(148, 163, 184, 0.14);
+  stroke: rgba(255, 255, 255, 0.14);
   stroke-width: 1;
 }
 
 .chart-bar {
   fill: url(#reachGradient);
-  filter: drop-shadow(0 12px 18px rgba(0, 214, 201, 0.1));
+  filter: drop-shadow(0 12px 18px rgba(255, 255, 255, 0.1));
 }
 
 .chart-bar-muted {
@@ -624,27 +662,27 @@ input:focus {
 }
 
 .chart-bar-strong {
-  filter: drop-shadow(0 16px 22px rgba(0, 214, 201, 0.2));
+  filter: drop-shadow(0 16px 22px rgba(255, 255, 255, 0.2));
 }
 
 .chart-label,
 .chart-value {
   fill: var(--muted);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 540;
 }
 
 .chart-label-left {
-  fill: rgba(245, 247, 250, 0.62);
+  fill: rgba(255, 255, 255, 0.62);
 }
 
 .chart-value {
-  fill: var(--ink);
-  font-weight: 950;
+  fill: var(--app-ink);
+  font-weight: 600;
 }
 
 .chart-track {
-  fill: rgba(245, 247, 250, 0.08);
+  fill: rgba(255, 255, 255, 0.08);
 }
 
 .reward-bar {
@@ -681,7 +719,7 @@ input:focus {
   align-items: center;
   justify-content: space-between;
   color: var(--muted-2);
-  font-weight: 850;
+  font-weight: 540;
 }
 
 .dot {
@@ -725,17 +763,17 @@ progress {
 }
 
 progress::-webkit-progress-bar {
-  background: rgba(245, 247, 250, 0.08);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 999px;
 }
 
 progress::-webkit-progress-value {
-  background: linear-gradient(90deg, var(--teal), rgba(124, 77, 255, 0.78));
+  background: linear-gradient(90deg, var(--teal), rgba(150, 152, 156, 0.78));
   border-radius: 999px;
 }
 
 progress::-moz-progress-bar {
-  background: linear-gradient(90deg, var(--teal), rgba(124, 77, 255, 0.78));
+  background: linear-gradient(90deg, var(--teal), rgba(150, 152, 156, 0.78));
   border-radius: 999px;
 }
 
@@ -750,23 +788,23 @@ progress::-moz-progress-bar {
   min-height: 62px;
   padding: 12px 14px;
   text-align: left;
-  color: var(--ink);
-  background: rgba(245, 247, 250, 0.055);
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.055);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  font-weight: 900;
+  font-weight: 560;
 }
 
 .task-list button span {
   font-size: 0.74rem;
-  font-weight: 950;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
 .task-list button:hover,
 .task-list button:focus-visible {
-  border-color: rgba(0, 214, 201, 0.38);
-  background: rgba(0, 214, 201, 0.08);
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.08);
   outline: none;
 }
 
@@ -786,9 +824,9 @@ progress::-moz-progress-bar {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: rgba(245, 247, 250, 0.045);
+  background: rgba(255, 255, 255, 0.045);
   color: var(--muted-2);
-  font-weight: 850;
+  font-weight: 540;
 }
 
 .custom-rule-editor {
@@ -808,11 +846,11 @@ progress::-moz-progress-bar {
   min-height: 40px;
   width: fit-content;
   padding: 0 14px;
-  color: #051314;
-  background: linear-gradient(135deg, #45f4e5, #9fe9ff);
+  color: #2a2b2c;
+  background: linear-gradient(135deg, #f2f2f2, #c9cacc);
   border: 0;
   border-radius: 999px;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .rule-add-button {
@@ -830,12 +868,12 @@ progress::-moz-progress-bar {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: rgba(245, 247, 250, 0.055);
+  background: rgba(255, 255, 255, 0.055);
 }
 
 .points-rate .story-rate-card {
-  border-color: rgba(0, 214, 201, 0.2);
-  background: linear-gradient(135deg, rgba(0, 214, 201, 0.1), rgba(124, 77, 255, 0.1));
+  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(150, 152, 156, 0.1));
 }
 
 .points-rate strong {
@@ -861,7 +899,7 @@ progress::-moz-progress-bar {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: rgba(245, 247, 250, 0.045);
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .reward-row label {
@@ -869,7 +907,7 @@ progress::-moz-progress-bar {
   gap: 7px;
   color: var(--muted);
   font-size: 0.8rem;
-  font-weight: 850;
+  font-weight: 540;
 }
 
 .reward-preview {
@@ -883,7 +921,7 @@ progress::-moz-progress-bar {
   padding: 15px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: rgba(245, 247, 250, 0.055);
+  background: rgba(255, 255, 255, 0.055);
 }
 
 .reward-preview strong,
@@ -895,7 +933,7 @@ progress::-moz-progress-bar {
 .reward-preview span {
   margin-top: 8px;
   color: var(--amber);
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .reward-preview small {
@@ -924,7 +962,7 @@ progress::-moz-progress-bar {
   width: 220px;
   height: 220px;
   padding: 16px;
-  border: 1px solid rgba(245, 247, 250, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius);
   background: #ffffff;
   box-shadow: 0 18px 38px rgba(0, 0, 0, 0.3);
@@ -962,7 +1000,7 @@ progress::-moz-progress-bar {
   padding: 15px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: rgba(245, 247, 250, 0.055);
+  background: rgba(255, 255, 255, 0.055);
 }
 
 .scan-list strong,
@@ -991,7 +1029,7 @@ progress::-moz-progress-bar {
   min-height: 190px;
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: 540;
 }
 
 .hour-bars span::before {
@@ -1001,7 +1039,7 @@ progress::-moz-progress-bar {
   width: 100%;
   height: var(--h);
   border-radius: 999px 999px 6px 6px;
-  background: linear-gradient(180deg, var(--teal), rgba(124, 77, 255, 0.35));
+  background: linear-gradient(180deg, var(--teal), rgba(150, 152, 156, 0.35));
 }
 
 .hour-bars b {
@@ -1021,7 +1059,7 @@ progress::-moz-progress-bar {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: rgba(245, 247, 250, 0.045);
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .timeline-list small {
@@ -1031,10 +1069,10 @@ progress::-moz-progress-bar {
 .empty-state {
   padding: 18px;
   color: var(--muted);
-  background: rgba(245, 247, 250, 0.055);
+  background: rgba(255, 255, 255, 0.055);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  font-weight: 800;
+  font-weight: 520;
 }
 
 @media (max-width: 1280px) {
