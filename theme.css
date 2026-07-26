@@ -1,0 +1,724 @@
+/* ============================================================
+   VIRALNIGHT — Design system
+   « Raycast — midnight command center · coral neon »
+   ------------------------------------------------------------
+   Couche partagee par index.html, app.html et admin.html.
+   Se charge APRES base.css (fonts + reset) et AVANT le CSS
+   specifique de chaque page.
+
+   Regles a ne pas casser :
+   - Le corail (--coral) est une couleur de MARQUE, pas une
+     couleur fonctionnelle. Autorise : logo, losange d'eyebrow,
+     dot "live", atmosphere du hero. Interdit : CTA, texte
+     courant, icones, bordures.
+   - Aucun bouton chromatique. Le CTA primaire est toujours
+     Mist (--mist) sur fond sombre.
+   - Pas de drop-shadow sur les cartes : l'elevation vient du
+     stack "keyboard key" (--key-shadow / --key-shadow-strong).
+   - Inter en graisse moderee (460-560, jamais 700), tracking
+     legerement positif sur les grands titres.
+   ============================================================ */
+
+:root {
+  /* --- Neutres, du plus sombre au plus clair --- */
+  --void: #040506; /* fond de page, unique - jamais de section claire */
+  --ink: #07080a; /* cartes, panels */
+  --obsidian: #111214; /* puits, pastilles d'icone */
+  --graphite: #1b1c1e; /* badges */
+  --slate: #2f3031;
+  --iron: #454647;
+  --smoke: #6a6b6c; /* texte tertiaire */
+  --ash: #9c9c9d; /* texte courant */
+  --mist: #e6e6e6; /* boutons primaires */
+  --white: #ffffff; /* titres, valeurs chiffrees */
+
+  /* --- Marque + atmosphere --- */
+  --coral: #ff6363; /* accent unique, strictement rationne */
+  --ember: #452324; /* surfaces teintees chaudes */
+  --sky: #63a1ff; /* atmosphere hero uniquement */
+  --cobalt: #143ca3; /* atmosphere hero uniquement */
+  --deep: #02193b;
+
+  /* --- Filets --- */
+  --hairline: rgba(255, 255, 255, 0.09);
+  --hairline-soft: rgba(255, 255, 255, 0.06);
+
+  /* --- Typo --- */
+  /* Inter est charge en local par base.css.
+     JetBrains Mono n'est PAS embarque : fallback mono systeme.
+     Pour l'ajouter, deposer le woff2 dans assets/fonts/ et
+     declarer un @font-face dans base.css. */
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* --- Elevation "keyboard key" --- */
+  --key-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px var(--hairline),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  --key-shadow-strong: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+
+  /* --- Rayons --- */
+  --r-btn: 9px;
+  --r-card: 16px;
+  --r-lg: 20px;
+  --r-xl: 24px;
+  --r-pill: 999px;
+
+  /* --- Mouvement --- */
+  --ease: cubic-bezier(0.22, 0.68, 0.34, 1);
+
+  /* --- Layout --- */
+  --wrap: 1160px;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  background: var(--void);
+  color: var(--ash);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "calt", "kern", "liga";
+}
+
+::selection {
+  background: rgba(255, 99, 99, 0.28);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--void);
+}
+::-webkit-scrollbar-thumb {
+  background: #232426;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--void);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #333436;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(230, 230, 230, 0.6);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.wrap {
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+/* Grain de film. A poser en premier enfant de <body> :
+   <div class="noise" aria-hidden="true"></div> */
+.noise {
+  position: fixed;
+  inset: -50%;
+  z-index: 120;
+  pointer-events: none;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   Typographie
+   ============================================================ */
+
+h1,
+h2,
+h3 {
+  color: var(--white);
+  text-wrap: balance;
+}
+
+.h-display {
+  font-size: clamp(40px, 6.4vw, 68px);
+  font-weight: 460;
+  line-height: 1.06;
+  letter-spacing: 0.004em;
+}
+
+.h-section {
+  font-size: clamp(30px, 4.2vw, 46px);
+  font-weight: 480;
+  line-height: 1.1;
+  letter-spacing: 0.003em;
+}
+
+.lead {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--ash);
+  max-width: 56ch;
+  text-wrap: pretty;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Micro-label technique : le seul endroit ou on met du mono
+   uppercase espace. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--smoke);
+}
+
+/* Losange corail : une des rares utilisations autorisees de
+   l'accent de marque. */
+.eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--coral);
+  transform: rotate(45deg);
+  border-radius: 1.5px;
+  flex: none;
+}
+
+.eyebrow--bare::before {
+  display: none;
+}
+
+/* ============================================================
+   Boutons
+   ============================================================ */
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 13px 20px;
+  border-radius: var(--r-btn);
+  font-size: 14px;
+  font-weight: 520;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.35s var(--ease), background 0.25s, box-shadow 0.35s var(--ease), color 0.25s;
+}
+
+/* Fleche qui avance au survol : <span class="arr">-></span> */
+.btn .arr {
+  transition: transform 0.35s var(--ease);
+}
+.btn:hover .arr {
+  transform: translateX(3px);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* CTA primaire. Toujours Mist, jamais chromatique. */
+.btn-mist {
+  background: var(--mist);
+  color: #2a2b2c;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+/* Reflet qui balaye le bouton au survol */
+.btn-mist::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -70%;
+  width: 45%;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.85), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.6s var(--ease);
+}
+.btn-mist:hover {
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5), inset 0 1px 0 #fff;
+}
+.btn-mist:hover::after {
+  left: 130%;
+}
+.btn-mist:active {
+  transform: translateY(0) scale(0.985);
+}
+
+/* CTA secondaire */
+.btn-ghost {
+  color: var(--mist);
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.btn-ghost:active {
+  transform: translateY(0);
+}
+
+.btn-sm {
+  padding: 9px 14px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* ============================================================
+   Surfaces
+   ============================================================ */
+
+.card {
+  padding: 26px 24px 28px;
+  border-radius: var(--r-card);
+  background: var(--ink);
+  box-shadow: var(--key-shadow);
+}
+
+.card-lg {
+  border-radius: var(--r-lg);
+  background: linear-gradient(160deg, #0a0d13, var(--ink) 55%);
+  box-shadow: var(--key-shadow);
+  overflow: hidden;
+}
+
+.card-xl {
+  border-radius: var(--r-xl);
+  background: linear-gradient(155deg, #0b0d12, var(--ink) 55%);
+  box-shadow: var(--key-shadow-strong);
+  overflow: hidden;
+}
+
+/* Carte qui reagit au survol */
+.card-hover {
+  transition: transform 0.45s var(--ease), box-shadow 0.45s;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--key-shadow-strong);
+}
+
+/* Puits : bloc en creux dans une carte (note, stat secondaire) */
+.well {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.024);
+  box-shadow: inset 0 0 0 1px var(--hairline-soft), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Pastille ronde pour une icone. SVG en stroke, jamais en fill. */
+.icon-pill {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--obsidian);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 1px var(--hairline-soft);
+}
+.icon-pill svg {
+  width: 19px;
+  height: 19px;
+  stroke: var(--mist);
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: var(--r-pill);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash);
+  background: var(--graphite);
+  box-shadow: inset 0 0 0 1px var(--hairline-soft);
+}
+
+/* Dot "live" : usage corail autorise. */
+.dot-live {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--coral);
+  flex: none;
+  animation: vn-pulse 2.4s ease-in-out infinite;
+}
+@keyframes vn-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Spotlight qui suit la souris. Necessite le JS de theme.js
+   (met a jour --mx / --my). Sans JS, la carte reste inerte. */
+.spot {
+  position: relative;
+}
+.spot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.06),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 0.45s;
+}
+.spot:hover::before {
+  opacity: 1;
+}
+
+/* ============================================================
+   Formulaires
+   ============================================================ */
+
+.f-field {
+  margin-bottom: 18px;
+}
+
+.f-field label {
+  display: block;
+  margin-bottom: 9px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--smoke);
+}
+
+.f-field input,
+.f-field select,
+.f-field textarea {
+  width: 100%;
+  padding: 15px 17px;
+  border: 0;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.038);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09), inset 0 2px 6px rgba(0, 0, 0, 0.3);
+  color: var(--white);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  transition: box-shadow 0.3s, background 0.3s;
+}
+
+.f-field textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.f-field select {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%239c9c9d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 12px;
+  padding-right: 40px;
+}
+
+.f-field input::placeholder,
+.f-field textarea::placeholder {
+  color: #5b5c5f;
+}
+
+.f-field input:focus,
+.f-field select:focus,
+.f-field textarea:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), inset 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Etat erreur : on assume le rouge ici, c'est fonctionnel et
+   distinct du corail de marque. */
+.f-field[data-error] input,
+.f-field[data-error] select,
+.f-field[data-error] textarea {
+  box-shadow: inset 0 0 0 1px rgba(255, 120, 120, 0.5), inset 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.f-error {
+  display: block;
+  margin-top: 7px;
+  font-size: 12.5px;
+  color: #ff9c9c;
+  letter-spacing: 0;
+  text-transform: none;
+  font-family: var(--font-sans);
+}
+
+.f-note {
+  margin-top: 14px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  color: #55565a;
+}
+
+/* ============================================================
+   Sections & reveals
+   ============================================================ */
+
+.section {
+  padding: 120px 0;
+}
+
+.section-head {
+  max-width: 720px;
+  margin-bottom: 64px;
+}
+.section-head h2 {
+  margin-top: 20px;
+}
+.section-head .lead {
+  margin-top: 18px;
+}
+
+/* Apparition au scroll.
+   IMPORTANT : l'etat cache est scope sous .vn-reveal-ready, une
+   classe que theme.js pose sur <html> uniquement quand il a
+   reussi a armer son IntersectionObserver.
+   Consequence : pas de JS, JS en erreur, JS pas encore charge
+   => le contenu est simplement visible. On ne peut jamais se
+   retrouver avec une page blanche a cause d'une animation. */
+.vn-reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+}
+.vn-reveal-ready [data-reveal].in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Meme chose, mais en cascade sur les enfants directs. */
+.vn-reveal-ready [data-reveal-group] > * {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+.vn-reveal-ready [data-reveal-group].in > * {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   Atmosphere
+   Halos flous du hero et du bloc contact. Toujours dans un
+   conteneur en position:relative + overflow:clip, et le parent
+   direct doit etre aria-hidden.
+   ============================================================ */
+
+.atmos {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: transform;
+}
+
+.blob-cobalt {
+  width: 1100px;
+  height: 640px;
+  top: -320px;
+  left: 50%;
+  margin-left: -550px;
+  background: radial-gradient(closest-side, rgba(20, 60, 163, 0.5), rgba(2, 25, 59, 0.15) 62%, transparent 75%);
+  animation: vn-drift-a 22s ease-in-out infinite alternate;
+}
+
+.blob-sky {
+  width: 520px;
+  height: 380px;
+  top: -140px;
+  left: 58%;
+  background: radial-gradient(closest-side, rgba(99, 161, 255, 0.22), transparent 70%);
+  animation: vn-drift-b 26s ease-in-out infinite alternate;
+}
+
+.bar-coral {
+  position: absolute;
+  height: 150px;
+  border-radius: var(--r-pill);
+  filter: blur(70px);
+  background: linear-gradient(90deg, rgba(255, 99, 99, 0.5), rgba(255, 99, 99, 0.06) 80%, transparent);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.bar-coral.b1 {
+  width: 760px;
+  top: 180px;
+  left: -220px;
+  transform: rotate(-22deg);
+  animation: vn-drift-c 19s ease-in-out infinite alternate;
+}
+.bar-coral.b2 {
+  width: 560px;
+  top: 430px;
+  right: -260px;
+  transform: rotate(-22deg) scaleX(-1);
+  opacity: 0.7;
+  animation: vn-drift-d 24s ease-in-out infinite alternate;
+}
+
+/* Fondu vers le fond en bas de la zone d'atmosphere */
+.atmos-fade {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 340px;
+  background: linear-gradient(180deg, transparent, var(--void) 82%);
+}
+
+@keyframes vn-drift-a {
+  from {
+    transform: translate3d(-40px, 0, 0);
+  }
+  to {
+    transform: translate3d(50px, 26px, 0);
+  }
+}
+@keyframes vn-drift-b {
+  from {
+    transform: translate3d(0, -12px, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-70px, 30px, 0) scale(1.12);
+  }
+}
+@keyframes vn-drift-c {
+  from {
+    transform: rotate(-22deg) translate3d(0, 0, 0);
+  }
+  to {
+    transform: rotate(-19deg) translate3d(90px, -24px, 0);
+  }
+}
+@keyframes vn-drift-d {
+  from {
+    transform: rotate(-22deg) scaleX(-1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: rotate(-25deg) scaleX(-1) translate3d(70px, 20px, 0);
+  }
+}
+
+/* ============================================================
+   Utilitaires
+   ============================================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.stack-8 > * + * {
+  margin-top: 8px;
+}
+.stack-16 > * + * {
+  margin-top: 16px;
+}
+.stack-24 > * + * {
+  margin-top: 24px;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .section {
+    padding: 90px 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    padding-inline: 20px;
+  }
+  .lead {
+    font-size: 16px;
+  }
+  .section-head {
+    margin-bottom: 44px;
+  }
+}
+
+/* ============================================================
+   Reduced motion
+   base.css neutralise deja les durees. Ici on s'assure surtout
+   que rien ne reste invisible.
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .vn-reveal-ready [data-reveal],
+  .vn-reveal-ready [data-reveal-group] > * {
+    opacity: 1;
+    transform: none;
+  }
+  .blob,
+  .bar-coral,
+  .dot-live {
+    animation: none;
+  }
+}
