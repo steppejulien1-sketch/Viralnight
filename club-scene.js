@@ -70,23 +70,14 @@ if (canvas && canvas.getContext) {
     r: ORB_RADIUS,
     ax: 0.06 + rand(i * 5.3 + 3) * 0.16,
     ay: 0.04 + rand(i * 9.1 + 4) * 0.12,
-    speed: 0.00035 + rand(i * 4.4 + 5) * 0.00055,
+    // Vitesse divisee par ~2.5 : deplacement plus lent, plus lisible.
+    speed: 0.00014 + rand(i * 4.4 + 5) * 0.00022,
     phase: rand(i * 6.6 + 6) * Math.PI * 2,
     tint: i % 3 === 0 ? IRIS : i % 5 === 0 ? MIST : CORAL,
   }));
 
-  // Poussiere en suspension : donne de la profondeur, comme des
-  // particules qui accrochent la lumiere au-dessus de la foule.
-  const DUST_COUNT = 46;
-  const dust = Array.from({ length: DUST_COUNT }, (_, i) => ({
-    x: (i * 0.618) % 1,
-    y: 0.15 + ((i * 71) % 100) / 130,
-    r: 0.0009 + ((i * 17) % 5) / 9000,
-    speed: 0.00004 + ((i * 11) % 6) / 400000,
-    drift: 0.02 + ((i * 7) % 5) / 300,
-    phase: (i * 0.94) % (Math.PI * 2),
-    tint: i % 6 === 0 ? CORAL : i % 9 === 0 ? IRIS : MIST,
-  }));
+  // Plus de poussiere : c'etait ca, les "petites boules" - une
+  // couche de 46 minuscules particules en plus des vraies boules.
 
   const DANCER_COUNT = 16;
   const dancers = Array.from({ length: DANCER_COUNT }, (_, i) => {
@@ -124,21 +115,6 @@ if (canvas && canvas.getContext) {
     g.addColorStop(1, `rgba(${orb.tint}, 0)`);
     ctx.fillStyle = g;
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-  }
-
-  function drawDust(t, particle) {
-    // Boucle verticale lente : remonte doucement puis revient en bas
-    // une fois sortie du cadre, sans jamais "sauter" a l'oeil.
-    const cycle = (particle.y - t * particle.speed) % 1;
-    const y = (cycle < 0 ? cycle + 1 : cycle) * height;
-    const x = (particle.x + Math.sin(t * 0.00012 + particle.phase) * particle.drift) * width;
-    const r = particle.r * Math.max(width, height);
-    const twinkle = 0.35 + 0.35 * Math.abs(Math.sin(t * 0.0009 + particle.phase * 3));
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, `rgba(${particle.tint}, ${twinkle})`);
-    g.addColorStop(1, `rgba(${particle.tint}, 0)`);
-    ctx.fillStyle = g;
-    ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
 
   function drawDancer(t, d) {
@@ -234,7 +210,6 @@ if (canvas && canvas.getContext) {
     SPOTLIGHTS.forEach((spot) => drawSpotlight(tm, spot, pulse));
     orbs.forEach((orb) => drawOrb(tm, orb, pulse));
     ctx.restore();
-    dust.forEach((particle) => drawDust(tm, particle));
     dancers.forEach((d) => drawDancer(tm, d));
   }
 
