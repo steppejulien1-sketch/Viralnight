@@ -62,8 +62,8 @@ if (canvas && canvas.getContext) {
   // seules leur position, vitesse et couleur varient - corail, iris
   // et une touche de mist. Reparties sur toute la scene, pas juste
   // en haut.
-  const ORB_COUNT = 42;
-  const ORB_RADIUS = 0.084;
+  const ORB_COUNT = 18;
+  const ORB_RADIUS = 0.1;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
     x: rand(i * 3.1 + 1),
     y: 0.04 + rand(i * 7.7 + 2) * 0.82,
