@@ -39,9 +39,29 @@ if (canvas && canvas.getContext) {
   const CORAL = "255, 99, 99";
   const IRIS = "146, 129, 247";
 
-  // Boules de lumiere supprimees, definitivement. Ne pas les remettre
-  // sans demande explicite et non ambigue.
-  const orbs = [];
+  // Petit generateur pseudo-aleatoire determineiste (une seule seed
+  // par boule).
+  function rand(seed) {
+    let x = Math.sin(seed * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
+  // Boules de lumiere, limitees au hero (contrairement a l'essai en
+  // page entiere qui a ete abandonne). Rayon de deplacement large :
+  // chaque boule parcourt vraiment toute la hero (x et y couvrent
+  // chacun bien au-dela de 0-1 sur leur cycle), pas juste une zone.
+  const ORB_COUNT = 20;
+  const ORB_RADIUS = 0.06;
+  const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
+    x: rand(i * 3.1 + 1),
+    y: rand(i * 7.7 + 2),
+    r: ORB_RADIUS,
+    ax: 0.45 + rand(i * 5.3 + 3) * 0.35,
+    ay: 0.4 + rand(i * 9.1 + 4) * 0.35,
+    speed: 0.00014 + rand(i * 4.4 + 5) * 0.00022,
+    phase: rand(i * 6.6 + 6) * Math.PI * 2,
+    tint: i % 3 === 0 ? IRIS : i % 5 === 0 ? MIST : CORAL,
+  }));
 
   // Le hero est nettement plus haut que la plupart des ecrans (le
   // contenu texte ne suffit pas a remplir toute la section) : un sol
