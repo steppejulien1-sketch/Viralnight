@@ -89,27 +89,28 @@ if (canvas && canvas.getContext) {
   // coupure nette.
   const TEXT_ZONE = { left: 0.12, right: 0.88, top: 0.0, bottom: 0.66, margin: 0.06 };
 
-  function textZoneFade(cx, cy) {
+  // Le fondu ne regardait que le CENTRE de la boule. Avec un rayon
+  // (ORB_RADIUS = 0.06) plus grand que la marge de transition, une
+  // boule dont le centre est juste hors zone gardait son coeur plein
+  // visible alors que son contour debordait deja dans le texte.
+  // Le rayon de la boule est retranche de la distance : le fondu
+  // commence des que le BORD de la boule touche la zone, pas son centre.
+  function textZoneFade(cx, cy, radiusNorm) {
     const nx = cx / width;
     const ny = cy / height;
-    const outsideDist = Math.max(
-      TEXT_ZONE.left - nx,
-      nx - TEXT_ZONE.right,
-      TEXT_ZONE.top - ny,
-      ny - TEXT_ZONE.bottom,
-    );
-    if (outsideDist >= TEXT_ZONE.margin) return 1;
-    // Coupure totale des le bord de la zone, pas de "presque invisible"
-    // qui reste quand meme visible en s'accumulant sur plusieurs frames.
+    const outsideDist =
+      Math.max(TEXT_ZONE.left - nx, nx - TEXT_ZONE.right, TEXT_ZONE.top - ny, ny - TEXT_ZONE.bottom) - radiusNorm;
+    const margin = TEXT_ZONE.margin + radiusNorm;
+    if (outsideDist >= margin) return 1;
     if (outsideDist <= 0) return 0;
-    return outsideDist / TEXT_ZONE.margin;
+    return outsideDist / margin;
   }
 
   function drawOrb(t, orb, boost = 1) {
     const cx = (orb.x + Math.cos(t * orb.speed + orb.phase) * orb.ax) * width;
     const cy = (orb.y + Math.sin(t * orb.speed * 1.4 + orb.phase) * orb.ay) * height;
     const r = orb.r * Math.max(width, height);
-    const fade = textZoneFade(cx, cy);
+    const fade = textZoneFade(cx, cy, orb.r);
     // Intensite fixe (plus de pulse individuel) : une boule au creux
     // de son cycle de luminosite devenait trop faible pour rester
     // visible, ce qui la faisait paraitre plus petite que les autres.
