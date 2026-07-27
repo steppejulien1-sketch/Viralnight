@@ -53,13 +53,18 @@ if (canvas && canvas.getContext) {
   // essayee. La scene se limite maintenant aux deux spots d'ambiance
   // et a la foule qui danse au sol.
 
+  // Le hero est nettement plus haut que la plupart des ecrans (le
+  // contenu texte ne suffit pas a remplir toute la section) : un sol
+  // a 90% de la hauteur du hero tombait bien sous le pli, invisible
+  // sans scroller. Remonte dans la zone qu'on voit vraiment au
+  // chargement.
   const DANCER_COUNT = 16;
   const dancers = Array.from({ length: DANCER_COUNT }, (_, i) => {
     const tint = i % 3 === 0 ? IRIS : i % 2 === 0 ? CORAL : MIST;
     return {
       x: (i + 0.5) / DANCER_COUNT,
-      floor: 0.9 + (i % 3) * 0.02,
-      height: 0.16 + ((i * 37) % 10) / 100,
+      floor: 0.64 + (i % 3) * 0.02,
+      height: 0.14 + ((i * 37) % 10) / 110,
       sway: 0.008 + ((i * 13) % 6) / 1000,
       bobSpeed: 0.0016 + ((i * 29) % 7) / 10000,
       phase: (i * 0.63) % (Math.PI * 2),
