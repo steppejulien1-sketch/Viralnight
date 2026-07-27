@@ -39,11 +39,28 @@ if (canvas && canvas.getContext) {
   const CORAL = "255, 99, 99";
   const IRIS = "146, 129, 247";
 
+  // Une seule source dominante (large, claire, presque statique - elle
+  // derive a peine) et deux touches secondaires bien plus petites : la
+  // hierarchie d'un vrai projecteur de cabine, pas trois lumieres
+  // egales qui se disputent l'attention.
+  const KEY_LIGHT = { color: MIST, r: 0.34, ax: 0.05, ay: 0.03, px: 0.5, py: 0.02, speed: 0.00009, phase: 0 };
   const SPOTLIGHTS = [
-    { color: CORAL, r: 0.16, ax: 0.28, ay: 0.1, px: 0.32, py: 0.1, speed: 0.00021, phase: 0 },
-    { color: IRIS, r: 0.13, ax: 0.22, ay: 0.08, px: 0.62, py: 0.06, speed: 0.00017, phase: 2.1 },
-    { color: MIST, r: 0.1, ax: 0.18, ay: 0.06, px: 0.5, py: 0.14, speed: 0.00026, phase: 4.4 },
+    { color: CORAL, r: 0.11, ax: 0.26, ay: 0.09, px: 0.3, py: 0.1, speed: 0.00021, phase: 0 },
+    { color: IRIS, r: 0.08, ax: 0.2, ay: 0.07, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
   ];
+
+  // Poussiere en suspension : donne de la profondeur, comme des
+  // particules qui accrochent la lumiere au-dessus de la foule.
+  const DUST_COUNT = 46;
+  const dust = Array.from({ length: DUST_COUNT }, (_, i) => ({
+    x: (i * 0.618) % 1,
+    y: 0.15 + ((i * 71) % 100) / 130,
+    r: 0.0009 + ((i * 17) % 5) / 9000,
+    speed: 0.00004 + ((i * 11) % 6) / 400000,
+    drift: 0.02 + ((i * 7) % 5) / 300,
+    phase: (i * 0.94) % (Math.PI * 2),
+    tint: i % 6 === 0 ? CORAL : i % 9 === 0 ? IRIS : MIST,
+  }));
 
   const DANCER_COUNT = 16;
   const dancers = Array.from({ length: DANCER_COUNT }, (_, i) => {
@@ -59,15 +76,30 @@ if (canvas && canvas.getContext) {
     };
   });
 
-  function drawSpotlight(t, spot) {
+  function drawSpotlight(t, spot, boost = 1) {
     const cx = (spot.px + Math.cos(t * spot.speed + spot.phase) * spot.ax) * width;
     const cy = (spot.py + Math.sin(t * spot.speed * 1.3 + spot.phase) * spot.ay) * height;
     const r = spot.r * Math.max(width, height);
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    g.addColorStop(0, `rgba(${spot.color}, 0.5)`);
+    g.addColorStop(0, `rgba(${spot.color}, ${0.5 * boost})`);
     g.addColorStop(1, `rgba(${spot.color}, 0)`);
     ctx.fillStyle = g;
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  }
+
+  function drawDust(t, particle) {
+    // Boucle verticale lente : remonte doucement puis revient en bas
+    // une fois sortie du cadre, sans jamais "sauter" a l'oeil.
+    const cycle = (particle.y - t * particle.speed) % 1;
+    const y = (cycle < 0 ? cycle + 1 : cycle) * height;
+    const x = (particle.x + Math.sin(t * 0.00012 + particle.phase) * particle.drift) * width;
+    const r = particle.r * Math.max(width, height);
+    const twinkle = 0.35 + 0.35 * Math.abs(Math.sin(t * 0.0009 + particle.phase * 3));
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${particle.tint}, ${twinkle})`);
+    g.addColorStop(1, `rgba(${particle.tint}, 0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
 
   function drawDancer(t, d) {
@@ -102,8 +134,14 @@ if (canvas && canvas.getContext) {
     ctx.fillStyle = "rgba(4, 5, 6, 0.16)";
     ctx.fillRect(0, 0, width, height);
 
+    // Pulse partage, lent : toute la scene respire ensemble au lieu
+    // que chaque element bouge independamment, comme calee sur un kick.
+    const pulse = 0.85 + 0.15 * Math.abs(Math.sin(t * 0.0012));
+
     ctx.globalCompositeOperation = "lighter";
-    SPOTLIGHTS.forEach((spot) => drawSpotlight(t, spot));
+    drawSpotlight(t, KEY_LIGHT, pulse);
+    SPOTLIGHTS.forEach((spot) => drawSpotlight(t, spot, pulse));
+    dust.forEach((particle) => drawDust(t, particle));
     dancers.forEach((d) => drawDancer(t, d));
   }
 
