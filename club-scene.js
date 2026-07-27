@@ -39,15 +39,6 @@ if (canvas && canvas.getContext) {
   const CORAL = "255, 99, 99";
   const IRIS = "146, 129, 247";
 
-  // Pas de lumiere "cle" fixe en haut : tout doit bouger. Deux
-  // accents larges qui derivent lentement (corail, iris), et les
-  // boules ci-dessous comme couche de taille moyenne, toutes a la
-  // meme taille pour ne pas retomber sur "deux enormes + le reste".
-  const SPOTLIGHTS = [
-    { color: CORAL, r: 0.075, ax: 0.3, ay: 0.12, px: 0.3, py: 0.1, speed: 0.00021, phase: 0 },
-    { color: IRIS, r: 0.065, ax: 0.24, ay: 0.1, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
-  ];
-
   // Petit generateur pseudo-aleatoire determineiste (une seule seed
   // par boule).
   function rand(seed) {
@@ -55,19 +46,18 @@ if (canvas && canvas.getContext) {
     return x - Math.floor(x);
   }
 
-  // Toutes les boules, plus de filtre. Le vrai probleme n'etait pas
-  // leur nombre mais le fait qu'elles ne parcouraient qu'une petite
-  // zone autour de leur point de depart ("rideau" fixe) : rayon de
-  // deplacement encore elargi pour que chacune traverse vraiment
-  // toute la hauteur/largeur du hero sur son cycle.
-  const ORB_COUNT = 18;
-  const ORB_RADIUS = 0.05;
+  // Un seul type de lumiere desormais (plus de "spots" a part, taille
+  // differente des boules) : tout est une boule, meme taille, meme
+  // comportement, et chacune parcourt toute la hero (haut, bas, gauche,
+  // droite) sans exception sur son cycle.
+  const ORB_COUNT = 20;
+  const ORB_RADIUS = 0.06;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
     x: rand(i * 3.1 + 1),
-    y: 0.06 + rand(i * 7.7 + 2) * 0.82,
+    y: rand(i * 7.7 + 2),
     r: ORB_RADIUS,
-    ax: 0.4 + rand(i * 5.3 + 3) * 0.4,
-    ay: 0.32 + rand(i * 9.1 + 4) * 0.34,
+    ax: 0.45 + rand(i * 5.3 + 3) * 0.35,
+    ay: 0.4 + rand(i * 9.1 + 4) * 0.35,
     speed: 0.00014 + rand(i * 4.4 + 5) * 0.00022,
     phase: rand(i * 6.6 + 6) * Math.PI * 2,
     tint: i % 3 === 0 ? IRIS : i % 5 === 0 ? MIST : CORAL,
@@ -92,26 +82,38 @@ if (canvas && canvas.getContext) {
     };
   });
 
-  function drawSpotlight(t, spot, boost = 1) {
-    const cx = (spot.px + Math.cos(t * spot.speed + spot.phase) * spot.ax) * width;
-    const cy = (spot.py + Math.sin(t * spot.speed * 1.3 + spot.phase) * spot.ay) * height;
-    const r = spot.r * Math.max(width, height);
-    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    g.addColorStop(0, `rgba(${spot.color}, ${0.26 * boost})`);
-    g.addColorStop(1, `rgba(${spot.color}, 0)`);
-    ctx.fillStyle = g;
-    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  // Plutot que d'esperer qu'une trajectoire evite le texte, on eteint
+  // directement tout ce qui passe dans la zone ou vit le texte (colonne
+  // centrale, du haut jusqu'aux CTA) - quelle que soit sa trajectoire,
+  // ca ne peut plus gener la lecture. Fondu doux sur les bords, pas de
+  // coupure nette.
+  const TEXT_ZONE = { left: 0.15, right: 0.85, top: 0.02, bottom: 0.62, margin: 0.08 };
+
+  function textZoneFade(cx, cy) {
+    const nx = cx / width;
+    const ny = cy / height;
+    const outsideDist = Math.max(
+      TEXT_ZONE.left - nx,
+      nx - TEXT_ZONE.right,
+      TEXT_ZONE.top - ny,
+      ny - TEXT_ZONE.bottom,
+    );
+    if (outsideDist >= TEXT_ZONE.margin) return 1;
+    if (outsideDist <= -TEXT_ZONE.margin) return 0.06;
+    const t = (outsideDist + TEXT_ZONE.margin) / (2 * TEXT_ZONE.margin);
+    return 0.06 + t * 0.94;
   }
 
   function drawOrb(t, orb, boost = 1) {
     const cx = (orb.x + Math.cos(t * orb.speed + orb.phase) * orb.ax) * width;
     const cy = (orb.y + Math.sin(t * orb.speed * 1.4 + orb.phase) * orb.ay) * height;
     const r = orb.r * Math.max(width, height);
+    const fade = textZoneFade(cx, cy);
     const pulse = 0.26 + 0.12 * Math.abs(Math.sin(t * 0.0007 + orb.phase * 2));
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    g.addColorStop(0, `rgba(${orb.tint}, ${pulse * boost})`);
-    g.addColorStop(0.35, `rgba(${orb.tint}, ${pulse * boost})`);
-    g.addColorStop(0.7, `rgba(${orb.tint}, ${pulse * 0.18 * boost})`);
+    g.addColorStop(0, `rgba(${orb.tint}, ${pulse * boost * fade})`);
+    g.addColorStop(0.35, `rgba(${orb.tint}, ${pulse * boost * fade})`);
+    g.addColorStop(0.7, `rgba(${orb.tint}, ${pulse * 0.18 * boost * fade})`);
     g.addColorStop(1, `rgba(${orb.tint}, 0)`);
     ctx.fillStyle = g;
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
@@ -207,7 +209,6 @@ if (canvas && canvas.getContext) {
     ctx.globalCompositeOperation = "lighter";
     ctx.save();
     ctx.translate((smoothX - 0.5) * PARALLAX * width, (smoothY - 0.5) * PARALLAX * height);
-    SPOTLIGHTS.forEach((spot) => drawSpotlight(tm, spot, pulse));
     orbs.forEach((orb) => drawOrb(tm, orb, pulse));
     ctx.restore();
     dancers.forEach((d) => drawDancer(tm, d));
