@@ -55,22 +55,23 @@ if (canvas && canvas.getContext) {
     return x - Math.floor(x);
   }
 
-  // Seules les boules qui avaient ete filtrees (position basse ET
-  // vitesse elevee) sont gardees ici - c'est l'inverse du filtre
-  // precedent, sur demande explicite.
+  // Toutes les boules, plus de filtre. Le vrai probleme n'etait pas
+  // leur nombre mais le fait qu'elles ne parcouraient qu'une petite
+  // zone autour de leur point de depart ("rideau" fixe) : rayon de
+  // deplacement encore elargi pour que chacune traverse vraiment
+  // toute la hauteur/largeur du hero sur son cycle.
   const ORB_COUNT = 18;
   const ORB_RADIUS = 0.05;
-  const ORB_SPEED_LIMIT = 0.00028;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
     x: rand(i * 3.1 + 1),
-    y: 0.08 + rand(i * 7.7 + 2) * 0.5,
+    y: 0.06 + rand(i * 7.7 + 2) * 0.82,
     r: ORB_RADIUS,
-    ax: 0.25 + rand(i * 5.3 + 3) * 0.32,
-    ay: 0.2 + rand(i * 9.1 + 4) * 0.26,
+    ax: 0.4 + rand(i * 5.3 + 3) * 0.4,
+    ay: 0.32 + rand(i * 9.1 + 4) * 0.34,
     speed: 0.00014 + rand(i * 4.4 + 5) * 0.00022,
     phase: rand(i * 6.6 + 6) * Math.PI * 2,
     tint: i % 3 === 0 ? IRIS : i % 5 === 0 ? MIST : CORAL,
-  })).filter((orb) => orb.y > 0.4 && orb.speed > ORB_SPEED_LIMIT);
+  }));
 
   // Le hero est nettement plus haut que la plupart des ecrans (le
   // contenu texte ne suffit pas a remplir toute la section) : un sol
