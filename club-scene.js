@@ -39,29 +39,9 @@ if (canvas && canvas.getContext) {
   const CORAL = "255, 99, 99";
   const IRIS = "146, 129, 247";
 
-  // Petit generateur pseudo-aleatoire determineiste (une seule seed
-  // par boule).
-  function rand(seed) {
-    let x = Math.sin(seed * 12.9898) * 43758.5453;
-    return x - Math.floor(x);
-  }
-
-  // Boules de lumiere, limitees au hero (contrairement a l'essai en
-  // page entiere qui a ete abandonne). Rayon de deplacement large :
-  // chaque boule parcourt vraiment toute la hero (x et y couvrent
-  // chacun bien au-dela de 0-1 sur leur cycle), pas juste une zone.
-  const ORB_COUNT = 20;
-  const ORB_RADIUS = 0.06;
-  const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
-    x: rand(i * 3.1 + 1),
-    y: rand(i * 7.7 + 2),
-    r: ORB_RADIUS,
-    ax: 0.45 + rand(i * 5.3 + 3) * 0.35,
-    ay: 0.4 + rand(i * 9.1 + 4) * 0.35,
-    speed: 0.00014 + rand(i * 4.4 + 5) * 0.00022,
-    phase: rand(i * 6.6 + 6) * Math.PI * 2,
-    tint: i % 3 === 0 ? IRIS : i % 5 === 0 ? MIST : CORAL,
-  }));
+  // Boules de lumiere supprimees, definitivement. Ne pas les remettre
+  // sans demande explicite et non ambigue.
+  const orbs = [];
 
   // Le hero est nettement plus haut que la plupart des ecrans (le
   // contenu texte ne suffit pas a remplir toute la section) : un sol
@@ -87,7 +67,15 @@ if (canvas && canvas.getContext) {
   // centrale, du haut jusqu'aux CTA) - quelle que soit sa trajectoire,
   // ca ne peut plus gener la lecture. Fondu doux sur les bords, pas de
   // coupure nette.
-  const TEXT_ZONE = { left: 0.12, right: 0.88, top: 0.0, bottom: 0.66, margin: 0.06 };
+  // Mesuree en direct sur le hero reel : le titre va de 0.209 a 0.791
+  // en largeur, l'eyebrow commence a 0.126, les CTA finissent a 0.928.
+  // L'ancienne zone (0.12-0.88 en largeur, jusqu'a 0.66 seulement en
+  // hauteur) etait bien plus large que le texte reel : elle bloquait
+  // 76% de la largeur sur toute la moitie haute du hero, ne laissant
+  // les boules visibles que sur d'etroites bandes laterales/basses -
+  // d'ou l'impression qu'elles restaient coincees. Resserree pour
+  // coller au texte, avec juste une petite marge de securite.
+  const TEXT_ZONE = { left: 0.17, right: 0.83, top: 0.09, bottom: 0.95, margin: 0.06 };
 
   // Le fondu ne regardait que le CENTRE de la boule. Avec un rayon
   // (ORB_RADIUS = 0.06) plus grand que la marge de transition, une
@@ -102,8 +90,15 @@ if (canvas && canvas.getContext) {
       Math.max(TEXT_ZONE.left - nx, nx - TEXT_ZONE.right, TEXT_ZONE.top - ny, ny - TEXT_ZONE.bottom) - radiusNorm;
     const margin = TEXT_ZONE.margin + radiusNorm;
     if (outsideDist >= margin) return 1;
-    if (outsideDist <= 0) return 0;
-    return outsideDist / margin;
+    // Att : le texte occupe presque toute la hauteur du hero dans sa
+    // colonne centrale (de l'eyebrow aux CTA) - une coupure a 0% pur y
+    // laisserait donc une bande centrale totalement noire sur toute la
+    // hauteur. Attenuation plutot que coupure totale : les boules
+    // restent visibles partout (juste plus discretes derriere le texte),
+    // le texte reste lisible.
+    const MIN_INSIDE = 0.16;
+    if (outsideDist <= 0) return MIN_INSIDE;
+    return MIN_INSIDE + (outsideDist / margin) * (1 - MIN_INSIDE);
   }
 
   function drawOrb(t, orb, boost = 1) {
