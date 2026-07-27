@@ -48,19 +48,30 @@ if (canvas && canvas.getContext) {
     { color: IRIS, r: 0.09, ax: 0.24, ay: 0.1, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
   ];
 
+  // Petit generateur pseudo-aleatoire determineiste (une seule seed
+  // par boule) : les formules a base de modulo precedentes faisaient
+  // boucler certaines valeurs (vitesse, phase) toutes les quelques
+  // boules, qui du coup demarraient visuellement groupees avant de
+  // se disperser. Avec un vrai hash par indice, plus de collision.
+  function rand(seed) {
+    let x = Math.sin(seed * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
   // Boules de lumiere : la couche du milieu. Toutes la meme taille,
   // seules leur position, vitesse et couleur varient - corail, iris
-  // et une touche de mist.
-  const ORB_COUNT = 30;
-  const ORB_RADIUS = 0.042;
+  // et une touche de mist. Reparties sur toute la scene, pas juste
+  // en haut.
+  const ORB_COUNT = 42;
+  const ORB_RADIUS = 0.084;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
-    x: (i * 0.371 + 0.04) % 1,
-    y: 0.06 + ((i * 53) % 100) / 130,
+    x: rand(i * 3.1 + 1),
+    y: 0.04 + rand(i * 7.7 + 2) * 0.82,
     r: ORB_RADIUS,
-    ax: 0.09 + ((i * 13) % 5) / 60,
-    ay: 0.06 + ((i * 7) % 4) / 70,
-    speed: 0.00042 + ((i * 23) % 9) / 55000,
-    phase: (i * 1.11) % (Math.PI * 2),
+    ax: 0.06 + rand(i * 5.3 + 3) * 0.16,
+    ay: 0.04 + rand(i * 9.1 + 4) * 0.12,
+    speed: 0.00035 + rand(i * 4.4 + 5) * 0.00055,
+    phase: rand(i * 6.6 + 6) * Math.PI * 2,
     tint: i % 3 === 0 ? IRIS : i % 5 === 0 ? MIST : CORAL,
   }));
 
