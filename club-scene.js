@@ -52,7 +52,7 @@ if (canvas && canvas.getContext) {
   // seules leur position, vitesse et couleur varient - corail, iris
   // et une touche de mist.
   const ORB_COUNT = 30;
-  const ORB_RADIUS = 0.03;
+  const ORB_RADIUS = 0.042;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
     x: (i * 0.371 + 0.04) % 1,
     y: 0.06 + ((i * 53) % 100) / 130,
