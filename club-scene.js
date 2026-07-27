@@ -43,11 +43,26 @@ if (canvas && canvas.getContext) {
   // derive a peine) et deux touches secondaires bien plus petites : la
   // hierarchie d'un vrai projecteur de cabine, pas trois lumieres
   // egales qui se disputent l'attention.
-  const KEY_LIGHT = { color: MIST, r: 0.34, ax: 0.05, ay: 0.03, px: 0.5, py: 0.02, speed: 0.00009, phase: 0 };
+  const KEY_LIGHT = { color: MIST, r: 0.3, ax: 0.05, ay: 0.03, px: 0.5, py: 0.02, speed: 0.00009, phase: 0 };
   const SPOTLIGHTS = [
-    { color: CORAL, r: 0.11, ax: 0.26, ay: 0.09, px: 0.3, py: 0.1, speed: 0.00021, phase: 0 },
-    { color: IRIS, r: 0.08, ax: 0.2, ay: 0.07, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
+    { color: CORAL, r: 0.15, ax: 0.26, ay: 0.09, px: 0.3, py: 0.1, speed: 0.00021, phase: 0 },
+    { color: IRIS, r: 0.13, ax: 0.2, ay: 0.07, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
   ];
+
+  // Boules de lumiere : plus grosses et plus nombreuses que la
+  // poussiere, quasi exclusivement rouge/violet, elles derivent en
+  // ellipse a leur propre rythme un peu partout dans la scene.
+  const ORB_COUNT = 16;
+  const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
+    x: (i * 0.371 + 0.04) % 1,
+    y: 0.06 + ((i * 53) % 100) / 130,
+    r: 0.026 + ((i * 19) % 6) / 240,
+    ax: 0.05 + ((i * 13) % 5) / 90,
+    ay: 0.03 + ((i * 7) % 4) / 110,
+    speed: 0.00011 + ((i * 23) % 7) / 130000,
+    phase: (i * 1.11) % (Math.PI * 2),
+    tint: i % 3 === 0 ? IRIS : CORAL,
+  }));
 
   // Poussiere en suspension : donne de la profondeur, comme des
   // particules qui accrochent la lumiere au-dessus de la foule.
@@ -64,7 +79,7 @@ if (canvas && canvas.getContext) {
 
   const DANCER_COUNT = 16;
   const dancers = Array.from({ length: DANCER_COUNT }, (_, i) => {
-    const tint = i % 5 === 0 ? CORAL : i % 7 === 0 ? IRIS : MIST;
+    const tint = i % 3 === 0 ? IRIS : i % 2 === 0 ? CORAL : MIST;
     return {
       x: (i + 0.5) / DANCER_COUNT,
       floor: 0.9 + (i % 3) * 0.02,
@@ -83,6 +98,19 @@ if (canvas && canvas.getContext) {
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
     g.addColorStop(0, `rgba(${spot.color}, ${0.5 * boost})`);
     g.addColorStop(1, `rgba(${spot.color}, 0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  }
+
+  function drawOrb(t, orb, boost = 1) {
+    const cx = (orb.x + Math.cos(t * orb.speed + orb.phase) * orb.ax) * width;
+    const cy = (orb.y + Math.sin(t * orb.speed * 1.4 + orb.phase) * orb.ay) * height;
+    const r = orb.r * Math.max(width, height);
+    const pulse = 0.55 + 0.25 * Math.abs(Math.sin(t * 0.0007 + orb.phase * 2));
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, `rgba(${orb.tint}, ${pulse * boost})`);
+    g.addColorStop(0.55, `rgba(${orb.tint}, ${pulse * 0.22 * boost})`);
+    g.addColorStop(1, `rgba(${orb.tint}, 0)`);
     ctx.fillStyle = g;
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
   }
@@ -141,6 +169,7 @@ if (canvas && canvas.getContext) {
     ctx.globalCompositeOperation = "lighter";
     drawSpotlight(t, KEY_LIGHT, pulse);
     SPOTLIGHTS.forEach((spot) => drawSpotlight(t, spot, pulse));
+    orbs.forEach((orb) => drawOrb(t, orb, pulse));
     dust.forEach((particle) => drawDust(t, particle));
     dancers.forEach((d) => drawDancer(t, d));
   }
