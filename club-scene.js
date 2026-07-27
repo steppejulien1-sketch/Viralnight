@@ -66,11 +66,13 @@ if (canvas && canvas.getContext) {
   const ORB_RADIUS = 0.05;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
     x: rand(i * 3.1 + 1),
-    y: 0.04 + rand(i * 7.7 + 2) * 0.82,
+    y: 0.1 + rand(i * 7.7 + 2) * 0.8,
     r: ORB_RADIUS,
-    ax: 0.06 + rand(i * 5.3 + 3) * 0.16,
-    ay: 0.04 + rand(i * 9.1 + 4) * 0.12,
-    // Vitesse divisee par ~2.5 : deplacement plus lent, plus lisible.
+    // Rayon de deplacement bien plus large : chaque boule parcourt
+    // une bonne partie de la scene sur son cycle, au lieu de deriver
+    // juste autour de son point de depart.
+    ax: 0.25 + rand(i * 5.3 + 3) * 0.32,
+    ay: 0.2 + rand(i * 9.1 + 4) * 0.26,
     speed: 0.00014 + rand(i * 4.4 + 5) * 0.00022,
     phase: rand(i * 6.6 + 6) * Math.PI * 2,
     tint: i % 3 === 0 ? IRIS : i % 5 === 0 ? MIST : CORAL,
@@ -109,9 +111,12 @@ if (canvas && canvas.getContext) {
     const cy = (orb.y + Math.sin(t * orb.speed * 1.4 + orb.phase) * orb.ay) * height;
     const r = orb.r * Math.max(width, height);
     const pulse = 0.26 + 0.12 * Math.abs(Math.sin(t * 0.0007 + orb.phase * 2));
+    // Coeur net (jusqu'a ~35% du rayon) puis chute rapide : lit comme
+    // une vraie boule bien definie plutot qu'un halo diffus.
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
     g.addColorStop(0, `rgba(${orb.tint}, ${pulse * boost})`);
-    g.addColorStop(0.55, `rgba(${orb.tint}, ${pulse * 0.22 * boost})`);
+    g.addColorStop(0.35, `rgba(${orb.tint}, ${pulse * boost})`);
+    g.addColorStop(0.7, `rgba(${orb.tint}, ${pulse * 0.18 * boost})`);
     g.addColorStop(1, `rgba(${orb.tint}, 0)`);
     ctx.fillStyle = g;
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
