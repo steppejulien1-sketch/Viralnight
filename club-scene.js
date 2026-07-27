@@ -39,25 +39,24 @@ if (canvas && canvas.getContext) {
   const CORAL = "255, 99, 99";
   const IRIS = "146, 129, 247";
 
-  // Trois tailles franches plutot que deux enormes (key + spots) qui
-  // ecrasent tout et de la poussiere minuscule sans rien entre les
-  // deux : une lumiere cle moderee, deux accents plus petits encore,
-  // et une vraie couche de taille moyenne (les boules) entre les
-  // deux et la poussiere.
-  const KEY_LIGHT = { color: MIST, r: 0.2, ax: 0.05, ay: 0.03, px: 0.5, py: 0.02, speed: 0.00009, phase: 0 };
+  // Pas de lumiere "cle" fixe en haut : tout doit bouger. Deux
+  // accents larges qui derivent lentement (corail, iris), et les
+  // boules ci-dessous comme couche de taille moyenne, toutes a la
+  // meme taille pour ne pas retomber sur "deux enormes + le reste".
   const SPOTLIGHTS = [
-    { color: CORAL, r: 0.08, ax: 0.26, ay: 0.09, px: 0.3, py: 0.1, speed: 0.00021, phase: 0 },
-    { color: IRIS, r: 0.07, ax: 0.2, ay: 0.07, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
+    { color: CORAL, r: 0.1, ax: 0.3, ay: 0.12, px: 0.3, py: 0.1, speed: 0.00021, phase: 0 },
+    { color: IRIS, r: 0.09, ax: 0.24, ay: 0.1, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
   ];
 
-  // Boules de lumiere : la couche du milieu. Plus rapides que les
-  // spots, plus grosses que la poussiere, en plusieurs couleurs
-  // (corail, iris et une touche de mist) pour varier le ton.
+  // Boules de lumiere : la couche du milieu. Toutes la meme taille,
+  // seules leur position, vitesse et couleur varient - corail, iris
+  // et une touche de mist.
   const ORB_COUNT = 16;
+  const ORB_RADIUS = 0.03;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
     x: (i * 0.371 + 0.04) % 1,
     y: 0.06 + ((i * 53) % 100) / 130,
-    r: 0.02 + ((i * 19) % 6) / 300,
+    r: ORB_RADIUS,
     ax: 0.09 + ((i * 13) % 5) / 60,
     ay: 0.06 + ((i * 7) % 4) / 70,
     speed: 0.00042 + ((i * 23) % 9) / 55000,
@@ -155,7 +154,17 @@ if (canvas && canvas.getContext) {
     ctx.fill();
   }
 
-  function renderFrame(t) {
+  // Allumage a l'arrivee sur la page : la scene monte de noir a
+  // pleine intensite en ~1.4s au lieu d'apparaitre d'un coup, comme
+  // les lumieres d'un club qui s'allument.
+  let sceneStart = null;
+
+  function renderFrame(t, igniteOverride) {
+    if (sceneStart === null) sceneStart = t;
+    const elapsed = t - sceneStart;
+    const ignite = igniteOverride ?? Math.min(1, elapsed / 1400);
+    const eased = 1 - Math.pow(1 - ignite, 3);
+
     // Voile quasi-opaque plutot qu'un clear total : les traces de la
     // frame precedente s'estompent au lieu de disparaitre net, ce qui
     // cree l'effet de lumiere qui "traine" derriere le mouvement.
@@ -165,10 +174,9 @@ if (canvas && canvas.getContext) {
 
     // Pulse partage, lent : toute la scene respire ensemble au lieu
     // que chaque element bouge independamment, comme calee sur un kick.
-    const pulse = 0.85 + 0.15 * Math.abs(Math.sin(t * 0.0012));
+    const pulse = (0.85 + 0.15 * Math.abs(Math.sin(t * 0.0012))) * eased;
 
     ctx.globalCompositeOperation = "lighter";
-    drawSpotlight(t, KEY_LIGHT, pulse);
     SPOTLIGHTS.forEach((spot) => drawSpotlight(t, spot, pulse));
     orbs.forEach((orb) => drawOrb(t, orb, pulse));
     dust.forEach((particle) => drawDust(t, particle));
@@ -198,8 +206,9 @@ if (canvas && canvas.getContext) {
   resize();
 
   if (REDUCED) {
-    // Une seule image, posee, pas de boucle qui tourne en continu.
-    renderFrame(0);
+    // Une seule image, deja pleinement allumee (pas d'allumage
+    // progressif sans boucle qui tourne), pas de boucle continue.
+    renderFrame(0, 1);
   } else {
     if ("IntersectionObserver" in window) {
       const io = new IntersectionObserver(
