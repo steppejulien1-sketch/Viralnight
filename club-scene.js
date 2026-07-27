@@ -110,7 +110,10 @@ if (canvas && canvas.getContext) {
     const cy = (orb.y + Math.sin(t * orb.speed * 1.4 + orb.phase) * orb.ay) * height;
     const r = orb.r * Math.max(width, height);
     const fade = textZoneFade(cx, cy);
-    const pulse = 0.26 + 0.12 * Math.abs(Math.sin(t * 0.0007 + orb.phase * 2));
+    // Intensite fixe (plus de pulse individuel) : une boule au creux
+    // de son cycle de luminosite devenait trop faible pour rester
+    // visible, ce qui la faisait paraitre plus petite que les autres.
+    const pulse = 0.34;
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
     g.addColorStop(0, `rgba(${orb.tint}, ${pulse * boost * fade})`);
     g.addColorStop(0.35, `rgba(${orb.tint}, ${pulse * boost * fade})`);
