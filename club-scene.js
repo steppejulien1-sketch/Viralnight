@@ -51,7 +51,7 @@ if (canvas && canvas.getContext) {
   // Boules de lumiere : la couche du milieu. Toutes la meme taille,
   // seules leur position, vitesse et couleur varient - corail, iris
   // et une touche de mist.
-  const ORB_COUNT = 16;
+  const ORB_COUNT = 30;
   const ORB_RADIUS = 0.03;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
     x: (i * 0.371 + 0.04) % 1,
