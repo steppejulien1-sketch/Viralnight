@@ -44,8 +44,8 @@ if (canvas && canvas.getContext) {
   // boules ci-dessous comme couche de taille moyenne, toutes a la
   // meme taille pour ne pas retomber sur "deux enormes + le reste".
   const SPOTLIGHTS = [
-    { color: CORAL, r: 0.1, ax: 0.3, ay: 0.12, px: 0.3, py: 0.1, speed: 0.00021, phase: 0 },
-    { color: IRIS, r: 0.09, ax: 0.24, ay: 0.1, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
+    { color: CORAL, r: 0.075, ax: 0.3, ay: 0.12, px: 0.3, py: 0.1, speed: 0.00021, phase: 0 },
+    { color: IRIS, r: 0.065, ax: 0.24, ay: 0.1, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
   ];
 
   // Petit generateur pseudo-aleatoire determineiste (une seule seed
@@ -63,7 +63,7 @@ if (canvas && canvas.getContext) {
   // et une touche de mist. Reparties sur toute la scene, pas juste
   // en haut.
   const ORB_COUNT = 18;
-  const ORB_RADIUS = 0.1;
+  const ORB_RADIUS = 0.05;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
     x: rand(i * 3.1 + 1),
     y: 0.04 + rand(i * 7.7 + 2) * 0.82,
@@ -98,7 +98,7 @@ if (canvas && canvas.getContext) {
     const cy = (spot.py + Math.sin(t * spot.speed * 1.3 + spot.phase) * spot.ay) * height;
     const r = spot.r * Math.max(width, height);
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    g.addColorStop(0, `rgba(${spot.color}, ${0.5 * boost})`);
+    g.addColorStop(0, `rgba(${spot.color}, ${0.26 * boost})`);
     g.addColorStop(1, `rgba(${spot.color}, 0)`);
     ctx.fillStyle = g;
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
@@ -108,7 +108,7 @@ if (canvas && canvas.getContext) {
     const cx = (orb.x + Math.cos(t * orb.speed + orb.phase) * orb.ax) * width;
     const cy = (orb.y + Math.sin(t * orb.speed * 1.4 + orb.phase) * orb.ay) * height;
     const r = orb.r * Math.max(width, height);
-    const pulse = 0.55 + 0.25 * Math.abs(Math.sin(t * 0.0007 + orb.phase * 2));
+    const pulse = 0.26 + 0.12 * Math.abs(Math.sin(t * 0.0007 + orb.phase * 2));
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
     g.addColorStop(0, `rgba(${orb.tint}, ${pulse * boost})`);
     g.addColorStop(0.55, `rgba(${orb.tint}, ${pulse * 0.22 * boost})`);
@@ -194,7 +194,7 @@ if (canvas && canvas.getContext) {
     // frame precedente s'estompent au lieu de disparaitre net, ce qui
     // cree l'effet de lumiere qui "traine" derriere le mouvement.
     ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = "rgba(4, 5, 6, 0.16)";
+    ctx.fillStyle = "rgba(4, 5, 6, 0.26)";
     ctx.fillRect(0, 0, width, height);
 
     // Pulse partage, lent : toute la scene respire ensemble au lieu
