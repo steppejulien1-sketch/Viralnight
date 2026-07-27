@@ -66,7 +66,9 @@ if (canvas && canvas.getContext) {
   const ORB_RADIUS = 0.05;
   const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
     x: rand(i * 3.1 + 1),
-    y: 0.1 + rand(i * 7.7 + 2) * 0.8,
+    // Reste au-dessus du sol (ou sont les danseurs) : aucune boule
+    // ne doit pouvoir se retrouver coincee tout en bas.
+    y: 0.08 + rand(i * 7.7 + 2) * 0.5,
     r: ORB_RADIUS,
     // Rayon de deplacement bien plus large : chaque boule parcourt
     // une bonne partie de la scene sur son cycle, au lieu de deriver
