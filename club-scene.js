@@ -137,27 +137,56 @@ if (canvas && canvas.getContext) {
     const h = d.height * height;
     const topY = floorY - h - bob;
     const w = h * 0.34;
+    // Leger balancement plutot qu'un aller-retour purement vertical :
+    // ca lit davantage comme une danse que comme un rebond mecanique.
+    const lean = Math.sin(t * d.bobSpeed * 1.7 + d.phase) * 0.14;
 
     const g = ctx.createLinearGradient(x, floorY, x, topY);
     g.addColorStop(0, `rgba(${d.tint}, 0.38)`);
     g.addColorStop(0.55, `rgba(${d.tint}, 0.16)`);
     g.addColorStop(1, `rgba(${d.tint}, 0)`);
     ctx.fillStyle = g;
+    ctx.save();
+    ctx.translate(x, floorY);
+    ctx.rotate(lean);
     ctx.beginPath();
-    ctx.ellipse(x, (floorY + topY) / 2, w, (floorY - topY) / 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, -(floorY - topY) / 2, w, (floorY - topY) / 2, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Tete : petit point plus dense en haut du halo.
     ctx.fillStyle = `rgba(${d.tint}, 0.45)`;
     ctx.beginPath();
-    ctx.arc(x, topY + h * 0.08, w * 0.32, 0, Math.PI * 2);
+    ctx.arc(0, -(h - h * 0.08) - bob, w * 0.32, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
   }
 
   // Allumage a l'arrivee sur la page : la scene monte de noir a
   // pleine intensite en ~1.4s au lieu d'apparaitre d'un coup, comme
   // les lumieres d'un club qui s'allument.
   let sceneStart = null;
+
+  // Parallax souris, discret : seules les lumieres du ciel (spots +
+  // boules) suivent le curseur, la foule reste au sol. Interpolation
+  // douce, pas de saut si la souris bouge vite.
+  const CAN_HOVER = window.matchMedia("(hover: hover)").matches;
+  let pointerX = 0.5;
+  let pointerY = 0.5;
+  let smoothX = 0.5;
+  let smoothY = 0.5;
+  const PARALLAX = 0.045;
+
+  if (CAN_HOVER) {
+    hero.addEventListener("pointermove", (e) => {
+      const rect = hero.getBoundingClientRect();
+      pointerX = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      pointerY = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+    });
+    hero.addEventListener("pointerleave", () => {
+      pointerX = 0.5;
+      pointerY = 0.5;
+    });
+  }
 
   function renderFrame(t, igniteOverride) {
     if (sceneStart === null) sceneStart = t;
@@ -176,9 +205,15 @@ if (canvas && canvas.getContext) {
     // que chaque element bouge independamment, comme calee sur un kick.
     const pulse = (0.85 + 0.15 * Math.abs(Math.sin(t * 0.0012))) * eased;
 
+    smoothX += (pointerX - smoothX) * 0.05;
+    smoothY += (pointerY - smoothY) * 0.05;
+
     ctx.globalCompositeOperation = "lighter";
+    ctx.save();
+    ctx.translate((smoothX - 0.5) * PARALLAX * width, (smoothY - 0.5) * PARALLAX * height);
     SPOTLIGHTS.forEach((spot) => drawSpotlight(t, spot, pulse));
     orbs.forEach((orb) => drawOrb(t, orb, pulse));
+    ctx.restore();
     dust.forEach((particle) => drawDust(t, particle));
     dancers.forEach((d) => drawDancer(t, d));
   }
