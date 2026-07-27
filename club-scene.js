@@ -199,11 +199,20 @@ if (canvas && canvas.getContext) {
     });
   }
 
-  function renderFrame(t, igniteOverride) {
+  // Reduced motion : le mouvement est ralenti, pas arrete. Une image
+  // figee ne laisse jamais le temps a l'effet de trainee (le voile
+  // presque opaque redessine chaque frame) de s'accumuler - le
+  // resultat reste presque entierement noir, ce qui est exactement
+  // le bug remonte ("je ne vois pas de boules"). La boucle continue
+  // de tourner, juste tres lentement.
+  const MOTION_SCALE = REDUCED ? 0.12 : 1;
+
+  function renderFrame(t) {
     if (sceneStart === null) sceneStart = t;
     const elapsed = t - sceneStart;
-    const ignite = igniteOverride ?? Math.min(1, elapsed / 1400);
+    const ignite = Math.min(1, elapsed / 1400);
     const eased = 1 - Math.pow(1 - ignite, 3);
+    const tm = sceneStart + (t - sceneStart) * MOTION_SCALE;
 
     // Voile quasi-opaque plutot qu'un clear total : les traces de la
     // frame precedente s'estompent au lieu de disparaitre net, ce qui
@@ -214,7 +223,7 @@ if (canvas && canvas.getContext) {
 
     // Pulse partage, lent : toute la scene respire ensemble au lieu
     // que chaque element bouge independamment, comme calee sur un kick.
-    const pulse = (0.85 + 0.15 * Math.abs(Math.sin(t * 0.0012))) * eased;
+    const pulse = (0.85 + 0.15 * Math.abs(Math.sin(tm * 0.0012))) * eased;
 
     smoothX += (pointerX - smoothX) * 0.05;
     smoothY += (pointerY - smoothY) * 0.05;
@@ -222,11 +231,11 @@ if (canvas && canvas.getContext) {
     ctx.globalCompositeOperation = "lighter";
     ctx.save();
     ctx.translate((smoothX - 0.5) * PARALLAX * width, (smoothY - 0.5) * PARALLAX * height);
-    SPOTLIGHTS.forEach((spot) => drawSpotlight(t, spot, pulse));
-    orbs.forEach((orb) => drawOrb(t, orb, pulse));
+    SPOTLIGHTS.forEach((spot) => drawSpotlight(tm, spot, pulse));
+    orbs.forEach((orb) => drawOrb(tm, orb, pulse));
     ctx.restore();
-    dust.forEach((particle) => drawDust(t, particle));
-    dancers.forEach((d) => drawDancer(t, d));
+    dust.forEach((particle) => drawDust(tm, particle));
+    dancers.forEach((d) => drawDancer(tm, d));
   }
 
   let rafId = null;
@@ -251,33 +260,30 @@ if (canvas && canvas.getContext) {
 
   resize();
 
-  if (REDUCED) {
-    // Une seule image, deja pleinement allumee (pas d'allumage
-    // progressif sans boucle qui tourne), pas de boucle continue.
-    renderFrame(0, 1);
+  // Boucle active dans tous les cas (juste tres lente si REDUCED) :
+  // suspendue seulement quand la scene n'est pas a l'ecran ou que
+  // l'onglet est cache.
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !document.hidden) start();
+        else stop();
+      },
+      { threshold: 0.01 },
+    );
+    io.observe(hero);
   } else {
-    if ("IntersectionObserver" in window) {
-      const io = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && !document.hidden) start();
-          else stop();
-        },
-        { threshold: 0.01 },
-      );
-      io.observe(hero);
-    } else {
-      start();
-    }
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) stop();
-      else if (!running) start();
-    });
-
-    let resizeTimer = null;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(resize, 150);
-    });
+    start();
   }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stop();
+    else if (!running) start();
+  });
+
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 150);
+  });
 }
