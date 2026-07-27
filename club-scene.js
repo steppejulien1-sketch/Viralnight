@@ -87,7 +87,7 @@ if (canvas && canvas.getContext) {
   // centrale, du haut jusqu'aux CTA) - quelle que soit sa trajectoire,
   // ca ne peut plus gener la lecture. Fondu doux sur les bords, pas de
   // coupure nette.
-  const TEXT_ZONE = { left: 0.15, right: 0.85, top: 0.02, bottom: 0.62, margin: 0.08 };
+  const TEXT_ZONE = { left: 0.12, right: 0.88, top: 0.0, bottom: 0.66, margin: 0.06 };
 
   function textZoneFade(cx, cy) {
     const nx = cx / width;
@@ -99,9 +99,10 @@ if (canvas && canvas.getContext) {
       ny - TEXT_ZONE.bottom,
     );
     if (outsideDist >= TEXT_ZONE.margin) return 1;
-    if (outsideDist <= -TEXT_ZONE.margin) return 0.06;
-    const t = (outsideDist + TEXT_ZONE.margin) / (2 * TEXT_ZONE.margin);
-    return 0.06 + t * 0.94;
+    // Coupure totale des le bord de la zone, pas de "presque invisible"
+    // qui reste quand meme visible en s'accumulant sur plusieurs frames.
+    if (outsideDist <= 0) return 0;
+    return outsideDist / TEXT_ZONE.margin;
   }
 
   function drawOrb(t, orb, boost = 1) {
