@@ -48,9 +48,29 @@ if (canvas && canvas.getContext) {
     { color: IRIS, r: 0.065, ax: 0.24, ay: 0.1, px: 0.68, py: 0.07, speed: 0.00017, phase: 2.1 },
   ];
 
-  // Boules de lumiere definitivement retirees : meme filtrees, elles
-  // continuaient a passer devant le texte. La scene reste sur les
-  // deux spots d'ambiance (en peripherie) et la foule au sol.
+  // Petit generateur pseudo-aleatoire determineiste (une seule seed
+  // par boule).
+  function rand(seed) {
+    let x = Math.sin(seed * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
+  // Seules les boules qui avaient ete filtrees (position basse ET
+  // vitesse elevee) sont gardees ici - c'est l'inverse du filtre
+  // precedent, sur demande explicite.
+  const ORB_COUNT = 18;
+  const ORB_RADIUS = 0.05;
+  const ORB_SPEED_LIMIT = 0.00028;
+  const orbs = Array.from({ length: ORB_COUNT }, (_, i) => ({
+    x: rand(i * 3.1 + 1),
+    y: 0.08 + rand(i * 7.7 + 2) * 0.5,
+    r: ORB_RADIUS,
+    ax: 0.25 + rand(i * 5.3 + 3) * 0.32,
+    ay: 0.2 + rand(i * 9.1 + 4) * 0.26,
+    speed: 0.00014 + rand(i * 4.4 + 5) * 0.00022,
+    phase: rand(i * 6.6 + 6) * Math.PI * 2,
+    tint: i % 3 === 0 ? IRIS : i % 5 === 0 ? MIST : CORAL,
+  })).filter((orb) => orb.y > 0.4 && orb.speed > ORB_SPEED_LIMIT);
 
   // Le hero est nettement plus haut que la plupart des ecrans (le
   // contenu texte ne suffit pas a remplir toute la section) : un sol
@@ -78,6 +98,20 @@ if (canvas && canvas.getContext) {
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
     g.addColorStop(0, `rgba(${spot.color}, ${0.26 * boost})`);
     g.addColorStop(1, `rgba(${spot.color}, 0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  }
+
+  function drawOrb(t, orb, boost = 1) {
+    const cx = (orb.x + Math.cos(t * orb.speed + orb.phase) * orb.ax) * width;
+    const cy = (orb.y + Math.sin(t * orb.speed * 1.4 + orb.phase) * orb.ay) * height;
+    const r = orb.r * Math.max(width, height);
+    const pulse = 0.26 + 0.12 * Math.abs(Math.sin(t * 0.0007 + orb.phase * 2));
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, `rgba(${orb.tint}, ${pulse * boost})`);
+    g.addColorStop(0.35, `rgba(${orb.tint}, ${pulse * boost})`);
+    g.addColorStop(0.7, `rgba(${orb.tint}, ${pulse * 0.18 * boost})`);
+    g.addColorStop(1, `rgba(${orb.tint}, 0)`);
     ctx.fillStyle = g;
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
   }
@@ -173,6 +207,7 @@ if (canvas && canvas.getContext) {
     ctx.save();
     ctx.translate((smoothX - 0.5) * PARALLAX * width, (smoothY - 0.5) * PARALLAX * height);
     SPOTLIGHTS.forEach((spot) => drawSpotlight(tm, spot, pulse));
+    orbs.forEach((orb) => drawOrb(tm, orb, pulse));
     ctx.restore();
     dancers.forEach((d) => drawDancer(tm, d));
   }
