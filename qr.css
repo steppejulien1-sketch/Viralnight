@@ -1,0 +1,256 @@
+/* Page gerant : recuperer et imprimer le QR code du club. */
+
+body {
+  background: var(--void);
+  color: var(--ash);
+}
+
+.qr-shell {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 26px 22px 70px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.qr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.qr-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--white);
+  font-weight: 650;
+  font-size: 15px;
+}
+
+.qr-header nav {
+  display: flex;
+  gap: 6px;
+}
+
+.qr-header nav a {
+  padding: 7px 12px;
+  border-radius: var(--r-btn);
+  font-size: 13px;
+  color: var(--smoke);
+}
+
+.qr-header nav a:hover {
+  color: var(--white);
+  background: var(--surface-2);
+}
+
+.qr-banner {
+  margin: 0;
+  padding: 12px 15px;
+  border-radius: var(--r-card);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.qr-banner.is-info {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  color: var(--ash);
+}
+
+.qr-banner.is-success {
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.qr-banner.is-error {
+  background: var(--ember);
+  border: 1px solid rgba(255, 99, 99, 0.3);
+  color: var(--coral);
+}
+
+.qr-intro h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  color: var(--white);
+  text-wrap: balance;
+}
+
+.qr-intro p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.62;
+}
+
+/* --- Carte du QR --- */
+
+.qr-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 28px;
+  align-items: start;
+  padding: 26px;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+}
+
+/* Le QR reste sur fond blanc : c'est la condition d'une lecture fiable. */
+.qr-visual {
+  background: #fff;
+  border-radius: var(--r-card);
+  padding: 14px;
+  line-height: 0;
+}
+
+.qr-visual svg {
+  width: 220px;
+  height: 220px;
+  display: block;
+}
+
+.qr-details {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.qr-club {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  color: var(--white);
+}
+
+.qr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.qr-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--smoke);
+}
+
+.qr-code {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: 0.16em;
+  color: var(--coral);
+}
+
+.qr-url {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ash);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-btn);
+  padding: 9px 11px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.qr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.qr-actions button {
+  padding: 11px 17px;
+  border-radius: var(--r-btn);
+  background: var(--mist);
+  color: var(--void);
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.qr-actions .qr-secondary {
+  background: var(--surface-2);
+  color: var(--white);
+  border: 1px solid var(--hairline);
+  font-weight: 500;
+}
+
+.qr-actions .qr-secondary:hover {
+  border-color: var(--iron);
+}
+
+/* --- Etapes --- */
+
+.qr-steps h2 {
+  margin: 0 0 14px;
+  font-size: 17px;
+  color: var(--white);
+}
+
+.qr-steps ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qr-steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 14px 16px 14px 50px;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* La numerotation encode une sequence reelle : chaque etape depend de la precedente. */
+.qr-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--smoke);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.qr-steps strong { color: var(--white); font-weight: 600; }
+
+:where(button, a):focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+@media (max-width: 680px) {
+  .qr-card {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .qr-details { align-items: center; width: 100%; }
+  .qr-actions { justify-content: center; }
+  .qr-url { max-width: 100%; }
+}

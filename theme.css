@@ -20,29 +20,42 @@
    ============================================================ */
 
 :root {
-  /* --- Neutres, du plus sombre au plus clair --- */
-  --void: #040506; /* fond de page, unique - jamais de section claire */
-  --ink: #07080a; /* cartes, panels */
-  --obsidian: #111214; /* puits, pastilles d'icone */
-  --graphite: #1b1c1e; /* badges */
-  --slate: #2f3031;
-  --iron: #454647;
-  --smoke: #6a6b6c; /* texte tertiaire */
-  --ash: #9c9c9d; /* texte courant */
-  --mist: #e6e6e6; /* boutons primaires */
+  /* --- Echelle de gris, plusieurs niveaux de profondeur plutot qu'un
+     noir plat unique (inspire Linear/Raycast/Vercel/Apple/Stripe) :
+     chaque niveau est LEGEREMENT plus clair que le precedent, jamais
+     une rupture nette - la profondeur vient du contraste de surfaces,
+     pas de la couleur. --void reste la base (fond de page), --surface-1
+     a --surface-3 servent aux cartes/panels/pastilles empiles. */
+  --void: #08090b; /* fond de page - plus jamais #000 pur */
+  --surface-1: #0d0f12; /* premier niveau de carte/section */
+  --surface-2: #131519; /* cartes sur fond deja surface-1, pastilles */
+  --surface-3: #191c21; /* badges, elements les plus "hauts" */
+  --ink: #0d0f12; /* alias retro-compatible = surface-1 */
+  --obsidian: #131519; /* alias retro-compatible = surface-2 */
+  --graphite: #191c21; /* alias retro-compatible = surface-3 */
+  --slate: #2a2d33;
+  --iron: #40434a;
+  --smoke: #6f7278; /* texte tertiaire */
+  --ash: #a1a3a8; /* texte courant */
+  --mist: #e8e9eb; /* boutons primaires */
   --white: #ffffff; /* titres, valeurs chiffrees */
 
   /* --- Marque + atmosphere --- */
   --coral: #ff6363; /* accent unique, strictement rationne */
-  --ember: #452324; /* surfaces teintees chaudes */
+  --ember: #2c2022; /* surfaces teintees chaudes, tres discretes */
   --sky: #63a1ff; /* atmosphere hero uniquement */
   --cobalt: #143ca3; /* atmosphere hero uniquement */
   --deep: #02193b;
   --iris: #9281f7; /* atmosphere hero uniquement, sur la video de fond */
 
-  /* --- Filets --- */
-  --hairline: rgba(255, 255, 255, 0.09);
-  --hairline-soft: rgba(255, 255, 255, 0.06);
+  /* Degrade de marque - reserve aux tout petits details (barre de
+     classement du dashboard). Retire des cartes/boutons/chiffres :
+     le relief vient desormais des surfaces, pas de la couleur. */
+  --brand-gradient: linear-gradient(135deg, var(--coral), var(--iris));
+
+  /* --- Filets, tres discrets --- */
+  --hairline: rgba(255, 255, 255, 0.07);
+  --hairline-soft: rgba(255, 255, 255, 0.045);
 
   /* --- Typo --- */
   /* Inter est charge en local par base.css.
@@ -299,11 +312,17 @@ h3 {
    Surfaces
    ============================================================ */
 
+/* Carte qui se distingue du fond par le CONTRASTE DE SURFACE (un
+   niveau de gris au-dessus du fond), pas par une teinte de couleur -
+   c'est le principe Linear/Vercel/Raycast : le relief vient de
+   l'empilement de surfaces, la couleur reste reservee a de tout
+   petits details fonctionnels. */
 .card {
   padding: 26px 24px 28px;
   border-radius: var(--r-card);
-  background: var(--ink);
-  box-shadow: var(--key-shadow);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .card-lg {
@@ -513,6 +532,16 @@ h3 {
   padding: 120px 0;
 }
 
+/* Chaque grande section respire sur un niveau de gris legerement
+   different (surface-1 en alternance avec le fond void) - la
+   variation est presque imperceptible isolement, mais cree une vraie
+   sensation de profondeur en scrollant, plutot qu'un aplat uniforme
+   du haut en bas de la page. */
+#fonctionnement,
+#faq {
+  background: var(--surface-1);
+}
+
 /* Halo decoratif discret pour casser le tout-noir sur une section
    donnee - jamais sur un element fonctionnel (bouton, input, statut),
    purement une ambiance de fond, comme au hero. */
@@ -523,10 +552,10 @@ h3 {
 
 .section-glow {
   position: absolute;
-  width: 640px;
-  height: 640px;
+  width: 720px;
+  height: 720px;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(110px);
   pointer-events: none;
   z-index: 0;
 }
@@ -534,13 +563,15 @@ h3 {
 .section-glow-coral {
   top: -220px;
   right: -160px;
-  background: radial-gradient(closest-side, rgba(255, 99, 99, 0.1), transparent 72%);
+  background: radial-gradient(closest-side, rgba(255, 99, 99, 0.07), transparent 72%);
 }
 
+/* Iris comme teinte d'atmosphere secondaire, tres discrete - un
+   halo qu'on devine plus qu'on ne voit, jamais un aplat de couleur. */
 .section-glow-iris {
   bottom: -220px;
   left: -160px;
-  background: radial-gradient(closest-side, rgba(146, 129, 247, 0.1), transparent 72%);
+  background: radial-gradient(closest-side, rgba(146, 129, 247, 0.06), transparent 72%);
 }
 
 .section-atmos > .wrap {

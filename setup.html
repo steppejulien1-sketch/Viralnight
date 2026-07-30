@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ViralNight | Installation</title>
+    <meta name="description" content="Installer et vérifier la base de données ViralNight." />
+    <link rel="icon" href="./assets/favicon.png" type="image/png" />
+    <meta name="theme-color" content="#040506" />
+    <meta name="robots" content="noindex" />
+    <link rel="stylesheet" href="./base.css" />
+    <link rel="stylesheet" href="./theme.css" />
+    <link rel="stylesheet" href="./setup.css" />
+  </head>
+  <body>
+    <main class="su-shell">
+      <header class="su-header">
+        <a class="brand" href="./index.html">
+          <img src="./assets/logo-mark.png" alt="" width="30" height="30" />
+          <span>ViralNight</span>
+        </a>
+        <span class="su-project" id="project-ref"></span>
+      </header>
+
+      <section class="su-intro">
+        <h1>Installer la collecte de statistiques</h1>
+        <p>
+          Une seule opération à faire : exécuter le script SQL dans Supabase. Cette page
+          vérifie ensuite, en direct, que tout est en place.
+        </p>
+      </section>
+
+      <!-- Etat de la base -->
+      <section class="su-block">
+        <div class="su-block-head">
+          <h2>État de ta base</h2>
+          <button type="button" id="recheck" class="su-secondary">Revérifier</button>
+        </div>
+        <div class="su-summary" id="summary">Vérification en cours…</div>
+        <ul class="su-checks" id="checks"></ul>
+      </section>
+
+      <!-- Le script -->
+      <section class="su-block" id="sql-block">
+        <div class="su-block-head">
+          <h2>Le script à exécuter</h2>
+          <span class="su-meta" id="sql-meta"></span>
+        </div>
+
+        <ol class="su-steps">
+          <li>
+            <span>Ouvre l'éditeur SQL de ton projet Supabase.</span>
+            <a id="open-editor" class="su-link" target="_blank" rel="noopener noreferrer">Ouvrir le SQL Editor</a>
+          </li>
+          <li>
+            <span>Copie le script complet et colle-le dans l'éditeur.</span>
+            <button type="button" id="copy-sql">Copier le script</button>
+          </li>
+          <li><span>Clique sur <strong>Run</strong>, puis reviens ici et clique sur <strong>Revérifier</strong>.</span></li>
+        </ol>
+
+        <details class="su-sql">
+          <summary>Voir le script (<span id="sql-lines"></span> lignes)</summary>
+          <pre id="sql-preview"></pre>
+        </details>
+      </section>
+
+      <!-- Test des triggers sur la vraie base -->
+      <section class="su-block">
+        <div class="su-block-head">
+          <h2>Tester que la collecte fonctionne</h2>
+          <span class="su-meta" id="test-meta"></span>
+        </div>
+
+        <p class="su-para">
+          Les vérifications ci-dessus confirment que les tables existent. Ce second script
+          va plus loin : il simule des scans et des publications à des heures précises, et
+          vérifie que chacun est rattaché à la bonne soirée — y compris une story publiée à
+          2 h du matin, qui doit rejoindre la soirée de la veille.
+        </p>
+
+        <ol class="su-steps">
+          <li>
+            <span>Colle ce script dans le même éditeur SQL et lance-le.</span>
+            <button type="button" id="copy-test">Copier le test</button>
+          </li>
+          <li>
+            <span>
+              Lis les messages : chaque ligne <strong>OK</strong> est un cas validé. Le
+              script se termine par <strong>TOUS LES TESTS SONT PASSÉS</strong>.
+            </span>
+          </li>
+        </ol>
+
+        <p class="su-note">
+          Le test s'exécute dans une transaction annulée à la fin : aucune donnée n'est
+          conservée et tes vraies soirées ne sont pas touchées.
+        </p>
+
+        <details class="su-sql">
+          <summary>Voir le test (<span id="test-lines"></span> lignes)</summary>
+          <pre id="test-preview"></pre>
+        </details>
+      </section>
+
+      <footer class="su-footer">
+        <p>
+          Le script est rejouable : l'exécuter deux fois ne casse rien. Il ne supprime aucune
+          donnée existante — il ajoute les tables de collecte et d'analyse.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="./setup.js"></script>
+  </body>
+</html>

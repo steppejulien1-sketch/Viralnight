@@ -255,6 +255,7 @@ body.side-open .side-scrim{ opacity:1; visibility:visible }
   margin-top:11px; font-size:clamp(24px, 2.2vw, 30px); font-weight:600; color:var(--white);
   line-height:1; letter-spacing:.01em; font-variant-numeric:tabular-nums; white-space:nowrap;
 }
+.kpi-delta.down{ color:#e08a8a }
 .kpi-value small{ font-size:14px; font-weight:500; color:var(--smoke) }
 .kpi-sub{ margin-top:8px; font-size:11.5px; color:var(--smoke) }
 .kpi-spark{ display:flex; align-items:flex-end; gap:3px; height:26px; margin-top:12px }
@@ -304,6 +305,11 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
   content:""; position:absolute; top:-13px; left:50%; margin-left:-3px;
   width:6px; height:6px; border-radius:50%; background:var(--coral);
   box-shadow:0 0 10px rgba(255,99,99,.9); animation:pulse 2s ease-in-out infinite;
+}
+.chart-empty{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  margin:0; padding:0 24px; text-align:center;
+  font-size:12.5px; line-height:1.6; color:var(--smoke);
 }
 .chart-x{ display:flex; gap:4%; padding:10px 2% 0; margin-left:44px }
 .chart-x span{
@@ -444,6 +450,18 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 }
 .ex-chip b{ color:var(--mist); font-weight:600 }
 .ex-chip.flash{ animation:row-flash 1s var(--ease) }
+.days-row{ display:flex; gap:8px; flex-wrap:wrap }
+.day-chip{
+  font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:.03em; color:var(--smoke);
+  padding:8px 14px; border-radius:9px; background:rgba(255,255,255,.028);
+  box-shadow:inset 0 0 0 1px var(--hairline-soft); cursor:pointer;
+  transition:color .2s, background .2s, box-shadow .2s;
+}
+.day-chip:hover{ color:var(--ash) }
+.day-chip.on{
+  color:var(--white); background:rgba(255,255,255,.07);
+  box-shadow:inset 0 0 0 1px var(--hairline);
+}
 
 /* Récompenses */
 .rw-head, .rw-row{ display:grid; grid-template-columns:1.35fr 78px 78px 1fr 42px; gap:12px; align-items:center }
@@ -531,6 +549,98 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 .qs-tile .v{ font-size:25px; font-weight:600; color:var(--white); font-variant-numeric:tabular-nums; white-space:nowrap }
 
 /* ---------- Footer ---------- */
+/* ============ 04 · Analyse des soirees ============
+   Reprend les tokens du simulateur. Le corail reste la couleur de marque :
+   il souligne les valeurs importantes, jamais un bouton. */
+
+.an-toolbar{ display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; margin-bottom:18px }
+
+.an-pick{ display:flex; flex-direction:column; gap:6px; flex:0 0 auto }
+.an-pick span{ font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--smoke) }
+.an-pick select{
+  background:var(--graphite); color:var(--white); border:1px solid var(--hairline);
+  border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit; max-width:260px;
+}
+
+/* Le verdict : la seule ligne que lira un patron presse. */
+.an-verdict{
+  flex:1; min-width:260px; margin:0; padding-left:14px;
+  border-left:2px solid var(--coral);
+  font-size:14px; line-height:1.6; color:var(--mist);
+}
+
+.an-kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:18px }
+
+.an-kpi{
+  background:var(--obsidian); border:1px solid var(--hairline); border-radius:14px;
+  padding:15px 16px; display:flex; flex-direction:column; gap:3px;
+}
+.an-kpi-value{ font-size:22px; font-weight:700; color:var(--white); letter-spacing:-.015em; font-variant-numeric:tabular-nums }
+.an-kpi-value.is-up{ color:#4ade80 }
+.an-kpi-value.is-down{ color:var(--coral) }
+.an-kpi-label{ font-size:11px; color:var(--ash) }
+.an-kpi-sub{ font-size:10px; color:var(--smoke) }
+
+.an-grid{ display:grid; grid-template-columns:1.15fr .85fr; gap:14px; margin-bottom:14px }
+.an-col{ display:flex; flex-direction:column; gap:14px }
+
+.an-panel{ padding:18px 20px }
+.an-panel h3{ margin:0 0 3px; font-size:15px; color:var(--white); letter-spacing:-.01em }
+.an-sub{ margin:0 0 14px; font-size:12px; color:var(--smoke); display:flex; gap:14px; flex-wrap:wrap }
+
+.an-empty{ margin:0; font-size:12px; color:var(--smoke); list-style:none }
+
+/* Actions : la severite est encodee dans le liseré, pas seulement dans le chiffre. */
+.an-actions{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px }
+.an-action{
+  display:flex; align-items:center; gap:14px;
+  padding:12px 14px; background:var(--graphite);
+  border-left:2px solid var(--iron); border-radius:10px;
+  font-size:13px; line-height:1.5; color:var(--mist);
+}
+.an-action.is-high{ border-left-color:var(--coral) }
+.an-action.is-medium{ border-left-color:#fbbf24 }
+.an-action span{ flex:1 }
+.an-action strong{ color:var(--coral); font-variant-numeric:tabular-nums; white-space:nowrap }
+
+/* Barres comparatives */
+.an-bars{ display:flex; flex-direction:column; gap:11px }
+.an-bar{ display:grid; grid-template-columns:1fr auto; gap:4px 10px }
+.an-bar-label{ font-size:12.5px; color:var(--ash) }
+.an-bar.is-top .an-bar-label{ color:var(--white); font-weight:600 }
+.an-bar-value{ grid-column:2; grid-row:1; font-size:11px; color:var(--smoke); font-family:var(--font-mono); font-variant-numeric:tabular-nums; white-space:nowrap }
+.an-bar-track{ grid-column:1/-1; height:7px; background:var(--graphite); border-radius:999px; overflow:hidden }
+.an-bar-fill{ height:100%; background:var(--iron); border-radius:999px; transition:width .5s cubic-bezier(.22,.68,.34,1) }
+.an-bar.is-top .an-bar-fill{ background:var(--coral) }
+
+/* Heures : deux series sur une base commune, sinon les hauteurs ne sont pas comparables. */
+.an-legend{ display:inline-flex; align-items:center; gap:6px }
+.an-legend::before{ content:""; width:8px; height:8px; border-radius:2px }
+.an-legend.is-scans::before{ background:var(--iron) }
+.an-legend.is-posts::before{ background:var(--coral) }
+
+.an-hours{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:8px; align-items:end; height:150px }
+.an-hour{ display:grid; grid-template-rows:1fr auto; gap:6px; height:100%; justify-items:center }
+.an-hour-pair{ display:flex; align-items:flex-end; justify-content:center; gap:3px; width:100%; height:100% }
+.an-hour-bar{ flex:1; max-width:20px; border-radius:4px 4px 0 0; transition:height .5s cubic-bezier(.22,.68,.34,1) }
+.an-hour-bar.is-scans{ background:var(--iron) }
+.an-hour-bar.is-posts{ background:rgba(255,99,99,.5) }
+.an-hour.is-peak .an-hour-bar.is-posts{ background:var(--coral) }
+.an-hour-label{ font-size:10.5px; color:var(--smoke); font-family:var(--font-mono) }
+.an-hour.is-peak .an-hour-label{ color:var(--white); font-weight:700 }
+
+.an-insight{
+  margin:16px 0 0; padding:12px 14px;
+  background:var(--graphite); border-left:2px solid var(--coral); border-radius:10px;
+  font-size:12.5px; line-height:1.55; color:var(--mist);
+}
+
+@media (max-width:900px){
+  .an-grid{ grid-template-columns:1fr }
+  .an-hours{ height:126px; gap:4px }
+  .an-verdict{ padding-left:12px }
+}
+
 .dash-foot{
   border-top:1px solid rgba(255,255,255,.045);
   padding:22px 26px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;
@@ -627,6 +737,7 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
     <a class="s-link active" href="#vue" data-spy="vue"><span class="n">01</span>Vue générale</a>
     <a class="s-link" href="#points" data-spy="points"><span class="n">02</span>Points &amp; récompenses</a>
     <a class="s-link" href="#qr" data-spy="qr"><span class="n">03</span>QR &amp; check-in</a>
+    <a class="s-link" href="#analyse" data-spy="analyse"><span class="n">04</span>Analyse des soirées</a>
   </nav>
 
   <div class="side-foot">
@@ -671,7 +782,7 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 
       <div class="kpis" data-reveal-group>
         <div class="kpi spot">
-          <div class="kpi-top"><span class="kpi-label">Reach généré</span><span class="kpi-delta">↑ +18,6 %</span></div>
+          <div class="kpi-top"><span class="kpi-label">Reach généré</span><span class="kpi-delta" id="kReachDelta">↑ +18,6 %</span></div>
           <div class="kpi-value" id="kReach">0</div>
           <div class="kpi-sub"><span id="kContents">81</span> contenus validés</div>
           <div class="kpi-spark" aria-hidden="true">
@@ -679,17 +790,17 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
           </div>
         </div>
         <div class="kpi spot">
-          <div class="kpi-top"><span class="kpi-label">Points attribués</span><span class="kpi-delta">↑ +12,3 %</span></div>
+          <div class="kpi-top"><span class="kpi-label">Points attribués</span><span class="kpi-delta" id="kPointsDelta">↑ +12,3 %</span></div>
           <div class="kpi-value" id="kPoints">0</div>
           <div class="kpi-sub">Barème de l'établissement appliqué</div>
         </div>
         <div class="kpi spot">
-          <div class="kpi-top"><span class="kpi-label">Récompenses utilisées</span><span class="kpi-delta">↑ +7</span></div>
+          <div class="kpi-top"><span class="kpi-label">Récompenses utilisées</span><span class="kpi-delta" id="kRewardsDelta">↑ +7</span></div>
           <div class="kpi-value" id="kRewards">0</div>
           <div class="kpi-sub"><span id="kActiveRewards">5</span> récompenses actives</div>
         </div>
         <div class="kpi warm spot">
-          <div class="kpi-top"><span class="kpi-label">Coût / 1 000 vues</span><span class="kpi-delta">↓ −0,14 €</span></div>
+          <div class="kpi-top"><span class="kpi-label">Coût / 1 000 vues</span><span class="kpi-delta" id="kCpmDelta">↓ −0,14 €</span></div>
           <div class="kpi-value" id="kCpm">0,00 €</div>
           <div class="kpi-sub">Estimation basée sur les récompenses</div>
         </div>
@@ -703,7 +814,7 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
               <p class="panel-sub">Évolution des vues qualifiées.</p>
             </div>
             <div class="seg" role="tablist" aria-label="Période du graphique">
-              <button class="on" id="segWeek" role="tab" aria-selected="true">7 SOIRÉES</button>
+              <button class="on" id="segWeek" role="tab" aria-selected="true">1 SEMAINE</button>
               <button id="segMonth" role="tab" aria-selected="false">4 SEMAINES</button>
             </div>
           </div>
@@ -850,6 +961,18 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
             <div id="rewardRows"></div>
           </div>
         </div>
+
+        <div class="panel spot" data-reveal>
+          <div class="panel-head">
+            <div>
+              <p class="panel-title">Jours d'ouverture</p>
+              <p class="panel-sub">Le simulateur n'anime que les soirées des jours cochés.</p>
+            </div>
+          </div>
+          <div class="cfg-body">
+            <div class="days-row" id="openDaysRow"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -897,6 +1020,59 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
       </div>
     </section>
 
+
+    <section class="section" id="analyse" data-section>
+      <div class="page-head">
+        <div>
+          <span class="eyebrow">04 · Analyse des soirées</span>
+          <h2>Savoir quoi changer pour la prochaine.</h2>
+        </div>
+        <p class="note">Chiffres calculés par le moteur d'analyse, pas des valeurs figées : changez de soirée, tout se recalcule.</p>
+      </div>
+
+      <div class="an-toolbar">
+        <label class="an-pick">
+          <span>Soirée analysée</span>
+          <select id="anEvent"></select>
+        </label>
+        <p class="an-verdict" id="anVerdict"></p>
+      </div>
+
+      <div class="an-kpis" id="anKpis"></div>
+
+      <div class="an-grid">
+        <div class="panel an-panel" data-reveal>
+          <h3>Ce qu'il faut améliorer</h3>
+          <p class="an-sub">Classé par gain estimé sur cette soirée.</p>
+          <ul class="an-actions" id="anActions"></ul>
+        </div>
+
+        <div class="an-col">
+          <div class="panel an-panel" data-reveal>
+            <h3>Quel DJ fait venir du monde</h3>
+            <p class="an-sub">Vues générées en moyenne par soirée.</p>
+            <div class="an-bars" id="anDjs"></div>
+          </div>
+
+          <div class="panel an-panel" data-reveal>
+            <h3>Les récompenses préférées</h3>
+            <p class="an-sub">Classées par ce que les clients choisissent réellement.</p>
+            <div class="an-bars" id="anRewards"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel an-panel" data-reveal>
+        <h3>Quand est-ce qu'ils postent</h3>
+        <p class="an-sub">
+          <span class="an-legend is-scans">Scans QR</span>
+          <span class="an-legend is-posts">Publications</span>
+        </p>
+        <div class="an-hours" id="anHours"></div>
+        <p class="an-insight" id="anTiming"></p>
+      </div>
+    </section>
+
     <footer class="dash-foot">
       <span>viralnight os</span><span class="pipe">|</span>
       <span>mode démo — données simulées</span><span class="pipe">|</span>
@@ -907,6 +1083,8 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 </div>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script type="module" src="./simulateur-analyse.js"></script>
 
 <script>
 (function(){
@@ -940,13 +1118,20 @@ var DEFAULTS = {
     { name:'Boisson premium',     seuil:110, stock:30,  used:6,  active:true },
     { name:'Coupe-file',          seuil:160, stock:20,  used:4,  active:true },
     { name:'Entrée gratuite',     seuil:240, stock:10,  used:2,  active:true }
-  ]
+  ],
+  openDays: ['jeu','ven','sam']
 };
 var LS_KEY = 'vn-dash-v1';
 function loadState(){
   try{
     var raw = localStorage.getItem(LS_KEY);
-    if(raw){ var s = JSON.parse(raw); if(s.bareme && s.rewards) return s }
+    if(raw){
+      var s = JSON.parse(raw);
+      if(s.bareme && s.rewards){
+        if(!s.openDays) s.openDays = DEFAULTS.openDays.slice();
+        return s;
+      }
+    }
   }catch(e){}
   return JSON.parse(JSON.stringify(DEFAULTS));
 }
@@ -1059,8 +1244,31 @@ if(window.matchMedia('(hover:hover)').matches){
 /* ============ KPIs ============ */
 var kReach = $('#kReach'), kPoints = $('#kPoints'), kRewards = $('#kRewards'), kCpm = $('#kCpm');
 var kContents = $('#kContents'), kActiveRewards = $('#kActiveRewards');
+var kReachDelta = $('#kReachDelta'), kPointsDelta = $('#kPointsDelta'), kRewardsDelta = $('#kRewardsDelta'), kCpmDelta = $('#kCpmDelta');
 function cpmValue(){
   return (live.rewardsUsed * live.avgRewardCost) / (live.reach / 1000);
+}
+/* Reference "soiree precedente" figee au chargement, a partir des
+   deltas d'origine (statiques) : ce qui permet ensuite de recalculer
+   un vrai pourcentage a chaque mise a jour au lieu de garder un
+   texte fige alors que les valeurs bougent. */
+var baseline = {
+  reach: live.reach / 1.186,
+  points: live.points / 1.123,
+  rewardsUsed: live.rewardsUsed - 7,
+  cpm: cpmValue() + 0.14
+};
+function pctDelta(current, base){
+  if(!base) return 0;
+  return (current - base) / base * 100;
+}
+function setDelta(el, value, opts){
+  opts = opts || {};
+  var up = value >= 0;
+  var arrow = up ? '↑' : '↓';
+  var text = opts.fmt ? opts.fmt(value, up) : arrow + ' ' + (up ? '+' : '') + value.toFixed(1).replace('.', ',') + ' %';
+  el.textContent = text;
+  el.classList.toggle('down', !up);
 }
 function renderKpis(fast){
   var d = fast ? 500 : 1400;
@@ -1069,6 +1277,17 @@ function renderKpis(fast){
   tween(kRewards, live.rewardsUsed, { dur:d });
   tween(kCpm, cpmValue(), { dur:d, fmt:function(v){ return fmtEur2.format(v) } });
   kContents.textContent = fmtInt.format(live.contents);
+
+  setDelta(kReachDelta, pctDelta(live.reach, baseline.reach));
+  setDelta(kPointsDelta, pctDelta(live.points, baseline.points));
+  setDelta(kRewardsDelta, live.rewardsUsed - baseline.rewardsUsed, {
+    fmt: function(v, up){ return (up ? '↑ +' : '↓ ') + fmtInt.format(Math.round(v)); }
+  });
+  var cpmNow = cpmValue();
+  var cpmDeltaVal = cpmNow - baseline.cpm;
+  setDelta(kCpmDelta, -cpmDeltaVal, {
+    fmt: function(){ return (cpmDeltaVal <= 0 ? '↓ ' : '↑ +') + fmtEur2.format(Math.abs(cpmDeltaVal)); }
+  });
 }
 
 /* ============ CHART ============ */
@@ -1076,6 +1295,29 @@ var WEEK = { labels:['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'], base:[18240,278
 var MONTH = { labels:['S−3','S−2','S−1','Cette sem.'], base:[148210,187640,203890,249480], max:280000, grid:[240000,160000,80000], liveIdx:3 };
 var tonightExtra = 0;
 var chartMode = WEEK;
+var chartIsWeek = true;
+
+/* Ordre des jours, aligne sur WEEK.labels et sur la liste DAYS des reglages. */
+var DAY_IDS = ['lun','mar','mer','jeu','ven','sam','dim'];
+
+/* La semaine affichee ne contient que les jours ou le club ouvre : montrer un lundi
+   a 18k vues alors que le club est ferme le lundi rendrait le graphique trompeur. */
+function weekForOpenDays(){
+  var ouverts = [];
+  DAY_IDS.forEach(function(id, i){
+    if(cfg.openDays.indexOf(id) !== -1) ouverts.push(i);
+  });
+  if(!ouverts.length) return null;
+
+  return {
+    labels: ouverts.map(function(i){ return WEEK.labels[i] }),
+    base:   ouverts.map(function(i){ return WEEK.base[i] }),
+    max: WEEK.max,
+    grid: WEEK.grid,
+    /* La soiree "live" est la derniere soiree ouverte de la semaine. */
+    liveIdx: ouverts.length - 1
+  };
+}
 var chartPlot = $('#chartPlot'), chartX = $('#chartX'), chartTip = $('#chartTip');
 
 function chartValues(m){
@@ -1084,9 +1326,20 @@ function chartValues(m){
 function fmtK(v){ return v >= 1000 ? Math.round(v / 1000) + 'k' : String(v) }
 
 function buildChart(m){
-  chartMode = m;
   chartPlot.innerHTML = '';
   chartX.innerHTML = '';
+
+  /* Aucun jour coche : on l'annonce au lieu d'afficher un graphique vide. */
+  if(!m){
+    chartMode = { labels:[], base:[], max:1, grid:[], liveIdx:-1 };
+    var vide = document.createElement('p');
+    vide.className = 'chart-empty';
+    vide.textContent = "Aucun jour d'ouverture selectionne : coche au moins un jour dans Points & recompenses.";
+    chartPlot.appendChild(vide);
+    return;
+  }
+
+  chartMode = m;
   var glZero = document.createElement('div');
   glZero.className = 'gridline'; glZero.style.bottom = '0';
   glZero.innerHTML = '<span class="gl">0</span>';
@@ -1146,8 +1399,8 @@ function setSeg(mode){
   segMonth.setAttribute('aria-selected', String(!isW));
   buildChart(mode);
 }
-segWeek.addEventListener('click', function(){ setSeg(WEEK) });
-segMonth.addEventListener('click', function(){ setSeg(MONTH) });
+segWeek.addEventListener('click', function(){ chartIsWeek = true; setSeg(weekForOpenDays()) });
+segMonth.addEventListener('click', function(){ chartIsWeek = false; setSeg(MONTH) });
 
 /* ============ FEED LIVE ============ */
 var AVA = [
@@ -1391,6 +1644,43 @@ $('#addReward').addEventListener('click', function(){
   saveState();
 });
 
+/* ============ JOURS D'OUVERTURE ============ */
+var DAYS = [
+  { id:'lun', label:'Lun' }, { id:'mar', label:'Mar' }, { id:'mer', label:'Mer' },
+  { id:'jeu', label:'Jeu' }, { id:'ven', label:'Ven' }, { id:'sam', label:'Sam' }, { id:'dim', label:'Dim' }
+];
+var openDaysRow = $('#openDaysRow');
+function renderOpenDays(){
+  openDaysRow.innerHTML = '';
+  DAYS.forEach(function(d){
+    var on = cfg.openDays.indexOf(d.id) !== -1;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'day-chip' + (on ? ' on' : '');
+    btn.setAttribute('data-day', d.id);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.textContent = d.label;
+    openDaysRow.appendChild(btn);
+  });
+}
+openDaysRow.addEventListener('click', function(e){
+  var t = e.target.closest('.day-chip');
+  if(!t) return;
+  var id = t.getAttribute('data-day');
+  var i = cfg.openDays.indexOf(id);
+  if(i === -1) cfg.openDays.push(id); else cfg.openDays.splice(i, 1);
+  t.classList.toggle('on');
+  t.setAttribute('aria-pressed', t.classList.contains('on'));
+  saveState();
+
+  /* Le graphique reflete immediatement les jours coches : c'est le lien
+     entre le reglage et ce que verra le gerant. */
+  if(chartIsWeek) buildChart(weekForOpenDays());
+
+  toast(t.classList.contains('on') ? 'Jour d\'ouverture ajouté' : 'Jour d\'ouverture retiré');
+});
+renderOpenDays();
+
 /* ============ QR ============ */
 var qrSvg = $('#qrSvg'), qrVisual = $('#qrVisual');
 var N = 21, M = 11; // 21 modules de 11px → viewBox 231
@@ -1441,7 +1731,7 @@ $('#qrDownload').addEventListener('click', function(){
 $('#resetDemo').addEventListener('click', function(){
   try{ localStorage.removeItem(LS_KEY) }catch(e){}
   cfg = JSON.parse(JSON.stringify(DEFAULTS));
-  renderBareme(); renderRewards(); updateExamples(false);
+  renderBareme(); renderRewards(); renderOpenDays(); updateExamples(false);
   toast('Démo réinitialisée');
 });
 
@@ -1449,7 +1739,7 @@ $('#resetDemo').addEventListener('click', function(){
 renderBareme();
 renderRewards();
 updateExamples(false);
-buildChart(WEEK);
+buildChart(weekForOpenDays());
 renderKpis(false);
 tween($('#qCheckins'), live.checkins, { dur:1400 });
 tween($('#qPresence'), live.presence, { dur:1400 });

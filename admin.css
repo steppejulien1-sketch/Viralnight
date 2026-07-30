@@ -577,3 +577,150 @@ select {
     display: none;
   }
 }
+
+/* --- Saisie des vues verifiees ---
+   La colonne "vues" etait un simple affichage : le staff validait un contenu
+   sans jamais pouvoir renseigner l'audience reelle, donc aucun point n'etait
+   credite et aucune statistique ne pouvait etre calculee. */
+
+.admin-views {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-views input {
+  width: 100%;
+  background: var(--surface-2, #131519);
+  border: 1px solid var(--hairline, rgba(255, 255, 255, 0.07));
+  border-radius: var(--r-btn, 9px);
+  padding: 8px 10px;
+  color: var(--white, #fff);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-views input:focus {
+  outline: none;
+  border-color: var(--coral, #ff6363);
+}
+
+.admin-views input:disabled {
+  opacity: 0.5;
+}
+
+.admin-views small {
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--smoke, #6f7278);
+}
+
+/* Ecart entre ce que le client annonce et ce que le staff constate :
+   signale en corail parce que c'est le signal d'un abus possible. */
+.admin-views small[data-declared] {
+  color: var(--coral, #ff6363);
+}
+
+/* --- Verification assistee ---
+   Instagram et TikTok ne donnent pas les vues : le staff doit trancher a la main.
+   Ces elements servent a lui donner le contexte sans quitter la page. */
+
+.admin-entry {
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-entry .admin-row {
+  border-bottom: 0;
+}
+
+/* Apercu de la publication : miniature + auteur, replies sous la ligne. */
+.admin-preview {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 14px 12px 14px;
+  font-size: 11.5px;
+  color: var(--smoke, #6f7278);
+  min-height: 0;
+}
+
+.admin-preview:empty {
+  display: none;
+}
+
+.admin-preview img {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex: 0 0 auto;
+}
+
+.admin-preview strong {
+  color: var(--white, #fff);
+  font-weight: 600;
+}
+
+/* Vues recuperees automatiquement : la seule valeur qu'on n'a pas eu a verifier. */
+.admin-preview em {
+  font-style: normal;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.admin-preview small {
+  display: block;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+/* Fiabilite du client, deduite de son historique de declarations. */
+.admin-trust {
+  padding: 3px 8px;
+  border-radius: var(--r-pill, 999px);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.admin-trust.is-fiable {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+}
+
+.admin-trust.is-a_surveiller {
+  background: rgba(255, 99, 99, 0.12);
+  color: var(--coral, #ff6363);
+}
+
+.admin-trust.is-inconnu {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--smoke, #6f7278);
+}
+
+/* Validation en un clic, reservee aux clients fiables.
+   Selecteur descendant volontaire : `.admin-actions button` plus haut dans ce fichier
+   a une specificite superieure et imposerait sinon sa couleur. */
+.admin-actions .admin-quick {
+  min-height: 32px;
+  padding: 0 11px;
+  border-radius: var(--r-btn, 9px);
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.32);
+  color: #4ade80;
+  font-size: 11px;
+  font-weight: 560;
+  white-space: nowrap;
+}
+
+.admin-actions .admin-quick:hover {
+  background: rgba(74, 222, 128, 0.2);
+  border-color: rgba(74, 222, 128, 0.5);
+}
+
+.admin-actions {
+  flex-wrap: wrap;
+  gap: 6px;
+}

@@ -1,4 +1,6 @@
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import { computePoints, describePoints } from "./lib/points/computePoints.js";
+import { evaluerFiabilite, validationRapidePossible } from "./lib/verification/customerTrust.js";
 
 const ADMIN_EMAIL = "viralnight001@gmail.com";
 
@@ -341,25 +343,53 @@ function renderTable() {
           : `<strong>${contentTitle}</strong>`;
 
         return `
-          <div class="admin-row" data-submission-id="${escapeHtml(submission.id)}">
+          <div class="admin-entry" data-submission-id="${escapeHtml(submission.id)}">
+          <div class="admin-row">
             <strong>${escapeHtml(submission.establishment)}</strong>
             <div>
               ${contentName}
               <span>${numberFormatter.format(submission.points)} pts proposés</span>
             </div>
             <span>${escapeHtml(submission.platform)}</span>
-            <span>${numberFormatter.format(submission.views)}</span>
+            <div class="admin-views">
+              <input
+                type="number"
+                min="0"
+                step="100"
+                inputmode="numeric"
+                data-views-input
+                value="${submission.views || submission.declaredViews || ""}"
+                placeholder="Vues reelles"
+                aria-label="Nombre de vues verifie"
+                ${isDone ? "disabled" : ""}
+              />
+              ${
+                // Affiche seulement s'il y a une declaration reelle ET differente du constat.
+                // Un test sur !== null laissait passer undefined et affichait "NaN".
+                Number.isFinite(submission.declaredViews) && submission.declaredViews > 0
+                && submission.declaredViews !== submission.views
+                  ? `<small data-declared>Annonce par le client : ${numberFormatter.format(submission.declaredViews)}</small>`
+                  : ""
+              }
+              <small data-points-preview>${escapeHtml(pointsPreviewFor(submission))}</small>
+            </div>
             <span class="status ${escapeHtml(submission.status)}">${escapeHtml(statusLabels[submission.status])}</span>
             <div class="admin-actions">
+              <span class="admin-trust is-inconnu" data-trust></span>
+              <button type="button" class="admin-quick" data-quick-validate hidden></button>
               <button type="button" data-admin-action="validate" ${isDone ? "disabled" : ""}>Valider</button>
               <button type="button" data-admin-action="reject" ${isDone ? "disabled" : ""}>Rejeter</button>
             </div>
+          </div>
+          <div class="admin-preview" data-preview></div>
           </div>
         `;
       })
       .join("");
 
   attachActionHandlers();
+  primePointRules();
+  chargerFiabilites();
 }
 
 function render() {
@@ -381,9 +411,14 @@ function normalizeSubmission(row) {
     platform: platformLabels[platform] || platform,
     type: contentTypeLabels[contentType] || contentType,
     views: Number(row.views_count || 0),
+    declaredViews: row.declared_views === null || row.declared_views === undefined ? null : Number(row.declared_views),
     points: Number(row.points_awarded || 0),
     status: row.status || "pending",
     url: row.url || "",
+    establishmentId: row.establishment_id || null,
+    customerId: row.customer_id || null,
+    contentType,
+    source: row.source || "staff",
   };
 }
 
@@ -406,7 +441,7 @@ async function loadSupabaseSubmissions() {
 
   const { data, error } = await supabase
     .from("submissions")
-    .select("id, platform, content_type, url, views_count, points_awarded, status, submitted_at, establishment:establishments(name, city)")
+    .select("id, establishment_id, customer_id, platform, content_type, url, views_count, declared_views, points_awarded, status, submitted_at, source, establishment:establishments(name, city)")
     .order("submitted_at", { ascending: false });
 
   if (error) {
@@ -457,7 +492,24 @@ async function updateSubmissionStatus(id, nextStatus) {
 
   if (state.source !== "supabase" || !supabase) return;
 
-  const { error } = await supabase.from("submissions").update({ status: nextStatus }).eq("id", id);
+  // Une validation credite le client : elle doit enregistrer les vues verifiees
+  // et les points correspondants. Sans cela le contenu passe "valide" avec 0 vue
+  // et 0 point, et aucune statistique ne peut etre calculee.
+  const miseAJour = { status: nextStatus };
+
+  if (nextStatus === "validated") {
+    const rules = await loadPointRules(submission.establishmentId);
+    const { points } = computePoints({
+      views: submission.views,
+      contentType: submission.contentType,
+      rules,
+    });
+    miseAJour.views_count = submission.views;
+    miseAJour.points_awarded = points;
+    submission.points = points;
+  }
+
+  const { error } = await supabase.from("submissions").update(miseAJour).eq("id", id);
 
   if (error) {
     submission.status = previousStatus;
@@ -467,7 +519,193 @@ async function updateSubmissionStatus(id, nextStatus) {
     return;
   }
 
-  setAuthStatus(nextStatus === "validated" ? "Contenu validé dans Supabase." : "Contenu rejeté dans Supabase.");
+  setAuthStatus(
+    nextStatus === "validated"
+      ? `Contenu validé : ${numberFormatter.format(submission.views)} vues, ${numberFormatter.format(submission.points)} pts crédités.`
+      : "Contenu rejeté dans Supabase.",
+  );
+}
+
+/**
+ * Baremes par etablissement, charges a la demande.
+ *
+ * Chaque club a son propre bareme : valider un contenu sans le bareme du bon
+ * etablissement crediterait un nombre de points errone.
+ */
+const pointRulesCache = new Map();
+
+const DEFAULT_POINT_RULES = {
+  videoViewsPerThousand: 25,
+  storyViewsPerThousand: 80,
+  viralBonus: 90,
+};
+
+async function loadPointRules(establishmentId) {
+  if (!establishmentId) return { ...DEFAULT_POINT_RULES };
+  if (pointRulesCache.has(establishmentId)) return pointRulesCache.get(establishmentId);
+
+  let regles = { ...DEFAULT_POINT_RULES };
+
+  if (supabase && state.source === "supabase") {
+    const { data } = await supabase
+      .from("establishment_point_rules")
+      .select("video_views_per_thousand, story_views_per_thousand, viral_bonus")
+      .eq("establishment_id", establishmentId)
+      .maybeSingle();
+
+    if (data) {
+      regles = {
+        videoViewsPerThousand: Number(data.video_views_per_thousand ?? DEFAULT_POINT_RULES.videoViewsPerThousand),
+        storyViewsPerThousand: Number(data.story_views_per_thousand ?? DEFAULT_POINT_RULES.storyViewsPerThousand),
+        viralBonus: Number(data.viral_bonus ?? DEFAULT_POINT_RULES.viralBonus),
+      };
+    }
+  }
+
+  pointRulesCache.set(establishmentId, regles);
+  return regles;
+}
+
+/** Bareme deja en cache, pour un affichage synchrone pendant la frappe. */
+function cachedRules(establishmentId) {
+  return pointRulesCache.get(establishmentId) || { ...DEFAULT_POINT_RULES };
+}
+
+function pointsPreviewFor(submission, viewsOverride) {
+  const vues = viewsOverride === undefined ? (submission.views || submission.declaredViews || 0) : viewsOverride;
+  if (!vues) return "Saisis les vues pour calculer les points";
+  return describePoints({
+    views: vues,
+    contentType: submission.contentType,
+    rules: cachedRules(submission.establishmentId),
+  });
+}
+
+/** Prepare les baremes des contenus affiches, puis rafraichit les apercus. */
+async function primePointRules() {
+  const ids = [...new Set(state.submissions.map((s) => s.establishmentId).filter(Boolean))];
+  await Promise.all(ids.map(loadPointRules));
+
+  document.querySelectorAll("[data-submission-id]").forEach((row) => {
+    const submission = state.submissions.find((s) => s.id === row.dataset.submissionId);
+    const apercu = row.querySelector("[data-points-preview]");
+    if (submission && apercu) apercu.textContent = pointsPreviewFor(submission);
+  });
+}
+
+/**
+ * Fiabilite des clients, calculee sur leur historique de declarations.
+ * Un client regulierement exact peut etre valide en un clic : c'est le seul moyen
+ * de reduire le travail sur Instagram et TikTok, ou aucune API ne donne les vues.
+ */
+const fiabiliteParClient = new Map();
+
+async function chargerFiabilites() {
+  if (state.source !== "supabase" || !supabase) return;
+
+  const clients = [...new Set(state.submissions.map((s) => s.customerId).filter(Boolean))];
+  const inconnus = clients.filter((id) => !fiabiliteParClient.has(id));
+  if (!inconnus.length) return rafraichirFiabilites();
+
+  const { data } = await supabase
+    .from("submissions")
+    .select("customer_id, declared_views, views_count, status")
+    .in("customer_id", inconnus);
+
+  const parClient = new Map();
+  for (const ligne of data || []) {
+    if (!parClient.has(ligne.customer_id)) parClient.set(ligne.customer_id, []);
+    parClient.get(ligne.customer_id).push(ligne);
+  }
+
+  for (const id of inconnus) {
+    fiabiliteParClient.set(id, evaluerFiabilite(parClient.get(id) || []));
+  }
+
+  rafraichirFiabilites();
+}
+
+const LIBELLES_FIABILITE = {
+  fiable: "Client fiable",
+  a_surveiller: "A verifier",
+  inconnu: "Nouveau client",
+};
+
+/** Injecte l'indicateur de fiabilite dans les lignes deja affichees. */
+function rafraichirFiabilites() {
+  document.querySelectorAll("[data-submission-id]").forEach((row) => {
+    const submission = state.submissions.find((s) => s.id === row.dataset.submissionId);
+    const cible = row.querySelector("[data-trust]");
+    if (!submission || !cible) return;
+
+    const fiabilite = fiabiliteParClient.get(submission.customerId);
+    if (!fiabilite) return;
+
+    cible.className = `admin-trust is-${fiabilite.niveau}`;
+    cible.textContent = LIBELLES_FIABILITE[fiabilite.niveau];
+    cible.title = fiabilite.libelle;
+
+    // Le bouton de validation rapide n'apparait que pour un client fiable
+    // ayant declare ses vues : il reprend sa declaration telle quelle.
+    const rapide = row.querySelector("[data-quick-validate]");
+    if (rapide) {
+      const possible = validationRapidePossible(fiabilite) && submission.declaredViews > 0;
+      rapide.hidden = !possible;
+      if (possible) rapide.textContent = `Valider ${numberFormatter.format(submission.declaredViews)} vues`;
+    }
+  });
+}
+
+/**
+ * Apercu de la publication : miniature, auteur, et vues reelles quand la plateforme
+ * les expose. Evite d'ouvrir l'application pour chaque contenu a verifier.
+ */
+async function chargerApercu(row, submission) {
+  const cible = row.querySelector("[data-preview]");
+  if (!cible || cible.dataset.charge) return;
+  cible.dataset.charge = "1";
+  cible.textContent = "Verification...";
+
+  try {
+    const { data } = await supabase.auth.getSession();
+    const jeton = data?.session?.access_token;
+    if (!jeton) throw new Error("session absente");
+
+    const reponse = await fetch(`/api/preview-link?url=${encodeURIComponent(submission.url)}`, {
+      headers: { Authorization: `Bearer ${jeton}` },
+    });
+    const apercu = await reponse.json();
+
+    if (!reponse.ok) {
+      cible.textContent = apercu.error || "Verification impossible.";
+      return;
+    }
+
+    const morceaux = [];
+    if (apercu.auteur) morceaux.push(`<strong>${escapeHtml(apercu.auteur)}</strong>`);
+    if (apercu.vuesAutomatiques) {
+      morceaux.push(`<em>${numberFormatter.format(apercu.vues)} vues verifiees</em>`);
+    }
+    if (apercu.note) morceaux.push(`<small>${escapeHtml(apercu.note)}</small>`);
+
+    cible.innerHTML = [
+      apercu.miniature
+        ? `<img src="${escapeHtml(apercu.miniature)}" alt="" loading="lazy" referrerpolicy="no-referrer" />`
+        : "",
+      `<span>${morceaux.join(" ")}</span>`,
+    ].join("");
+
+    // Vues officielles disponibles : on prerempli, le staff n'a plus qu'a valider.
+    if (apercu.vuesAutomatiques) {
+      const champ = row.querySelector("[data-views-input]");
+      if (champ && !champ.disabled) {
+        champ.value = apercu.vues;
+        champ.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }
+  } catch (error) {
+    cible.textContent = "Verification impossible.";
+  }
 }
 
 function attachActionHandlers() {
@@ -475,7 +713,51 @@ function attachActionHandlers() {
     button.addEventListener("click", () => {
       const row = button.closest("[data-submission-id]");
       const nextStatus = button.dataset.adminAction === "validate" ? "validated" : "rejected";
+      const submission = state.submissions.find((item) => item.id === row?.dataset.submissionId);
+
+      if (nextStatus === "validated") {
+        const saisie = Number(row?.querySelector("[data-views-input]")?.value || 0);
+        if (!saisie) {
+          setAuthStatus("Saisis le nombre de vues verifie avant de valider : sans vues, aucun point ne peut etre credite.");
+          row?.querySelector("[data-views-input]")?.focus();
+          return;
+        }
+        if (submission) submission.views = Math.max(0, Math.round(saisie));
+      }
+
       updateSubmissionStatus(row?.dataset.submissionId, nextStatus);
+    });
+  });
+
+  // Validation rapide : reprend la declaration d'un client fiable sans recomptage.
+  document.querySelectorAll("[data-quick-validate]").forEach((bouton) => {
+    bouton.addEventListener("click", () => {
+      const row = bouton.closest("[data-submission-id]");
+      const submission = state.submissions.find((item) => item.id === row?.dataset.submissionId);
+      if (!submission?.declaredViews) return;
+
+      submission.views = submission.declaredViews;
+      updateSubmissionStatus(submission.id, "validated");
+    });
+  });
+
+  // Apercus charges apres le rendu : ce sont des appels reseau, ils ne doivent pas
+  // retarder l'affichage de la file.
+  document.querySelectorAll("[data-submission-id]").forEach((row) => {
+    const submission = state.submissions.find((item) => item.id === row.dataset.submissionId);
+    if (submission?.url && state.source === "supabase") chargerApercu(row, submission);
+  });
+
+  // Apercu recalcule pendant la frappe : le staff voit le total credite
+  // avant de cliquer, plutot que de le decouvrir apres.
+  document.querySelectorAll("[data-views-input]").forEach((input) => {
+    input.addEventListener("input", () => {
+      const row = input.closest("[data-submission-id]");
+      const submission = state.submissions.find((item) => item.id === row?.dataset.submissionId);
+      const apercu = row?.querySelector("[data-points-preview]");
+      if (submission && apercu) {
+        apercu.textContent = pointsPreviewFor(submission, Number(input.value || 0));
+      }
     });
   });
 }

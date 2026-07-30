@@ -1,5 +1,27 @@
 # Supabase setup ViralNight
 
+## Installation rapide (recommandee)
+
+Tout le SQL de Viral Intelligence et de la collecte est regroupe dans un seul fichier
+rejouable : `supabase/migrations/SETUP_COMPLET.sql`.
+
+```bash
+npm run dev
+```
+
+Puis ouvrir **http://127.0.0.1:5173/setup.html** : la page donne le lien direct vers ton
+SQL Editor, un bouton pour copier le script, et verifie ensuite en direct ce qui est
+reellement installe.
+
+La verification distingue trois etats — installe, manquant, **indetermine**. Ce dernier
+apparait quand Supabase est injoignable : sans lui, une coupure reseau afficherait tout
+au vert et laisserait croire que la base est prete alors qu'elle est vide.
+
+Le reste de ce document detaille chaque migration prise separement.
+
+---
+
+
 ## 1. Variables d'environnement
 
 Créer ou compléter `.env.local` à la racine du projet Vite :
@@ -142,6 +164,155 @@ values
   ('ESTABLISHMENT_ID_RETOURNE', 'Surclassement table', 500, true),
   ('ESTABLISHMENT_ID_RETOURNE', 'Acces VIP / backroom', 700, true);
 ```
+
+## 5quater. Collecte des statistiques (le QR code)
+
+C'est le point d'entree de toute la chaine : **sans scan, aucune donnee n'est collectee**
+et toutes les analyses restent vides.
+
+Executer `supabase/migrations/202607290004_tracking_public_code.sql`. Elle ajoute :
+
+- `establishments.public_code` : code court encode dans le QR (jamais l'UUID, qui
+  permettrait d'enumerer les etablissements) ;
+- un index unique `(event_id, customer_id)` sur `qr_scans` : un client ne compte qu'une
+  fois par soiree, meme s'il rafraichit la page ;
+- `submissions.declared_views` : les vues **annoncees** par le client, distinctes de
+  `views_count` qui reste la valeur validee par le staff ;
+- `submissions.source` : distingue une saisie staff d'une soumission client.
+
+### Le parcours complet
+
+1. Le gerant ouvre `qr.html`, telecharge ou imprime son QR code, et l'affiche a l'entree.
+2. Le client scanne -> `scan.html?c=CODE` -> `POST /api/track-scan` enregistre son passage.
+   Le trigger SQL resout la soiree a partir de l'heure et des horaires d'ouverture, et la
+   cree si c'est le premier scan de la nuit.
+3. Le client publie sa story, colle le lien -> `POST /api/track-post` cree une `submission`
+   en statut `pending`, rattachee automatiquement a la meme soiree.
+4. Le staff valide le contenu depuis `admin.html` et saisit le nombre de vues reel.
+5. Les analyses se recalculent : DJs, recompenses, heures de publication.
+
+### Points de vigilance
+
+- Les clients **ne sont pas authentifies**. Les routes `track-*` sont donc publiques :
+  elles valident strictement le code et l'identifiant, limitent le debit par IP, et
+  n'exposent jamais d'erreur interne.
+- L'identifiant client est un UUID anonyme stocke dans le navigateur. Aucune donnee
+  personnelle (nom, email, telephone) n'est collectee.
+- Les points ne sont **jamais** attribues sur la base du nombre de vues annonce par le
+  client : la validation staff reste obligatoire.
+
+## 5ter. Tester l'API en local
+
+Les fonctions `api/*.js` sont des fonctions serverless Vercel. Elles sont desormais servies
+aussi par `npm run dev`, grace au plugin `vite-plugin-api.js` : un appel a
+`/api/viral-intelligence` execute reellement le handler, comme en production.
+
+Pour que l'API reponde autre chose qu'une erreur de configuration, `.env.local` doit contenir
+les cles serveur (elles ne sont PAS prefixees `VITE_`, donc jamais exposees au navigateur) :
+
+```env
+SUPABASE_SERVICE_ROLE_KEY=cle service_role du projet Supabase
+OPENAI_API_KEY=optionnel
+GOOGLE_PLACES_API_KEY=optionnel
+```
+
+Verification rapide, sans session : la reponse attendue est `401 Session requise.`
+
+```bash
+curl -i "http://127.0.0.1:5173/api/viral-intelligence?eventId=test"
+```
+
+La page `demo.html` s'adapte automatiquement :
+
+- **owner connecte** -> les soirees viennent de Supabase et l'analyse de `/api/viral-intelligence` ;
+- **pas de session** -> le meme moteur tourne dans le navigateur sur des donnees generees,
+  et un bandeau precise que les chiffres sont fictifs.
+
+## 5bis. Viral Intelligence™ : soirees et metriques
+
+Executer `supabase/migrations/202607290001_viral_intelligence_events.sql` dans le `SQL Editor`
+(cree `events`, `qr_scans`, `event_metrics`, rattache `submissions`/`reward_redemptions` a un `event_id`).
+
+Ajouter ensuite dans `.env.local` (local) et dans Vercel (prod) :
+
+```text
+SUPABASE_SERVICE_ROLE_KEY=clé service_role du projet Supabase
+OPENAI_API_KEY=clé OpenAI (optionnelle : sans elle, les recommandations restent affichées, juste sans reformulation IA)
+```
+
+Executer ensuite, dans l'ordre :
+
+```text
+supabase/migrations/202607290002_auto_event_scheduling.sql
+supabase/migrations/202607290003_per_day_opening_hours.sql
+```
+
+Pour l'import Google, ajouter aussi (optionnel mais recommande) :
+
+```text
+GOOGLE_PLACES_API_KEY=cle API Google avec Places API (New) activee
+```
+
+Sans cette cle, l'import bascule sur une lecture de la page Google Maps publique :
+ca depanne, mais c'est fragile (Google change son HTML sans preavis) et l'interface
+affiche alors un avertissement invitant a verifier les horaires importes.
+
+### Comment fonctionne la creation automatique
+
+Le gerant renseigne ses horaires dans `viral-intelligence.html`, soit en collant le lien
+de sa fiche Google Maps (panneau `Import Google`, tout est recupere et enregistre en une
+fois), soit a la main jour par jour. Ensuite, plus personne ne cree de soiree :
+
+1. Des qu'un scan QR, une publication ou une reclamation arrive, un trigger SQL rattache
+   automatiquement la ligne a la bonne soiree, et cree cette soiree si elle n'existe pas.
+2. Chaque jour a ses propres horaires. Un club ouvert vendredi 22h-06h et dimanche 15h-23h
+   est correctement gere : une publication du dimanche apres-midi va sur la soiree du
+   dimanche, une publication du samedi 02h va sur la soiree du **vendredi**.
+   C'est la fonction `resolve_event_night()`, qui teste les deux nuits candidates.
+3. Une activite en dehors de toute plage d'ouverture ne cree aucune soiree
+   (pas de soirees fantomes un mardi apres-midi).
+4. Les prochaines soirees sont pre-creees pour que le gerant les voie a l'avance, soit au
+   chargement du dashboard, soit via le script ci-dessous.
+
+Pre-creer les soirees a venir (14 jours par defaut) :
+
+```powershell
+node scripts/precreate-events.js
+```
+
+Alternative 100% Supabase avec `pg_cron`, une fois par jour :
+
+```sql
+select cron.schedule('precreate-events', '0 12 * * *', $$select public.precreate_upcoming_events(14)$$);
+```
+
+### Creation manuelle (optionnelle)
+
+Pour une soiree exceptionnelle un jour de fermeture, utiliser le bloc
+`Ajouter une soiree exceptionnelle` du dashboard, ou directement en SQL :
+
+```sql
+insert into public.events (establishment_id, name, event_date, dj_name, participants_count)
+values ('ESTABLISHMENT_ID_RETOURNE', 'Soiree Halloween', '2026-10-31', 'DJ Martin', 320)
+returning id;
+```
+
+Rattacher les submissions/reward_redemptions **historiques** (anterieures aux triggers) a une soiree.
+Les nouvelles lignes sont rattachees automatiquement, ceci ne sert qu'au rattrapage :
+
+```sql
+update public.submissions set event_id = 'EVENT_ID_RETOURNE' where establishment_id = 'ESTABLISHMENT_ID_RETOURNE' and event_id is null;
+update public.reward_redemptions set event_id = 'EVENT_ID_RETOURNE'
+  where event_id is null and reward_id in (select id from public.rewards where establishment_id = 'ESTABLISHMENT_ID_RETOURNE');
+```
+
+Puis recalculer les metriques (necessite `SUPABASE_SERVICE_ROLE_KEY` dans `.env.local`) :
+
+```powershell
+node scripts/recompute-event-metrics.js ESTABLISHMENT_ID_RETOURNE
+```
+
+Ouvrir ensuite `http://127.0.0.1:5173/viral-intelligence.html` (owner connecte requis).
 
 ## 6. Tester le dashboard
 

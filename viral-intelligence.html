@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ViralNight | Viral Intelligence™</title>
+    <meta
+      name="description"
+      content="Analyse automatique des soirees : Viral Score, heatmap horaire, comparaison DJs et recompenses, recommandations generees."
+    />
+    <link rel="icon" href="./assets/favicon.png" type="image/png" />
+    <link rel="preload" href="./assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <meta name="theme-color" content="#040506" />
+    <meta name="robots" content="noindex" />
+    <link rel="stylesheet" href="./base.css" />
+    <link rel="stylesheet" href="./theme.css" />
+    <link rel="stylesheet" href="./viral-intelligence.css" />
+  </head>
+  <body>
+    <main class="vi-shell">
+      <aside class="vi-sidebar">
+        <a class="brand" href="./index.html" aria-label="Retour ViralNight">
+          <img src="./assets/logo-mark.png" alt="" width="36" height="36" />
+          <span>Viral Intelligence™</span>
+        </a>
+        <nav aria-label="Navigation">
+          <a href="./app.html">Dashboard client</a>
+          <a class="is-active" href="./viral-intelligence.html">Viral Intelligence™</a>
+          <a href="./qr.html">QR code du club</a>
+        </nav>
+        <div class="vi-event-picker">
+          <label for="event-select">Soiree analysee</label>
+          <select id="event-select" disabled>
+            <option value="">Chargement...</option>
+          </select>
+        </div>
+
+        <form id="vi-google-form" class="vi-panel">
+          <p class="vi-panel-title">Import Google</p>
+          <p class="vi-panel-hint">
+            Collez le lien de votre fiche Google Maps : les horaires des 7 jours sont
+            recuperes et enregistres en une fois.
+          </p>
+          <input
+            type="url"
+            id="google-url"
+            placeholder="https://maps.app.goo.gl/..."
+            autocomplete="url"
+          />
+          <button type="submit" id="google-import-button">Importer les horaires</button>
+          <p id="vi-google-status" class="vi-panel-status" hidden></p>
+        </form>
+
+        <form id="vi-schedule-form" class="vi-panel">
+          <p class="vi-panel-title">Horaires d'ouverture</p>
+          <p class="vi-panel-hint">
+            Les soirees sont creees automatiquement pour ces creneaux. Une publication a 2h du
+            matin est rattachee a la soiree commencee la veille au soir.
+          </p>
+
+          <div class="vi-hours-grid" id="vi-hours-grid"></div>
+
+          <label class="vi-field">
+            <span>Nom automatique</span>
+            <input type="text" id="schedule-name-template" placeholder="Soiree du {date}" />
+          </label>
+
+          <label class="vi-field">
+            <span>DJ par defaut</span>
+            <input type="text" id="schedule-default-dj" placeholder="Optionnel" />
+          </label>
+
+          <label class="vi-checkbox">
+            <input type="checkbox" id="schedule-auto-create" checked />
+            <span>Creation automatique</span>
+          </label>
+
+          <button type="submit">Enregistrer</button>
+          <p id="vi-schedule-status" class="vi-panel-status" hidden></p>
+        </form>
+
+        <details class="vi-panel vi-panel--collapsible">
+          <summary>Ajouter une soiree exceptionnelle</summary>
+          <form id="vi-new-event-form" class="vi-new-event-form">
+            <input type="text" id="new-event-name" placeholder="Nom de la soiree" required />
+            <input type="date" id="new-event-date" required />
+            <input type="text" id="new-event-dj" placeholder="DJ (optionnel)" />
+            <input type="number" id="new-event-participants" placeholder="Participants" min="0" />
+            <button type="submit">Creer la soiree</button>
+            <p id="vi-new-event-error" class="vi-new-event-error" hidden></p>
+          </form>
+        </details>
+      </aside>
+
+      <section class="vi-workspace">
+        <header class="vi-topbar">
+          <p class="eyebrow">Analyse automatique</p>
+          <h1 id="vi-headline">Viral Intelligence™</h1>
+          <p id="vi-summary">Selectionnez une soiree pour lancer l'analyse.</p>
+        </header>
+
+        <div id="vi-error" class="vi-error" hidden></div>
+        <div id="vi-loading" class="vi-loading" hidden>Analyse en cours...</div>
+
+        <div id="vi-content" hidden>
+          <section class="vi-grid vi-grid--top">
+            <article class="vi-card vi-score-card">
+              <h2>Viral Score</h2>
+              <div class="vi-score-ring" id="vi-score-ring">
+                <span id="vi-score-value">--</span>
+                <small>/100</small>
+              </div>
+              <ul id="vi-score-breakdown" class="vi-breakdown"></ul>
+            </article>
+
+            <article class="vi-card">
+              <h2>Comparaison soirees</h2>
+              <ul id="vi-comparison" class="vi-comparison-list"></ul>
+            </article>
+          </section>
+
+          <section class="vi-card">
+            <h2>Heatmap horaire</h2>
+            <div id="vi-heatmap" class="vi-heatmap"></div>
+            <p id="vi-timing-hint" class="vi-hint"></p>
+          </section>
+
+          <section class="vi-grid">
+            <article class="vi-card">
+              <h2>Analyse des DJs</h2>
+              <table class="vi-table" id="vi-dj-table">
+                <thead>
+                  <tr><th>DJ</th><th>Reach moyen</th><th>Soirees</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </article>
+
+            <article class="vi-card">
+              <h2>Analyse des recompenses</h2>
+              <div id="vi-rewards" class="vi-reward-cards"></div>
+            </article>
+          </section>
+
+          <section class="vi-card">
+            <h2>Recommandations</h2>
+            <ul id="vi-recommendations" class="vi-recommendations"></ul>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./viral-intelligence.js"></script>
+  </body>
+</html>

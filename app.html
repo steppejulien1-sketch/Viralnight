@@ -30,6 +30,14 @@
           <a href="#checkin" data-view-link="checkin"><span>03</span>QR &amp; check-in</a>
         </nav>
 
+        <p class="sidebar-label">Collecte &amp; analyse</p>
+        <nav class="app-nav" aria-label="Collecte et analyse">
+          <a href="./live.html">Soirée en cours</a>
+          <a href="./viral-intelligence.html">Analyse des soirées</a>
+          <a href="./qr.html">QR code du club</a>
+          <a href="./admin.html">Valider les contenus</a>
+        </nav>
+
         <div class="sidebar-note">
           <span>Mode dashboard</span>
           <strong>Vue monitoring</strong>
@@ -110,6 +118,8 @@
             </article>
           </div>
 
+          <div class="dash-layout">
+          <div class="dash-main">
           <div class="analytics-grid">
             <section class="panel spot chart-panel chart-panel-main" aria-labelledby="reach-chart-title">
               <div class="panel-heading">
@@ -151,6 +161,99 @@
                 <text class="chart-value" x="709" y="24" text-anchor="middle">249k</text>
               </svg>
             </section>
+          </div>
+
+          <!-- Pipeline du contenu client : donne a voir le flux, pas
+               seulement des totaux (audit dashboard #2). -->
+          <div class="pipeline-row" aria-label="Pipeline des contenus clients">
+            <div class="pipeline-col">
+              <p class="pipeline-col-head"><i class="pipeline-dot"></i>Soumis <span>3</span></p>
+              <article class="pipeline-card">
+                <strong>@ambre.clb</strong>
+                <span>Story · 2,1k vues</span>
+                <b>+168 pts</b>
+              </article>
+              <article class="pipeline-card">
+                <strong>@dylan.off</strong>
+                <span>TikTok · 15,4k vues</span>
+                <b>+385 pts</b>
+              </article>
+              <article class="pipeline-card">
+                <strong>@noa.dpt</strong>
+                <span>Story · 3,9k vues</span>
+                <b>+312 pts</b>
+              </article>
+            </div>
+            <div class="pipeline-col">
+              <p class="pipeline-col-head"><i class="pipeline-dot pipeline-dot-warm"></i>Vérifié <span>2</span></p>
+              <article class="pipeline-card">
+                <strong>@jade.prz</strong>
+                <span>Reel · 5,7k vues</span>
+                <b>+142 pts</b>
+              </article>
+              <article class="pipeline-card">
+                <strong>@marco.lgc</strong>
+                <span>TikTok · 12,4k vues</span>
+                <b>+90 pts</b>
+              </article>
+            </div>
+            <div class="pipeline-col">
+              <p class="pipeline-col-head"><i class="pipeline-dot pipeline-dot-done"></i>Récompensé <span>2</span></p>
+              <article class="pipeline-card pipeline-card-done">
+                <strong>@lea.mrt</strong>
+                <span>Shot premium · 250 pts</span>
+                <b>Honoré</b>
+              </article>
+              <article class="pipeline-card pipeline-card-done">
+                <strong>@sofia.b</strong>
+                <span>Coupe-file · 300 pts</span>
+                <b>Honoré</b>
+              </article>
+            </div>
+          </div>
+          </div>
+
+          <!-- Rail lateral : prochains check-ins + classement des
+               ambassadeurs (audit dashboard #3). -->
+          <aside class="dash-rail">
+            <div class="panel spot rail-panel">
+              <p class="rail-title">Prochains check-ins</p>
+              <div class="rail-list">
+                <div class="rail-item">
+                  <span class="rail-time">21:30</span>
+                  <div><strong>Soirée Neon</strong><small>QR actif · 184 scans</small></div>
+                </div>
+                <div class="rail-item">
+                  <span class="rail-time">22:00</span>
+                  <div><strong>@karim.zed</strong><small>Nouveau lead · en salle</small></div>
+                </div>
+                <div class="rail-item">
+                  <span class="rail-time">23:15</span>
+                  <div><strong>@julie.roy</strong><small>Ambassadrice · story postée</small></div>
+                </div>
+              </div>
+            </div>
+            <div class="panel spot rail-panel">
+              <p class="rail-title">Top ambassadeurs · semaine</p>
+              <div class="rail-list">
+                <div class="leader-row">
+                  <span class="leader-init">SA</span>
+                  <div class="leader-bar"><i style="width:100%"></i></div>
+                  <span class="leader-val">2 100 pts</span>
+                </div>
+                <div class="leader-row">
+                  <span class="leader-init">YA</span>
+                  <div class="leader-bar"><i style="width:78%"></i></div>
+                  <span class="leader-val">1 640 pts</span>
+                </div>
+                <div class="leader-row">
+                  <span class="leader-init">MA</span>
+                  <div class="leader-bar"><i style="width:56%"></i></div>
+                  <span class="leader-val">1 180 pts</span>
+                </div>
+              </div>
+            </div>
+          </aside>
           </div>
         </section>
 
@@ -251,5 +354,34 @@
     </div>
 
     <script type="module" src="./app.js"></script>
+    <script type="module">
+      // Comptage des KPI depuis 0 a l'arrivee sur l'ecran (audit
+      // dashboard #8) : purement visuel, s'execute une fois sur la
+      // valeur deja rendue dans le HTML, n'interfere pas avec les
+      // mises a jour dynamiques ulterieures de app.js.
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!reduceMotion) {
+        document.querySelectorAll(".kpi strong[data-metric]").forEach((el) => {
+          const raw = el.textContent.trim();
+          const match = raw.match(/[\d\s]+/);
+          if (!match) return;
+          const target = parseInt(match[0].replace(/\s/g, ""), 10);
+          if (!Number.isFinite(target)) return;
+          const prefix = raw.slice(0, match.index);
+          const suffix = raw.slice(match.index + match[0].length);
+          const duration = 800;
+          const start = performance.now();
+          function frame(now) {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            const value = Math.round(target * eased);
+            el.textContent = prefix + value.toLocaleString("fr-FR") + suffix;
+            if (t < 1) requestAnimationFrame(frame);
+            else el.textContent = raw;
+          }
+          requestAnimationFrame(frame);
+        });
+      }
+    </script>
   </body>
 </html>

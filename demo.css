@@ -1,0 +1,565 @@
+/* Outil d'analyse de soiree. Mise en page volontairement sobre : une question par bloc,
+   une reponse lisible sans jargon. Le corail reste la couleur de marque et sert aux
+   accents (valeurs mises en avant, pic horaire), jamais a un bouton d'action. */
+
+body {
+  background: var(--void);
+  color: var(--ash);
+}
+
+/* --- En-tete --- */
+
+.an-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(8, 9, 11, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.an-header-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.an-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--white);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.an-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--smoke);
+}
+
+.an-picker select {
+  background: var(--surface-2);
+  color: var(--white);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-btn);
+  padding: 8px 10px;
+  font-size: 13px;
+  max-width: 260px;
+}
+
+/* --- Corps --- */
+
+.an-main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+/* Bandeau d'etat : precise toujours si les chiffres sont reels ou generes. */
+.an-banner {
+  margin: 0;
+  padding: 11px 15px;
+  border-radius: var(--r-card);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.an-banner.is-info {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  color: var(--smoke);
+}
+
+.an-banner.is-error {
+  background: var(--ember);
+  border: 1px solid rgba(255, 99, 99, 0.3);
+  color: var(--coral);
+}
+
+.an-main[aria-busy="true"] .an-hero,
+.an-main[aria-busy="true"] .an-block {
+  opacity: 0.55;
+  transition: opacity 0.2s var(--ease);
+}
+
+.an-footer code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ash);
+}
+
+.an-hero-date {
+  margin: 0 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--coral);
+}
+
+.an-hero h1 {
+  margin: 0 0 22px;
+  font-size: 30px;
+  line-height: 1.15;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+/* Verdict : la seule ligne que lira un gerant presse. */
+.an-verdict {
+  margin: 0 0 22px;
+  max-width: 68ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--mist);
+  padding-left: 14px;
+  border-left: 2px solid var(--coral);
+}
+
+.an-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+/* --- Courbe de tendance --- */
+
+.an-trend {
+  position: relative;
+  height: 120px;
+}
+
+/* Un SVG porteur d'un viewBox se dimensionne selon son ratio intrinseque et ignore
+   top/bottom : la hauteur doit donc etre imposee explicitement, sinon la zone remplie
+   deborde sur la section suivante.
+   Les 12px lateraux evitent que les points des extremites soient rognes. */
+.an-trend-svg {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  width: calc(100% - 24px);
+  height: calc(100% - 22px);
+  display: block;
+}
+
+.an-trend-points {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  width: calc(100% - 24px);
+  height: calc(100% - 22px);
+}
+
+.an-trend-point {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 2px solid var(--iron);
+  cursor: pointer;
+  transition: transform 0.16s var(--ease), background 0.16s var(--ease), border-color 0.16s var(--ease);
+}
+
+.an-trend-point:hover,
+.an-trend-point:focus-visible {
+  transform: scale(1.35);
+  border-color: var(--coral);
+  outline: none;
+}
+
+.an-trend-point.is-active {
+  background: var(--coral);
+  border-color: var(--white);
+  transform: scale(1.2);
+}
+
+.an-trend-axis {
+  position: absolute;
+  left: 12px;
+  width: calc(100% - 24px);
+  bottom: 0;
+  height: 22px;
+}
+
+.an-trend-axis span {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--smoke);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.an-stat {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.an-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+.an-stat-value.is-good {
+  color: #4ade80;
+}
+
+.an-stat-value.is-warn {
+  color: #fbbf24;
+}
+
+.an-stat-value.is-bad {
+  color: var(--coral);
+}
+
+.an-stat-label {
+  font-size: 11px;
+  color: var(--smoke);
+  line-height: 1.35;
+}
+
+/* --- Blocs --- */
+
+.an-block h2 {
+  margin: 0 0 4px;
+  font-size: 19px;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+.an-block-sub {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--smoke);
+}
+
+.an-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 34px;
+}
+
+.an-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--smoke);
+  list-style: none;
+}
+
+/* --- A ameliorer --- */
+
+.an-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  counter-reset: action;
+}
+
+.an-action {
+  counter-increment: action;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 18px;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--iron);
+  border-radius: var(--r-card);
+}
+
+.an-action.is-high {
+  border-left-color: var(--coral);
+}
+
+.an-action.is-medium {
+  border-left-color: #fbbf24;
+}
+
+.an-action::before {
+  content: counter(action);
+  flex: 0 0 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--smoke);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.an-action-text {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mist);
+}
+
+.an-action-gain {
+  flex: 0 0 auto;
+  text-align: right;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--coral);
+  line-height: 1.1;
+}
+
+.an-action-gain em {
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--smoke);
+}
+
+/* --- Ce qui a marche --- */
+
+.an-wins {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.an-win {
+  position: relative;
+  padding: 12px 16px 12px 38px;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mist);
+}
+
+.an-win::before {
+  content: "✓";
+  position: absolute;
+  left: 16px;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+/* --- Barres comparatives (DJs, recompenses) --- */
+
+.an-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.an-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+}
+
+.an-bar-label {
+  font-size: 13px;
+  color: var(--ash);
+}
+
+.an-bar.is-top .an-bar-label {
+  color: var(--white);
+  font-weight: 600;
+}
+
+.an-bar-value {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 12px;
+  color: var(--smoke);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.an-bar-track {
+  grid-column: 1 / -1;
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.an-bar-fill {
+  height: 100%;
+  background: var(--iron);
+  border-radius: var(--r-pill);
+  transition: width 0.45s var(--ease);
+}
+
+.an-bar.is-top .an-bar-fill {
+  background: var(--coral);
+}
+
+/* --- Heures de publication --- */
+
+.an-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.an-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--smoke);
+}
+
+.an-legend-item::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.an-legend-item.is-posts::before {
+  background: var(--coral);
+}
+
+.an-legend-item.is-scans::before {
+  background: var(--iron);
+}
+
+.an-hours {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+  align-items: end;
+  height: 190px;
+  padding-top: 8px;
+}
+
+.an-hour {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  align-items: end;
+  justify-items: center;
+  gap: 6px;
+  height: 100%;
+}
+
+/* Les deux series partagent la meme base pour rester comparables a l'oeil. */
+.an-hour-pair {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  height: 100%;
+}
+
+.an-hour-bar {
+  position: relative;
+  flex: 1;
+  max-width: 22px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.45s var(--ease);
+}
+
+.an-hour-bar.is-posts {
+  background: rgba(255, 99, 99, 0.5);
+}
+
+.an-hour-bar.is-scans {
+  background: var(--iron);
+}
+
+.an-hour.is-peak .an-hour-bar.is-posts {
+  background: var(--coral);
+}
+
+.an-insight {
+  margin: 18px 0 0;
+  padding: 13px 16px;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-left: 2px solid var(--coral);
+  border-radius: var(--r-card);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--mist);
+}
+
+.an-hour-count {
+  font-size: 12px;
+  color: var(--ash);
+  font-family: var(--font-mono);
+}
+
+.an-hour.is-peak .an-hour-count {
+  color: var(--white);
+  font-weight: 700;
+}
+
+.an-hour-label {
+  font-size: 11px;
+  color: var(--smoke);
+}
+
+.an-footer {
+  border-top: 1px solid var(--hairline);
+  padding-top: 18px;
+}
+
+.an-footer p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--smoke);
+}
+
+@media (max-width: 760px) {
+  .an-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .an-header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .an-hero h1 {
+    font-size: 24px;
+  }
+
+  .an-action {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .an-action-gain {
+    text-align: left;
+  }
+
+  .an-hours {
+    height: 150px;
+    gap: 4px;
+  }
+}

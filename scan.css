@@ -1,0 +1,272 @@
+/* Page client, vue au telephone dans un club : peu de lumiere, une main, quelques secondes.
+   D'ou les cibles tactiles larges, les contrastes marques et une seule action visible. */
+
+body {
+  background: var(--void);
+  color: var(--ash);
+}
+
+.sc-shell {
+  min-height: 100vh;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 28px 20px calc(28px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.sc-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sc-club {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--white);
+}
+
+.sc-step {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sc-step h1 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--white);
+}
+
+.sc-lead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ash);
+}
+
+/* --- Attente --- */
+
+.sc-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px;
+  border-radius: var(--r-card);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+}
+
+.sc-status p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ash);
+}
+
+.sc-spinner {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 2px solid var(--surface-3);
+  border-top-color: var(--coral);
+  animation: sc-spin 0.8s linear infinite;
+}
+
+@keyframes sc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Formulaire --- */
+
+.sc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.sc-field > span {
+  font-size: 12px;
+  color: var(--smoke);
+}
+
+.sc-field em {
+  font-style: normal;
+  opacity: 0.75;
+}
+
+.sc-field input {
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  padding: 15px 16px;
+  color: var(--white);
+  /* 16px minimum : en dessous, iOS zoome automatiquement au focus. */
+  font-size: 16px;
+}
+
+.sc-field input::placeholder { color: var(--smoke); }
+
+.sc-field input:focus {
+  outline: none;
+  border-color: var(--iron);
+}
+
+.sc-types {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.sc-types legend {
+  padding: 0 0 8px;
+  font-size: 12px;
+  color: var(--smoke);
+}
+
+.sc-types label {
+  position: relative;
+  display: flex;
+}
+
+.sc-types input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.sc-types span {
+  flex: 1;
+  text-align: center;
+  padding: 12px 4px;
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  color: var(--smoke);
+  font-size: 12px;
+  transition: border-color 0.16s var(--ease), color 0.16s var(--ease);
+}
+
+.sc-types input:checked + span {
+  border-color: var(--coral);
+  color: var(--white);
+  background: var(--surface-3);
+}
+
+.sc-types input:focus-visible + span {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+/* Bouton d'action neutre : le corail reste la couleur de marque, pas un CTA. */
+.sc-form button,
+.sc-secondary {
+  padding: 17px;
+  border-radius: var(--r-card);
+  background: var(--mist);
+  color: var(--void);
+  font-weight: 650;
+  font-size: 16px;
+  text-align: center;
+}
+
+.sc-secondary {
+  background: var(--surface-2);
+  color: var(--white);
+  border: 1px solid var(--hairline);
+}
+
+.sc-form button:disabled { opacity: 0.55; }
+
+.sc-note {
+  margin: 0;
+  padding: 13px 15px;
+  border-radius: var(--r-card);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sc-note.is-info {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  color: var(--ash);
+}
+
+.sc-note.is-success {
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.sc-note.is-error {
+  background: var(--ember);
+  border: 1px solid rgba(255, 99, 99, 0.3);
+  color: var(--coral);
+}
+
+/* --- Publications envoyees --- */
+
+.sc-sent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.sc-sent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r-btn);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+}
+
+.sc-sent-platform {
+  flex: 0 0 auto;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--coral);
+}
+
+.sc-sent-url {
+  font-size: 12px;
+  color: var(--smoke);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sc-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--hairline);
+}
+
+.sc-footer p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--smoke);
+}

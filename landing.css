@@ -17,6 +17,33 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Divider fin en degrade de marque - utilise avec parcimonie entre
+   quelques sections cles, pour un detail de finition qui casse la
+   monotonie des hairlines neutres partout. */
+.divider-gradient {
+  height: 1px;
+  margin-inline: auto;
+  max-width: 640px;
+  background: linear-gradient(90deg, transparent, var(--hairline), transparent);
+}
+
+/* Grain de fond legerement plus present pour casser les aplats noirs
+   unis (detail texture demande) - landing.css charge apres base.css,
+   cette regle l'emporte sans avoir besoin de !important. */
+.noise { opacity: 0.05; }
+
+/* Echo du serif italique du hero (h-display-serif sur "Multipliez")
+   sur les titres de section : meme paire serif/sans que le hero,
+   pour que le reste du site se sente comme la suite du hero video
+   plutot qu'un habillage different. Un seul mot/groupe accentue par
+   titre, jamais le titre entier. */
+.h-section em {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--white);
+}
+
 /* ============================================================
    Navigation
    ============================================================ */
@@ -205,10 +232,52 @@ body.menu-open .m-menu .btn {
 
 .hero {
   position: relative;
-  /* Reduit par rapport a l'origine (170px) : les CTA doivent rester
-     visibles sans scroller sur un maximum d'ecrans. */
-  padding: 120px 0 90px;
+  padding: 168px 0 150px;
   overflow: clip;
+}
+
+/* ---- Version "audit" du hero : noir sobre, un seul halo discret,
+   un seul CTA plein (recommandations #1, #4, #5, #14 de l'audit). ---- */
+.hero-sober { background: var(--void); }
+.hero-glow-sober {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 900px;
+  height: 900px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(146, 129, 247, 0.09), transparent 70%);
+  pointer-events: none;
+  animation: vn-glow-breathe 10s ease-in-out infinite;
+}
+@keyframes vn-glow-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.94); opacity: 0.7; }
+  50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-glow-sober { animation: none; }
+}
+
+.text-link-sober {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ash);
+  transition: color 0.2s;
+}
+.text-link-sober:hover { color: var(--white); }
+.text-link-sober .arr { transition: transform 0.35s var(--ease); }
+.text-link-sober:hover .arr { transform: translateX(3px); }
+
+.hero-proof {
+  margin-top: 28px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--smoke);
 }
 
 /* ------------------------------------------------------------
@@ -382,48 +451,6 @@ body.menu-open .m-menu .btn {
   text-align: center;
 }
 
-.hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 14px;
-  border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.03);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ash);
-}
-/* Point corail pulsant : usage de marque autorise. */
-.hero-eyebrow i {
-  width: 6px;
-  height: 6px;
-  background: var(--coral);
-  border-radius: 50%;
-  flex: none;
-  box-shadow: 0 0 10px rgba(255, 99, 99, 0.9);
-  animation: vn-pulse 2.4s ease-in-out infinite;
-}
-
-/* ------------------------------------------------------------
-   Hero "black velvet, violet neon" (reference Resend) : anti-
-   decoratif, aucun halo/gradient, bordures fines plutot que des
-   ombres, un seul accent violet - jamais sur un CTA. Scope au
-   hero uniquement : le reste du site garde son identite corail.
-   ------------------------------------------------------------ */
-.hero-eyebrow-ghost {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--hairline);
-}
-.hero-eyebrow-ghost i {
-  background: var(--iris);
-  box-shadow: none;
-  animation: none;
-}
-
 .h-display-serif {
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 400;
@@ -446,157 +473,68 @@ body.menu-open .m-menu .btn {
   transform: none;
 }
 
-/* Halo unique qui respire lentement en fond du hero - position
-   absolue (n'affecte aucune disposition), tres bas en opacite pour
-   rester "anti-decoratif" comme le reste du hero. Convient a un SaaS
-   d'analytics temps reel : evoque un signal vivant, pas une scene. */
-.hero-glow {
+/* Ciel etoile du hero, en Canvas 2D (voir sky.js) : etoiles avec
+   scintillement independant, lune realiste (crateres, mers lunaires,
+   terminator courbe). Remplace les anciennes boules/etiquettes/halo
+   CSS. Position absolue, n'affecte aucune disposition existante. */
+/* Clip video du hero, plein cadre (voir assets/hero-video.mp4,
+   vitesse d'origine - un ralenti par simple etirement des PTS
+   rendait le mouvement saccade sur des images filmees a la main).
+   Un seul voile noir par-dessus pour la lisibilite du texte. */
+.hero-video {
   position: absolute;
-  top: 50%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.hero-video-overlay {
+  position: absolute;
+  inset: 0;
+  /* Voile plat pour la lisibilite du texte, plus un fondu en bas pour
+     raccorder proprement a la section suivante (fond plein var(--void))
+     au lieu d'une coupure nette entre video et aplat noir. */
+  background:
+    linear-gradient(180deg, transparent 78%, var(--void) 100%),
+    rgba(4, 5, 6, 0.48);
+  pointer-events: none;
+}
+
+/* .wrap limite le hero-inner a 1160px : a 114px de police,
+   "Remplissez vos soirées." depasse cette largeur et revenait a la
+   ligne (ou etait coupe par overflow:clip sur .hero). Elargi
+   uniquement pour le hero, pour garder l'effet pyramide (chaque
+   ligne sur un seul trait, largeurs qui varient) sur tous les
+   ecrans assez larges. */
+.hero-inner-resend {
+  max-width: min(94vw, 1500px);
+}
+
+/* Zone de contraste dediee derriere le texte : une ellipse sombre
+   centree, plus large que le bloc de texte, qui garantit la
+   lisibilite meme quand la video passe sur une zone claire (vert des
+   projecteurs, flashs) - independante du voile plat sur toute la
+   video. */
+.hero-text-scrim {
+  position: absolute;
   left: 50%;
-  width: 900px;
-  height: 900px;
-  margin: -450px 0 0 -450px;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(146, 129, 247, 0.1), transparent 70%);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(1400px, 120vw);
+  height: 640px;
+  background: radial-gradient(closest-side, rgba(4, 5, 6, 0.72), rgba(4, 5, 6, 0.32) 62%, transparent 85%);
   pointer-events: none;
-  animation: vn-glow-breathe 10s ease-in-out infinite;
-}
-
-@keyframes vn-glow-breathe {
-  0%, 100% { transform: scale(0.92); opacity: 0.7; }
-  50% { transform: scale(1.06); opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-glow {
-    animation: none;
-  }
-}
-
-/* Boules de lumiere, version stable : 6 elements fixes en CSS pur
-   (pas de canvas, pas de JS), tous places dans les marges laterales
-   du hero - jamais dans la colonne centrale du texte, donc aucun
-   risque de repasser dessus quelle que soit la taille d'ecran.
-   Position absolue : zero impact sur la disposition de la page. */
-.hero-orbs {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.hero-orb {
-  position: absolute;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  filter: blur(1px);
-  animation: vn-orb-drift 7s ease-in-out infinite;
-}
-
-.hero-orb.o1 { top: 14%; left: 1%; background: radial-gradient(circle, rgba(255, 99, 99, 0.55), transparent 72%); animation-delay: 0s; }
-.hero-orb.o2 { top: 62%; left: 3%; background: radial-gradient(circle, rgba(146, 129, 247, 0.5), transparent 72%); animation-delay: -2.3s; width: 46px; height: 46px; }
-.hero-orb.o3 { top: 38%; left: -1%; background: radial-gradient(circle, rgba(230, 230, 230, 0.4), transparent 72%); animation-delay: -4.6s; width: 34px; height: 34px; }
-.hero-orb.o4 { top: 18%; right: 1%; background: radial-gradient(circle, rgba(146, 129, 247, 0.5), transparent 72%); animation-delay: -1.2s; }
-.hero-orb.o5 { top: 58%; right: -1%; background: radial-gradient(circle, rgba(255, 99, 99, 0.5), transparent 72%); animation-delay: -3.6s; width: 50px; height: 50px; }
-.hero-orb.o6 { top: 36%; right: 4%; background: radial-gradient(circle, rgba(230, 230, 230, 0.4), transparent 72%); animation-delay: -5.4s; width: 30px; height: 30px; }
-
-/* Bandes hautes/basses du hero (au-dessus du badge, sous les CTA) :
-   sans texte quelle que soit la largeur, donc libres sur tout le X. */
-.hero-orb.o7  { top: 2%; left: 22%; background: radial-gradient(circle, rgba(255, 99, 99, 0.5), transparent 72%); animation-delay: -1.8s; width: 40px; height: 40px; }
-.hero-orb.o8  { top: 4%; left: 52%; background: radial-gradient(circle, rgba(146, 129, 247, 0.55), transparent 72%); animation-delay: -3.9s; width: 30px; height: 30px; }
-.hero-orb.o9  { top: 1%; left: 78%; background: radial-gradient(circle, rgba(230, 230, 230, 0.4), transparent 72%); animation-delay: -0.6s; width: 44px; height: 44px; }
-.hero-orb.o10 { top: 93%; left: 28%; background: radial-gradient(circle, rgba(146, 129, 247, 0.5), transparent 72%); animation-delay: -5s; width: 34px; height: 34px; }
-.hero-orb.o11 { top: 96%; left: 50%; background: radial-gradient(circle, rgba(255, 99, 99, 0.5), transparent 72%); animation-delay: -2.7s; width: 46px; height: 46px; }
-.hero-orb.o12 { top: 94%; left: 70%; background: radial-gradient(circle, rgba(230, 230, 230, 0.4), transparent 72%); animation-delay: -4.2s; width: 30px; height: 30px; }
-
-/* Etiquettes "telemetrie" : meme esprit que .hero-eyebrow-ghost
-   (pastille transparente, bordure fine, mono) mais avec le vrai
-   vocabulaire du produit. Uniquement dans les bandes hautes/basses
-   du hero (sans texte sur tout l'axe X), les pastilles sont trop
-   larges pour les marges laterales etroites des boules. */
-.hero-tags {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.hero-tag {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 11px;
-  border-radius: var(--r-pill);
-  box-shadow: inset 0 0 0 1px var(--hairline);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: var(--smoke);
-  white-space: nowrap;
-  animation: vn-tag-drift 8s ease-in-out infinite;
-}
-
-.hero-tag i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  flex: none;
-}
-.dot-coral { background: var(--coral); box-shadow: 0 0 8px rgba(255, 99, 99, 0.8); }
-.dot-iris { background: var(--iris); box-shadow: 0 0 8px rgba(146, 129, 247, 0.8); }
-.dot-mist { background: var(--mist); box-shadow: 0 0 8px rgba(230, 230, 230, 0.6); }
-
-.hero-tag.t1 { top: 4%; left: 8%; animation-delay: -0.5s; }
-.hero-tag.t2 { top: 2%; left: 62%; animation-delay: -2.8s; }
-.hero-tag.t3 { top: 6%; right: 6%; animation-delay: -5s; }
-.hero-tag.t4 { top: 95%; left: 14%; animation-delay: -1.6s; }
-.hero-tag.t5 { top: 97%; left: 58%; animation-delay: -4.1s; }
-.hero-tag.t6 { top: 96%; right: 9%; animation-delay: -3.2s; }
-
-@keyframes vn-tag-drift {
-  0%, 100% { transform: translateY(0); opacity: 0.65; }
-  50% { transform: translateY(-8px); opacity: 1; }
-}
-
-@media (max-width: 1280px) {
-  .hero-tags {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-tag {
-    animation-duration: 40s;
-  }
-}
-
-@keyframes vn-orb-drift {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.75; }
-  50% { transform: translate(10px, -16px) scale(1.12); opacity: 1; }
-}
-
-/* En dessous de 1280px, le titre (jusqu'a 84-104px) s'etire presque
-   bord a bord dans le hero - les boules toucheraient les vraies
-   lettres, pas juste la boite (invisible) du h1. Reserve aux ecrans
-   ou il reste une vraie marge. */
-@media (max-width: 1280px) {
-  .hero-orbs {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-orb {
-    animation-duration: 40s;
-  }
 }
 
 .hero h1 {
-  margin-top: 26px;
+  margin-top: 0;
+  font-size: clamp(52px, 9.4vw, 114px);
+  text-shadow: 0 4px 28px rgba(0, 0, 0, 0.75), 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.hero h1 .hl,
+.hero h1 .hl > span {
+  white-space: nowrap;
 }
 
 /* Titre qui monte ligne par ligne.
@@ -624,22 +562,33 @@ body.loaded .hl > span {
 .hero h1 .hl:nth-child(3) > span {
   transition-delay: 0.18s;
 }
+/* #66686c etait quasi invisible sur les zones claires de la video
+   (le vert des projecteurs le mangeait completement) - remonte pour
+   rester lisible tout en gardant la hierarchie (moins present que
+   le blanc plein des deux autres lignes). */
 .hl .dim {
-  color: #66686c;
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .hero .lead {
-  margin-top: 18px;
-  max-width: 600px;
-  font-size: 17.5px;
+  margin-top: 22px;
+  max-width: 620px;
+  font-size: 19px;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6);
 }
 
 .hero-cta {
-  margin-top: 26px;
+  margin-top: 32px;
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
+}
+/* CTA du hero agrandis - scope local, ne touche pas .btn ailleurs
+   (nav, footer, etc). */
+.hero-cta .btn {
+  padding: 17px 26px;
+  font-size: 16.5px;
 }
 
 .hero-meta {
@@ -1100,7 +1049,7 @@ body.loaded .spark i {
   position: absolute;
   inset: 0 0 auto 0;
   height: 0%;
-  background: linear-gradient(180deg, rgba(230, 230, 230, 0.9), rgba(230, 230, 230, 0.25));
+  background: linear-gradient(180deg, rgba(255, 99, 99, 0.95), rgba(255, 99, 99, 0.35));
   transition: height 0.7s var(--ease);
 }
 .step {
@@ -1129,8 +1078,9 @@ body.loaded .spark i {
   flex: 1;
   padding: 22px 24px;
   border-radius: var(--r-card);
-  background: var(--ink);
-  box-shadow: var(--key-shadow);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: box-shadow 0.45s, transform 0.45s var(--ease), background 0.45s;
 }
 .step-tag {
@@ -1156,11 +1106,11 @@ body.loaded .spark i {
   transition: color 0.45s;
 }
 .step.active .step-num {
-  background: var(--mist);
+  background: var(--coral);
   color: #1c1d1e;
   transform: scale(1.06);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 6px 18px rgba(0, 0, 0, 0.5),
-    0 0 24px rgba(230, 230, 230, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 99, 99, 0.35), 0 6px 18px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(255, 99, 99, 0.25);
 }
 .step.active .step-body {
   background: #0b0c0f;
@@ -1183,30 +1133,44 @@ body.loaded .spark i {
 .points-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: 20px;
 }
 .p-card {
   position: relative;
-  padding: 26px 24px 28px;
+  padding: 30px 26px 32px;
   border-radius: var(--r-card);
-  background: var(--ink);
-  box-shadow: var(--key-shadow);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   overflow: hidden;
   transition: transform 0.45s var(--ease), box-shadow 0.45s;
+}
+/* Le vrai differenciateur produit (stories mieux payees) se distingue
+   des 3 autres cartes egales - hierarchie sans ajouter de couleur
+   (audit #10). */
+.p-card-lead {
+  border-color: rgba(255, 255, 255, 0.2);
 }
 .p-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--key-shadow-strong);
 }
+.p-card:hover { box-shadow: var(--key-shadow-strong), 0 0 0 1px rgba(255, 99, 99, 0.35), 0 18px 40px -20px rgba(255, 99, 99, 0.35); }
 .p-card .icon-pill {
   margin-bottom: 20px;
 }
+/* Une seule couleur de marque (corail) partout - l'alternance
+   corail/iris rendait le rythme visuel incoherent, trop de contraste
+   entre les cartes. */
+.p-card .icon-pill { background: var(--surface-3); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px var(--hairline-soft); }
+.p-card .icon-pill svg { stroke: var(--coral); }
+
 .p-pts {
   font-family: var(--font-mono);
   font-size: 26px;
   font-weight: 600;
-  color: var(--white);
   line-height: 1;
+  color: var(--white);
 }
 .p-pts small {
   display: block;
@@ -1576,8 +1540,9 @@ input[type="range"]::-moz-range-thumb {
   align-items: flex-start;
   padding: 22px 24px;
   border-radius: var(--r-card);
-  background: var(--ink);
-  box-shadow: var(--key-shadow);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: transform 0.4s var(--ease), box-shadow 0.4s;
 }
 .c-item:hover {
@@ -1589,6 +1554,8 @@ input[type="range"]::-moz-range-thumb {
   height: 40px;
   flex: none;
 }
+.c-item .icon-pill { background: var(--surface-3); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px var(--hairline-soft); }
+.c-item .icon-pill svg { stroke: var(--coral); }
 .c-item h3 {
   font-size: 14.5px;
   font-weight: 560;
@@ -1662,6 +1629,10 @@ input[type="range"]::-moz-range-thumb {
 }
 .faq-item.open .faq-x {
   transform: rotate(135deg);
+}
+.faq-item.open .faq-x::before,
+.faq-item.open .faq-x::after {
+  background: var(--coral);
 }
 /* Accordeon sans hauteur fixe : grid-template-rows 0fr -> 1fr */
 .faq-a {
@@ -1843,6 +1814,23 @@ input[type="range"]::-moz-range-thumb {
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   padding: 52px 0 40px;
 }
+/* Rattrape les visiteurs qui lisent tout sans convertir - simple lien
+   texte, pas un bouton plein, pour rester discret (audit #16). */
+.foot-cta-reminder {
+  margin: 0 0 32px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--ash);
+}
+.foot-cta-reminder a {
+  color: var(--white);
+  font-weight: 500;
+  border-bottom: 1px solid var(--hairline);
+  transition: border-color 0.2s;
+}
+.foot-cta-reminder a:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
 .foot-top {
   display: flex;
   align-items: center;
@@ -2000,11 +1988,57 @@ input[type="range"]::-moz-range-thumb {
     transform: none;
   }
   .mq-track,
-  .hero-eyebrow i,
   .app-live i {
     animation: none;
   }
   .manifesto-text .w {
     color: var(--white);
   }
+}
+
+/* --- Connexion / inscription dans la barre de navigation ---
+   Le bouton plein reprend le corail de la marque : c'est le seul endroit du site
+   ou il porte une action, parce que c'est LE point d'entree du produit. */
+
+.nav-auth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+}
+
+.nav-signin {
+  padding: 8px 12px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  color: var(--ash);
+  white-space: nowrap;
+  transition: color 0.16s var(--ease);
+}
+
+.nav-signin:hover { color: var(--white); }
+
+.nav-start {
+  padding: 9px 16px;
+  border-radius: var(--r-pill);
+  background: var(--coral);
+  color: var(--void);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: filter 0.16s var(--ease), transform 0.16s var(--ease);
+}
+
+.nav-start:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.nav-start:active { transform: translateY(0); }
+
+/* Sur mobile le menu se replie derriere le burger : on garde uniquement
+   l'action principale, la connexion reste accessible depuis le pied de page. */
+@media (max-width: 860px) {
+  .nav-signin { display: none; }
+  .nav-start { padding: 8px 13px; font-size: 12.5px; }
 }
