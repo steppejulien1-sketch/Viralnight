@@ -1,7 +1,7 @@
 /* Pages de connexion et d'inscription.
-   Meme composition que la maquette : carte centree sur une photo assombrie.
-   L'accent passe au corail de la marque, et le fond devient la salle de club :
-   un patron de boite doit reconnaitre son univers des la premiere seconde. */
+   Parti pris : rien d'autre que ce qui sert a entrer. Pas de logo dans la carte,
+   pas de lien de retour, pas d'effet. Le fond est une photo de club rendue
+   abstraite par un flou fort : elle pose l'ambiance sans distraire du formulaire. */
 
 body {
   margin: 0;
@@ -16,24 +16,21 @@ body {
 
 .au-bg {
   position: fixed;
-  inset: 0;
+  inset: -60px;
   z-index: 0;
   background-image: url("./assets/hero-nightclub.webp");
   background-size: cover;
   background-position: center;
-  /* Assombri et desature : la photo doit poser l'ambiance sans jamais
-     concurrencer la lisibilite du formulaire. */
-  filter: brightness(0.32) saturate(0.75);
-  transform: scale(1.04);
+  /* Flou fort et forte desaturation : on veut une texture, pas une image lisible.
+     L'inset negatif evite les bords transparents que produit le flou. */
+  filter: blur(46px) brightness(0.34) saturate(0.55);
 }
 
 .au-bg::after {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(120% 90% at 50% 40%, rgba(8, 9, 11, 0.25), rgba(8, 9, 11, 0.9) 70%),
-    linear-gradient(180deg, rgba(8, 9, 11, 0.55), rgba(8, 9, 11, 0.75));
+  background: linear-gradient(180deg, rgba(8, 9, 11, 0.62), rgba(8, 9, 11, 0.82));
 }
 
 /* --- Composition --- */
@@ -49,37 +46,26 @@ body {
 
 .au-card {
   width: 100%;
-  max-width: 384px;
-  padding: 34px 32px 30px;
-  border-radius: 22px;
-  background: rgba(19, 21, 25, 0.82);
-  border: 1px solid var(--hairline);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
-}
-
-.au-brand {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 22px;
-  color: var(--white);
-  font-weight: 650;
-  font-size: 14px;
+  max-width: 380px;
+  padding: 30px 30px 26px;
+  border-radius: 16px;
+  background: rgba(17, 19, 22, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.4);
 }
 
 .au-card h1 {
-  margin: 0 0 6px;
-  font-size: 23px;
+  margin: 0 0 5px;
+  font-size: 22px;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--white);
-  text-wrap: balance;
 }
 
 .au-lead {
   margin: 0 0 22px;
   font-size: 13.5px;
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--smoke);
 }
 
@@ -90,21 +76,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 9px;
   padding: 13px;
-  border-radius: 999px;
-  background: var(--surface-3);
-  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--white);
   font-size: 14px;
   font-weight: 500;
-  transition: border-color 0.16s var(--ease), background 0.16s var(--ease);
+  transition: background 0.15s var(--ease);
 }
 
-.au-google:hover {
-  background: var(--slate);
-  border-color: var(--iron);
-}
+.au-google:hover { background: rgba(255, 255, 255, 0.09); }
 
 .au-google svg {
   width: 17px;
@@ -118,8 +101,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 20px 0;
-  font-size: 11px;
+  margin: 18px 0;
+  font-size: 11.5px;
   color: var(--smoke);
 }
 
@@ -128,7 +111,7 @@ body {
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--hairline);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* --- Champs --- */
@@ -136,13 +119,13 @@ body {
 .au-form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 14px;
 }
 
 .au-field {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .au-label {
@@ -161,28 +144,26 @@ body {
 
 .au-field input {
   width: 100%;
-  background: rgba(8, 9, 11, 0.6);
-  border: 1px solid var(--hairline);
-  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
   padding: 12px 13px;
   color: var(--white);
-  /* 16px : en dessous, iOS zoome automatiquement au focus. */
+  /* 16px : en dessous, iOS zoome au focus. */
   font-size: 16px;
   font-family: inherit;
-  transition: border-color 0.16s var(--ease);
+  transition: border-color 0.15s var(--ease);
 }
-
-.au-field input::placeholder { color: var(--iron); }
 
 .au-field input:focus {
   outline: none;
-  border-color: var(--coral);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 /* Bouton oeil : superpose au champ, jamais dans le flux. */
 .au-eye {
   position: absolute;
-  right: 6px;
+  right: 5px;
   top: 50%;
   transform: translateY(-50%);
   display: grid;
@@ -190,72 +171,71 @@ body {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  color: var(--smoke);
+  color: var(--iron);
 }
 
-.au-eye:hover { color: var(--mist); }
+.au-eye:hover { color: var(--ash); }
 .au-eye svg { width: 17px; height: 17px; }
 
 .au-hint {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--smoke);
 }
 
 .au-forgot {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--coral);
 }
 
 .au-forgot:hover { text-decoration: underline; text-underline-offset: 2px; }
 
-/* --- Action principale ---
-   Blanc plein, comme la maquette. Le corail reste la couleur de marque
-   et sert aux accents, pas au bouton d'action. */
+/* --- Action principale --- */
 
 .au-submit {
   width: 100%;
+  margin-top: 4px;
   padding: 14px;
   border-radius: 999px;
-  background: var(--mist);
-  color: var(--void);
+  background: #fff;
+  color: #08090b;
   font-size: 14.5px;
-  font-weight: 650;
+  font-weight: 600;
   font-family: inherit;
-  transition: background 0.16s var(--ease), opacity 0.16s var(--ease);
+  transition: opacity 0.15s var(--ease);
 }
 
-.au-submit:hover:not(:disabled) { background: var(--white); }
+.au-submit:hover:not(:disabled) { opacity: 0.9; }
 
 .au-submit:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* --- Messages --- */
 
 .au-msg {
-  margin: 16px 0 0;
-  padding: 11px 13px;
-  border-radius: 11px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
   font-size: 12.5px;
   line-height: 1.5;
 }
 
 .au-msg.is-error {
-  background: var(--ember);
-  border: 1px solid rgba(255, 99, 99, 0.32);
+  background: rgba(255, 99, 99, 0.1);
+  border: 1px solid rgba(255, 99, 99, 0.25);
   color: var(--coral);
 }
 
 .au-msg.is-success {
   background: rgba(74, 222, 128, 0.09);
-  border: 1px solid rgba(74, 222, 128, 0.32);
+  border: 1px solid rgba(74, 222, 128, 0.25);
   color: #4ade80;
 }
 
 .au-msg.is-info {
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--hairline);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   color: var(--ash);
 }
 
@@ -273,25 +253,11 @@ body {
 
 .au-foot a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
-.au-back {
-  display: block;
-  margin-top: 22px;
-  text-align: center;
-  font-size: 11.5px;
-  color: var(--smoke);
-}
-
-.au-back:hover { color: var(--ash); }
-
 :where(button, a, input):focus-visible {
   outline: 2px solid var(--coral);
   outline-offset: 2px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .au-bg { transform: none; }
-}
-
 @media (max-width: 420px) {
-  .au-card { padding: 28px 22px 26px; border-radius: 18px; }
+  .au-card { padding: 26px 22px 24px; }
 }
