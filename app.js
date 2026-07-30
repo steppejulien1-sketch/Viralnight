@@ -16,7 +16,6 @@ const signOutButton = document.querySelector("[data-sign-out]");
 const rewardEditor = document.querySelector("[data-reward-editor]");
 const rewardPreview = document.querySelector("[data-reward-preview]");
 const totalRulePoints = document.querySelector("[data-total-rule-points]");
-const checkinStats = document.querySelector("[data-checkin-stats]");
 const addRewardButton = document.querySelector("[data-add-reward]");
 const customRuleEditor = document.querySelector("[data-custom-rule-editor]");
 const addPointRuleButton = document.querySelector("[data-add-point-rule]");
@@ -29,11 +28,6 @@ const LOCAL_REWARD_PREFIX = "local-reward-";
 const LOCAL_POINT_RULE_PREFIX = "local-point-rule-";
 
 const numberFormatter = new Intl.NumberFormat("fr-FR");
-const currencyFormatter = new Intl.NumberFormat("fr-FR", {
-  style: "currency",
-  currency: "EUR",
-  maximumFractionDigits: 2,
-});
 
 let dashboardState = {
   ...fallbackDashboardData,
@@ -91,9 +85,12 @@ function setText(selector, value) {
 function updateMetric(name, value, caption) {
   const metric = document.querySelector(`[data-metric="${name}"]`);
   if (!metric) return;
-  metric.textContent = value;
-  const note = metric.closest(".metric-card")?.querySelector("small");
-  if (note && caption) note.textContent = caption;
+
+  const valeur = metric.querySelector(".metric-value");
+  const legende = metric.querySelector(".metric-caption");
+
+  if (valeur) valeur.textContent = value;
+  if (legende && caption) legende.textContent = caption;
 }
 
 function updateTaskButton(button, label, text) {
@@ -194,8 +191,9 @@ function getDashboardStats(data) {
   const redemptions = data.rewardRedemptions || [];
   const reach = validated.reduce((sum, submission) => sum + Number(submission.views_count || 0), 0);
   const points = validated.reduce((sum, submission) => sum + Number(submission.points_awarded || 0), 0);
-  const estimatedBudget = redemptions.length * 6;
-  const cpm = reach > 0 ? (estimatedBudget / reach) * 1000 : 0;
+  // Les scans viennent de la table qr_scans. Aucune estimation : afficher un chiffre
+  // invente comme s'il etait mesure induit le gerant en erreur sur sa frequentation.
+  const qrScans = data.qrScans || [];
 
   return {
     submissions,
@@ -210,8 +208,8 @@ function getDashboardStats(data) {
     activeCustomers: getUniqueCustomerCount(submissions),
     reach,
     points,
-    cpm,
-    estimatedBudget,
+    scanCount: qrScans.length,
+    uniqueScanners: getUniqueCustomerCount(qrScans),
   };
 }
 
@@ -280,35 +278,65 @@ function renderEstablishment(data) {
 function renderOverview(data) {
   const stats = getDashboardStats(data);
 
-  updateMetric("reach", formatNumber(stats.reach), `${stats.validatedCount} contenus validés`);
-  updateMetric("points", formatNumber(stats.points), "Barème de l'établissement appliqué");
-  updateMetric("rewards", formatNumber(stats.redemptions.length), `${stats.activeRewards.length} récompenses actives`);
-  updateMetric("cpm", currencyFormatter.format(stats.cpm), "Estimation basée sur les récompenses");
+  updateMetric("reach", formatNumber(stats.reach), `${formatNumber(stats.validatedCount)} contenus validés`);
+  updateMetric("points", formatNumber(stats.points), "Selon votre barème");
+  updateMetric(
+    "scans",
+    formatNumber(stats.scanCount),
+    stats.scanCount ? `${formatNumber(stats.uniqueScanners)} personnes différentes` : "Aucun scan enregistré",
+  );
+  updateMetric(
+    "rewards",
+    formatNumber(stats.redemptions.length),
+    `${formatNumber(stats.activeRewards.length)} récompenses actives`,
+  );
 
-  const funnelRows = document.querySelectorAll(".funnel div");
-  const estimatedScans = stats.activeCustomers + Math.max(40, Math.round(stats.activeCustomers * 0.6));
-  const rows = [
-    { label: "QR scans", value: estimatedScans, max: Math.max(estimatedScans, 1) },
-    { label: "Contenus reçus", value: stats.receivedCount, max: Math.max(estimatedScans, stats.receivedCount, 1) },
-    { label: "Contenus validés", value: stats.validatedCount, max: Math.max(estimatedScans, stats.receivedCount, 1) },
-    { label: "Récompenses utilisées", value: stats.redemptions.length, max: Math.max(estimatedScans, stats.receivedCount, 1) },
+  renderPipeline(stats);
+}
+
+/**
+ * Parcours d'un contenu, du depot a la recompense.
+ *
+ * Chaque etape est un compte reel. L'ancienne version estimait les scans a partir
+ * du nombre de clients, ce qui affichait une frequentation inventee.
+ */
+function renderPipeline(stats) {
+  const container = document.querySelector("[data-pipeline]");
+  const note = document.querySelector("[data-pipeline-note]");
+  if (!container) return;
+
+  const etapes = [
+    { label: "Scans du QR code", valeur: stats.scanCount },
+    { label: "Contenus reçus", valeur: stats.receivedCount },
+    { label: "Contenus validés", valeur: stats.validatedCount },
+    { label: "Récompenses réclamées", valeur: stats.redemptions.length },
   ];
 
-  funnelRows.forEach((row, index) => {
-    const dataRow = rows[index];
-    if (!dataRow) return;
-    row.querySelector("span").textContent = dataRow.label;
-    row.querySelector("strong").textContent = formatNumber(dataRow.value);
-    const progress = row.querySelector("progress");
-    progress.value = dataRow.value;
-    progress.max = dataRow.max;
-  });
+  const max = Math.max(...etapes.map((e) => e.valeur), 1);
 
-  const pointTasks = document.querySelectorAll('[data-jump="points"]');
-  const checkinTask = document.querySelector('[data-jump="checkin"]');
-  updateTaskButton(pointTasks[0], "Stock", `Vérifier ${formatNumber(stats.activeRewards.length)} récompenses actives`);
-  updateTaskButton(pointTasks[1], "Points", "Ajuster les seuils avant vendredi");
-  updateTaskButton(checkinTask, "QR", "Préparer le check-in de la soirée");
+  container.innerHTML = etapes
+    .map(
+      (e) => `
+      <li class="pipeline-step">
+        <span class="pipeline-label">${escapeHtml(e.label)}</span>
+        <span class="pipeline-value">${formatNumber(e.valeur)}</span>
+        <div class="pipeline-track"><div class="pipeline-fill" style="width:${Math.round((e.valeur / max) * 100)}%"></div></div>
+      </li>`,
+    )
+    .join("");
+
+  if (!note) return;
+
+  // Le message pointe la prochaine action utile plutot qu'un constat neutre.
+  if (!stats.scanCount && !stats.receivedCount) {
+    note.textContent = "Rien n'est encore collecté. Affichez votre QR code à l'entrée pour démarrer.";
+  } else if (stats.pendingCount) {
+    note.textContent = `${formatNumber(stats.pendingCount)} contenu(s) attendent d'être validés : sans validation, aucun point n'est crédité.`;
+  } else if (stats.receivedCount && !stats.redemptions.length) {
+    note.textContent = "Vos clients publient mais ne réclament aucune récompense : vos seuils sont peut-être trop hauts.";
+  } else {
+    note.textContent = "Tout est à jour.";
+  }
 }
 
 function updatePointRuleExamples(rules = getPointRules()) {
@@ -710,19 +738,6 @@ async function persistPointRules() {
   setDataStatus("Barème de points sauvegardé pour cet établissement.", "connected");
 }
 
-function renderCheckins(data) {
-  const stats = getDashboardStats(data);
-  const checkins = stats.activeCustomers + Math.max(40, Math.round(stats.activeCustomers * 0.6));
-  const presenceBonuses = Math.round(checkins * 0.34);
-  const usedRewards = stats.redemptions.filter((redemption) => redemption.status === "used").length;
-
-  checkinStats.innerHTML = `
-    <div><strong>${formatNumber(checkins)}</strong><span>check-ins estimés</span></div>
-    <div><strong>${formatNumber(presenceBonuses)}</strong><span>bonus de présence attribués</span></div>
-    <div><strong>${formatNumber(usedRewards)}</strong><span>récompenses utilisées</span></div>
-  `;
-}
-
 function renderDashboard(data) {
   dashboardState = data;
   renderDataSource(data);
@@ -732,7 +747,6 @@ function renderDashboard(data) {
   renderOverview(data);
   renderPointRules(data);
   renderRewardEditor(data);
-  renderCheckins(data);
 }
 
 async function refreshDashboard() {

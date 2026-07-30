@@ -203,6 +203,11 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured, options
   ]);
 
   const rewardIds = (rewardsResult.data || []).map((reward) => reward.id).filter(Boolean);
+
+  // Les scans QR sont desormais collectes reellement : on les lit au lieu de les estimer.
+  const qrScansResult = establishmentId
+    ? await supabase.from("qr_scans").select("id, customer_id, scanned_at").eq("establishment_id", establishmentId)
+    : { data: [], error: null };
   const redemptionsResult =
     rewardIds.length > 0
       ? await supabase.from("reward_redemptions").select("*").in("reward_id", rewardIds).order("redeemed_at", { ascending: false })
@@ -236,5 +241,6 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured, options
     submissions: submissionsResult.data || [],
     rewards: rewardsResult.data || [],
     rewardRedemptions: redemptionsResult.data || [],
+    qrScans: qrScansResult.error ? [] : qrScansResult.data || [],
   };
 }
