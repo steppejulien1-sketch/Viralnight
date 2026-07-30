@@ -49,8 +49,21 @@ function occupe(actif, libelleAttente) {
       : "Se connecter";
 }
 
-/** Destination apres connexion : le back-office pour l'admin, le dashboard sinon. */
+/**
+ * Destination apres connexion.
+ *
+ * Si l'utilisateur a ete redirige ici depuis une page protegee, on l'y ramene :
+ * il voulait aller quelque part, pas atterrir sur un accueil generique.
+ * Seuls les chemins internes sont acceptes, pour eviter une redirection ouverte
+ * vers un site tiers depuis un lien piege.
+ */
 function destination(email) {
+  const suivant = new URLSearchParams(window.location.search).get("suivant");
+
+  if (suivant && suivant.startsWith("/") && !suivant.startsWith("//")) {
+    return suivant;
+  }
+
   return String(email).trim().toLowerCase() === ADMIN_EMAIL ? "./admin.html" : "./app.html";
 }
 

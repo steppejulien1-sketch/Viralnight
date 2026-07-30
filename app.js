@@ -155,6 +155,18 @@ function getLockedCopy(data) {
 
 function renderAccessGate(data) {
   const allowed = hasDashboardAccess(data);
+
+  // Pas de session : on envoie directement au formulaire de connexion.
+  //
+  // On teste la session et non hasDashboardAccess(), qui renvoie toujours true :
+  // sans ce test, un visiteur non connecte voyait un dashboard de demonstration
+  // rempli de chiffres qui ne sont pas les siens.
+  if (!data.session && data.reason !== "missing_env") {
+    const retour = encodeURIComponent(window.location.pathname + window.location.hash);
+    window.location.replace(`./connexion.html?suivant=${retour}`);
+    return false;
+  }
+
   dashboardContent.forEach((section) => {
     section.hidden = !allowed;
   });
