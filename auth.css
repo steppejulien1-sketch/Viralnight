@@ -1,11 +1,9 @@
-/* Pages connexion / inscription — layout deux colonnes, univers nightclub premium.
-   Desktop : panneau photo gauche + formulaire droite.
-   Mobile  : plein ecran avec fond aurora.
+/* Pages connexion / inscription.
+   Concept : photo de club plein ecran, carte en verre depoli flottante.
    Corail = accent marque. CTA = mist / white. */
 
 body {
   margin: 0;
-  min-height: 100vh;
   background: #030405;
   color: var(--ash);
   font-family: var(--font-sans);
@@ -13,7 +11,7 @@ body {
 }
 
 /* ============================================================
-   Fond aurora — visible sur mobile et en transparence a droite
+   Fond : photo de club plein ecran
    ============================================================ */
 
 .au-bg {
@@ -21,219 +19,75 @@ body {
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #030405;
 }
 
+/* Photo + voiles de couleur empiles */
 .au-bg::before {
-  content: "";
-  position: absolute;
-  inset: -30%;
-  background-image:
-    radial-gradient(38% 64% at 14% -5%, rgba(146, 129, 247, 0.66) 0%, transparent 60%),
-    radial-gradient(32% 56% at 88% -3%, rgba(46, 104, 226, 0.58) 0%, transparent 58%),
-    radial-gradient(48% 30% at 52% 108%, rgba(255, 99, 99, 0.22) 0%, transparent 55%),
-    radial-gradient(72% 52% at 50% 55%, rgba(10, 22, 75, 0.72) 0%, transparent 74%);
-  filter: blur(78px);
-  animation: au-drift 56s var(--ease) infinite alternate;
-}
-
-.au-bg::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    conic-gradient(from 118deg at -3% -6%,
-      transparent 43deg,
-      rgba(146, 129, 247, 0.065) 46deg,
-      rgba(99, 161, 255, 0.04) 50deg,
-      transparent 53deg),
-    conic-gradient(from 58deg at 103% -5%,
-      transparent 44deg,
-      rgba(46, 104, 226, 0.06) 47deg,
-      rgba(146, 129, 247, 0.04) 51deg,
-      transparent 55deg),
-    radial-gradient(66% 56% at 50% 46%, transparent 20%, rgba(3, 4, 6, 0.5) 64%, rgba(3, 4, 6, 0.94) 100%),
-    linear-gradient(180deg, rgba(146, 129, 247, 0.04) 0%, transparent 11%);
+    /* Lueur iris depuis le haut — projecteur de scene */
+    radial-gradient(65% 40% at 50% -2%, rgba(146, 129, 247, 0.28) 0%, transparent 58%),
+    /* Touche chaude corail en bas — signature de marque */
+    radial-gradient(50% 28% at 50% 106%, rgba(255, 99, 99, 0.22) 0%, transparent 52%),
+    /* Voile sombre uniforme pour lisibilite de la carte */
+    linear-gradient(rgba(4, 5, 9, 0.64), rgba(4, 5, 9, 0.64)),
+    /* Photo de boite de nuit plein ecran */
+    url('./assets/hero-nightclub.webp') center / cover no-repeat;
+  animation: au-zoom 28s ease-in-out infinite alternate;
 }
 
-@keyframes au-drift {
-  0%   { transform: translate3d(-2%, -1.5%, 0) scale(1.04); }
-  33%  { transform: translate3d(1.5%, 2%, 0) scale(1.09); }
-  66%  { transform: translate3d(-1.5%, 1.5%, 0) scale(1.07); }
-  100% { transform: translate3d(2%, -1%, 0) scale(1.05); }
+/* Ken Burns tres lent : on ne le voit pas bouger, on sent la photo vivre */
+@keyframes au-zoom {
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
 }
 
-.noise { opacity: 0.046; }
+/* Vignette : assombrit les bords, concentre le regard sur la carte */
+.au-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    72% 65% at 50% 50%,
+    transparent 25%,
+    rgba(3, 4, 8, 0.46) 65%,
+    rgba(3, 4, 8, 0.88) 100%
+  );
+}
+
+.noise { opacity: 0.04; }
 
 @media (prefers-reduced-motion: reduce) {
-  .au-bg::before,
-  .au-card { animation: none; }
+  .au-bg::before { animation: none; }
+  .au-card       { animation: none; }
 }
 
 /* ============================================================
-   Layout global : deux colonnes sur desktop
+   Mise en page : header + carte centree
    ============================================================ */
 
 .au-layout {
   position: relative;
   z-index: 1;
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
-/* Sur desktop : hauteur fixe pour que le panneau gauche reste immobile
-   pendant que le formulaire droit scrolle si besoin. */
-@media (min-width: 860px) {
-  .au-layout {
-    height: 100vh;
-    overflow: hidden;
-  }
-}
-
-/* ============================================================
-   Panneau gauche : photo de club (desktop uniquement)
-   ============================================================ */
-
-.au-panel {
-  display: none;
-  flex-direction: column;
-  width: 44%;
-  flex: 0 0 44%;
-  padding: 36px 40px 32px;
-  overflow: hidden;
-
-  background:
-    /* Lueur iris depuis le haut : projecteur de scene */
-    radial-gradient(55% 35% at 20% 0%, rgba(146, 129, 247, 0.28) 0%, transparent 62%),
-    /* Voile sombre progressif pour la lisibilite du texte */
-    linear-gradient(160deg, rgba(3, 4, 6, 0.52) 0%, rgba(3, 4, 6, 0.78) 55%, rgba(3, 4, 6, 0.92) 100%),
-    /* Photo de club */
-    url('./assets/hero-nightclub.webp') center / cover no-repeat;
-
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.au-panel-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 11px;
-  color: var(--white);
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  text-decoration: none;
-  flex: 0 0 auto;
-}
-
-.au-panel-logo .au-brand-mark {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--ember);
-  box-shadow: var(--key-shadow), 0 0 20px rgba(255, 99, 99, 0.2);
-  flex: 0 0 auto;
-}
-
-.au-panel-logo .au-brand-mark svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* Corps central du panneau : titre + avantages */
-.au-panel-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 24px 0;
-}
-
-.au-panel-eyebrow {
-  margin: 0 0 20px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--iris);
-  opacity: 0.9;
-}
-
-.au-panel-headline {
-  margin: 0 0 32px;
-  font-size: clamp(30px, 3.2vw, 42px);
-  font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: -0.03em;
-  color: var(--white);
-}
-
-.au-panel-perks {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.au-panel-perks li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: var(--ash);
-  line-height: 1.4;
-}
-
-.au-panel-perks svg {
-  flex: 0 0 16px;
-  width: 16px;
-  height: 16px;
-  color: var(--iris);
-  opacity: 0.85;
-}
-
-/* Pied de panneau : preuve sociale */
-.au-panel-foot {
-  margin: 0;
-  font-size: 12px;
-  color: var(--smoke);
-  letter-spacing: 0.01em;
-}
-
-/* Affiche le panneau gauche a partir de 860px */
-@media (min-width: 860px) {
-  .au-panel { display: flex; }
-}
-
-/* ============================================================
-   Panneau droit : formulaire
-   ============================================================ */
-
-.au-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  position: relative;
-}
-
-/* En-tete de marque : visible uniquement sur mobile (< 860px) */
+/* En-tete : logo discret en haut a gauche */
 .au-top {
-  position: relative;
-  z-index: 2;
   display: flex;
   align-items: center;
-  padding: 22px 24px;
+  padding: 22px 28px;
   flex: 0 0 auto;
 }
 
 .au-brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   color: var(--white);
   font-size: 15px;
   font-weight: 600;
@@ -248,98 +102,77 @@ body {
   height: 34px;
   border-radius: 10px;
   background: var(--ember);
-  box-shadow: var(--key-shadow), 0 0 18px rgba(255, 99, 99, 0.18);
+  box-shadow: var(--key-shadow), 0 0 20px rgba(255, 99, 99, 0.2);
   flex: 0 0 auto;
 }
 
-.au-brand-mark svg {
-  width: 18px;
-  height: 18px;
-}
+.au-brand-mark svg { width: 18px; height: 18px; }
 
-/* Filet vertical entre pastille et nom */
+/* Filet vertical entre la pastille et le nom */
 .au-brand::after {
   content: "";
   order: -1;
   width: 1px;
   height: 20px;
   margin-left: -1px;
-  background: var(--hairline);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .au-brand:hover .au-brand-mark { background: #362527; }
 
-/* Cache le header mobile sur desktop */
-@media (min-width: 860px) {
-  .au-top { display: none; }
-}
-
-/* ============================================================
-   Centrage de la carte dans le panneau droit
-   ============================================================ */
-
+/* Zone de centrage de la carte */
 .au-shell {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 40px 56px;
-  position: relative;
-  z-index: 1;
-}
-
-@media (max-width: 479px) {
-  .au-shell { padding: 20px 16px 48px; }
+  padding: 16px 20px 64px;
 }
 
 /* ============================================================
-   Carte : verre depoli avec lueur iris
+   Carte : verre depoli flottant sur la photo
    ============================================================ */
 
 .au-card {
   width: 100%;
-  max-width: 400px;
-  padding: 32px 32px 28px;
-  border-radius: 20px;
-  background: rgba(10, 12, 18, 0.76);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  max-width: 408px;
+  padding: 34px 34px 28px;
+  border-radius: 22px;
+
+  /* Verre depoli : la photo derriere est floute et assombrie */
+  background: rgba(8, 10, 16, 0.76);
+  -webkit-backdrop-filter: blur(32px) saturate(130%);
+  backdrop-filter: blur(32px) saturate(130%);
+
+  /* Bordures et lueurs */
+  border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow:
-    inset 0 1px 0 rgba(146, 129, 247, 0.16),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
-    0 0 80px rgba(146, 129, 247, 0.07),
-    0 40px 90px rgba(0, 0, 0, 0.65);
-  -webkit-backdrop-filter: blur(36px) saturate(145%);
-  backdrop-filter: blur(36px) saturate(145%);
-  animation: au-breathe 10s var(--ease) infinite alternate;
+    /* Liseré lumineux en haut : projecteur qui eclaire la carte */
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    /* Ombre portee profonde */
+    0 32px 80px rgba(0, 0, 0, 0.75),
+    /* Lueur iris tres subtile */
+    0 0 0 1px rgba(0, 0, 0, 0.5);
+
+  animation: au-breathe 12s ease-in-out infinite alternate;
 }
 
+/* Respiration subtile de la lueur iris */
 @keyframes au-breathe {
-  from {
-    box-shadow:
-      inset 0 1px 0 rgba(146, 129, 247, 0.13),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.5),
-      0 0 55px rgba(146, 129, 247, 0.05),
-      0 40px 90px rgba(0, 0, 0, 0.65);
-  }
-  to {
-    box-shadow:
-      inset 0 1px 0 rgba(146, 129, 247, 0.24),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.5),
-      0 0 105px rgba(146, 129, 247, 0.12),
-      0 40px 90px rgba(0, 0, 0, 0.65);
-  }
+  from { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 32px 80px rgba(0,0,0,0.75), 0 0 60px rgba(146,129,247,0.04); }
+  to   { box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 32px 80px rgba(0,0,0,0.75), 0 0 90px rgba(146,129,247,0.10); }
 }
 
-/* Liseré iris au-dessus du titre */
+/* Liseré iris fin au-dessus du titre */
 .au-card::before {
   content: "";
   display: block;
-  width: 32px;
+  width: 28px;
   height: 2px;
   border-radius: 1px;
   background: linear-gradient(90deg, var(--iris), var(--sky));
   margin-bottom: 16px;
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
 .au-card h1 {
@@ -351,15 +184,10 @@ body {
 }
 
 .au-lead {
-  margin: 0 0 24px;
+  margin: 0 0 22px;
   font-size: 13.5px;
   line-height: 1.55;
   color: var(--smoke);
-}
-
-@media (max-width: 479px) {
-  .au-card { padding: 24px 20px 22px; }
-  .au-card::before { margin-bottom: 12px; }
 }
 
 /* ============================================================
@@ -374,8 +202,8 @@ body {
   gap: 9px;
   padding: 13px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   color: var(--white);
   font-size: 14px;
   font-weight: 500;
@@ -385,19 +213,15 @@ body {
 }
 
 .au-google:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.16);
   transform: translateY(-1px);
 }
 
 .au-google:active:not(:disabled) { transform: translateY(0); }
-.au-google:disabled { opacity: 0.45; cursor: not-allowed; }
+.au-google:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.au-google svg {
-  width: 17px;
-  height: 17px;
-  flex: 0 0 auto;
-}
+.au-google svg { width: 17px; height: 17px; flex: 0 0 auto; }
 
 /* ============================================================
    Separateur
@@ -407,10 +231,10 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 20px 0;
+  margin: 18px 0;
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--iron);
 }
@@ -420,17 +244,17 @@ body {
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--hairline);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 /* ============================================================
-   Champs
+   Champs de formulaire
    ============================================================ */
 
 .au-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 13px;
 }
 
 .au-field {
@@ -447,7 +271,7 @@ body {
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.01em;
-  color: var(--mist);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .au-input-wrap {
@@ -457,8 +281,8 @@ body {
 
 .au-field input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 10px;
   padding: 12px 14px;
   color: var(--white);
@@ -474,9 +298,9 @@ body {
 
 .au-field input:focus {
   outline: none;
-  border-color: rgba(146, 129, 247, 0.45);
-  background: rgba(146, 129, 247, 0.04);
-  box-shadow: 0 0 0 3px rgba(146, 129, 247, 0.08);
+  border-color: rgba(146, 129, 247, 0.5);
+  background: rgba(146, 129, 247, 0.06);
+  box-shadow: 0 0 0 3px rgba(146, 129, 247, 0.10);
 }
 
 /* Bouton oeil */
@@ -498,13 +322,10 @@ body {
 }
 
 .au-eye:hover { color: var(--ash); }
-.au-eye svg { width: 17px; height: 17px; }
+.au-eye svg   { width: 17px; height: 17px; }
 
-/* Avec bouton oeil, le champ de texte recule pour ne pas etre cache */
-.au-field input:has(~ .au-eye),
-.au-input-wrap:has(.au-eye) input {
-  padding-right: 44px;
-}
+/* Decale le texte pour ne pas etre cache par le bouton oeil */
+.au-input-wrap:has(.au-eye) input { padding-right: 44px; }
 
 .au-hint {
   font-size: 11.5px;
@@ -517,10 +338,7 @@ body {
   text-decoration: none;
 }
 
-.au-forgot:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+.au-forgot:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ============================================================
    Checkbox consentement CGU
@@ -540,7 +358,6 @@ body {
   margin-top: 3px;
   accent-color: var(--iris);
   cursor: pointer;
-  border-radius: 4px;
 }
 
 .au-check label {
@@ -555,13 +372,10 @@ body {
   text-decoration: none;
 }
 
-.au-check label a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+.au-check label a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ============================================================
-   Bouton soumettre
+   Bouton principal
    ============================================================ */
 
 .au-submit {
@@ -588,8 +402,9 @@ body {
 .au-submit:active:not(:disabled) { transform: translateY(0); }
 
 .au-submit:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* ============================================================
@@ -600,11 +415,11 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .au-avatar {
@@ -615,7 +430,7 @@ body {
   flex: 0 0 auto;
   border-radius: 50%;
   background: var(--ember);
-  box-shadow: 0 0 0 1px rgba(255, 99, 99, 0.22);
+  box-shadow: 0 0 0 1px rgba(255, 99, 99, 0.25);
   color: #f0a8a8;
   font-size: 14px;
   font-weight: 600;
@@ -652,7 +467,7 @@ body {
   padding: 12px;
   border-radius: var(--r-pill);
   background: transparent;
-  border: 1px solid var(--hairline);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--ash);
   font-size: 13.5px;
   font-family: inherit;
@@ -665,7 +480,7 @@ body {
   color: var(--white);
 }
 
-.au-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
+.au-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ============================================================
    Messages
@@ -680,20 +495,20 @@ body {
 }
 
 .au-msg.is-error {
-  background: rgba(255, 99, 99, 0.09);
-  border: 1px solid rgba(255, 99, 99, 0.22);
+  background: rgba(255, 99, 99, 0.10);
+  border: 1px solid rgba(255, 99, 99, 0.24);
   color: var(--coral);
 }
 
 .au-msg.is-success {
-  background: rgba(74, 222, 128, 0.08);
-  border: 1px solid rgba(74, 222, 128, 0.22);
+  background: rgba(74, 222, 128, 0.09);
+  border: 1px solid rgba(74, 222, 128, 0.24);
   color: #4ade80;
 }
 
 .au-msg.is-info {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--ash);
 }
 
@@ -714,10 +529,7 @@ body {
   text-decoration: none;
 }
 
-.au-foot a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+.au-foot a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ============================================================
    Focus visible
@@ -726,4 +538,14 @@ body {
 :where(button, a, input):focus-visible {
   outline: 2px solid rgba(146, 129, 247, 0.65);
   outline-offset: 2px;
+}
+
+/* ============================================================
+   Mobile
+   ============================================================ */
+
+@media (max-width: 440px) {
+  .au-top  { padding: 18px 18px; }
+  .au-card { padding: 24px 20px 22px; border-radius: 18px; }
+  .au-shell { padding: 12px 14px 52px; }
 }
