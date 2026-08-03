@@ -13,6 +13,9 @@ import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 /** Compte disposant du back-office complet. Doit rester aligne avec admin.js. */
 const ADMIN_EMAIL = "viralnight001@gmail.com";
 
+/** Identifiant du setInterval du compte a rebours rate limit. */
+let timerRateLimit = null;
+
 const els = {
   form: document.getElementById("form"),
   google: document.getElementById("google"),
@@ -89,10 +92,52 @@ function messageErreur(error) {
     return "Un compte existe déjà avec cet email. Connectez-vous plutôt.";
   }
   if (brut.includes("password")) return "Mot de passe trop faible : 8 caractères minimum, dont un chiffre.";
-  if (brut.includes("rate limit") || brut.includes("too many")) return "Trop de tentatives. Patientez une minute.";
+  if (estErreurRateLimit(error)) return null; // gere par demarrerRebours
   if (brut.includes("failed to fetch")) return "Connexion impossible. Vérifiez votre accès internet.";
 
   return error?.message || "Une erreur est survenue.";
+}
+
+/** Detecte les erreurs de limite de requetes Supabase. */
+function estErreurRateLimit(error) {
+  const brut = String(error?.message || "").toLowerCase();
+  return (
+    brut.includes("rate limit") ||
+    brut.includes("too many") ||
+    brut.includes("security purposes") ||
+    brut.includes("email rate limit")
+  );
+}
+
+/**
+ * Lance un compte a rebours visible sur le bouton soumettre.
+ * Extrait la duree exacte du message d'erreur Supabase si disponible
+ * (ex : "you can only request this after 60 seconds"), sinon 60s par defaut.
+ */
+function demarrerRebours(error) {
+  clearInterval(timerRateLimit);
+
+  const match = String(error?.message || "").match(/after\s+(\d+)\s+second/i);
+  let secondes = match ? parseInt(match[1], 10) : 60;
+
+  message(`Trop de tentatives. Vous pourrez réessayer dans ${secondes} seconde${secondes > 1 ? "s" : ""}.`, "error");
+  els.submit.disabled = true;
+  els.google.disabled = true;
+  els.submit.textContent = `Réessayer dans ${secondes}s`;
+
+  timerRateLimit = setInterval(() => {
+    secondes -= 1;
+    if (secondes <= 0) {
+      clearInterval(timerRateLimit);
+      timerRateLimit = null;
+      els.submit.disabled = false;
+      els.google.disabled = false;
+      els.submit.textContent = estInscription ? "Créer mon espace" : "Se connecter";
+      message("Vous pouvez réessayer.", "info");
+    } else {
+      els.submit.textContent = `Réessayer dans ${secondes}s`;
+    }
+  }, 1000);
 }
 
 function motDePasseValide(valeur) {
@@ -154,9 +199,13 @@ async function envoyer(event) {
       await connexion(email, password);
     }
   } catch (error) {
+    if (estErreurRateLimit(error)) {
+      demarrerRebours(error);
+      return; // occupe(false) ne doit pas s'executer : le rebours gere l'etat du bouton
+    }
     message(messageErreur(error), "error");
   } finally {
-    occupe(false);
+    if (!timerRateLimit) occupe(false);
   }
 }
 
