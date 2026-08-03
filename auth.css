@@ -1,31 +1,19 @@
-/* Pages de connexion et d'inscription.
-
-   Parti pris : une barre de marque discrete en haut (logo + retour au site),
-   une carte centree, et rien d'autre. Le fond n'est plus une photo de club
-   floutee - trop lourde a charger pour un decor - mais une aurore en degrades
-   CSS : meme ambiance nocturne, zero octet reseau, nette a toutes les tailles.
-
-   Les couleurs viennent toutes de theme.css. Aucune variable globale n'est
-   redefinie ici : tout ce qui est local est prefixe --au- pour ne rien
-   ecraser ailleurs dans l'app. */
+/* Pages connexion / inscription — layout deux colonnes, univers nightclub premium.
+   Desktop : panneau photo gauche + formulaire droite.
+   Mobile  : plein ecran avec fond aurora.
+   Corail = accent marque. CTA = mist / white. */
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--void);
+  background: #030405;
   color: var(--ash);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
 /* ============================================================
-   Fond : aurore
-   ------------------------------------------------------------
-   Deux couches distinctes, et c'est volontaire :
-   - ::before porte la couleur, elle est floutee et derive lentement ;
-   - ::after porte la vignette, elle ne bouge pas.
-   Les melanger donnait un assombrissement qui glissait avec l'aurore,
-   et un voile uniforme ramenait toute la page au noir.
+   Fond aurora — visible sur mobile et en transparence a droite
    ============================================================ */
 
 .au-bg {
@@ -33,59 +21,215 @@ body {
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #0a0c11;
+  background: #030405;
 }
 
 .au-bg::before {
   content: "";
   position: absolute;
-  /* Large debordement : le flou ne doit jamais laisser voir un bord. */
-  inset: -28%;
+  inset: -30%;
   background-image:
-    radial-gradient(56% 42% at 18% 14%, rgba(146, 129, 247, 0.64), transparent 68%),
-    radial-gradient(50% 38% at 84% 24%, rgba(46, 104, 226, 0.58), transparent 66%),
-    radial-gradient(62% 44% at 64% 76%, rgba(255, 99, 99, 0.32), transparent 70%),
-    radial-gradient(68% 48% at 24% 88%, rgba(20, 60, 163, 0.46), transparent 72%);
-  filter: blur(80px);
-  animation: au-drift 46s var(--ease) infinite alternate;
+    radial-gradient(38% 64% at 14% -5%, rgba(146, 129, 247, 0.66) 0%, transparent 60%),
+    radial-gradient(32% 56% at 88% -3%, rgba(46, 104, 226, 0.58) 0%, transparent 58%),
+    radial-gradient(48% 30% at 52% 108%, rgba(255, 99, 99, 0.22) 0%, transparent 55%),
+    radial-gradient(72% 52% at 50% 55%, rgba(10, 22, 75, 0.72) 0%, transparent 74%);
+  filter: blur(78px);
+  animation: au-drift 56s var(--ease) infinite alternate;
 }
 
-/* Derive tres lente : a cette vitesse on ne la voit pas bouger, on la
-   remarque seulement quand on revient sur la page. */
-@keyframes au-drift {
-  from { transform: translate3d(-1.5%, -1%, 0) scale(1.05); }
-  to { transform: translate3d(2%, 1.5%, 0) scale(1.13); }
-}
-
-/* Vignette : assombrit les bords, laisse le centre lumineux. C'est elle
-   qui pose la carte au milieu sans avoir besoin d'un cadre. */
 .au-bg::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(76% 60% at 50% 44%, transparent, rgba(5, 6, 9, 0.46) 62%, rgba(5, 6, 9, 0.9) 100%),
-    linear-gradient(180deg, rgba(5, 6, 9, 0.2), rgba(5, 6, 9, 0.52));
+    conic-gradient(from 118deg at -3% -6%,
+      transparent 43deg,
+      rgba(146, 129, 247, 0.065) 46deg,
+      rgba(99, 161, 255, 0.04) 50deg,
+      transparent 53deg),
+    conic-gradient(from 58deg at 103% -5%,
+      transparent 44deg,
+      rgba(46, 104, 226, 0.06) 47deg,
+      rgba(146, 129, 247, 0.04) 51deg,
+      transparent 55deg),
+    radial-gradient(66% 56% at 50% 46%, transparent 20%, rgba(3, 4, 6, 0.5) 64%, rgba(3, 4, 6, 0.94) 100%),
+    linear-gradient(180deg, rgba(146, 129, 247, 0.04) 0%, transparent 11%);
 }
 
+@keyframes au-drift {
+  0%   { transform: translate3d(-2%, -1.5%, 0) scale(1.04); }
+  33%  { transform: translate3d(1.5%, 2%, 0) scale(1.09); }
+  66%  { transform: translate3d(-1.5%, 1.5%, 0) scale(1.07); }
+  100% { transform: translate3d(2%, -1%, 0) scale(1.05); }
+}
+
+.noise { opacity: 0.046; }
+
 @media (prefers-reduced-motion: reduce) {
-  .au-bg::before { animation: none; }
+  .au-bg::before,
+  .au-card { animation: none; }
 }
 
 /* ============================================================
-   Barre de marque
+   Layout global : deux colonnes sur desktop
    ============================================================ */
 
+.au-layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sur desktop : hauteur fixe pour que le panneau gauche reste immobile
+   pendant que le formulaire droit scrolle si besoin. */
+@media (min-width: 860px) {
+  .au-layout {
+    height: 100vh;
+    overflow: hidden;
+  }
+}
+
+/* ============================================================
+   Panneau gauche : photo de club (desktop uniquement)
+   ============================================================ */
+
+.au-panel {
+  display: none;
+  flex-direction: column;
+  width: 44%;
+  flex: 0 0 44%;
+  padding: 36px 40px 32px;
+  overflow: hidden;
+
+  background:
+    /* Lueur iris depuis le haut : projecteur de scene */
+    radial-gradient(55% 35% at 20% 0%, rgba(146, 129, 247, 0.28) 0%, transparent 62%),
+    /* Voile sombre progressif pour la lisibilite du texte */
+    linear-gradient(160deg, rgba(3, 4, 6, 0.52) 0%, rgba(3, 4, 6, 0.78) 55%, rgba(3, 4, 6, 0.92) 100%),
+    /* Photo de club */
+    url('./assets/hero-nightclub.webp') center / cover no-repeat;
+
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.au-panel-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+
+.au-panel-logo .au-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--ember);
+  box-shadow: var(--key-shadow), 0 0 20px rgba(255, 99, 99, 0.2);
+  flex: 0 0 auto;
+}
+
+.au-panel-logo .au-brand-mark svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Corps central du panneau : titre + avantages */
+.au-panel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.au-panel-eyebrow {
+  margin: 0 0 20px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--iris);
+  opacity: 0.9;
+}
+
+.au-panel-headline {
+  margin: 0 0 32px;
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: var(--white);
+}
+
+.au-panel-perks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.au-panel-perks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ash);
+  line-height: 1.4;
+}
+
+.au-panel-perks svg {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  color: var(--iris);
+  opacity: 0.85;
+}
+
+/* Pied de panneau : preuve sociale */
+.au-panel-foot {
+  margin: 0;
+  font-size: 12px;
+  color: var(--smoke);
+  letter-spacing: 0.01em;
+}
+
+/* Affiche le panneau gauche a partir de 860px */
+@media (min-width: 860px) {
+  .au-panel { display: flex; }
+}
+
+/* ============================================================
+   Panneau droit : formulaire
+   ============================================================ */
+
+.au-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* En-tete de marque : visible uniquement sur mobile (< 860px) */
 .au-top {
   position: relative;
   z-index: 2;
   display: flex;
   align-items: center;
   padding: 22px 24px;
+  flex: 0 0 auto;
 }
 
-/* Reprend le lockup de la landing : pastille + filet + nom.
-   Sert aussi de sortie de secours vers le site public. */
 .au-brand {
   display: inline-flex;
   align-items: center;
@@ -94,6 +238,7 @@ body {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
+  text-decoration: none;
 }
 
 .au-brand-mark {
@@ -103,7 +248,8 @@ body {
   height: 34px;
   border-radius: 10px;
   background: var(--ember);
-  box-shadow: var(--key-shadow);
+  box-shadow: var(--key-shadow), 0 0 18px rgba(255, 99, 99, 0.18);
+  flex: 0 0 auto;
 }
 
 .au-brand-mark svg {
@@ -111,7 +257,7 @@ body {
   height: 18px;
 }
 
-/* Filet vertical entre la pastille et le nom, comme dans la nav. */
+/* Filet vertical entre pastille et nom */
 .au-brand::after {
   content: "";
   order: -1;
@@ -123,59 +269,101 @@ body {
 
 .au-brand:hover .au-brand-mark { background: #362527; }
 
+/* Cache le header mobile sur desktop */
+@media (min-width: 860px) {
+  .au-top { display: none; }
+}
+
 /* ============================================================
-   Composition
+   Centrage de la carte dans le panneau droit
    ============================================================ */
 
-/* Centrage en flex et non en grid : avec `place-items:center`, la colonne se
-   dimensionne sur le max-content de la carte, donc un email long en nowrap
-   elargissait la carte au-dela de l'ecran. En flex, le 100% de la carte se
-   resout sur le conteneur, jamais sur son propre contenu. */
 .au-shell {
-  position: relative;
-  z-index: 1;
-  /* La barre de marque est dans le flux : on lui retire sa hauteur pour que
-     la carte reste optiquement centree sur l'ecran. */
-  min-height: calc(100vh - 78px);
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 20px 60px;
+  padding: 32px 40px 56px;
+  position: relative;
+  z-index: 1;
 }
 
-/* Le fond de la carte est volontairement translucide : l'aurore transparait
-   a travers, c'est ce qui evite l'effet "rectangle pose sur une image". */
+@media (max-width: 479px) {
+  .au-shell { padding: 20px 16px 48px; }
+}
+
+/* ============================================================
+   Carte : verre depoli avec lueur iris
+   ============================================================ */
+
 .au-card {
   width: 100%;
-  max-width: 384px;
-  padding: 30px 30px 26px;
-  border-radius: 18px;
-  background: rgba(14, 16, 21, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  max-width: 400px;
+  padding: 32px 32px 28px;
+  border-radius: 20px;
+  background: rgba(10, 12, 18, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow:
-    0 30px 70px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  -webkit-backdrop-filter: blur(24px) saturate(130%);
-  backdrop-filter: blur(24px) saturate(130%);
+    inset 0 1px 0 rgba(146, 129, 247, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 0 80px rgba(146, 129, 247, 0.07),
+    0 40px 90px rgba(0, 0, 0, 0.65);
+  -webkit-backdrop-filter: blur(36px) saturate(145%);
+  backdrop-filter: blur(36px) saturate(145%);
+  animation: au-breathe 10s var(--ease) infinite alternate;
+}
+
+@keyframes au-breathe {
+  from {
+    box-shadow:
+      inset 0 1px 0 rgba(146, 129, 247, 0.13),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+      0 0 55px rgba(146, 129, 247, 0.05),
+      0 40px 90px rgba(0, 0, 0, 0.65);
+  }
+  to {
+    box-shadow:
+      inset 0 1px 0 rgba(146, 129, 247, 0.24),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+      0 0 105px rgba(146, 129, 247, 0.12),
+      0 40px 90px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* Liseré iris au-dessus du titre */
+.au-card::before {
+  content: "";
+  display: block;
+  width: 32px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--iris), var(--sky));
+  margin-bottom: 16px;
+  opacity: 0.65;
 }
 
 .au-card h1 {
   margin: 0 0 5px;
   font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: var(--white);
 }
 
 .au-lead {
-  margin: 0 0 22px;
+  margin: 0 0 24px;
   font-size: 13.5px;
-  line-height: 1.5;
+  line-height: 1.55;
   color: var(--smoke);
 }
 
+@media (max-width: 479px) {
+  .au-card { padding: 24px 20px 22px; }
+  .au-card::before { margin-bottom: 12px; }
+}
+
 /* ============================================================
-   Google
+   Bouton Google
    ============================================================ */
 
 .au-google {
@@ -186,16 +374,24 @@ body {
   gap: 9px;
   padding: 13px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   color: var(--white);
   font-size: 14px;
   font-weight: 500;
-  transition: background 0.15s var(--ease);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s var(--ease), border-color 0.18s var(--ease), transform 0.12s var(--ease);
 }
 
-.au-google:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
-.au-google:disabled { opacity: 0.5; cursor: not-allowed; }
+.au-google:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.au-google:active:not(:disabled) { transform: translateY(0); }
+.au-google:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .au-google svg {
   width: 17px;
@@ -211,9 +407,12 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 18px 0;
-  font-size: 11.5px;
-  color: var(--smoke);
+  margin: 20px 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--iron);
 }
 
 .au-sep::before,
@@ -245,7 +444,9 @@ body {
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12.5px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   color: var(--mist);
 }
 
@@ -256,24 +457,29 @@ body {
 
 .au-field input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  padding: 12px 13px;
+  padding: 12px 14px;
   color: var(--white);
-  /* 16px : en dessous, iOS zoome au focus. */
   font-size: 16px;
   font-family: inherit;
-  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+
+.au-field input::placeholder {
+  color: var(--iron);
+  font-size: 14px;
 }
 
 .au-field input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(146, 129, 247, 0.45);
+  background: rgba(146, 129, 247, 0.04);
+  box-shadow: 0 0 0 3px rgba(146, 129, 247, 0.08);
 }
 
-/* Bouton oeil : superpose au champ, jamais dans le flux. */
+/* Bouton oeil */
 .au-eye {
   position: absolute;
   right: 5px;
@@ -285,10 +491,20 @@ body {
   height: 34px;
   border-radius: 8px;
   color: var(--iron);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: color 0.15s var(--ease);
 }
 
 .au-eye:hover { color: var(--ash); }
 .au-eye svg { width: 17px; height: 17px; }
+
+/* Avec bouton oeil, le champ de texte recule pour ne pas etre cache */
+.au-field input:has(~ .au-eye),
+.au-input-wrap:has(.au-eye) input {
+  padding-right: 44px;
+}
 
 .au-hint {
   font-size: 11.5px;
@@ -296,14 +512,18 @@ body {
 }
 
 .au-forgot {
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--coral);
+  text-decoration: none;
 }
 
-.au-forgot:hover { text-decoration: underline; text-underline-offset: 2px; }
+.au-forgot:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 
 /* ============================================================
-   Action principale
+   Bouton soumettre
    ============================================================ */
 
 .au-submit {
@@ -316,22 +536,26 @@ body {
   font-size: 14.5px;
   font-weight: 600;
   font-family: inherit;
-  transition: background 0.15s var(--ease);
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s var(--ease), transform 0.12s var(--ease);
 }
 
-.au-submit:hover:not(:disabled) { background: var(--white); }
+.au-submit:hover:not(:disabled) {
+  background: var(--white);
+  transform: translateY(-1px);
+}
+
+.au-submit:active:not(:disabled) { transform: translateY(0); }
 
 .au-submit:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 /* ============================================================
    Session deja ouverte
-   ------------------------------------------------------------
-   Cet ecran remplace la redirection automatique qui renvoyait au
-   dashboard des qu'une session existait : la page de connexion
-   devenait inatteignable, et changer de compte impossible.
    ============================================================ */
 
 .au-account {
@@ -348,11 +572,12 @@ body {
 .au-avatar {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   flex: 0 0 auto;
   border-radius: 50%;
   background: var(--ember);
+  box-shadow: 0 0 0 1px rgba(255, 99, 99, 0.22);
   color: #f0a8a8;
   font-size: 14px;
   font-weight: 600;
@@ -393,11 +618,16 @@ body {
   color: var(--ash);
   font-size: 13.5px;
   font-family: inherit;
+  cursor: pointer;
   transition: background 0.15s var(--ease), color 0.15s var(--ease);
 }
 
-.au-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); color: var(--white); }
-.au-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+.au-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--white);
+}
+
+.au-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ============================================================
    Messages
@@ -405,21 +635,21 @@ body {
 
 .au-msg {
   margin: 14px 0 0;
-  padding: 10px 12px;
+  padding: 10px 13px;
   border-radius: 10px;
   font-size: 12.5px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .au-msg.is-error {
-  background: rgba(255, 99, 99, 0.1);
-  border: 1px solid rgba(255, 99, 99, 0.25);
+  background: rgba(255, 99, 99, 0.09);
+  border: 1px solid rgba(255, 99, 99, 0.22);
   color: var(--coral);
 }
 
 .au-msg.is-success {
-  background: rgba(74, 222, 128, 0.09);
-  border: 1px solid rgba(74, 222, 128, 0.25);
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.22);
   color: #4ade80;
 }
 
@@ -428,6 +658,10 @@ body {
   border: 1px solid var(--hairline);
   color: var(--ash);
 }
+
+/* ============================================================
+   Pied de carte
+   ============================================================ */
 
 .au-foot {
   margin: 20px 0 0;
@@ -439,16 +673,19 @@ body {
 .au-foot a {
   color: var(--coral);
   font-weight: 500;
+  text-decoration: none;
 }
 
-.au-foot a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.au-foot a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ============================================================
+   Focus visible
+   ============================================================ */
 
 :where(button, a, input):focus-visible {
-  outline: 2px solid var(--coral);
+  outline: 2px solid rgba(146, 129, 247, 0.65);
   outline-offset: 2px;
-}
-
-@media (max-width: 420px) {
-  .au-top { padding: 18px 18px; }
-  .au-card { padding: 26px 22px 24px; }
 }

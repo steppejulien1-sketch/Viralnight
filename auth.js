@@ -163,6 +163,13 @@ async function envoyer(event) {
 async function google() {
   message(null);
 
+  const btn = els.google;
+  const htmlOriginal = btn.innerHTML;
+  btn.disabled = true;
+  // Change le texte sans toucher au SVG
+  const textNode = [...btn.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+  if (textNode) textNode.textContent = " Connexion...";
+
   try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -171,11 +178,11 @@ async function google() {
       options: { redirectTo: new URL("./app.html", window.location.href).href },
     });
     if (error) throw error;
+    // Pas de restauration : la page va rediriger vers Google immediatement.
   } catch (error) {
-    message(
-      `Connexion Google indisponible : ${messageErreur(error)} Utilisez plutôt votre email.`,
-      "error",
-    );
+    message(messageErreur(error) || "Connexion Google indisponible. Utilisez votre email.", "error");
+    btn.innerHTML = htmlOriginal;
+    btn.disabled = false;
   }
 }
 
