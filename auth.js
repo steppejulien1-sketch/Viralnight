@@ -24,6 +24,15 @@ const els = {
   password: document.getElementById("password"),
   club: document.getElementById("club"),
   name: document.getElementById("name"),
+  title: document.getElementById("title"),
+  lead: document.getElementById("lead"),
+  guest: document.getElementById("guest"),
+  foot: document.getElementById("foot"),
+  session: document.getElementById("session"),
+  sessionEmail: document.getElementById("session-email"),
+  sessionInitial: document.getElementById("session-initial"),
+  sessionGo: document.getElementById("session-go"),
+  sessionOut: document.getElementById("session-out"),
 };
 
 // La presence du champ club distingue l'inscription de la connexion.
@@ -199,6 +208,50 @@ function basculerVisibilite() {
   els.password.focus();
 }
 
+/**
+ * Session deja ouverte.
+ *
+ * On n'envoie plus automatiquement au dashboard : la redirection rendait ces
+ * pages inatteignables (cliquer "Se connecter" depuis le site renvoyait aussitot
+ * a l'espace deja ouvert) et ne laissait aucun moyen de changer de compte.
+ * On affiche le compte et on laisse choisir.
+ */
+function afficherSession(email) {
+  els.title.textContent = "Vous êtes déjà connecté";
+  els.lead.textContent = "Continuez vers votre espace, ou connectez-vous avec un autre compte.";
+
+  els.sessionEmail.textContent = email;
+  els.sessionInitial.textContent = String(email).trim().charAt(0) || "?";
+
+  els.guest.hidden = true;
+  els.foot.hidden = true;
+  els.session.hidden = false;
+
+  els.sessionGo.addEventListener("click", () => {
+    window.location.href = destination(email);
+  });
+
+  els.sessionOut.addEventListener("click", async () => {
+    els.sessionGo.disabled = true;
+    els.sessionOut.disabled = true;
+    els.sessionOut.textContent = "Déconnexion...";
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      els.sessionGo.disabled = false;
+      els.sessionOut.disabled = false;
+      els.sessionOut.textContent = "Utiliser un autre compte";
+      message(messageErreur(error), "error");
+      return;
+    }
+
+    // Rechargement plutot que reaffichage manuel : on repart d'un etat propre,
+    // sans risque d'ecouteur laisse en place sur l'ancienne session.
+    window.location.reload();
+  });
+}
+
 async function init() {
   if (!isSupabaseConfigured || !supabase) {
     message("Supabase n'est pas configuré : la connexion est indisponible.", "error");
@@ -207,10 +260,9 @@ async function init() {
     return;
   }
 
-  // Deja connecte : inutile de redemander, on envoie directement au bon endroit.
   const { data } = await supabase.auth.getSession();
   if (data?.session) {
-    window.location.href = destination(data.session.user.email);
+    afficherSession(data.session.user.email);
     return;
   }
 

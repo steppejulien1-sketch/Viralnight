@@ -548,98 +548,177 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 .qs-tile .l small{ display:block; font-family:var(--font-mono); font-size:8.5px; letter-spacing:.13em; text-transform:uppercase; color:#55565a; margin-top:3px }
 .qs-tile .v{ font-size:25px; font-weight:600; color:var(--white); font-variant-numeric:tabular-nums; white-space:nowrap }
 
-/* ---------- Footer ---------- */
-/* ============ 04 · Analyse des soirees ============
-   Reprend les tokens du simulateur. Le corail reste la couleur de marque :
-   il souligne les valeurs importantes, jamais un bouton. */
+/* ============ 03 · Analyse des soirees ============
+   Cette section reutilise les composants du dashboard plutot que d'inventer
+   les siens : meme .panel, meme .panel-head, memes tuiles .kpi que la vue
+   generale. Seuls les objets qui n'existent nulle part ailleurs (anneau de
+   note, barres comparatives, histogramme horaire) sont definis ici.
 
-.an-toolbar{ display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; margin-bottom:18px }
+   Le corail reste la couleur de marque : il souligne la valeur la plus
+   importante d'une serie, jamais un bouton. */
 
-.an-pick{ display:flex; flex-direction:column; gap:6px; flex:0 0 auto }
-.an-pick span{ font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--smoke) }
+/* Selecteur de soiree : pose dans la page-head, a droite du titre. */
+.an-pick{ display:flex; flex-direction:column; gap:7px; flex:0 0 auto }
+.an-pick > span{
+  font-family:var(--font-mono); font-size:9.5px; font-weight:500;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--smoke);
+}
 .an-pick select{
-  background:var(--graphite); color:var(--white); border:1px solid var(--hairline);
-  border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit; max-width:260px;
+  background:var(--graphite); color:var(--white);
+  border:none; box-shadow:inset 0 0 0 1px var(--hairline);
+  border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit;
+  min-width:250px; max-width:320px; transition:box-shadow .25s;
+}
+.an-pick select:hover{ box-shadow:inset 0 0 0 1px rgba(255,255,255,.16) }
+
+/* ---------- Verdict ----------
+   L'anneau porte la note, la phrase porte le pourquoi. C'est le seul bloc
+   qu'un patron presse lira vraiment : il ouvre la section. */
+.an-verdict-card{ display:flex; align-items:center; gap:26px; padding:22px 24px; flex-wrap:wrap }
+
+.an-score{
+  position:relative; width:98px; height:98px; flex:none;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+}
+.an-ring{ position:absolute; inset:0; transform:rotate(-90deg) }
+.an-ring circle{ fill:none; stroke-width:6; stroke-linecap:round }
+.an-ring-bg{ stroke:var(--graphite) }
+/* pathLength=100 sur le cercle : la dasharray se lit directement en points sur 100. */
+.an-ring-fg{ stroke:var(--coral); stroke-dasharray:0 100; transition:stroke-dasharray 1s var(--ease) }
+.an-score-v{
+  font-size:30px; font-weight:600; color:var(--white); line-height:1;
+  letter-spacing:.01em; font-variant-numeric:tabular-nums;
+}
+.an-score-l{
+  font-family:var(--font-mono); font-size:8.5px; font-weight:500;
+  letter-spacing:.14em; text-transform:uppercase; color:#55565a;
 }
 
-/* Le verdict : la seule ligne que lira un patron presse. */
-.an-verdict{
-  flex:1; min-width:260px; margin:0; padding-left:14px;
-  border-left:2px solid var(--coral);
-  font-size:14px; line-height:1.6; color:var(--mist);
-}
+.an-verdict-body{ flex:1; min-width:250px }
+.an-verdict-head{ margin:0 0 6px; font-size:16.5px; font-weight:560; color:var(--white); letter-spacing:.004em }
+.an-verdict{ margin:0; font-size:13.5px; line-height:1.6; color:var(--ash) }
+.an-verdict b{ color:var(--mist); font-weight:500 }
 
-.an-kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:18px }
+/* ---------- Tuiles ----------
+   Rendues en .kpi par simulateur-analyse.js : meme composant que la vue 01. */
+.an-kpis{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px }
+.kpi-delta.up{ color:#8ed7aa }
 
-.an-kpi{
-  background:var(--obsidian); border:1px solid var(--hairline); border-radius:14px;
-  padding:15px 16px; display:flex; flex-direction:column; gap:3px;
-}
-.an-kpi-value{ font-size:22px; font-weight:700; color:var(--white); letter-spacing:-.015em; font-variant-numeric:tabular-nums }
-.an-kpi-value.is-up{ color:#4ade80 }
-.an-kpi-value.is-down{ color:var(--coral) }
-.an-kpi-label{ font-size:11px; color:var(--ash) }
-.an-kpi-sub{ font-size:10px; color:var(--smoke) }
-
-.an-grid{ display:grid; grid-template-columns:1.15fr .85fr; gap:14px; margin-bottom:14px }
-.an-col{ display:flex; flex-direction:column; gap:14px }
-
-.an-panel{ padding:18px 20px }
-.an-panel h3{ margin:0 0 3px; font-size:15px; color:var(--white); letter-spacing:-.01em }
-.an-sub{ margin:0 0 14px; font-size:12px; color:var(--smoke); display:flex; gap:14px; flex-wrap:wrap }
-
+/* ---------- Grille ---------- */
+.an-grid{ display:grid; grid-template-columns:1.15fr .85fr; gap:12px; margin-top:12px }
+.an-col{ display:flex; flex-direction:column; gap:12px }
+.an-body{ padding:16px 20px 20px }
+.an-full{ margin-top:12px }
 .an-empty{ margin:0; font-size:12px; color:var(--smoke); list-style:none }
 
-/* Actions : la severite est encodee dans le liseré, pas seulement dans le chiffre. */
-.an-actions{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px }
+/* ---------- Actions ----------
+   La severite est ecrite en toutes lettres, pas seulement teintee : un liseré
+   corail ne se distingue pas d'un liseré ambre pour un daltonien, et ne se voit
+   pas du tout sur un ecran de mauvaise qualite en soiree. */
+.an-actions{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px }
 .an-action{
-  display:flex; align-items:center; gap:14px;
-  padding:12px 14px; background:var(--graphite);
-  border-left:2px solid var(--iron); border-radius:10px;
-  font-size:13px; line-height:1.5; color:var(--mist);
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:14px;
+  padding:13px 15px; background:var(--graphite);
+  border-left:2px solid var(--iron); border-radius:11px;
 }
 .an-action.is-high{ border-left-color:var(--coral) }
-.an-action.is-medium{ border-left-color:#fbbf24 }
-.an-action span{ flex:1 }
-.an-action strong{ color:var(--coral); font-variant-numeric:tabular-nums; white-space:nowrap }
+.an-action.is-medium{ border-left-color:#c99a3f }
+.an-action-rank{
+  font-family:var(--font-mono); font-size:10px; letter-spacing:.06em;
+  color:#55565a; font-variant-numeric:tabular-nums;
+}
+.an-action-text{ min-width:0; font-size:13px; line-height:1.5; color:var(--mist) }
+.an-action-prio{
+  display:block; margin-top:5px;
+  font-family:var(--font-mono); font-size:8.5px; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--smoke);
+}
+.an-action.is-high .an-action-prio{ color:#f0a8a8 }
+.an-action.is-medium .an-action-prio{ color:#d9b46e }
+.an-action-gain{
+  font-family:var(--font-mono); font-size:12.5px; font-weight:600; color:var(--coral);
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
 
-/* Barres comparatives */
-.an-bars{ display:flex; flex-direction:column; gap:11px }
-.an-bar{ display:grid; grid-template-columns:1fr auto; gap:4px 10px }
-.an-bar-label{ font-size:12.5px; color:var(--ash) }
+/* ---------- Barres comparatives ---------- */
+.an-bars{ display:flex; flex-direction:column; gap:13px }
+.an-bar{ display:grid; grid-template-columns:auto 1fr auto; gap:6px 10px; align-items:baseline }
+.an-bar-rank{
+  font-family:var(--font-mono); font-size:10px; color:#55565a;
+  font-variant-numeric:tabular-nums;
+}
+.an-bar-label{
+  font-size:12.5px; color:var(--ash);
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
 .an-bar.is-top .an-bar-label{ color:var(--white); font-weight:600 }
-.an-bar-value{ grid-column:2; grid-row:1; font-size:11px; color:var(--smoke); font-family:var(--font-mono); font-variant-numeric:tabular-nums; white-space:nowrap }
-.an-bar-track{ grid-column:1/-1; height:7px; background:var(--graphite); border-radius:999px; overflow:hidden }
-.an-bar-fill{ height:100%; background:var(--iron); border-radius:999px; transition:width .5s cubic-bezier(.22,.68,.34,1) }
+.an-bar-value{
+  font-family:var(--font-mono); font-size:11px; color:var(--smoke);
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.an-bar-track{
+  grid-column:1/-1; height:8px; border-radius:999px; overflow:hidden;
+  background:var(--graphite); box-shadow:inset 0 0 0 1px var(--hairline-soft);
+}
+.an-bar-fill{ height:100%; background:#3a3d44; border-radius:999px; transition:width .6s var(--ease) }
 .an-bar.is-top .an-bar-fill{ background:var(--coral) }
 
-/* Heures : deux series sur une base commune, sinon les hauteurs ne sont pas comparables. */
-.an-legend{ display:inline-flex; align-items:center; gap:6px }
-.an-legend::before{ content:""; width:8px; height:8px; border-radius:2px }
-.an-legend.is-scans::before{ background:var(--iron) }
+/* ---------- Heures ----------
+   Deux series sur une echelle commune, avec des reperes chiffres : sans eux,
+   les barres se comparent entre elles mais ne disent aucune quantite. */
+.an-legend{
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:var(--font-mono); font-size:9px; font-weight:500;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--smoke);
+}
+.an-legend + .an-legend{ margin-left:16px }
+.an-legend::before{ content:""; width:8px; height:8px; border-radius:2px; flex:none }
+.an-legend.is-scans::before{ background:#3a3d44 }
 .an-legend.is-posts::before{ background:var(--coral) }
 
-.an-hours{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:8px; align-items:end; height:150px }
-.an-hour{ display:grid; grid-template-rows:1fr auto; gap:6px; height:100%; justify-items:center }
+.an-hours-wrap{ --an-h:158px; position:relative; padding-left:42px; margin-top:6px }
+.an-hours-grid{ position:absolute; left:42px; right:0; top:0; height:var(--an-h); pointer-events:none }
+.an-gl{ position:absolute; left:0; right:0; border-top:1px solid rgba(255,255,255,.05) }
+.an-gl span{
+  position:absolute; left:-42px; top:-7px; width:34px; text-align:right;
+  font-family:var(--font-mono); font-size:9.5px; color:#55565a; font-variant-numeric:tabular-nums;
+}
+.an-hours{ position:relative; display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:8px }
+.an-hour{ display:grid; grid-template-rows:var(--an-h) auto; gap:8px; justify-items:center }
 .an-hour-pair{ display:flex; align-items:flex-end; justify-content:center; gap:3px; width:100%; height:100% }
-.an-hour-bar{ flex:1; max-width:20px; border-radius:4px 4px 0 0; transition:height .5s cubic-bezier(.22,.68,.34,1) }
-.an-hour-bar.is-scans{ background:var(--iron) }
-.an-hour-bar.is-posts{ background:rgba(255,99,99,.5) }
+.an-hour-bar{ flex:1; max-width:18px; border-radius:4px 4px 0 0; transition:height .6s var(--ease) }
+.an-hour-bar.is-scans{ background:#3a3d44 }
+.an-hour-bar.is-posts{ background:rgba(255,99,99,.42) }
 .an-hour.is-peak .an-hour-bar.is-posts{ background:var(--coral) }
-.an-hour-label{ font-size:10.5px; color:var(--smoke); font-family:var(--font-mono) }
-.an-hour.is-peak .an-hour-label{ color:var(--white); font-weight:700 }
+.an-hour-label{
+  font-family:var(--font-mono); font-size:10px; color:#55565a;
+  font-variant-numeric:tabular-nums;
+}
+.an-hour.is-peak .an-hour-label{ color:var(--white); font-weight:600 }
 
 .an-insight{
-  margin:16px 0 0; padding:12px 14px;
-  background:var(--graphite); border-left:2px solid var(--coral); border-radius:10px;
+  margin:18px 0 0; padding:13px 15px;
+  background:var(--graphite); border-left:2px solid var(--coral); border-radius:11px;
   font-size:12.5px; line-height:1.55; color:var(--mist);
 }
 
 @media (max-width:900px){
   .an-grid{ grid-template-columns:1fr }
-  .an-hours{ height:126px; gap:4px }
-  .an-verdict{ padding-left:12px }
+  .an-kpis{ grid-template-columns:1fr 1fr }
+  .an-hours-wrap{ --an-h:126px; padding-left:34px }
+  .an-hours-grid{ left:34px }
+  .an-gl span{ left:-34px; width:28px }
+  .an-hours{ gap:4px }
+  .an-verdict-card{ gap:20px; padding:20px }
 }
+
+@media (max-width:560px){
+  .an-kpis{ grid-template-columns:1fr }
+  .an-pick{ width:100% }
+  .an-pick select{ min-width:0; max-width:none; width:100% }
+}
+
+/* ---------- Footer ---------- */
 
 .dash-foot{
   border-top:1px solid rgba(255,255,255,.045);
@@ -736,8 +815,8 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
   <nav>
     <a class="s-link active" href="#vue" data-spy="vue"><span class="n">01</span>Vue générale</a>
     <a class="s-link" href="#points" data-spy="points"><span class="n">02</span>Points &amp; récompenses</a>
-    <a class="s-link" href="#qr" data-spy="qr"><span class="n">03</span>QR &amp; check-in</a>
-    <a class="s-link" href="#analyse" data-spy="analyse"><span class="n">04</span>Analyse des soirées</a>
+    <a class="s-link" href="#analyse" data-spy="analyse"><span class="n">03</span>Analyse des soirées</a>
+    <a class="s-link" href="#qr" data-spy="qr"><span class="n">04</span>QR &amp; check-in</a>
   </nav>
 
   <div class="side-foot">
@@ -976,11 +1055,104 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
       </div>
     </section>
 
-    <!-- ============ 03 · QR & CHECK-IN ============ -->
+    <!-- ============ 03 · ANALYSE DES SOIRÉES ============
+         Tout est rendu par simulateur-analyse.js a partir du vrai moteur
+         d'analyse : les conteneurs ci-dessous sont volontairement vides. -->
+    <section class="section" id="analyse" data-section>
+      <div class="page-head">
+        <div>
+          <span class="eyebrow">03 · Analyse des soirées</span>
+          <h2>Savoir quoi changer pour la prochaine.</h2>
+        </div>
+        <label class="an-pick">
+          <span>Soirée analysée</span>
+          <select id="anEvent"></select>
+        </label>
+      </div>
+
+      <div class="panel an-verdict-card spot" data-reveal>
+        <div class="an-score">
+          <svg class="an-ring" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="an-ring-bg" cx="50" cy="50" r="44" pathLength="100" />
+            <circle class="an-ring-fg" id="anRing" cx="50" cy="50" r="44" pathLength="100" />
+          </svg>
+          <span class="an-score-v" id="anScore">--</span>
+          <span class="an-score-l">Note</span>
+        </div>
+        <div class="an-verdict-body">
+          <p class="an-verdict-head" id="anVerdictHead"></p>
+          <p class="an-verdict" id="anVerdict"></p>
+        </div>
+      </div>
+
+      <div class="an-kpis" id="anKpis"></div>
+
+      <div class="an-grid">
+        <div class="panel spot" data-reveal>
+          <div class="panel-head">
+            <div>
+              <p class="panel-title">Ce qu'il faut améliorer</p>
+              <p class="panel-sub">Classé par gain estimé sur cette soirée.</p>
+            </div>
+          </div>
+          <div class="an-body">
+            <ul class="an-actions" id="anActions"></ul>
+          </div>
+        </div>
+
+        <div class="an-col">
+          <div class="panel spot" data-reveal>
+            <div class="panel-head">
+              <div>
+                <p class="panel-title">Quel DJ fait venir du monde</p>
+                <p class="panel-sub">Vues générées en moyenne par soirée.</p>
+              </div>
+            </div>
+            <div class="an-body">
+              <div class="an-bars" id="anDjs"></div>
+            </div>
+          </div>
+
+          <div class="panel spot" data-reveal>
+            <div class="panel-head">
+              <div>
+                <p class="panel-title">Les récompenses préférées</p>
+                <p class="panel-sub">Classées par ce que les clients choisissent réellement.</p>
+              </div>
+            </div>
+            <div class="an-body">
+              <div class="an-bars" id="anRewards"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel an-full spot" data-reveal>
+        <div class="panel-head">
+          <div>
+            <p class="panel-title">Quand est-ce qu'ils postent</p>
+            <p class="panel-sub">Scans et publications sur la même échelle.</p>
+          </div>
+          <div>
+            <span class="an-legend is-scans">Scans QR</span>
+            <span class="an-legend is-posts">Publications</span>
+          </div>
+        </div>
+        <div class="an-body">
+          <div class="an-hours-wrap">
+            <div class="an-hours-grid" id="anHoursGrid" aria-hidden="true"></div>
+            <div class="an-hours" id="anHours"></div>
+          </div>
+          <p class="an-insight" id="anTiming"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 04 · QR & CHECK-IN ============ -->
     <section class="section" id="qr" data-section>
       <div class="page-head">
         <div>
-          <span class="eyebrow">03 · QR &amp; check-in</span>
+          <span class="eyebrow">04 · QR &amp; check-in</span>
           <h2>Piloter la soirée en direct.</h2>
         </div>
         <p class="note">Un seul QR pour rattacher présence, points et récompenses.</p>
@@ -1020,58 +1192,6 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
       </div>
     </section>
 
-
-    <section class="section" id="analyse" data-section>
-      <div class="page-head">
-        <div>
-          <span class="eyebrow">04 · Analyse des soirées</span>
-          <h2>Savoir quoi changer pour la prochaine.</h2>
-        </div>
-        <p class="note">Chiffres calculés par le moteur d'analyse, pas des valeurs figées : changez de soirée, tout se recalcule.</p>
-      </div>
-
-      <div class="an-toolbar">
-        <label class="an-pick">
-          <span>Soirée analysée</span>
-          <select id="anEvent"></select>
-        </label>
-        <p class="an-verdict" id="anVerdict"></p>
-      </div>
-
-      <div class="an-kpis" id="anKpis"></div>
-
-      <div class="an-grid">
-        <div class="panel an-panel" data-reveal>
-          <h3>Ce qu'il faut améliorer</h3>
-          <p class="an-sub">Classé par gain estimé sur cette soirée.</p>
-          <ul class="an-actions" id="anActions"></ul>
-        </div>
-
-        <div class="an-col">
-          <div class="panel an-panel" data-reveal>
-            <h3>Quel DJ fait venir du monde</h3>
-            <p class="an-sub">Vues générées en moyenne par soirée.</p>
-            <div class="an-bars" id="anDjs"></div>
-          </div>
-
-          <div class="panel an-panel" data-reveal>
-            <h3>Les récompenses préférées</h3>
-            <p class="an-sub">Classées par ce que les clients choisissent réellement.</p>
-            <div class="an-bars" id="anRewards"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel an-panel" data-reveal>
-        <h3>Quand est-ce qu'ils postent</h3>
-        <p class="an-sub">
-          <span class="an-legend is-scans">Scans QR</span>
-          <span class="an-legend is-posts">Publications</span>
-        </p>
-        <div class="an-hours" id="anHours"></div>
-        <p class="an-insight" id="anTiming"></p>
-      </div>
-    </section>
 
     <footer class="dash-foot">
       <span>viralnight os</span><span class="pipe">|</span>

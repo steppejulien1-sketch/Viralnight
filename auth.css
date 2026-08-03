@@ -1,7 +1,13 @@
 /* Pages de connexion et d'inscription.
-   Parti pris : rien d'autre que ce qui sert a entrer. Pas de logo dans la carte,
-   pas de lien de retour, pas d'effet. Le fond est une photo de club rendue
-   abstraite par un flou fort : elle pose l'ambiance sans distraire du formulaire. */
+
+   Parti pris : une barre de marque discrete en haut (logo + retour au site),
+   une carte centree, et rien d'autre. Le fond n'est plus une photo de club
+   floutee - trop lourde a charger pour un decor - mais une aurore en degrades
+   CSS : meme ambiance nocturne, zero octet reseau, nette a toutes les tailles.
+
+   Les couleurs viennent toutes de theme.css. Aucune variable globale n'est
+   redefinie ici : tout ce qui est local est prefixe --au- pour ne rien
+   ecraser ailleurs dans l'app. */
 
 body {
   margin: 0;
@@ -12,46 +18,145 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* --- Fond --- */
+/* ============================================================
+   Fond : aurore
+   ------------------------------------------------------------
+   Deux couches distinctes, et c'est volontaire :
+   - ::before porte la couleur, elle est floutee et derive lentement ;
+   - ::after porte la vignette, elle ne bouge pas.
+   Les melanger donnait un assombrissement qui glissait avec l'aurore,
+   et un voile uniforme ramenait toute la page au noir.
+   ============================================================ */
 
 .au-bg {
   position: fixed;
-  inset: -60px;
+  inset: 0;
   z-index: 0;
-  background-image: url("./assets/hero-nightclub.webp");
-  background-size: cover;
-  background-position: center;
-  /* Flou fort et forte desaturation : on veut une texture, pas une image lisible.
-     L'inset negatif evite les bords transparents que produit le flou. */
-  filter: blur(46px) brightness(0.34) saturate(0.55);
+  overflow: hidden;
+  background: #0a0c11;
 }
 
+.au-bg::before {
+  content: "";
+  position: absolute;
+  /* Large debordement : le flou ne doit jamais laisser voir un bord. */
+  inset: -28%;
+  background-image:
+    radial-gradient(56% 42% at 18% 14%, rgba(146, 129, 247, 0.64), transparent 68%),
+    radial-gradient(50% 38% at 84% 24%, rgba(46, 104, 226, 0.58), transparent 66%),
+    radial-gradient(62% 44% at 64% 76%, rgba(255, 99, 99, 0.32), transparent 70%),
+    radial-gradient(68% 48% at 24% 88%, rgba(20, 60, 163, 0.46), transparent 72%);
+  filter: blur(80px);
+  animation: au-drift 46s var(--ease) infinite alternate;
+}
+
+/* Derive tres lente : a cette vitesse on ne la voit pas bouger, on la
+   remarque seulement quand on revient sur la page. */
+@keyframes au-drift {
+  from { transform: translate3d(-1.5%, -1%, 0) scale(1.05); }
+  to { transform: translate3d(2%, 1.5%, 0) scale(1.13); }
+}
+
+/* Vignette : assombrit les bords, laisse le centre lumineux. C'est elle
+   qui pose la carte au milieu sans avoir besoin d'un cadre. */
 .au-bg::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(8, 9, 11, 0.62), rgba(8, 9, 11, 0.82));
+  background:
+    radial-gradient(76% 60% at 50% 44%, transparent, rgba(5, 6, 9, 0.46) 62%, rgba(5, 6, 9, 0.9) 100%),
+    linear-gradient(180deg, rgba(5, 6, 9, 0.2), rgba(5, 6, 9, 0.52));
 }
 
-/* --- Composition --- */
+@media (prefers-reduced-motion: reduce) {
+  .au-bg::before { animation: none; }
+}
 
+/* ============================================================
+   Barre de marque
+   ============================================================ */
+
+.au-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: 22px 24px;
+}
+
+/* Reprend le lockup de la landing : pastille + filet + nom.
+   Sert aussi de sortie de secours vers le site public. */
+.au-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.au-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--ember);
+  box-shadow: var(--key-shadow);
+}
+
+.au-brand-mark svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Filet vertical entre la pastille et le nom, comme dans la nav. */
+.au-brand::after {
+  content: "";
+  order: -1;
+  width: 1px;
+  height: 20px;
+  margin-left: -1px;
+  background: var(--hairline);
+}
+
+.au-brand:hover .au-brand-mark { background: #362527; }
+
+/* ============================================================
+   Composition
+   ============================================================ */
+
+/* Centrage en flex et non en grid : avec `place-items:center`, la colonne se
+   dimensionne sur le max-content de la carte, donc un email long en nowrap
+   elargissait la carte au-dela de l'ecran. En flex, le 100% de la carte se
+   resout sur le conteneur, jamais sur son propre contenu. */
 .au-shell {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 40px 20px;
+  /* La barre de marque est dans le flux : on lui retire sa hauteur pour que
+     la carte reste optiquement centree sur l'ecran. */
+  min-height: calc(100vh - 78px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px 60px;
 }
 
+/* Le fond de la carte est volontairement translucide : l'aurore transparait
+   a travers, c'est ce qui evite l'effet "rectangle pose sur une image". */
 .au-card {
   width: 100%;
-  max-width: 380px;
+  max-width: 384px;
   padding: 30px 30px 26px;
-  border-radius: 16px;
-  background: rgba(17, 19, 22, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.4);
+  border-radius: 18px;
+  background: rgba(14, 16, 21, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 30px 70px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  backdrop-filter: blur(24px) saturate(130%);
 }
 
 .au-card h1 {
@@ -69,7 +174,9 @@ body {
   color: var(--smoke);
 }
 
-/* --- Google --- */
+/* ============================================================
+   Google
+   ============================================================ */
 
 .au-google {
   width: 100%;
@@ -87,7 +194,8 @@ body {
   transition: background 0.15s var(--ease);
 }
 
-.au-google:hover { background: rgba(255, 255, 255, 0.09); }
+.au-google:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
+.au-google:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .au-google svg {
   width: 17px;
@@ -95,7 +203,9 @@ body {
   flex: 0 0 auto;
 }
 
-/* --- Separateur --- */
+/* ============================================================
+   Separateur
+   ============================================================ */
 
 .au-sep {
   display: flex;
@@ -111,10 +221,12 @@ body {
   content: "";
   flex: 1;
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--hairline);
 }
 
-/* --- Champs --- */
+/* ============================================================
+   Champs
+   ============================================================ */
 
 .au-form {
   display: flex;
@@ -152,12 +264,13 @@ body {
   /* 16px : en dessous, iOS zoome au focus. */
   font-size: 16px;
   font-family: inherit;
-  transition: border-color 0.15s var(--ease);
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
 }
 
 .au-field input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.055);
 }
 
 /* Bouton oeil : superpose au champ, jamais dans le flux. */
@@ -189,29 +302,106 @@ body {
 
 .au-forgot:hover { text-decoration: underline; text-underline-offset: 2px; }
 
-/* --- Action principale --- */
+/* ============================================================
+   Action principale
+   ============================================================ */
 
 .au-submit {
   width: 100%;
   margin-top: 4px;
   padding: 14px;
-  border-radius: 999px;
-  background: #fff;
-  color: #08090b;
+  border-radius: var(--r-pill);
+  background: var(--mist);
+  color: var(--void);
   font-size: 14.5px;
   font-weight: 600;
   font-family: inherit;
-  transition: opacity 0.15s var(--ease);
+  transition: background 0.15s var(--ease);
 }
 
-.au-submit:hover:not(:disabled) { opacity: 0.9; }
+.au-submit:hover:not(:disabled) { background: var(--white); }
 
 .au-submit:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* --- Messages --- */
+/* ============================================================
+   Session deja ouverte
+   ------------------------------------------------------------
+   Cet ecran remplace la redirection automatique qui renvoyait au
+   dashboard des qu'une session existait : la page de connexion
+   devenait inatteignable, et changer de compte impossible.
+   ============================================================ */
+
+.au-account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hairline);
+}
+
+.au-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--ember);
+  color: #f0a8a8;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.au-account-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.au-account-label {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--smoke);
+}
+
+.au-account-mail {
+  font-size: 13px;
+  color: var(--white);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.au-ghost {
+  width: 100%;
+  margin-top: 9px;
+  padding: 12px;
+  border-radius: var(--r-pill);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  color: var(--ash);
+  font-size: 13.5px;
+  font-family: inherit;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.au-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); color: var(--white); }
+.au-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ============================================================
+   Messages
+   ============================================================ */
 
 .au-msg {
   margin: 14px 0 0;
@@ -235,7 +425,7 @@ body {
 
 .au-msg.is-info {
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--hairline);
   color: var(--ash);
 }
 
@@ -259,5 +449,6 @@ body {
 }
 
 @media (max-width: 420px) {
+  .au-top { padding: 18px 18px; }
   .au-card { padding: 26px 22px 24px; }
 }
