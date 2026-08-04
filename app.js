@@ -928,10 +928,23 @@ openAccessButtons.forEach((button) => {
 });
 
 if (supabase) {
-  supabase.auth.onAuthStateChange((event) => {
+  // L'admin ne doit jamais rester sur app.html — il a son propre espace.
+  // Cas typique : connexion via Google OAuth qui redirige toujours vers app.html.
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user?.email?.trim().toLowerCase() === "viralnight001@gmail.com") {
+      window.location.replace("./admin.html");
+    }
+  });
+
+  supabase.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY" && passwordUpdateForm) {
       showPasswordUpdateForm();
       setAuthFeedback("Enregistre ton nouveau mot de passe ci-dessous.", "connected");
+      return;
+    }
+    if (session?.user?.email?.trim().toLowerCase() === "viralnight001@gmail.com") {
+      window.location.replace("./admin.html");
+      return;
     }
     refreshDashboard();
   });
