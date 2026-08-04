@@ -26,7 +26,6 @@ const els = {
   email: document.getElementById("email"),
   password: document.getElementById("password"),
   club: document.getElementById("club"),
-  name: document.getElementById("name"),
   title: document.getElementById("title"),
   lead: document.getElementById("lead"),
   guest: document.getElementById("guest"),
@@ -150,14 +149,14 @@ async function connexion(email, password) {
   window.location.href = destination(email);
 }
 
-async function inscription(email, password, club, nom) {
+async function inscription(email, password, club) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      // Ces informations servent a creer l'establishment cote admin,
+      // Le nom du club sert a creer l'establishment cote admin,
       // sans redemander au gerant ce qu'il a deja saisi.
-      data: { club_name: club, full_name: nom },
+      data: { club_name: club },
       emailRedirectTo: new URL("./connexion.html", window.location.href).href,
     },
   });
@@ -194,7 +193,7 @@ async function envoyer(event) {
 
   try {
     if (estInscription) {
-      await inscription(email, password, els.club.value.trim(), els.name.value.trim());
+      await inscription(email, password, els.club.value.trim());
     } else {
       await connexion(email, password);
     }
