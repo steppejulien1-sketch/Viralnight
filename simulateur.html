@@ -1872,5 +1872,48 @@ setTimeout(liveTick, 2600);
 
 })();
 </script>
+
+<script type="module">
+import { supabase, isSupabaseConfigured } from './supabaseClient.js';
+
+async function personnaliser() {
+  if (!isSupabaseConfigured || !supabase) return;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  // Cherche l'etablissement lie au compte connecte
+  const { data: ownership } = await supabase
+    .from('establishment_owners')
+    .select('establishment_id, establishments(name, city)')
+    .eq('owner_id', session.user.id)
+    .limit(1)
+    .maybeSingle();
+
+  const nom = ownership?.establishments?.name;
+  if (!nom) return;
+
+  const ville = ownership?.establishments?.city || '';
+  const nomComplet = ville ? `${nom} · ${ville}` : nom;
+
+  // Met a jour le nom dans la topbar
+  const nameEl = document.querySelector('.tb-club .name');
+  if (nameEl) nameEl.textContent = nom;
+
+  // Met a jour le titre de page
+  document.title = `ViralNight OS — ${nom}`;
+
+  // Remplace "MODE DEMO" par le nom complet + ville
+  const demoEl = document.querySelector('.tb-demo');
+  if (demoEl) {
+    demoEl.textContent = nomComplet.toUpperCase();
+    demoEl.style.background = 'rgba(146,129,247,0.15)';
+    demoEl.style.color = '#9281f7';
+    demoEl.style.borderColor = 'rgba(146,129,247,0.3)';
+  }
+}
+
+personnaliser();
+</script>
 </body>
 </html>

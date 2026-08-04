@@ -76,7 +76,7 @@ function destination(email) {
     return suivant;
   }
 
-  return String(email).trim().toLowerCase() === ADMIN_EMAIL ? "./admin.html" : "./app.html";
+  return String(email).trim().toLowerCase() === ADMIN_EMAIL ? "./admin.html" : "./simulateur.html";
 }
 
 /**
@@ -224,7 +224,7 @@ async function google() {
       provider: "google",
       // Le compte admin est redirige au meme endroit que les autres : la page
       // app.html renverra vers l'admin si l'email correspond.
-      options: { redirectTo: new URL("./app.html", window.location.href).href },
+      options: { redirectTo: new URL("./simulateur.html", window.location.href).href },
     });
     if (error) throw error;
     // Pas de restauration : la page va rediriger vers Google immediatement.
