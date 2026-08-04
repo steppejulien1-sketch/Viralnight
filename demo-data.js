@@ -14,12 +14,17 @@ const REWARDS = [
   { id: "rw-entree", title: "Entree gratuite", points_required: 240 },
 ];
 
-// DJ Martin surperforme DJ Alex, mais avec un ecart plausible pour un vrai club
-// (~+60% de reach moyen) : un ecart de x4 rendrait la demo peu credible.
+// Quatre residents avec des profils distincts mais plausibles pour un vrai club :
+// l'ecart entre le meilleur et le dernier reste sous x2, un ecart de x4 rendrait
+// la demo peu credible. Un classement a 4 lignes est plus parlant que 2.
 const DJ_PROFILES = {
-  "DJ Martin": { reachPerPost: 3900, postRate: 0.2, scanRate: 0.62 },
-  "DJ Alex": { reachPerPost: 2600, postRate: 0.15, scanRate: 0.5 },
+  "Sacha Vega": { reachPerPost: 4200, postRate: 0.22, scanRate: 0.64 },
+  "Nova Kaï": { reachPerPost: 3400, postRate: 0.19, scanRate: 0.58 },
+  "Dario Sette": { reachPerPost: 2800, postRate: 0.16, scanRate: 0.52 },
+  "Lyna B.": { reachPerPost: 2300, postRate: 0.14, scanRate: 0.48 },
 };
+
+const DJ_NAMES = Object.keys(DJ_PROFILES);
 
 /** PRNG deterministe (mulberry32) : meme graine = memes donnees. */
 function createRandom(seed) {
@@ -109,7 +114,8 @@ export function buildDemoDataset({ seed = 20260731, eventCount = 8, lastEventDat
 
   eventDates.forEach((eventDate, index) => {
     const eventId = `evt-${index + 1}`;
-    const djName = index % 2 === 0 ? "DJ Alex" : "DJ Martin";
+    // Rotation sur les quatre residents : chacun anime deux soirees sur huit.
+    const djName = DJ_NAMES[index % DJ_NAMES.length];
     const profile = DJ_PROFILES[djName];
 
     // Croissance progressive de l'affluence sur la periode, avec du bruit.
