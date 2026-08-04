@@ -311,13 +311,21 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
   margin:0; padding:0 24px; text-align:center;
   font-size:12.5px; line-height:1.6; color:var(--smoke);
 }
-.chart-x{ display:flex; gap:4%; padding:10px 2% 0; margin-left:44px }
+.chart-x{ display:flex; gap:4%; padding:12px 2% 0; margin-left:44px }
 .chart-x span{
   flex:1; text-align:center;
   font-family:var(--font-mono); font-size:9.5px; letter-spacing:.1em; color:var(--smoke); text-transform:uppercase;
   white-space:nowrap;
 }
 .chart-x span.live{ color:var(--mist) }
+/* Valeur lisible au-dessus du nom du jour : chiffre en clair, jour en dessous. */
+.xval{
+  display:block; margin-bottom:4px;
+  font-family:var(--font-sans); font-size:14px; font-weight:600; letter-spacing:-.01em;
+  color:var(--white); text-transform:none; font-variant-numeric:tabular-nums;
+  transition:color .3s;
+}
+.chart-x span.live .xval{ color:var(--white) }
 .chart-tip{
   position:absolute; z-index:5; pointer-events:none;
   padding:8px 11px; border-radius:9px;
@@ -1488,8 +1496,12 @@ function buildChart(m){
     col.appendChild(b);
     bars.appendChild(col);
     var x = document.createElement('span');
-    x.textContent = lb;
-    if(i === m.liveIdx){ x.classList.add('live'); x.textContent = lb + ' · live' }
+    x.className = 'xtick';
+    if(i === m.liveIdx) x.classList.add('live');
+    var jour = (i === m.liveIdx) ? lb + ' · live' : lb;
+    // Valeur affichee en permanence au-dessus du jour : un dashboard se lit
+    // d'un coup d'oeil, sans avoir a survoler chaque barre.
+    x.innerHTML = '<b class="xval" data-i="' + i + '">—</b>' + jour;
     chartX.appendChild(x);
   });
   chartPlot.appendChild(bars);
@@ -1513,6 +1525,10 @@ function updateChart(){
   var vals = chartValues(chartMode);
   $$('.cbar', chartPlot).forEach(function(b, i){
     b.style.height = clamp(vals[i] / chartMode.max * 100, 1.5, 100) + '%';
+  });
+  // Met a jour la valeur lisible sous chaque barre (suit la soiree live).
+  $$('.xval', chartX).forEach(function(el, i){
+    el.textContent = fmtK(Math.round(vals[i]));
   });
 }
 var segWeek = $('#segWeek'), segMonth = $('#segMonth');
