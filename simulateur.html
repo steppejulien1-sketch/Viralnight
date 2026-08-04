@@ -286,25 +286,24 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
   position:absolute; left:-44px; top:-7px; width:36px; text-align:right;
   font-family:var(--font-mono); font-size:9.5px; color:#55565a; font-variant-numeric:tabular-nums;
 }
-.bars{ position:absolute; left:44px; right:0; top:0; bottom:0; display:flex; align-items:flex-end; gap:4% ; padding:0 2% }
-.cbar-col{ flex:1; height:100%; display:flex; align-items:flex-end; justify-content:center; position:relative }
-.cbar{
-  width:min(72%, 44px); height:0%;
-  border-radius:7px 7px 3px 3px;
-  background:linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.1));
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09), inset 0 1px 0 rgba(255,255,255,.22);
-  transition:height .9s var(--ease), background .3s, box-shadow .3s;
-  cursor:pointer;
+/* Courbe area : aire degradee + ligne lissee + points ronds. */
+.c-plot{ position:absolute; left:44px; right:0; top:0; bottom:0 }
+.c-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible }
+.c-line{
+  fill:none; stroke:#eef0ff; stroke-width:2.5;
+  vector-effect:non-scaling-stroke; stroke-linejoin:round; stroke-linecap:round;
+  filter:drop-shadow(0 1px 5px rgba(238,240,255,.28));
 }
-.cbar:hover{ background:linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.2)) }
-.cbar.live{
-  background:linear-gradient(180deg, #fff, rgba(255,255,255,.3));
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.25), 0 0 24px rgba(255,255,255,.09);
+.c-dot{
+  position:absolute; width:9px; height:9px; margin:0 0 -4.5px -4.5px; border-radius:50%;
+  background:#eef0ff; box-shadow:0 0 0 3px var(--ink), 0 0 8px rgba(238,240,255,.45);
+  cursor:pointer; transition:left .9s var(--ease), bottom .9s var(--ease), transform .2s;
 }
-.cbar.live::before{
-  content:""; position:absolute; top:-13px; left:50%; margin-left:-3px;
-  width:6px; height:6px; border-radius:50%; background:var(--coral);
-  box-shadow:0 0 10px rgba(255,99,99,.9); animation:pulse 2s ease-in-out infinite;
+.c-dot:hover{ transform:scale(1.35) }
+.c-dot.live{
+  width:11px; height:11px; margin:0 0 -5.5px -5.5px;
+  background:var(--coral); box-shadow:0 0 0 3px var(--ink), 0 0 16px rgba(255,99,99,.85);
+  animation:pulse 2s ease-in-out infinite;
 }
 .chart-empty{
   position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
@@ -1458,9 +1457,26 @@ function chartValues(m){
 }
 function fmtK(v){ return v >= 1000 ? Math.round(v / 1000) + 'k' : String(v) }
 
+var chartCurve = null;
+
+/* Chemin lisse facon Catmull-Rom -> bezier cubique : une courbe douce
+   plutot que des segments droits, comme les dashboards analytics modernes. */
+function smoothLine(pts){
+  if(pts.length < 2) return pts.length ? 'M ' + pts[0][0] + ' ' + pts[0][1] : '';
+  var d = 'M ' + pts[0][0] + ' ' + pts[0][1];
+  for(var i=0; i<pts.length-1; i++){
+    var p0 = pts[i-1] || pts[i], p1 = pts[i], p2 = pts[i+1], p3 = pts[i+2] || p2;
+    var c1x = p1[0] + (p2[0]-p0[0])/6, c1y = p1[1] + (p2[1]-p0[1])/6;
+    var c2x = p2[0] - (p3[0]-p1[0])/6, c2y = p2[1] - (p3[1]-p1[1])/6;
+    d += ' C ' + c1x+' '+c1y+' '+c2x+' '+c2y+' '+p2[0]+' '+p2[1];
+  }
+  return d;
+}
+
 function buildChart(m){
   chartPlot.innerHTML = '';
   chartX.innerHTML = '';
+  chartCurve = null;
 
   /* Aucun jour coche : on l'annonce au lieu d'afficher un graphique vide. */
   if(!m){
@@ -1484,49 +1500,72 @@ function buildChart(m){
     gl.innerHTML = '<span class="gl">' + fmtK(g) + '</span>';
     chartPlot.appendChild(gl);
   });
-  var bars = document.createElement('div');
-  bars.className = 'bars';
+
+  /* Zone de trace : courbe SVG (aire degradee + ligne) + points HTML ronds. */
+  var plot = document.createElement('div');
+  plot.className = 'c-plot';
+  plot.innerHTML =
+    '<svg class="c-svg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true">'
+    + '<defs><linearGradient id="cGrad" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0" stop-color="#eef0ff" stop-opacity=".24"/>'
+    + '<stop offset="1" stop-color="#eef0ff" stop-opacity="0"/>'
+    + '</linearGradient></defs>'
+    + '<path class="c-area" fill="url(#cGrad)" d=""/>'
+    + '<path class="c-line" d=""/>'
+    + '</svg>';
+  chartPlot.appendChild(plot);
+  chartCurve = plot;
+
   var vals = chartValues(m);
   m.labels.forEach(function(lb, i){
-    var col = document.createElement('div');
-    col.className = 'cbar-col';
-    var b = document.createElement('div');
-    b.className = 'cbar' + (i === m.liveIdx ? ' live' : '');
-    b.setAttribute('data-i', i);
-    col.appendChild(b);
-    bars.appendChild(col);
+    var dot = document.createElement('div');
+    dot.className = 'c-dot' + (i === m.liveIdx ? ' live' : '');
+    dot.setAttribute('data-i', i);
+    plot.appendChild(dot);
+
     var x = document.createElement('span');
     x.className = 'xtick';
     if(i === m.liveIdx) x.classList.add('live');
     var jour = (i === m.liveIdx) ? lb + ' · live' : lb;
-    // Valeur affichee en permanence au-dessus du jour : un dashboard se lit
-    // d'un coup d'oeil, sans avoir a survoler chaque barre.
     x.innerHTML = '<b class="xval" data-i="' + i + '">—</b>' + jour;
     chartX.appendChild(x);
   });
-  chartPlot.appendChild(bars);
+
   requestAnimationFrame(function(){ requestAnimationFrame(function(){ updateChart() }) });
 
-  bars.addEventListener('pointermove', function(e){
-    var b = e.target.closest('.cbar');
-    if(!b){ chartTip.classList.remove('on'); return }
-    var i = +b.getAttribute('data-i');
+  plot.addEventListener('pointermove', function(e){
+    var d = e.target.closest('.c-dot');
+    if(!d){ chartTip.classList.remove('on'); return }
+    var i = +d.getAttribute('data-i');
     var v = chartValues(chartMode)[i];
     chartTip.innerHTML = chartMode.labels[i] + ' · <b>' + fmtInt.format(Math.round(v)) + ' vues</b>';
     var pr = chartTip.parentElement.getBoundingClientRect();
-    var br = b.getBoundingClientRect();
-    chartTip.style.left = (br.left - pr.left + br.width / 2) + 'px';
-    chartTip.style.top = (br.top - pr.top - 40) + 'px';
+    var dr = d.getBoundingClientRect();
+    chartTip.style.left = (dr.left - pr.left + dr.width / 2) + 'px';
+    chartTip.style.top = (dr.top - pr.top - 40) + 'px';
     chartTip.classList.add('on');
   });
-  bars.addEventListener('pointerleave', function(){ chartTip.classList.remove('on') });
+  plot.addEventListener('pointerleave', function(){ chartTip.classList.remove('on') });
 }
+
 function updateChart(){
-  var vals = chartValues(chartMode);
-  $$('.cbar', chartPlot).forEach(function(b, i){
-    b.style.height = clamp(vals[i] / chartMode.max * 100, 1.5, 100) + '%';
+  if(!chartCurve) return;
+  var m = chartMode, vals = chartValues(m), n = vals.length, W = 1000, H = 260;
+  var pts = vals.map(function(v, i){
+    var x = n === 1 ? W/2 : (i/(n-1))*W;
+    var y = H - clamp(v/m.max, 0, 1) * H;
+    return [x, y];
   });
-  // Met a jour la valeur lisible sous chaque barre (suit la soiree live).
+  var line = smoothLine(pts);
+  var area = line + ' L ' + pts[n-1][0] + ' ' + H + ' L ' + pts[0][0] + ' ' + H + ' Z';
+  var lineEl = $('.c-line', chartCurve), areaEl = $('.c-area', chartCurve);
+  if(lineEl) lineEl.setAttribute('d', line);
+  if(areaEl) areaEl.setAttribute('d', area);
+
+  $$('.c-dot', chartCurve).forEach(function(dot, i){
+    dot.style.left = (n === 1 ? 50 : (i/(n-1))*100) + '%';
+    dot.style.bottom = clamp(vals[i]/m.max, 0, 1)*100 + '%';
+  });
   $$('.xval', chartX).forEach(function(el, i){
     el.textContent = fmtK(Math.round(vals[i]));
   });
