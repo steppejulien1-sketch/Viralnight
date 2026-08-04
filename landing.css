@@ -38,8 +38,63 @@ html {
     radial-gradient(720px 600px at 80% 96%, rgba(255, 99, 99, 0.10), transparent 58%),
     var(--void);
   background-attachment: fixed;
+  /* Derive tres lente des halos : on ne la voit pas bouger, on sent
+     juste l'ambiance respirer. Petit deplacement en px, la couleur
+     de base var(--void) remplit toujours les bords. */
+  animation: vn-ambiance 38s ease-in-out infinite alternate;
 }
 body { background: transparent; }
+
+@keyframes vn-ambiance {
+  from { background-position: 0 0; }
+  to   { background-position: -36px 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { animation: none; }
+}
+
+/* ============================================================
+   Fluidite — reveals enrichis + micro-interactions
+   ------------------------------------------------------------
+   On garde le systeme [data-reveal] de theme.js, on affine juste
+   la courbe : montee un peu plus ample avec un leger scale, pour
+   une apparition plus soyeuse. Scope landing uniquement.
+   ============================================================ */
+.vn-reveal-ready [data-reveal] {
+  transform: translateY(34px) scale(0.98);
+  transition: opacity 1s var(--ease), transform 1s var(--ease);
+}
+.vn-reveal-ready [data-reveal].in {
+  transform: none;
+}
+.vn-reveal-ready [data-reveal-group] > * {
+  transform: translateY(30px) scale(0.985);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+  transition-delay: calc(var(--i, 0) * 100ms);
+}
+.vn-reveal-ready [data-reveal-group].in > * {
+  transform: none;
+}
+
+/* Micro-lift au survol des cartes de contenu. Le spotlight (.spot)
+   reste gere par theme.js ; on ajoute juste l'elevation douce. */
+.p-card,
+.step {
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+.p-card:hover,
+.step:hover {
+  transform: translateY(-5px);
+}
+
+/* Les pastilles du feed reagissent aussi, plus discretement. */
+.chip {
+  transition: transform 0.3s var(--ease), background 0.3s var(--ease);
+}
+.chip:hover {
+  transform: translateY(-2px);
+}
 
 /* Divider fin en degrade de marque - utilise avec parcimonie entre
    quelques sections cles, pour un detail de finition qui casse la
