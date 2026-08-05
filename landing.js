@@ -489,11 +489,11 @@ function setupSimulator() {
 
     if (cpm < ADS_CPM * 0.98) {
       const ratio = (ADS_CPM / cpm).toFixed(1).replace(".", ",");
-      verdict.innerHTML = `Soit <b>≈ ${ratio}× moins cher</b> qu'un CPM social moyen à 8 €.`;
+      verdict.innerHTML = `Soit <b>≈ ${ratio}× moins cher</b> qu'une pub sociale moyenne à 8 € les 1 000 vues.`;
     } else if (cpm > ADS_CPM * 1.02) {
-      verdict.innerHTML = `<b>Au-dessus</b> d'un CPM social à 8 € — réduisez le coût de récompense ou visez plus de vues.`;
+      verdict.innerHTML = `<b>Au-dessus</b> d'une pub sociale à 8 € les 1 000 vues — réduisez le coût de récompense ou visez plus de vues.`;
     } else {
-      verdict.innerHTML = `Équivalent à un CPM social à 8 € — ajustez le barème pour passer devant.`;
+      verdict.innerHTML = `Équivalent à une pub sociale à 8 € les 1 000 vues — ajustez le barème pour passer devant.`;
     }
   };
 
