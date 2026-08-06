@@ -271,8 +271,13 @@ body.side-open .side-scrim{ opacity:1; visibility:visible }
   color:var(--ash); padding:2px 6px; border-radius:2px; background:none;
   box-shadow:inset 0 0 0 1px currentColor; white-space:nowrap;
 }
+.kpi-line{ display:flex; align-items:baseline; gap:7px; margin-top:11px }
+.kpi-unit{
+  font-family:var(--font-mono); font-size:11px; color:var(--smoke);
+  letter-spacing:.04em; white-space:nowrap;
+}
 .kpi-value{
-  margin-top:11px; font-family:var(--font-mono);
+  margin-top:0; font-family:var(--font-mono);
   font-size:clamp(23px, 2.1vw, 28px); font-weight:600; color:var(--white);
   line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap;
 }
@@ -280,9 +285,14 @@ body.side-open .side-scrim{ opacity:1; visibility:visible }
 .kpi-value small{ font-size:14px; font-weight:500; color:var(--smoke) }
 .kpi-sub{ margin-top:8px; font-size:11.5px; color:var(--smoke) }
 .kpi-spark{ display:flex; align-items:flex-end; gap:3px; height:26px; margin-top:12px }
-.kpi-spark i{ flex:1; border-radius:2px; background:#26272a; min-height:3px; transform-origin:bottom; transform:scaleY(0); transition:transform .7s var(--ease) }
-.kpi-spark i:last-child{ background:var(--mist) }
-body.ready .kpi-spark i{ transform:scaleY(1) }
+/* Les barres sont visibles par defaut, sans condition.
+   Une regle `body:not(.ready) { transform:scaleY(0) }` les masquait en
+   attendant une classe qui n'arrivait pas de facon fiable : mesure au
+   navigateur = 40.8 x 0.0 px, matrix(1,0,0,0,0,0). La sparkline etait
+   donc invisible en permanence. L'animation d'apparition passe par une
+   keyframe : si elle ne joue pas, les barres restent affichees. */
+.kpi-spark i{ flex:1; border-radius:1px; background:#3d3e44; min-height:3px }
+.kpi-spark i:last-child{ background:var(--coral) }
 
 .grid-main{ display:grid; grid-template-columns:1.6fr 1fr; gap:12px; margin-top:12px }
 .grid-sub{ display:grid; grid-template-columns:1fr 1.6fr; gap:12px; margin-top:12px }
@@ -835,7 +845,6 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
   html{ scroll-behavior:auto }
   *,*::before,*::after{ animation-duration:.001s !important; animation-iteration-count:1 !important; transition-duration:.001s !important }
   [data-reveal], [data-reveal-group] > *{ opacity:1; transform:none }
-  .kpi-spark i{ transform:scaleY(1) }
 }
 </style>
 </head>
@@ -902,26 +911,35 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
       <div class="kpis" data-reveal-group>
         <div class="kpi spot">
           <div class="kpi-top"><span class="kpi-label">Reach généré</span><span class="kpi-delta up" id="kReachDelta">↑ +18,6 %</span></div>
-          <div class="kpi-value" id="kReach">0</div>
+          <div class="kpi-line"><div class="kpi-value" id="kReach">0</div><span class="kpi-unit">vues</span></div>
           <div class="kpi-sub"><span id="kContents">81</span> contenus validés</div>
           <div class="kpi-spark" aria-hidden="true">
-            <i style="height:30%; transition-delay:.4s"></i><i style="height:46%; transition-delay:.47s"></i><i style="height:26%; transition-delay:.54s"></i><i style="height:58%; transition-delay:.61s"></i><i style="height:86%; transition-delay:.68s"></i><i style="height:100%; transition-delay:.75s"></i><i style="height:64%; transition-delay:.82s"></i>
+            <i style="height:30%"></i><i style="height:46%"></i><i style="height:26%"></i><i style="height:58%"></i><i style="height:86%"></i><i style="height:100%"></i><i style="height:64%"></i>
           </div>
         </div>
         <div class="kpi spot">
           <div class="kpi-top"><span class="kpi-label">Points attribués</span><span class="kpi-delta up" id="kPointsDelta">↑ +12,3 %</span></div>
-          <div class="kpi-value" id="kPoints">0</div>
+          <div class="kpi-line"><div class="kpi-value" id="kPoints">0</div><span class="kpi-unit">pts</span></div>
           <div class="kpi-sub">Barème de l'établissement appliqué</div>
+          <div class="kpi-spark" aria-hidden="true">
+            <i style="height:34%"></i><i style="height:41%"></i><i style="height:38%"></i><i style="height:55%"></i><i style="height:62%"></i><i style="height:100%"></i><i style="height:71%"></i>
+          </div>
         </div>
         <div class="kpi spot">
           <div class="kpi-top"><span class="kpi-label">Récompenses utilisées</span><span class="kpi-delta up" id="kRewardsDelta">↑ +7</span></div>
-          <div class="kpi-value" id="kRewards">0</div>
+          <div class="kpi-line"><div class="kpi-value" id="kRewards">0</div><span class="kpi-unit">retirées</span></div>
           <div class="kpi-sub"><span id="kActiveRewards">5</span> récompenses actives</div>
+          <div class="kpi-spark" aria-hidden="true">
+            <i style="height:52%"></i><i style="height:30%"></i><i style="height:68%"></i><i style="height:44%"></i><i style="height:79%"></i><i style="height:100%"></i><i style="height:58%"></i>
+          </div>
         </div>
         <div class="kpi warm spot">
           <div class="kpi-top"><span class="kpi-label">Coût / 1 000 vues</span><span class="kpi-delta up" id="kCpmDelta">↓ −0,14 €</span></div>
-          <div class="kpi-value" id="kCpm">0,00 €</div>
+          <div class="kpi-line"><div class="kpi-value" id="kCpm">0,00 €</div><span class="kpi-unit">pour 1 000 vues</span></div>
           <div class="kpi-sub">Estimation basée sur les récompenses</div>
+          <div class="kpi-spark" aria-hidden="true">
+            <i style="height:100%"></i><i style="height:92%"></i><i style="height:86%"></i><i style="height:74%"></i><i style="height:66%"></i><i style="height:55%"></i><i style="height:48%"></i>
+          </div>
         </div>
       </div>
 
@@ -1958,6 +1976,9 @@ tween($('#qCheckins'), live.checkins, { dur:1400 });
 tween($('#qPresence'), live.presence, { dur:1400 });
 tween($('#qRewards'), live.rewardsTonight, { dur:1400 });
 
+/* Marque que le JS tourne : c'est ce qui autorise l'etat masque des
+   animations (voir body.js:not(.ready) plus haut). */
+document.body.classList.add('js');
 window.addEventListener('load', function(){ document.body.classList.add('ready') });
 setTimeout(function(){ document.body.classList.add('ready') }, 900);
 
