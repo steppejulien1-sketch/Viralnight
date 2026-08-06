@@ -1436,198 +1436,203 @@ body.loaded .spark i {
 }
 
 /* ============================================================
-   Simulateur
+   Simulateur — traitement "instrument"
+   ------------------------------------------------------------
+   Avant : grande carte molle, halo floute, pastilles rondes et
+   tuiles translucides. Ici : surfaces franches, filets, chiffres
+   en mono tabulaire. Le corail ne sert qu'a la donnee qui compte
+   (le cout reel) et au remplissage des curseurs.
    ============================================================ */
 
 .sim-card {
-  border-radius: var(--r-xl);
-  background: linear-gradient(155deg, #0a0c11, var(--ink) 50%);
-  box-shadow: var(--key-shadow);
-  padding: clamp(28px, 4.5vw, 52px);
+  border-radius: var(--r-card);
+  border: 1px solid var(--hairline);
+  padding: clamp(24px, 3.5vw, 40px);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: clamp(32px, 5vw, 72px);
+  gap: clamp(28px, 4vw, 56px);
   position: relative;
-  overflow: hidden;
+
+  /* background-color et non background : le raccourci effacerait les
+     reperes d'angle poses juste apres. */
+  background-color: var(--surface-1);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.22)),
+    linear-gradient(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.22)),
+    linear-gradient(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.22)),
+    linear-gradient(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.22));
+  background-size: 7px 1px, 1px 7px, 7px 1px, 1px 7px;
+  background-position: 9px 9px, 9px 9px, right 9px bottom 9px, right 9px bottom 9px;
+  background-repeat: no-repeat;
 }
-.sim-card::after {
-  content: "";
-  position: absolute;
-  top: -180px;
-  right: -140px;
-  width: 480px;
-  height: 420px;
-  pointer-events: none;
-  background: radial-gradient(closest-side, rgba(255, 99, 99, 0.10), transparent 72%);
-  filter: blur(30px);
-}
+
 .sim-controls {
   display: flex;
   flex-direction: column;
-  gap: 34px;
+  gap: 26px;
   position: relative;
   z-index: 1;
 }
+
+/* Chaque reglage se lit comme une ligne d'instrument : libelle en mono
+   discret, valeur en gros chiffre tabulaire, filet de separation. */
 .sim-field label {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--hairline-soft);
 }
 .sim-field .name {
-  font-size: 14.5px;
-  font-weight: 530;
-  color: var(--mist);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--smoke);
 }
 .sim-field output {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 19px;
   font-weight: 600;
   color: var(--white);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
+/* Curseurs : rail de 2px, poignee rectangulaire. Le remplissage est
+   corail, c'est la partie que l'utilisateur pilote. */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 30px;
+  height: 22px;
   background: transparent;
   cursor: pointer;
   display: block;
 }
 input[type="range"]::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: var(--r-pill);
-  background: linear-gradient(90deg, var(--mist) var(--p, 50%), #202124 var(--p, 50%));
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+  height: 2px;
+  background: linear-gradient(90deg, var(--coral) var(--p, 50%), #26272b var(--p, 50%));
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 19px;
-  height: 19px;
-  border-radius: 50%;
-  margin-top: -7.5px;
-  background: #f7f7f7;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28), 0 5px 14px rgba(0, 0, 0, 0.65), inset 0 1px 0 #fff;
-  transition: transform 0.25s var(--ease);
+  width: 10px;
+  height: 18px;
+  border-radius: 1px;
+  margin-top: -8px;
+  background: var(--mist);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.65);
+  transition: background 0.2s var(--ease);
 }
 input[type="range"]:hover::-webkit-slider-thumb,
 input[type="range"]:active::-webkit-slider-thumb {
-  transform: scale(1.18);
+  background: #ffffff;
 }
 input[type="range"]::-moz-range-track {
-  height: 4px;
-  border-radius: var(--r-pill);
-  background: #202124;
+  height: 2px;
+  background: #26272b;
 }
 input[type="range"]::-moz-range-progress {
-  height: 4px;
-  border-radius: var(--r-pill);
-  background: var(--mist);
+  height: 2px;
+  background: var(--coral);
 }
 input[type="range"]::-moz-range-thumb {
-  width: 19px;
-  height: 19px;
+  width: 10px;
+  height: 18px;
   border: 0;
-  border-radius: 50%;
-  background: #f7f7f7;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28), 0 5px 14px rgba(0, 0, 0, 0.65);
-}
-.sim-hint {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.03em;
-  color: #55565a;
-  line-height: 1.7;
-  margin-top: 4px;
+  border-radius: 1px;
+  background: var(--mist);
 }
 
+/* --- Sorties : un tableau de valeurs, pas des boites flottantes --- */
 .sim-out {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   position: relative;
   z-index: 1;
 }
 .out-tile {
-  padding: 20px 24px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.024);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline-soft);
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 18px;
 }
 .out-tile .lbl {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--ash);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--smoke);
 }
 .out-tile .lbl small {
   display: block;
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--smoke);
-  margin-top: 4px;
+  margin-top: 5px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #55565a;
 }
 .out-tile .val {
-  font-size: clamp(24px, 2.6vw, 32px);
+  font-family: var(--font-mono);
+  font-size: clamp(22px, 2.4vw, 30px);
   font-weight: 600;
   color: var(--white);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.02em;
   white-space: nowrap;
 }
+/* La tuile de resultat porte le corail : c'est le chiffre qui compte.
+   L'ancien degrade brun-rouge (reste de l'essai encre chaude) est retire. */
 .out-tile.warm {
-  background: linear-gradient(135deg, rgba(69, 35, 36, 0.42), rgba(69, 35, 36, 0.16));
-  box-shadow: inset 0 0 0 1px rgba(255, 120, 120, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-bottom-color: transparent;
+}
+.out-tile.warm .val {
+  color: var(--coral);
 }
 
 .sim-compare {
-  margin-top: 8px;
-  padding: 20px 24px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.018);
-  box-shadow: inset 0 0 0 1px var(--hairline-soft);
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
 }
 .cmp-row {
   display: grid;
-  grid-template-columns: 112px 1fr auto;
+  grid-template-columns: 96px 1fr auto;
   align-items: center;
   gap: 14px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .cmp-row:last-of-type {
   margin-bottom: 0;
 }
 .cmp-name {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--smoke);
 }
 .cmp-track {
-  height: 7px;
-  border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.055);
+  height: 6px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
 .cmp-track i {
   display: block;
   height: 100%;
-  border-radius: var(--r-pill);
   width: 0%;
   transition: width 0.6s var(--ease);
 }
 .cmp-vn i {
-  background: linear-gradient(90deg, #a9aaac, var(--mist));
+  background: var(--coral);
 }
 .cmp-ads i {
   background: #3a3b3e;
@@ -1636,18 +1641,20 @@ input[type="range"]::-moz-range-thumb {
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
-  color: var(--mist);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+.cmp-vn .cmp-val {
+  color: var(--coral);
 }
 .cmp-ads .cmp-val {
   color: var(--smoke);
 }
 .sim-verdict {
-  margin-top: 16px;
-  padding-top: 16px;
+  margin-top: 14px;
+  padding-top: 14px;
   border-top: 1px solid var(--hairline-soft);
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--ash);
   line-height: 1.55;
 }
