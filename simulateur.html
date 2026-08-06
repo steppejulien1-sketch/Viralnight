@@ -100,7 +100,7 @@ svg{ display:block }
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.14), inset 0 1px 0 rgba(255,255,255,.06);
 }
 .btn-ghost:hover{ background:rgba(255,255,255,.06); transform:translateY(-1px) }
-.btn-xs{ padding:7px 11px; font-size:12px; border-radius:8px }
+.btn-xs{ padding:7px 11px; font-size:12px; border-radius:2px }
 
 /* ---------- Layout ---------- */
 .side{
@@ -146,7 +146,7 @@ svg{ display:block }
 
 .side-foot{ margin-top:auto; display:flex; flex-direction:column; gap:10px }
 .side-card{
-  padding:13px 14px; border-radius:12px;
+  padding:13px 14px; border-radius:3px;
   background:rgba(255,255,255,.025);
   box-shadow:inset 0 0 0 1px var(--hairline-soft), inset 0 1px 0 rgba(255,255,255,.04);
 }
@@ -222,7 +222,7 @@ body.side-open .side-scrim{ opacity:1; visibility:visible }
 
 /* ---------- Panels & KPIs ---------- */
 .panel{
-  background:var(--ink); border-radius:16px;
+  background:var(--ink); border-radius:3px;
   box-shadow:var(--key-shadow);
   transition:box-shadow .4s var(--ease), transform .4s var(--ease);
 }
@@ -243,7 +243,21 @@ body.side-open .side-scrim{ opacity:1; visibility:visible }
 .spot:hover::before{ opacity:1 }
 
 .kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px }
-.kpi{ padding:18px 20px 16px; border-radius:16px; background:var(--ink); box-shadow:var(--key-shadow); transition:box-shadow .4s, transform .4s var(--ease) }
+.kpi{ padding:18px 20px 16px; border-radius:3px; background:var(--ink); box-shadow:var(--key-shadow); transition:box-shadow .4s, transform .4s var(--ease) }
+/* Reperes d'angle : petit trait d'equerre, detail d'instrument.
+   Dessines en background-image et non en ::before/::after, car .spot::before
+   sert deja au halo de survol et ecraserait le repere. */
+.kpi{
+  position:relative;
+  background-image:
+    linear-gradient(rgba(255,255,255,.2), rgba(255,255,255,.2)),
+    linear-gradient(rgba(255,255,255,.2), rgba(255,255,255,.2)),
+    linear-gradient(rgba(255,255,255,.2), rgba(255,255,255,.2)),
+    linear-gradient(rgba(255,255,255,.2), rgba(255,255,255,.2));
+  background-size:6px 1px, 1px 6px, 6px 1px, 1px 6px;
+  background-position:8px 8px, 8px 8px, right 8px bottom 8px, right 8px bottom 8px;
+  background-repeat:no-repeat;
+}
 .kpi:hover{ box-shadow:var(--key-shadow-strong); transform:translateY(-2px) }
 .kpi.warm{
   /* relief neutre : la carte "warm" se distingue par la clarte, pas par une teinte */
@@ -254,12 +268,13 @@ body.side-open .side-scrim{ opacity:1; visibility:visible }
 .kpi-label{ font-family:var(--font-mono); font-size:9.5px; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:var(--smoke) }
 .kpi-delta{
   font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:.04em;
-  color:var(--ash); padding:3px 7px; border-radius:6px; background:rgba(255,255,255,.045);
-  box-shadow:inset 0 0 0 1px var(--hairline-soft); white-space:nowrap;
+  color:var(--ash); padding:2px 6px; border-radius:2px; background:none;
+  box-shadow:inset 0 0 0 1px currentColor; white-space:nowrap;
 }
 .kpi-value{
-  margin-top:11px; font-size:clamp(24px, 2.2vw, 30px); font-weight:600; color:var(--white);
-  line-height:1; letter-spacing:.01em; font-variant-numeric:tabular-nums; white-space:nowrap;
+  margin-top:11px; font-family:var(--font-mono);
+  font-size:clamp(23px, 2.1vw, 28px); font-weight:600; color:var(--white);
+  line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap;
 }
 .kpi-delta.down{ color:#e8a0a0; background:rgba(232,138,138,.09); box-shadow:inset 0 0 0 1px rgba(232,138,138,.18) }
 .kpi-value small{ font-size:14px; font-weight:500; color:var(--smoke) }
@@ -374,7 +389,7 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 .fi-pts.neg{ color:var(--smoke) }
 .fi-time{ display:block; margin-top:1px; font-family:var(--font-mono); font-size:8.5px; color:#55565a; letter-spacing:.05em }
 .feed-pause{
-  width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+  width:30px; height:30px; border-radius:2px; display:grid; place-items:center;
   background:rgba(255,255,255,.03); box-shadow:inset 0 0 0 1px var(--hairline-soft);
   transition:background .25s;
 }
@@ -399,7 +414,7 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 .amb-body{ padding:6px 12px 14px }
 .amb-row{
   display:grid; grid-template-columns:26px 31px 1fr auto auto; gap:7px 12px; align-items:center;
-  padding:11px 10px; border-radius:10px;
+  padding:11px 10px; border-radius:2px;
   transition:background .25s;
 }
 .amb-row:hover{ background:rgba(255,255,255,.03) }
@@ -463,7 +478,7 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 .cfg-examples{ display:flex; gap:8px; flex-wrap:wrap }
 .ex-chip{
   font-family:var(--font-mono); font-size:9.5px; letter-spacing:.03em; color:var(--smoke);
-  padding:6px 10px; border-radius:8px; background:rgba(255,255,255,.028);
+  padding:6px 10px; border-radius:2px; background:rgba(255,255,255,.028);
   box-shadow:inset 0 0 0 1px var(--hairline-soft);
   transition:box-shadow .3s;
 }
@@ -534,7 +549,7 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 .qr-grid{ display:grid; grid-template-columns:1.5fr 1fr; gap:12px }
 .qr-card{ display:flex; gap:26px; padding:22px; align-items:center }
 .qr-visual{
-  width:186px; aspect-ratio:1; flex:none; border-radius:14px;
+  width:186px; aspect-ratio:1; flex:none; border-radius:3px;
   background:var(--mist); padding:13px;
   box-shadow:0 0 0 1px rgba(255,255,255,.2), 0 18px 44px rgba(0,0,0,.55), inset 0 1px 0 #fff;
 }
@@ -557,7 +572,7 @@ body.ready .kpi-spark i{ transform:scaleY(1) }
 
 .qr-stats{ display:flex; flex-direction:column; gap:12px }
 .qs-tile{
-  flex:1; padding:16px 20px; border-radius:16px;
+  flex:1; padding:16px 20px; border-radius:3px;
   background:var(--ink); box-shadow:var(--key-shadow);
   display:flex; align-items:center; justify-content:space-between; gap:16px;
   transition:box-shadow .4s;
