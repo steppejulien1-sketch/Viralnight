@@ -46,8 +46,8 @@ const els = {
 const BREAKDOWN_LABELS = {
   reach: "Reach",
   participation: "Participation",
-  claimRate: "Taux de reclamation",
-  contentDiversity: "Diversite de contenu",
+  claimRate: "Taux de réclamation",
+  contentDiversity: "Diversité de contenu",
   growth: "Croissance",
 };
 
@@ -67,18 +67,26 @@ function formatPercent(value) {
 }
 
 async function resolveEstablishmentId() {
-  if (!isSupabaseConfigured) throw new Error("Supabase non configure.");
+  if (!isSupabaseConfigured) throw new Error("Supabase non configuré.");
 
   const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData?.session) throw new Error("Connexion requise pour acceder a Viral Intelligence.");
+  if (!sessionData?.session) throw new Error("Connexion requise pour accéder à Viral Intelligence.");
 
+  // ⚠️ `maybeSingle` et pas `single` : avec `single`, PostgREST repond
+  // 406 des qu'il y a zero ligne — ce qui est le cas NORMAL d'un compte
+  // pas encore rattache a un club. La page restait alors bloquee sur
+  // « Chargement… » indefiniment, la ou live.html et qr.html disent
+  // simplement « Aucun etablissement lie a ce compte ».
+  // Une absence attendue n'est pas une erreur de transport.
   const { data, error } = await supabase
     .from("establishment_owners")
     .select("establishment_id")
     .eq("id", sessionData.session.user.id)
-    .single();
+    .maybeSingle();
 
-  if (error || !data?.establishment_id) throw new Error("Aucun establishment lie a ce compte.");
+  if (error || !data?.establishment_id) {
+    throw new Error("Aucun établissement lié à ce compte.");
+  }
   return data.establishment_id;
 }
 
@@ -98,7 +106,7 @@ function populateEventSelect(events) {
   els.eventSelect.innerHTML = "";
 
   if (!events.length) {
-    els.eventSelect.innerHTML = '<option value="">Aucune soiree enregistree</option>';
+    els.eventSelect.innerHTML = '<option value="">Aucune soirée enregistrée</option>';
     els.eventSelect.disabled = true;
     return;
   }
@@ -117,7 +125,7 @@ function populateEventSelect(events) {
 async function getAccessToken() {
   const { data } = await supabase.auth.getSession();
   const token = data?.session?.access_token;
-  if (!token) throw new Error("Session expiree, reconnectez-vous.");
+  if (!token) throw new Error("Session expirée, reconnectez-vous.");
   return token;
 }
 
@@ -150,8 +158,8 @@ function renderComparison(data) {
     stories_count: "Stories",
     reels_count: "Reels",
     tiktoks_count: "TikTok",
-    points_distributed: "Points distribues",
-    rewards_claimed_count: "Recompenses reclamees",
+    points_distributed: "Points distribués",
+    rewards_claimed_count: "Récompenses réclamées",
     scans_count: "Scans QR",
   };
 
@@ -179,7 +187,7 @@ function renderHeatmap(data) {
     els.heatmap.append(row);
   }
 
-  els.timingHint.textContent = `Pic de publications ${formatHour(data.timing.publicationPeakHour)} · Pic de scans ${formatHour(data.timing.scanPeakHour)} · Bonus recommande ${formatHour(data.timing.recommendedBonusHour)}`;
+  els.timingHint.textContent = `Pic de publications ${formatHour(data.timing.publicationPeakHour)} · Pic de scans ${formatHour(data.timing.scanPeakHour)} · Bonus recommandé ${formatHour(data.timing.recommendedBonusHour)}`;
 }
 
 function renderDjs(data) {
@@ -211,7 +219,7 @@ function renderRecommendations(data) {
   const items = data.narrative.recommendations || [];
 
   if (!items.length) {
-    els.recommendations.innerHTML = "<li>Aucune recommandation declenchee pour cette soiree.</li>";
+    els.recommendations.innerHTML = "<li>Aucune recommandation déclenchée pour cette soirée.</li>";
     return;
   }
 
@@ -402,7 +410,7 @@ async function saveSchedule(establishmentId) {
     return null;
   }
 
-  setStatus(els.scheduleStatus, "Horaires enregistres.");
+  setStatus(els.scheduleStatus, "Horaires enregistrés.");
   return schedule;
 }
 
@@ -420,7 +428,7 @@ async function importFromGoogle() {
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData?.session?.access_token;
   if (!accessToken) {
-    setStatus(els.googleStatus, "Session expiree, reconnectez-vous.", true);
+    setStatus(els.googleStatus, "Session expirée, reconnectez-vous.", true);
     return null;
   }
 
@@ -481,7 +489,7 @@ async function ensureUpcomingEvents(establishmentId, schedule) {
     .upsert(rows, { onConflict: "establishment_id,event_date", ignoreDuplicates: true });
 
   // Echec non bloquant : le trigger SQL creera de toute facon la soiree au premier scan.
-  if (error) console.warn("[schedule] pre-creation des soirees impossible", error.message);
+  if (error) console.warn("[schedule] pre-creation des soirées impossible", error.message);
 }
 
 async function createEvent(establishmentId) {
@@ -508,7 +516,7 @@ async function createEvent(establishmentId) {
     .single();
 
   if (error) {
-    els.newEventError.textContent = "Erreur lors de la creation de la soiree.";
+    els.newEventError.textContent = "Erreur lors de la création de la soirée.";
     els.newEventError.hidden = false;
     return null;
   }
