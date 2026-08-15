@@ -1,7 +1,7 @@
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 import { loadEventAnalysis, EventNotFoundError } from "../lib/analytics/loadEventAnalysis.js";
 import { buildChatMessages } from "../lib/ai/chatPrompt.js";
-import { streamChatCompletion, MissingApiKeyError } from "../lib/ai/chatClient.js";
+import { streamChatCompletion, MissingApiKeyError, QuotaExceededError } from "../lib/ai/chatClient.js";
 
 const MAX_HISTORY = 12; // tours conserves : au-dela, le contexte coute cher sans servir
 const MAX_MESSAGE_LENGTH = 2000;
@@ -88,11 +88,11 @@ export default async function handler(request, response) {
       sendEvent(response, "done", { text: full });
     } catch (error) {
       console.error("[api/chat] streaming interrompu", error);
+      // ⚠️ Un message d'erreur doit dire si l'action a un sens. « Reessayez »
+      // sur un compte sans credit fait perdre du temps et laisse croire a un
+      // incident passager : le probleme est une facture, pas le reseau.
       sendEvent(response, "error", {
-        error:
-          error instanceof MissingApiKeyError
-            ? "Le chat n'est pas encore configure : ajoutez OPENAI_API_KEY cote serveur."
-            : "La reponse a ete interrompue. Reessayez.",
+        error: messageErreur(error),
       });
     }
 
@@ -104,4 +104,23 @@ export default async function handler(request, response) {
     console.error("[api/chat]", error);
     return json(response, { error: "Impossible de preparer l'analyse de cette soiree." }, 500);
   }
+}
+
+/**
+ * Traduit une panne de l'assistant en une phrase que le gerant peut lire
+ * ET dont il peut faire quelque chose.
+ *
+ * ⚠️ La regle : ne proposer « reessayez » QUE si reessayer peut marcher.
+ * Un compte sans credit repond 429 a chaque tentative ; l'ancien message
+ * unique faisait passer une facture impayee pour un incident reseau, et
+ * personne n'allait chercher du cote de la facturation.
+ */
+function messageErreur(error) {
+  if (error instanceof MissingApiKeyError) {
+    return "L'assistant n'est pas encore configure : la cle OpenAI manque cote serveur.";
+  }
+  if (error instanceof QuotaExceededError) {
+    return "L'assistant est momentanement indisponible : le compte OpenAI n'a plus de credit. Rechargez-le sur platform.openai.com pour le reactiver.";
+  }
+  return "La reponse a ete interrompue. Reessayez.";
 }

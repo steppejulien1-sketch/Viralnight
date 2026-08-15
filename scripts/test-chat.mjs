@@ -3,6 +3,7 @@
 // ou un parseur SSE qui casse sur un fragment coupe au mauvais endroit.
 
 import { buildChatMessages, buildFactsBlock, CHAT_SYSTEM_PROMPT } from "../lib/ai/chatPrompt.js";
+import { streamChatCompletion, MissingApiKeyError, QuotaExceededError } from "../lib/ai/chatClient.js";
 import { buildDemoDataset, buildMetricsMap } from "../demo-data.js";
 import { runFullAnalysis } from "../lib/analytics/index.js";
 import { generateRecommendations } from "../lib/rules/index.js";
@@ -147,6 +148,53 @@ check(
   sanitizeHistory([{ role: "user", content: "x".repeat(5000) }])[0].content.length === MAX_MESSAGE_LENGTH,
 );
 check("une entree non tableau ne casse rien", sanitizeHistory("bonjour").length === 0);
+
+// --- Panne de credit OpenAI ------------------------------------------------
+// Releve reel contre l'API le 2026-08-15 : HTTP 429 + `insufficient_quota`.
+// L'enjeu n'est pas cosmetique : ce cas etait confondu avec une coupure
+// passagere, donc le gerant lisait « Reessayez » sur une panne qu'aucune
+// tentative ne resout.
+console.log("\nPanne de credit OpenAI (lib/ai/chatClient.js)");
+
+const fetchOrigine = globalThis.fetch;
+
+async function attraper(reponse) {
+  globalThis.fetch = async () => reponse;
+  try {
+    await streamChatCompletion([{ role: "user", content: "x" }], () => {});
+    return null;
+  } catch (e) {
+    return e;
+  } finally {
+    globalThis.fetch = fetchOrigine;
+  }
+}
+
+process.env.OPENAI_API_KEY = "sk-pour-les-tests";
+
+const quota = await attraper({
+  ok: false,
+  status: 429,
+  text: async () => JSON.stringify({ error: { type: "insufficient_quota" } }),
+});
+check("un 429 insufficient_quota devient QuotaExceededError", quota instanceof QuotaExceededError, `recu : ${quota?.name}`);
+
+// ⚠️ Le 429 seul ne suffit pas : c'est aussi le code d'une limite de debit,
+// elle passagere, pour laquelle « reessayez » est le bon conseil.
+const debit = await attraper({
+  ok: false,
+  status: 429,
+  text: async () => JSON.stringify({ error: { type: "rate_limit_exceeded" } }),
+});
+check(
+  "une limite de debit reste une erreur passagere",
+  debit instanceof Error && !(debit instanceof QuotaExceededError),
+  `recu : ${debit?.name}`,
+);
+
+delete process.env.OPENAI_API_KEY;
+const sansCle = await attraper({ ok: true });
+check("une cle absente reste MissingApiKeyError", sansCle instanceof MissingApiKeyError, `recu : ${sansCle?.name}`);
 
 console.log(`\n${passed} test(s) OK, ${failed} echec(s).`);
 if (failed > 0) process.exit(1);
