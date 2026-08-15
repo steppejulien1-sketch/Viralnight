@@ -165,13 +165,24 @@ export default async function handler(request, response) {
     monthly_ambassador: 350,
   });
 
-  await supabase.from("rewards").insert(
+  // ⚠️ L'ERREUR EST LUE. Sans ce controle, cette insertion a echoue en
+  // silence pendant des mois : `max_redemptions` n'existait pas en base
+  // (migration 202607030002 jamais appliquee), Postgres rejetait la
+  // ligne, et le nouveau client etait cree avec ZERO recompense — sans
+  // que personne ne le sache. C'est exactement ce qui est arrive au
+  // Mirage. Un `await` sans lecture de l'erreur, c'est un echec qu'on
+  // s'interdit de voir.
+  const { error: erreurRecompenses } = await supabase.from("rewards").insert(
     defaultRewards.map((reward) => ({
       ...reward,
       establishment_id: establishmentId,
       active: true,
     })),
   );
+
+  if (erreurRecompenses) {
+    console.error("[api/create-client] recompenses par defaut non creees :", erreurRecompenses.message);
+  }
 
   const resetResult = await supabase.auth.resetPasswordForEmail(ownerEmail, {
     redirectTo: `${getSiteUrl(request)}/app.html`,
