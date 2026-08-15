@@ -43,6 +43,29 @@ const fallbackRedemptions = Array.from({ length: 42 }, (_, index) => ({
   redeemed_at: daysAgo(index % 14),
 }));
 
+/**
+ * Jeu de donnees VIDE, pour les cas ou l'on sait qu'on n'a rien a montrer.
+ *
+ * ⚠️ A ne pas confondre avec `fallbackDashboardData`, qui est une DEMO :
+ * un club nomme, 249 480 vues, 81 contenus. Servir cette demo a un gerant
+ * connecte, sous un titre qui promet « Chiffres mesures sur vos contenus
+ * valides. Rien n'est estime. », revient a lui montrer les chiffres d'un
+ * autre club en les presentant comme les siens.
+ * La demo reste legitime hors session (page publique, dev sans .env) ;
+ * des qu'il y a un compte, c'est le vide honnete qui s'affiche.
+ */
+export const emptyDashboardData = {
+  source: "empty",
+  reason: "empty",
+  pointRules: { ...DEFAULT_POINT_RULES },
+  pointRuleItems: [],
+  establishment: null,
+  submissions: [],
+  rewards: [],
+  rewardRedemptions: [],
+  qrScans: [],
+};
+
 export const fallbackDashboardData = {
   source: "demo",
   reason: "demo",
@@ -170,6 +193,40 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured, options
 
   let establishmentId = "";
 
+  // ⚠️ UN GERANT DOIT ETRE RATTACHE A SON CLUB PAR SON COMPTE, comme le
+  // fait lib/auth/requireEstablishment.js cote serveur
+  // (`establishment_owners.id` REFERENCE `auth.users.id`).
+  //
+  // Avant, `establishmentId` restait VIDE pour tout gerant normal, et la
+  // requete partait alors sans aucun filtre :
+  //     supabase.from("establishments").select("*").single()
+  // c'est-a-dire « rends-moi l'etablissement », en comptant uniquement
+  // sur la RLS pour qu'il n'y en ait qu'un. Deux consequences :
+  //   - aujourd'hui la RLS n'en rend aucun -> `.single()` repond 406,
+  //     on tombait en repli et le tableau de bord affichait un club et
+  //     des chiffres qui n'existent pas ;
+  //   - le jour ou une policy deviendrait plus large, `.single()` ne
+  //     protegerait rien du tout.
+  // Le filtre doit venir du compte, pas de la chance.
+  if (!ownerEmail) {
+    const lien = await supabase
+      .from("establishment_owners")
+      .select("establishment_id")
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    if (lien.error || !lien.data?.establishment_id) {
+      return {
+        ...emptyDashboardData,
+        reason: "no_establishment",
+        session,
+        error: lien.error?.message || null,
+      };
+    }
+
+    establishmentId = lien.data.establishment_id;
+  }
+
   if (ownerEmail) {
     const ownerResult = await supabase
       .from("establishment_owners")
@@ -221,9 +278,12 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured, options
     redemptionsResult.error;
 
   if (firstError) {
-    console.warn("Supabase dashboard fallback:", firstError.message);
+    // ⚠️ Vide, pas demo : la session existe, donc afficher les chiffres
+    // d'un club de demonstration ferait passer une panne pour des
+    // resultats. Mieux vaut un ecran vide qui dit qu'il y a un probleme.
+    console.warn("Supabase dashboard, lecture en echec :", firstError.message);
     return {
-      ...fallbackDashboardData,
+      ...emptyDashboardData,
       reason: "query_error",
       session,
       error: firstError.message,

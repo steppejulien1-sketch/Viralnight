@@ -2016,12 +2016,28 @@ async function personnaliser() {
   if (!session) return;
 
   // Cherche l'etablissement lie au compte connecte
-  const { data: ownership } = await supabase
+  // ⚠️ On lit AUSSI l'erreur. Sans elle, une requete invalide (c'etait le
+  // cas ici pendant des mois) echoue sans laisser la moindre trace, meme
+  // dans la console : on cherche un probleme d'affichage alors que la
+  // requete n'est jamais partie correctement.
+  const { data: ownership, error: erreurLien } = await supabase
     .from('establishment_owners')
     .select('establishment_id, establishments(name, city)')
-    .eq('owner_id', session.user.id)
+    // ⚠️ `id`, PAS `owner_id` : la colonne owner_id n'a jamais existe.
+    // establishment_owners.id REFERENCE auth.users(id) — c'est ce que
+    // fait lib/auth/requireEstablishment.js. La requete partait donc en
+    // erreur a chaque fois, l'erreur n'etait pas lue (`const { data }`
+    // seul), `ownership` valait undefined et la personnalisation
+    // n'arrivait jamais : la demo affichait « Mirage Club Brussels » a
+    // tout le monde, y compris a un gerant connecte sur son propre club.
+    .eq('id', session.user.id)
     .limit(1)
     .maybeSingle();
+
+  if (erreurLien) {
+    console.warn('[simulateur] rattachement du compte illisible :', erreurLien.message);
+    return;
+  }
 
   const nom = ownership?.establishments?.name;
   if (!nom) return;

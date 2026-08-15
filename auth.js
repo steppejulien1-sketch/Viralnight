@@ -221,8 +221,15 @@ async function google() {
   try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      // Le compte admin est redirige au meme endroit que les autres : la page
-      // app.html renverra vers l'admin si l'email correspond.
+      // ⚠️ TOUT LE MONDE ATTERRIT SUR LA DEMO, ADMIN COMPRIS.
+      // Le commentaire precedent affirmait que « app.html renverra vers
+      // l'admin si l'email correspond » : c'etait faux deux fois — la
+      // redirection ne pointe pas sur app.html, et simulateur.html ne
+      // reoriente personne. Par email/mot de passe, `destination()`
+      // envoie bien l'admin sur admin.html ; par Google, non.
+      // Laisse tel quel volontairement : rediriger l'admin depuis la demo
+      // l'empecherait d'ouvrir cette page devant un prospect alors qu'il
+      // est connecte. A trancher cote produit, pas ici.
       options: { redirectTo: new URL("./simulateur.html", window.location.href).href },
     });
     if (error) throw error;

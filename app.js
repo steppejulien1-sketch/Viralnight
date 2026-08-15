@@ -251,6 +251,15 @@ function renderDataSource(data) {
     return;
   }
 
+  // ⚠️ Le cas le plus frequent aujourd'hui : le compte existe mais n'est
+  // rattache a aucun club (la table establishment_owners est vide). Il
+  // faut le DIRE, sinon le gerant croit que son tableau de bord est
+  // casse — ou pire, prend les chiffres affiches pour les siens.
+  if (data.reason === "no_establishment") {
+    setDataStatus("Club non rattaché", "warning");
+    return;
+  }
+
   if (data.reason === "missing_env") {
     setDataStatus("Mode démo", "warning");
     return;
@@ -270,20 +279,34 @@ function renderDataSource(data) {
 }
 
 function renderEstablishment(data) {
-  const establishment = data.establishment || fallbackDashboardData.establishment;
-  setText("[data-establishment-name]", establishment.name || "Établissement ViralNight");
+  // ⚠️ NE JAMAIS retomber sur le club de demonstration quand une session
+  // existe. Un gerant connecte lisait « Mirage Club Brussels » en haut de
+  // SON tableau de bord, avec les chiffres qui vont avec.
+  const reel = data.source === "supabase";
+  const establishment = data.establishment || (reel ? null : data.session ? null : fallbackDashboardData.establishment);
+
+  setText("[data-establishment-name]", establishment?.name || (data.session ? "Votre club" : "Établissement ViralNight"));
+
+  // La phrase « Rien n'est estime » est une promesse : elle ne doit
+  // s'afficher que si les chiffres viennent bien de la base.
+  const promesse = document.querySelector("[data-promesse-chiffres]");
+  if (promesse) {
+    promesse.textContent = reel
+      ? "Chiffres mesurés sur vos contenus validés. Rien n'est estimé."
+      : "Aucune donnée à afficher pour le moment.";
+  }
 
   const sidebarNote = document.querySelector(".sidebar-note");
   const plan = sidebarNote?.querySelector("strong");
   const detail = sidebarNote?.querySelector("small");
 
   if (plan) {
-    plan.textContent = establishment.subscription_status === "actif" ? "Plan actif" : "Plan pilote";
+    plan.textContent = establishment?.subscription_status === "actif" ? "Plan actif" : "Plan pilote";
   }
 
   if (detail) {
-    const city = establishment.city ? ` - ${establishment.city}` : "";
-    detail.textContent = `${establishment.category || "club"}${city}`;
+    const city = establishment?.city ? ` - ${establishment.city}` : "";
+    detail.textContent = `${establishment?.category || "club"}${city}`;
   }
 }
 
