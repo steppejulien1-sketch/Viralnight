@@ -22,12 +22,17 @@ const DOSSIER = `${__dirname}/pages${process.env.VN_W && process.env.VN_W !== "1
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 const notes = [];
 
-const PAGES = [
+// VN_PAGES=simulateur.html pour ne viser qu'une page.
+const TOUTES = [
   ["", "1-accueil", "Accueil (ce que voit un prospect)"],
   ["connexion.html", "2-connexion", "Connexion"],
   ["inscription.html", "3-inscription", "Inscription"],
   ["demo.html", "4-demo", "Demander une démo"],
+  ["simulateur.html", "5-simulateur", "Démo commerciale (ce qu'on montre pour vendre)"],
 ];
+const PAGES = process.env.VN_PAGES
+  ? TOUTES.filter(([chemin]) => process.env.VN_PAGES.split(",").includes(chemin))
+  : TOUTES;
 
 // Neutralise ce qui rend une page longue incapturable, sans toucher au
 // depot : injecte au moment de la visite seulement.
