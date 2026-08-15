@@ -519,11 +519,54 @@ async function updateSubmissionStatus(id, nextStatus) {
     return;
   }
 
+  // ⚠️ LE CLUBBEUR VIT DANS L'AUTRE BASE. Mettre `status = validated`
+  // ici ne lui donne rien : ses points sont dans le projet Supabase de
+  // la PWA. Depuis que la validation est centralisee sur ce site, c'est
+  // ce pont qui remplace l'ecran « A valider » de la console gerant.
+  //
+  // Un echec du pont ne doit PAS annuler la validation cote B2B : le
+  // contenu a bien ete verifie. On le dit, et on laisse rejouer.
+  const credit = await crediterClubbeur(id, nextStatus === "validated", submission);
+
   setAuthStatus(
     nextStatus === "validated"
-      ? `Contenu validé : ${numberFormatter.format(submission.views)} vues, ${numberFormatter.format(submission.points)} pts crédités.`
-      : "Contenu rejeté dans Supabase.",
+      ? `Contenu validé : ${numberFormatter.format(submission.views)} vues, ${numberFormatter.format(submission.points)} pts crédités.${credit}`
+      : `Contenu rejeté dans Supabase.${credit}`,
   );
+}
+
+/**
+ * Repercute la decision sur le compte du clubbeur, dans la base de la PWA.
+ *
+ * Renvoie un complement de message, jamais une exception : le pont est un
+ * effet de bord de la validation, pas sa condition.
+ */
+async function crediterClubbeur(submissionId, approuve, submission) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const jeton = data?.session?.access_token;
+    if (!jeton) return "";
+
+    const reponse = await fetch("/api/credit-clubbeur", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${jeton}` },
+      body: JSON.stringify({
+        submissionId,
+        approve: approuve,
+        points: approuve ? submission.points : null,
+        views: approuve ? submission.views : null,
+      }),
+    });
+
+    const sortie = await reponse.json().catch(() => ({}));
+
+    if (!reponse.ok) return ` ⚠️ Points non crédités au clubbeur : ${sortie.error || reponse.status}.`;
+    if (sortie.skipped === "sans_origine_pwa") return "";
+    if (sortie.skipped === "deja_credite") return " (clubbeur déjà crédité)";
+    return ` Clubbeur crédité de ${numberFormatter.format(sortie.awarded || 0)} pts.`;
+  } catch (error) {
+    return ` ⚠️ Pont vers l'app clubbeur injoignable : ${error.message}`;
+  }
 }
 
 /**

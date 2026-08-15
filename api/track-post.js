@@ -75,6 +75,11 @@ export default async function handler(request, response) {
         content_type: contentType,
         url: social.url,
         declared_views: declaredViews,
+        // Reference vers la story d'origine dans la base de la PWA.
+        // C'est elle qui permettra, apres validation ici, de crediter le
+        // clubbeur dans l'autre base. Null si le contenu n'est pas venu
+        // de la PWA (saisie manuelle, autre source).
+        external_story_id: typeof body.storyId === "string" && body.storyId ? body.storyId : null,
         views_count: 0,
         points_awarded: 0,
         status: "pending",
