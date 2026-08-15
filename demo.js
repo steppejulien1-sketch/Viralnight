@@ -215,7 +215,7 @@ function renderActions(actions) {
 
 function renderWins(wins) {
   if (!wins.length) {
-    els.wins.innerHTML = '<li class="an-empty">Pas de point fort marquant cette fois.</li>';
+    els.wins.innerHTML = `<li class="an-empty">Aucun autre constat sur cette soirée.</li>`;
     return;
   }
 

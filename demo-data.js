@@ -11,7 +11,7 @@ const REWARDS = [
   { id: "rw-vestiaire", title: "Vestiaire offert", points_required: 40 },
   { id: "rw-shot", title: "Shot offert", points_required: 70 },
   { id: "rw-premium", title: "Boisson premium", points_required: 110 },
-  { id: "rw-entree", title: "Entree gratuite", points_required: 240 },
+  { id: "rw-entree", title: "Entrée gratuite", points_required: 240 },
 ];
 
 // Quatre residents avec des profils distincts mais plausibles pour un vrai club :
@@ -125,7 +125,7 @@ export function buildDemoDataset({ seed = 20260731, eventCount = 8, lastEventDat
     events.push({
       id: eventId,
       establishment_id: establishmentId,
-      name: `Soiree du ${eventDate.split("-").reverse().join("/")}`,
+      name: `Soirée du ${eventDate.split("-").reverse().join("/")}`,
       event_date: eventDate,
       dj_name: djName,
       participants_count: participants,
