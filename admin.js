@@ -462,6 +462,15 @@ function updateAuthUi() {
   if (emailInput && email) emailInput.value = email;
   if (loginButton) loginButton.hidden = Boolean(state.session);
   if (logoutButton) logoutButton.hidden = !state.session;
+
+  // Une fois connecte, un formulaire de connexion n'a plus rien a dire.
+  // Il restait a l'ecran avec ses deux champs, au milieu des outils de
+  // travail — de l'attention prise pour rien, sur la page qui sert
+  // maintenant a crediter tous les clubbeurs.
+  const champsConnexion = [emailInput, passwordInput]
+    .map((champ) => champ?.closest("label"))
+    .filter(Boolean);
+  for (const champ of champsConnexion) champ.hidden = Boolean(state.session);
   if (clientDashboardForm) clientDashboardForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
   if (createClientForm) createClientForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
   if (clientAccessForm) clientAccessForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;

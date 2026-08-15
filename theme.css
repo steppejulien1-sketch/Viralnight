@@ -834,3 +834,30 @@ h3 {
     animation: none;
   }
 }
+
+/* ============================================================
+   L'ATTRIBUT `hidden` DOIT GAGNER
+   ============================================================
+   ⚠️ Piege systemique, mesure sur admin.html le 2026-08-15 : TROIS
+   controles que le JavaScript masquait explicitement restaient a
+   l'ecran — le bouton « Connexion admin » alors que l'admin etait
+   connecte, le champ « Nouveau mot de passe » et son bouton
+   d'enregistrement.
+
+   La cause : `[hidden]` vaut `display: none` dans la feuille par
+   defaut du navigateur, avec une specificite de (0,1,0). N'importe
+   quelle regle du projet qui pose un `display` — `.admin-auth label {
+   display: grid }`, `.admin-actions button { display: flex }` — la
+   remplace, et l'attribut ne fait plus rien. Le code croit masquer,
+   l'ecran continue d'afficher.
+
+   `app.css` portait deja ce correctif, seul dans son coin. Il vaut
+   pour tout le site : il remonte donc ici, dans le design system que
+   chaque page charge. La regle dans app.css devient redondante et
+   reste sans effet de bord.
+
+   C'est l'un des rares cas ou `!important` est le bon outil : masquer
+   est precisement ce que cet attribut promet. */
+[hidden] {
+  display: none !important;
+}
