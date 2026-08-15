@@ -75,7 +75,15 @@ function destination(email) {
     return suivant;
   }
 
-  return String(email).trim().toLowerCase() === ADMIN_EMAIL ? "./admin.html" : "./simulateur.html";
+  // ⚠️ UN CLIENT CONNECTE VA SUR SON TABLEAU DE BORD, JAMAIS SUR LA DEMO.
+  // Il atterrissait jusqu'ici sur simulateur.html : une page de vente,
+  // remplie de donnees simulees et estampillee « MODE DEMO ». Un gerant
+  // qui se connecte a son espace n'a rien a faire dans une simulation —
+  // il veut SES chiffres, meme s'ils sont a zero. Un tableau de bord vide
+  // est un etat legitime ; une demo presentee comme son espace, non.
+  // simulateur.html reste accessible directement : c'est un outil de
+  // vente, il n'est simplement plus la destination d'une connexion.
+  return String(email).trim().toLowerCase() === ADMIN_EMAIL ? "./admin.html" : "./app.html";
 }
 
 /**
@@ -221,16 +229,13 @@ async function google() {
   try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      // ⚠️ TOUT LE MONDE ATTERRIT SUR LA DEMO, ADMIN COMPRIS.
-      // Le commentaire precedent affirmait que « app.html renverra vers
-      // l'admin si l'email correspond » : c'etait faux deux fois — la
-      // redirection ne pointe pas sur app.html, et simulateur.html ne
-      // reoriente personne. Par email/mot de passe, `destination()`
-      // envoie bien l'admin sur admin.html ; par Google, non.
-      // Laisse tel quel volontairement : rediriger l'admin depuis la demo
-      // l'empecherait d'ouvrir cette page devant un prospect alors qu'il
-      // est connecte. A trancher cote produit, pas ici.
-      options: { redirectTo: new URL("./simulateur.html", window.location.href).href },
+      // ⚠️ Google renvoie sur app.html, comme la connexion par email.
+      // Une adresse de retour OAuth est figee : elle ne peut pas dependre
+      // de l'email, encore inconnu au moment du depart. C'est donc
+      // app.html qui renvoie l'administrateur vers son back-office —
+      // exactement ce que l'ancien commentaire affirmait a tort, et qui
+      // est desormais vrai (voir renderAccessGate dans app.js).
+      options: { redirectTo: new URL("./app.html", window.location.href).href },
     });
     if (error) throw error;
     // Pas de restauration : la page va rediriger vers Google immediatement.

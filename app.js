@@ -167,6 +167,16 @@ function renderAccessGate(data) {
     return false;
   }
 
+  // ⚠️ L'administrateur n'a pas de tableau de bord a lui : il consulte
+  // celui d'un client, choisi depuis le back-office. Arrive ici sans
+  // client selectionne — typiquement au retour d'une connexion Google,
+  // dont l'adresse de retour est figee et ne peut pas dependre de
+  // l'email —, on l'envoie ou il voulait aller.
+  if (data.reason === "admin_select_client") {
+    window.location.replace("./admin.html");
+    return false;
+  }
+
   dashboardContent.forEach((section) => {
     section.hidden = !allowed;
   });
