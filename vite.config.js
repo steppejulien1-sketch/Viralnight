@@ -5,6 +5,10 @@ import { apiPlugin } from "./vite-plugin-api.js";
 export default defineConfig({
   // Rend les fonctions api/ appelables en local, comme sur Vercel.
   plugins: [apiPlugin()],
+  // maplibre-gl demarre un Worker interne via `new URL(..., import.meta.url)` ;
+  // le pre-bundling esbuild de Vite casse cette resolution d'URL, ce qui bloque
+  // silencieusement le chargement du style (aucune erreur, juste une carte vide).
+  optimizeDeps: { exclude: ["maplibre-gl"] },
   build: {
     rollupOptions: {
       input: {
