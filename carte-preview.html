@@ -776,13 +776,13 @@ function snapifie() {
   // par la version du style-spec que sert ce moteur (teste : chaque
   // appel leve une exception).
   map.setPaintProperty("Building 3D", "fill-extrusion-vertical-gradient", true);
-  // ni trop hauts (essai precedent : .65/48, ecrasait la carte) ni
-  // trop plats (.42/26, tous les immeubles a la meme hauteur) — un
-  // reglage entre les deux, qui garde un peu de variete de silhouette
+  // encore trop imposants au dernier essai (.5/34) — on redescend
+  // nettement, des petits blocs discrets plutot que des immeubles
+  // qui dominent l'ecran
   map.setPaintProperty("Building 3D", "fill-extrusion-height", [
     "interpolate", ["linear"], ["zoom"],
     13, 0,
-    15, ["min", 34, ["*", ["get", "render_height"], .5]]
+    15, ["min", 20, ["*", ["get", "render_height"], .34]]
   ]);
 
   // une lumiere plus douce : la version precedente (intensite .68)
@@ -843,92 +843,58 @@ function snapifie() {
 }
 
 /* ==========================================================
-   LES ARBRES — pas une liste fixe autour de Bruxelles : on
-   interroge les vraies zones boisees/vertes que MapTiler affiche
-   dans la vue courante (foret, bois, herbe) et on y seme des arbres
-   au hasard mais de facon stable (meme graine par polygone, tiree
-   de son identifiant) — ca marche donc partout dans le monde, pas
-   seulement la ou j'ai code des coordonnees a la main.
+   LES ARBRES — une liste FIXE, calculee une seule fois au demarrage.
+   L'essai precedent interrogeait les polygones verts affiches a
+   l'ecran a chaque "idle"/"moveend" et semait des arbres dedans :
+   comme MapLibre decoupe un meme parc en plusieurs morceaux de
+   tuiles differents selon le zoom/la position, la forme (et donc la
+   cle de cache) changeait sans arret, et les arbres se regeneraient
+   ailleurs a chaque image — d'ou l'effet "ils volent". Ici, la
+   position de chaque arbre est tiree au hasard une fois pour toutes
+   et ne change plus jamais, exactement comme pour les clubs/amis.
    ========================================================== */
 
-function hashDe(str) {
-  var h = 2166136261;
-  for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = (h * 16777619) >>> 0; }
-  return h || 1;
-}
+var ARBRES = (function () {
+  var arr = [];
+  var graine = 20260818;
+  function rnd() { graine = (graine * 1664525 + 1013904223) % 4294967296; return graine / 4294967296; }
 
-function pointDansAnneau(pt, anneau) {
-  var dedans = false;
-  for (var i = 0, j = anneau.length - 1; i < anneau.length; j = i++) {
-    var xi = anneau[i][0], yi = anneau[i][1], xj = anneau[j][0], yj = anneau[j][1];
-    var croise = ((yi > pt[1]) !== (yj > pt[1])) && (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi);
-    if (croise) dedans = !dedans;
+  function versDeg(lat) {
+    return { dlng: 1 / (111320 * Math.cos(lat * Math.PI / 180)), dlat: 1 / 110540 };
   }
-  return dedans;
-}
-function pointDansPolygone(pt, anneaux) {
-  if (!pointDansAnneau(pt, anneaux[0])) return false;
-  for (var i = 1; i < anneaux.length; i++) if (pointDansAnneau(pt, anneaux[i])) return false;
-  return true;
-}
-function pointDansGeometrie(pt, geom) {
-  if (geom.type === "Polygon") return pointDansPolygone(pt, geom.coordinates);
-  if (geom.type === "MultiPolygon") return geom.coordinates.some(function (p) { return pointDansPolygone(pt, p); });
-  return false;
-}
-function bboxDe(geom) {
-  var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
-  function scan(anneau) {
-    anneau.forEach(function (c) {
-      if (c[0] < minX) minX = c[0]; if (c[0] > maxX) maxX = c[0];
-      if (c[1] < minY) minY = c[1]; if (c[1] > maxY) maxY = c[1];
-    });
-  }
-  if (geom.type === "Polygon") geom.coordinates.forEach(scan);
-  else if (geom.type === "MultiPolygon") geom.coordinates.forEach(function (p) { p.forEach(scan); });
-  return [minX, minY, maxX, maxY];
-}
 
-var CACHE_ARBRES = new Map();
-var DENSITES = { Forest: 1 / 500, Wood: 1 / 500, Grass: 1 / 2600, Meadow: 1 / 2600 };
-
-function arbresDuPolygone(f) {
-  var g = f.geometry;
-  if (!g || (g.type !== "Polygon" && g.type !== "MultiPolygon")) return [];
-  var bbox = bboxDe(g);
-  var cle = f.layer.id + ":" + bbox.map(function (v) { return v.toFixed(5); }).join(",");
-  var cache = CACHE_ARBRES.get(cle);
-  if (cache) return cache;
-
-  var graine = hashDe(cle);
-  function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
-
-  var dlat = 1 / 110540, dlng = 1 / (111320 * Math.cos((bbox[1] + bbox[3]) / 2 * Math.PI / 180));
-  var largeurM = (bbox[2] - bbox[0]) / dlng, hauteurM = (bbox[3] - bbox[1]) / dlat;
-  var aireM2 = Math.max(0, largeurM * hauteurM);
-  var n = Math.min(46, Math.round(aireM2 * (DENSITES[f.layer.id] || 1 / 1800)));
-
-  var pts = [], tentatives = 0;
-  while (pts.length < n && tentatives < n * 14) {
-    tentatives++;
-    var lng = bbox[0] + rnd() * (bbox[2] - bbox[0]);
-    var lat = bbox[1] + rnd() * (bbox[3] - bbox[1]);
-    if (pointDansGeometrie([lng, lat], g)) {
-      pts.push({
-        lng: lng, lat: lat, s: .55 + rnd() * .55,
-        teinte: rnd() < .5 ? 1 : 2, variante: 0
+  function grappe(centre, rayonM, n) {
+    var conv = versDeg(centre[1]);
+    for (var i = 0; i < n; i++) {
+      var a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * rayonM;
+      arr.push({
+        lng: centre[0] + Math.cos(a) * d * conv.dlng,
+        lat: centre[1] + Math.sin(a) * d * conv.dlat,
+        s: .55 + rnd() * .5,
+        teinte: rnd() < .5 ? 1 : 2
       });
     }
   }
-  CACHE_ARBRES.set(cle, pts);
-  return pts;
-}
+
+  // les vrais parcs de Bruxelles : grappes denses
+  grappe([4.3653, 50.8465], 140, 34); // Parc de Bruxelles
+  grappe([4.3746, 50.8395], 110, 22); // Parc Leopold
+  grappe([4.3540, 50.8410], 70, 12);  // Square du Petit Sablon
+  grappe([4.3939, 50.8398], 150, 30); // Parc du Cinquantenaire
+
+  // des arbres de rue, eparpilles autour du centre et de chaque club
+  grappe(BRUXELLES, 900, 40);
+  grappe([4.3554, 50.8479], 260, 14);
+  grappe([4.3405, 50.8375], 260, 14);
+  grappe([4.3651, 50.8367], 260, 14);
+
+  return arr;
+})();
 
 (function () {
   var cv = document.getElementById("arbres");
   var ctx = cv.getContext("2d");
   var W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
-  var COUCHES_VERTES = ["Forest", "Wood", "Grass", "Meadow"];
 
   function dimensionner() {
     var r = cv.getBoundingClientRect();
@@ -944,29 +910,16 @@ function arbresDuPolygone(f) {
     var z = map.getZoom();
     if (z < 12.5) return; // trop dezoome pour distinguer un arbre d'un pixel de bruit
     var echelle = Math.min(1, (z - 12.5) / 2);
-
-    var couches = COUCHES_VERTES.filter(function (id) { return map.getLayer(id); });
-    var feats;
-    try { feats = map.queryRenderedFeatures({ layers: couches }); } catch (e) { feats = []; }
-
-    var pts = [];
-    feats.forEach(function (f) {
-      arbresDuPolygone(f).forEach(function (a) {
-        var p = map.project([a.lng, a.lat]);
-        if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) return;
-        pts.push({ x: p.x, y: p.y, s: a.s * echelle, teinte: a.teinte, variante: a.variante });
-      });
+    var pts = ARBRES.map(function (a) {
+      var p = map.project([a.lng, a.lat]);
+      return { x: p.x, y: p.y, s: a.s * echelle, teinte: a.teinte };
+    }).filter(function (p) {
+      return p.x > -40 && p.x < W + 40 && p.y > -70 && p.y < H + 40 && p.s > .05;
     });
-    if (pts.length > 600) pts.length = 600; // garde-fou perf sur une vue tres chargee
     pts.sort(function (a, b) { return a.y - b.y; });
-    pts.forEach(function (p) { arbreSur(ctx, p.x, p.y, 14 * p.s, p.teinte, p.variante); });
+    pts.forEach(function (p) { arbreSur(ctx, p.x, p.y, 14 * p.s, p.teinte, 0); });
   }
-  // "moveend" seul ne suffit pas : juste apres un saut de camera, les
-  // tuiles de la nouvelle zone ne sont pas encore chargees et
-  // queryRenderedFeatures renvoie 0 resultat — "idle" (tout est
-  // charge, plus rien en attente) est le bon moment pour re-semer.
-  map.on("moveend", dessiner);
-  map.on("idle", dessiner);
+  map.on("move", dessiner);
   map.on("load", dessiner);
 })();
 
