@@ -601,6 +601,11 @@ map.on("error", function (e) {
 
 map.on("load", function () {
   map.setProjection({ type: "globe" });
+  // sans ce recalage explicite, la camera restait parfois figee
+  // sur une vue large (globe/Europe) apres l'activation du globe,
+  // meme si `getZoom()` renvoyait deja 16 — le rendu et l'etat
+  // interne se desynchronisaient au tout premier chargement.
+  map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 55, bearing: -12 });
 });
 
 /* --- Le globe : etoiles et brume fournies par MapLibre lui-meme
@@ -623,15 +628,42 @@ function ambiance() {
        (Apple Plans, Mapbox Outdoors) font le rendu : une texture,
        pas des milliers d'icones placees a la main. --- */
 function motifArbres() {
-  var s = 96, c = document.createElement("canvas");
+  // un carreau deux fois plus grand et deux fois moins dense que
+  // l'essai precedent, avec un tronc visible, une ombre projetee
+  // nette et trois teintes de feuillage empilees — c'est cet
+  // empilement qui donne l'impression d'un arbre en volume plutot
+  // que d'un rond plat, comme sur une vraie carte illustree.
+  var s = 160, c = document.createElement("canvas");
   c.width = s; c.height = s;
   var ctx = c.getContext("2d");
-  function arbre(x, y, r) {
-    ctx.beginPath(); ctx.arc(x, y + 2, r * .32, 0, 7); ctx.fillStyle = "rgba(30,20,10,.18)"; ctx.fill();
-    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = "#4f9a4a"; ctx.fill();
-    ctx.beginPath(); ctx.arc(x - r * .3, y - r * .25, r * .62, 0, 7); ctx.fillStyle = "#5fb056"; ctx.fill();
+
+  function arbre(x, y, r, teinte) {
+    var vertFonce = teinte === 1 ? "#3f8a3a" : "#4a9646";
+    var vertMoyen = teinte === 1 ? "#5aab4f" : "#63b558";
+    var vertClair = teinte === 1 ? "#7ac765" : "#82cf6e";
+
+    // ombre projetee au sol, decalee vers le bas-droite
+    ctx.beginPath(); ctx.ellipse(x + r * .35, y + r * .85, r * .95, r * .32, 0, 0, 7);
+    ctx.fillStyle = "rgba(30,55,20,.22)"; ctx.fill();
+
+    // tronc
+    ctx.fillStyle = "#7a5a38";
+    ctx.fillRect(x - r * .08, y + r * .25, r * .16, r * .55);
+
+    // trois masses de feuillage qui se chevauchent, du plus
+    // sombre (dessous, a droite) au plus clair (dessus, a gauche)
+    // pour simuler une lumiere qui vient d'en haut a gauche
+    ctx.beginPath(); ctx.arc(x + r * .18, y + r * .05, r * .68, 0, 7); ctx.fillStyle = vertFonce; ctx.fill();
+    ctx.beginPath(); ctx.arc(x - r * .12, y - r * .1, r * .78, 0, 7); ctx.fillStyle = vertMoyen; ctx.fill();
+    ctx.beginPath(); ctx.arc(x - r * .32, y - r * .38, r * .48, 0, 7); ctx.fillStyle = vertClair; ctx.fill();
   }
-  arbre(22, 26, 12); arbre(70, 20, 9); arbre(46, 62, 13); arbre(84, 72, 9); arbre(12, 78, 8);
+
+  arbre(38, 46, 22, 1);
+  arbre(118, 34, 17, 2);
+  arbre(78, 104, 25, 1);
+  arbre(140, 122, 16, 2);
+  arbre(18, 128, 15, 1);
+
   return ctx.getImageData(0, 0, s, s);
 }
 
@@ -695,8 +727,18 @@ function snapifie() {
     "interpolate", ["linear"], ["zoom"], 13, 0, 15, ["get", "render_height"]
   ]);
 
-  // une lumiere rasante pour que le relief des immeubles se voie
-  map.setLight({ anchor: "viewport", color: "#fff3df", intensity: .35, position: [1.4, 90, 42] });
+  // une lumiere plus forte et plus rasante : elle creuse vraiment
+  // les faces des immeubles au lieu de les laisser presque plates
+  map.setLight({ anchor: "viewport", color: "#fff6e6", intensity: .55, position: [1.15, 80, 32] });
+
+  // un fin trait a la base de chaque immeuble — separe nettement
+  // les blocs les uns des autres au lieu de les laisser fondre
+  // dans le sol et entre eux
+  map.addLayer({
+    id: "Contour toits", type: "line", source: "maptiler_planet", "source-layer": "building",
+    minzoom: 13,
+    paint: { "line-color": "#c9a58f", "line-width": 1, "line-opacity": .55 }
+  });
 
   // La carte ne montre que les clubs et les gens — pas les
   // restaurants, boutiques, musees ni parcs que le fond de carte
