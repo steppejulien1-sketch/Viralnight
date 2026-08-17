@@ -25,6 +25,7 @@ export default defineConfig({
         confidentialite: resolve(__dirname, "confidentialite.html"),
         cgu: resolve(__dirname, "cgu.html"),
         cookies: resolve(__dirname, "cookies.html"),
+        cartePreview: resolve(__dirname, "carte-preview.html"),
       },
     },
   },

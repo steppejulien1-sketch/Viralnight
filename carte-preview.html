@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0d11" />
+    <meta name="robots" content="noindex" />
+    <title>Carte ViralNight — preview</title>
+    <style>
+  /* ============================================================
+     CARTE VIRALNIGHT — quatre niveaux de zoom, comme Snap Map.
+
+       Terre     espace, etoiles filantes, globe
+       Europe    les pays
+       Belgique  les villes
+       Bruxelles la ville en 3D isometrique
+
+     Regle qui tient les quatre niveaux ensemble : la pastille
+     porte TOUJOURS le nombre de personnes en soiree a cet
+     instant. Un club s'agrege en ville, une ville en pays, un
+     pays en continent — donc les clubs restent representes,
+     meme depuis l'orbite.
+     ============================================================ */
+
+  :root {
+    --page:      #0b0d11;
+    --page-2:    #14171d;
+    --page-line: rgba(255,255,255,.09);
+    --page-ink:  #edeff4;
+    --page-ink2: #99a1b0;
+    --page-ink3: #6a7280;
+
+    --ground:    #eaf4e1;
+    --halo:      #eaf4e1;
+    --red:       #ff2f45;
+    --green:     #3f9c6d;
+
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0; background: var(--page); color: var(--page-ink);
+    font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 54px 22px 110px; }
+
+  .kicker {
+    display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--page-ink3); margin-bottom: 15px;
+  }
+  h1 { margin: 0 0 14px; font-size: clamp(32px, 5.4vw, 54px); font-weight: 800; letter-spacing: -.042em; line-height: 1; text-wrap: balance; }
+  .lede { margin: 0; font-size: 17px; color: var(--page-ink2); max-width: 62ch; }
+
+  .stage { display: flex; justify-content: center; padding: 40px 0 48px; }
+
+  /* ================= TELEPHONE ================= */
+
+  .phone {
+    width: 360px; height: 760px; border-radius: 48px; background: #000;
+    padding: 5px; flex: 0 0 auto;
+    box-shadow: 0 44px 100px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
+  }
+  .screen {
+    position: relative; width: 100%; height: 100%; border-radius: 43px;
+    overflow: hidden; background: var(--ground); user-select: none; color: #22262c;
+    transition: background .3s;
+  }
+  .screen.space { background: #05060a; }
+
+  /* Le calque qui porte carte + marqueurs : c'est lui qu'on
+     anime au changement de niveau, pour que le zoom se sente. */
+  .mapwrap { position: absolute; inset: 0; }
+  #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #layer { position: absolute; inset: 0; }
+
+  /* ---- Barre d'etat ---- */
+  .statusbar {
+    position: absolute; top: 0; left: 0; right: 0; height: 54px; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 26px; font-size: 16px; font-weight: 700; color: #16191e; pointer-events: none;
+  }
+  .screen.space .statusbar { color: #fff; }
+  .statusbar .right { display: flex; align-items: center; gap: 6px; }
+  .bars { display: flex; align-items: flex-end; gap: 2px; height: 11px; }
+  .bars i { width: 3px; background: currentColor; border-radius: 1px; display: block; }
+  .bars i:nth-child(1){height:4px} .bars i:nth-child(2){height:6.5px}
+  .bars i:nth-child(3){height:9px} .bars i:nth-child(4){height:11px;opacity:.28}
+  .batt { width: 25px; height: 12px; border: 1.6px solid currentColor; border-radius: 3.5px; padding: 1.6px; }
+  .batt span { display: block; height: 100%; width: 74%; background: currentColor; border-radius: 1px; }
+
+  /* ---- Coin superieur ---- */
+  .me-btn {
+    position: absolute; top: 62px; left: 16px; z-index: 26;
+    width: 56px; height: 56px; border-radius: 50%; background: #fff;
+    border: 0; padding: 0; cursor: pointer; box-shadow: 0 3px 12px rgba(0,0,0,.2);
+    display: grid; place-items: center;
+  }
+  .me-btn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
+  .me-btn svg { width: 34px; height: 44px; display: block; }
+  .me-btn .dot {
+    position: absolute; top: 1px; right: 1px; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
+  }
+
+  .place { position: absolute; top: 60px; right: 18px; z-index: 26; text-align: right; pointer-events: none; }
+  .place b { display: block; font-size: 27px; font-weight: 700; letter-spacing: -.03em; color: #16191e; }
+  .screen.space .place b { color: #fff; }
+  .place span { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 15px; font-weight: 600; color: #3b4048; }
+  .screen.space .place span { color: rgba(255,255,255,.6); }
+  .place svg { width: 19px; height: 19px; fill: currentColor; }
+
+  /* ---- Filtres ---- */
+  .filters {
+    position: absolute; top: 128px; left: 0; right: 0; z-index: 25;
+    display: flex; gap: 9px; padding: 0 14px; overflow-x: auto; scrollbar-width: none;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  .filt {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 7px; background: #fff;
+    border: 0; border-radius: 999px; padding: 9px 15px; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 700; color: #1b1f25;
+    letter-spacing: -.01em; box-shadow: 0 2px 9px rgba(0,0,0,.14);
+  }
+  .filt:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; }
+  .filt svg { width: 16px; height: 16px; }
+  .filt.on { background: var(--red); color: #fff; }
+
+  /* ---- Bascule 2D/3D : seulement au niveau ville ---- */
+  .dim {
+    position: absolute; top: 180px; left: 50%; transform: translateX(-50%);
+    z-index: 25; display: flex; align-items: center; gap: 2px; background: #fff;
+    border-radius: 999px; padding: 4px; box-shadow: 0 2px 9px rgba(0,0,0,.16);
+  }
+  .dim[hidden] { display: none; }
+  .dim button {
+    border: 0; background: none; cursor: pointer; font-family: inherit;
+    font-size: 14px; font-weight: 800; color: #1b1f25; padding: 5px 14px; border-radius: 999px;
+  }
+  .dim button.on { background: #2aa3f0; color: #fff; }
+  .dim button:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; }
+
+  /* ---- Etiquettes ---- */
+  .lbl {
+    position: absolute; z-index: 12; transform: translate(-50%, -50%);
+    pointer-events: none; text-align: center;
+    font-size: 12px; font-weight: 600; color: #8b94a0;
+    text-shadow: 0 0 3px var(--halo), 0 0 7px var(--halo);
+  }
+  .lbl.sea { color: #7fb4d8; text-shadow: 0 0 3px #dcecf7, 0 0 7px #dcecf7; letter-spacing: .06em; }
+  .lbl.void { color: rgba(255,255,255,.34); text-shadow: none; letter-spacing: .1em; text-transform: uppercase; font-size: 10.5px; }
+  .street {
+    position: absolute; z-index: 11; transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+    font-size: 11.5px; font-weight: 600; color: #a6aeb9; letter-spacing: .03em;
+    white-space: nowrap; pointer-events: none;
+    text-shadow: 0 0 3px var(--halo), 0 0 6px var(--halo);
+  }
+  .shield {
+    position: absolute; z-index: 12; transform: translate(-50%, -50%); background: #fff;
+    border: 1.5px solid #8e9bb0; border-radius: 5px; padding: 1px 6px;
+    font-size: 11px; font-weight: 700; color: #4a5568; pointer-events: none;
+  }
+
+  /* ---- Pastille : le meme objet aux quatre niveaux ---- */
+  .spot {
+    position: absolute; z-index: 15; transform: translate(-50%, -25px);
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
+  }
+  .spot:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 4px; border-radius: 14px; }
+
+  .spot-badge {
+    border-radius: 999px; background: var(--c); border: 3px solid #fff;
+    box-shadow: 0 3px 10px rgba(0,0,0,.3);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; flex: 0 0 auto; position: relative; line-height: 1;
+    width: var(--d, 50px); height: var(--d, 50px);
+  }
+  .spot-badge b { font-size: var(--fs, 17px); font-weight: 800; letter-spacing: -.04em; }
+  .spot-badge i { font-style: normal; font-size: 8px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 1px; }
+  .spot-badge.shut { background: #fff; color: #7b828c; border-color: #d9dde3; }
+
+  .spot-txt { text-align: center; max-width: var(--tw, 96px); }
+  .spot-txt b {
+    display: block; font-size: 13px; font-weight: 800; color: #1f242c; line-height: 1.1;
+    letter-spacing: -.015em; text-shadow: 0 0 3px var(--halo), 0 0 6px var(--halo);
+  }
+  .spot-txt small {
+    display: block; font-size: 10.5px; font-weight: 700; color: var(--c); line-height: 1.2;
+    margin-top: 1px; text-shadow: 0 0 3px var(--halo), 0 0 6px var(--halo);
+  }
+  .spot-txt small.mute { color: #8b929c; }
+
+  /* En orbite, le halo blanc et l'ombre portee ne fonctionnent
+     plus : le fond est noir. On inverse. */
+  .screen.space .spot-badge { border-color: rgba(255,255,255,.9); box-shadow: 0 0 18px var(--c); }
+  .screen.space .spot-txt b { color: #fff; text-shadow: 0 1px 6px #000, 0 0 12px #000; }
+  .screen.space .spot-txt small { text-shadow: 0 1px 6px #000, 0 0 12px #000; }
+  .screen.space .spot-txt small.mute { color: rgba(255,255,255,.55); }
+
+  .spot-badge.hot::after {
+    content: ""; position: absolute; inset: -3px; border-radius: 50%;
+    border: 2.5px solid var(--c); animation: ping 2.6s cubic-bezier(.2,.6,.35,1) infinite;
+  }
+  @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
+
+  .glow {
+    position: absolute; z-index: 9; width: 190px; height: 130px;
+    transform: translate(-50%, -50%); pointer-events: none;
+    background: radial-gradient(50% 50% at 50% 50%, rgba(255,47,69,.2), transparent 70%);
+  }
+
+  /* ---- Pinte d'ami ---- */
+  .mate {
+    position: absolute; z-index: 18; transform: translate(-50%, -100%);
+    display: flex; flex-direction: column; align-items: center;
+    background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
+  }
+  .mate:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 4px; border-radius: 14px; }
+  .mate .pint { width: 52px; height: 68px; display: block; filter: drop-shadow(0 4px 5px rgba(40,60,35,.26)); animation: bob 3.4s ease-in-out infinite; }
+  .mate.big .pint { width: 62px; height: 81px; }
+  .mate.tiny .pint { width: 30px; height: 39px; filter: drop-shadow(0 0 6px rgba(255,220,140,.5)); }
+  .mate:nth-of-type(even) .pint { animation-delay: -1.7s; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+  .mate-tag {
+    margin-top: 1px; background: #fff; border-radius: 8px; padding: 4px 10px;
+    font-size: 12.5px; font-weight: 800; color: #1b1f25;
+    box-shadow: 0 2px 8px rgba(0,0,0,.24); white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .mate.tiny .mate-tag { padding: 2px 7px; font-size: 10.5px; }
+  .mate-tag em { font-style: normal; font-weight: 700; font-size: 11.5px; color: #97a0ac; }
+  .mate-tag em.now { color: var(--green); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mate .pint { animation: none; }
+    .spot-badge.hot::after { animation: none; opacity: .45; }
+  }
+
+  /* ---- Colonne de boutons ---- */
+  .rail {
+    position: absolute; right: 13px; top: 51%; transform: translateY(-44%);
+    z-index: 24; display: flex; flex-direction: column; gap: 11px; align-items: center;
+  }
+  .rbtn {
+    width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 0;
+    padding: 0; cursor: pointer; display: grid; place-items: center; position: relative;
+    box-shadow: 0 3px 11px rgba(0,0,0,.24);
+  }
+  .rbtn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
+  .rbtn svg.ico { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .rbtn svg.pint { width: 30px; height: 39px; }
+  .rbtn .dot {
+    position: absolute; right: 0; bottom: 1px; width: 13px; height: 13px;
+    border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
+  }
+
+  /* Le zoom : deux boutons empiles, comme une vraie carte */
+  .zoom {
+    width: 52px; border-radius: 26px; background: #fff; box-shadow: 0 3px 11px rgba(0,0,0,.24);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .zoom button {
+    height: 46px; border: 0; background: none; cursor: pointer; display: grid; place-items: center;
+    font-family: inherit; color: #1b1f25;
+  }
+  .zoom button:disabled { opacity: .3; cursor: default; }
+  .zoom button:focus-visible { outline: 3px solid #1d7fd6; outline-offset: -3px; }
+  .zoom button + button { border-top: 1px solid #ecedf0; }
+  .zoom svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+
+  .compass { position: relative; }
+  .compass .needle {
+    position: absolute; top: 4px; left: 50%; margin-left: -3px; width: 0; height: 0;
+    border-left: 3.5px solid transparent; border-right: 3.5px solid transparent; border-bottom: 7px solid var(--red);
+  }
+  .compass .ring { width: 32px; height: 32px; border-radius: 50%; border: 1.5px dashed #c6cbd3; }
+  .compass .n { position: absolute; font-size: 12px; font-weight: 800; color: #1b1f25; }
+
+  /* ---- Pastille d'activite ---- */
+  .status-pill {
+    position: absolute; left: 14px; bottom: 184px; z-index: 24; background: var(--green);
+    color: #fff; border-radius: 999px; padding: 10px 18px 10px 14px; font-size: 14px;
+    font-weight: 700; display: flex; align-items: center; gap: 9px; box-shadow: 0 3px 13px rgba(0,0,0,.28);
+  }
+  .status-pill[hidden] { display: none; }
+  .status-pill svg { width: 16px; height: 16px; fill: #fff; }
+
+  /* ---- Rail d'amis ---- */
+  .friend-rail {
+    position: absolute; left: 0; right: 0; bottom: 92px; z-index: 24;
+    display: flex; gap: 9px; padding: 0 12px; overflow-x: auto; scrollbar-width: none;
+  }
+  .friend-rail::-webkit-scrollbar { display: none; }
+  .fr {
+    flex: 0 0 auto; background: none; border: 0; padding: 0; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; width: 54px;
+  }
+  .fr:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; border-radius: 12px; }
+  .fr .bub {
+    width: 52px; height: 52px; border-radius: 50%; background: #fff;
+    box-shadow: 0 3px 10px rgba(0,0,0,.22); display: grid; place-items: center; overflow: hidden;
+  }
+  .fr .bub svg.pint { width: 27px; height: 35px; }
+  .fr .bub svg.plus { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .fr b {
+    font-size: 10.5px; font-weight: 700; color: #2b3039; text-shadow: 0 0 3px #fff, 0 0 6px #fff;
+    max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .screen.space .fr b { color: #fff; text-shadow: 0 1px 5px #000; }
+
+  /* ---- Onglets ---- */
+  .tabs {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
+    background: #fff; border-top: 1px solid rgba(0,0,0,.07);
+    display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
+  }
+  .tab { display: grid; place-items: center; background: none; border: 0; cursor: pointer; position: relative; padding: 0; }
+  .tab:focus-visible { outline: 3px solid #1d7fd6; outline-offset: -3px; border-radius: 10px; }
+  .tab svg { width: 28px; height: 28px; stroke: #1b1f25; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.on svg { stroke: var(--red); }
+  .tab .badge { position: absolute; top: -4px; right: 50%; margin-right: -21px; width: 11px; height: 11px; border-radius: 50%; background: var(--red); }
+
+  /* ---- Feuille du club ---- */
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 88px; z-index: 34; background: #fff;
+    border-radius: 24px 24px 0 0; padding: 10px 20px 22px; box-shadow: 0 -14px 44px rgba(0,0,0,.26);
+    transform: translateY(calc(100% + 94px)); transition: transform .36s cubic-bezier(.22,.75,.3,1);
+  }
+  .sheet.up { transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .sheet { transition: none; } }
+
+  .grab { width: 40px; height: 4.5px; border-radius: 99px; background: #dcdfe4; margin: 0 auto 15px; }
+  .sheet-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .sheet-top .spot-badge { width: 54px; height: 54px; box-shadow: none; border-width: 0; }
+  .sheet-top .spot-badge b { font-size: 19px; }
+  .sheet-id { flex: 1; min-width: 0; }
+  .sheet-id strong { display: block; font-size: 19px; font-weight: 800; letter-spacing: -.025em; color: #14171c; }
+  .sheet-id span { font-size: 13px; color: #767d88; font-weight: 600; }
+  .sheet-close {
+    width: 32px; height: 32px; border-radius: 50%; background: #f0f1f4; border: 0;
+    cursor: pointer; display: grid; place-items: center; flex: 0 0 auto;
+  }
+  .sheet-close:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; }
+  .sheet-close svg { width: 15px; height: 15px; stroke: #4a515c; stroke-width: 2.4; fill: none; stroke-linecap: round; }
+  .sheet-chips { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
+  .chip { font-size: 12px; font-weight: 700; color: #3d444f; background: #f0f1f4; border-radius: 999px; padding: 5px 11px; }
+  .chip.warm { background: rgba(255,47,69,.11); color: #d31730; }
+  .who { display: flex; align-items: center; gap: 9px; margin-bottom: 16px; }
+  .who .stack { display: flex; }
+  .who .stack span {
+    width: 30px; height: 30px; border-radius: 50%; overflow: hidden; border: 2.5px solid #fff;
+    margin-left: -10px; background: #f3f4f6; display: grid; place-items: center;
+  }
+  .who .stack span:first-child { margin-left: 0; }
+  .who .stack svg { width: 15px; height: 20px; }
+  .who p { margin: 0; font-size: 12.5px; font-weight: 700; color: #5c636e; }
+  .sheet-cta {
+    display: block; width: 100%; background: var(--red); color: #fff; border: 0;
+    border-radius: 16px; padding: 17px; font-family: inherit; font-size: 16px;
+    font-weight: 800; letter-spacing: -.01em; cursor: pointer;
+  }
+  .sheet-cta:focus-visible { outline: 3px solid #1b1f25; outline-offset: 3px; }
+  .sheet-note { text-align: center; font-size: 12.5px; color: #868d98; margin: 10px 0 0; font-weight: 600; }
+
+  /* ================= SECTIONS ================= */
+
+  .sec { margin-top: 34px; }
+  .sec-head {
+    display: flex; align-items: baseline; gap: 16px; padding-bottom: 13px;
+    border-bottom: 1px solid var(--page-line); margin-bottom: 26px;
+  }
+  .sec-head h2 { margin: 0; flex: 1; font-size: clamp(24px, 3.2vw, 34px); font-weight: 800; letter-spacing: -.035em; }
+  .sec-head span { font-family: var(--mono); font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--page-ink3); }
+
+  /* L'echelle d'agregation */
+  .ladder { display: flex; flex-direction: column; border: 1px solid var(--page-line); border-radius: 5px; overflow: hidden; }
+  .rung {
+    display: grid; grid-template-columns: 96px 1fr auto; gap: 18px; align-items: center;
+    padding: 18px 22px; background: var(--page-2); border-bottom: 1px solid var(--page-line);
+  }
+  .rung:last-child { border-bottom: 0; }
+  .rung .lvl { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--page-ink3); }
+  .rung h3 { margin: 0 0 3px; font-size: 15.5px; font-weight: 700; letter-spacing: -.015em; }
+  .rung p { margin: 0; font-size: 14px; color: var(--page-ink2); line-height: 1.5; }
+  .rung .demo {
+    width: 54px; height: 54px; border-radius: 50%; background: var(--c); color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    line-height: 1; flex: 0 0 auto;
+  }
+  .rung .demo b { font-size: 16px; font-weight: 800; letter-spacing: -.04em; }
+  .rung .demo i { font-style: normal; font-size: 7.5px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 2px; }
+
+  .notes {
+    margin-top: 34px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1px; background: var(--page-line); border: 1px solid var(--page-line);
+    border-radius: 5px; overflow: hidden;
+  }
+  .note { background: var(--page-2); padding: 24px 22px 26px; }
+  .note .mark {
+    display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--page-ink3); margin-bottom: 10px;
+  }
+  .note.warn .mark { color: var(--red); }
+  .note h3 { margin: 0 0 8px; font-size: 15.5px; font-weight: 700; letter-spacing: -.015em; }
+  .note p { margin: 0; font-size: 14px; color: var(--page-ink2); line-height: 1.55; }
+
+  footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--page-line); font-size: 13px; color: var(--page-ink3); }
+  code { font-family: var(--mono); font-size: 12.5px; color: var(--page-ink); }
+
+  @media (max-width: 560px) {
+    .rung { grid-template-columns: 1fr auto; gap: 12px; }
+    .rung .lvl { grid-column: 1 / -1; }
+  }
+  @media (max-width: 430px) {
+    .wrap { padding: 38px 12px 70px; }
+    .phone { width: 100%; max-width: 360px; }
+  }
+    </style>
+  </head>
+  <body>
+
+<div class="wrap">
+
+  <span class="kicker">PWA clubbeur · écran carte · 17 août 2026</span>
+  <h1>Carte ViralNight</h1>
+  <p class="lede">
+    Quatre niveaux : Bruxelles en 3D, la Belgique, l'Europe, puis la Terre vue de
+    l'orbite avec les étoiles filantes. Utilise les boutons + et − à droite, ou la
+    molette sur la carte. Touche une pastille pour plonger dedans.
+  </p>
+
+  <div class="stage">
+    <div class="phone">
+      <div class="screen" id="screen">
+
+        <div class="mapwrap" id="mapwrap">
+          <canvas id="map" width="700" height="1500" aria-hidden="true"></canvas>
+          <div id="layer"></div>
+        </div>
+
+        <div class="statusbar">
+          <span>0:41</span>
+          <span class="right">
+            <span class="bars"><i></i><i></i><i></i><i></i></span>
+            <span class="batt"><span></span></span>
+          </span>
+        </div>
+
+        <button class="me-btn" id="me-btn" aria-label="Mon profil"><span class="dot"></span></button>
+
+        <div class="place">
+          <b id="place-name">Bruxelles</b>
+          <span id="place-sub">
+            <svg viewBox="0 0 24 24"><path d="M6.5 18.5A4.5 4.5 0 0 1 6 9.6a5.6 5.6 0 0 1 10.7-1.3A4.1 4.1 0 0 1 18 18.5z"/></svg>
+            17 °C
+          </span>
+        </div>
+
+        <div class="filters">
+          <button class="filt on">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+            Ça chauffe
+          </button>
+          <button class="filt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1b1f25" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9.5" r="2.2"/><path d="M16 15.6a5.4 5.4 0 0 1 5 4.4"/></svg>
+            Mes amis
+          </button>
+          <button class="filt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1b1f25" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 13h18M12 9v11"/><path d="M12 9S9.6 4.4 7.7 6s4.3 3 4.3 3zM12 9s2.4-4.6 4.3-3-4.3 3-4.3 3z"/></svg>
+            Récompenses
+          </button>
+          <button class="filt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1b1f25" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>
+            Ouvert
+          </button>
+        </div>
+
+        <div class="dim" id="dim">
+          <button aria-label="Vue satellite">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#1b1f25" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 5 5-5 5-5-5z"/><path d="m16 11 5 5-5 5-5-5z"/><path d="m11 8 5 5"/></svg>
+          </button>
+          <button class="on">3D</button>
+        </div>
+
+        <div class="rail">
+          <button class="rbtn" id="rail-me" aria-label="Ma pinte"><span class="dot"></span></button>
+          <div class="zoom">
+            <button id="zin" aria-label="Zoomer">
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <button id="zout" aria-label="Dézoomer">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+            </button>
+          </div>
+          <button class="rbtn" aria-label="Mode fantôme">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M12 3c-3.6 0-6.5 2.9-6.5 6.5V20l2.2-1.6L9.9 20l2.1-1.6L14.1 20l2.2-1.6L18.5 20V9.5C18.5 5.9 15.6 3 12 3z"/><path d="M9.6 10h.01M14.4 10h.01"/></svg>
+          </button>
+          <button class="rbtn compass" aria-label="Orientation">
+            <span class="needle"></span><span class="ring"></span><span class="n">N</span>
+          </button>
+        </div>
+
+        <div class="status-pill">
+          <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+          Julien · Actif à l'instant
+        </div>
+
+        <div class="friend-rail" id="friend-rail">
+          <button class="fr" aria-label="Ajouter un ami">
+            <span class="bub"><svg class="plus" viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.4"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0"/><path d="M18.5 7.5v6M21.5 10.5h-6"/></svg></span>
+            <b>Ajouter</b>
+          </button>
+        </div>
+
+        <nav class="tabs">
+          <button class="tab on" aria-label="Carte">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>
+          </button>
+          <button class="tab" aria-label="Boutique">
+            <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
+          </button>
+          <button class="tab" aria-label="Poster ma story">
+            <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
+          </button>
+          <button class="tab" aria-label="Amis">
+            <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
+          </button>
+          <button class="tab" aria-label="Profil">
+            <span class="badge"></span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.4 20.2a7.6 7.6 0 0 1 15.2 0"/></svg>
+          </button>
+        </nav>
+
+        <div class="sheet" id="sheet" role="dialog" aria-label="Détail du club" aria-hidden="true">
+          <div class="grab"></div>
+          <div class="sheet-top">
+            <span class="spot-badge" id="sh-disc"><b>42</b><i>ICI</i></span>
+            <span class="sheet-id">
+              <strong id="sh-name">Mirage</strong>
+              <span id="sh-addr">Rue de l'Écuyer · 400 m</span>
+            </span>
+            <button class="sheet-close" id="sh-close" aria-label="Fermer">
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <div class="sheet-chips" id="sh-chips"></div>
+          <div class="who"><span class="stack" id="sh-stack"></span><p id="sh-who"></p></div>
+          <button class="sheet-cta">Poster ma story</button>
+          <p class="sheet-note" id="sh-note"></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Les clubs restent visibles</h2>
+      <span>L'échelle d'agrégation</span>
+    </div>
+    <p class="lede" style="margin-bottom:24px">
+      C'est le point que tu demandais. La pastille garde le même sens aux quatre
+      niveaux — <strong>le nombre de personnes en soirée à cet instant</strong> — et ce
+      qu'elle regroupe change avec le zoom. Rien ne disparaît en dézoomant, tout se
+      rassemble.
+    </p>
+
+    <div class="ladder">
+      <div class="rung">
+        <span class="lvl">Niveau 4</span>
+        <div><h3>Un club</h3><p>Mirage, 42 personnes sur place. Le halo rouge signale celui qui chauffe.</p></div>
+        <span class="demo" style="--c:#ff2f45"><b>42</b><i>ICI</i></span>
+      </div>
+      <div class="rung">
+        <span class="lvl">Niveau 3</span>
+        <div><h3>Une ville</h3><p>Les 12 clubs de Bruxelles deviennent une pastille. 187 personnes en soirée dans la ville.</p></div>
+        <span class="demo" style="--c:#ff2f45"><b>187</b><i>ICI</i></span>
+      </div>
+      <div class="rung">
+        <span class="lvl">Niveau 2</span>
+        <div><h3>Un pays</h3><p>Toutes les villes belges se rassemblent. 468 personnes, 38 clubs affiliés.</p></div>
+        <span class="demo" style="--c:#3b4250"><b>468</b><i>ICI</i></span>
+      </div>
+      <div class="rung">
+        <span class="lvl">Niveau 1</span>
+        <div><h3>Un continent</h3><p>Vu de l'orbite, l'Europe est un seul point lumineux. Les pastilles brillent sur le noir au lieu d'y disparaître.</p></div>
+        <span class="demo" style="--c:#ff2f45"><b>6,5k</b><i>ICI</i></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <div class="note">
+      <span class="mark">Le zoom</span>
+      <h3>Comment il est fait</h3>
+      <p>
+        Un seul jeu de coordonnées géographiques sert aux quatre niveaux : projection
+        orthographique pour le globe, équirectangulaire pour l'Europe et la Belgique,
+        isométrique pour la ville. Le changement de niveau fait grandir ou rétrécir
+        le calque, pour que le zoom se sente au lieu d'être un saut.
+      </p>
+    </div>
+    <div class="note">
+      <span class="mark">L'espace</span>
+      <h3>Les étoiles filantes</h3>
+      <p>
+        Champ d'étoiles qui scintillent, plus trois filantes qui traversent à
+        intervalles irréguliers, avec une traînée qui s'estompe. Tout s'arrête si le
+        téléphone est réglé sur « réduire les animations ».
+      </p>
+    </div>
+    <div class="note warn">
+      <span class="mark">À savoir</span>
+      <h3>Les chiffres sont inventés</h3>
+      <p>
+        Aucun club n'est encore créé dans ta base de production — les 38 clubs belges
+        et les 6 500 personnes en Europe sont là pour montrer le système, pas pour
+        décrire l'existant. Le jour où tu signes ton premier client, la même
+        mécanique affichera 1 club et 12 personnes.
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    Maquette interactive — repo <code>06-pwa-clubbeurs</code>. À valider avant que je porte l'écran sur MapLibre.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ==========================================================
+     LA PINTE
+     ========================================================== */
+
+  var uid = 0;
+
+  function pint(level, cls) {
+    var id = "pg" + (++uid);
+    var TOP = 26, BOT = 122;
+    var y = BOT - (BOT - TOP) * level;
+    var full = level > .06, foam = level > .25;
+
+    return '<svg class="pint ' + (cls || "") + '" viewBox="0 0 100 138" xmlns="http://www.w3.org/2000/svg" role="img">' +
+      '<defs><clipPath id="' + id + '"><path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z"/></clipPath></defs>' +
+      '<ellipse cx="50" cy="132" rx="24" ry="5" fill="#4a6b3f" opacity=".2"/>' +
+      '<path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z" fill="#dfe9ef" opacity=".85"/>' +
+      (full ? '<g clip-path="url(#' + id + ')">' +
+        '<rect x="20" y="' + y + '" width="60" height="' + (132 - y) + '" fill="#f0a91e"/>' +
+        '<rect x="20" y="' + (y + (132 - y) * .55) + '" width="60" height="' + ((132 - y) * .45) + '" fill="#d98a09"/>' +
+        '<circle cx="40" cy="' + (y + 24) + '" r="3" fill="#ffd98a" opacity=".75"/>' +
+        '<circle cx="59" cy="' + (y + 40) + '" r="2.2" fill="#ffd98a" opacity=".65"/>' +
+        '</g>' : "") +
+      (foam ? '<g><ellipse cx="50" cy="' + y + '" rx="27" ry="11" fill="#fffaf0"/>' +
+        '<circle cx="34" cy="' + (y - 6) + '" r="9" fill="#fffaf0"/>' +
+        '<circle cx="50" cy="' + (y - 11) + '" r="11" fill="#fffdf7"/>' +
+        '<circle cx="66" cy="' + (y - 6) + '" r="9" fill="#fffaf0"/></g>' : "") +
+      '<g clip-path="url(#' + id + ')">' +
+        '<rect x="31" y="20" width="7" height="112" fill="#fff" opacity=".55"/>' +
+        '<rect x="43" y="20" width="3" height="112" fill="#fff" opacity=".3"/>' +
+        '<rect x="66" y="20" width="5" height="112" fill="#fff" opacity=".25"/>' +
+      '</g>' +
+      '<ellipse cx="50" cy="20" rx="26" ry="7" fill="none" stroke="#c9d6de" stroke-width="3"/>' +
+      '<path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z" fill="none" stroke="#c9d6de" stroke-width="2.5"/>' +
+    '</svg>';
+  }
+
+  /* ==========================================================
+     DONNEES GEOGRAPHIQUES
+     ----------------------------------------------------------
+     Un seul jeu de coordonnees, en degres, reutilise par les
+     trois projections. Contours volontairement grossiers : ils
+     doivent etre reconnaissables a 200 px, pas exacts.
+     ========================================================== */
+
+  var LAND = [
+    // Afrique
+    [[-6,36],[10,37],[20,32],[32,31],[43,12],[51,12],[42,-2],[40,-15],[35,-24],
+     [25,-34],[18,-34],[12,-18],[9,-1],[2,6],[-8,5],[-17,14],[-16,22],[-10,30]],
+    // Eurasie
+    [[-10,36],[-9,43],[-2,49],[4,52],[8,58],[18,69],[30,70],[60,72],[90,75],
+     [130,72],[160,68],[170,60],[145,50],[135,45],[127,35],[120,25],[105,10],
+     [95,15],[88,22],[80,10],[72,20],[66,25],[58,25],[48,30],[36,36],[28,41],
+     [20,40],[16,45],[12,44],[3,42],[-2,38]],
+    // Amerique du Nord
+    [[-168,65],[-160,70],[-130,70],[-95,73],[-75,68],[-60,55],[-70,45],[-80,32],
+     [-97,26],[-105,20],[-115,30],[-125,40],[-130,55],[-155,58]],
+    // Amerique du Sud
+    [[-81,0],[-78,-6],[-71,-18],[-70,-30],[-73,-45],[-68,-55],[-58,-38],[-48,-25],
+     [-35,-8],[-50,0],[-60,8],[-70,10],[-78,8]],
+    // Oceanie
+    [[113,-22],[122,-18],[131,-12],[142,-11],[147,-20],[153,-28],[146,-39],
+     [135,-35],[125,-33],[115,-34]],
+    // Groenland
+    [[-45,60],[-30,68],[-25,75],[-35,82],[-55,82],[-65,76],[-55,66]]
+  ];
+
+  /* `off` : decalage de l'etiquette en pixels de canvas. Une
+     vraie carte fait pareil — a l'echelle d'un pays, Bruxelles,
+     Amsterdam et Berne tombent a quelques pixels l'un de
+     l'autre, donc les libelles se poussent pour rester lisibles. */
+  var PAYS = [
+    { nom: "Belgique",      ici: 468,  clubs: 38,  c: [4.5, 50.6], hot: true, off: [0, 0],
+      pts: [[2.5,51.1],[4.2,51.4],[5.0,51.5],[6.0,50.8],[5.8,49.6],[4.2,49.9],[2.6,50.8]] },
+    { nom: "France",        ici: 1240, clubs: 96,  c: [2.4, 46.8], off: [0, 52],
+      pts: [[-1.8,49.7],[2.5,51.0],[5.0,49.5],[7.6,48.0],[7.0,45.5],[7.5,43.8],
+            [3.0,43.0],[-1.8,43.4],[-1.2,46.0],[-4.8,48.6]] },
+    { nom: "Pays-Bas",      ici: 402,  clubs: 29,  c: [5.5, 52.4], off: [30, -104],
+      pts: [[3.4,51.4],[6.9,53.4],[7.2,52.4],[6.0,51.9],[5.9,50.8],[4.2,51.4]] },
+    { nom: "Allemagne",     ici: 890,  clubs: 71,  c: [10.2, 51.2], off: [18, 0],
+      pts: [[6.0,50.8],[6.0,53.6],[8.5,54.9],[13.0,54.5],[14.5,51.0],[13.0,48.5],
+            [10.0,47.3],[7.6,47.6],[6.1,49.5]] },
+    { nom: "Royaume-Uni",   ici: 2010, clubs: 154, c: [-2.2, 53.4], hot: true, off: [-40, -40],
+      pts: [[-5.0,50.0],[1.7,51.4],[0.0,54.0],[-1.5,57.0],[-3.0,58.6],[-5.5,57.0],
+            [-5.0,54.0],[-4.0,52.0]] },
+    { nom: "Espagne",       ici: 760,  clubs: 58,  c: [-3.6, 40.2], off: [0, 0],
+      pts: [[-9.5,43.0],[-1.8,43.4],[3.3,42.4],[0.0,39.0],[-2.0,36.8],[-7.0,37.0],[-9.0,39.0]] },
+    { nom: "Italie",        ici: 540,  clubs: 44,  c: [12.4, 42.6], off: [0, 40],
+      pts: [[7.5,44.0],[13.5,45.8],[18.5,40.2],[16.0,38.0],[15.6,38.0],[12.5,41.5],[10.0,43.5]] },
+    { nom: "Suisse",        ici: 180,  clubs: 14,  c: [8.1, 46.8], off: [50, 30],
+      pts: [[6.0,46.2],[8.5,47.6],[10.5,46.9],[8.6,46.0]] }
+  ];
+
+  // Quatre villes affichees : au-dela, les libelles se marchent
+  // dessus. Les autres reapparaitraient a un zoom intermediaire.
+  var VILLES = [
+    { nom: "Bruxelles", ici: 187, clubs: 12, c: [4.35, 50.85], hot: true, zoom: true, off: [0, 0] },
+    { nom: "Anvers",    ici: 96,  clubs: 8,  c: [4.40, 51.22], off: [0, 0] },
+    { nom: "Gand",      ici: 71,  clubs: 6,  c: [3.72, 51.05], off: [0, 0] },
+    { nom: "Charleroi", ici: 18,  clubs: 3,  c: [4.44, 50.41], off: [0, 0] }
+  ];
+
+  /* Vu de l'orbite, on ne montre que les continents visibles :
+     le globe est centre sur l'Europe, donc les Ameriques du Nord
+     et l'Oceanie sont derriere. Le back-face culling s'en charge. */
+  var REGIONS = [
+    { nom: "Europe",          ici: "6,5k", c: [10, 52],   hot: true, zoom: true, off: [0, 0] },
+    { nom: "Asie",            ici: "1,8k", c: [74, 26],   off: [-40, 90] },
+    { nom: "Afrique",         ici: "260",  c: [12, 4],    off: [0, 0] },
+    { nom: "Amérique du Sud", ici: "740",  c: [-55, -15], off: [0, 0] }
+  ];
+
+  var AMIS = [
+    { nom: "Sarah",  q: 1 },   { nom: "Nassym", q: .62 },
+    { nom: "Yanis",  q: .62 }, { nom: "Léa",    q: 1 },
+    { nom: "Théo",   q: .3 },  { nom: "Inès",   q: .3 },
+    { nom: "Malik",  q: 0 },   { nom: "Chloé",  q: 1 }
+  ];
+
+  /* ==========================================================
+     CANVAS
+     ========================================================== */
+
+  var cv = document.getElementById("map");
+  var ctx = cv.getContext("2d");
+  var W = cv.width, H = cv.height;
+  var screenEl = document.getElementById("screen");
+  var layer = document.getElementById("layer");
+  var mapwrap = document.getElementById("mapwrap");
+
+  var C = {
+    ground: "#eaf4e1", cream: "#f4f2ea", park: "#c6e5a4", park2: "#b4dd90",
+    water: "#a3d4f2", bank: "#cfe8f7",
+    road: "#cfcec8", roadCase: "#ffffff", roadMin: "#f8f6f1",
+    roofs: [
+      { top: "#eae2d6", l: "#d2c8b8", r: "#b9ae9c" },
+      { top: "#f2efe9", l: "#dcd7cd", r: "#c4beb2" },
+      { top: "#e3ded6", l: "#cbc4b7", r: "#b2aa9a" }
+    ],
+    win: "#a8cde4", vent: "#cfc7ba",
+    leafTop: "#a5d972", leafBot: "#7cba4d", trunk: "#8a6a45",
+    // niveaux geographiques
+    sea: "#c9e6f7", seaDeep: "#a9d6ef",
+    terre: "#dcefc6", terreEdge: "#b9dd97", terreOff: "#e6eadf", terreOffEdge: "#d3d9c9"
+  };
+
+  function poly(pts, fill, stroke, lw) {
+    if (!pts.length) return;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 2; ctx.stroke(); }
+  }
+
+  /* ---------- Projection equirectangulaire (Europe, Belgique) ---------- */
+
+  var VUE = { lon: 0, lat: 0, k: 1 };
+
+  function pxy(c) {
+    return [ W / 2 + (c[0] - VUE.lon) * VUE.k,
+             H / 2 - (c[1] - VUE.lat) * VUE.k * 1.52 ];
+  }
+
+  /* ---------- Projection orthographique (le globe) ---------- */
+
+  var GLOBE = { cx: W / 2, cy: H * 0.45, r: W * 0.335, rot: -14, tilt: 16 };
+
+  function ortho(c) {
+    var l = (c[0] + GLOBE.rot) * Math.PI / 180, p = c[1] * Math.PI / 180;
+    var t = GLOBE.tilt * Math.PI / 180;
+    var x = Math.cos(p) * Math.sin(l);
+    var y = Math.sin(p);
+    var z = Math.cos(p) * Math.cos(l);
+    var y2 = y * Math.cos(t) - z * Math.sin(t);
+    var z2 = y * Math.sin(t) + z * Math.cos(t);
+    return { x: GLOBE.cx + GLOBE.r * x, y: GLOBE.cy - GLOBE.r * y2, front: z2 > 0.02 };
+  }
+
+  /* ---------- Le champ d'etoiles ---------- */
+
+  var etoiles = [], filantes = [];
+  (function () {
+    var s = 4242;
+    function r() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
+    for (var i = 0; i < 190; i++) {
+      etoiles.push({ x: r() * W, y: r() * H, r: .7 + r() * 1.7, ph: r() * 6.28, sp: .6 + r() * 1.6 });
+    }
+    for (var j = 0; j < 3; j++) filantes.push(neuve(j * 2.4));
+  })();
+
+  function neuve(delai) {
+    var a = -0.55 + Math.random() * 0.4;           // vers le bas-droite
+    return {
+      x: Math.random() * W * .7 - W * .1,
+      y: Math.random() * H * .55,
+      a: a, v: 9 + Math.random() * 7,
+      len: 110 + Math.random() * 150,
+      t: -(delai + Math.random() * 4), vie: 1.1 + Math.random() * .5
+    };
+  }
+
+  function espace(dt, temps) {
+    ctx.fillStyle = "#05060a";
+    ctx.fillRect(0, 0, W, H);
+
+    // une nappe froide, pour que le noir ne soit pas mort
+    var g = ctx.createRadialGradient(W * .8, H * .12, 0, W * .8, H * .12, W * .9);
+    g.addColorStop(0, "rgba(70,110,190,.16)");
+    g.addColorStop(1, "rgba(70,110,190,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    etoiles.forEach(function (e) {
+      var a = REDUCED ? .7 : .45 + .55 * Math.abs(Math.sin(temps * e.sp + e.ph));
+      ctx.globalAlpha = a;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, 6.2832); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    if (REDUCED) return;
+
+    filantes.forEach(function (f, i) {
+      f.t += dt;
+      if (f.t < 0) return;
+      if (f.t > f.vie) { filantes[i] = neuve(1.5 + Math.random() * 5); return; }
+
+      var d = f.t * f.v * 60;
+      var hx = f.x + Math.cos(f.a) * d, hy = f.y - Math.sin(f.a) * d;
+      var tx = hx - Math.cos(f.a) * f.len, ty = hy + Math.sin(f.a) * f.len;
+
+      // la trainee s'efface aux deux bouts
+      var fade = Math.min(1, f.t / .18) * Math.min(1, (f.vie - f.t) / .3);
+      var lg = ctx.createLinearGradient(tx, ty, hx, hy);
+      lg.addColorStop(0, "rgba(255,255,255,0)");
+      lg.addColorStop(1, "rgba(255,255,255," + (.85 * fade) + ")");
+      ctx.strokeStyle = lg; ctx.lineWidth = 2.4; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+
+      ctx.globalAlpha = fade;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(hx, hy, 2.6, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  function globe() {
+    // halo atmospherique
+    var atm = ctx.createRadialGradient(GLOBE.cx, GLOBE.cy, GLOBE.r * .92, GLOBE.cx, GLOBE.cy, GLOBE.r * 1.3);
+    atm.addColorStop(0, "rgba(120,190,255,.34)");
+    atm.addColorStop(1, "rgba(120,190,255,0)");
+    ctx.fillStyle = atm;
+    ctx.beginPath(); ctx.arc(GLOBE.cx, GLOBE.cy, GLOBE.r * 1.3, 0, 6.2832); ctx.fill();
+
+    ctx.save();
+    ctx.beginPath(); ctx.arc(GLOBE.cx, GLOBE.cy, GLOBE.r, 0, 6.2832); ctx.clip();
+
+    // l'ocean
+    var oc = ctx.createLinearGradient(GLOBE.cx - GLOBE.r, GLOBE.cy - GLOBE.r, GLOBE.cx + GLOBE.r, GLOBE.cy + GLOBE.r);
+    oc.addColorStop(0, "#bfe2f7");
+    oc.addColorStop(1, "#8ec6e8");
+    ctx.fillStyle = oc;
+    ctx.fillRect(GLOBE.cx - GLOBE.r, GLOBE.cy - GLOBE.r, GLOBE.r * 2, GLOBE.r * 2);
+
+    // les terres
+    LAND.forEach(function (ring) {
+      var pts = [];
+      ring.forEach(function (c) {
+        var p = ortho(c);
+        if (p.front) pts.push([p.x, p.y]);
+      });
+      if (pts.length > 2) poly(pts, "#cfe6ac");
+    });
+
+    // le terminateur : un cote dans la nuit
+    var sh = ctx.createLinearGradient(GLOBE.cx - GLOBE.r * .2, 0, GLOBE.cx + GLOBE.r, 0);
+    sh.addColorStop(0, "rgba(6,10,26,0)");
+    sh.addColorStop(1, "rgba(6,10,26,.5)");
+    ctx.fillStyle = sh;
+    ctx.fillRect(GLOBE.cx - GLOBE.r, GLOBE.cy - GLOBE.r, GLOBE.r * 2, GLOBE.r * 2);
+
+    ctx.restore();
+  }
+
+  /* ---------- Europe et Belgique ---------- */
+
+  function carteVecteur(zoomBelgique) {
+    // la mer
+    var m = ctx.createLinearGradient(0, 0, 0, H);
+    m.addColorStop(0, C.sea);
+    m.addColorStop(1, C.seaDeep);
+    ctx.fillStyle = m; ctx.fillRect(0, 0, W, H);
+
+    PAYS.forEach(function (p) {
+      var pts = p.pts.map(pxy);
+      var focus = !zoomBelgique || p.nom === "Belgique";
+      poly(pts,
+        focus ? C.terre : C.terreOff,
+        focus ? C.terreEdge : C.terreOffEdge,
+        zoomBelgique ? 3 : 2.4);
+    });
+
+    if (zoomBelgique) {
+      // quelques axes, pour que la Belgique ne soit pas une tache
+      ctx.strokeStyle = "#e8e4d8"; ctx.lineWidth = 7; ctx.lineCap = "round";
+      [[[3.2,51.2],[4.35,50.85]], [[4.35,50.85],[5.57,50.63]],
+       [[4.40,51.22],[4.35,50.85]], [[4.35,50.85],[4.44,50.41]],
+       [[4.35,50.85],[4.70,50.88]], [[3.72,51.05],[4.40,51.22]]].forEach(function (seg) {
+        var a = pxy(seg[0]), b = pxy(seg[1]);
+        ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      });
+    }
+  }
+
+  /* ---------- La ville en 3D ---------- */
+
+  function ville() {
+    var seed = 20260817;
+    function rnd() { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }
+    function span(a, b) { return a + rnd() * (b - a); }
+
+    var TH = -0.36, SY = 0.80, COS = Math.cos(TH), SIN = Math.sin(TH);
+    var OX = W * 0.5, OY = H * 0.44;
+    function proj(x, y) { return [ (x * COS - y * SIN) + OX, (x * SIN + y * COS) * SY + OY ]; }
+    function up(p, h) { return [ p[0] - h * 0.17, p[1] - h * 0.92 ]; }
+
+    ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, H);
+
+    function blob(cx, cy, rx, ry, fill, rot) {
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot || 0);
+      ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, 6.2832);
+      ctx.fillStyle = fill; ctx.fill(); ctx.restore();
+    }
+    blob(W * .50, H * .40, 330, 300, C.cream, -.3);
+    blob(W * .18, H * .70, 200, 180, C.cream, .2);
+    blob(W * .84, H * .30, 175, 150, C.park, -.2);
+    blob(W * .80, H * .33, 120, 100, C.park2, -.2);
+    blob(W * .10, H * .22, 150, 120, C.park, .3);
+    blob(W * .62, H * .82, 190, 130, C.park, -.15);
+    blob(W * .30, H * .12, 130, 95, C.park, .1);
+
+    function canal(width, color) {
+      ctx.strokeStyle = color; ctx.lineCap = "round"; ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(-30, H * .20);
+      ctx.bezierCurveTo(W * .26, H * .32, W * .28, H * .52, W * .12, H * .68);
+      ctx.bezierCurveTo(W * .04, H * .78, W * .10, H * .90, W * .02, H + 30);
+      ctx.stroke();
+    }
+    canal(50, C.bank); canal(40, C.water);
+
+    var BW = 190, BH = 210, EXT = 1500, gx, gy;
+
+    function road(a, b, w, col) {
+      var p = proj(a[0], a[1]), q = proj(b[0], b[1]);
+      ctx.lineCap = "round";
+      ctx.strokeStyle = C.roadCase; ctx.lineWidth = w + 4;
+      ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+      ctx.strokeStyle = col; ctx.lineWidth = w;
+      ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+    }
+
+    for (gy = -EXT; gy <= EXT; gy += BH) {
+      var majY = Math.abs(gy % (BH * 3)) < 1;
+      road([-EXT, gy], [EXT, gy], majY ? 16 : 8, majY ? C.road : C.roadMin);
+    }
+    for (gx = -EXT; gx <= EXT; gx += BW) {
+      var majX = Math.abs(gx % (BW * 3)) < 1;
+      road([gx, -EXT], [gx, EXT], majX ? 16 : 8, majX ? C.road : C.roadMin);
+    }
+
+    var objs = [];
+    for (gy = -EXT; gy < EXT; gy += BH) {
+      for (gx = -EXT; gx < EXT; gx += BW) {
+        var cp = proj(gx + BW / 2, gy + BH / 2);
+        if (cp[0] < -140 || cp[0] > W + 140 || cp[1] < -180 || cp[1] > H + 140) continue;
+
+        var inPark =
+          Math.hypot(cp[0] - W * .84, cp[1] - H * .30) < 160 ||
+          Math.hypot(cp[0] - W * .62, cp[1] - H * .82) < 165 ||
+          Math.hypot(cp[0] - W * .10, cp[1] - H * .22) < 135 ||
+          Math.hypot(cp[0] - W * .30, cp[1] - H * .12) < 115;
+
+        if (inPark) {
+          var n = 3 + Math.floor(rnd() * 3);
+          for (var t = 0; t < n; t++) {
+            objs.push({ k: "tree", s: span(.78, 1.25), p: proj(gx + span(24, BW - 24), gy + span(24, BH - 24)) });
+          }
+        } else {
+          var cnt = 1 + Math.floor(rnd() * 3);
+          for (var b = 0; b < cnt; b++) {
+            var bw = span(46, 92), bh = span(46, 88);
+            var bx = gx + 22 + rnd() * (BW - 44 - bw);
+            var by = gy + 22 + rnd() * (BH - 44 - bh);
+            objs.push({ k: "bldg", x: bx, y: by, w: bw, h: bh, z: span(22, 70),
+                        pal: Math.floor(rnd() * 3), p: proj(bx + bw / 2, by + bh / 2) });
+          }
+          for (var a2 = 0; a2 < 2; a2++) {
+            objs.push({ k: "tree", s: span(.6, .82), p: proj(gx + span(30, BW - 30), gy + BH - span(6, 14)) });
+          }
+        }
+      }
+    }
+    objs.sort(function (a, b) { return a.p[1] - b.p[1]; });
+
+    objs.forEach(function (o) {
+      if (o.k === "tree") {
+        var p = o.p, s = o.s;
+        ctx.beginPath(); ctx.ellipse(p[0] + 5, p[1] + 3, 15 * s, 6 * s, 0, 0, 6.2832);
+        ctx.fillStyle = "rgba(90,110,80,.16)"; ctx.fill();
+        ctx.fillStyle = C.trunk; ctx.fillRect(p[0] - 2.6 * s, p[1] - 16 * s, 5.2 * s, 17 * s);
+        ctx.beginPath(); ctx.ellipse(p[0], p[1] - 32 * s, 15 * s, 21 * s, 0, 0, 6.2832);
+        ctx.fillStyle = C.leafBot; ctx.fill();
+        ctx.beginPath(); ctx.ellipse(p[0] - 3 * s, p[1] - 36 * s, 12 * s, 16 * s, 0, 0, 6.2832);
+        ctx.fillStyle = C.leafTop; ctx.fill();
+        return;
+      }
+
+      var pal = C.roofs[o.pal];
+      var a = proj(o.x, o.y), bpt = proj(o.x + o.w, o.y);
+      var c = proj(o.x + o.w, o.y + o.h), d = proj(o.x, o.y + o.h);
+      poly([[a[0]+7,a[1]+5],[bpt[0]+7,bpt[1]+5],[c[0]+7,c[1]+5],[d[0]+7,d[1]+5]], "rgba(90,110,80,.13)");
+      var A = up(a, o.z), B = up(bpt, o.z), Cc = up(c, o.z), D = up(d, o.z);
+      poly([d, c, Cc, D], pal.l);
+      poly([c, bpt, B, Cc], pal.r);
+      poly([A, B, Cc, D], pal.top);
+
+      var rows = o.z > 44 ? 2 : 1;
+      for (var r = 0; r < rows; r++) {
+        var f = 0.30 + r * 0.34, sx = .18;
+        var w1 = [ d[0] + (D[0]-d[0])*f, d[1] + (D[1]-d[1])*f ];
+        var w2 = [ c[0] + (Cc[0]-c[0])*f, c[1] + (Cc[1]-c[1])*f ];
+        var w3 = [ w2[0] + (Cc[0]-c[0])*.16, w2[1] + (Cc[1]-c[1])*.16 ];
+        var w4 = [ w1[0] + (D[0]-d[0])*.16, w1[1] + (D[1]-d[1])*.16 ];
+        poly([
+          [w1[0] + (w2[0]-w1[0])*sx, w1[1] + (w2[1]-w1[1])*sx],
+          [w1[0] + (w2[0]-w1[0])*(1-sx), w1[1] + (w2[1]-w1[1])*(1-sx)],
+          [w4[0] + (w3[0]-w4[0])*(1-sx), w4[1] + (w3[1]-w4[1])*(1-sx)],
+          [w4[0] + (w3[0]-w4[0])*sx, w4[1] + (w3[1]-w4[1])*sx]
+        ], C.win);
+      }
+
+      if (o.z > 46) {
+        var m1 = .32, m2 = .58;
+        poly([
+          [A[0]+(B[0]-A[0])*m1+(D[0]-A[0])*m1-1.5, A[1]+(B[1]-A[1])*m1+(D[1]-A[1])*m1-8],
+          [A[0]+(B[0]-A[0])*m2+(D[0]-A[0])*m1-1.5, A[1]+(B[1]-A[1])*m2+(D[1]-A[1])*m1-8],
+          [A[0]+(B[0]-A[0])*m2+(D[0]-A[0])*m2-1.5, A[1]+(B[1]-A[1])*m2+(D[1]-A[1])*m2-8],
+          [A[0]+(B[0]-A[0])*m1+(D[0]-A[0])*m2-1.5, A[1]+(B[1]-A[1])*m1+(D[1]-A[1])*m2-8]
+        ], C.vent);
+      }
+    });
+  }
+
+  /* ==========================================================
+     LES MARQUEURS
+     ========================================================== */
+
+  function pct(x, y) { return { l: (x / W * 100) + "%", t: (y / H * 100) + "%" }; }
+
+  function spot(o) {
+    var b = document.createElement("button");
+    b.className = "spot";
+    b.style.left = o.l; b.style.top = o.t;
+    b.style.setProperty("--c", o.c);
+    if (o.d) b.style.setProperty("--d", o.d + "px");
+    if (o.fs) b.style.setProperty("--fs", o.fs + "px");
+    if (o.tw) b.style.setProperty("--tw", o.tw + "px");
+    b.innerHTML =
+      '<span class="spot-badge' + (o.hot ? " hot" : "") + (o.shut ? " shut" : "") + '">' +
+        '<b>' + o.n + '</b><i>' + (o.u || "ICI") + '</i></span>' +
+      '<span class="spot-txt"><b>' + o.nom + '</b>' +
+        (o.sub ? '<small class="' + (o.mute ? "mute" : "") + '">' + o.sub + '</small>' : '') +
+      '</span>';
+    if (o.onClick) b.addEventListener("click", o.onClick);
+    layer.appendChild(b);
+    return b;
+  }
+
+  function mate(o) {
+    var b = document.createElement("button");
+    b.className = "mate" + (o.cls ? " " + o.cls : "");
+    b.style.left = o.l; b.style.top = o.t;
+    b.innerHTML = pint(o.q) +
+      '<span class="mate-tag">' + o.nom + ' <em class="' + (o.now ? "now" : "") + '">' + o.quand + '</em></span>';
+    layer.appendChild(b);
+  }
+
+  function el(cls, html, l, t, extra) {
+    var d = document.createElement(cls === "shield" ? "span" : "div");
+    d.className = cls;
+    d.style.left = l; d.style.top = t;
+    if (extra) d.setAttribute("style", d.getAttribute("style") + ";" + extra);
+    d.innerHTML = html;
+    layer.appendChild(d);
+    return d;
+  }
+
+  /* ==========================================================
+     LES QUATRE NIVEAUX
+     ========================================================== */
+
+  var NIVEAUX = ["Terre", "Europe", "Belgique", "Bruxelles"];
+  var niveau = 3;
+  var raf = null, dernier = 0;
+
+  function stopBoucle() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+
+  function boucle(ts) {
+    var t = ts / 1000;
+    var dt = dernier ? Math.min(.05, t - dernier) : 0;
+    dernier = t;
+    espace(dt, t);
+    globe();
+    raf = requestAnimationFrame(boucle);
+  }
+
+  function rendre(direction) {
+    stopBoucle();
+    dernier = 0;
+    layer.innerHTML = "";
+    screenEl.classList.toggle("space", niveau === 0);
+    document.getElementById("dim").hidden = niveau !== 3;
+    // ta propre activite n'a de sens qu'a l'echelle de la ville :
+    // au-dessus, la pastille n'est plus qu'un obstacle
+    document.querySelector(".status-pill").hidden = niveau !== 3;
+    document.getElementById("place-name").textContent = NIVEAUX[niveau];
+    document.getElementById("place-sub").style.display = niveau === 3 ? "flex" : "none";
+    document.getElementById("zin").disabled = niveau === 3;
+    document.getElementById("zout").disabled = niveau === 0;
+
+    if (niveau === 0) {
+      // une premiere image tout de suite : sans elle, le canvas
+      // garde l'ancien niveau le temps d'une frame et on voit
+      // l'Europe clignoter avant l'espace
+      espace(0, 0);
+      globe();
+      raf = requestAnimationFrame(boucle);
+
+      REGIONS.forEach(function (r) {
+        var p = ortho(r.c);
+        if (!p.front) return;
+        var q = pct(p.x + r.off[0], p.y + r.off[1]);
+        spot({
+          l: q.l, t: q.t, n: r.ici, nom: r.nom,
+          c: r.hot ? "#ff2f45" : "#3b4250",
+          d: r.hot ? 48 : 36, fs: r.hot ? 15 : 12, tw: 74,
+          hot: r.hot, onClick: r.zoom ? function () { aller(1, 1); } : null
+        });
+      });
+
+      el("lbl void", "Vu d'ici, chaque continent est un seul point", "50%", "86%");
+
+    } else if (niveau === 1) {
+      VUE = { lon: 6, lat: 50.5, k: 21 };
+      carteVecteur(false);
+
+      PAYS.forEach(function (p) {
+        var xy = pxy(p.c);
+        var q = pct(xy[0] + p.off[0], xy[1] + p.off[1]);
+        spot({
+          l: q.l, t: q.t, n: fmt(p.ici), nom: p.nom, sub: p.clubs + " clubs",
+          mute: !p.hot, c: p.hot ? "#ff2f45" : "#3b4250",
+          d: p.hot ? 42 : 38, fs: p.hot ? 14 : 12, tw: 74, hot: p.hot,
+          onClick: p.nom === "Belgique" ? function () { aller(2, 1); } : null
+        });
+      });
+
+      el("lbl sea", "Mer du Nord", "26%", "16%");
+      el("lbl sea", "Atlantique", "7%", "66%");
+
+    } else if (niveau === 2) {
+      VUE = { lon: 4.55, lat: 50.85, k: 300 };
+      carteVecteur(true);
+
+      VILLES.forEach(function (v) {
+        var xy = pxy(v.c);
+        var q = pct(xy[0] + v.off[0], xy[1] + v.off[1]);
+        spot({
+          l: q.l, t: q.t, n: fmt(v.ici), nom: v.nom, sub: v.clubs + " clubs",
+          mute: !v.hot, c: v.hot ? "#ff2f45" : "#3b4250",
+          d: v.hot ? 48 : 40, fs: v.hot ? 15 : 13, tw: 76, hot: v.hot,
+          onClick: v.zoom ? function () { aller(3, 1); } : null
+        });
+      });
+
+      el("lbl", "Pays-Bas", "80%", "10%");
+      el("lbl", "France", "22%", "92%");
+
+    } else {
+      ville();
+
+      el("glow", "", "34%", "32%");
+      el("lbl", "Parc royal", "84%", "30%");
+      el("lbl", "Marolles", "16%", "82%");
+      el("lbl", "Matonge", "82%", "79%");
+      el("street", "Rue du Trône", "74%", "58%", "--rot:-21deg");
+      el("street", "Quai au Bois", "6%", "45%", "--rot:69deg");
+      el("shield", "N23", "84%", "74%");
+      el("shield", "R20", "70%", "46%");
+
+      spot({ l: "13%", t: "33%", n: "1h", u: "OUVRE", nom: "Spirito",
+             sub: "Pas encore ouvert", mute: true, shut: true, c: "#8b929c",
+             onClick: function () { ouvrir("spirito"); } });
+      spot({ l: "34%", t: "32%", n: "42", nom: "Mirage", sub: "Ça chauffe",
+             c: "#ff2f45", hot: true, onClick: function () { ouvrir("mirage"); } });
+      spot({ l: "60%", t: "58%", n: "11", nom: "Fuse", sub: "Ouvert jusqu'à 7h",
+             mute: true, c: "#3b4250", onClick: function () { ouvrir("fuse"); } });
+
+      mate({ l: "50%", t: "54%", q: 1, nom: "Sarah", quand: "maintenant", now: true, cls: "big" });
+      mate({ l: "18%", t: "60%", q: .62, nom: "Nassym", quand: "1 h" });
+    }
+
+    // le zoom doit se sentir : le calque grandit ou rapetisse en place
+    if (direction && mapwrap.animate && !REDUCED) {
+      mapwrap.animate(
+        [{ transform: "scale(" + (direction > 0 ? 1.18 : 0.86) + ")", opacity: 0 },
+         { transform: "scale(1)", opacity: 1 }],
+        { duration: 400, easing: "cubic-bezier(.22,.75,.3,1)" });
+    }
+  }
+
+  function fmt(n) { return typeof n === "number" && n >= 1000 ? (n / 1000).toFixed(1).replace(".", ",") + "k" : String(n); }
+
+  function aller(n, dir) {
+    n = Math.max(0, Math.min(3, n));
+    if (n === niveau) return;
+    dir = dir || (n > niveau ? 1 : -1);
+    niveau = n;
+    fermer();
+    rendre(dir);
+  }
+
+  document.getElementById("zin").addEventListener("click", function () { aller(niveau + 1, 1); });
+  document.getElementById("zout").addEventListener("click", function () { aller(niveau - 1, -1); });
+
+  var molette = 0;
+  mapwrap.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    molette += e.deltaY;
+    if (molette < -120) { molette = 0; aller(niveau + 1, 1); }
+    if (molette > 120)  { molette = 0; aller(niveau - 1, -1); }
+  }, { passive: false });
+
+  /* ==========================================================
+     LE RESTE DU MONTAGE
+     ========================================================== */
+
+  document.getElementById("me-btn").insertAdjacentHTML("afterbegin", pint(1));
+  document.getElementById("rail-me").insertAdjacentHTML("afterbegin", pint(1));
+
+  var rail = document.getElementById("friend-rail");
+  AMIS.forEach(function (p) {
+    var b = document.createElement("button");
+    b.className = "fr";
+    b.setAttribute("aria-label", p.nom);
+    b.innerHTML = '<span class="bub">' + pint(p.q) + '</span><b>' + p.nom + '</b>';
+    rail.appendChild(b);
+  });
+
+  var CLUBS = {
+    mirage: {
+      nom: "Mirage", adr: "Rue de l'Écuyer · 400 m", n: "42", u: "ICI", c: "#ff2f45",
+      chips: [["Ça chauffe", true], ["Ouvert jusqu'à 6h", false]],
+      amis: [1, 1, .3], qui: "Sarah et Léa sont là, Théo est parti",
+      note: "300 pts = un cocktail offert. Tu en as 0."
+    },
+    fuse: {
+      nom: "Fuse", adr: "Rue Blaes · 1,2 km", n: "11", u: "ICI", c: "#3b4250",
+      chips: [["Ouvert jusqu'à 7h", false], ["Ça se remplit", false]],
+      amis: [.62], qui: "Nassym y était il y a une heure",
+      note: "250 pts = une entrée offerte. Tu en as 0."
+    },
+    spirito: {
+      nom: "Spirito", adr: "Rue Stassart · 2,1 km", n: "1h", u: "OUVRE", c: "#8b929c",
+      chips: [["Pas encore ouvert", false]],
+      amis: [], qui: "Personne de tes amis pour l'instant",
+      note: "400 pts = un coupe-file. Tu en as 0."
+    }
+  };
+
+  var sheet = document.getElementById("sheet");
+  var shDisc = document.getElementById("sh-disc");
+  var back = null;
+
+  function ouvrir(key, src) {
+    var c = CLUBS[key];
+    if (!c) return;
+    back = src || null;
+    shDisc.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>";
+    shDisc.style.setProperty("--c", c.c);
+    shDisc.classList.toggle("shut", c.n === "1h");
+    document.getElementById("sh-name").textContent = c.nom;
+    document.getElementById("sh-addr").textContent = c.adr;
+    document.getElementById("sh-note").textContent = c.note;
+
+    var chips = document.getElementById("sh-chips");
+    chips.innerHTML = "";
+    c.chips.forEach(function (ch) {
+      var e = document.createElement("span");
+      e.className = "chip" + (ch[1] ? " warm" : "");
+      e.textContent = ch[0];
+      chips.appendChild(e);
+    });
+
+    var stack = document.getElementById("sh-stack");
+    stack.innerHTML = "";
+    c.amis.forEach(function (q) {
+      var e = document.createElement("span");
+      e.innerHTML = pint(q);
+      stack.appendChild(e);
+    });
+    stack.style.display = c.amis.length ? "flex" : "none";
+    document.getElementById("sh-who").textContent = c.qui;
+
+    sheet.classList.add("up");
+    sheet.setAttribute("aria-hidden", "false");
+    document.querySelector(".sheet-cta").focus();
+  }
+
+  function fermer() {
+    sheet.classList.remove("up");
+    sheet.setAttribute("aria-hidden", "true");
+  }
+
+  document.getElementById("sh-close").addEventListener("click", function () {
+    fermer(); if (back) back.focus();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && sheet.classList.contains("up")) fermer();
+  });
+
+  rendre(0);
+})();
+</script>
+
+  </body>
+</html>
