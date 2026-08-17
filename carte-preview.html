@@ -638,11 +638,28 @@ function motifArbres() {
 function snapifie() {
   map.addImage("motif-arbres", motifArbres(), { pixelRatio: 2 });
 
-  var vert = "#5fae52", vertClair = "#8fd17a", creme = "#ecdfc9", cremeSol = "#e6d8bd", eau = "#57b6ee";
+  // La palette relevee sur tes captures : le sol est vert menthe
+  // PARTOUT (pas juste dans les parcs), les batiments un rose-beige
+  // doux, l'eau un bleu ciel clair. Le style d'origine, lui, garde
+  // un fond bleu marine fonce (heritage de sa version "dark") des
+  // qu'on sort d'un batiment ou d'une route — c'est ce fond-la,
+  // pas les couleurs des parcs, qui faisait "vraie carte".
+  var mentheClair = "#e3f3d3", mentheFonce = "#cbe8ac", vertArbre = "#6dbb52",
+      rose = "#f1e2da", roseOmbre = "#e0cabd", eau = "#a9ddf7";
 
-  // le sol boise : un aplat vert, puis la texture d'arbres par-dessus
+  map.setPaintProperty("Background", "background-color", mentheClair);
+
+  // tout ce qui n'est ni batiment, ni route, ni eau, ni parc —
+  // zones residentielles, industrielles, scolaires... — reprend
+  // le meme vert menthe que le fond au lieu du bleu marine du
+  // style sombre d'origine.
+  ["Residential", "Industrial", "School", "Cemetery", "Hospital", "Pedestrian"].forEach(function (id) {
+    if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", mentheClair);
+  });
+
+  // le sol boise : un vert plus soutenu, puis la texture d'arbres
   ["Forest", "Wood"].forEach(function (id) {
-    map.setPaintProperty(id, "fill-color", vert);
+    map.setPaintProperty(id, "fill-color", mentheFonce);
     map.setPaintProperty(id, "fill-opacity", 1);
     map.setLayoutProperty(id, "visibility", "visible");
     map.setLayerZoomRange(id, 0, 24);
@@ -659,22 +676,21 @@ function snapifie() {
   }, "Building");
 
   ["Grass", "Meadow"].forEach(function (id) {
-    map.setPaintProperty(id, "fill-color", vertClair);
+    map.setPaintProperty(id, "fill-color", mentheFonce);
     map.setPaintProperty(id, "fill-opacity", 1);
   });
 
   map.setPaintProperty("Water", "fill-color", eau);
 
-  // les batiments : creme plein, pas le bleu-gris transparent
-  // d'origine qui les faisait disparaitre — et l'extrusion 3D
+  // les batiments : rose-beige, pas creme/brun — et l'extrusion 3D
   // s'active des le niveau rue au lieu d'attendre le zoom 15
-  map.setPaintProperty("Building", "fill-color", cremeSol);
-  map.setPaintProperty("Building", "fill-opacity", .9);
+  map.setPaintProperty("Building", "fill-color", roseOmbre);
+  map.setPaintProperty("Building", "fill-opacity", .95);
   map.setLayerZoomRange("Building", 0, 15.5);
 
   map.setLayerZoomRange("Building 3D", 13, 24);
-  map.setPaintProperty("Building 3D", "fill-extrusion-color", creme);
-  map.setPaintProperty("Building 3D", "fill-extrusion-opacity", .96);
+  map.setPaintProperty("Building 3D", "fill-extrusion-color", rose);
+  map.setPaintProperty("Building 3D", "fill-extrusion-opacity", 1);
   map.setPaintProperty("Building 3D", "fill-extrusion-height", [
     "interpolate", ["linear"], ["zoom"], 13, 0, 15, ["get", "render_height"]
   ]);
