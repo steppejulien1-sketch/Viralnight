@@ -59,6 +59,10 @@
       }
 
       #map { position: absolute; inset: 0; width: 100%; height: 100%; }
+      /* Le ciel etoile : au-dessus des tuiles (qui peignent un fond
+         uni la ou le globe ne couvre pas l'ecran), en dessous des
+         marqueurs et du chrome de l'appli. */
+      #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
 
       /* MapLibre pose son propre attribution/logo : on les recadre
          pour qu'ils restent lisibles dans le cadre du telephone
@@ -328,6 +332,7 @@
       <div class="screen">
 
         <div id="map"></div>
+        <canvas id="etoiles" aria-hidden="true"></canvas>
 
         <div class="statusbar">
           <span>0:41</span>
@@ -676,7 +681,133 @@ function snapifie() {
 
   // une lumiere rasante pour que le relief des immeubles se voie
   map.setLight({ anchor: "viewport", color: "#fff3df", intensity: .35, position: [1.4, 90, 42] });
+
+  // La carte ne montre que les clubs et les gens — pas les
+  // restaurants, boutiques, musees ni parcs que le fond de carte
+  // affiche par defaut. On coupe toutes les icones/etiquettes de
+  // lieux, sauf les noms de villes/pays qui servent a se reperer
+  // en dezoomant.
+  [
+    "Public", "Sport", "Education", "Tourism", "Culture", "Shopping",
+    "Food", "Transport", "Park", "Healthcare", "Station",
+    "Road labels", "Highway junction", "Highway shield", "Highway shield (US)",
+    "Highway shield interstate top (US)", "Highway shield interstate (US)",
+    "Housenumber", "Oneway", "Gondola", "Ferry",
+    "River labels", "Ocean labels", "Lake labels",
+    "Airport gate", "Airport", "Place labels"
+  ].forEach(function (id) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
+  });
+
+  // Les routes, en version dessinee : un large trait creme-blanc
+  // avec un liseret, plus epais et plus rond qu'une vraie carte
+  // routiere — c'est ce qui fait « jeu vide-ville » plutot que GPS.
+  var ROUTES_PLEINES = ["Motorway", "Trunk", "Primary", "Secondary", "Tertiary", "Minor", "Service", "Street"];
+  ROUTES_PLEINES.forEach(function (id) {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "line-color", "#fbf6ea");
+    map.setPaintProperty(id, "line-opacity", 1);
+  });
+  var CASINGS = ["Motorway casing", "Trunk casing", "Primary casing", "Secondary casing", "Tertiary casing"];
+  CASINGS.forEach(function (id) {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "line-color", "#d8cdb2");
+  });
 }
+
+/* ==========================================================
+   L'ESPACE — etoiles et etoiles filantes derriere le globe.
+   MapLibre peint un ciel uni (voir ambiance()) mais pas d'etoiles :
+   ce calque est un simple canvas pose au-dessus de la carte, qui
+   ne s'affiche qu'au niveau orbite et s'efface des qu'on plonge
+   vers un pays.
+   ========================================================== */
+
+(function () {
+  var cv = document.getElementById("etoiles");
+  var ctx = cv.getContext("2d");
+  var W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
+  var REDUIT = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function dimensionner() {
+    var r = cv.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * DPR; cv.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  dimensionner();
+  window.addEventListener("resize", dimensionner);
+
+  var etoiles = [], filantes = [];
+  (function () {
+    var s = 20260817;
+    function r() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
+    for (var i = 0; i < 140; i++) {
+      etoiles.push({ x: r(), y: r(), r: .6 + r() * 1.5, ph: r() * 6.28, sp: .6 + r() * 1.6 });
+    }
+    for (var j = 0; j < 3; j++) filantes.push(neuve(j * 2.6));
+    function neuve(delai) {
+      return { a: -.55 + Math.random() * .4, v: 9 + Math.random() * 7, len: 110 + Math.random() * 150,
+        x: Math.random() * .8, y: Math.random() * .5,
+        t: -(delai + Math.random() * 4), vie: 1.1 + Math.random() * .5 };
+    }
+    window.__neuve = neuve;
+  })();
+
+  var opacite = 1, dernier = 0, raf = null;
+
+  function dessiner(temps, dt) {
+    ctx.clearRect(0, 0, W, H);
+    if (opacite <= 0) return;
+    ctx.globalAlpha = opacite;
+
+    etoiles.forEach(function (e) {
+      var a = REDUIT ? .7 : .4 + .6 * Math.abs(Math.sin(temps * e.sp + e.ph));
+      ctx.globalAlpha = opacite * a;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(e.x * W, e.y * H, e.r, 0, 6.29); ctx.fill();
+    });
+
+    if (!REDUIT) filantes.forEach(function (f, i) {
+      f.t += dt;
+      if (f.t < 0) return;
+      if (f.t > f.vie) { filantes[i] = window.__neuve(1.5 + Math.random() * 5); return; }
+      var d = f.t * f.v * 60;
+      var hx = f.x * W + Math.cos(f.a) * d, hy = f.y * H - Math.sin(f.a) * d;
+      var tx = hx - Math.cos(f.a) * f.len, ty = hy + Math.sin(f.a) * f.len;
+      var fade = Math.min(1, f.t / .18) * Math.min(1, (f.vie - f.t) / .3) * opacite;
+      var lg = ctx.createLinearGradient(tx, ty, hx, hy);
+      lg.addColorStop(0, "rgba(255,255,255,0)");
+      lg.addColorStop(1, "rgba(255,255,255," + (.9 * fade) + ")");
+      ctx.strokeStyle = lg; ctx.lineWidth = 2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.globalAlpha = fade; ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(hx, hy, 2.2, 0, 6.29); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function boucle(ts) {
+    var t = ts / 1000, dt = dernier ? Math.min(.05, t - dernier) : 0;
+    dernier = t;
+    dessiner(t, dt);
+    raf = requestAnimationFrame(boucle);
+  }
+  raf = requestAnimationFrame(boucle);
+
+  // visible en orbite (zoom tres bas), disparait des qu'on plonge
+  // vers un pays — MapLibre garde le zoom continu, donc un fondu
+  // plutot qu'un seuil net se sent plus naturel.
+  function majOpacite() {
+    var z = map.getZoom();
+    opacite = z < 2 ? 1 : z > 4 ? 0 : 1 - (z - 2) / 2;
+  }
+  // sans cet appel immediat, l'opacite initiale (1) restait figee
+  // jusqu'au premier zoom manuel : les etoiles se voyaient encore
+  // au niveau rue, la carte demarrant directement sur Bruxelles.
+  majOpacite();
+  map.on("zoom", majOpacite);
+})();
 map.on("style.load", function () {
   try { ambiance(); snapifie(); }
   catch (e) { console.error("[carte] exception style.load:", e); }
