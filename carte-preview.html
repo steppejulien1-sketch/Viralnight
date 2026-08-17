@@ -627,25 +627,29 @@ function ambiance() {
        exactement comme ca que les vraies cartes « avec des arbres »
        (Apple Plans, Mapbox Outdoors) font le rendu : une texture,
        pas des milliers d'icones placees a la main. --- */
+/* --- L'arbre du tout premier prototype (le canvas maison, avant
+       MapLibre) : ombre au sol, tronc, puis deux ellipses de
+       feuillage empilees. (x, y) est le point au sol ; l'arbre
+       pousse vers le haut a partir de la, exactement comme dans
+       le prototype d'origine — juste transpose ici en motif de
+       tuile plutot qu'en objets dessinees un par un a la volee. */
 function arbreSur(ctx, x, y, r, teinte) {
-  var vertFonce = teinte === 1 ? "#3f8a3a" : "#4a9646";
-  var vertMoyen = teinte === 1 ? "#5aab4f" : "#63b558";
-  var vertClair = teinte === 1 ? "#7ac765" : "#82cf6e";
+  var s = r / 18;
+  var trunk = "#8a6a45";
+  var leafBot = teinte === 1 ? "#7cba4d" : "#8fcf5e";
+  var leafTop = teinte === 1 ? "#a5d972" : "#b9e28a";
 
-  // ombre projetee au sol, decalee vers le bas-droite
-  ctx.beginPath(); ctx.ellipse(x + r * .35, y + r * .85, r * .95, r * .32, 0, 0, 7);
-  ctx.fillStyle = "rgba(30,55,20,.22)"; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x + 5 * s, y + 3 * s, 15 * s, 6 * s, 0, 0, 7);
+  ctx.fillStyle = "rgba(90,110,80,.16)"; ctx.fill();
 
-  // tronc
-  ctx.fillStyle = "#7a5a38";
-  ctx.fillRect(x - r * .08, y + r * .25, r * .16, r * .55);
+  ctx.fillStyle = trunk;
+  ctx.fillRect(x - 2.6 * s, y - 16 * s, 5.2 * s, 17 * s);
 
-  // trois masses de feuillage qui se chevauchent, du plus
-  // sombre (dessous, a droite) au plus clair (dessus, a gauche)
-  // pour simuler une lumiere qui vient d'en haut a gauche
-  ctx.beginPath(); ctx.arc(x + r * .18, y + r * .05, r * .68, 0, 7); ctx.fillStyle = vertFonce; ctx.fill();
-  ctx.beginPath(); ctx.arc(x - r * .12, y - r * .1, r * .78, 0, 7); ctx.fillStyle = vertMoyen; ctx.fill();
-  ctx.beginPath(); ctx.arc(x - r * .32, y - r * .38, r * .48, 0, 7); ctx.fillStyle = vertClair; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x, y - 32 * s, 15 * s, 21 * s, 0, 0, 7);
+  ctx.fillStyle = leafBot; ctx.fill();
+
+  ctx.beginPath(); ctx.ellipse(x - 3 * s, y - 36 * s, 12 * s, 16 * s, 0, 0, 7);
+  ctx.fillStyle = leafTop; ctx.fill();
 }
 
 /* --- Le motif « foret » : la toute premiere version, celle qui
@@ -654,15 +658,15 @@ function arbreSur(ctx, x, y, r, teinte) {
        tuile plus grande) cassaient ca pendant le zoom continu —
        on revient exactement a ces coordonnees-la. --- */
 function motifArbres() {
-  var s = 160, c = document.createElement("canvas");
+  var s = 190, c = document.createElement("canvas");
   c.width = s; c.height = s;
   var ctx = c.getContext("2d");
 
-  arbreSur(ctx, 38, 46, 22, 1);
-  arbreSur(ctx, 118, 34, 17, 2);
-  arbreSur(ctx, 78, 104, 25, 1);
-  arbreSur(ctx, 140, 122, 16, 2);
-  arbreSur(ctx, 18, 128, 15, 1);
+  arbreSur(ctx, 45, 70, 20, 1);
+  arbreSur(ctx, 135, 60, 15, 2);
+  arbreSur(ctx, 95, 140, 18, 1);
+  arbreSur(ctx, 30, 155, 13, 2);
+  arbreSur(ctx, 158, 150, 15, 1);
 
   return ctx.getImageData(0, 0, s, s);
 }
@@ -675,8 +679,8 @@ function motifArbresClairsemes() {
   c.width = s; c.height = s;
   var ctx = c.getContext("2d");
 
-  arbreSur(ctx, 58, 66, 19, 1);
-  arbreSur(ctx, 176, 150, 16, 2);
+  arbreSur(ctx, 60, 90, 19, 1);
+  arbreSur(ctx, 176, 170, 16, 2);
 
   return ctx.getImageData(0, 0, s, s);
 }
@@ -755,31 +759,45 @@ function snapifie() {
 
   map.setPaintProperty("Water", "fill-color", eau);
 
-  // les batiments : marine/indigo avec des bandes de fenetres
-  // claires (motif-fenetres), plus petits qu'avant — l'extrusion
-  // 3D est reduite de moitie et plafonnee, comme les petits blocs
-  // des captures plutot que de vraies tours.
+  // les batiments : marine/indigo, avec 3 teintes qui alternent
+  // d'un immeuble a l'autre (comme les 3 palettes de toit du tout
+  // premier prototype canvas) — c'est ca qui donne l'impression de
+  // "vrais" batiments distincts plutot que des blocs identiques.
+  var indigo2 = "#3d4068", indigo3 = "#2c2e4e";
+  var teinteBatiment = [
+    "step", ["%", ["id"], 3],
+    indigo, 1, indigo2, 2, indigo3
+  ];
   map.setPaintProperty("Building", "fill-color", indigo);
   map.setPaintProperty("Building", "fill-opacity", .95);
   map.setLayerZoomRange("Building", 0, 15.5);
 
   map.setLayerZoomRange("Building 3D", 13, 24);
-  map.setPaintProperty("Building 3D", "fill-extrusion-color", indigoClair);
+  try {
+    map.setPaintProperty("Building 3D", "fill-extrusion-color", teinteBatiment);
+  } catch (e) {
+    map.setPaintProperty("Building 3D", "fill-extrusion-color", indigoClair);
+  }
   map.setPaintProperty("Building 3D", "fill-extrusion-opacity", 1);
+  // fill-extrusion-pattern essaye puis abandonne : sur des petits
+  // batiments, la texture ne se plaque pas facade par facade mais
+  // s'etire selon les coordonnees monde, ce qui donne un effet
+  // moire (petits carreaux) quelle que soit la taille de la tuile —
+  // limite du moteur, pas un reglage a corriger. La variete de
+  // teintes ci-dessus + le degrade font le travail de detail a la place.
   // le degrade vertical assombrit la base et eclaircit le sommet —
   // c'est la principale source de relief ici : les proprietes plus
   // recentes (ambient occlusion, flood-light) ne sont pas supportees
-  // par la version du style-spec que sert ce moteur (testee : chaque
-  // appel leve une exception), on ne s'appuie donc que sur ca et sur
-  // la lumiere ci-dessous.
+  // par la version du style-spec que sert ce moteur (teste : chaque
+  // appel leve une exception).
   map.setPaintProperty("Building 3D", "fill-extrusion-vertical-gradient", true);
-  // trop hauts au dernier essai (.65, plafond 48) : on revient a des
-  // petits blocs, sous meme le tout premier reglage, avec un plafond
-  // bas pour eviter les immeubles qui dominent la carte
+  // ni trop hauts (essai precedent : .65/48, ecrasait la carte) ni
+  // trop plats (.42/26, tous les immeubles a la meme hauteur) — un
+  // reglage entre les deux, qui garde un peu de variete de silhouette
   map.setPaintProperty("Building 3D", "fill-extrusion-height", [
     "interpolate", ["linear"], ["zoom"],
     13, 0,
-    15, ["min", 26, ["*", ["get", "render_height"], .42]]
+    15, ["min", 34, ["*", ["get", "render_height"], .5]]
   ]);
 
   // la lumiere plus forte reste : c'est le volume des blocs qui
