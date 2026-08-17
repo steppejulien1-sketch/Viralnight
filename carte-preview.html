@@ -648,21 +648,21 @@ function arbreSur(ctx, x, y, r, teinte) {
   ctx.beginPath(); ctx.arc(x - r * .32, y - r * .38, r * .48, 0, 7); ctx.fillStyle = vertClair; ctx.fill();
 }
 
-/* --- Le motif « foret » : des arbres bien separes, avec de l'espace
-       vert entre chacun — a densite trop forte (essai precedent, 8
-       arbres serres) les canopees se touchent et le rendu tuile en
-       un seul « buisson » flou plutot que des arbres qu'on distingue,
-       comme sur Snap Map ou chaque arbre reste un rond net et isole. */
+/* --- Le motif « foret » : la toute premiere version, celle qui
+       tenait bien au zoom sans que les arbres se divisent en
+       buisson flou. Les essais suivants (plus d'arbres par tuile,
+       tuile plus grande) cassaient ca pendant le zoom continu —
+       on revient exactement a ces coordonnees-la. --- */
 function motifArbres() {
-  var s = 190, c = document.createElement("canvas");
+  var s = 160, c = document.createElement("canvas");
   c.width = s; c.height = s;
   var ctx = c.getContext("2d");
 
-  arbreSur(ctx, 42, 44, 19, 1);
-  arbreSur(ctx, 138, 38, 15, 2);
-  arbreSur(ctx, 90, 100, 18, 1);
-  arbreSur(ctx, 30, 140, 14, 2);
-  arbreSur(ctx, 155, 132, 15, 1);
+  arbreSur(ctx, 38, 46, 22, 1);
+  arbreSur(ctx, 118, 34, 17, 2);
+  arbreSur(ctx, 78, 104, 25, 1);
+  arbreSur(ctx, 140, 122, 16, 2);
+  arbreSur(ctx, 18, 128, 15, 1);
 
   return ctx.getImageData(0, 0, s, s);
 }
@@ -734,15 +734,22 @@ function snapifie() {
   // des arbres eparpilles sur les zones residentielles et les
   // pelouses (fond transparent, juste les arbres) — c'est ce qui
   // manquait le plus par rapport aux references : sur Snap Map, les
-  // arbres ne sont pas confines aux forets, ils sont partout.
+  // arbres ne sont pas confines aux forets, ils sont partout. Pour
+  // "plus d'arbres" sans revenir a l'effet buisson, on etend cette
+  // meme tuile eparse a davantage de zones plutot que de la densifier.
   map.addLayer({
     id: "Texture arbres residentiel", type: "fill", source: "maptiler_planet", "source-layer": "landuse",
-    filter: ["in", "class", "residential", "suburbs", "neighbourhood"],
+    filter: ["in", "class", "residential", "suburbs", "neighbourhood", "cemetery", "school", "college", "university"],
     paint: { "fill-pattern": "motif-arbres-clairsemes" }
   }, "Building");
   map.addLayer({
     id: "Texture arbres pelouse", type: "fill", source: "maptiler_planet", "source-layer": "landcover",
-    filter: ["==", "class", "grass"],
+    filter: ["in", "class", "grass", "scrub"],
+    paint: { "fill-pattern": "motif-arbres-clairsemes" }
+  }, "Building");
+  map.addLayer({
+    id: "Texture arbres pietonne", type: "fill", source: "maptiler_planet", "source-layer": "landuse",
+    filter: ["==", "class", "pedestrian"],
     paint: { "fill-pattern": "motif-arbres-clairsemes" }
   }, "Building");
 
@@ -766,16 +773,17 @@ function snapifie() {
   // appel leve une exception), on ne s'appuie donc que sur ca et sur
   // la lumiere ci-dessous.
   map.setPaintProperty("Building 3D", "fill-extrusion-vertical-gradient", true);
-  // un peu plus de volume qu'avant (les blocs restaient tres plats),
-  // en gardant un plafond raisonnable pour ne pas retomber sur des tours
+  // trop hauts au dernier essai (.65, plafond 48) : on revient a des
+  // petits blocs, sous meme le tout premier reglage, avec un plafond
+  // bas pour eviter les immeubles qui dominent la carte
   map.setPaintProperty("Building 3D", "fill-extrusion-height", [
     "interpolate", ["linear"], ["zoom"],
     13, 0,
-    15, ["min", 48, ["*", ["get", "render_height"], .65]]
+    15, ["min", 26, ["*", ["get", "render_height"], .42]]
   ]);
 
-  // une lumiere plus forte et plus rasante : elle creuse vraiment
-  // les faces des immeubles au lieu de les laisser presque plates
+  // la lumiere plus forte reste : c'est le volume des blocs qui
+  // etait le probleme, pas le relief/l'ombrage
   map.setLight({ anchor: "viewport", color: "#fff6e6", intensity: .68, position: [1.15, 75, 52] });
 
   // un fin trait a la base de chaque immeuble — separe nettement
