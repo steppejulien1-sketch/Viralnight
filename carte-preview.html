@@ -7,441 +7,340 @@
     <meta name="robots" content="noindex" />
     <title>Carte ViralNight — preview</title>
     <style>
-  /* ============================================================
-     CARTE VIRALNIGHT — quatre niveaux de zoom, comme Snap Map.
+      /* ============================================================
+         CARTE VIRALNIGHT — moteur MapLibre GL JS + MapTiler.
+         Une vraie carte : on glisse a la souris/au doigt, on zoome
+         a la molette/au pincement jusqu'au village, on tourne au
+         clic droit ou a deux doigts. Le globe 3D et la carte plate
+         sont tous deux fournis par MapLibre — plus de canvas maison.
+         ============================================================ */
 
-       Terre     espace, etoiles filantes, globe
-       Europe    les pays
-       Belgique  les villes
-       Bruxelles la ville en 3D isometrique
+      :root {
+        --page:      #0b0d11;
+        --page-2:    #14171d;
+        --page-line: rgba(255,255,255,.09);
+        --page-ink:  #edeff4;
+        --page-ink2: #99a1b0;
+        --page-ink3: #6a7280;
+        --red:       #ff2f45;
+        --green:     #3f9c6d;
+        --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+      }
 
-     Regle qui tient les quatre niveaux ensemble : la pastille
-     porte TOUJOURS le nombre de personnes en soiree a cet
-     instant. Un club s'agrege en ville, une ville en pays, un
-     pays en continent — donc les clubs restent representes,
-     meme depuis l'orbite.
-     ============================================================ */
+      * { box-sizing: border-box; }
 
-  :root {
-    --page:      #0b0d11;
-    --page-2:    #14171d;
-    --page-line: rgba(255,255,255,.09);
-    --page-ink:  #edeff4;
-    --page-ink2: #99a1b0;
-    --page-ink3: #6a7280;
+      body {
+        margin: 0; background: var(--page); color: var(--page-ink);
+        font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
+      }
 
-    --ground:    #eaf4e1;
-    --halo:      #eaf4e1;
-    --red:       #ff2f45;
-    --green:     #3f9c6d;
+      .wrap { max-width: 1000px; margin: 0 auto; padding: 54px 22px 110px; }
 
-    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
-  }
+      .kicker {
+        display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
+        text-transform: uppercase; color: var(--page-ink3); margin-bottom: 15px;
+      }
+      h1 { margin: 0 0 14px; font-size: clamp(32px, 5.4vw, 54px); font-weight: 800; letter-spacing: -.042em; line-height: 1; text-wrap: balance; }
+      .lede { margin: 0; font-size: 17px; color: var(--page-ink2); max-width: 62ch; }
 
-  * { box-sizing: border-box; }
+      .stage { display: flex; justify-content: center; padding: 40px 0 48px; }
 
-  body {
-    margin: 0; background: var(--page); color: var(--page-ink);
-    font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
-  }
+      /* ---------------- Telephone ---------------- */
 
-  .wrap { max-width: 1000px; margin: 0 auto; padding: 54px 22px 110px; }
+      .phone {
+        width: 360px; height: 760px; border-radius: 48px; background: #000;
+        padding: 5px; flex: 0 0 auto;
+        box-shadow: 0 44px 100px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
+      }
+      .screen {
+        position: relative; width: 100%; height: 100%; border-radius: 43px;
+        overflow: hidden; background: #1a1d24; user-select: none;
+      }
 
-  .kicker {
-    display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
-    text-transform: uppercase; color: var(--page-ink3); margin-bottom: 15px;
-  }
-  h1 { margin: 0 0 14px; font-size: clamp(32px, 5.4vw, 54px); font-weight: 800; letter-spacing: -.042em; line-height: 1; text-wrap: balance; }
-  .lede { margin: 0; font-size: 17px; color: var(--page-ink2); max-width: 62ch; }
+      #map { position: absolute; inset: 0; width: 100%; height: 100%; }
+      /* Le ciel etoile : au-dessus des tuiles (qui peignent un fond
+         uni la ou le globe ne couvre pas l'ecran), en dessous des
+         marqueurs et du chrome de l'appli. */
+      #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+      /* Les arbres : plus un motif de tuile MapLibre (ca repetait les
+         5 memes arbres a l'identique, effet grille tres visible),
+         mais un calque dessine a la main par-dessus la carte,
+         exactement comme le tout premier prototype canvas — chaque
+         arbre est un objet independant, positionne et redessine a
+         chaque mouvement de carte. */
+      #arbres { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 
-  .stage { display: flex; justify-content: center; padding: 40px 0 48px; }
+      /* MapLibre pose son propre attribution/logo : on les recadre
+         pour qu'ils restent lisibles dans le cadre du telephone
+         sans deborder sur la barre d'onglets. */
+      .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left { bottom: 92px !important; }
+      .maplibregl-ctrl-attrib { font-size: 9.5px !important; background: rgba(15,17,22,.55) !important; }
+      .maplibregl-ctrl-attrib a { color: rgba(255,255,255,.7) !important; }
+      .maplibregl-popup { display: none; } /* on utilise notre propre feuille, pas les bulles MapLibre */
+      .maplibregl-ctrl-logo { display: none !important; }
 
-  /* ================= TELEPHONE ================= */
+      /* ---------------- Barre d'etat ---------------- */
 
-  .phone {
-    width: 360px; height: 760px; border-radius: 48px; background: #000;
-    padding: 5px; flex: 0 0 auto;
-    box-shadow: 0 44px 100px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
-  }
-  .screen {
-    position: relative; width: 100%; height: 100%; border-radius: 43px;
-    overflow: hidden; background: var(--ground); user-select: none; color: #22262c;
-    transition: background .3s;
-  }
-  .screen.space { background: #05060a; }
+      .statusbar {
+        position: absolute; top: 0; left: 0; right: 0; height: 54px; z-index: 30;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 26px; font-size: 16px; font-weight: 700; color: #fff; pointer-events: none;
+        text-shadow: 0 1px 6px rgba(0,0,0,.5);
+      }
+      .statusbar .right { display: flex; align-items: center; gap: 6px; }
+      .bars { display: flex; align-items: flex-end; gap: 2px; height: 11px; }
+      .bars i { width: 3px; background: currentColor; border-radius: 1px; display: block; }
+      .bars i:nth-child(1){height:4px} .bars i:nth-child(2){height:6.5px}
+      .bars i:nth-child(3){height:9px} .bars i:nth-child(4){height:11px;opacity:.28}
+      .batt { width: 25px; height: 12px; border: 1.6px solid currentColor; border-radius: 3.5px; padding: 1.6px; }
+      .batt span { display: block; height: 100%; width: 74%; background: currentColor; border-radius: 1px; }
 
-  /* Le calque qui porte carte + marqueurs : c'est lui qu'on
-     anime au changement de niveau, pour que le zoom se sente. */
-  .mapwrap { position: absolute; inset: 0; }
-  #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  #layer { position: absolute; inset: 0; }
+      /* ---------------- Coin superieur ---------------- */
 
-  /* ---- Barre d'etat ---- */
-  .statusbar {
-    position: absolute; top: 0; left: 0; right: 0; height: 54px; z-index: 30;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 26px; font-size: 16px; font-weight: 700; color: #16191e; pointer-events: none;
-  }
-  .screen.space .statusbar { color: #fff; }
-  .statusbar .right { display: flex; align-items: center; gap: 6px; }
-  .bars { display: flex; align-items: flex-end; gap: 2px; height: 11px; }
-  .bars i { width: 3px; background: currentColor; border-radius: 1px; display: block; }
-  .bars i:nth-child(1){height:4px} .bars i:nth-child(2){height:6.5px}
-  .bars i:nth-child(3){height:9px} .bars i:nth-child(4){height:11px;opacity:.28}
-  .batt { width: 25px; height: 12px; border: 1.6px solid currentColor; border-radius: 3.5px; padding: 1.6px; }
-  .batt span { display: block; height: 100%; width: 74%; background: currentColor; border-radius: 1px; }
+      .me-btn {
+        position: absolute; top: 62px; left: 16px; z-index: 26;
+        width: 56px; height: 56px; border-radius: 50%; background: #fff;
+        border: 0; padding: 0; cursor: pointer; box-shadow: 0 3px 12px rgba(0,0,0,.35);
+        display: grid; place-items: center;
+      }
+      .me-btn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
+      .me-btn svg { width: 34px; height: 44px; display: block; }
+      .me-btn .dot {
+        position: absolute; top: 1px; right: 1px; width: 14px; height: 14px;
+        border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
+      }
 
-  /* ---- Coin superieur ---- */
-  .me-btn {
-    position: absolute; top: 62px; left: 16px; z-index: 26;
-    width: 56px; height: 56px; border-radius: 50%; background: #fff;
-    border: 0; padding: 0; cursor: pointer; box-shadow: 0 3px 12px rgba(0,0,0,.2);
-    display: grid; place-items: center;
-  }
-  .me-btn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
-  .me-btn svg { width: 34px; height: 44px; display: block; }
-  .me-btn .dot {
-    position: absolute; top: 1px; right: 1px; width: 14px; height: 14px;
-    border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
-  }
+      .place { position: absolute; top: 60px; right: 18px; z-index: 26; text-align: right; pointer-events: none; }
+      .place b { display: block; font-size: 25px; font-weight: 700; letter-spacing: -.03em; color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.5); }
+      .place span { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,.8); text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+      .place svg { width: 18px; height: 18px; fill: currentColor; }
 
-  .place { position: absolute; top: 60px; right: 18px; z-index: 26; text-align: right; pointer-events: none; }
-  .place b { display: block; font-size: 27px; font-weight: 700; letter-spacing: -.03em; color: #16191e; }
-  .screen.space .place b { color: #fff; }
-  .place span { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 15px; font-weight: 600; color: #3b4048; }
-  .screen.space .place span { color: rgba(255,255,255,.6); }
-  .place svg { width: 19px; height: 19px; fill: currentColor; }
+      /* ---------------- Filtres ---------------- */
 
-  /* ---- Filtres ---- */
-  .filters {
-    position: absolute; top: 128px; left: 0; right: 0; z-index: 25;
-    display: flex; gap: 9px; padding: 0 14px; overflow-x: auto; scrollbar-width: none;
-  }
-  .filters::-webkit-scrollbar { display: none; }
-  .filt {
-    flex: 0 0 auto; display: flex; align-items: center; gap: 7px; background: #fff;
-    border: 0; border-radius: 999px; padding: 9px 15px; cursor: pointer;
-    font-family: inherit; font-size: 14px; font-weight: 700; color: #1b1f25;
-    letter-spacing: -.01em; box-shadow: 0 2px 9px rgba(0,0,0,.14);
-  }
-  .filt:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; }
-  .filt svg { width: 16px; height: 16px; }
-  .filt.on { background: var(--red); color: #fff; }
+      .filters {
+        position: absolute; top: 128px; left: 0; right: 0; z-index: 25;
+        display: flex; gap: 9px; padding: 0 14px; overflow-x: auto; scrollbar-width: none;
+      }
+      .filters::-webkit-scrollbar { display: none; }
+      .filt {
+        flex: 0 0 auto; display: flex; align-items: center; gap: 7px; background: #fff;
+        border: 0; border-radius: 999px; padding: 9px 15px; cursor: pointer;
+        font-family: inherit; font-size: 14px; font-weight: 700; color: #1b1f25;
+        letter-spacing: -.01em; box-shadow: 0 2px 9px rgba(0,0,0,.14);
+      }
+      .filt:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; }
+      .filt svg { width: 16px; height: 16px; }
+      .filt.on { background: var(--red); color: #fff; }
 
-  /* ---- Bascule 2D/3D : seulement au niveau ville ---- */
-  .dim {
-    position: absolute; top: 180px; left: 50%; transform: translateX(-50%);
-    z-index: 25; display: flex; align-items: center; gap: 2px; background: #fff;
-    border-radius: 999px; padding: 4px; box-shadow: 0 2px 9px rgba(0,0,0,.16);
-  }
-  .dim[hidden] { display: none; }
-  .dim button {
-    border: 0; background: none; cursor: pointer; font-family: inherit;
-    font-size: 14px; font-weight: 800; color: #1b1f25; padding: 5px 14px; border-radius: 999px;
-  }
-  .dim button.on { background: #2aa3f0; color: #fff; }
-  .dim button:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; }
+      /* ---------------- Bascule globe / plat ---------------- */
 
-  /* ---- Etiquettes ---- */
-  .lbl {
-    position: absolute; z-index: 12; transform: translate(-50%, -50%);
-    pointer-events: none; text-align: center;
-    font-size: 12px; font-weight: 600; color: #8b94a0;
-    text-shadow: 0 0 3px var(--halo), 0 0 7px var(--halo);
-  }
-  .lbl.sea { color: #7fb4d8; text-shadow: 0 0 3px #dcecf7, 0 0 7px #dcecf7; letter-spacing: .06em; }
-  .lbl.void { color: rgba(255,255,255,.34); text-shadow: none; letter-spacing: .1em; text-transform: uppercase; font-size: 10.5px; }
-  .street {
-    position: absolute; z-index: 11; transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
-    font-size: 11.5px; font-weight: 600; color: #a6aeb9; letter-spacing: .03em;
-    white-space: nowrap; pointer-events: none;
-    text-shadow: 0 0 3px var(--halo), 0 0 6px var(--halo);
-  }
-  .shield {
-    position: absolute; z-index: 12; transform: translate(-50%, -50%); background: #fff;
-    border: 1.5px solid #8e9bb0; border-radius: 5px; padding: 1px 6px;
-    font-size: 11px; font-weight: 700; color: #4a5568; pointer-events: none;
-  }
+      .dim {
+        position: absolute; top: 180px; left: 50%; transform: translateX(-50%);
+        z-index: 25; display: flex; align-items: center; gap: 2px; background: #fff;
+        border-radius: 999px; padding: 4px; box-shadow: 0 2px 9px rgba(0,0,0,.16);
+      }
+      .dim button {
+        border: 0; background: none; cursor: pointer; font-family: inherit;
+        font-size: 14px; font-weight: 800; color: #1b1f25; padding: 5px 14px; border-radius: 999px;
+      }
+      .dim button.on { background: #2aa3f0; color: #fff; }
+      .dim button:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; }
 
-  /* ---- Pastille : le meme objet aux quatre niveaux ---- */
-  .spot {
-    position: absolute; z-index: 15; transform: translate(-50%, -25px);
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
-  }
-  .spot:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 4px; border-radius: 14px; }
+      /* ---------------- Marqueur de club ---------------- */
 
-  .spot-badge {
-    border-radius: 999px; background: var(--c); border: 3px solid #fff;
-    box-shadow: 0 3px 10px rgba(0,0,0,.3);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: #fff; flex: 0 0 auto; position: relative; line-height: 1;
-    width: var(--d, 50px); height: var(--d, 50px);
-  }
-  .spot-badge b { font-size: var(--fs, 17px); font-weight: 800; letter-spacing: -.04em; }
-  .spot-badge i { font-style: normal; font-size: 8px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 1px; }
-  .spot-badge.shut { background: #fff; color: #7b828c; border-color: #d9dde3; }
+      .club-badge {
+        width: 50px; height: 50px; border-radius: 50%;
+        background: var(--c); border: 3px solid #fff;
+        box-shadow: 0 3px 10px rgba(0,0,0,.35);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: #fff; position: relative; line-height: 1; cursor: pointer;
+      }
+      .club-badge b { font-size: 17px; font-weight: 800; letter-spacing: -.04em; }
+      .club-badge i { font-style: normal; font-size: 8px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 1px; }
+      .club-badge.shut { background: #fff; color: #7b828c; border-color: #d9dde3; }
+      .club-badge.hot::after {
+        content: ""; position: absolute; inset: -3px; border-radius: 50%;
+        border: 2.5px solid var(--c); animation: ping 2.6s cubic-bezier(.2,.6,.35,1) infinite;
+      }
+      @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
 
-  .spot-txt { text-align: center; max-width: var(--tw, 96px); }
-  .spot-txt b {
-    display: block; font-size: 13px; font-weight: 800; color: #1f242c; line-height: 1.1;
-    letter-spacing: -.015em; text-shadow: 0 0 3px var(--halo), 0 0 6px var(--halo);
-  }
-  .spot-txt small {
-    display: block; font-size: 10.5px; font-weight: 700; color: var(--c); line-height: 1.2;
-    margin-top: 1px; text-shadow: 0 0 3px var(--halo), 0 0 6px var(--halo);
-  }
-  .spot-txt small.mute { color: #8b929c; }
+      .friend-marker { width: 40px; height: 52px; cursor: pointer; }
+      .friend-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
 
-  /* En orbite, le halo blanc et l'ombre portee ne fonctionnent
-     plus : le fond est noir. On inverse. */
-  .screen.space .spot-badge { border-color: rgba(255,255,255,.9); box-shadow: 0 0 18px var(--c); }
-  .screen.space .spot-txt b { color: #fff; text-shadow: 0 1px 6px #000, 0 0 12px #000; }
-  .screen.space .spot-txt small { text-shadow: 0 1px 6px #000, 0 0 12px #000; }
-  .screen.space .spot-txt small.mute { color: rgba(255,255,255,.55); }
+      /* ---------------- Colonne de boutons ---------------- */
 
-  .spot-badge.hot::after {
-    content: ""; position: absolute; inset: -3px; border-radius: 50%;
-    border: 2.5px solid var(--c); animation: ping 2.6s cubic-bezier(.2,.6,.35,1) infinite;
-  }
-  @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
+      .rail {
+        position: absolute; right: 13px; top: 51%; transform: translateY(-44%);
+        z-index: 24; display: flex; flex-direction: column; gap: 11px; align-items: center;
+      }
+      .rbtn {
+        width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 0;
+        padding: 0; cursor: pointer; display: grid; place-items: center; position: relative;
+        box-shadow: 0 3px 11px rgba(0,0,0,.24);
+      }
+      .rbtn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
+      .rbtn svg.ico { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .rbtn svg.pint { width: 30px; height: 39px; }
+      .rbtn .dot {
+        position: absolute; right: 0; bottom: 1px; width: 13px; height: 13px;
+        border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
+      }
 
-  .glow {
-    position: absolute; z-index: 9; width: 190px; height: 130px;
-    transform: translate(-50%, -50%); pointer-events: none;
-    background: radial-gradient(50% 50% at 50% 50%, rgba(255,47,69,.2), transparent 70%);
-  }
+      .zoom {
+        width: 52px; border-radius: 26px; background: #fff; box-shadow: 0 3px 11px rgba(0,0,0,.24);
+        display: flex; flex-direction: column; overflow: hidden;
+      }
+      .zoom button {
+        height: 46px; border: 0; background: none; cursor: pointer; display: grid; place-items: center;
+        font-family: inherit; color: #1b1f25;
+      }
+      .zoom button:focus-visible { outline: 3px solid #1d7fd6; outline-offset: -3px; }
+      .zoom button + button { border-top: 1px solid #ecedf0; }
+      .zoom svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
 
-  /* ---- Pinte d'ami ---- */
-  .mate {
-    position: absolute; z-index: 18; transform: translate(-50%, -100%);
-    display: flex; flex-direction: column; align-items: center;
-    background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
-  }
-  .mate:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 4px; border-radius: 14px; }
-  .mate .pint { width: 52px; height: 68px; display: block; filter: drop-shadow(0 4px 5px rgba(40,60,35,.26)); animation: bob 3.4s ease-in-out infinite; }
-  .mate.big .pint { width: 62px; height: 81px; }
-  .mate.tiny .pint { width: 30px; height: 39px; filter: drop-shadow(0 0 6px rgba(255,220,140,.5)); }
-  .mate:nth-of-type(even) .pint { animation-delay: -1.7s; }
-  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+      .compass { position: relative; }
+      .compass .needle {
+        position: absolute; top: 4px; left: 50%; margin-left: -3px; width: 0; height: 0;
+        border-left: 3.5px solid transparent; border-right: 3.5px solid transparent; border-bottom: 7px solid var(--red);
+        transform-origin: 3.5px 21px; pointer-events: none;
+      }
+      .compass .ring { width: 32px; height: 32px; border-radius: 50%; border: 1.5px dashed #c6cbd3; }
+      .compass .n { position: absolute; font-size: 12px; font-weight: 800; color: #1b1f25; }
 
-  .mate-tag {
-    margin-top: 1px; background: #fff; border-radius: 8px; padding: 4px 10px;
-    font-size: 12.5px; font-weight: 800; color: #1b1f25;
-    box-shadow: 0 2px 8px rgba(0,0,0,.24); white-space: nowrap;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .mate.tiny .mate-tag { padding: 2px 7px; font-size: 10.5px; }
-  .mate-tag em { font-style: normal; font-weight: 700; font-size: 11.5px; color: #97a0ac; }
-  .mate-tag em.now { color: var(--green); }
+      /* ---------------- Pastille d'activite ---------------- */
 
-  @media (prefers-reduced-motion: reduce) {
-    .mate .pint { animation: none; }
-    .spot-badge.hot::after { animation: none; opacity: .45; }
-  }
+      .status-pill {
+        position: absolute; left: 14px; bottom: 184px; z-index: 24; background: var(--green);
+        color: #fff; border-radius: 999px; padding: 10px 18px 10px 14px; font-size: 14px;
+        font-weight: 700; display: flex; align-items: center; gap: 9px; box-shadow: 0 3px 13px rgba(0,0,0,.28);
+      }
+      .status-pill svg { width: 16px; height: 16px; fill: #fff; }
 
-  /* ---- Colonne de boutons ---- */
-  .rail {
-    position: absolute; right: 13px; top: 51%; transform: translateY(-44%);
-    z-index: 24; display: flex; flex-direction: column; gap: 11px; align-items: center;
-  }
-  .rbtn {
-    width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 0;
-    padding: 0; cursor: pointer; display: grid; place-items: center; position: relative;
-    box-shadow: 0 3px 11px rgba(0,0,0,.24);
-  }
-  .rbtn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
-  .rbtn svg.ico { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-  .rbtn svg.pint { width: 30px; height: 39px; }
-  .rbtn .dot {
-    position: absolute; right: 0; bottom: 1px; width: 13px; height: 13px;
-    border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
-  }
+      /* ---------------- Rail d'amis ---------------- */
 
-  /* Le zoom : deux boutons empiles, comme une vraie carte */
-  .zoom {
-    width: 52px; border-radius: 26px; background: #fff; box-shadow: 0 3px 11px rgba(0,0,0,.24);
-    display: flex; flex-direction: column; overflow: hidden;
-  }
-  .zoom button {
-    height: 46px; border: 0; background: none; cursor: pointer; display: grid; place-items: center;
-    font-family: inherit; color: #1b1f25;
-  }
-  .zoom button:disabled { opacity: .3; cursor: default; }
-  .zoom button:focus-visible { outline: 3px solid #1d7fd6; outline-offset: -3px; }
-  .zoom button + button { border-top: 1px solid #ecedf0; }
-  .zoom svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+      .friend-rail {
+        position: absolute; left: 0; right: 0; bottom: 92px; z-index: 24;
+        display: flex; gap: 9px; padding: 0 12px; overflow-x: auto; scrollbar-width: none;
+      }
+      .friend-rail::-webkit-scrollbar { display: none; }
+      .fr {
+        flex: 0 0 auto; background: none; border: 0; padding: 0; cursor: pointer;
+        display: flex; flex-direction: column; align-items: center; gap: 3px; width: 54px;
+      }
+      .fr:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; border-radius: 12px; }
+      .fr .bub {
+        width: 52px; height: 52px; border-radius: 50%; background: #fff;
+        box-shadow: 0 3px 10px rgba(0,0,0,.22); display: grid; place-items: center; overflow: hidden;
+      }
+      .fr .bub svg.pint { width: 27px; height: 35px; }
+      .fr .bub svg.plus { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .fr b {
+        font-size: 10.5px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6);
+        max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
 
-  .compass { position: relative; }
-  .compass .needle {
-    position: absolute; top: 4px; left: 50%; margin-left: -3px; width: 0; height: 0;
-    border-left: 3.5px solid transparent; border-right: 3.5px solid transparent; border-bottom: 7px solid var(--red);
-  }
-  .compass .ring { width: 32px; height: 32px; border-radius: 50%; border: 1.5px dashed #c6cbd3; }
-  .compass .n { position: absolute; font-size: 12px; font-weight: 800; color: #1b1f25; }
+      /* ---------------- Onglets ---------------- */
 
-  /* ---- Pastille d'activite ---- */
-  .status-pill {
-    position: absolute; left: 14px; bottom: 184px; z-index: 24; background: var(--green);
-    color: #fff; border-radius: 999px; padding: 10px 18px 10px 14px; font-size: 14px;
-    font-weight: 700; display: flex; align-items: center; gap: 9px; box-shadow: 0 3px 13px rgba(0,0,0,.28);
-  }
-  .status-pill[hidden] { display: none; }
-  .status-pill svg { width: 16px; height: 16px; fill: #fff; }
+      .tabs {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
+        background: #fff; border-top: 1px solid rgba(0,0,0,.07);
+        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
+      }
+      .tab { display: grid; place-items: center; background: none; border: 0; cursor: pointer; position: relative; padding: 0; }
+      .tab:focus-visible { outline: 3px solid #1d7fd6; outline-offset: -3px; border-radius: 10px; }
+      .tab svg { width: 28px; height: 28px; stroke: #1b1f25; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; }
+      .tab.on svg { stroke: var(--red); }
+      .tab .badge { position: absolute; top: -4px; right: 50%; margin-right: -21px; width: 11px; height: 11px; border-radius: 50%; background: var(--red); }
 
-  /* ---- Rail d'amis ---- */
-  .friend-rail {
-    position: absolute; left: 0; right: 0; bottom: 92px; z-index: 24;
-    display: flex; gap: 9px; padding: 0 12px; overflow-x: auto; scrollbar-width: none;
-  }
-  .friend-rail::-webkit-scrollbar { display: none; }
-  .fr {
-    flex: 0 0 auto; background: none; border: 0; padding: 0; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; gap: 3px; width: 54px;
-  }
-  .fr:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; border-radius: 12px; }
-  .fr .bub {
-    width: 52px; height: 52px; border-radius: 50%; background: #fff;
-    box-shadow: 0 3px 10px rgba(0,0,0,.22); display: grid; place-items: center; overflow: hidden;
-  }
-  .fr .bub svg.pint { width: 27px; height: 35px; }
-  .fr .bub svg.plus { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-  .fr b {
-    font-size: 10.5px; font-weight: 700; color: #2b3039; text-shadow: 0 0 3px #fff, 0 0 6px #fff;
-    max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .screen.space .fr b { color: #fff; text-shadow: 0 1px 5px #000; }
+      /* ---------------- Feuille du club ---------------- */
 
-  /* ---- Onglets ---- */
-  .tabs {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
-    background: #fff; border-top: 1px solid rgba(0,0,0,.07);
-    display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
-  }
-  .tab { display: grid; place-items: center; background: none; border: 0; cursor: pointer; position: relative; padding: 0; }
-  .tab:focus-visible { outline: 3px solid #1d7fd6; outline-offset: -3px; border-radius: 10px; }
-  .tab svg { width: 28px; height: 28px; stroke: #1b1f25; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; }
-  .tab.on svg { stroke: var(--red); }
-  .tab .badge { position: absolute; top: -4px; right: 50%; margin-right: -21px; width: 11px; height: 11px; border-radius: 50%; background: var(--red); }
+      .sheet {
+        position: absolute; left: 0; right: 0; bottom: 88px; z-index: 34; background: #fff;
+        border-radius: 24px 24px 0 0; padding: 10px 20px 22px; box-shadow: 0 -14px 44px rgba(0,0,0,.26);
+        transform: translateY(calc(100% + 94px)); transition: transform .36s cubic-bezier(.22,.75,.3,1);
+      }
+      .sheet.up { transform: translateY(0); }
+      @media (prefers-reduced-motion: reduce) { .sheet { transition: none; } }
 
-  /* ---- Feuille du club ---- */
-  .sheet {
-    position: absolute; left: 0; right: 0; bottom: 88px; z-index: 34; background: #fff;
-    border-radius: 24px 24px 0 0; padding: 10px 20px 22px; box-shadow: 0 -14px 44px rgba(0,0,0,.26);
-    transform: translateY(calc(100% + 94px)); transition: transform .36s cubic-bezier(.22,.75,.3,1);
-  }
-  .sheet.up { transform: translateY(0); }
-  @media (prefers-reduced-motion: reduce) { .sheet { transition: none; } }
+      .grab { width: 40px; height: 4.5px; border-radius: 99px; background: #dcdfe4; margin: 0 auto 15px; }
+      .sheet-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+      .sheet-top .club-badge { width: 54px; height: 54px; box-shadow: none; border-width: 0; cursor: default; }
+      .sheet-top .club-badge b { font-size: 19px; }
+      .sheet-id { flex: 1; min-width: 0; }
+      .sheet-id strong { display: block; font-size: 19px; font-weight: 800; letter-spacing: -.025em; color: #14171c; }
+      .sheet-id span { font-size: 13px; color: #767d88; font-weight: 600; }
+      .sheet-close {
+        width: 32px; height: 32px; border-radius: 50%; background: #f0f1f4; border: 0;
+        cursor: pointer; display: grid; place-items: center; flex: 0 0 auto;
+      }
+      .sheet-close:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; }
+      .sheet-close svg { width: 15px; height: 15px; stroke: #4a515c; stroke-width: 2.4; fill: none; stroke-linecap: round; }
+      .sheet-chips { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
+      .chip { font-size: 12px; font-weight: 700; color: #3d444f; background: #f0f1f4; border-radius: 999px; padding: 5px 11px; }
+      .chip.warm { background: rgba(255,47,69,.11); color: #d31730; }
+      .who { display: flex; align-items: center; gap: 9px; margin-bottom: 16px; }
+      .who .stack { display: flex; }
+      .who .stack span {
+        width: 30px; height: 30px; border-radius: 50%; overflow: hidden; border: 2.5px solid #fff;
+        margin-left: -10px; background: #f3f4f6; display: grid; place-items: center;
+      }
+      .who .stack span:first-child { margin-left: 0; }
+      .who .stack svg { width: 15px; height: 20px; }
+      .who p { margin: 0; font-size: 12.5px; font-weight: 700; color: #5c636e; }
+      .sheet-cta {
+        display: block; width: 100%; background: var(--red); color: #fff; border: 0;
+        border-radius: 16px; padding: 17px; font-family: inherit; font-size: 16px;
+        font-weight: 800; letter-spacing: -.01em; cursor: pointer;
+      }
+      .sheet-cta:focus-visible { outline: 3px solid #1b1f25; outline-offset: 3px; }
+      .sheet-note { text-align: center; font-size: 12.5px; color: #868d98; margin: 10px 0 0; font-weight: 600; }
 
-  .grab { width: 40px; height: 4.5px; border-radius: 99px; background: #dcdfe4; margin: 0 auto 15px; }
-  .sheet-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-  .sheet-top .spot-badge { width: 54px; height: 54px; box-shadow: none; border-width: 0; }
-  .sheet-top .spot-badge b { font-size: 19px; }
-  .sheet-id { flex: 1; min-width: 0; }
-  .sheet-id strong { display: block; font-size: 19px; font-weight: 800; letter-spacing: -.025em; color: #14171c; }
-  .sheet-id span { font-size: 13px; color: #767d88; font-weight: 600; }
-  .sheet-close {
-    width: 32px; height: 32px; border-radius: 50%; background: #f0f1f4; border: 0;
-    cursor: pointer; display: grid; place-items: center; flex: 0 0 auto;
-  }
-  .sheet-close:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; }
-  .sheet-close svg { width: 15px; height: 15px; stroke: #4a515c; stroke-width: 2.4; fill: none; stroke-linecap: round; }
-  .sheet-chips { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
-  .chip { font-size: 12px; font-weight: 700; color: #3d444f; background: #f0f1f4; border-radius: 999px; padding: 5px 11px; }
-  .chip.warm { background: rgba(255,47,69,.11); color: #d31730; }
-  .who { display: flex; align-items: center; gap: 9px; margin-bottom: 16px; }
-  .who .stack { display: flex; }
-  .who .stack span {
-    width: 30px; height: 30px; border-radius: 50%; overflow: hidden; border: 2.5px solid #fff;
-    margin-left: -10px; background: #f3f4f6; display: grid; place-items: center;
-  }
-  .who .stack span:first-child { margin-left: 0; }
-  .who .stack svg { width: 15px; height: 20px; }
-  .who p { margin: 0; font-size: 12.5px; font-weight: 700; color: #5c636e; }
-  .sheet-cta {
-    display: block; width: 100%; background: var(--red); color: #fff; border: 0;
-    border-radius: 16px; padding: 17px; font-family: inherit; font-size: 16px;
-    font-weight: 800; letter-spacing: -.01em; cursor: pointer;
-  }
-  .sheet-cta:focus-visible { outline: 3px solid #1b1f25; outline-offset: 3px; }
-  .sheet-note { text-align: center; font-size: 12.5px; color: #868d98; margin: 10px 0 0; font-weight: 600; }
+      /* ---------------- Notes ---------------- */
 
-  /* ================= SECTIONS ================= */
+      .notes {
+        margin-top: 34px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1px; background: var(--page-line); border: 1px solid var(--page-line);
+        border-radius: 5px; overflow: hidden;
+      }
+      .note { background: var(--page-2); padding: 24px 22px 26px; }
+      .note .mark {
+        display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--page-ink3); margin-bottom: 10px;
+      }
+      .note.warn .mark { color: var(--red); }
+      .note h3 { margin: 0 0 8px; font-size: 15.5px; font-weight: 700; letter-spacing: -.015em; }
+      .note p { margin: 0; font-size: 14px; color: var(--page-ink2); line-height: 1.55; }
 
-  .sec { margin-top: 34px; }
-  .sec-head {
-    display: flex; align-items: baseline; gap: 16px; padding-bottom: 13px;
-    border-bottom: 1px solid var(--page-line); margin-bottom: 26px;
-  }
-  .sec-head h2 { margin: 0; flex: 1; font-size: clamp(24px, 3.2vw, 34px); font-weight: 800; letter-spacing: -.035em; }
-  .sec-head span { font-family: var(--mono); font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--page-ink3); }
+      footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--page-line); font-size: 13px; color: var(--page-ink3); }
+      code { font-family: var(--mono); font-size: 12.5px; color: var(--page-ink); }
 
-  /* L'echelle d'agregation */
-  .ladder { display: flex; flex-direction: column; border: 1px solid var(--page-line); border-radius: 5px; overflow: hidden; }
-  .rung {
-    display: grid; grid-template-columns: 96px 1fr auto; gap: 18px; align-items: center;
-    padding: 18px 22px; background: var(--page-2); border-bottom: 1px solid var(--page-line);
-  }
-  .rung:last-child { border-bottom: 0; }
-  .rung .lvl { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--page-ink3); }
-  .rung h3 { margin: 0 0 3px; font-size: 15.5px; font-weight: 700; letter-spacing: -.015em; }
-  .rung p { margin: 0; font-size: 14px; color: var(--page-ink2); line-height: 1.5; }
-  .rung .demo {
-    width: 54px; height: 54px; border-radius: 50%; background: var(--c); color: #fff;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    line-height: 1; flex: 0 0 auto;
-  }
-  .rung .demo b { font-size: 16px; font-weight: 800; letter-spacing: -.04em; }
-  .rung .demo i { font-style: normal; font-size: 7.5px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 2px; }
-
-  .notes {
-    margin-top: 34px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1px; background: var(--page-line); border: 1px solid var(--page-line);
-    border-radius: 5px; overflow: hidden;
-  }
-  .note { background: var(--page-2); padding: 24px 22px 26px; }
-  .note .mark {
-    display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--page-ink3); margin-bottom: 10px;
-  }
-  .note.warn .mark { color: var(--red); }
-  .note h3 { margin: 0 0 8px; font-size: 15.5px; font-weight: 700; letter-spacing: -.015em; }
-  .note p { margin: 0; font-size: 14px; color: var(--page-ink2); line-height: 1.55; }
-
-  footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--page-line); font-size: 13px; color: var(--page-ink3); }
-  code { font-family: var(--mono); font-size: 12.5px; color: var(--page-ink); }
-
-  @media (max-width: 560px) {
-    .rung { grid-template-columns: 1fr auto; gap: 12px; }
-    .rung .lvl { grid-column: 1 / -1; }
-  }
-  @media (max-width: 430px) {
-    .wrap { padding: 38px 12px 70px; }
-    .phone { width: 100%; max-width: 360px; }
-  }
+      @media (max-width: 430px) {
+        .wrap { padding: 38px 12px 70px; }
+        .phone { width: 100%; max-width: 360px; }
+      }
     </style>
   </head>
   <body>
 
 <div class="wrap">
 
-  <span class="kicker">PWA clubbeur · écran carte · 17 août 2026</span>
+  <span class="kicker">PWA clubbeur · écran carte · 17 août 2026 · moteur MapLibre</span>
   <h1>Carte ViralNight</h1>
   <p class="lede">
-    Quatre niveaux : Bruxelles en 3D, la Belgique, l'Europe, puis la Terre vue de
-    l'orbite avec les étoiles filantes. Utilise les boutons + et − à droite, ou la
-    molette sur la carte. Touche une pastille pour plonger dedans.
+    Vraie carte, vraies tuiles. Glisse pour te déplacer, molette ou pincement pour
+    zoomer en continu jusqu'au village, clic droit + glisser (ou torsion à deux
+    doigts) pour tourner. Le bouton « Globe » bascule en 3D.
   </p>
 
   <div class="stage">
     <div class="phone">
-      <div class="screen" id="screen">
+      <div class="screen">
 
-        <div class="mapwrap" id="mapwrap">
-          <canvas id="map" width="700" height="1500" aria-hidden="true"></canvas>
-          <div id="layer"></div>
-        </div>
+        <div id="map"></div>
+        <canvas id="arbres" aria-hidden="true"></canvas>
+        <canvas id="etoiles" aria-hidden="true"></canvas>
 
         <div class="statusbar">
           <span>0:41</span>
@@ -455,7 +354,7 @@
 
         <div class="place">
           <b id="place-name">Bruxelles</b>
-          <span id="place-sub">
+          <span>
             <svg viewBox="0 0 24 24"><path d="M6.5 18.5A4.5 4.5 0 0 1 6 9.6a5.6 5.6 0 0 1 10.7-1.3A4.1 4.1 0 0 1 18 18.5z"/></svg>
             17 °C
           </span>
@@ -480,11 +379,9 @@
           </button>
         </div>
 
-        <div class="dim" id="dim">
-          <button aria-label="Vue satellite">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#1b1f25" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 5 5-5 5-5-5z"/><path d="m16 11 5 5-5 5-5-5z"/><path d="m11 8 5 5"/></svg>
-          </button>
-          <button class="on">3D</button>
+        <div class="dim">
+          <button id="btn-plat">Plat</button>
+          <button id="btn-globe" class="on">Globe</button>
         </div>
 
         <div class="rail">
@@ -500,8 +397,8 @@
           <button class="rbtn" aria-label="Mode invisible">
             <svg class="ico" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c5 0 9 3.5 10 7-.5 1.6-1.5 3.1-2.8 4.2M6.6 6.6C4.5 7.9 3 9.7 2 11c1 3.5 5 7 10 7 1.4 0 2.7-.3 3.9-.7"/><path d="M9.9 10a3 3 0 0 0 4.2 4.2"/></svg>
           </button>
-          <button class="rbtn compass" aria-label="Orientation">
-            <span class="needle"></span><span class="ring"></span><span class="n">N</span>
+          <button class="rbtn compass" id="btn-compass" aria-label="Réorienter au nord">
+            <span class="needle" id="needle"></span><span class="ring"></span><span class="n">N</span>
           </button>
         </div>
 
@@ -539,7 +436,7 @@
         <div class="sheet" id="sheet" role="dialog" aria-label="Détail du club" aria-hidden="true">
           <div class="grab"></div>
           <div class="sheet-top">
-            <span class="spot-badge" id="sh-disc"><b>42</b><i>ICI</i></span>
+            <span class="club-badge" id="sh-disc"><b>42</b><i>ICI</i></span>
             <span class="sheet-id">
               <strong id="sh-name">Mirage</strong>
               <span id="sh-addr">Rue de l'Écuyer · 400 m</span>
@@ -558,1144 +455,772 @@
     </div>
   </div>
 
-  <section class="sec">
-    <div class="sec-head">
-      <h2>Les clubs restent visibles</h2>
-      <span>L'échelle d'agrégation</span>
-    </div>
-    <p class="lede" style="margin-bottom:24px">
-      C'est le point que tu demandais. La pastille garde le même sens aux quatre
-      niveaux — <strong>le nombre de personnes en soirée à cet instant</strong> — et ce
-      qu'elle regroupe change avec le zoom. Rien ne disparaît en dézoomant, tout se
-      rassemble.
-    </p>
-
-    <div class="ladder">
-      <div class="rung">
-        <span class="lvl">Niveau 4</span>
-        <div><h3>Un club</h3><p>Mirage, 42 personnes sur place. Le halo rouge signale celui qui chauffe.</p></div>
-        <span class="demo" style="--c:#ff2f45"><b>42</b><i>ICI</i></span>
-      </div>
-      <div class="rung">
-        <span class="lvl">Niveau 3</span>
-        <div><h3>Une ville</h3><p>Les 12 clubs de Bruxelles deviennent une pastille. 187 personnes en soirée dans la ville.</p></div>
-        <span class="demo" style="--c:#ff2f45"><b>187</b><i>ICI</i></span>
-      </div>
-      <div class="rung">
-        <span class="lvl">Niveau 2</span>
-        <div><h3>Un pays</h3><p>Toutes les villes belges se rassemblent. 468 personnes, 38 clubs affiliés.</p></div>
-        <span class="demo" style="--c:#3b4250"><b>468</b><i>ICI</i></span>
-      </div>
-      <div class="rung">
-        <span class="lvl">Niveau 1</span>
-        <div><h3>Un continent</h3><p>Vu de l'orbite, l'Europe est un seul point lumineux. Les pastilles brillent sur le noir au lieu d'y disparaître.</p></div>
-        <span class="demo" style="--c:#ff2f45"><b>6,5k</b><i>ICI</i></span>
-      </div>
-    </div>
-  </section>
-
   <div class="notes">
     <div class="note">
-      <span class="mark">Le zoom</span>
-      <h3>Comment il est fait</h3>
+      <span class="mark">Le moteur</span>
+      <h3>MapLibre GL JS + MapTiler</h3>
       <p>
-        Un seul jeu de coordonnées géographiques sert aux quatre niveaux : projection
-        orthographique pour le globe, équirectangulaire pour l'Europe et la Belgique,
-        isométrique pour la ville. Le changement de niveau fait grandir ou rétrécir
-        le calque, pour que le zoom se sente au lieu d'être un saut.
+        Fini le canvas fait main : la carte est une vraie carte vectorielle,
+        avec les rues, bâtiments, parcs et noms de lieux jusqu'au village,
+        partout dans le monde — pas seulement les 8 pays que j'avais recensés.
       </p>
     </div>
     <div class="note">
-      <span class="mark">L'espace</span>
-      <h3>Les étoiles filantes</h3>
+      <span class="mark">La navigation</span>
+      <h3>Comme sur Snap Map</h3>
       <p>
-        Champ d'étoiles qui scintillent, plus trois filantes qui traversent à
-        intervalles irréguliers, avec une traînée qui s'estompe. Tout s'arrête si le
-        téléphone est réglé sur « réduire les animations ».
+        Glisser-déposer natif à la souris et au doigt, zoom continu à la
+        molette ou au pincement, rotation au clic droit ou à deux doigts,
+        inclinaison. Rien de tout ça n'est simulé : c'est le comportement
+        natif de MapLibre.
+      </p>
+    </div>
+    <div class="note">
+      <span class="mark">Le globe</span>
+      <h3>Un vrai globe 3D</h3>
+      <p>
+        Le bouton « Globe » utilise la projection sphérique native de
+        MapLibre — la Terre se courbe vraiment, avec l'atmosphère et les
+        étoiles fournies par le moteur, pas dessinées à la main.
       </p>
     </div>
     <div class="note warn">
       <span class="mark">À savoir</span>
-      <h3>Les chiffres sont inventés</h3>
+      <h3>Clé API à restreindre</h3>
       <p>
-        Aucun club n'est encore créé dans ta base de production — les 38 clubs belges
-        et les 6 500 personnes en Europe sont là pour montrer le système, pas pour
-        décrire l'existant. Le jour où tu signes ton premier client, la même
-        mécanique affichera 1 club et 12 personnes.
+        La clé MapTiler utilisée ici est visible dans le code source de la
+        page, comme toute clé de fond de carte. Pense à la restreindre par
+        domaine (<code>viralnight-koif.vercel.app</code>) dans ton tableau
+        de bord MapTiler pour empêcher qu'elle serve ailleurs.
       </p>
     </div>
   </div>
 
   <footer>
-    Maquette interactive — repo <code>06-pwa-clubbeurs</code>. À valider avant que je porte l'écran sur MapLibre.
+    Maquette interactive — repo <code>06-pwa-clubbeurs</code>. À valider avant de brancher les vraies données Supabase.
   </footer>
 
 </div>
 
-<script>
+<script type="module">
+import * as maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+// Copie statique dans public/, servie telle quelle par Vite (dev
+// et prod) sans passer par sa chaine de transformation JS. Le
+// fichier original, lui, se faisait soit injecter le client HMR
+// de Vite (en dev, ce qui le casse : il tourne dans un Worker,
+// sans `document`), soit renommer/hasher d'une facon que MapLibre
+// ne retrouvait pas au moment d'ouvrir le Worker (en prod).
+maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+
+/* ==========================================================
+   LA PINTE — inchangee, sert aux marqueurs d'amis
+   ========================================================== */
+
+var uid = 0;
+
+function pint(level, cls) {
+  var id = "pg" + (++uid);
+  var TOP = 26, BOT = 122;
+  var y = BOT - (BOT - TOP) * level;
+  var full = level > .06, foam = level > .25;
+
+  return '<svg class="pint ' + (cls || "") + '" viewBox="0 0 100 138" xmlns="http://www.w3.org/2000/svg" role="img">' +
+    '<defs><clipPath id="' + id + '"><path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z"/></clipPath></defs>' +
+    '<ellipse cx="50" cy="132" rx="24" ry="5" fill="#4a6b3f" opacity=".2"/>' +
+    '<path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z" fill="#dfe9ef" opacity=".85"/>' +
+    (full ? '<g clip-path="url(#' + id + ')">' +
+      '<rect x="20" y="' + y + '" width="60" height="' + (132 - y) + '" fill="#f0a91e"/>' +
+      '<rect x="20" y="' + (y + (132 - y) * .55) + '" width="60" height="' + ((132 - y) * .45) + '" fill="#d98a09"/>' +
+      '<circle cx="40" cy="' + (y + 24) + '" r="3" fill="#ffd98a" opacity=".75"/>' +
+      '<circle cx="59" cy="' + (y + 40) + '" r="2.2" fill="#ffd98a" opacity=".65"/>' +
+      '</g>' : "") +
+    (foam ? '<g><ellipse cx="50" cy="' + y + '" rx="27" ry="11" fill="#fffaf0"/>' +
+      '<circle cx="34" cy="' + (y - 6) + '" r="9" fill="#fffaf0"/>' +
+      '<circle cx="50" cy="' + (y - 11) + '" r="11" fill="#fffdf7"/>' +
+      '<circle cx="66" cy="' + (y - 6) + '" r="9" fill="#fffaf0"/></g>' : "") +
+    '<g clip-path="url(#' + id + ')">' +
+      '<rect x="31" y="20" width="7" height="112" fill="#fff" opacity=".55"/>' +
+      '<rect x="43" y="20" width="3" height="112" fill="#fff" opacity=".3"/>' +
+      '<rect x="66" y="20" width="5" height="112" fill="#fff" opacity=".25"/>' +
+    '</g>' +
+    '<ellipse cx="50" cy="20" rx="26" ry="7" fill="none" stroke="#c9d6de" stroke-width="3"/>' +
+    '<path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z" fill="none" stroke="#c9d6de" stroke-width="2.5"/>' +
+  '</svg>';
+}
+
+/* ==========================================================
+   DONNEES — les 3 vrais clubs de Bruxelles, sur leurs vraies
+   rues. Les coordonnees des amis sont a proximite.
+   ========================================================== */
+
+var CLUBS = {
+  mirage: {
+    nom: "Mirage", adr: "Rue de l'Écuyer · 400 m", n: "42", u: "ICI", c: "#ff2f45",
+    lngLat: [4.3554, 50.8479], hot: true,
+    chips: [["Ça chauffe", true], ["Ouvert jusqu'à 6h", false]],
+    amis: [1, 1, .3], qui: "Sarah et Léa sont là, Théo est parti",
+    note: "300 pts = un cocktail offert. Tu en as 0."
+  },
+  fuse: {
+    nom: "Fuse", adr: "Rue Blaes · 1,2 km", n: "11", u: "ICI", c: "#3b4250",
+    lngLat: [4.3405, 50.8375],
+    chips: [["Ouvert jusqu'à 7h", false], ["Ça se remplit", false]],
+    amis: [.62], qui: "Nassym y était il y a une heure",
+    note: "250 pts = une entrée offerte. Tu en as 0."
+  },
+  spirito: {
+    nom: "Spirito", adr: "Rue Stassart · 2,1 km", n: "1h", u: "OUVRE", c: "#8b929c",
+    lngLat: [4.3651, 50.8367], shut: true,
+    chips: [["Pas encore ouvert", false]],
+    amis: [], qui: "Personne de tes amis pour l'instant",
+    note: "400 pts = un coupe-file. Tu en as 0."
+  }
+};
+
+var AMIS = [
+  { nom: "Sarah",  q: 1,   lngLat: [4.3561, 50.8486] },
+  { nom: "Nassym", q: .62, lngLat: [4.3415, 50.8380] },
+  { nom: "Yanis",  q: .62 }, { nom: "Léa",    q: 1 },
+  { nom: "Théo",   q: .3 },  { nom: "Inès",   q: .3 },
+  { nom: "Malik",  q: 0 },   { nom: "Chloé",  q: 1 }
+];
+
+var BRUXELLES = [4.3517, 50.8503];
+
+/* ==========================================================
+   LA CARTE
+   ========================================================== */
+
+var MAPTILER_KEY = "HRqda4Ggxp9Mx9bKwvTh";
+
+var map = new maplibregl.Map({
+  container: "map",
+  style: "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=" + MAPTILER_KEY,
+  center: BRUXELLES,
+  zoom: 16,
+  pitch: 55,
+  bearing: -12,
+  attributionControl: { compact: true }
+});
+window.__vnMap = map;
+map.on("error", function (e) {
+  console.error("[carte]", (e && e.error && (e.error.message)) || e);
+});
+
+map.on("load", function () {
+  map.setProjection({ type: "globe" });
+  // sans ce recalage explicite, la camera restait parfois figee
+  // sur une vue large (globe/Europe) apres l'activation du globe,
+  // meme si `getZoom()` renvoyait deja 16 — le rendu et l'etat
+  // interne se desynchronisaient au tout premier chargement.
+  map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 55, bearing: -12 });
+});
+
+/* --- Le globe : etoiles et brume fournies par MapLibre lui-meme
+       (fog + halo atmospherique), pas dessinees a la main. --- */
+function ambiance() {
+  map.setSky({
+    "sky-color": "#0a0d16",
+    "sky-horizon-blend": 0.55,
+    "horizon-color": "#1b2a44",
+    "horizon-fog-blend": 0.6,
+    "fog-color": "#0e1420",
+    "fog-ground-blend": 0.7,
+    "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+  });
+}
+
+/* --- Un motif d'arbre, dessine une fois sur un petit canvas et
+       repete par MapLibre sur chaque parcelle boisee — c'est
+       exactement comme ca que les vraies cartes « avec des arbres »
+       (Apple Plans, Mapbox Outdoors) font le rendu : une texture,
+       pas des milliers d'icones placees a la main. --- */
+/* --- L'arbre du tout premier prototype (le canvas maison, avant
+       MapLibre) : ombre au sol, tronc, puis deux ellipses de
+       feuillage empilees. (x, y) est le point au sol ; l'arbre
+       pousse vers le haut a partir de la, exactement comme dans
+       le prototype d'origine — juste transpose ici en motif de
+       tuile plutot qu'en objets dessinees un par un a la volee. */
+/* --- Les arbres, comme sur les captures Snap Map : plusieurs types
+       (boule irreguliere, sapin, buisson large, petit arbuste), plus
+       petits qu'avant, avec un tronc bien visible qui depasse sous
+       la canopee. "variante" (0-3) choisit la silhouette, "teinte"
+       (1-2) varie juste la couleur au sein d'un meme type. --- */
+function arbreSur(ctx, x, y, r, teinte, variante) {
+  var s = r / 22;
+  var fonce = teinte === 1 ? "#5c9c42" : "#4f9350";
+  var moyen = teinte === 1 ? "#79bb52" : "#6cb562";
+  var clair = teinte === 1 ? "#9bd977" : "#8fd684";
+
+  function ombre(rx) {
+    ctx.beginPath(); ctx.ellipse(x, y + 3.5 * s, rx * s, rx * .38 * s, 0, 0, 7);
+    ctx.fillStyle = "rgba(40,60,30,.2)"; ctx.fill();
+  }
+  function tronc(h) {
+    ctx.fillStyle = "#7a5a38";
+    ctx.fillRect(x - 1.6 * s, y - h * .6 * s, 3.2 * s, h * s);
+    ctx.fillStyle = "#63472a";
+    ctx.fillRect(x + .3 * s, y - h * .6 * s, 1.2 * s, h * s);
+  }
+  function lobe(dx, dy, r2, col) {
+    ctx.beginPath(); ctx.arc(x + dx * s, y + dy * s, r2 * s, 0, 7);
+    ctx.fillStyle = col; ctx.fill();
+  }
+
+  var v = variante % 4;
+
+  if (v === 0) {
+    // boule irreguliere : plusieurs lobes decales, pas un cercle net
+    ombre(8); tronc(9);
+    lobe(1.5, -12, 9, fonce);
+    lobe(-4, -14.5, 7.5, moyen);
+    lobe(3, -16.5, 6, moyen);
+    lobe(-2, -18, 5, clair);
+  } else if (v === 1) {
+    // sapin : silhouette pointue, 3 etages qui retrecissent
+    ombre(7); tronc(6);
+    ctx.beginPath(); ctx.moveTo(x - 9 * s, y - 5 * s); ctx.lineTo(x + 9 * s, y - 5 * s); ctx.lineTo(x, y - 16 * s); ctx.closePath();
+    ctx.fillStyle = fonce; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - 7 * s, y - 12 * s); ctx.lineTo(x + 7 * s, y - 12 * s); ctx.lineTo(x, y - 21 * s); ctx.closePath();
+    ctx.fillStyle = moyen; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - 4.5 * s, y - 18 * s); ctx.lineTo(x + 4.5 * s, y - 18 * s); ctx.lineTo(x, y - 25 * s); ctx.closePath();
+    ctx.fillStyle = clair; ctx.fill();
+  } else if (v === 2) {
+    // buisson large et bas, plutot que haut
+    ombre(10); tronc(4);
+    lobe(-5, -7, 8, fonce);
+    lobe(4, -6.5, 7.5, fonce);
+    lobe(0, -10, 8.5, moyen);
+    lobe(-2.5, -12.5, 5, clair);
+  } else {
+    // petit arbuste, plus discret que les autres
+    ombre(5.5); tronc(4.5);
+    lobe(0, -9, 6.5, fonce);
+    lobe(-2, -11, 5, moyen);
+    lobe(1.5, -12.5, 3.2, clair);
+  }
+}
+
+function snapifie() {
+
+  // La palette relevee sur tes captures : le sol est vert menthe
+  // PARTOUT (pas juste dans les parcs), l'eau un bleu ciel clair.
+  // Le style d'origine, lui, garde un fond bleu marine fonce
+  // (heritage de sa version "dark") des qu'on sort d'un batiment
+  // ou d'une route — c'est ce fond-la, pas les couleurs des parcs,
+  // qui faisait "vraie carte".
+  // Les batiments reprennent exactement la palette du tout premier
+  // prototype canvas (les 3 tons de toit "roofs" retrouves dans
+  // l'historique git) : des creme/greige doux, pas des couleurs vives.
+  var mentheClair = "#e3f3d3", mentheFonce = "#cbe8ac", vertArbre = "#6dbb52",
+      indigo = "#eae2d6", indigoClair = "#eae2d6", eau = "#a9ddf7";
+
+  map.setPaintProperty("Background", "background-color", mentheClair);
+
+  // tout ce qui n'est ni batiment, ni route, ni eau, ni parc —
+  // zones residentielles, industrielles, scolaires... — reprend
+  // le meme vert menthe que le fond au lieu du bleu marine du
+  // style sombre d'origine.
+  ["Residential", "Industrial", "School", "Cemetery", "Hospital", "Pedestrian"].forEach(function (id) {
+    if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", mentheClair);
+  });
+
+  // le sol boise : un vert plus soutenu. Les arbres eux-memes ne
+  // sont plus un motif de tuile (ca repete exactement les 5 memes
+  // arbres cote a cote, ca sautait aux yeux) — ils sont dessines un
+  // par un par le calque canvas plus bas, exactement comme dans le
+  // tout premier prototype.
+  ["Forest", "Wood"].forEach(function (id) {
+    map.setPaintProperty(id, "fill-color", mentheFonce);
+    map.setPaintProperty(id, "fill-opacity", 1);
+    map.setLayoutProperty(id, "visibility", "visible");
+    map.setLayerZoomRange(id, 0, 24);
+  });
+  ["Grass", "Meadow"].forEach(function (id) {
+    map.setPaintProperty(id, "fill-color", mentheFonce);
+    map.setPaintProperty(id, "fill-opacity", 1);
+  });
+
+  map.setPaintProperty("Water", "fill-color", eau);
+
+  // les batiments : les 3 tons de toit exacts du tout premier
+  // prototype canvas (retrouves dans l'historique git), qui alternent
+  // d'un immeuble a l'autre — creme/greige doux, pas les couleurs
+  // vives de l'essai precedent.
+  var indigo2 = "#f2efe9", indigo3 = "#e3ded6";
+  var teinteBatiment = [
+    "step", ["%", ["id"], 3],
+    indigo, 1, indigo2, 2, indigo3
+  ];
+  map.setPaintProperty("Building", "fill-color", indigo);
+  map.setPaintProperty("Building", "fill-opacity", .95);
+  map.setLayerZoomRange("Building", 0, 15.5);
+
+  map.setLayerZoomRange("Building 3D", 13, 24);
+  try {
+    map.setPaintProperty("Building 3D", "fill-extrusion-color", teinteBatiment);
+  } catch (e) {
+    map.setPaintProperty("Building 3D", "fill-extrusion-color", indigoClair);
+  }
+  map.setPaintProperty("Building 3D", "fill-extrusion-opacity", 1);
+  // fill-extrusion-pattern essaye puis abandonne : sur des petits
+  // batiments, la texture ne se plaque pas facade par facade mais
+  // s'etire selon les coordonnees monde, ce qui donne un effet
+  // moire (petits carreaux) quelle que soit la taille de la tuile —
+  // limite du moteur, pas un reglage a corriger. La variete de
+  // teintes ci-dessus + le degrade font le travail de detail a la place.
+  // le degrade vertical assombrit la base et eclaircit le sommet —
+  // c'est la principale source de relief ici : les proprietes plus
+  // recentes (ambient occlusion, flood-light) ne sont pas supportees
+  // par la version du style-spec que sert ce moteur (teste : chaque
+  // appel leve une exception).
+  map.setPaintProperty("Building 3D", "fill-extrusion-vertical-gradient", true);
+  // ni trop hauts (essai precedent : .65/48, ecrasait la carte) ni
+  // trop plats (.42/26, tous les immeubles a la meme hauteur) — un
+  // reglage entre les deux, qui garde un peu de variete de silhouette
+  map.setPaintProperty("Building 3D", "fill-extrusion-height", [
+    "interpolate", ["linear"], ["zoom"],
+    13, 0,
+    15, ["min", 34, ["*", ["get", "render_height"], .5]]
+  ]);
+
+  // une lumiere plus douce : la version precedente (intensite .68)
+  // assombrissait trop les nouvelles couleurs, elles finissaient par
+  // lire comme du noir sur les faces a l'ombre
+  map.setLight({ anchor: "viewport", color: "#fff6e6", intensity: .4, position: [1.15, 75, 52] });
+
+  // un fin trait a la base de chaque immeuble — separe nettement
+  // les blocs les uns des autres au lieu de les laisser fondre
+  // dans le sol et entre eux
+  map.addLayer({
+    id: "Contour toits", type: "line", source: "maptiler_planet", "source-layer": "building",
+    minzoom: 13,
+    paint: { "line-color": "#b9ae9c", "line-width": 1, "line-opacity": .55 }
+  });
+
+  // la demarcation des pays : un trait clair et net, visible a
+  // toutes les echelles, pas juste le gris discret du style d'origine.
+  if (map.getLayer("Country border")) {
+    map.setPaintProperty("Country border", "line-color", "#ffffff");
+    map.setPaintProperty("Country border", "line-opacity", .85);
+    map.setPaintProperty("Country border", "line-width", [
+      "interpolate", ["linear"], ["zoom"], 1, .8, 5, 1.8, 10, 2.4, 24, 3.2
+    ]);
+  }
+
+  // La carte ne montre que les clubs et les gens — pas les
+  // restaurants, boutiques, musees ni parcs que le fond de carte
+  // affiche par defaut. On coupe toutes les icones/etiquettes de
+  // lieux, sauf les noms de villes/pays qui servent a se reperer
+  // en dezoomant.
+  [
+    "Public", "Sport", "Education", "Tourism", "Culture", "Shopping",
+    "Food", "Transport", "Park", "Healthcare", "Station",
+    "Road labels", "Highway junction", "Highway shield", "Highway shield (US)",
+    "Highway shield interstate top (US)", "Highway shield interstate (US)",
+    "Housenumber", "Oneway", "Gondola", "Ferry",
+    "River labels", "Ocean labels", "Lake labels",
+    "Airport gate", "Airport", "Place labels"
+  ].forEach(function (id) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
+  });
+
+  // Les routes, en version dessinee : un large trait creme-blanc
+  // avec un liseret, plus epais et plus rond qu'une vraie carte
+  // routiere — c'est ce qui fait « jeu vide-ville » plutot que GPS.
+  var ROUTES_PLEINES = ["Motorway", "Trunk", "Primary", "Secondary", "Tertiary", "Minor", "Service", "Street"];
+  ROUTES_PLEINES.forEach(function (id) {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "line-color", "#fbf6ea");
+    map.setPaintProperty(id, "line-opacity", 1);
+  });
+  var CASINGS = ["Motorway casing", "Trunk casing", "Primary casing", "Secondary casing", "Tertiary casing"];
+  CASINGS.forEach(function (id) {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "line-color", "#d8cdb2");
+  });
+}
+
+/* ==========================================================
+   LES ARBRES — pas une liste fixe autour de Bruxelles : on
+   interroge les vraies zones boisees/vertes que MapTiler affiche
+   dans la vue courante (foret, bois, herbe) et on y seme des arbres
+   au hasard mais de facon stable (meme graine par polygone, tiree
+   de son identifiant) — ca marche donc partout dans le monde, pas
+   seulement la ou j'ai code des coordonnees a la main.
+   ========================================================== */
+
+function hashDe(str) {
+  var h = 2166136261;
+  for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = (h * 16777619) >>> 0; }
+  return h || 1;
+}
+
+function pointDansAnneau(pt, anneau) {
+  var dedans = false;
+  for (var i = 0, j = anneau.length - 1; i < anneau.length; j = i++) {
+    var xi = anneau[i][0], yi = anneau[i][1], xj = anneau[j][0], yj = anneau[j][1];
+    var croise = ((yi > pt[1]) !== (yj > pt[1])) && (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi);
+    if (croise) dedans = !dedans;
+  }
+  return dedans;
+}
+function pointDansPolygone(pt, anneaux) {
+  if (!pointDansAnneau(pt, anneaux[0])) return false;
+  for (var i = 1; i < anneaux.length; i++) if (pointDansAnneau(pt, anneaux[i])) return false;
+  return true;
+}
+function pointDansGeometrie(pt, geom) {
+  if (geom.type === "Polygon") return pointDansPolygone(pt, geom.coordinates);
+  if (geom.type === "MultiPolygon") return geom.coordinates.some(function (p) { return pointDansPolygone(pt, p); });
+  return false;
+}
+function bboxDe(geom) {
+  var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+  function scan(anneau) {
+    anneau.forEach(function (c) {
+      if (c[0] < minX) minX = c[0]; if (c[0] > maxX) maxX = c[0];
+      if (c[1] < minY) minY = c[1]; if (c[1] > maxY) maxY = c[1];
+    });
+  }
+  if (geom.type === "Polygon") geom.coordinates.forEach(scan);
+  else if (geom.type === "MultiPolygon") geom.coordinates.forEach(function (p) { p.forEach(scan); });
+  return [minX, minY, maxX, maxY];
+}
+
+var CACHE_ARBRES = new Map();
+var DENSITES = { Forest: 1 / 500, Wood: 1 / 500, Grass: 1 / 2600, Meadow: 1 / 2600 };
+
+function arbresDuPolygone(f) {
+  var g = f.geometry;
+  if (!g || (g.type !== "Polygon" && g.type !== "MultiPolygon")) return [];
+  var bbox = bboxDe(g);
+  var cle = f.layer.id + ":" + bbox.map(function (v) { return v.toFixed(5); }).join(",");
+  var cache = CACHE_ARBRES.get(cle);
+  if (cache) return cache;
+
+  var graine = hashDe(cle);
+  function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
+
+  var dlat = 1 / 110540, dlng = 1 / (111320 * Math.cos((bbox[1] + bbox[3]) / 2 * Math.PI / 180));
+  var largeurM = (bbox[2] - bbox[0]) / dlng, hauteurM = (bbox[3] - bbox[1]) / dlat;
+  var aireM2 = Math.max(0, largeurM * hauteurM);
+  var n = Math.min(46, Math.round(aireM2 * (DENSITES[f.layer.id] || 1 / 1800)));
+
+  var pts = [], tentatives = 0;
+  while (pts.length < n && tentatives < n * 14) {
+    tentatives++;
+    var lng = bbox[0] + rnd() * (bbox[2] - bbox[0]);
+    var lat = bbox[1] + rnd() * (bbox[3] - bbox[1]);
+    if (pointDansGeometrie([lng, lat], g)) {
+      pts.push({
+        lng: lng, lat: lat, s: .55 + rnd() * .55,
+        teinte: rnd() < .5 ? 1 : 2, variante: Math.floor(rnd() * 4)
+      });
+    }
+  }
+  CACHE_ARBRES.set(cle, pts);
+  return pts;
+}
+
 (function () {
-  "use strict";
-
-  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  /* ==========================================================
-     LA PINTE
-     ========================================================== */
-
-  var uid = 0;
-
-  function pint(level, cls) {
-    var id = "pg" + (++uid);
-    var TOP = 26, BOT = 122;
-    var y = BOT - (BOT - TOP) * level;
-    var full = level > .06, foam = level > .25;
-
-    return '<svg class="pint ' + (cls || "") + '" viewBox="0 0 100 138" xmlns="http://www.w3.org/2000/svg" role="img">' +
-      '<defs><clipPath id="' + id + '"><path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z"/></clipPath></defs>' +
-      '<ellipse cx="50" cy="132" rx="24" ry="5" fill="#4a6b3f" opacity=".2"/>' +
-      '<path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z" fill="#dfe9ef" opacity=".85"/>' +
-      (full ? '<g clip-path="url(#' + id + ')">' +
-        '<rect x="20" y="' + y + '" width="60" height="' + (132 - y) + '" fill="#f0a91e"/>' +
-        '<rect x="20" y="' + (y + (132 - y) * .55) + '" width="60" height="' + ((132 - y) * .45) + '" fill="#d98a09"/>' +
-        '<circle cx="40" cy="' + (y + 24) + '" r="3" fill="#ffd98a" opacity=".75"/>' +
-        '<circle cx="59" cy="' + (y + 40) + '" r="2.2" fill="#ffd98a" opacity=".65"/>' +
-        '</g>' : "") +
-      (foam ? '<g><ellipse cx="50" cy="' + y + '" rx="27" ry="11" fill="#fffaf0"/>' +
-        '<circle cx="34" cy="' + (y - 6) + '" r="9" fill="#fffaf0"/>' +
-        '<circle cx="50" cy="' + (y - 11) + '" r="11" fill="#fffdf7"/>' +
-        '<circle cx="66" cy="' + (y - 6) + '" r="9" fill="#fffaf0"/></g>' : "") +
-      '<g clip-path="url(#' + id + ')">' +
-        '<rect x="31" y="20" width="7" height="112" fill="#fff" opacity=".55"/>' +
-        '<rect x="43" y="20" width="3" height="112" fill="#fff" opacity=".3"/>' +
-        '<rect x="66" y="20" width="5" height="112" fill="#fff" opacity=".25"/>' +
-      '</g>' +
-      '<ellipse cx="50" cy="20" rx="26" ry="7" fill="none" stroke="#c9d6de" stroke-width="3"/>' +
-      '<path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z" fill="none" stroke="#c9d6de" stroke-width="2.5"/>' +
-    '</svg>';
-  }
-
-  /* ==========================================================
-     DONNEES GEOGRAPHIQUES
-     ----------------------------------------------------------
-     Un seul jeu de coordonnees, en degres, reutilise par les
-     trois projections. Contours volontairement grossiers : ils
-     doivent etre reconnaissables a 200 px, pas exacts.
-     ========================================================== */
-
-  var LAND = [
-    [[107,77],[114.1,75.8],[109.4,74.2],[127,73.6],[131.3,70.8],[139.9,71.5],[140.5,72.8],[169.6,68.7],[170.5,70.1],[175.7,69.9],[180,69],[180,65],[177.4,64.6],[179.2,62.3],[163.5,59.9],[162.1,54.9],[156.8,51],[155.9,56.8],[164.5,62.6],[160.1,60.5],[156.7,61.4],[155,59.1],[142.2,59],[135.1,54.7],[139.9,54.2],[141.4,52.2],[138.2,46.3],[127.5,39.8],[129.1,35.1],[126.5,34.4],[125.3,39.6],[121.1,38.9],[121.6,40.9],[118,39.2],[118.9,37.4],[122.4,37.5],[119.2,34.9],[121.9,31.7],[121.7,28.2],[115.9,22.8],[110.4,20.3],[108.5,21.7],[105.9,19.8],[109.3,13.4],[105.2,8.6],[100.1,13.4],[99.2,9.2],[103,5.5],[104.2,1.3],[101.4,2.8],[98.3,7.8],[97.2,16.9],[94.2,16],[91.4,22.8],[87,21.5],[80.3,15.9],[79.9,10.4],[77.5,8],[72.6,21.4],[70.5,20.9],[66.4,25.4],[57.4,25.7],[48,30],[51.8,24],[56.4,26.4],[59.8,22.3],[55.3,17.2],[43.5,12.6],[42.6,16.8],[34.9,29.5],[33.9,27.6],[32.4,29.9],[37.5,18.6],[42.7,11.7],[44.6,10.4],[51.1,12],[51,10.6],[47.7,4.2],[39.2,-4.7],[40.8,-14.7],[34.8,-19.8],[35.6,-23.7],[32.6,-25.7],[32.2,-28.8],[25.8,-33.9],[18.4,-34.1],[11.8,-18.1],[13.7,-10.7],[8.8,-1.1],[9.4,3.7],[4.3,6.3],[-9,4.8],[-16.6,12.2],[-17,21.9],[-5.9,35.8],[9.5,37.4],[11.1,36.9],[10.3,33.8],[19.1,30.3],[21.5,32.8],[33.8,31],[36.2,36.7],[27.6,36.7],[26.2,39.5],[33.5,42],[41.7,42],[36.7,45.2],[39.1,47.3],[35,46.3],[36.3,45.1],[33.9,44.4],[30.7,46.6],[27.7,42.6],[28.8,41.1],[22.6,40.3],[24,37.7],[22.5,36.4],[19.5,41.7],[13.1,45.7],[12.6,44.1],[18.5,40.2],[16.9,40.4],[16.1,38],[8.9,44.4],[3.1,43.1],[-2.1,36.7],[-8.9,36.9],[-9.4,43],[-1.4,44],[-1.2,46],[-4.6,48.7],[8.1,53.5],[8.5,57.1],[10.6,57.7],[9.7,55.5],[10.9,54],[19.7,54.4],[21.6,57.4],[24.1,57],[23.3,59.2],[29.1,60],[21.3,60.7],[21.5,63.2],[25.4,65.1],[22.2,65.7],[17.8,62.7],[17.1,61.3],[18.8,60.1],[15.9,56.1],[12.9,55.4],[10.4,59.5],[5.7,58.6],[5,62],[14.8,67.8],[24.5,71],[41.1,67.5],[38.4,66],[33.2,66.6],[37,63.8],[37.2,65.1],[43.9,66.1],[43.5,68.6],[46.3,68.3],[46.3,66.7],[53.7,68.9],[59.9,68.3],[60.6,69.9],[68.5,68.1],[66.7,71],[72.6,72.8],[73.7,68.4],[71.3,66.3],[72.4,66.2],[75.1,67.8],[73.1,71.4],[74.7,72.8],[76.4,71.2],[81.5,71.8],[80.5,73.6],[87.2,75.1],[107,77]],
-    [[-90.5,69.5],[-87.4,67.2],[-85.5,69.9],[-82.6,69.7],[-81.3,67.6],[-93.2,62],[-94.7,58.9],[-92.3,57.1],[-82.3,55.1],[-79.9,51.2],[-78.6,52.6],[-79.8,54.7],[-76.5,56.5],[-78.5,58.8],[-78.1,62.3],[-73.8,62.4],[-69.6,61.1],[-67.6,58.2],[-64.6,60.3],[-55.7,52.1],[-60,50.2],[-66.4,50.2],[-71.1,46.8],[-65.1,49.2],[-64.5,46.2],[-59.8,45.9],[-65.4,43.5],[-66.2,44.5],[-64.4,45.3],[-67.1,45.1],[-70.7,43],[-70,41.6],[-75.5,39.5],[-75.9,37.2],[-76.3,39.2],[-75.7,35.6],[-81.3,31.4],[-80.4,25.2],[-84.1,30.1],[-96.6,28.3],[-97.9,22.4],[-96.3,19.3],[-92,18.7],[-90.3,21],[-87.1,21.5],[-88.9,15.9],[-83.4,15.3],[-83.8,11.1],[-81.4,8.8],[-76.8,8.6],[-71.8,12.4],[-71.7,9.1],[-69.9,12.2],[-68.2,10.6],[-61.9,10.7],[-57.1,6],[-51.3,4.2],[-50.4,-0.1],[-40,-2.9],[-35.6,-5.1],[-34.7,-7.3],[-38.7,-13.1],[-40.9,-21.9],[-47.6,-24.9],[-53.8,-34.4],[-58.4,-33.9],[-56.8,-36.9],[-65.1,-41.1],[-63.5,-42.6],[-67.3,-45.6],[-66,-48.1],[-69.1,-50.7],[-68.2,-52.3],[-71,-53.8],[-74.9,-52.3],[-75.6,-48.7],[-74.1,-46.9],[-75.6,-46.6],[-72.7,-42.4],[-74.3,-43.2],[-70.2,-19.8],[-76,-14.6],[-81.3,-6.1],[-79.8,-2.7],[-80.9,-1.1],[-77.1,3.8],[-78.2,8.3],[-80.9,7.2],[-85.7,9.9],[-87.5,13.3],[-103.5,18.3],[-114.8,31.8],[-109.4,23.2],[-112.2,24.7],[-117.3,33],[-120.6,34.6],[-124.4,40.3],[-124.7,48.2],[-122.6,47.1],[-122.8,49],[-127.4,50.8],[-134.1,58.1],[-147.1,60.9],[-151.7,59.2],[-150.6,61.3],[-158.4,56],[-164.8,54.4],[-157,58.9],[-162,58.7],[-166.1,61.5],[-160.8,64.8],[-168.1,65.7],[-161.7,66.1],[-166.8,68.4],[-156.6,71.4],[-136.5,68.9],[-128.1,70.5],[-108.9,67.4],[-106.2,68.8],[-96.1,67.3],[-94.2,69.1],[-96.5,70.1],[-95.2,71.9],[-90.5,69.5]],
-    [[-58.6,-64.2],[-65.7,-68],[-61.8,-70.7],[-60.8,-73.7],[-70.6,-76.6],[-77.2,-76.7],[-73.7,-77.9],[-78,-79.2],[-58.2,-83.2],[-28.5,-80.3],[-35.8,-78.3],[-17.5,-75.1],[-6.9,-70.9],[27.1,-70.5],[33.9,-68.5],[38.6,-69.8],[54.5,-65.8],[61.4,-68],[68.9,-67.9],[67.9,-71.9],[69.9,-72.3],[88,-66.2],[95.8,-67.4],[102.8,-65.6],[106.2,-66.9],[113.6,-65.9],[119.8,-67.3],[135.1,-65.3],[137.5,-67],[145.5,-66.9],[171.2,-71.7],[163.6,-76.2],[167,-78.8],[161.8,-79.2],[159.8,-80.9],[180,-84.7],[180,-90],[-180,-90],[-179.1,-84.1],[-143.1,-85],[-153.6,-83.7],[-152.9,-82],[-156.8,-81.1],[-146.4,-80.3],[-155.3,-79.1],[-158.4,-76.9],[-151.3,-77.4],[-135.2,-74.3],[-100.1,-74.9],[-103.7,-72.6],[-74.9,-73.9],[-67.4,-72.5],[-67.7,-67.3],[-57.2,-63.5],[-58.6,-64.2]],
-    [[-27.1,83.5],[-20.8,82.7],[-31.9,82.2],[-12.2,81.3],[-20,80.2],[-17.7,80.1],[-19.7,78.8],[-18.5,77],[-21.7,76.6],[-19.4,74.3],[-24.8,72.3],[-21.8,70.7],[-25.5,71.4],[-26.4,70.2],[-22.3,70.1],[-39.8,65.5],[-43.4,60.1],[-48.3,60.9],[-51.6,63.6],[-54,67.2],[-50.9,69.9],[-54.7,69.6],[-51.4,70.6],[-55.8,71.7],[-54.7,72.6],[-58.6,75.5],[-68.5,76.1],[-71.4,77],[-66.8,77.4],[-73.3,78],[-65.7,79.4],[-68,80.1],[-62.7,81.8],[-27.1,83.5]],
-    [[143.6,-13.8],[153.1,-26.1],[152.9,-31.6],[150,-37.4],[146.3,-39],[140.6,-38],[138.2,-34.4],[136.8,-35.3],[137.8,-32.9],[136,-34.9],[131.3,-31.5],[118,-35.1],[115,-34.2],[115.7,-31.6],[113.3,-26.1],[114.1,-21.8],[120.9,-19.7],[125.7,-14.2],[129.6,-15],[132.4,-11.1],[136.5,-11.9],[135.5,-15],[140.2,-17.7],[142.5,-10.7],[143.6,-13.8]],
-    [[-86.6,73.2],[-85.8,72.5],[-82.3,73.8],[-80.6,72.7],[-80.7,72.1],[-77.8,72.7],[-74.1,71.3],[-72.2,71.6],[-67,69.2],[-68.8,68.7],[-61.9,66.9],[-63.9,65],[-68,66.3],[-64.7,63.4],[-65,62.7],[-68.8,63.7],[-66.2,61.9],[-74.8,64.7],[-77.7,64.2],[-78.6,64.6],[-77.9,65.3],[-74,65.5],[-72.9,67.7],[-79,70.2],[-84.9,70],[-89.9,71.2],[-89.4,73.1],[-85.8,73.8],[-86.6,73.2]],
-    [[-68.5,83.1],[-61.9,82.6],[-67.7,81.5],[-65.5,81.5],[-71.2,79.8],[-76.9,79.3],[-75.4,78.5],[-79.8,77.2],[-77.9,76.8],[-80.6,76.2],[-89.5,76.5],[-87.8,77.2],[-88.3,77.9],[-85,77.5],[-88,78.4],[-85.1,79.3],[-86.9,80.3],[-81.8,80.5],[-87.6,80.5],[-91.6,81.9],[-79.3,83.1],[-68.5,83.1]],
-    [[134.1,-1.2],[134.4,-2.8],[135.5,-3.4],[138.3,-1.7],[144.6,-3.9],[147.6,-6.1],[147.2,-7.4],[150.7,-10.6],[147.9,-10.1],[144.7,-7.6],[142.6,-9.3],[139.1,-8.1],[137.6,-8.4],[138.7,-7.3],[137.9,-5.4],[133.7,-3.5],[133,-4.1],[132,-2.8],[133.7,-2.2],[130.5,-0.9],[132.4,-0.4],[134.1,-1.2]],
-    [[141,37.1],[140.3,35.1],[137.2,34.6],[135.8,33.5],[135.1,33.8],[135.1,34.6],[131,33.9],[132,33.1],[131.3,31.5],[130.7,31],[130.2,31.4],[130.4,32.3],[129.4,33.3],[132.6,35.4],[135.7,35.5],[136.7,37.3],[137.4,36.8],[139.4,38.2],[140.1,39.4],[139.9,40.6],[140.3,41.2],[141.4,41.4],[141.9,39.2],[141,38.2],[141,37.1]],
-    [[105.8,-5.9],[104.7,-5.9],[102.6,-4.2],[99.3,0.2],[98.6,1.8],[95.3,5.5],[97.5,5.2],[100.6,2.1],[101.7,2.1],[103.8,0.1],[103.4,-0.7],[104.4,-1.1],[104.9,-2.3],[106.1,-3.1],[105.8,-5.9]],
-    [[117.9,1.8],[119,0.9],[117.8,0.8],[117.5,-0.8],[116.6,-1.5],[116.1,-4],[116,-3.7],[114.9,-4.1],[114.5,-3.5],[113.3,-3.1],[112.1,-3.5],[111.7,-3],[110.2,-2.9],[110.1,-1.6],[109.1,-0.5],[109.1,1.3],[109.7,2],[111.2,1.9],[111.4,2.7],[113,3.1],[116.7,6.9],[119.2,5.4],[117.3,3.2],[118,2.3],[117.9,1.8]],
-    [[57.5,70.7],[53.7,70.8],[53.4,71.2],[51.6,71.5],[51.5,72],[54.4,73.6],[53.5,73.7],[55.9,74.6],[55.6,75.1],[61.2,76.3],[68.2,76.9],[68.9,76.5],[58.5,74.3],[55.4,72.4],[55.6,71.5],[57.5,70.7]],
-    [[50.1,-13.6],[50.4,-15.7],[49.7,-15.7],[49.8,-16.9],[47.1,-24.9],[45.4,-25.6],[44,-25],[43.3,-22.1],[44.4,-20.1],[44,-17.4],[44.4,-16.2],[46.3,-15.8],[47.7,-14.6],[47.9,-13.7],[48.3,-13.8],[49.2,-12],[50.1,-13.6]],
-    [[-114.2,73.1],[-114.7,72.7],[-112.4,73],[-111.1,72.5],[-109.9,73],[-108.2,71.7],[-107.7,72.1],[-108.4,73.1],[-106.5,73.1],[-105.4,72.7],[-104.5,71],[-101,70],[-101.1,69.6],[-102.7,69.5],[-102.1,69.1],[-102.4,68.8],[-106,69.2],[-113.3,68.5],[-113.9,69],[-116.1,69.2],[-117.3,70],[-112.4,70.4],[-117.9,70.5],[-118.4,70.9],[-116.1,71.3],[-119.4,71.6],[-117.9,72.7],[-115.2,73.3],[-114.2,73.1]],
-    [[-3,58.6],[-4.1,57.6],[-2,57.7],[-3.1,56],[-2.1,55.9],[-1.1,54.6],[-0.4,54.5],[0.5,52.9],[1.7,52.7],[1.1,51.8],[1.4,51.3],[0.6,50.8],[-3,50.7],[-5.2,50],[-5.8,50.2],[-3.4,51.4],[-5.3,52],[-4.2,52.3],[-4.8,52.8],[-4.6,53.5],[-3.1,53.4],[-2.9,54],[-3.6,54.6],[-4.8,54.8],[-5,55.8],[-5.6,55.3],[-6.1,56.8],[-5,58.6],[-3,58.6]],
-    [[-94.7,77.1],[-91.6,76.8],[-90.7,76.4],[-91,76.1],[-89.2,75.6],[-81.1,75.7],[-79.8,74.9],[-81.9,74.4],[-89.8,74.5],[-92.4,74.8],[-92.9,75.9],[-93.9,76.3],[-97.1,76.8],[-96.7,77.2],[-94.7,77.1]],
-    [[-175,66.6],[-174.3,66.3],[-174.6,67.1],[-171.9,66.9],[-169.9,66],[-172.5,65.4],[-172.6,64.5],[-173,64.3],[-176,64.9],[-176.2,65.4],[-178.4,65.4],[-178.9,65.7],[-178.7,66.1],[-179.9,65.9],[-179.4,65.4],[-180,65],[-180,69],[-174.9,67.2],[-175,66.6]],
-    [[173,-40.9],[173.2,-41.3],[174,-40.9],[174.2,-41.3],[172.7,-43.4],[173.1,-43.9],[171.5,-44.2],[170.6,-45.9],[169.3,-46.6],[166.7,-46.2],[167,-45.1],[170.5,-43],[172.1,-41],[172.8,-40.5],[173,-40.9]],
-    [[125.2,1.4],[124.4,0.4],[123.7,0.2],[120.2,0.2],[120,-0.5],[120.9,-1.4],[123.3,-0.6],[123.3,-1.1],[122.8,-0.9],[121.5,-1.9],[123.2,-5.3],[122.6,-5.6],[122.2,-5.3],[122.7,-4.5],[121.5,-4.6],[121.6,-4.2],[120.9,-3.6],[121,-2.6],[120.3,-2.9],[120.4,-5.5],[119.4,-5.4],[119.5,-3.5],[118.8,-2.8],[120,0.6],[120.9,1.3],[122.9,0.9],[125.2,1.4]],
-    [[174.6,-36.2],[175.3,-37.2],[175.4,-36.5],[176,-37.6],[176.8,-37.9],[178.5,-37.7],[178,-39.2],[177.2,-39.1],[176,-41.3],[175.2,-41.7],[174.7,-41.3],[175.2,-40.5],[174.9,-39.9],[173.8,-39.5],[174.6,-38.8],[174.7,-37.4],[172.6,-34.5],[174.3,-35.3],[174.6,-36.2]],
-    [[-120.5,71.4],[-123.1,70.9],[-125.9,71.9],[-123.9,73.7],[-124.9,74.3],[-117.6,74.2],[-115.5,73.5],[-119.2,72.5],[-120.5,71.8],[-120.5,71.4]],
-    [[18.3,79.7],[21.5,79],[19,78.6],[17.1,76.8],[15.9,76.8],[13.8,77.4],[14.7,77.7],[11.2,78.9],[10.4,79.7],[17,80.1],[18.3,79.7]]
-  ];
-
-  /* `off` : decalage de l'etiquette en pixels de canvas. Une
-     vraie carte fait pareil — a l'echelle d'un pays, Bruxelles,
-     Amsterdam et Berne tombent a quelques pixels l'un de
-     l'autre, donc les libelles se poussent pour rester lisibles. */
-  var PAYS = [
-    { nom: "Belgique", ici: 468, clubs: 38, c: [4.5, 50.6], hot: true, off: [0, 0],
-      pts: [[6.16,50.8],[6.04,50.13],[5.78,50.09],[5.67,49.53],[4.8,49.99],[4.29,49.91],[3.12,50.78],[2.66,50.8],[2.51,51.15],[3.31,51.35],[4.05,51.27],[4.97,51.48],[5.61,51.04],[6.16,50.8]],
-      villes: [
-        { nom: "Bruxelles", ici: 187, clubs: 12, c: [4.35, 50.85], hot: true },
-        { nom: "Anvers",    ici: 96,  clubs: 8,  c: [4.40, 51.22] },
-        { nom: "Gand",      ici: 71,  clubs: 6,  c: [3.72, 51.05] },
-        { nom: "Liège",     ici: 44,  clubs: 5,  c: [5.57, 50.63] },
-        { nom: "Charleroi", ici: 18,  clubs: 3,  c: [4.44, 50.41] },
-        { nom: "Namur",     ici: 14,  clubs: 2,  c: [4.87, 50.47] }
-      ] },
-    { nom: "France", ici: 1240, clubs: 96, c: [2.4, 46.8], off: [0, 52],
-      pts: [[6.19,49.46],[6.66,49.2],[8.1,49.02],[7.59,48.33],[7.47,47.62],[7.19,47.45],[6.74,47.54],[6.77,47.29],[6.04,46.73],[6.02,46.27],[6.5,46.43],[6.84,45.99],[6.8,45.71],[7.1,45.33],[6.75,45.03],[7.01,44.25],[7.55,44.13],[7.44,43.69],[6.53,43.13],[4.56,43.4],[3.1,43.08],[2.99,42.47],[1.83,42.34],[0.7,42.8],[0.34,42.58],[-1.5,43.03],[-1.9,43.42],[-1.38,44.02],[-1.19,46.01],[-2.23,47.06],[-2.96,47.57],[-4.49,47.95],[-4.59,48.68],[-3.3,48.9],[-1.62,48.64],[-1.93,49.78],[-0.99,49.35],[1.34,50.13],[1.64,50.95],[2.51,51.15],[2.66,50.8],[3.12,50.78],[4.29,49.91],[4.8,49.99],[5.9,49.44],[6.19,49.46]],
-      villes: [
-        { nom: "Paris",      ici: 340, clubs: 22, c: [2.35, 48.86],  hot: true },
-        { nom: "Marseille",  ici: 128, clubs: 11, c: [5.37, 43.30] },
-        { nom: "Lyon",       ici: 121, clubs: 10, c: [4.83, 45.76] },
-        { nom: "Lille",      ici: 84,  clubs: 7,  c: [3.06, 50.63] },
-        { nom: "Toulouse",   ici: 76,  clubs: 6,  c: [1.44, 43.60] },
-        { nom: "Nice",       ici: 68,  clubs: 6,  c: [7.26, 43.70] },
-        { nom: "Nantes",     ici: 54,  clubs: 5,  c: [-1.55, 47.22] },
-        { nom: "Strasbourg", ici: 47,  clubs: 4,  c: [7.75, 48.57] },
-        { nom: "Bordeaux",   ici: 62,  clubs: 5,  c: [-0.58, 44.84] }
-      ] },
-    { nom: "Pays-Bas", ici: 402, clubs: 29, c: [5.5, 52.4], off: [30, -104],
-      pts: [[6.91,53.48],[7.09,53.14],[6.84,52.23],[6.59,51.85],[5.99,51.85],[6.16,50.8],[5.61,51.04],[4.97,51.48],[4.05,51.27],[3.31,51.35],[3.83,51.62],[4.71,53.09],[6.07,53.51],[6.91,53.48]],
-      villes: [
-        { nom: "Amsterdam", ici: 168, clubs: 11, c: [4.90, 52.37], hot: true },
-        { nom: "Rotterdam", ici: 92,  clubs: 7,  c: [4.48, 51.92] },
-        { nom: "La Haye",   ici: 58,  clubs: 5,  c: [4.30, 52.08] },
-        { nom: "Utrecht",   ici: 49,  clubs: 4,  c: [5.12, 52.09] },
-        { nom: "Eindhoven", ici: 35,  clubs: 3,  c: [5.48, 51.44] }
-      ] },
-    { nom: "Allemagne", ici: 890, clubs: 71, c: [10.2, 51.2], off: [18, 0],
-      pts: [[14.12,53.76],[14.35,53.25],[14.07,52.98],[14.44,52.62],[14.69,52.09],[14.61,51.75],[15.02,51.11],[14.57,51],[14.31,51.12],[14.06,50.93],[13.34,50.73],[12.97,50.48],[12.24,50.27],[12.42,49.97],[12.52,49.55],[13.03,49.31],[13.6,48.88],[13.24,48.42],[12.88,48.29],[13.03,47.64],[12.93,47.47],[12.62,47.67],[12.14,47.7],[11.43,47.52],[10.54,47.57],[10.4,47.3],[9.9,47.58],[9.59,47.53],[8.52,47.83],[8.32,47.61],[7.47,47.62],[7.59,48.33],[8.1,49.02],[6.66,49.2],[6.19,49.46],[6.24,49.9],[6.04,50.13],[6.16,50.8],[5.99,51.85],[6.59,51.85],[6.84,52.23],[7.09,53.14],[6.91,53.48],[7.1,53.69],[7.94,53.75],[8.12,53.53],[8.8,54.02],[8.57,54.4],[8.53,54.96],[9.28,54.83],[9.92,54.98],[9.94,54.6],[10.95,54.36],[10.94,54.01],[11.96,54.2],[12.52,54.47],[13.65,54.08],[14.12,53.76]],
-      villes: [
-        { nom: "Berlin",     ici: 214, clubs: 15, c: [13.40, 52.52], hot: true },
-        { nom: "Hambourg",   ici: 98,  clubs: 8,  c: [9.99, 53.55] },
-        { nom: "Munich",     ici: 91,  clubs: 7,  c: [11.58, 48.14] },
-        { nom: "Cologne",    ici: 76,  clubs: 6,  c: [6.96, 50.94] },
-        { nom: "Francfort",  ici: 63,  clubs: 5,  c: [8.68, 50.11] },
-        { nom: "Düsseldorf", ici: 41,  clubs: 4,  c: [6.77, 51.23] },
-        { nom: "Stuttgart",  ici: 38,  clubs: 3,  c: [9.18, 48.78] }
-      ] },
-    { nom: "Royaume-Uni", ici: 2010, clubs: 154, c: [-2.2, 53.4], hot: true, off: [-40, -40],
-      pts: [[-3.09,53.4],[-2.95,53.98],[-3.63,54.62],[-4.84,54.79],[-5.08,55.06],[-4.72,55.51],[-5.05,55.78],[-5.59,55.31],[-5.64,56.28],[-6.15,56.79],[-5.79,57.82],[-5.01,58.63],[-4.21,58.55],[-3.01,58.63],[-4.07,57.55],[-3.06,57.69],[-1.96,57.68],[-2.22,56.87],[-3.12,55.97],[-2.09,55.91],[-1.11,54.62],[-0.43,54.46],[0.18,53.33],[0.47,52.93],[1.68,52.74],[1.56,52.1],[1.05,51.81],[1.45,51.29],[0.55,50.77],[-0.79,50.77],[-2.49,50.5],[-2.96,50.7],[-3.62,50.23],[-4.54,50.34],[-5.25,49.96],[-5.78,50.16],[-4.31,51.21],[-3.41,51.43],[-4.98,51.59],[-5.27,51.99],[-4.22,52.3],[-4.77,52.84],[-4.58,53.5],[-3.09,53.4]],
-      villes: [
-        { nom: "Londres",    ici: 412, clubs: 29, c: [-0.13, 51.51], hot: true },
-        { nom: "Manchester", ici: 138, clubs: 10, c: [-2.24, 53.48] },
-        { nom: "Birmingham", ici: 87,  clubs: 7,  c: [-1.90, 52.48] },
-        { nom: "Glasgow",    ici: 74,  clubs: 6,  c: [-4.25, 55.86] },
-        { nom: "Liverpool",  ici: 69,  clubs: 5,  c: [-2.98, 53.41] },
-        { nom: "Leeds",      ici: 58,  clubs: 5,  c: [-1.55, 53.80] },
-        { nom: "Édimbourg",  ici: 52,  clubs: 4,  c: [-3.19, 55.95] },
-        { nom: "Bristol",    ici: 41,  clubs: 3,  c: [-2.59, 51.45] }
-      ] },
-    { nom: "Espagne", ici: 760, clubs: 58, c: [-3.6, 40.2], off: [0, 0],
-      pts: [[-7.45,37.1],[-7.54,37.43],[-7.17,37.8],[-7.03,38.08],[-7.37,38.37],[-7.1,39.03],[-7.5,39.63],[-7.07,39.71],[-7.03,40.18],[-6.86,40.33],[-6.85,41.11],[-6.39,41.38],[-6.67,41.88],[-7.25,41.92],[-7.42,41.79],[-8.01,41.79],[-8.26,42.28],[-8.67,42.13],[-9.03,41.88],[-8.98,42.59],[-9.39,43.03],[-7.98,43.75],[-6.75,43.57],[-5.41,43.57],[-4.35,43.4],[-3.52,43.46],[-1.9,43.42],[-1.5,43.03],[0.34,42.58],[0.7,42.8],[1.83,42.34],[2.99,42.47],[3.04,41.89],[2.09,41.23],[0.81,41.01],[0.72,40.68],[0.11,40.12],[-0.28,39.31],[0.11,38.74],[-0.47,38.29],[-0.68,37.64],[-1.44,37.44],[-2.15,36.67],[-4.37,36.68],[-5,36.32],[-5.38,35.95],[-5.87,36.03],[-6.24,36.37],[-6.52,36.94],[-7.45,37.1]],
-      villes: [
-        { nom: "Madrid",    ici: 187, clubs: 13, c: [-3.70, 40.42], hot: true },
-        { nom: "Barcelone", ici: 176, clubs: 12, c: [2.17, 41.39], hot: true },
-        { nom: "Ibiza",     ici: 143, clubs: 6,  c: [1.43, 38.91] },
-        { nom: "Valence",   ici: 71,  clubs: 6,  c: [-0.38, 39.47] },
-        { nom: "Séville",   ici: 64,  clubs: 5,  c: [-5.98, 37.39] },
-        { nom: "Malaga",    ici: 52,  clubs: 4,  c: [-4.42, 36.72] },
-        { nom: "Bilbao",    ici: 34,  clubs: 3,  c: [-2.93, 43.26] }
-      ] },
-    { nom: "Italie", ici: 540, clubs: 44, c: [12.4, 42.6], off: [0, 40],
-      pts: [[10.44,46.89],[11.05,46.75],[11.16,46.94],[12.15,47.12],[12.38,46.77],[13.81,46.51],[13.7,46.02],[13.94,45.59],[13.14,45.74],[12.33,45.38],[12.38,44.89],[12.26,44.6],[12.59,44.09],[13.53,43.59],[14.03,42.76],[15.14,41.96],[15.93,41.96],[16.17,41.74],[15.89,41.54],[17.52,40.88],[18.38,40.36],[18.48,40.17],[18.29,39.81],[17.74,40.28],[16.87,40.44],[16.45,39.8],[17.17,39.42],[17.05,38.9],[16.64,38.84],[16.1,37.99],[15.68,37.91],[15.69,38.21],[15.89,38.75],[16.11,38.96],[15.41,40.05],[15,40.17],[14.7,40.6],[14.06,40.79],[13.63,41.19],[12.89,41.25],[12.11,41.7],[11.19,42.36],[10.51,42.93],[10.2,43.92],[9.7,44.04],[8.89,44.37],[8.43,44.23],[7.85,43.77],[7.44,43.69],[7.55,44.13],[7.01,44.25],[6.75,45.03],[7.1,45.33],[6.8,45.71],[6.84,45.99],[7.27,45.78],[7.76,45.82],[8.32,46.16],[8.49,46.01],[8.97,46.04],[9.18,46.44],[9.92,46.31],[10.36,46.48],[10.44,46.89]],
-      villes: [
-        { nom: "Rome",    ici: 156, clubs: 11, c: [12.50, 41.90], hot: true },
-        { nom: "Milan",   ici: 149, clubs: 11, c: [9.19, 45.46], hot: true },
-        { nom: "Naples",  ici: 78,  clubs: 6,  c: [14.27, 40.85] },
-        { nom: "Turin",   ici: 59,  clubs: 5,  c: [7.68, 45.07] },
-        { nom: "Bologne",   ici: 44,  clubs: 4,  c: [11.34, 44.49] },
-        { nom: "Florence", ici: 38,  clubs: 3,  c: [11.26, 43.77] },
-        { nom: "Venise",  ici: 16,  clubs: 4,  c: [12.34, 45.44] }
-      ] },
-    { nom: "Suisse", ici: 180, clubs: 14, c: [8.1, 46.8], off: [50, 30],
-      pts: [[9.59,47.53],[9.63,47.35],[9.48,47.1],[9.93,46.92],[10.44,46.89],[10.36,46.48],[9.92,46.31],[9.18,46.44],[8.97,46.04],[8.49,46.01],[8.32,46.16],[7.76,45.82],[7.27,45.78],[6.84,45.99],[6.5,46.43],[6.02,46.27],[6.04,46.73],[6.77,47.29],[6.74,47.54],[7.19,47.45],[7.47,47.62],[8.32,47.61],[8.52,47.83],[9.59,47.53]],
-      villes: [
-        { nom: "Zurich",  ici: 68, clubs: 5, c: [8.54, 47.37], hot: true },
-        { nom: "Genève",  ici: 51, clubs: 4, c: [6.14, 46.20] },
-        { nom: "Bâle",    ici: 33, clubs: 3, c: [7.59, 47.56] },
-        { nom: "Lausanne",ici: 21, clubs: 2, c: [6.63, 46.52] },
-        { nom: "Berne",   ici: 7,  clubs: 1, c: [7.45, 46.95] }
-      ] }
-  ];
-
-  /* Vu de l'orbite, on ne montre que les continents visibles :
-     le globe est centre sur l'Europe, donc les Ameriques du Nord
-     et l'Oceanie sont derriere. Le back-face culling s'en charge. */
-  var REGIONS = [
-    { nom: "Europe",          ici: "6,5k", c: [10, 52],   hot: true, zoom: true, off: [0, 0] },
-    { nom: "Asie",            ici: "1,8k", c: [74, 26],   off: [-40, 90] },
-    { nom: "Afrique",         ici: "260",  c: [12, 4],    off: [0, 0] },
-    { nom: "Amérique du Sud", ici: "740",  c: [-55, -15], off: [0, 0] }
-  ];
-
-  var AMIS = [
-    { nom: "Sarah",  q: 1 },   { nom: "Nassym", q: .62 },
-    { nom: "Yanis",  q: .62 }, { nom: "Léa",    q: 1 },
-    { nom: "Théo",   q: .3 },  { nom: "Inès",   q: .3 },
-    { nom: "Malik",  q: 0 },   { nom: "Chloé",  q: 1 }
-  ];
-
-  /* ==========================================================
-     CANVAS
-     ========================================================== */
-
-  var cv = document.getElementById("map");
+  var cv = document.getElementById("arbres");
   var ctx = cv.getContext("2d");
-  var W = cv.width, H = cv.height;
-  var screenEl = document.getElementById("screen");
-  var layer = document.getElementById("layer");
-  var mapwrap = document.getElementById("mapwrap");
+  var W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
+  var COUCHES_VERTES = ["Forest", "Wood", "Grass", "Meadow"];
 
-  var C = {
-    ground: "#eaf4e1", cream: "#f4f2ea", park: "#c6e5a4", park2: "#b4dd90",
-    water: "#a3d4f2", bank: "#cfe8f7",
-    road: "#cfcec8", roadCase: "#ffffff", roadMin: "#f8f6f1",
-    roofs: [
-      { top: "#eae2d6", l: "#d2c8b8", r: "#b9ae9c" },
-      { top: "#f2efe9", l: "#dcd7cd", r: "#c4beb2" },
-      { top: "#e3ded6", l: "#cbc4b7", r: "#b2aa9a" }
-    ],
-    win: "#a8cde4", vent: "#cfc7ba",
-    leafTop: "#a5d972", leafBot: "#7cba4d", trunk: "#8a6a45",
-    // niveaux geographiques
-    sea: "#c9e6f7", seaDeep: "#a9d6ef",
-    terre: "#dcefc6", terreEdge: "#b9dd97", terreOff: "#e6eadf", terreOffEdge: "#d3d9c9"
-  };
-
-  function poly(pts, fill, stroke, lw) {
-    if (!pts.length) return;
-    ctx.beginPath();
-    ctx.moveTo(pts[0][0], pts[0][1]);
-    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
-    ctx.closePath();
-    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
-    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 2; ctx.stroke(); }
+  function dimensionner() {
+    var r = cv.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * DPR; cv.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   }
+  dimensionner();
+  window.addEventListener("resize", dimensionner);
 
-  /* ---------- Projection equirectangulaire (Europe, Belgique) ---------- */
+  function dessiner() {
+    ctx.clearRect(0, 0, W, H);
+    var z = map.getZoom();
+    if (z < 12.5) return; // trop dezoome pour distinguer un arbre d'un pixel de bruit
+    var echelle = Math.min(1, (z - 12.5) / 2);
 
-  var VUE = { lon: 0, lat: 0, k: 1 };
+    var couches = COUCHES_VERTES.filter(function (id) { return map.getLayer(id); });
+    var feats;
+    try { feats = map.queryRenderedFeatures({ layers: couches }); } catch (e) { feats = []; }
 
-  function pxy(c) {
-    return [ W / 2 + (c[0] - VUE.lon) * VUE.k,
-             H / 2 - (c[1] - VUE.lat) * VUE.k * 1.52 ];
+    var pts = [];
+    feats.forEach(function (f) {
+      arbresDuPolygone(f).forEach(function (a) {
+        var p = map.project([a.lng, a.lat]);
+        if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) return;
+        pts.push({ x: p.x, y: p.y, s: a.s * echelle, teinte: a.teinte, variante: a.variante });
+      });
+    });
+    if (pts.length > 600) pts.length = 600; // garde-fou perf sur une vue tres chargee
+    pts.sort(function (a, b) { return a.y - b.y; });
+    pts.forEach(function (p) { arbreSur(ctx, p.x, p.y, 14 * p.s, p.teinte, p.variante); });
   }
+  // "moveend" seul ne suffit pas : juste apres un saut de camera, les
+  // tuiles de la nouvelle zone ne sont pas encore chargees et
+  // queryRenderedFeatures renvoie 0 resultat — "idle" (tout est
+  // charge, plus rien en attente) est le bon moment pour re-semer.
+  map.on("moveend", dessiner);
+  map.on("idle", dessiner);
+  map.on("load", dessiner);
+})();
 
-  /* ---------- Projection orthographique (le globe) ---------- */
+/* ==========================================================
+   L'ESPACE — etoiles et etoiles filantes derriere le globe.
+   MapLibre peint un ciel uni (voir ambiance()) mais pas d'etoiles :
+   ce calque est un simple canvas pose au-dessus de la carte, qui
+   ne s'affiche qu'au niveau orbite et s'efface des qu'on plonge
+   vers un pays.
+   ========================================================== */
 
-  // rot=5, tilt=10 : la ligne d'horizon ne traverse ni le
-  // Moyen-Orient ni les Ameriques en plein milieu du contour,
-  // les deux plus grandes masses ne se fragmentent donc plus
-  // en eclats verts isoles pres du bord du globe
-  var GLOBE = { cx: W / 2, cy: H * 0.45, r: W * 0.335, rot: 5, tilt: 10 };
+(function () {
+  var cv = document.getElementById("etoiles");
+  var ctx = cv.getContext("2d");
+  var W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
+  var REDUIT = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  function ortho(c) {
-    var l = (c[0] + GLOBE.rot) * Math.PI / 180, p = c[1] * Math.PI / 180;
-    var t = GLOBE.tilt * Math.PI / 180;
-    var x = Math.cos(p) * Math.sin(l);
-    var y = Math.sin(p);
-    var z = Math.cos(p) * Math.cos(l);
-    var y2 = y * Math.cos(t) - z * Math.sin(t);
-    var z2 = y * Math.sin(t) + z * Math.cos(t);
-    return { x: GLOBE.cx + GLOBE.r * x, y: GLOBE.cy - GLOBE.r * y2, front: z2 > 0.02, z: z2 };
+  function dimensionner() {
+    var r = cv.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * DPR; cv.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   }
-
-  /* Trouve, par dichotomie, le point de la geodesique entre deux
-     coordonnees ou l'horizon (z=0) est franchi. Sans ca, un
-     contour qui passe derriere le globe se refermait en ligne
-     droite a travers le disque au lieu de suivre le bord. */
-  function pointHorizon(cA, cB) {
-    if (Math.abs(cB[0] - cA[0]) > 180) return ortho(cA); // antimeridien : cas rare, hors-champ
-    var lo = 0, hi = 1, signeA = ortho(cA).z > 0;
-    for (var i = 0; i < 14; i++) {
-      var t = (lo + hi) / 2;
-      var c = [cA[0] + (cB[0] - cA[0]) * t, cA[1] + (cB[1] - cA[1]) * t];
-      if ((ortho(c).z > 0) === signeA) lo = t; else hi = t;
-    }
-    var t2 = (lo + hi) / 2;
-    return ortho([cA[0] + (cB[0] - cA[0]) * t2, cA[1] + (cB[1] - cA[1]) * t2]);
-  }
-
-  /* Decoupe un anneau de coordonnees en sous-chemins qui restent
-     entierement du cote visible, en inserant le point d'horizon
-     exact a chaque franchissement — plutot que de relier deux
-     points visibles non consecutifs par une ligne droite qui
-     traverserait le disque. */
-  function segmentsVisibles(ring) {
-    var runs = [], cur = [];
-    var p0 = ortho(ring[0]);
-    if (p0.front) cur.push([p0.x, p0.y]);
-
-    for (var i = 1; i < ring.length; i++) {
-      var prevC = ring[i - 1], c = ring[i];
-      var prevP = ortho(prevC), p = ortho(c);
-
-      if (prevP.front && p.front) {
-        cur.push([p.x, p.y]);
-      } else if (prevP.front && !p.front) {
-        var out = pointHorizon(prevC, c);
-        cur.push([out.x, out.y]);
-        if (cur.length > 2) runs.push(cur);
-        cur = [];
-      } else if (!prevP.front && p.front) {
-        var inn = pointHorizon(prevC, c);
-        cur = [[inn.x, inn.y], [p.x, p.y]];
-      }
-      // cache-cache (les deux caches) : rien a tracer
-    }
-    if (cur.length > 2) runs.push(cur);
-    return runs;
-  }
-
-  /* ---------- Le champ d'etoiles ---------- */
+  dimensionner();
+  window.addEventListener("resize", dimensionner);
 
   var etoiles = [], filantes = [];
   (function () {
-    var s = 4242;
+    var s = 20260817;
     function r() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
-    for (var i = 0; i < 190; i++) {
-      etoiles.push({ x: r() * W, y: r() * H, r: .7 + r() * 1.7, ph: r() * 6.28, sp: .6 + r() * 1.6 });
+    for (var i = 0; i < 140; i++) {
+      etoiles.push({ x: r(), y: r(), r: .6 + r() * 1.5, ph: r() * 6.28, sp: .6 + r() * 1.6 });
     }
-    for (var j = 0; j < 3; j++) filantes.push(neuve(j * 2.4));
+    for (var j = 0; j < 3; j++) filantes.push(neuve(j * 2.6));
+    function neuve(delai) {
+      return { a: -.55 + Math.random() * .4, v: 9 + Math.random() * 7, len: 110 + Math.random() * 150,
+        x: Math.random() * .8, y: Math.random() * .5,
+        t: -(delai + Math.random() * 4), vie: 1.1 + Math.random() * .5 };
+    }
+    window.__neuve = neuve;
   })();
 
-  function neuve(delai) {
-    var a = -0.55 + Math.random() * 0.4;           // vers le bas-droite
-    return {
-      x: Math.random() * W * .7 - W * .1,
-      y: Math.random() * H * .55,
-      a: a, v: 9 + Math.random() * 7,
-      len: 110 + Math.random() * 150,
-      t: -(delai + Math.random() * 4), vie: 1.1 + Math.random() * .5
-    };
-  }
+  var opacite = 1, dernier = 0, raf = null;
 
-  function espace(dt, temps) {
-    ctx.fillStyle = "#05060a";
-    ctx.fillRect(0, 0, W, H);
-
-    // une nappe froide, pour que le noir ne soit pas mort
-    var g = ctx.createRadialGradient(W * .8, H * .12, 0, W * .8, H * .12, W * .9);
-    g.addColorStop(0, "rgba(70,110,190,.16)");
-    g.addColorStop(1, "rgba(70,110,190,0)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  function dessiner(temps, dt) {
+    ctx.clearRect(0, 0, W, H);
+    if (opacite <= 0) return;
+    ctx.globalAlpha = opacite;
 
     etoiles.forEach(function (e) {
-      var a = REDUCED ? .7 : .45 + .55 * Math.abs(Math.sin(temps * e.sp + e.ph));
-      ctx.globalAlpha = a;
+      var a = REDUIT ? .7 : .4 + .6 * Math.abs(Math.sin(temps * e.sp + e.ph));
+      ctx.globalAlpha = opacite * a;
       ctx.fillStyle = "#fff";
-      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.x * W, e.y * H, e.r, 0, 6.29); ctx.fill();
     });
-    ctx.globalAlpha = 1;
 
-    if (REDUCED) return;
-
-    filantes.forEach(function (f, i) {
+    if (!REDUIT) filantes.forEach(function (f, i) {
       f.t += dt;
       if (f.t < 0) return;
-      if (f.t > f.vie) { filantes[i] = neuve(1.5 + Math.random() * 5); return; }
-
+      if (f.t > f.vie) { filantes[i] = window.__neuve(1.5 + Math.random() * 5); return; }
       var d = f.t * f.v * 60;
-      var hx = f.x + Math.cos(f.a) * d, hy = f.y - Math.sin(f.a) * d;
+      var hx = f.x * W + Math.cos(f.a) * d, hy = f.y * H - Math.sin(f.a) * d;
       var tx = hx - Math.cos(f.a) * f.len, ty = hy + Math.sin(f.a) * f.len;
-
-      // la trainee s'efface aux deux bouts
-      var fade = Math.min(1, f.t / .18) * Math.min(1, (f.vie - f.t) / .3);
+      var fade = Math.min(1, f.t / .18) * Math.min(1, (f.vie - f.t) / .3) * opacite;
       var lg = ctx.createLinearGradient(tx, ty, hx, hy);
       lg.addColorStop(0, "rgba(255,255,255,0)");
-      lg.addColorStop(1, "rgba(255,255,255," + (.85 * fade) + ")");
-      ctx.strokeStyle = lg; ctx.lineWidth = 2.4; ctx.lineCap = "round";
+      lg.addColorStop(1, "rgba(255,255,255," + (.9 * fade) + ")");
+      ctx.strokeStyle = lg; ctx.lineWidth = 2; ctx.lineCap = "round";
       ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
-
-      ctx.globalAlpha = fade;
-      ctx.fillStyle = "#fff";
-      ctx.beginPath(); ctx.arc(hx, hy, 2.6, 0, 6.2832); ctx.fill();
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = fade; ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(hx, hy, 2.2, 0, 6.29); ctx.fill();
     });
+    ctx.globalAlpha = 1;
   }
-
-  function globe() {
-    // halo atmospherique
-    var atm = ctx.createRadialGradient(GLOBE.cx, GLOBE.cy, GLOBE.r * .92, GLOBE.cx, GLOBE.cy, GLOBE.r * 1.3);
-    atm.addColorStop(0, "rgba(120,190,255,.34)");
-    atm.addColorStop(1, "rgba(120,190,255,0)");
-    ctx.fillStyle = atm;
-    ctx.beginPath(); ctx.arc(GLOBE.cx, GLOBE.cy, GLOBE.r * 1.3, 0, 6.2832); ctx.fill();
-
-    ctx.save();
-    ctx.beginPath(); ctx.arc(GLOBE.cx, GLOBE.cy, GLOBE.r, 0, 6.2832); ctx.clip();
-
-    // l'ocean : un vrai bleu profond, la lumiere venant du coin
-    // haut-gauche pour donner du volume a la sphere
-    var oc = ctx.createRadialGradient(
-      GLOBE.cx - GLOBE.r * .38, GLOBE.cy - GLOBE.r * .42, GLOBE.r * .12,
-      GLOBE.cx, GLOBE.cy, GLOBE.r * 1.18);
-    oc.addColorStop(0, "#d7edfb");
-    oc.addColorStop(.35, "#a9d6ef");
-    oc.addColorStop(.72, "#6fa9d6");
-    oc.addColorStop(1, "#3f74a8");
-    ctx.fillStyle = oc;
-    ctx.fillRect(GLOBE.cx - GLOBE.r, GLOBE.cy - GLOBE.r, GLOBE.r * 2, GLOBE.r * 2);
-
-    // les terres : contour et decroche discrets vers les bords,
-    // pour que chaque masse se detache au lieu de se fondre
-    LAND.forEach(function (ring) {
-      // une masse presque entierement cachee (l'essentiel de son
-      // contour derriere l'horizon) ne laisse depasser qu'un bord
-      // qui zigzague au fil des sommets simplifies — un residu
-      // illisible plutot qu'un continent qu'on reconnait. On saute
-      // le ring entier plutot que d'en tracer la miette visible.
-      var visibles = 0;
-      for (var v = 0; v < ring.length; v++) if (ortho(ring[v]).front) visibles++;
-      if (visibles / ring.length < 0.12) return;
-
-      segmentsVisibles(ring).forEach(function (pts) {
-        // une cote qui longe l'horizon en tangente laisse un
-        // ruban fin et haut — sa boite englobante est grande mais
-        // sa surface reelle est quasi nulle. On mesure l'aire du
-        // polygone (formule du lacet), pas sa boite, sinon ce
-        // ruban passait le filtre precedent.
-        var aire = 0;
-        for (var k = 0; k < pts.length; k++) {
-          var a = pts[k], b = pts[(k + 1) % pts.length];
-          aire += a[0] * b[1] - b[0] * a[1];
-        }
-        if (Math.abs(aire) / 2 < 90) return;
-        poly(pts, "#c3e2a0", "#9fc47a", 1.1);
-      });
-    });
-
-    // un voile clair au centre du cote jour, pour epouser la
-    // courbure — sans lui la terre visible paraissait plate
-    var relief = ctx.createRadialGradient(
-      GLOBE.cx - GLOBE.r * .3, GLOBE.cy - GLOBE.r * .34, 0,
-      GLOBE.cx - GLOBE.r * .3, GLOBE.cy - GLOBE.r * .34, GLOBE.r * 1.05);
-    relief.addColorStop(0, "rgba(255,255,255,.16)");
-    relief.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = relief;
-    ctx.fillRect(GLOBE.cx - GLOBE.r, GLOBE.cy - GLOBE.r, GLOBE.r * 2, GLOBE.r * 2);
-
-    // le terminateur : un cote dans la nuit
-    var sh = ctx.createLinearGradient(GLOBE.cx - GLOBE.r * .15, 0, GLOBE.cx + GLOBE.r, 0);
-    sh.addColorStop(0, "rgba(5,8,20,0)");
-    sh.addColorStop(.68, "rgba(5,8,20,.22)");
-    sh.addColorStop(1, "rgba(5,8,20,.62)");
-    ctx.fillStyle = sh;
-    ctx.fillRect(GLOBE.cx - GLOBE.r, GLOBE.cy - GLOBE.r, GLOBE.r * 2, GLOBE.r * 2);
-
-    ctx.restore();
-
-    // le rebord de la sphere : une ligne fine, sinon le globe
-    // se fond dans le noir de l'espace
-    ctx.beginPath(); ctx.arc(GLOBE.cx, GLOBE.cy, GLOBE.r, 0, 6.2832);
-    ctx.strokeStyle = "rgba(180,215,255,.35)"; ctx.lineWidth = 1.4; ctx.stroke();
-  }
-
-  /* ---------- Europe et Belgique ---------- */
-
-  function carteVecteur(paysFocus) {
-    // la mer
-    var m = ctx.createLinearGradient(0, 0, 0, H);
-    m.addColorStop(0, C.sea);
-    m.addColorStop(1, C.seaDeep);
-    ctx.fillStyle = m; ctx.fillRect(0, 0, W, H);
-
-    PAYS.forEach(function (p) {
-      var pts = p.pts.map(pxy);
-      var focus = !paysFocus || p === paysFocus;
-      poly(pts,
-        focus ? C.terre : C.terreOff,
-        focus ? C.terreEdge : C.terreOffEdge,
-        paysFocus ? 3 : 2.4);
-    });
-
-    if (paysFocus) {
-      // quelques axes entre les plus grandes villes du pays, pour
-      // qu'un petit pays ne reste pas une simple tache de couleur
-      ctx.strokeStyle = "#e8e4d8"; ctx.lineWidth = 7; ctx.lineCap = "round";
-      var vs = paysFocus.villes.slice(0, 6);
-      for (var i = 1; i < vs.length; i++) {
-        var a = pxy(vs[0].c), b = pxy(vs[i].c);
-        ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
-      }
-    }
-  }
-
-  /* Calcule le centre et le zoom qui font tenir un pays dans le
-     cadre, quelle que soit sa taille reelle — la Suisse et la
-     France ne peuvent pas partager le meme facteur d'echelle. */
-  function cadrerPays(p) {
-    var minx = 1e9, maxx = -1e9, miny = 1e9, maxy = -1e9;
-    p.pts.forEach(function (c) {
-      minx = Math.min(minx, c[0]); maxx = Math.max(maxx, c[0]);
-      miny = Math.min(miny, c[1]); maxy = Math.max(maxy, c[1]);
-    });
-    var cx = (minx + maxx) / 2, cy = (miny + maxy) / 2;
-    var spanLon = Math.max(maxx - minx, 0.6), spanLat = Math.max(maxy - miny, 0.6);
-    var kLon = (W * 0.66) / spanLon;
-    var kLat = (H * 0.5) / (spanLat * 1.52);
-    return { lon: cx, lat: cy, k: Math.min(kLon, kLat, 340) };
-  }
-
-  /* ---------- La ville en 3D ---------- */
-
-  function ville() {
-    var seed = 20260817;
-    function rnd() { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }
-    function span(a, b) { return a + rnd() * (b - a); }
-
-    var TH = -0.36, SY = 0.80, COS = Math.cos(TH), SIN = Math.sin(TH);
-    var OX = W * 0.5, OY = H * 0.44;
-    function proj(x, y) { return [ (x * COS - y * SIN) + OX, (x * SIN + y * COS) * SY + OY ]; }
-    function up(p, h) { return [ p[0] - h * 0.17, p[1] - h * 0.92 ]; }
-
-    ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, H);
-
-    function blob(cx, cy, rx, ry, fill, rot) {
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot || 0);
-      ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, 6.2832);
-      ctx.fillStyle = fill; ctx.fill(); ctx.restore();
-    }
-    blob(W * .50, H * .40, 330, 300, C.cream, -.3);
-    blob(W * .18, H * .70, 200, 180, C.cream, .2);
-    blob(W * .84, H * .30, 175, 150, C.park, -.2);
-    blob(W * .80, H * .33, 120, 100, C.park2, -.2);
-    blob(W * .10, H * .22, 150, 120, C.park, .3);
-    blob(W * .62, H * .82, 190, 130, C.park, -.15);
-    blob(W * .30, H * .12, 130, 95, C.park, .1);
-
-    function canal(width, color) {
-      ctx.strokeStyle = color; ctx.lineCap = "round"; ctx.lineWidth = width;
-      ctx.beginPath();
-      ctx.moveTo(-30, H * .20);
-      ctx.bezierCurveTo(W * .26, H * .32, W * .28, H * .52, W * .12, H * .68);
-      ctx.bezierCurveTo(W * .04, H * .78, W * .10, H * .90, W * .02, H + 30);
-      ctx.stroke();
-    }
-    canal(50, C.bank); canal(40, C.water);
-
-    var BW = 190, BH = 210, EXT = 1500, gx, gy;
-
-    function road(a, b, w, col) {
-      var p = proj(a[0], a[1]), q = proj(b[0], b[1]);
-      ctx.lineCap = "round";
-      ctx.strokeStyle = C.roadCase; ctx.lineWidth = w + 4;
-      ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
-      ctx.strokeStyle = col; ctx.lineWidth = w;
-      ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
-    }
-
-    for (gy = -EXT; gy <= EXT; gy += BH) {
-      var majY = Math.abs(gy % (BH * 3)) < 1;
-      road([-EXT, gy], [EXT, gy], majY ? 16 : 8, majY ? C.road : C.roadMin);
-    }
-    for (gx = -EXT; gx <= EXT; gx += BW) {
-      var majX = Math.abs(gx % (BW * 3)) < 1;
-      road([gx, -EXT], [gx, EXT], majX ? 16 : 8, majX ? C.road : C.roadMin);
-    }
-
-    var objs = [];
-    for (gy = -EXT; gy < EXT; gy += BH) {
-      for (gx = -EXT; gx < EXT; gx += BW) {
-        var cp = proj(gx + BW / 2, gy + BH / 2);
-        if (cp[0] < -140 || cp[0] > W + 140 || cp[1] < -180 || cp[1] > H + 140) continue;
-
-        var inPark =
-          Math.hypot(cp[0] - W * .84, cp[1] - H * .30) < 160 ||
-          Math.hypot(cp[0] - W * .62, cp[1] - H * .82) < 165 ||
-          Math.hypot(cp[0] - W * .10, cp[1] - H * .22) < 135 ||
-          Math.hypot(cp[0] - W * .30, cp[1] - H * .12) < 115;
-
-        if (inPark) {
-          var n = 3 + Math.floor(rnd() * 3);
-          for (var t = 0; t < n; t++) {
-            objs.push({ k: "tree", s: span(.78, 1.25), p: proj(gx + span(24, BW - 24), gy + span(24, BH - 24)) });
-          }
-        } else {
-          var cnt = 1 + Math.floor(rnd() * 3);
-          for (var b = 0; b < cnt; b++) {
-            var bw = span(46, 92), bh = span(46, 88);
-            var bx = gx + 22 + rnd() * (BW - 44 - bw);
-            var by = gy + 22 + rnd() * (BH - 44 - bh);
-            objs.push({ k: "bldg", x: bx, y: by, w: bw, h: bh, z: span(22, 70),
-                        pal: Math.floor(rnd() * 3), p: proj(bx + bw / 2, by + bh / 2) });
-          }
-          for (var a2 = 0; a2 < 2; a2++) {
-            objs.push({ k: "tree", s: span(.6, .82), p: proj(gx + span(30, BW - 30), gy + BH - span(6, 14)) });
-          }
-        }
-      }
-    }
-    objs.sort(function (a, b) { return a.p[1] - b.p[1]; });
-
-    objs.forEach(function (o) {
-      if (o.k === "tree") {
-        var p = o.p, s = o.s;
-        ctx.beginPath(); ctx.ellipse(p[0] + 5, p[1] + 3, 15 * s, 6 * s, 0, 0, 6.2832);
-        ctx.fillStyle = "rgba(90,110,80,.16)"; ctx.fill();
-        ctx.fillStyle = C.trunk; ctx.fillRect(p[0] - 2.6 * s, p[1] - 16 * s, 5.2 * s, 17 * s);
-        ctx.beginPath(); ctx.ellipse(p[0], p[1] - 32 * s, 15 * s, 21 * s, 0, 0, 6.2832);
-        ctx.fillStyle = C.leafBot; ctx.fill();
-        ctx.beginPath(); ctx.ellipse(p[0] - 3 * s, p[1] - 36 * s, 12 * s, 16 * s, 0, 0, 6.2832);
-        ctx.fillStyle = C.leafTop; ctx.fill();
-        return;
-      }
-
-      var pal = C.roofs[o.pal];
-      var a = proj(o.x, o.y), bpt = proj(o.x + o.w, o.y);
-      var c = proj(o.x + o.w, o.y + o.h), d = proj(o.x, o.y + o.h);
-      poly([[a[0]+7,a[1]+5],[bpt[0]+7,bpt[1]+5],[c[0]+7,c[1]+5],[d[0]+7,d[1]+5]], "rgba(90,110,80,.13)");
-      var A = up(a, o.z), B = up(bpt, o.z), Cc = up(c, o.z), D = up(d, o.z);
-      poly([d, c, Cc, D], pal.l);
-      poly([c, bpt, B, Cc], pal.r);
-      poly([A, B, Cc, D], pal.top);
-
-      var rows = o.z > 44 ? 2 : 1;
-      for (var r = 0; r < rows; r++) {
-        var f = 0.30 + r * 0.34, sx = .18;
-        var w1 = [ d[0] + (D[0]-d[0])*f, d[1] + (D[1]-d[1])*f ];
-        var w2 = [ c[0] + (Cc[0]-c[0])*f, c[1] + (Cc[1]-c[1])*f ];
-        var w3 = [ w2[0] + (Cc[0]-c[0])*.16, w2[1] + (Cc[1]-c[1])*.16 ];
-        var w4 = [ w1[0] + (D[0]-d[0])*.16, w1[1] + (D[1]-d[1])*.16 ];
-        poly([
-          [w1[0] + (w2[0]-w1[0])*sx, w1[1] + (w2[1]-w1[1])*sx],
-          [w1[0] + (w2[0]-w1[0])*(1-sx), w1[1] + (w2[1]-w1[1])*(1-sx)],
-          [w4[0] + (w3[0]-w4[0])*(1-sx), w4[1] + (w3[1]-w4[1])*(1-sx)],
-          [w4[0] + (w3[0]-w4[0])*sx, w4[1] + (w3[1]-w4[1])*sx]
-        ], C.win);
-      }
-
-      if (o.z > 46) {
-        var m1 = .32, m2 = .58;
-        poly([
-          [A[0]+(B[0]-A[0])*m1+(D[0]-A[0])*m1-1.5, A[1]+(B[1]-A[1])*m1+(D[1]-A[1])*m1-8],
-          [A[0]+(B[0]-A[0])*m2+(D[0]-A[0])*m1-1.5, A[1]+(B[1]-A[1])*m2+(D[1]-A[1])*m1-8],
-          [A[0]+(B[0]-A[0])*m2+(D[0]-A[0])*m2-1.5, A[1]+(B[1]-A[1])*m2+(D[1]-A[1])*m2-8],
-          [A[0]+(B[0]-A[0])*m1+(D[0]-A[0])*m2-1.5, A[1]+(B[1]-A[1])*m1+(D[1]-A[1])*m2-8]
-        ], C.vent);
-      }
-    });
-  }
-
-  /* ==========================================================
-     LES MARQUEURS
-     ========================================================== */
-
-  function pct(x, y) { return { l: (x / W * 100) + "%", t: (y / H * 100) + "%" }; }
-
-  function spot(o) {
-    var b = document.createElement("button");
-    b.className = "spot";
-    b.style.left = o.l; b.style.top = o.t;
-    // les marqueurs compacts n'affichent pas de nom a l'ecran,
-    // mais gardent un libelle pour les lecteurs d'ecran
-    b.setAttribute("aria-label", (o.nom || "") + " " + o.n + " " + (o.u || "ici"));
-    b.style.setProperty("--c", o.c);
-    if (o.d) b.style.setProperty("--d", o.d + "px");
-    if (o.fs) b.style.setProperty("--fs", o.fs + "px");
-    if (o.tw) b.style.setProperty("--tw", o.tw + "px");
-    b.innerHTML =
-      '<span class="spot-badge' + (o.hot ? " hot" : "") + (o.shut ? " shut" : "") + '">' +
-        '<b>' + o.n + '</b><i>' + (o.u || "ICI") + '</i></span>' +
-      (o.nom && !o.compact ? '<span class="spot-txt"><b>' + o.nom + '</b>' +
-        (o.sub ? '<small class="' + (o.mute ? "mute" : "") + '">' + o.sub + '</small>' : '') +
-      '</span>' : '');
-    if (o.onClick) b.addEventListener("click", o.onClick);
-    layer.appendChild(b);
-    return b;
-  }
-
-  function mate(o) {
-    var b = document.createElement("button");
-    b.className = "mate" + (o.cls ? " " + o.cls : "");
-    b.style.left = o.l; b.style.top = o.t;
-    b.innerHTML = pint(o.q) +
-      '<span class="mate-tag">' + o.nom + ' <em class="' + (o.now ? "now" : "") + '">' + o.quand + '</em></span>';
-    layer.appendChild(b);
-  }
-
-  function el(cls, html, l, t, extra) {
-    var d = document.createElement(cls === "shield" ? "span" : "div");
-    d.className = cls;
-    d.style.left = l; d.style.top = t;
-    if (extra) d.setAttribute("style", d.getAttribute("style") + ";" + extra);
-    d.innerHTML = html;
-    layer.appendChild(d);
-    return d;
-  }
-
-  /* ==========================================================
-     LES QUATRE NIVEAUX
-     ========================================================== */
-
-  var NIVEAUX_TERRE_EUROPE = ["Terre", "Europe"];
-  var niveau = 3;
-  // le pays et la ville affiches aux niveaux 2 et 3 — plus de
-  // Belgique/Bruxelles figes en dur, n'importe quel pays d'Europe
-  // s'ouvre sur ses propres villes
-  var paysActuel = PAYS[0];               // Belgique par defaut
-  var villeActuelle = PAYS[0].villes[0];  // Bruxelles par defaut
-  var raf = null, dernier = 0;
-
-  function stopBoucle() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
 
   function boucle(ts) {
-    var t = ts / 1000;
-    var dt = dernier ? Math.min(.05, t - dernier) : 0;
+    var t = ts / 1000, dt = dernier ? Math.min(.05, t - dernier) : 0;
     dernier = t;
-    espace(dt, t);
-    globe();
+    dessiner(t, dt);
     raf = requestAnimationFrame(boucle);
   }
+  raf = requestAnimationFrame(boucle);
 
-  function rendre(direction) {
-    stopBoucle();
-    dernier = 0;
-    layer.innerHTML = "";
-    screenEl.classList.toggle("space", niveau === 0);
-    document.getElementById("dim").hidden = niveau !== 3;
-    // ta propre activite n'a de sens qu'a l'echelle de la ville :
-    // au-dessus, la pastille n'est plus qu'un obstacle
-    document.querySelector(".status-pill").hidden = niveau !== 3;
-    document.getElementById("place-name").textContent =
-      niveau === 2 ? paysActuel.nom :
-      niveau === 3 ? villeActuelle.nom :
-      NIVEAUX_TERRE_EUROPE[niveau];
-    document.getElementById("place-sub").style.display = niveau === 3 ? "flex" : "none";
-    document.getElementById("zin").disabled = niveau === 3;
-    document.getElementById("zout").disabled = niveau === 0;
-
-    if (niveau === 0) {
-      // une premiere image tout de suite : sans elle, le canvas
-      // garde l'ancien niveau le temps d'une frame et on voit
-      // l'Europe clignoter avant l'espace
-      espace(0, 0);
-      globe();
-      raf = requestAnimationFrame(boucle);
-
-      REGIONS.forEach(function (r) {
-        var p = ortho(r.c);
-        if (!p.front) return;
-        var q = pct(p.x + r.off[0], p.y + r.off[1]);
-        spot({
-          l: q.l, t: q.t, n: r.ici, nom: r.nom,
-          c: r.hot ? "#ff2f45" : "#3b4250",
-          d: r.hot ? 48 : 36, fs: r.hot ? 15 : 12, tw: 74,
-          hot: r.hot, onClick: r.zoom ? function () { aller(1, 1); } : null
-        });
-      });
-
-      el("lbl void", "Vu d'ici, chaque continent est un seul point", "50%", "86%");
-
-    } else if (niveau === 1) {
-      VUE = { lon: 6, lat: 50.5, k: 21 };
-      carteVecteur(null);
-
-      PAYS.forEach(function (p) {
-        var xy = pxy(p.c);
-        var q = pct(xy[0] + p.off[0], xy[1] + p.off[1]);
-        spot({
-          l: q.l, t: q.t, n: fmt(p.ici), nom: p.nom, sub: p.clubs + " clubs",
-          mute: !p.hot, c: p.hot ? "#ff2f45" : "#3b4250",
-          d: p.hot ? 42 : 38, fs: p.hot ? 14 : 12, tw: 74, hot: p.hot,
-          onClick: function () { paysActuel = p; aller(2, 1); }
-        });
-      });
-
-      el("lbl sea", "Mer du Nord", "26%", "16%");
-      el("lbl sea", "Atlantique", "7%", "66%");
-
-    } else if (niveau === 2) {
-      VUE = cadrerPays(paysActuel);
-      carteVecteur(paysActuel);
-
-      // Les positions restent les vraies coordonnees des villes —
-      // on ne deplace rien. Mais deux villes reellement voisines
-      // (Amsterdam/Rotterdam/La Haye, Glasgow/Edimbourg...) tombent
-      // a quelques pixels l'une de l'autre a cette echelle : la
-      // plus grande garde son etiquette complete, les autres se
-      // reduisent a un point si elles la chevauchent — exactement
-      // ce qu'une vraie carte fait en dezoomant.
-      var vs = paysActuel.villes.slice().sort(function (a, b) { return b.ici - a.ici; });
-      var placees = [];
-      // demi-largeur/demi-hauteur du VRAI encombrement a l'ecran :
-      // badge + nom + sous-titre en dessous pour une etiquette
-      // complete, juste le petit badge pour une compacte.
-      // x/y sont en coordonnees canvas (700x1500) alors que ces
-      // tailles ont ete mesurees en pixels ecran (~350x750) : sans
-      // ce facteur 2, le test de chevauchement sous-estimait de
-      // moitie la place que prend vraiment une etiquette.
-      var ECH = W / 350;
-      // marge de securite : la hauteur reelle d'une etiquette varie
-      // de quelques pixels selon la longueur du nom et du sous-titre
-      var FULL_HW = 48 * ECH, FULL_HH = 46 * ECH, COMP_HW = 16 * ECH, COMP_HH = 16 * ECH;
-      // le CSS decale chaque pastille de -25px en Y avant de la
-      // dessiner (translate(-50%,-25px)) : pour une boite pleine
-      // (haute) ou compacte (courte), ce meme decalage fixe laisse
-      // le CENTRE VISUEL a des hauteurs differentes par rapport au
-      // point geographique. Sans en tenir compte, une petite ville
-      // compacte pouvait chevaucher le bas de l'etiquette pleine
-      // voisine sans que le calcul le detecte (vu chez Barcelone/
-      // Ibiza : l'ecart reel a l'ecran etait de 24 px de moins que
-      // l'ecart calcule a partir des seules coordonnees geo).
-      var DECALAGE = -25 * ECH;
-      function centreY(y, hh) { return y + DECALAGE + hh; }
-      function chevauche(x, y, hw, hh) {
-        var cy = centreY(y, hh);
-        return placees.some(function (o) {
-          return Math.abs(o.x - x) < (o.hw + hw) && Math.abs(o.cy - cy) < (o.hh + hh);
-        });
-      }
-      vs.forEach(function (v, i) {
-        var xy = pxy(v.c);
-        var x = xy[0] + (v.off ? v.off[0] : 0), y = xy[1] + (v.off ? v.off[1] : 0);
-        var compact = i >= 6 || chevauche(x, y, FULL_HW, FULL_HH);
-        // un point compact peut serrer contre son voisin sans
-        // vraiment le recouvrir — mieux vaut une ville en petit
-        // point qu'une ville qui disparait completement de la carte
-        if (compact && chevauche(x, y, COMP_HW * .5, COMP_HH * .5)) return;
-        var hw = compact ? COMP_HW : FULL_HW, hh = compact ? COMP_HH : FULL_HH;
-        placees.push({ x: x, cy: centreY(y, hh), hw: hw, hh: hh });
-
-        var q = pct(x, y);
-        spot({
-          l: q.l, t: q.t, n: fmt(v.ici), nom: v.nom, compact: compact,
-          sub: compact ? "" : v.clubs + " clubs",
-          mute: !v.hot, c: v.hot ? "#ff2f45" : "#3b4250",
-          d: v.hot ? 46 : (compact ? 30 : 40), fs: v.hot ? 14 : (compact ? 11 : 12), tw: 76, hot: v.hot,
-          onClick: function () { villeActuelle = v; aller(3, 1); }
-        });
-      });
-
-    } else if (villeActuelle.nom === "Bruxelles") {
-      ville();
-
-      el("glow", "", "34%", "32%");
-      el("lbl", "Parc royal", "84%", "30%");
-      el("lbl", "Marolles", "16%", "82%");
-      el("lbl", "Matonge", "82%", "79%");
-      el("street", "Rue du Trône", "74%", "58%", "--rot:-21deg");
-      el("street", "Quai au Bois", "6%", "45%", "--rot:69deg");
-      el("shield", "N23", "84%", "74%");
-      el("shield", "R20", "70%", "46%");
-
-      spot({ l: "13%", t: "33%", n: "1h", u: "OUVRE", nom: "Spirito",
-             sub: "Pas encore ouvert", mute: true, shut: true, c: "#8b929c",
-             onClick: function () { ouvrir(CLUBS.spirito); } });
-      spot({ l: "34%", t: "32%", n: "42", nom: "Mirage", sub: "Ça chauffe",
-             c: "#ff2f45", hot: true, onClick: function () { ouvrir(CLUBS.mirage); } });
-      spot({ l: "60%", t: "58%", n: "11", nom: "Fuse", sub: "Ouvert jusqu'à 7h",
-             mute: true, c: "#3b4250", onClick: function () { ouvrir(CLUBS.fuse); } });
-
-      mate({ l: "50%", t: "54%", q: 1, nom: "Sarah", quand: "maintenant", now: true, cls: "big" });
-      mate({ l: "18%", t: "60%", q: .62, nom: "Nassym", quand: "1 h" });
-
-    } else {
-      // n'importe quelle autre ville : meme decor isometrique
-      // generique, deux clubs generes a partir de son affluence
-      ville();
-
-      el("glow", "", "34%", "32%");
-      el("lbl", "Centre-ville", "84%", "30%");
-      el("lbl", "Vieille ville", "16%", "82%");
-      el("shield", paysActuel.nom.slice(0, 1).toUpperCase(), "70%", "46%");
-
-      var clubsVille = clubsGeneres(villeActuelle);
-      spot({ l: "34%", t: "32%", n: String(clubsVille[0].n), nom: clubsVille[0].nom,
-             sub: "Ça chauffe", c: "#ff2f45", hot: true,
-             onClick: function () { ouvrir(clubsVille[0]); } });
-      spot({ l: "60%", t: "58%", n: String(clubsVille[1].n), nom: clubsVille[1].nom,
-             sub: "Ouvert", mute: true, c: "#3b4250",
-             onClick: function () { ouvrir(clubsVille[1]); } });
-    }
-
-    // le zoom doit se sentir : le calque grandit ou rapetisse en place
-    if (direction && mapwrap.animate && !REDUCED) {
-      mapwrap.animate(
-        [{ transform: "scale(" + (direction > 0 ? 1.18 : 0.86) + ")", opacity: 0 },
-         { transform: "scale(1)", opacity: 1 }],
-        { duration: 400, easing: "cubic-bezier(.22,.75,.3,1)" });
-    }
+  // visible en orbite (zoom tres bas), disparait des qu'on plonge
+  // vers un pays — MapLibre garde le zoom continu, donc un fondu
+  // plutot qu'un seuil net se sent plus naturel.
+  function majOpacite() {
+    var z = map.getZoom();
+    opacite = z < 2 ? 1 : z > 4 ? 0 : 1 - (z - 2) / 2;
   }
-
-  function fmt(n) { return typeof n === "number" && n >= 1000 ? (n / 1000).toFixed(1).replace(".", ",") + "k" : String(n); }
-
-  function aller(n, dir) {
-    n = Math.max(0, Math.min(3, n));
-    if (n === niveau) return;
-    dir = dir || (n > niveau ? 1 : -1);
-    niveau = n;
-    fermer();
-    rendre(dir);
-  }
-
-  document.getElementById("zin").addEventListener("click", function () { aller(niveau + 1, 1); });
-  document.getElementById("zout").addEventListener("click", function () { aller(niveau - 1, -1); });
-
-  var molette = 0;
-  mapwrap.addEventListener("wheel", function (e) {
-    e.preventDefault();
-    molette += e.deltaY;
-    if (molette < -120) { molette = 0; aller(niveau + 1, 1); }
-    if (molette > 120)  { molette = 0; aller(niveau - 1, -1); }
-  }, { passive: false });
-
-  /* ----------------------------------------------------------
-     Pincement tactile : sur un vrai telephone il n'y a pas de
-     molette. Deux doigts qui s'ecartent dezooment, qui se
-     rapprochent zooment — le geste que tout le monde connait
-     depuis Plans ou Snap Map. On suit la distance entre les
-     deux points de contact et on change de niveau a chaque
-     franchissement de seuil, pour pouvoir traverser plusieurs
-     niveaux d'un seul geste continu.
-     ---------------------------------------------------------- */
-
-  var pinceDist = null;
-  var doigts = {};
-
-  mapwrap.style.touchAction = "none";
-
-  mapwrap.addEventListener("pointerdown", function (e) {
-    doigts[e.pointerId] = { x: e.clientX, y: e.clientY };
-    if (Object.keys(doigts).length === 2) pinceDist = ecart();
-  });
-
-  mapwrap.addEventListener("pointermove", function (e) {
-    if (!(e.pointerId in doigts)) return;
-    doigts[e.pointerId] = { x: e.clientX, y: e.clientY };
-    if (Object.keys(doigts).length !== 2 || pinceDist === null) return;
-
-    e.preventDefault();
-    var d = ecart();
-    var delta = d - pinceDist;
-    var SEUIL = 46;
-    if (delta > SEUIL) { pinceDist = d; aller(niveau + 1, 1); }
-    else if (delta < -SEUIL) { pinceDist = d; aller(niveau - 1, -1); }
-  }, { passive: false });
-
-  function fin(e) {
-    delete doigts[e.pointerId];
-    if (Object.keys(doigts).length < 2) pinceDist = null;
-  }
-  mapwrap.addEventListener("pointerup", fin);
-  mapwrap.addEventListener("pointercancel", fin);
-  mapwrap.addEventListener("pointerleave", fin);
-
-  function ecart() {
-    var pts = Object.keys(doigts).map(function (k) { return doigts[k]; });
-    if (pts.length < 2) return 0;
-    return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-  }
-
-  /* ==========================================================
-     LE RESTE DU MONTAGE
-     ========================================================== */
-
-  document.getElementById("me-btn").insertAdjacentHTML("afterbegin", pint(1));
-  document.getElementById("rail-me").insertAdjacentHTML("afterbegin", pint(1));
-
-  var rail = document.getElementById("friend-rail");
-  AMIS.forEach(function (p) {
-    var b = document.createElement("button");
-    b.className = "fr";
-    b.setAttribute("aria-label", p.nom);
-    b.innerHTML = '<span class="bub">' + pint(p.q) + '</span><b>' + p.nom + '</b>';
-    rail.appendChild(b);
-  });
-
-  var CLUBS = {
-    mirage: {
-      nom: "Mirage", adr: "Rue de l'Écuyer · 400 m", n: "42", u: "ICI", c: "#ff2f45",
-      chips: [["Ça chauffe", true], ["Ouvert jusqu'à 6h", false]],
-      amis: [1, 1, .3], qui: "Sarah et Léa sont là, Théo est parti",
-      note: "300 pts = un cocktail offert. Tu en as 0."
-    },
-    fuse: {
-      nom: "Fuse", adr: "Rue Blaes · 1,2 km", n: "11", u: "ICI", c: "#3b4250",
-      chips: [["Ouvert jusqu'à 7h", false], ["Ça se remplit", false]],
-      amis: [.62], qui: "Nassym y était il y a une heure",
-      note: "250 pts = une entrée offerte. Tu en as 0."
-    },
-    spirito: {
-      nom: "Spirito", adr: "Rue Stassart · 2,1 km", n: "1h", u: "OUVRE", c: "#8b929c",
-      chips: [["Pas encore ouvert", false]],
-      amis: [], qui: "Personne de tes amis pour l'instant",
-      note: "400 pts = un coupe-file. Tu en as 0."
-    }
-  };
-
-  /* Deux clubs generes pour n'importe quelle ville autre que
-     Bruxelles — deterministe : la meme ville affiche toujours
-     les memes deux clubs, avec l'affluence de la ville repartie
-     entre eux. Ce sont des noms de demonstration, pas de vrais
-     etablissements — la page le precise deja plus bas. */
-  var NOMS_CLUBS = ["Nova", "Éclipse", "Kraft", "Bunker", "Le Sous-Sol",
-    "District", "Loft", "Aurora", "Vertigo", "Prisma", "Odyssée", "Silo"];
-
-  function hashVille(s) {
-    var h = 2166136261;
-    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
-    return h;
-  }
-
-  var clubsCache = {};
-  function clubsGeneres(v) {
-    if (clubsCache[v.nom]) return clubsCache[v.nom];
-    var h = hashVille(v.nom);
-    var i1 = h % NOMS_CLUBS.length;
-    // decalage NON signe (>>>) : avec >>, un hash dont le bit 31 est
-    // pose devenait negatif, et un modulo negatif pouvait ramener
-    // i2 exactement sur i1 — Liege affichait alors "Nova" deux fois
-    var i2 = (i1 + 1 + (h >>> 8) % (NOMS_CLUBS.length - 1)) % NOMS_CLUBS.length;
-    var total = Math.max(v.ici, 4);
-    var n1 = Math.max(1, Math.round(total * .58));
-    var n2 = Math.max(1, total - n1);
-    var clubs = [
-      { nom: NOMS_CLUBS[i1], adr: "Centre-ville · " + v.nom, n: String(n1), u: "ICI", c: "#ff2f45",
-        chips: [["Ça chauffe", true]], amis: [], qui: "Aucun de tes amis n'y est pour l'instant",
-        note: "100 pts par story. Tu en as 0." },
-      { nom: NOMS_CLUBS[i2], adr: "Centre-ville · " + v.nom, n: String(n2), u: "ICI", c: "#3b4250",
-        chips: [["Ouvert", false]], amis: [], qui: "Aucun de tes amis n'y est pour l'instant",
-        note: "100 pts par story. Tu en as 0." }
-    ];
-    clubsCache[v.nom] = clubs;
-    return clubs;
-  }
-
-  var sheet = document.getElementById("sheet");
-  var shDisc = document.getElementById("sh-disc");
-  var back = null;
-
-  function ouvrir(c, src) {
-    if (!c) return;
-    back = src || null;
-    shDisc.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>";
-    shDisc.style.setProperty("--c", c.c);
-    shDisc.classList.toggle("shut", c.n === "1h");
-    document.getElementById("sh-name").textContent = c.nom;
-    document.getElementById("sh-addr").textContent = c.adr;
-    document.getElementById("sh-note").textContent = c.note;
-
-    var chips = document.getElementById("sh-chips");
-    chips.innerHTML = "";
-    c.chips.forEach(function (ch) {
-      var e = document.createElement("span");
-      e.className = "chip" + (ch[1] ? " warm" : "");
-      e.textContent = ch[0];
-      chips.appendChild(e);
-    });
-
-    var stack = document.getElementById("sh-stack");
-    stack.innerHTML = "";
-    c.amis.forEach(function (q) {
-      var e = document.createElement("span");
-      e.innerHTML = pint(q);
-      stack.appendChild(e);
-    });
-    stack.style.display = c.amis.length ? "flex" : "none";
-    document.getElementById("sh-who").textContent = c.qui;
-
-    sheet.classList.add("up");
-    sheet.setAttribute("aria-hidden", "false");
-    document.querySelector(".sheet-cta").focus();
-  }
-
-  function fermer() {
-    sheet.classList.remove("up");
-    sheet.setAttribute("aria-hidden", "true");
-  }
-
-  document.getElementById("sh-close").addEventListener("click", function () {
-    fermer(); if (back) back.focus();
-  });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && sheet.classList.contains("up")) fermer();
-  });
-
-  rendre(0);
+  // sans cet appel immediat, l'opacite initiale (1) restait figee
+  // jusqu'au premier zoom manuel : les etoiles se voyaient encore
+  // au niveau rue, la carte demarrant directement sur Bruxelles.
+  majOpacite();
+  map.on("zoom", majOpacite);
 })();
+map.on("style.load", function () {
+  try { ambiance(); snapifie(); }
+  catch (e) { console.error("[carte] exception style.load:", e); }
+});
+
+/* --- Marqueurs de club : notre propre badge en HTML, pas les
+       bulles par defaut de MapLibre. --- */
+
+var sheet = document.getElementById("sheet");
+var shDisc = document.getElementById("sh-disc");
+var back = null;
+
+function ouvrir(c, src) {
+  if (!c) return;
+  back = src || null;
+  shDisc.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>";
+  shDisc.style.setProperty("--c", c.c);
+  shDisc.classList.toggle("shut", !!c.shut);
+  document.getElementById("sh-name").textContent = c.nom;
+  document.getElementById("sh-addr").textContent = c.adr;
+  document.getElementById("sh-note").textContent = c.note;
+
+  var chips = document.getElementById("sh-chips");
+  chips.innerHTML = "";
+  c.chips.forEach(function (ch) {
+    var e = document.createElement("span");
+    e.className = "chip" + (ch[1] ? " warm" : "");
+    e.textContent = ch[0];
+    chips.appendChild(e);
+  });
+
+  var stack = document.getElementById("sh-stack");
+  stack.innerHTML = "";
+  c.amis.forEach(function (q) {
+    var e = document.createElement("span");
+    e.innerHTML = pint(q);
+    stack.appendChild(e);
+  });
+  stack.style.display = c.amis.length ? "flex" : "none";
+  document.getElementById("sh-who").textContent = c.qui;
+
+  sheet.classList.add("up");
+  sheet.setAttribute("aria-hidden", "false");
+  document.querySelector(".sheet-cta").focus();
+}
+
+function fermer() {
+  sheet.classList.remove("up");
+  sheet.setAttribute("aria-hidden", "true");
+}
+
+document.getElementById("sh-close").addEventListener("click", function () {
+  fermer(); if (back) back.focus();
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && sheet.classList.contains("up")) fermer();
+});
+
+/* Les marqueurs sont crees seulement une fois la carte "load" —
+   avant ca, le conteneur peut ne pas encore avoir sa taille et sa
+   transform definitives, et les marqueurs se projetaient n'importe
+   ou (constate : deux des trois clubs apparaissaient a des milliers
+   de pixels hors ecran au premier rendu). */
+map.on("load", function () {
+  Object.keys(CLUBS).forEach(function (key) {
+    var c = CLUBS[key];
+    var el = document.createElement("button");
+    el.className = "club-badge" + (c.hot ? " hot" : "") + (c.shut ? " shut" : "");
+    el.style.setProperty("--c", c.c);
+    el.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>";
+    el.setAttribute("aria-label", c.nom + " " + c.n + " " + c.u);
+    el.addEventListener("click", function () { ouvrir(c, el); });
+    new maplibregl.Marker({ element: el, anchor: "center" })
+      .setLngLat(c.lngLat)
+      .addTo(map);
+  });
+
+  /* --- Marqueurs d'amis : leur pinte, posee la ou ils ont poste
+         en dernier. --- */
+  AMIS.filter(function (a) { return a.lngLat; }).forEach(function (a) {
+    var el = document.createElement("div");
+    el.className = "friend-marker";
+    el.innerHTML = pint(a.q);
+    el.setAttribute("role", "img");
+    el.setAttribute("aria-label", a.nom);
+    new maplibregl.Marker({ element: el, anchor: "bottom" })
+      .setLngLat(a.lngLat)
+      .addTo(map);
+  });
+});
+
+/* ==========================================================
+   LES COMMANDES — la souris/le doigt font deja tout (glisser,
+   molette, pincement, clic droit ou torsion pour tourner) ;
+   ces boutons ne font que relayer les memes actions.
+   ========================================================== */
+
+document.getElementById("zin").addEventListener("click", function () { map.zoomIn({ duration: 260 }); });
+document.getElementById("zout").addEventListener("click", function () { map.zoomOut({ duration: 260 }); });
+
+document.getElementById("btn-compass").addEventListener("click", function () {
+  map.easeTo({ bearing: 0, pitch: map.getPitch() > 0 ? 0 : 50, duration: 500 });
+});
+
+document.getElementById("rail-me").addEventListener("click", function () {
+  map.flyTo({ center: BRUXELLES, zoom: 14.2, bearing: -12, pitch: 50, duration: 900 });
+});
+
+var btnPlat = document.getElementById("btn-plat"), btnGlobe = document.getElementById("btn-globe");
+btnGlobe.addEventListener("click", function () {
+  map.setProjection({ type: "globe" });
+  btnGlobe.classList.add("on"); btnPlat.classList.remove("on");
+});
+btnPlat.addEventListener("click", function () {
+  map.setProjection({ type: "mercator" });
+  btnPlat.classList.add("on"); btnGlobe.classList.remove("on");
+});
+
+/* L'aiguille de la boussole suit la vraie orientation de la carte */
+var needle = document.getElementById("needle");
+map.on("rotate", function () {
+  needle.style.transform = "rotate(" + (-map.getBearing()) + "deg)";
+});
+
+/* Le nom affiche en haut suit le lieu vise, via le geocodage
+   inverse que MapTiler fournit avec les memes tuiles — on
+   retombe sur "Bruxelles" si rien n'est encore charge. */
+var placeName = document.getElementById("place-name");
+var dernierLabel = "Bruxelles";
+function etiquetteAuCentre() {
+  var f = map.queryRenderedFeatures(map.project(map.getCenter()), {
+    layers: undefined
+  });
+  var trouve = f.find(function (x) {
+    return x.layer && /place|settlement|city|town|village/.test(x.layer.id) && x.properties && x.properties.name;
+  });
+  if (trouve) { dernierLabel = trouve.properties.name; placeName.textContent = dernierLabel; }
+}
+map.on("moveend", etiquetteAuCentre);
+
+/* ==========================================================
+   LE RESTE DU MONTAGE : ma pinte, le rail d'amis
+   ========================================================== */
+
+document.getElementById("me-btn").insertAdjacentHTML("afterbegin", pint(1));
+document.getElementById("rail-me").insertAdjacentHTML("afterbegin", pint(1));
+
+var rail = document.getElementById("friend-rail");
+AMIS.forEach(function (p) {
+  var b = document.createElement("button");
+  b.className = "fr";
+  b.setAttribute("aria-label", p.nom);
+  b.innerHTML = '<span class="bub">' + pint(p.q) + '</span><b>' + p.nom + '</b>';
+  if (p.lngLat) b.addEventListener("click", function () {
+    map.flyTo({ center: p.lngLat, zoom: 16, duration: 800 });
+  });
+  rail.appendChild(b);
+});
 </script>
 
   </body>
