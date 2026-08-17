@@ -63,6 +63,13 @@
          uni la ou le globe ne couvre pas l'ecran), en dessous des
          marqueurs et du chrome de l'appli. */
       #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+      /* Les arbres : plus un motif de tuile MapLibre (ca repetait les
+         5 memes arbres a l'identique, effet grille tres visible),
+         mais un calque dessine a la main par-dessus la carte,
+         exactement comme le tout premier prototype canvas — chaque
+         arbre est un objet independant, positionne et redessine a
+         chaque mouvement de carte. */
+      #arbres { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 
       /* MapLibre pose son propre attribution/logo : on les recadre
          pour qu'ils restent lisibles dans le cadre du telephone
@@ -332,6 +339,7 @@
       <div class="screen">
 
         <div id="map"></div>
+        <canvas id="arbres" aria-hidden="true"></canvas>
         <canvas id="etoiles" aria-hidden="true"></canvas>
 
         <div class="statusbar">
@@ -652,43 +660,7 @@ function arbreSur(ctx, x, y, r, teinte) {
   ctx.fillStyle = leafTop; ctx.fill();
 }
 
-/* --- Le motif « foret » : la toute premiere version, celle qui
-       tenait bien au zoom sans que les arbres se divisent en
-       buisson flou. Les essais suivants (plus d'arbres par tuile,
-       tuile plus grande) cassaient ca pendant le zoom continu —
-       on revient exactement a ces coordonnees-la. --- */
-function motifArbres() {
-  var s = 190, c = document.createElement("canvas");
-  c.width = s; c.height = s;
-  var ctx = c.getContext("2d");
-
-  arbreSur(ctx, 45, 70, 20, 1);
-  arbreSur(ctx, 135, 60, 15, 2);
-  arbreSur(ctx, 95, 140, 18, 1);
-  arbreSur(ctx, 30, 155, 13, 2);
-  arbreSur(ctx, 158, 150, 15, 1);
-
-  return ctx.getImageData(0, 0, s, s);
-}
-
-/* --- Le motif « arbres de rue » : eparse, semee sur les zones
-       residentielles et les pelouses, comme les arbres isoles
-       qu'on voit disperses sur Snap Map en dehors des forets. --- */
-function motifArbresClairsemes() {
-  var s = 230, c = document.createElement("canvas");
-  c.width = s; c.height = s;
-  var ctx = c.getContext("2d");
-
-  arbreSur(ctx, 60, 90, 19, 1);
-  arbreSur(ctx, 176, 170, 16, 2);
-
-  return ctx.getImageData(0, 0, s, s);
-}
-
-
 function snapifie() {
-  map.addImage("motif-arbres", motifArbres(), { pixelRatio: 2 });
-  map.addImage("motif-arbres-clairsemes", motifArbresClairsemes(), { pixelRatio: 2 });
 
   // La palette relevee sur tes captures : le sol est vert menthe
   // PARTOUT (pas juste dans les parcs), l'eau un bleu ciel clair.
@@ -712,50 +684,21 @@ function snapifie() {
     if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", mentheClair);
   });
 
-  // le sol boise : un vert plus soutenu, puis la texture d'arbres
+  // le sol boise : un vert plus soutenu. Les arbres eux-memes ne
+  // sont plus un motif de tuile (ca repete exactement les 5 memes
+  // arbres cote a cote, ca sautait aux yeux) — ils sont dessines un
+  // par un par le calque canvas plus bas, exactement comme dans le
+  // tout premier prototype.
   ["Forest", "Wood"].forEach(function (id) {
     map.setPaintProperty(id, "fill-color", mentheFonce);
     map.setPaintProperty(id, "fill-opacity", 1);
     map.setLayoutProperty(id, "visibility", "visible");
     map.setLayerZoomRange(id, 0, 24);
   });
-  map.addLayer({
-    id: "Texture arbres", type: "fill", source: "maptiler_planet", "source-layer": "landcover",
-    filter: ["==", "class", "wood"],
-    paint: { "fill-pattern": "motif-arbres" }
-  }, "Building");
-  map.addLayer({
-    id: "Texture arbres globallandcover", type: "fill", source: "maptiler_planet", "source-layer": "globallandcover",
-    filter: ["in", "class", "forest", "tree"],
-    paint: { "fill-pattern": "motif-arbres" }
-  }, "Building");
-
   ["Grass", "Meadow"].forEach(function (id) {
     map.setPaintProperty(id, "fill-color", mentheFonce);
     map.setPaintProperty(id, "fill-opacity", 1);
   });
-
-  // des arbres eparpilles sur les zones residentielles et les
-  // pelouses (fond transparent, juste les arbres) — c'est ce qui
-  // manquait le plus par rapport aux references : sur Snap Map, les
-  // arbres ne sont pas confines aux forets, ils sont partout. Pour
-  // "plus d'arbres" sans revenir a l'effet buisson, on etend cette
-  // meme tuile eparse a davantage de zones plutot que de la densifier.
-  map.addLayer({
-    id: "Texture arbres residentiel", type: "fill", source: "maptiler_planet", "source-layer": "landuse",
-    filter: ["in", "class", "residential", "suburbs", "neighbourhood", "cemetery", "school", "college", "university"],
-    paint: { "fill-pattern": "motif-arbres-clairsemes" }
-  }, "Building");
-  map.addLayer({
-    id: "Texture arbres pelouse", type: "fill", source: "maptiler_planet", "source-layer": "landcover",
-    filter: ["in", "class", "grass", "scrub"],
-    paint: { "fill-pattern": "motif-arbres-clairsemes" }
-  }, "Building");
-  map.addLayer({
-    id: "Texture arbres pietonne", type: "fill", source: "maptiler_planet", "source-layer": "landuse",
-    filter: ["==", "class", "pedestrian"],
-    paint: { "fill-pattern": "motif-arbres-clairsemes" }
-  }, "Building");
 
   map.setPaintProperty("Water", "fill-color", eau);
 
@@ -856,6 +799,84 @@ function snapifie() {
     map.setPaintProperty(id, "line-color", "#d8cdb2");
   });
 }
+
+/* ==========================================================
+   LES ARBRES — exactement la technique du tout premier prototype :
+   chaque arbre est un objet independant (position + taille tirees
+   au hasard une fois), redessine a sa position ecran a chaque
+   mouvement de carte. Pas de motif de tuile MapLibre : ca evite la
+   repetition trop reguliere qui donnait un effet grille/buisson.
+   ========================================================== */
+
+var ARBRES = (function () {
+  var arr = [];
+  var graine = 20260818;
+  function rnd() { graine = (graine * 1664525 + 1013904223) % 4294967296; return graine / 4294967296; }
+
+  function versDeg(lat) {
+    return { dlng: 1 / (111320 * Math.cos(lat * Math.PI / 180)), dlat: 1 / 110540 };
+  }
+
+  function grappe(centre, rayonM, n) {
+    var conv = versDeg(centre[1]);
+    for (var i = 0; i < n; i++) {
+      var a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * rayonM;
+      arr.push({
+        lng: centre[0] + Math.cos(a) * d * conv.dlng,
+        lat: centre[1] + Math.sin(a) * d * conv.dlat,
+        s: .7 + rnd() * .6,
+        teinte: rnd() < .5 ? 1 : 2
+      });
+    }
+  }
+
+  // les vrais parcs de Bruxelles : grappes denses, comme la foret
+  // du tout premier prototype
+  grappe([4.3653, 50.8465], 140, 34); // Parc de Bruxelles
+  grappe([4.3746, 50.8395], 110, 22); // Parc Leopold
+  grappe([4.3540, 50.8410], 70, 12);  // Square du Petit Sablon
+  grappe([4.3939, 50.8398], 150, 30); // Parc du Cinquantenaire
+
+  // des arbres de rue, eparpilles autour du centre et de chaque club
+  grappe(BRUXELLES, 900, 40);
+  grappe([4.3554, 50.8479], 260, 14);
+  grappe([4.3405, 50.8375], 260, 14);
+  grappe([4.3651, 50.8367], 260, 14);
+
+  return arr;
+})();
+
+(function () {
+  var cv = document.getElementById("arbres");
+  var ctx = cv.getContext("2d");
+  var W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
+
+  function dimensionner() {
+    var r = cv.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * DPR; cv.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  dimensionner();
+  window.addEventListener("resize", dimensionner);
+
+  function dessiner() {
+    ctx.clearRect(0, 0, W, H);
+    var z = map.getZoom();
+    if (z < 12.5) return; // trop dezoome pour distinguer un arbre d'un pixel de bruit
+    var echelle = Math.min(1, (z - 12.5) / 2);
+    var pts = ARBRES.map(function (a) {
+      var p = map.project([a.lng, a.lat]);
+      return { x: p.x, y: p.y, s: a.s * echelle, teinte: a.teinte };
+    }).filter(function (p) {
+      return p.x > -40 && p.x < W + 40 && p.y > -70 && p.y < H + 40 && p.s > .05;
+    });
+    pts.sort(function (a, b) { return a.y - b.y; });
+    pts.forEach(function (p) { arbreSur(ctx, p.x, p.y, 18 * p.s, p.teinte); });
+  }
+  map.on("move", dessiner);
+  map.on("load", dessiner);
+})();
 
 /* ==========================================================
    L'ESPACE — etoiles et etoiles filantes derriere le globe.
