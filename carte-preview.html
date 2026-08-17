@@ -648,20 +648,21 @@ function arbreSur(ctx, x, y, r, teinte) {
   ctx.beginPath(); ctx.arc(x - r * .32, y - r * .38, r * .48, 0, 7); ctx.fillStyle = vertClair; ctx.fill();
 }
 
-/* --- Le motif « foret » : dense, pour les bois/forets. --- */
+/* --- Le motif « foret » : des arbres bien separes, avec de l'espace
+       vert entre chacun — a densite trop forte (essai precedent, 8
+       arbres serres) les canopees se touchent et le rendu tuile en
+       un seul « buisson » flou plutot que des arbres qu'on distingue,
+       comme sur Snap Map ou chaque arbre reste un rond net et isole. */
 function motifArbres() {
-  var s = 160, c = document.createElement("canvas");
+  var s = 190, c = document.createElement("canvas");
   c.width = s; c.height = s;
   var ctx = c.getContext("2d");
 
-  arbreSur(ctx, 38, 46, 22, 1);
-  arbreSur(ctx, 118, 34, 17, 2);
-  arbreSur(ctx, 78, 104, 25, 1);
-  arbreSur(ctx, 140, 122, 16, 2);
-  arbreSur(ctx, 18, 128, 15, 1);
-  arbreSur(ctx, 95, 68, 13, 2);
-  arbreSur(ctx, 16, 58, 12, 1);
-  arbreSur(ctx, 138, 88, 12, 2);
+  arbreSur(ctx, 42, 44, 19, 1);
+  arbreSur(ctx, 138, 38, 15, 2);
+  arbreSur(ctx, 90, 100, 18, 1);
+  arbreSur(ctx, 30, 140, 14, 2);
+  arbreSur(ctx, 155, 132, 15, 1);
 
   return ctx.getImageData(0, 0, s, s);
 }
@@ -758,16 +759,24 @@ function snapifie() {
   map.setLayerZoomRange("Building 3D", 13, 24);
   map.setPaintProperty("Building 3D", "fill-extrusion-color", indigoClair);
   map.setPaintProperty("Building 3D", "fill-extrusion-opacity", 1);
+  // le degrade vertical assombrit la base et eclaircit le sommet —
+  // c'est la principale source de relief ici : les proprietes plus
+  // recentes (ambient occlusion, flood-light) ne sont pas supportees
+  // par la version du style-spec que sert ce moteur (testee : chaque
+  // appel leve une exception), on ne s'appuie donc que sur ca et sur
+  // la lumiere ci-dessous.
   map.setPaintProperty("Building 3D", "fill-extrusion-vertical-gradient", true);
+  // un peu plus de volume qu'avant (les blocs restaient tres plats),
+  // en gardant un plafond raisonnable pour ne pas retomber sur des tours
   map.setPaintProperty("Building 3D", "fill-extrusion-height", [
     "interpolate", ["linear"], ["zoom"],
     13, 0,
-    15, ["min", 34, ["*", ["get", "render_height"], .5]]
+    15, ["min", 48, ["*", ["get", "render_height"], .65]]
   ]);
 
   // une lumiere plus forte et plus rasante : elle creuse vraiment
   // les faces des immeubles au lieu de les laisser presque plates
-  map.setLight({ anchor: "viewport", color: "#fff6e6", intensity: .55, position: [1.15, 80, 32] });
+  map.setLight({ anchor: "viewport", color: "#fff6e6", intensity: .68, position: [1.15, 75, 52] });
 
   // un fin trait a la base de chaque immeuble — separe nettement
   // les blocs les uns des autres au lieu de les laisser fondre
