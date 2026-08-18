@@ -30,6 +30,7 @@ export default defineConfig({
         cgu: resolve(__dirname, "cgu.html"),
         cookies: resolve(__dirname, "cookies.html"),
         cartePreview: resolve(__dirname, "carte-preview.html"),
+        boutiquePreview: resolve(__dirname, "boutique-preview.html"),
       },
     },
   },

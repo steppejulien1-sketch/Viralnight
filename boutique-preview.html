@@ -1,0 +1,1324 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0d11" />
+    <meta name="robots" content="noindex" />
+    <title>Boutique ViralNight — preview</title>
+    <style>
+      /* ============================================================
+         BOUTIQUE VIRALNIGHT — deuxieme onglet de la PWA clubbeur,
+         juste apres la carte. On y depense les points gagnes en
+         postant.
+
+         Regle de fond : ici RIEN ne s'achete en euros. La seule
+         monnaie est le point, et le point ne s'obtient qu'en
+         publiant. Une boutique de jeu vend des gemmes ; celle-ci
+         ne vend rien, elle echange. Le vocabulaire suit partout :
+         « echanger », jamais « acheter ».
+
+         L'ecran est sombre alors que la carte est claire : on
+         l'ouvre a 2 h du matin dans une salle noire. C'est aussi
+         ce que fait Snapchat (carte claire, reste de l'appli
+         sombre). La barre d'onglets garde exactement la meme
+         geometrie que sur la carte pour qu'on sente qu'on est
+         reste dans la meme application.
+         ============================================================ */
+
+      :root {
+        --page:      #0b0d11;
+        --page-2:    #14171d;
+        --page-line: rgba(255,255,255,.09);
+        --page-ink:  #edeff4;
+        --page-ink2: #99a1b0;
+        --page-ink3: #6a7280;
+        --red:       #ff2f45;
+        --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0; background: var(--page); color: var(--page-ink);
+        font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
+      }
+
+      .wrap { max-width: 1000px; margin: 0 auto; padding: 54px 22px 110px; }
+
+      .kicker {
+        display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
+        text-transform: uppercase; color: var(--page-ink3); margin-bottom: 15px;
+      }
+      h1 { margin: 0 0 14px; font-size: clamp(32px, 5.4vw, 54px); font-weight: 800; letter-spacing: -.042em; line-height: 1; text-wrap: balance; }
+      .lede { margin: 0; font-size: 17px; color: var(--page-ink2); max-width: 62ch; }
+
+      .stage { display: flex; justify-content: center; padding: 40px 0 48px; }
+
+      /* ---------------- Telephone ---------------- */
+
+      .phone {
+        width: 360px; height: 760px; border-radius: 48px; background: #000;
+        padding: 5px; flex: 0 0 auto;
+        box-shadow: 0 44px 100px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
+      }
+      .screen {
+        position: relative; width: 100%; height: 100%; border-radius: 43px;
+        overflow: hidden; user-select: none;
+
+        /* Les jetons de style de l'appli. Scopes ici plutot que sur
+           :root pour qu'ils ne puissent jamais deteindre sur la
+           page sombre qui entoure le telephone. */
+        --ink:   #f3f5f9;
+        --ink2:  #98a0ad;
+        --ink3:  #6b7280;
+        --bg:    #0a0b0e;
+        --s1:    #131519;
+        --s2:    #1a1d24;
+        --s3:    #23272f;
+        --line:  rgba(255,255,255,.075);
+        --line2: rgba(255,255,255,.15);
+        --vert:  #57d98a;
+
+        /* Une couleur par famille de recompense, trois en tout.
+           Le relief vient des surfaces ; la couleur ne sert qu'a
+           ranger, jamais a decorer. */
+        --f-bar:   #ffb43d;
+        --f-acces: #ff2f45;
+        --f-vip:   #d9b26a;
+
+        background: var(--bg); color: var(--ink);
+      }
+
+      /* ---------------- Colonne defilante ---------------- */
+
+      .app {
+        position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain;
+        padding-bottom: 112px; scrollbar-width: none;
+      }
+      .app::-webkit-scrollbar { display: none; }
+
+      .sec { padding: 0 16px; margin-top: 30px; }
+      .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 13px; }
+      .sec-head h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.03em; }
+      .sec-head .sub { font-size: 11.5px; font-weight: 700; color: var(--ink3); margin-left: auto; white-space: nowrap; }
+      .sec-note { margin: 10px 2px 0; font-size: 11.5px; color: var(--ink3); font-weight: 600; line-height: 1.5; }
+
+      /* ---------------- La cagnotte ---------------- */
+
+      /* Collante : le solde est la seule information qu'on relit a
+         chaque carte de la boutique. Le laisser partir avec le
+         scroll obligerait a remonter en haut pour savoir si on
+         peut se payer ce qu'on est en train de regarder. */
+      .wallet {
+        position: sticky; top: 0; z-index: 20;
+        padding: 50px 16px 15px;
+        background: linear-gradient(180deg, #0e1015 0%, #0e1015 60%, rgba(14,16,21,.93) 100%);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      }
+      .wallet-top { display: flex; align-items: flex-end; gap: 10px; }
+      .wallet-lab {
+        display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .13em;
+        text-transform: uppercase; color: var(--ink3); margin-bottom: 6px;
+      }
+      .wallet-sum { display: flex; align-items: center; gap: 9px; }
+      .wallet-sum .jeton { width: 26px; height: 26px; flex: 0 0 auto; }
+      .wallet-sum b {
+        font-size: 33px; font-weight: 800; letter-spacing: -.045em; line-height: 1;
+        font-variant-numeric: tabular-nums; display: inline-block;
+      }
+      .wallet-sum i { font-style: normal; font-size: 14px; font-weight: 800; color: var(--ink3); letter-spacing: -.01em; }
+      .wallet-week {
+        margin-left: auto; text-align: right; font-size: 11.5px; font-weight: 750;
+        color: var(--vert); white-space: nowrap; padding-bottom: 3px;
+      }
+      .wallet-goal { margin-top: 14px; }
+      .wallet-bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,.09); overflow: hidden; }
+      .wallet-bar span {
+        display: block; height: 100%; width: 0; border-radius: 99px;
+        background: linear-gradient(90deg, #ff6a3d, var(--red));
+        transition: width .5s cubic-bezier(.22,.75,.3,1);
+      }
+      .wallet-goal p { margin: 8px 0 0; font-size: 11.5px; font-weight: 700; color: var(--ink2); }
+      .wallet-goal p em { font-style: normal; color: var(--ink); }
+
+      /* Le solde tressaille une fois quand il change : sans ca, la
+         deduction apres un echange passe totalement inapercue. */
+      @keyframes majSolde {
+        0%   { transform: scale(1); }
+        40%  { transform: scale(1.12); color: var(--red); }
+        100% { transform: scale(1); }
+      }
+      .wallet-sum b.maj { animation: majSolde .5s cubic-bezier(.3,1.4,.5,1); }
+
+      .jeton { display: block; }
+
+      /* ---------------- Les offres du soir ---------------- */
+
+      .rail {
+        display: flex; gap: 11px; overflow-x: auto; scroll-snap-type: x mandatory;
+        padding: 2px 16px 4px; margin: 0 -16px; scrollbar-width: none;
+      }
+      .rail::-webkit-scrollbar { display: none; }
+      .rail > * { scroll-snap-align: start; }
+
+      .deal {
+        position: relative; flex: 0 0 auto; width: 214px; text-align: left;
+        border: 1px solid var(--line2); border-radius: 20px; padding: 0; cursor: pointer;
+        background: var(--s1); color: inherit; font-family: inherit; overflow: hidden;
+      }
+      .deal:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+      .deal-art {
+        height: 118px; display: grid; place-items: center; position: relative;
+        background: radial-gradient(105% 88% at 50% 6%, var(--glow), transparent 70%), #0f1116;
+        border-bottom: 1px solid var(--line);
+      }
+      .deal-art svg.reco { width: 82px; height: 95px; }
+      .deal-body { padding: 12px 13px 13px; }
+      .deal-body strong { display: block; font-size: 14.5px; font-weight: 800; letter-spacing: -.028em; }
+      .deal-body .sous { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink2); margin-top: 3px; line-height: 1.4; min-height: 32px; }
+      .deal-cost { display: flex; align-items: center; gap: 6px; margin-top: 9px; }
+      .deal-cost .jeton { width: 16px; height: 16px; flex: 0 0 auto; }
+      .deal-cost b { font-size: 15px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+      .deal-cost del { font-size: 12px; font-weight: 700; color: var(--ink3); }
+      .deal-cost .offert { font-size: 14.5px; font-weight: 800; letter-spacing: -.02em; color: var(--vert); }
+
+      /* Le coin rabattu, facon etiquette de solde. Un seul par carte,
+         et jamais sur la grille du bas : si tout crie, plus rien ne
+         ressort. */
+      .flag {
+        position: absolute; top: 11px; right: 0; z-index: 2;
+        background: var(--c); color: #0a0b0e;
+        font-size: 10.5px; font-weight: 900; letter-spacing: .04em;
+        padding: 4px 9px 4px 10px; border-radius: 7px 0 0 7px;
+      }
+
+      .compte {
+        position: absolute; left: 10px; bottom: 10px; z-index: 2;
+        display: flex; align-items: center; gap: 5px;
+        background: rgba(8,9,12,.78); border: 1px solid var(--line2);
+        border-radius: 999px; padding: 4px 9px 4px 7px;
+        font-size: 10.5px; font-weight: 800; color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .compte svg { width: 11px; height: 11px; stroke: var(--red); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* ---------------- Le pass du mois ---------------- */
+
+      .pass {
+        border: 1px solid var(--line); border-radius: 20px; overflow: hidden;
+        background: linear-gradient(180deg, #171a21, #101217);
+      }
+      .pass-head { display: flex; align-items: center; gap: 11px; padding: 15px 16px 0; }
+      .pass-head .sceau {
+        width: 40px; height: 40px; border-radius: 12px; flex: 0 0 auto; display: grid; place-items: center;
+        background: radial-gradient(90% 90% at 30% 20%, rgba(217,178,106,.3), rgba(217,178,106,.07));
+        border: 1px solid rgba(217,178,106,.35);
+      }
+      .pass-head .sceau svg { width: 21px; height: 21px; stroke: var(--f-vip); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .pass-head strong { display: block; font-size: 15px; font-weight: 800; letter-spacing: -.028em; }
+      .pass-head .dit { display: block; font-size: 11.5px; font-weight: 650; color: var(--ink2); margin-top: 2px; }
+
+      .track { position: relative; padding: 24px 16px 14px; }
+      .track-rail {
+        position: absolute; left: 44px; right: 44px; top: 38px; height: 4px;
+        border-radius: 99px; background: rgba(255,255,255,.09);
+      }
+      .track-rail span {
+        display: block; height: 100%; width: 0; border-radius: 99px;
+        background: linear-gradient(90deg, var(--f-vip), #f2d7a0);
+        transition: width .6s cubic-bezier(.22,.75,.3,1);
+      }
+      .track-steps { position: relative; display: flex; justify-content: space-between; }
+      .step { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 56px; text-align: center; }
+      .step .pastille {
+        width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+        background: var(--s3); border: 2px solid rgba(255,255,255,.14);
+      }
+      .step .pastille svg { width: 14px; height: 14px; stroke: var(--ink3); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .step.ok .pastille { background: var(--f-vip); border-color: var(--f-vip); }
+      .step.ok .pastille svg { stroke: #12141a; stroke-width: 2.9; }
+      .step.now .pastille { border-color: var(--f-vip); box-shadow: 0 0 0 4px rgba(217,178,106,.16); }
+      .step.now .pastille svg { stroke: var(--f-vip); }
+      .step b { font-size: 10px; font-weight: 800; color: var(--ink2); font-variant-numeric: tabular-nums; }
+      .step.ok b, .step.now b { color: var(--ink); }
+      .step i { font-style: normal; font-size: 9px; font-weight: 700; color: var(--ink3); line-height: 1.25; }
+
+      .pass-foot {
+        display: flex; align-items: center; gap: 10px; padding: 12px 16px 14px;
+        border-top: 1px solid var(--line); background: rgba(255,255,255,.018);
+      }
+      .pass-foot p { margin: 0; font-size: 11.5px; font-weight: 700; color: var(--ink2); line-height: 1.45; }
+      .pass-foot p em { font-style: normal; color: var(--f-vip); }
+
+      /* ---------------- Filtres ---------------- */
+
+      .filtres { display: flex; gap: 7px; overflow-x: auto; padding: 0 16px 2px; margin: 0 -16px 13px; scrollbar-width: none; }
+      .filtres::-webkit-scrollbar { display: none; }
+      .filtre {
+        flex: 0 0 auto; font-family: inherit; font-size: 12.5px; font-weight: 750; letter-spacing: -.01em;
+        color: var(--ink2); background: var(--s2); border: 1px solid var(--line);
+        border-radius: 999px; padding: 7px 14px; cursor: pointer;
+      }
+      .filtre:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+      .filtre[aria-pressed="true"] { background: var(--ink); color: #0a0b0e; border-color: var(--ink); }
+
+      /* ---------------- Grille des recompenses ---------------- */
+
+      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+      .reco-card {
+        position: relative; text-align: left; padding: 0; cursor: pointer; overflow: hidden;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        color: inherit; font-family: inherit; display: flex; flex-direction: column;
+      }
+      .reco-card:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+      .reco-card .bandeau {
+        font-size: 9px; font-weight: 900; letter-spacing: .11em; text-transform: uppercase;
+        color: var(--c); background: rgba(0,0,0,.5); border-bottom: 1px solid var(--line);
+        padding: 5px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .reco-card .art {
+        flex: 1; min-height: 106px; display: grid; place-items: center;
+        background: radial-gradient(112% 84% at 50% 8%, var(--glow), transparent 72%);
+      }
+      .reco-card .art svg.reco { width: 72px; height: 84px; }
+      .reco-card .nom {
+        padding: 10px 11px 0; font-size: 12.5px; font-weight: 800; letter-spacing: -.022em;
+        line-height: 1.25; min-height: 32px;
+      }
+      .reco-card .prix {
+        display: flex; align-items: center; gap: 6px; margin-top: 9px;
+        padding: 9px 11px; background: var(--s2); border-top: 1px solid var(--line);
+      }
+      .reco-card .prix .jeton { width: 15px; height: 15px; flex: 0 0 auto; }
+      .reco-card .prix b { font-size: 14.5px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+      .reco-card .prix .go {
+        margin-left: auto; width: 21px; height: 21px; border-radius: 50%; background: var(--red);
+        display: grid; place-items: center; flex: 0 0 auto;
+      }
+      .reco-card .prix .go svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* Hors budget : on ne masque pas la recompense, on affiche ce
+         qu'il manque. C'est ce chiffre-la qui donne envie de
+         reposter, pas un cadenas muet. */
+      .reco-card.loin .art { opacity: .36; }
+      .reco-card.loin .nom { color: var(--ink2); }
+      .reco-card.loin .prix b { color: var(--ink3); }
+      .reco-card .manque {
+        margin-left: auto; font-size: 10.5px; font-weight: 800; color: var(--ink3);
+        white-space: nowrap; font-variant-numeric: tabular-nums;
+      }
+      .reco-card.epuise { opacity: .45; }
+
+      /* ---------------- Comment gagner des points ---------------- */
+
+      .gains { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--s1); }
+      .gain { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-top: 1px solid var(--line); }
+      .gain:first-child { border-top: 0; }
+      .gain .ic { width: 32px; height: 32px; border-radius: 10px; background: var(--s3); display: grid; place-items: center; flex: 0 0 auto; }
+      .gain .ic svg { width: 16px; height: 16px; stroke: var(--ink2); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .gain p { margin: 0; flex: 1; min-width: 0; font-size: 12.5px; font-weight: 750; letter-spacing: -.012em; line-height: 1.3; }
+      .gain p span { display: block; font-size: 11px; font-weight: 600; color: var(--ink3); margin-top: 2px; }
+      .gain .val { font-size: 13px; font-weight: 800; color: var(--vert); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+      /* ---------------- Mes bons ---------------- */
+
+      .bons { display: grid; gap: 9px; }
+      .bon {
+        display: flex; align-items: center; gap: 12px; padding: 11px 13px;
+        border: 1px dashed var(--line2); border-radius: 16px; background: rgba(255,255,255,.022);
+      }
+      .bon .code {
+        font-family: var(--mono); font-size: 12.5px; font-weight: 700; letter-spacing: .06em;
+        color: var(--ink); background: #0a0b0e; border: 1px solid var(--line2);
+        border-radius: 9px; padding: 8px 9px; flex: 0 0 auto;
+      }
+      .bon .txt { flex: 1; min-width: 0; }
+      .bon .txt strong { display: block; font-size: 13px; font-weight: 800; letter-spacing: -.022em; }
+      .bon .txt span { display: block; font-size: 11px; font-weight: 650; color: var(--ink3); margin-top: 2px; }
+
+      @keyframes bonNeuf { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+      .bon.neuf { animation: bonNeuf .4s cubic-bezier(.22,.75,.3,1); border-color: rgba(87,217,138,.5); }
+
+      /* ---------------- Onglets (identiques a la carte) ---------------- */
+
+      .tabs {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
+        background: #0e1015; border-top: 1px solid var(--line2);
+        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
+      }
+      .tab { display: grid; place-items: center; background: none; border: 0; cursor: pointer; position: relative; padding: 0; }
+      .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
+      .tab svg { width: 28px; height: 28px; stroke: #eef0f4; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; }
+      .tab.on svg { stroke: var(--red); }
+      .tab .badge { position: absolute; top: -4px; right: 50%; margin-right: -21px; width: 11px; height: 11px; border-radius: 50%; background: var(--red); }
+
+      /* ---------------- Feuille de detail ---------------- */
+
+      .voile {
+        position: absolute; inset: 0; z-index: 30; background: rgba(4,5,7,.66);
+        opacity: 0; pointer-events: none; transition: opacity .3s ease;
+      }
+      .voile.on { opacity: 1; pointer-events: auto; }
+
+      .sheet {
+        position: absolute; left: 0; right: 0; bottom: 0; z-index: 34; overflow: hidden;
+        background: #14171d; border-top: 1px solid var(--line2);
+        border-radius: 24px 24px 0 0; padding: 10px 20px 24px;
+        box-shadow: 0 -14px 44px rgba(0,0,0,.6);
+        transform: translateY(calc(100% + 24px)); transition: transform .36s cubic-bezier(.22,.75,.3,1);
+      }
+      .sheet.up { transform: translateY(0); }
+      @media (prefers-reduced-motion: reduce) {
+        .sheet, .voile { transition: none; }
+        .wallet-bar span, .track-rail span { transition: none; }
+        .wallet-sum b.maj, .bon.neuf { animation: none; }
+      }
+
+      .grab { width: 40px; height: 4.5px; border-radius: 99px; background: rgba(255,255,255,.16); margin: 0 auto 12px; }
+      .sheet-close {
+        position: absolute; top: 15px; right: 15px; z-index: 3;
+        width: 32px; height: 32px; border-radius: 50%; background: rgba(35,39,47,.9); border: 0;
+        cursor: pointer; display: grid; place-items: center;
+      }
+      .sheet-close:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+      .sheet-close svg { width: 14px; height: 14px; stroke: var(--ink2); stroke-width: 2.4; fill: none; stroke-linecap: round; }
+
+      .sheet-art {
+        height: 128px; margin: 0 -20px 6px; display: grid; place-items: center;
+        background: radial-gradient(72% 100% at 50% 20%, var(--glow), transparent 70%);
+      }
+      .sheet-art svg.reco { width: 106px; height: 122px; }
+      .sheet-fam {
+        display: block; font-size: 9.5px; font-weight: 900; letter-spacing: .12em;
+        text-transform: uppercase; color: var(--c); margin-bottom: 7px;
+      }
+      .sheet h3 { margin: 0 0 7px; font-size: 21px; font-weight: 800; letter-spacing: -.038em; line-height: 1.15; }
+      .sheet .desc { margin: 0 0 14px; font-size: 13px; color: var(--ink2); font-weight: 600; line-height: 1.5; }
+      .sheet ul.regles { display: grid; gap: 7px; margin: 0 0 17px; padding: 0; }
+      .sheet ul.regles li { list-style: none; display: flex; gap: 8px; font-size: 12px; font-weight: 650; color: var(--ink2); line-height: 1.45; }
+      .sheet ul.regles svg { width: 13px; height: 13px; margin-top: 3px; flex: 0 0 auto; stroke: var(--ink3); fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+
+      .sheet-cta {
+        display: flex; align-items: center; justify-content: center; gap: 9px;
+        width: 100%; background: var(--red); color: #fff; border: 0;
+        border-radius: 16px; padding: 16px; font-family: inherit; font-size: 15.5px;
+        font-weight: 800; letter-spacing: -.015em; cursor: pointer;
+      }
+      .sheet-cta:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+      .sheet-cta .jeton { width: 17px; height: 17px; flex: 0 0 auto; }
+      .sheet-cta[disabled] { background: var(--s3); color: var(--ink3); cursor: not-allowed; }
+      .sheet-note { text-align: center; font-size: 11.5px; color: var(--ink3); margin: 10px 0 0; font-weight: 650; line-height: 1.45; }
+
+      /* Confirmation : le meme panneau bascule sur le code, on
+         n'empile pas une deuxieme feuille par-dessus. */
+      .sheet-ok { text-align: center; padding: 8px 0 0; }
+      .sheet-ok .rond {
+        width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center;
+        background: rgba(87,217,138,.14); border: 1px solid rgba(87,217,138,.4);
+      }
+      .sheet-ok .rond svg { width: 26px; height: 26px; stroke: var(--vert); fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+      .sheet-ok h3 { font-size: 19px; margin-bottom: 6px; }
+      .sheet-ok .grand-code {
+        font-family: var(--mono); font-size: 26px; font-weight: 700; letter-spacing: .14em;
+        padding: 15px 0; margin: 16px 0 12px; border-radius: 14px;
+        background: #0a0b0e; border: 1px dashed var(--line2);
+      }
+
+      /* ---------------- Notes de la page ---------------- */
+
+      .notes {
+        margin-top: 34px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1px; background: var(--page-line); border: 1px solid var(--page-line);
+        border-radius: 5px; overflow: hidden;
+      }
+      .note { background: var(--page-2); padding: 24px 22px 26px; }
+      .note .mark {
+        display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--page-ink3); margin-bottom: 10px;
+      }
+      .note.warn .mark { color: var(--red); }
+      .note h3 { margin: 0 0 8px; font-size: 15.5px; font-weight: 700; letter-spacing: -.015em; }
+      .note p { margin: 0; font-size: 14px; color: var(--page-ink2); line-height: 1.55; }
+
+      footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--page-line); font-size: 13px; color: var(--page-ink3); }
+      code { font-family: var(--mono); font-size: 12.5px; color: var(--page-ink); }
+
+      @media (max-width: 430px) {
+        .wrap { padding: 38px 12px 70px; }
+        .phone { width: 100%; max-width: 360px; }
+      }
+    </style>
+  </head>
+  <body>
+
+<div class="wrap">
+
+  <span class="kicker">PWA clubbeur · écran boutique · 18 août 2026</span>
+  <h1>Boutique ViralNight</h1>
+  <p class="lede">
+    Le deuxième onglet, après la carte. On y dépense les points gagnés en postant :
+    un vestiaire, un shot, un cocktail, un coupe-file, une table. Rien ne s'achète
+    en euros — la seule monnaie est le point, et le point ne s'obtient qu'en publiant.
+  </p>
+
+  <div class="stage">
+    <div class="phone">
+      <div class="screen">
+
+        <div class="app" id="app">
+
+          <header class="wallet">
+            <div class="wallet-top">
+              <div>
+                <span class="wallet-lab">Ma cagnotte</span>
+                <div class="wallet-sum">
+                  <span class="jeton" id="w-jeton"></span>
+                  <b id="w-solde">0</b>
+                  <i>pts</i>
+                </div>
+              </div>
+              <span class="wallet-week" id="w-semaine"></span>
+            </div>
+            <div class="wallet-goal">
+              <div class="wallet-bar"><span id="w-jauge"></span></div>
+              <p id="w-objectif"></p>
+            </div>
+          </header>
+
+          <section class="sec">
+            <div class="sec-head">
+              <h2>Ce soir au Mirage</h2>
+              <span class="sub" id="o-fin"></span>
+            </div>
+            <div class="rail" id="rail-offres"></div>
+            <p class="sec-note">Ces offres tombent à la fermeture. Elles ne sont pas reportées.</p>
+          </section>
+
+          <section class="sec">
+            <div class="sec-head"><h2>Pass du mois</h2></div>
+            <div class="pass">
+              <div class="pass-head">
+                <span class="sceau">
+                  <svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.2 5.5.8-4 3.9 1 5.6-5-2.7-5 2.7 1-5.6-4-3.9 5.5-.8z"/></svg>
+                </span>
+                <span>
+                  <strong id="p-titre">Pass Nuit · août</strong>
+                  <span class="dit" id="p-dit"></span>
+                </span>
+              </div>
+              <div class="track">
+                <div class="track-rail"><span id="p-jauge"></span></div>
+                <div class="track-steps" id="p-steps"></div>
+              </div>
+              <div class="pass-foot">
+                <p id="p-note"></p>
+              </div>
+            </div>
+          </section>
+
+          <section class="sec">
+            <div class="sec-head">
+              <h2>Récompenses</h2>
+              <span class="sub" id="g-compte"></span>
+            </div>
+            <div class="filtres" id="filtres">
+              <button class="filtre" type="button" data-fam="tout" aria-pressed="true">Tout</button>
+              <button class="filtre" type="button" data-fam="bar" aria-pressed="false">Bar</button>
+              <button class="filtre" type="button" data-fam="acces" aria-pressed="false">Accès</button>
+              <button class="filtre" type="button" data-fam="vip" aria-pressed="false">VIP</button>
+            </div>
+            <div class="grille" id="grille"></div>
+          </section>
+
+          <section class="sec">
+            <div class="sec-head"><h2>Mes bons</h2></div>
+            <div class="bons" id="bons"></div>
+            <p class="sec-note">Un bon se montre au bar ou à l'entrée. Le club le valide sur sa tablette.</p>
+          </section>
+
+          <section class="sec">
+            <div class="sec-head"><h2>Gagner des points</h2></div>
+            <div class="gains" id="gains"></div>
+            <p class="sec-note">Les points arrivent une fois la publication vérifiée par le club, en général sous 24 h.</p>
+          </section>
+
+        </div>
+
+        <div class="voile" id="voile"></div>
+
+        <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sh-titre">
+          <div class="grab"></div>
+          <button class="sheet-close" id="sh-close" aria-label="Fermer">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <div id="sh-corps"></div>
+        </div>
+
+        <nav class="tabs">
+          <button class="tab" id="tab-carte" aria-label="Carte">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>
+          </button>
+          <button class="tab on" aria-label="Boutique" aria-current="page">
+            <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
+          </button>
+          <button class="tab" aria-label="Poster ma story">
+            <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
+          </button>
+          <button class="tab" aria-label="Amis">
+            <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
+          </button>
+          <button class="tab" aria-label="Profil">
+            <span class="badge"></span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.4 20.2a7.6 7.6 0 0 1 15.2 0"/></svg>
+          </button>
+        </nav>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <span class="mark">Le parti pris</span>
+      <h3>Une boutique qui ne vend rien</h3>
+      <p>
+        Les boutiques de jeu dont je me suis inspiré vendent une monnaie contre
+        de l'argent. Ici, la seule monnaie est le point, et il ne s'obtient qu'en
+        publiant. Aucun prix en euros nulle part, et le verbe est « échanger »,
+        jamais « acheter ».
+      </p>
+    </div>
+    <div class="note">
+      <span class="mark">Les chiffres</span>
+      <h3>Le vrai barème du produit</h3>
+      <p>
+        Les coûts et les stocks viennent de <code>DEFAULT_REWARDS</code>, et les
+        gains de <code>DEFAULT_POINT_RULES</code> — les mêmes valeurs que la
+        landing et le dashboard du gérant. Rien n'est inventé pour la maquette.
+      </p>
+    </div>
+    <div class="note warn">
+      <span class="mark">À brancher</span>
+      <h3>Encore une maquette</h3>
+      <p>
+        Le solde, les stocks et les bons vivent en mémoire dans la page : un
+        rechargement remet tout à zéro. Le branchement Supabase passera par
+        <code>rewards</code> et <code>reward_redemptions</code>, avec le club
+        déduit du jeton de session.
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    Maquette interactive — écran boutique de la PWA clubbeur, à valider avant branchement des données.
+  </footer>
+
+</div>
+
+<script type="module">
+
+/* ==========================================================
+   LES ILLUSTRATIONS
+
+   Dessinees a la main plutot que prises dans une banque
+   d'icones : une recompense de club se reconnait a l'objet
+   (le verre, le cintre, le cordon), et un pictogramme au
+   trait ne donne pas cette matiere-la.
+
+   Chaque fonction rend un SVG complet. Les identifiants de
+   clip sont numerotes : le meme verre est dessine plusieurs
+   fois par ecran (grille + feuille), et deux clipPath de
+   meme id se marchent dessus.
+   ========================================================== */
+
+var uid = 0;
+function nid(p) { return p + (++uid); }
+
+function svg(inner) {
+  return '<svg class="reco" viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<ellipse cx="50" cy="107" rx="25" ry="4.5" fill="rgba(0,0,0,.45)"/>' + inner + '</svg>';
+}
+
+/* --- Le cocktail : coupe, rondelle d'agrume, paille. --- */
+function artCocktail() {
+  return svg(
+    '<path d="M29 31h42L50 58z" fill="#ff4d6d"/>' +
+    '<path d="M29 31h42l-5 5H34z" fill="#ff8ea5" opacity=".75"/>' +
+    '<path d="M22 26h56L50 62z" fill="none" stroke="#e2e9f3" stroke-width="3.4" stroke-linejoin="round"/>' +
+    '<path d="M50 62v33" stroke="#e2e9f3" stroke-width="3.4" stroke-linecap="round"/>' +
+    '<path d="M34 97h32" stroke="#e2e9f3" stroke-width="3.8" stroke-linecap="round"/>' +
+    '<path d="M63 12 55 40" stroke="#ffb43d" stroke-width="3.4" stroke-linecap="round"/>' +
+    '<circle cx="73" cy="22" r="9" fill="#ffd166" stroke="#e59a12" stroke-width="2"/>' +
+    '<path d="M73 13v18M64 22h18" stroke="#e59a12" stroke-width="1.5"/>'
+  );
+}
+
+/* --- Le shot : petit verre epais et son quartier de citron. --- */
+function artShot() {
+  var id = nid("shot");
+  var corps = "M35 48h30l-3 45a7 7 0 0 1-7 6H45a7 7 0 0 1-7-6z";
+  return svg(
+    '<defs><clipPath id="' + id + '"><path d="' + corps + '"/></clipPath></defs>' +
+    '<path d="' + corps + '" fill="#e9eef5" opacity=".14"/>' +
+    '<g clip-path="url(#' + id + ')">' +
+      '<rect x="30" y="64" width="40" height="42" fill="#dc8f28"/>' +
+      '<rect x="30" y="64" width="40" height="6" fill="#f7bd5e"/>' +
+    '</g>' +
+    '<path d="' + corps + '" fill="none" stroke="#e2e9f3" stroke-width="3.2" stroke-linejoin="round"/>' +
+    '<ellipse cx="50" cy="48" rx="15" ry="4.4" fill="none" stroke="#e2e9f3" stroke-width="3.2"/>' +
+    '<path d="M64 33a11 11 0 0 1 0 22z" fill="#a8d84f" stroke="#7cae30" stroke-width="2" stroke-linejoin="round"/>' +
+    '<path d="M64 38v12M64 44h8" stroke="#7cae30" stroke-width="1.5"/>'
+  );
+}
+
+/* --- La pinte : reprise de la carte, ou elle sert deja de
+       marqueur d'ami. Le meme objet d'un ecran a l'autre. --- */
+function artPinte() {
+  var id = nid("pinte");
+  var corps = "M31 30h38l-4 62a8 8 0 0 1-8 7H43a8 8 0 0 1-8-7z";
+  return svg(
+    '<defs><clipPath id="' + id + '"><path d="' + corps + '"/></clipPath></defs>' +
+    '<path d="' + corps + '" fill="#dfe9ef" opacity=".2"/>' +
+    '<g clip-path="url(#' + id + ')">' +
+      '<rect x="28" y="44" width="46" height="60" fill="#f0a91e"/>' +
+      '<rect x="28" y="74" width="46" height="30" fill="#d98a09"/>' +
+      '<circle cx="42" cy="60" r="3" fill="#ffd98a" opacity=".75"/>' +
+      '<circle cx="59" cy="76" r="2.2" fill="#ffd98a" opacity=".65"/>' +
+      '<rect x="37" y="30" width="6" height="70" fill="#fff" opacity=".45"/>' +
+    '</g>' +
+    '<g><ellipse cx="50" cy="44" rx="21" ry="9" fill="#fffaf0"/>' +
+      '<circle cx="37" cy="39" r="8" fill="#fffaf0"/>' +
+      '<circle cx="50" cy="35" r="9.5" fill="#fffdf7"/>' +
+      '<circle cx="63" cy="39" r="8" fill="#fffaf0"/></g>' +
+    '<path d="' + corps + '" fill="none" stroke="#c9d6de" stroke-width="2.8" stroke-linejoin="round"/>'
+  );
+}
+
+/* --- Le vestiaire : le cintre et son numero. --- */
+function artCintre() {
+  return svg(
+    '<path d="M50 24a8.5 8.5 0 0 1 8.5 8.5c0 5-8.5 4-8.5 10.5" fill="none" stroke="#cfd8e4" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M50 43 21 74a4 4 0 0 0 3 6.6h52a4 4 0 0 0 3-6.6z" fill="none" stroke="#cfd8e4" stroke-width="4.4" stroke-linejoin="round"/>' +
+    '<rect x="55" y="76" width="24" height="19" rx="4" fill="#1b2029" stroke="#ff2f45" stroke-width="2.6" transform="rotate(9 67 85)"/>' +
+    '<text x="67" y="92" transform="rotate(9 67 85)" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12" font-weight="700" fill="#ff2f45">07</text>'
+  );
+}
+
+/* --- Le coupe-file : le ticket dechirable et son eclair. --- */
+function artTicket() {
+  return svg(
+    '<g transform="rotate(-7 50 62)">' +
+      '<rect x="13" y="40" width="74" height="44" rx="9" fill="#1d222b" stroke="#ff2f45" stroke-width="3"/>' +
+      '<path d="M62 42v40" stroke="#ff2f45" stroke-width="2.2" stroke-dasharray="4 5"/>' +
+      '<path d="M38 48l-10 17h9l-3 12 12-18h-9z" fill="#ff2f45"/>' +
+      '<path d="M69 55h10M69 62h10M69 69h6" stroke="#ff2f45" stroke-width="2.4" stroke-linecap="round" opacity=".5"/>' +
+    '</g>'
+  );
+}
+
+/* --- L'entree : le bracelet de soiree. --- */
+function artBracelet() {
+  return svg(
+    '<ellipse cx="50" cy="60" rx="29" ry="29" fill="none" stroke="#ff2f45" stroke-width="10"/>' +
+    '<ellipse cx="50" cy="60" rx="29" ry="29" fill="none" stroke="#ff6b7d" stroke-width="3" opacity=".55"/>' +
+    '<rect x="38" y="20" width="24" height="17" rx="5" fill="#1d222b" stroke="#ff2f45" stroke-width="3"/>' +
+    '<path d="M50 24.5l1.9 3.9 4.1.6-3 2.9.7 4.2-3.7-2-3.7 2 .7-4.2-3-2.9 4.1-.6z" fill="#ff2f45"/>'
+  );
+}
+
+/* --- La table : la bouteille et son cierge. --- */
+function artBouteille() {
+  return svg(
+    '<path d="M44 24h12v18c0 5 12 8 12 20v34a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V62c0-12 12-15 12-20z" fill="#17392c" stroke="#d9b26a" stroke-width="3" stroke-linejoin="round"/>' +
+    '<rect x="34" y="68" width="32" height="21" rx="3" fill="#d9b26a" opacity=".92"/>' +
+    '<path d="M40 75h20M40 81h13" stroke="#17392c" stroke-width="2.2" stroke-linecap="round"/>' +
+    '<rect x="42" y="20" width="16" height="8" rx="2.5" fill="#d9b26a"/>' +
+    '<path d="M50 14V6M41 17l-5-5M59 17l5-5" stroke="#f2d7a0" stroke-width="2.8" stroke-linecap="round"/>'
+  );
+}
+
+/* --- Le carre VIP : le cordon et ses deux poteaux. --- */
+function artCordon() {
+  return svg(
+    '<path d="M22 48q28 28 56 0" fill="none" stroke="#d9b26a" stroke-width="5.5" stroke-linecap="round"/>' +
+    '<g stroke="#c3c9d3" stroke-width="4.5" stroke-linecap="round"><path d="M22 50v44"/><path d="M78 50v44"/></g>' +
+    '<circle cx="22" cy="43" r="6.5" fill="#d9b26a"/>' +
+    '<circle cx="78" cy="43" r="6.5" fill="#d9b26a"/>' +
+    '<path d="M12 97h20M68 97h20" stroke="#c3c9d3" stroke-width="5.5" stroke-linecap="round"/>'
+  );
+}
+
+/* --- Les points doubles : le jeton, en grand, marque x2. --- */
+function artDouble() {
+  return svg(
+    '<circle cx="44" cy="56" r="28" fill="#2a1216" stroke="#ff2f45" stroke-width="3"/>' +
+    '<path d="M44 40l3.6 8.4L56 52l-8.4 3.6L44 64l-3.6-8.4L32 52l8.4-3.6z" fill="#ff2f45"/>' +
+    '<circle cx="66" cy="72" r="24" fill="#0f1116" stroke="#ff2f45" stroke-width="3"/>' +
+    '<text x="66" y="80" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="800" fill="#ff2f45">×2</text>'
+  );
+}
+
+/* --- Le jeton de points, decline en petit partout. --- */
+function jeton(taille) {
+  return '<svg class="jeton" viewBox="0 0 24 24" width="' + taille + '" height="' + taille + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="10.5" fill="#ff2f45"/>' +
+    '<circle cx="12" cy="12" r="10.5" fill="none" stroke="#ff8a99" stroke-width="1.2" opacity=".6"/>' +
+    '<path d="M12 5.6l1.7 3.9 3.9 1.7-3.9 1.7-1.7 3.9-1.7-3.9-3.9-1.7 3.9-1.7z" fill="#fff"/>' +
+    '</svg>';
+}
+
+/* --- Petits pictogrammes au trait, eux, pour les lignes de
+       texte : la, une illustration serait du bruit. --- */
+var ICO = {
+  horloge: '<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/>',
+  check:   '<path d="M4 12.5l5 5L20 6.5"/>',
+  puce:    '<circle cx="12" cy="12" r="3"/>',
+  qr:      '<rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><path d="M13.5 13.5h3v3M20.5 16.5v4M16.5 20.5h-3"/>',
+  story:   '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1"/>',
+  video:   '<rect x="2.5" y="5" width="14" height="14" rx="3"/><path d="M16.5 10l5-3v10l-5-3z"/>',
+  flamme:  '<path d="M12 2.5s5.5 4.5 5.5 9.5a5.5 5.5 0 0 1-11 0c0-2 1-3.5 1-3.5s.5 2 2 2c0-3.5 2.5-6 2.5-8z"/>',
+  couronne:'<path d="M3 7l4 4 5-6.5L17 11l4-4v10.5H3z"/>'
+};
+function ico(nom, cls) {
+  return '<svg viewBox="0 0 24 24" class="' + (cls || "") + '" aria-hidden="true">' + ICO[nom] + '</svg>';
+}
+
+/* ==========================================================
+   LES FAMILLES — trois, pas une de plus. Elles servent a
+   ranger la grille, pas a la decorer.
+   ========================================================== */
+
+var FAMILLES = {
+  bar:   { nom: "Bar",   c: "#ffb43d", glow: "rgba(255,180,61,.16)" },
+  acces: { nom: "Accès", c: "#ff2f45", glow: "rgba(255,47,69,.15)" },
+  vip:   { nom: "VIP",   c: "#d9b26a", glow: "rgba(217,178,106,.15)" }
+};
+
+/* ==========================================================
+   LE CATALOGUE
+
+   Les cinq premieres lignes sont exactement DEFAULT_REWARDS
+   de dashboardData.js — memes libelles, memes couts, memes
+   stocks. Les trois autres (pinte, table, carre) etendent la
+   grille vers le haut : une boutique ou tout est deja
+   accessible n'a plus rien a offrir au bout de deux soirees.
+   ========================================================== */
+
+var RECOMPENSES = [
+  {
+    id: "vestiaire", nom: "Vestiaire offert", cout: 40, fam: "acces", stock: 100,
+    art: artCintre, bandeau: "Le plus pris",
+    desc: "Ton manteau au vestiaire, sans payer.",
+    regles: ["Valable la soirée où tu l'échanges", "À montrer au vestiaire avant de déposer"]
+  },
+  {
+    id: "shot", nom: "Shot maison", cout: 70, fam: "bar", stock: 50,
+    art: artShot, bandeau: null,
+    desc: "Un shot de la maison, servi directement au bar.",
+    regles: ["Un seul shot par soirée", "Le bar peut demander ta carte d'identité"]
+  },
+  {
+    id: "pinte", nom: "Pinte offerte", cout: 90, fam: "bar", stock: 40,
+    art: artPinte, bandeau: null,
+    desc: "La pression du bar, la pinte entière.",
+    regles: ["Un seul verre par soirée", "Le bar peut demander ta carte d'identité"]
+  },
+  {
+    id: "cocktail", nom: "Cocktail signature", cout: 110, fam: "bar", stock: 30,
+    art: artCocktail, bandeau: "Le préféré",
+    desc: "Le cocktail signature de la carte, préparé au bar.",
+    regles: ["Hors carte premium", "Un seul cocktail par soirée", "Le bar peut demander ta carte d'identité"]
+  },
+  {
+    id: "coupefile", nom: "Coupe-file", cout: 160, fam: "acces", stock: 20,
+    art: artTicket, bandeau: null,
+    desc: "Tu passes devant la file, avec une personne.",
+    regles: ["Toi + 1 accompagnant", "Valable jusqu'à 2 h du matin"]
+  },
+  {
+    id: "entree", nom: "Entrée gratuite", cout: 240, fam: "acces", stock: 10,
+    art: artBracelet, bandeau: null,
+    desc: "L'entrée offerte pour toi, ce soir.",
+    regles: ["Valable la soirée où tu l'échanges", "Hors soirées spéciales et privatisations"]
+  },
+  {
+    id: "table", nom: "Table + bouteille", cout: 900, fam: "vip", stock: 2,
+    art: artBouteille, bandeau: null,
+    desc: "Une table réservée et une bouteille pour ton groupe.",
+    regles: ["Sur réservation, 24 h à l'avance", "Jusqu'à 6 personnes", "Bouteille au choix dans la sélection maison"]
+  },
+  {
+    id: "carre", nom: "Carré VIP pour 4", cout: 1400, fam: "vip", stock: 1,
+    art: artCordon, bandeau: null,
+    desc: "Le carré VIP pour toi et trois amis, toute la nuit.",
+    regles: ["Sur réservation, 48 h à l'avance", "Entrées comprises pour 4", "Une seule attribution par soirée"]
+  }
+];
+
+/* --- Les offres du soir : elles ne vivent que cette nuit-la.
+       C'est ce qui les distingue du catalogue, et la raison
+       du compte a rebours affiche sur chacune. --- */
+
+var OFFRES = [
+  {
+    id: "o-shot", nom: "Shot offert", sous: "Dès ta première story de la soirée",
+    fam: "bar", art: artShot, cout: 0, avant: 70, flag: "OFFERT", reste: null,
+    desc: "Poste ta première story de la soirée avec le tag du Mirage, et le shot est offert.",
+    regles: ["Story validée par le club", "Une seule fois par soirée", "Le bar peut demander ta carte d'identité"]
+  },
+  {
+    id: "o-cocktail", nom: "Cocktail signature", sous: "Moitié prix jusqu'à la fermeture",
+    fam: "bar", art: artCocktail, cout: 55, avant: 110, flag: "−50 %", reste: 7,
+    desc: "Le cocktail signature à moitié prix en points, réservé aux vingt premiers de la soirée.",
+    regles: ["Sept exemplaires restants", "Un seul cocktail par soirée", "Le bar peut demander ta carte d'identité"]
+  },
+  {
+    id: "o-double", nom: "Points doublés", sous: "Chaque vue compte double jusqu'à 1 h",
+    fam: "acces", art: artDouble, cout: null, flag: "CE SOIR", reste: null, info: true,
+    desc: "Jusqu'à 1 h du matin, chaque vue sur tes stories et tes vidéos rapporte le double de points.",
+    regles: ["Actif automatiquement, rien à échanger", "S'applique aux contenus postés avant 1 h", "Cumulable avec le bonus viral"]
+  }
+];
+
+/* --- Le pass du mois : la progression longue, celle qui fait
+       revenir la semaine d'apres. Le dernier palier vaut le
+       bonus « ambassadeur du mois » du barème (350 pts). --- */
+
+var PASS = {
+  mois: "août",
+  cumul: 430,
+  paliers: [
+    { pts: 100,  lab: "Vestiaire" },
+    { pts: 250,  lab: "Shot" },
+    { pts: 500,  lab: "Cocktail" },
+    { pts: 800,  lab: "Coupe-file" },
+    { pts: 1200, lab: "Ambassadeur" }
+  ]
+};
+
+/* --- Le barème, mot pour mot depuis DEFAULT_POINT_RULES. --- */
+
+var GAINS = [
+  { ic: "qr",       t: "Scanner le QR au club",   s: "À l'entrée, une fois par soirée",  v: 15 },
+  { ic: "story",    t: "1 000 vues sur ta story", s: "Story taguée, une fois validée",   v: 80 },
+  { ic: "video",    t: "1 000 vues sur ta vidéo", s: "TikTok, Reel ou Short",            v: 25 },
+  { ic: "flamme",   t: "Contenu qui décolle",     s: "Bonus au-delà de 10 000 vues",     v: 90 },
+  { ic: "couronne", t: "Ambassadeur du mois",     s: "Le plus gros total du mois",       v: 350 }
+];
+
+/* ==========================================================
+   L'ETAT
+
+   Tout vit en memoire : c'est une maquette, un rechargement
+   remet le solde et les stocks a leur valeur de depart. Le
+   branchement Supabase remplacera cet objet, pas le rendu.
+   ========================================================== */
+
+var ETAT = {
+  solde: 185,
+  semaine: 130,
+  bons: [
+    { code: "VN-7XQ2", titre: "Vestiaire offert", note: "Mirage · à utiliser avant 6 h" }
+  ]
+};
+
+var $ = function (s) { return document.querySelector(s); };
+
+/* ==========================================================
+   LA CAGNOTTE
+   ========================================================== */
+
+$("#w-jeton").outerHTML = jeton(26);
+$("#w-semaine").textContent = "+" + ETAT.semaine + " cette semaine";
+
+/* L'objectif affiche est toujours la premiere recompense hors
+   budget, pas une cible fixe : c'est la seule facon que la
+   barre reste utile quand le solde monte. */
+function prochaine() {
+  var reste = RECOMPENSES.filter(function (r) { return r.cout > ETAT.solde && r.stock > 0; });
+  reste.sort(function (a, b) { return a.cout - b.cout; });
+  return reste[0] || null;
+}
+
+function majCagnotte(anime) {
+  var b = $("#w-solde");
+  b.textContent = ETAT.solde.toLocaleString("fr-FR");
+  if (anime) {
+    b.classList.remove("maj");
+    void b.offsetWidth; // force le rejeu de l'animation
+    b.classList.add("maj");
+  }
+
+  var cible = prochaine();
+  if (cible) {
+    var part = Math.max(4, Math.round((ETAT.solde / cible.cout) * 100));
+    $("#w-jauge").style.width = Math.min(100, part) + "%";
+    $("#w-objectif").innerHTML =
+      "Encore <em>" + (cible.cout - ETAT.solde).toLocaleString("fr-FR") + " pts</em> avant " + cible.nom.toLowerCase() + ".";
+  } else {
+    $("#w-jauge").style.width = "100%";
+    $("#w-objectif").innerHTML = "<em>Tout le catalogue est à ta portée.</em>";
+  }
+}
+
+/* ==========================================================
+   LE COMPTE A REBOURS
+
+   La nuit court de 23 h a 6 h : les offres du soir tombent a
+   la fermeture, et le club recharge les siennes le lendemain.
+
+   Hors de cette fenetre, on annonce l'ouverture au lieu du
+   rebours : afficher « encore 14 h 58 » a trois heures de
+   l'apres-midi ne dit rien a personne, et fait passer une
+   offre de la nuit pour une offre permanente.
+   ========================================================== */
+
+var OUVERTURE = 23, FERMETURE = 6;
+
+function fenetreSoir() {
+  var n = new Date();
+  var h = n.getHours();
+  if (h >= FERMETURE && h < OUVERTURE) return { ouvert: false, texte: "dès 23 h" };
+
+  var fin = new Date(n);
+  fin.setHours(FERMETURE, 0, 0, 0);
+  if (h >= OUVERTURE) fin.setDate(fin.getDate() + 1);
+  var m = Math.max(0, Math.round((fin - n) / 60000));
+  var hh = Math.floor(m / 60);
+  return { ouvert: true, texte: hh > 0 ? hh + " h " + String(m % 60).padStart(2, "0") : m + " min" };
+}
+
+function majRebours() {
+  var f = fenetreSoir();
+  $("#o-fin").textContent = f.ouvert ? "encore " + f.texte : f.texte;
+  Array.prototype.forEach.call(document.querySelectorAll(".compte b"), function (e) {
+    e.textContent = f.texte;
+  });
+}
+
+/* ==========================================================
+   LES OFFRES DU SOIR
+   ========================================================== */
+
+function rendreOffres() {
+  var rail = $("#rail-offres");
+  rail.innerHTML = "";
+
+  OFFRES.forEach(function (o) {
+    var f = FAMILLES[o.fam];
+    var b = document.createElement("button");
+    b.className = "deal";
+    b.type = "button";
+    b.style.setProperty("--glow", f.glow);
+    b.setAttribute("aria-label", o.nom + " — " + o.sous);
+
+    var cout;
+    if (o.info) cout = '<span class="offert">Actif ce soir</span>';
+    else if (o.cout === 0) cout = '<span class="offert">Offert</span>' +
+      '<del>' + o.avant + ' pts</del>';
+    else cout = jeton(16) + "<b>" + o.cout + "</b><del>" + o.avant + "</del>";
+
+    b.innerHTML =
+      '<span class="flag" style="--c:' + f.c + '">' + o.flag + "</span>" +
+      '<span class="deal-art">' + o.art() +
+        '<span class="compte">' + ico("horloge") + "<b></b></span>" +
+      "</span>" +
+      '<span class="deal-body">' +
+        "<strong>" + o.nom + "</strong>" +
+        '<span class="sous">' + o.sous + "</span>" +
+        '<span class="deal-cost">' + cout + "</span>" +
+      "</span>";
+
+    b.addEventListener("click", function () { ouvrir(o, b); });
+    rail.appendChild(b);
+  });
+}
+
+/* ==========================================================
+   LE PASS DU MOIS
+   ========================================================== */
+
+function rendrePass() {
+  var p = PASS, n = p.paliers.length;
+  $("#p-titre").textContent = "Pass Nuit · " + p.mois;
+  $("#p-dit").textContent = p.cumul.toLocaleString("fr-FR") + " pts gagnés ce mois-ci";
+
+  var atteints = p.paliers.filter(function (x) { return p.cumul >= x.pts; }).length;
+  var suivant = p.paliers[atteints] || null;
+
+  /* La barre suit les pastilles, pas les valeurs : les paliers
+     sont espaces regulierement a l'ecran alors que leurs couts
+     ne le sont pas. Une progression calculee sur les points
+     bruts se decalerait visiblement des pastilles. */
+  var avance;
+  if (!suivant) avance = 100;
+  else {
+    var bas = atteints === 0 ? 0 : p.paliers[atteints - 1].pts;
+    var frac = (p.cumul - bas) / (suivant.pts - bas);
+    avance = ((atteints - 1 + frac) / (n - 1)) * 100;
+  }
+  $("#p-jauge").style.width = Math.max(0, Math.min(100, avance)) + "%";
+
+  var steps = $("#p-steps");
+  steps.innerHTML = "";
+  p.paliers.forEach(function (x, i) {
+    var etat = p.cumul >= x.pts ? "ok" : (i === atteints ? "now" : "");
+    var e = document.createElement("span");
+    e.className = "step " + etat;
+    e.innerHTML =
+      '<span class="pastille">' + ico(etat === "ok" ? "check" : "puce") + "</span>" +
+      "<b>" + x.pts + "</b><i>" + x.lab + "</i>";
+    steps.appendChild(e);
+  });
+
+  $("#p-note").innerHTML = suivant
+    ? "Encore <em>" + (suivant.pts - p.cumul) + " pts ce mois-ci</em> pour débloquer " +
+      suivant.lab.toLowerCase() + "."
+    : "<em>Pass terminé.</em> Tu es ambassadeur du mois.";
+}
+
+/* ==========================================================
+   LA GRILLE
+   ========================================================== */
+
+var filtreActif = "tout";
+
+function rendreGrille() {
+  var g = $("#grille");
+  g.innerHTML = "";
+
+  var liste = RECOMPENSES.filter(function (r) {
+    return filtreActif === "tout" || r.fam === filtreActif;
+  });
+
+  $("#g-compte").textContent = liste.length + (liste.length > 1 ? " récompenses" : " récompense");
+
+  liste.forEach(function (r) {
+    var f = FAMILLES[r.fam];
+    var loin = r.cout > ETAT.solde;
+    var epuise = r.stock <= 0;
+
+    var b = document.createElement("button");
+    b.className = "reco-card" + (loin ? " loin" : "") + (epuise ? " epuise" : "");
+    b.type = "button";
+    b.style.setProperty("--c", f.c);
+    b.style.setProperty("--glow", f.glow);
+    b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
+
+    /* Le bandeau dit d'abord la rarete quand il en reste peu :
+       « il en reste 2 » pese plus lourd qu'un nom de famille. */
+    var bandeau = epuise ? "Épuisé"
+      : (r.stock <= 5 ? "Il en reste " + r.stock : (r.bandeau || f.nom));
+
+    var pied = epuise
+      ? '<span class="manque">Épuisé</span>'
+      : (loin
+        ? '<span class="manque">encore ' + (r.cout - ETAT.solde).toLocaleString("fr-FR") + "</span>"
+        : '<span class="go">' + ico("check") + "</span>");
+
+    b.innerHTML =
+      '<span class="bandeau">' + bandeau + "</span>" +
+      '<span class="art">' + r.art() + "</span>" +
+      '<span class="nom">' + r.nom + "</span>" +
+      '<span class="prix">' + jeton(15) + "<b>" + r.cout.toLocaleString("fr-FR") + "</b>" + pied + "</span>";
+
+    b.addEventListener("click", function () { ouvrir(r, b); });
+    g.appendChild(b);
+  });
+}
+
+Array.prototype.forEach.call(document.querySelectorAll(".filtre"), function (btn) {
+  btn.addEventListener("click", function () {
+    filtreActif = btn.dataset.fam;
+    Array.prototype.forEach.call(document.querySelectorAll(".filtre"), function (o) {
+      o.setAttribute("aria-pressed", String(o === btn));
+    });
+    rendreGrille();
+  });
+});
+
+/* ==========================================================
+   MES BONS ET LE BAREME
+   ========================================================== */
+
+function rendreBons(neufCode) {
+  var z = $("#bons");
+  z.innerHTML = "";
+  ETAT.bons.forEach(function (bon) {
+    var e = document.createElement("div");
+    e.className = "bon" + (bon.code === neufCode ? " neuf" : "");
+    e.innerHTML =
+      '<span class="code">' + bon.code + "</span>" +
+      '<span class="txt"><strong>' + bon.titre + "</strong><span>" + bon.note + "</span></span>";
+    z.appendChild(e);
+  });
+}
+
+(function rendreGains() {
+  var z = $("#gains");
+  GAINS.forEach(function (g) {
+    var e = document.createElement("div");
+    e.className = "gain";
+    e.innerHTML =
+      '<span class="ic">' + ico(g.ic) + "</span>" +
+      "<p>" + g.t + "<span>" + g.s + "</span></p>" +
+      '<span class="val">+' + g.v + " pts</span>";
+    z.appendChild(e);
+  });
+})();
+
+/* ==========================================================
+   LA FEUILLE DE DETAIL
+
+   Meme composant que sur la carte : elle monte du bas, se
+   ferme au voile, a la croix ou avec Echap. L'echange
+   bascule le contenu de cette meme feuille sur le code,
+   plutot que d'empiler une deuxieme surface par-dessus.
+   ========================================================== */
+
+var sheet = $("#sheet"), voile = $("#voile"), corps = $("#sh-corps");
+var rendeur = null; // le bouton d'ou l'on vient, pour lui rendre le focus
+
+function ouvrir(item, src) {
+  rendeur = src || null;
+  var f = FAMILLES[item.fam];
+  var stock = typeof item.stock === "number" ? item.stock : item.reste;
+  var epuise = stock === 0;
+  var loin = typeof item.cout === "number" && item.cout > ETAT.solde;
+
+  var entete = f.nom;
+  if (typeof stock === "number") entete += " · il en reste " + stock;
+
+  var cta;
+  if (item.info) {
+    cta = '<button class="sheet-cta" id="sh-cta" type="button">Compris</button>';
+  } else if (epuise) {
+    cta = '<button class="sheet-cta" type="button" disabled>Épuisé pour ce soir</button>';
+  } else if (loin) {
+    cta = '<button class="sheet-cta" type="button" disabled>Encore ' +
+      (item.cout - ETAT.solde).toLocaleString("fr-FR") + ' pts</button>';
+  } else {
+    cta = '<button class="sheet-cta" id="sh-cta" type="button">Échanger ' +
+      jeton(17) + "<span>" + item.cout.toLocaleString("fr-FR") + "</span></button>";
+  }
+
+  var note;
+  if (item.info) note = "Rien à faire : le doublement est déjà actif sur ton compte.";
+  else if (epuise) note = "Reviens demain, le club recharge ses stocks chaque soirée.";
+  else if (loin) note = "Il te manque " + (item.cout - ETAT.solde).toLocaleString("fr-FR") + " pts. Une story taguée à 1 000 vues en rapporte 80.";
+  else note = "Le bon est valable ce soir. Il te restera " +
+    (ETAT.solde - item.cout).toLocaleString("fr-FR") + " pts.";
+
+  corps.innerHTML =
+    '<div class="sheet-art" style="--glow:' + f.glow + '">' + item.art() + "</div>" +
+    '<span class="sheet-fam" style="--c:' + f.c + '">' + entete + "</span>" +
+    '<h3 id="sh-titre">' + item.nom + "</h3>" +
+    '<p class="desc">' + item.desc + "</p>" +
+    '<ul class="regles">' + item.regles.map(function (r) {
+      return "<li>" + ico("check") + "<span>" + r + "</span></li>";
+    }).join("") + "</ul>" +
+    cta +
+    '<p class="sheet-note">' + note + "</p>";
+
+  var btn = $("#sh-cta");
+  if (btn) btn.addEventListener("click", function () {
+    if (item.info) { fermer(); return; }
+    echanger(item);
+  });
+
+  sheet.classList.add("up");
+  sheet.setAttribute("aria-hidden", "false");
+  voile.classList.add("on");
+  (btn || $("#sh-close")).focus();
+}
+
+function fermer() {
+  sheet.classList.remove("up");
+  sheet.setAttribute("aria-hidden", "true");
+  voile.classList.remove("on");
+  if (rendeur && document.contains(rendeur)) rendeur.focus();
+  rendeur = null;
+}
+
+$("#sh-close").addEventListener("click", fermer);
+voile.addEventListener("click", fermer);
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && sheet.classList.contains("up")) fermer();
+});
+
+/* ==========================================================
+   L'ECHANGE
+   ========================================================== */
+
+/* Alphabet volontairement ampute du 0/O et du 1/I : le code
+   est lu a voix haute au bar, dans le bruit. */
+var LETTRES = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function nouveauCode() {
+  var s = "";
+  for (var i = 0; i < 4; i++) s += LETTRES[Math.floor(Math.random() * LETTRES.length)];
+  return "VN-" + s;
+}
+
+function echanger(item) {
+  var code = nouveauCode();
+  ETAT.solde -= item.cout;
+  if (typeof item.stock === "number") item.stock -= 1;
+  if (typeof item.reste === "number") item.reste -= 1;
+
+  ETAT.bons.unshift({
+    code: code,
+    titre: item.nom,
+    note: "Mirage · à utiliser avant 6 h"
+  });
+
+  var f = FAMILLES[item.fam];
+  corps.innerHTML =
+    '<div class="sheet-ok">' +
+      '<span class="rond">' + ico("check") + "</span>" +
+      '<h3 id="sh-titre">' + item.nom + "</h3>" +
+      '<p class="desc">Montre ce code au ' + (item.fam === "bar" ? "bar" : "staff") +
+        ". Il le valide sur sa tablette.</p>" +
+      '<div class="grand-code">' + code + "</div>" +
+      '<button class="sheet-cta" id="sh-ok" type="button" style="background:' + f.c +
+        ';color:#0a0b0e">Retour à la boutique</button>' +
+      '<p class="sheet-note">Le bon est aussi rangé dans « Mes bons », plus bas.</p>' +
+    "</div>";
+
+  $("#sh-ok").addEventListener("click", fermer);
+  $("#sh-ok").focus();
+
+  majCagnotte(true);
+  rendreGrille();
+  rendreBons(code);
+}
+
+/* ==========================================================
+   LES ONGLETS — seul celui de la carte mene quelque part,
+   les autres ecrans n'existent pas encore.
+   ========================================================== */
+
+$("#tab-carte").addEventListener("click", function () {
+  window.location.href = "./carte-preview.html";
+});
+
+/* ==========================================================
+   DEPART
+   ========================================================== */
+
+majCagnotte(false);
+rendreOffres();
+rendrePass();
+rendreGrille();
+rendreBons(null);
+majRebours();
+setInterval(majRebours, 30000);
+
+</script>
+
+  </body>
+</html>
