@@ -854,6 +854,28 @@ var ARBRES = (function () {
   dimensionner();
   window.addEventListener("resize", dimensionner);
 
+  // Interroger le moteur (queryRenderedFeatures) pour chaque arbre a
+  // chaque frame pendant un zoom/glisser rendait la carte saccadee —
+  // c'est une requete GPU par arbre visible, repetee en continu
+  // pendant tout le geste. Desormais cette requete ne tourne qu'une
+  // fois le geste termine ("moveend"), et le dessin a chaque frame
+  // ("move") ne fait plus que projeter des points deja tries —
+  // beaucoup plus leger, donc fluide meme en plein zoom.
+  var exclus = {};
+
+  function recalculerExclusions() {
+    var z = map.getZoom();
+    exclus = {};
+    if (z < 12.5) return;
+    var couchesBatiments = ["Building", "Building 3D"].filter(function (id) { return map.getLayer(id); });
+    if (!couchesBatiments.length) return;
+    for (var i = 0; i < ARBRES.length; i++) {
+      var p = map.project([ARBRES[i].lng, ARBRES[i].lat]);
+      if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) continue;
+      if (map.queryRenderedFeatures([p.x, p.y], { layers: couchesBatiments }).length > 0) exclus[i] = true;
+    }
+  }
+
   function dessiner() {
     ctx.clearRect(0, 0, W, H);
     var z = map.getZoom();
@@ -868,27 +890,22 @@ var ARBRES = (function () {
     var fondu = Math.min(1, (z - 12.5) / 2);
     var echelle = echelleZoom * fondu;
 
-    var couchesBatiments = ["Building", "Building 3D"].filter(function (id) { return map.getLayer(id); });
-
-    var pts = ARBRES.map(function (a) {
+    var pts = [];
+    for (var i = 0; i < ARBRES.length; i++) {
+      if (exclus[i]) continue;
+      var a = ARBRES[i];
       var p = map.project([a.lng, a.lat]);
-      return { x: p.x, y: p.y, s: a.s * echelle, teinte: a.teinte, graine: a.graine };
-    }).filter(function (p) {
-      if (!(p.x > -40 && p.x < W + 40 && p.y > -70 && p.y < H + 40 && p.s > .03)) return false;
-      // on ecarte les arbres qui tombent visuellement sur un toit —
-      // sinon ca donne l'impression bizarre d'un arbre pose sur un
-      // immeuble plutot qu'au sol a cote
-      if (couchesBatiments.length) {
-        var sousUnBatiment = map.queryRenderedFeatures([p.x, p.y], { layers: couchesBatiments }).length > 0;
-        if (sousUnBatiment) return false;
-      }
-      return true;
-    });
+      if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) continue;
+      var s = a.s * echelle;
+      if (s <= .03) continue;
+      pts.push({ x: p.x, y: p.y, s: s, teinte: a.teinte, graine: a.graine });
+    }
     pts.sort(function (a, b) { return a.y - b.y; });
     pts.forEach(function (p) { arbreSur(ctx, p.x, p.y, 14 * p.s, p.teinte, p.graine); });
   }
   map.on("move", dessiner);
-  map.on("load", dessiner);
+  map.on("moveend", function () { recalculerExclusions(); dessiner(); });
+  map.on("load", function () { recalculerExclusions(); dessiner(); });
 })();
 
 /* ==========================================================
