@@ -304,6 +304,13 @@
         display: block; font-size: 11.5px; font-weight: 550; color: var(--ink3); margin-top: 2px;
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
+      /* L'offre du soir est seule dans sa liste : elle peut se permettre
+         une deuxieme ligne plutot que de couper "Des ta premiere story
+         de la..." en plein mot, comme le forcerait le nowrap ci-dessus. */
+      .liste-soir .ligne-txt .court {
+        white-space: normal; display: -webkit-box; -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.35;
+      }
       .ligne-prix { flex: 0 0 auto; text-align: right; }
       .ligne-prix .cout { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
       .ligne-prix .jeton { width: 14px; height: 14px; flex: 0 0 auto; }
@@ -1816,7 +1823,10 @@ function ouvrirRecompense(item, src) {
   var epuise = item.stock <= 0;
   var loin = item.cout > ETAT.solde;
 
-  var entete = FAMILLES[item.fam] + " · il en reste " + item.stock;
+  // Meme seuil que la liste (rendreListe) : "il en reste 50" ne cree
+  // aucune urgence et n'est qu'un chiffre en trop, alors que "il en
+  // reste 2" pousse vraiment a se decider.
+  var entete = FAMILLES[item.fam] + (item.stock <= 5 ? " · il en reste " + item.stock : "");
 
   var cta, note;
   if (epuise) {
