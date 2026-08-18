@@ -624,14 +624,15 @@ function snapifie() {
 
   map.setPaintProperty("Water", "fill-color", eau);
 
-  // les batiments : les 3 tons de toit exacts du tout premier
-  // prototype canvas (retrouves dans l'historique git), qui alternent
-  // d'un immeuble a l'autre — creme/greige doux, pas les couleurs
-  // vives de l'essai precedent.
-  var indigo2 = "#f2efe9", indigo3 = "#e3ded6";
+  // les batiments : 6 tons plutot que 3 (toujours dans la famille
+  // creme/greige du tout premier prototype, avec en plus une pointe
+  // de terracotta et de sable) — plus de variete d'un immeuble a
+  // l'autre, pour casser l'effet "blocs identiques" plutot qu'une
+  // vraie couleur vive.
+  var indigo2 = "#f2efe9", indigo3 = "#e3ded6", indigo4 = "#e0c4a8", indigo5 = "#ddd8c8", indigo6 = "#ecdfd0";
   var teinteBatiment = [
-    "step", ["%", ["id"], 3],
-    indigo, 1, indigo2, 2, indigo3
+    "step", ["%", ["id"], 6],
+    indigo, 1, indigo2, 2, indigo3, 3, indigo4, 4, indigo5, 5, indigo6
   ];
   map.setPaintProperty("Building", "fill-color", indigo);
   map.setPaintProperty("Building", "fill-opacity", .95);
@@ -658,17 +659,19 @@ function snapifie() {
   map.setPaintProperty("Building 3D", "fill-extrusion-vertical-gradient", true);
   // encore trop imposants au dernier essai (.5/34) — on redescend
   // nettement, des petits blocs discrets plutot que des immeubles
-  // qui dominent l'ecran
+  // qui dominent l'ecran. Une legere variation aleatoire (+/- 15%,
+  // tiree de l'id) casse en plus l'effet "tous les immeubles a
+  // exactement la meme hauteur" d'un quartier residentiel uniforme.
   map.setPaintProperty("Building 3D", "fill-extrusion-height", [
     "interpolate", ["linear"], ["zoom"],
     13, 0,
-    15, ["min", 20, ["*", ["get", "render_height"], .34]]
+    15, ["min", 20, ["*", ["get", "render_height"], .34, ["+", .85, ["*", .3, ["/", ["%", ["id"], 11], 11]]]]]
   ]);
 
-  // une lumiere plus douce : la version precedente (intensite .68)
-  // assombrissait trop les nouvelles couleurs, elles finissaient par
-  // lire comme du noir sur les faces a l'ombre
-  map.setLight({ anchor: "viewport", color: "#fff6e6", intensity: .4, position: [1.15, 75, 52] });
+  // une lumiere un peu plus contrastee : ca dessine mieux les aretes
+  // de chaque bloc (toit clair / face a l'ombre) sans retomber dans
+  // le trop sombre de l'essai d'avant
+  map.setLight({ anchor: "viewport", color: "#fff6e6", intensity: .48, position: [1.15, 70, 58] });
 
   // un fin trait a la base de chaque immeuble — separe nettement
   // les blocs les uns des autres au lieu de les laisser fondre
