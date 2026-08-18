@@ -1,0 +1,1819 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#08090c" />
+    <meta name="robots" content="noindex" />
+    <title>ViralNight — preview appli</title>
+    <style>
+      /* ============================================================
+         APPLI VIRALNIGHT — carte et boutique fusionnees en une seule
+         page. Les deux ecrans precedents (carte-preview.html et
+         boutique-preview.html) vivaient chacun dans leur fichier et
+         se rechargeaient l'un l'autre au clic sur l'onglet du bas —
+         ca marchait, mais ca se voyait : un vrai changement d'onglet
+         ne recharge jamais la page.
+
+         Ici les deux ecrans sont montes en meme temps dans le DOM,
+         empiles, et le clic sur un onglet bascule juste lequel est
+         visible. La carte MapLibre n'est donc initialisee qu'une
+         fois : on garde sa position, son zoom, son orientation en
+         passant a la boutique et en y revenant, exactement comme
+         dans une vraie appli.
+
+         Consequence directe : la feuille du bas (fiche club, fiche
+         recompense) et la barre d'onglets ne sont plus dupliquees
+         dans chaque ecran, il y en a une seule pour toute l'appli.
+         Et comme les deux ecrans partagent maintenant le meme etat
+         JS, le solde de points est reellement le meme des deux
+         cotes — ouvrir un club sur la carte affiche le vrai solde,
+         pas un chiffre fige a part.
+         ============================================================ */
+
+      :root {
+        --page:      #0b0d11;
+        --page-2:    #14171d;
+        --page-line: rgba(255,255,255,.09);
+        --page-ink:  #edeff4;
+        --page-ink2: #99a1b0;
+        --page-ink3: #6a7280;
+        --red:       #ff2f45;
+        --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0; background: var(--page); color: var(--page-ink);
+        font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
+      }
+
+      .wrap { max-width: 1000px; margin: 0 auto; padding: 54px 22px 110px; }
+
+      .kicker {
+        display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
+        text-transform: uppercase; color: var(--page-ink3); margin-bottom: 15px;
+      }
+      h1 { margin: 0 0 14px; font-size: clamp(32px, 5.4vw, 54px); font-weight: 800; letter-spacing: -.042em; line-height: 1; text-wrap: balance; }
+      .lede { margin: 0; font-size: 17px; color: var(--page-ink2); max-width: 62ch; }
+
+      .stage { display: flex; justify-content: center; padding: 40px 0 48px; }
+
+      /* ---------------- Telephone ---------------- */
+
+      .phone {
+        width: 360px; height: 760px; border-radius: 48px; background: #000;
+        padding: 5px; flex: 0 0 auto;
+        box-shadow: 0 44px 100px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
+      }
+      .screen {
+        position: relative; width: 100%; height: 100%; border-radius: 43px;
+        overflow: hidden; background: #1a1d24; user-select: none;
+
+        --ink:   #ffffff;
+        --ink2:  #a3aab6;
+        --ink3:  #6e7581;
+        --bg:    #08090c;
+        --s1:    #101217;
+        --s2:    #171a20;
+        --s3:    #20242b;
+        --line:  rgba(255,255,255,.07);
+        --line2: rgba(255,255,255,.13);
+        --accent: #ff2f45;
+      }
+
+      /* Les deux ecrans sont superposes en permanence. On bascule
+         l'opacite et les interactions, jamais le display : la carte
+         garde ainsi une taille de conteneur stable, ce qui evite
+         d'avoir a rappeler map.resize() a chaque changement d'onglet. */
+      .vue {
+        position: absolute; inset: 0;
+        opacity: 0; visibility: hidden; transition: opacity .18s ease;
+      }
+      .vue.actif { opacity: 1; visibility: visible; }
+      @media (prefers-reduced-motion: reduce) { .vue { transition: none; } }
+
+      /* ============================================================
+         ECRAN 1 — LA CARTE
+         ============================================================ */
+
+      #map { position: absolute; inset: 0; width: 100%; height: 100%; }
+      #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+      #arbres { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+
+      .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left { bottom: 92px !important; }
+      .maplibregl-ctrl-attrib { font-size: 9.5px !important; background: rgba(15,17,22,.55) !important; }
+      .maplibregl-ctrl-attrib a { color: rgba(255,255,255,.7) !important; }
+      .maplibregl-popup { display: none; }
+      .maplibregl-ctrl-logo { display: none !important; }
+
+      .me-btn {
+        position: absolute; top: 62px; left: 16px; z-index: 26;
+        width: 56px; height: 56px; border-radius: 50%; background: #fff;
+        border: 0; padding: 0; cursor: pointer; box-shadow: 0 3px 12px rgba(0,0,0,.35);
+        display: grid; place-items: center;
+      }
+      .me-btn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
+      .me-btn svg { width: 34px; height: 44px; display: block; }
+      .me-btn .dot {
+        position: absolute; top: 1px; right: 1px; width: 14px; height: 14px;
+        border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
+      }
+
+      /* La pastille de solde, en miroir du bouton profil. C'est le
+         seul endroit sur la carte qui parle de points : elle sert
+         de pont vers la boutique, comme le compteur de Snaps chez
+         Snapchat ou le compteur de pieces dans la plupart des
+         applis a recompenses. */
+      .pts-pill {
+        position: absolute; top: 68px; right: 16px; z-index: 26;
+        display: flex; align-items: center; gap: 6px;
+        background: rgba(10,11,14,.86); border: 1px solid rgba(255,255,255,.14);
+        border-radius: 999px; padding: 7px 13px 7px 8px; cursor: pointer;
+        backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      }
+      .pts-pill:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+      .pts-pill .jeton { width: 20px; height: 20px; flex: 0 0 auto; }
+      .pts-pill b { color: #fff; font-size: 14px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+
+      .club-badge {
+        width: 50px; height: 50px; border-radius: 50%;
+        background: var(--c); border: 3px solid #fff;
+        box-shadow: 0 3px 10px rgba(0,0,0,.35);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: #fff; position: relative; line-height: 1; cursor: pointer;
+      }
+      .club-badge b { font-size: 17px; font-weight: 800; letter-spacing: -.04em; }
+      .club-badge i { font-style: normal; font-size: 8px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 1px; }
+      .club-badge.shut { background: #fff; color: #7b828c; border-color: #d9dde3; }
+      .club-badge.hot::after {
+        content: ""; position: absolute; inset: -3px; border-radius: 50%;
+        border: 2.5px solid var(--c); animation: ping 2.6s cubic-bezier(.2,.6,.35,1) infinite;
+      }
+      @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
+
+      .friend-marker { width: 40px; height: 52px; cursor: pointer; }
+      .friend-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
+
+      .carte-rail {
+        position: absolute; right: 13px; top: 51%; transform: translateY(-44%);
+        z-index: 24; display: flex; flex-direction: column; gap: 11px; align-items: center;
+      }
+      .rbtn {
+        width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 0;
+        padding: 0; cursor: pointer; display: grid; place-items: center; position: relative;
+        box-shadow: 0 3px 11px rgba(0,0,0,.24);
+      }
+      .rbtn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
+      .rbtn svg.ico { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .rbtn svg.pint { width: 30px; height: 39px; }
+      .rbtn .dot {
+        position: absolute; right: 0; bottom: 1px; width: 13px; height: 13px;
+        border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
+      }
+
+      .friend-rail {
+        position: absolute; left: 0; right: 0; bottom: 92px; z-index: 24;
+        display: flex; gap: 9px; padding: 0 12px; overflow-x: auto; scrollbar-width: none;
+      }
+      .friend-rail::-webkit-scrollbar { display: none; }
+      .fr {
+        flex: 0 0 auto; background: none; border: 0; padding: 0; cursor: pointer;
+        display: flex; flex-direction: column; align-items: center; gap: 3px; width: 54px;
+      }
+      .fr:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 2px; border-radius: 12px; }
+      .fr .bub {
+        width: 52px; height: 52px; border-radius: 50%; background: #fff;
+        box-shadow: 0 3px 10px rgba(0,0,0,.22); display: grid; place-items: center; overflow: hidden;
+      }
+      .fr .bub svg.pint { width: 27px; height: 35px; }
+      .fr .bub svg.plus { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .fr b {
+        font-size: 10.5px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6);
+        max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
+      /* ============================================================
+         ECRAN 2 — LA BOUTIQUE
+         ============================================================ */
+
+      .app {
+        position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain;
+        padding-bottom: 112px; scrollbar-width: none; background: var(--bg); color: var(--ink);
+      }
+      .app::-webkit-scrollbar { display: none; }
+
+      .sec { padding: 0 18px; margin-top: 32px; }
+      .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; padding: 0 2px; }
+      .sec-head h2 {
+        margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--ink3);
+      }
+      .sec-head .sub { font-size: 11px; font-weight: 650; color: var(--ink3); margin-left: auto; white-space: nowrap; }
+
+      .wallet {
+        position: sticky; top: 0; z-index: 20;
+        padding: 54px 18px 18px;
+        background: linear-gradient(180deg, #0d0f14 0%, #0a0c10 70%, rgba(9,11,14,.94) 100%);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      }
+      .wallet-lab {
+        display: block; font-size: 11px; font-weight: 700; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--ink3); margin-bottom: 9px;
+      }
+      .wallet-top { display: flex; align-items: baseline; gap: 10px; }
+      .wallet-sum { display: flex; align-items: center; gap: 10px; }
+      .wallet-sum .jeton { width: 24px; height: 24px; flex: 0 0 auto; align-self: center; }
+      .wallet-sum b {
+        font-size: 38px; font-weight: 700; letter-spacing: -.05em; line-height: 1;
+        font-variant-numeric: tabular-nums; display: inline-block;
+      }
+      .wallet-sum i { font-style: normal; font-size: 15px; font-weight: 600; color: var(--ink3); letter-spacing: -.02em; }
+      .wallet-mois {
+        margin-left: auto; text-align: right; font-size: 11px; font-weight: 650;
+        color: var(--ink3); white-space: nowrap;
+      }
+
+      .wallet-goal { margin-top: 18px; }
+      .wallet-bar { height: 3px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
+      .wallet-bar span {
+        display: block; height: 100%; width: 0; border-radius: 99px; background: var(--accent);
+        transition: width .55s cubic-bezier(.22,.75,.3,1);
+      }
+      .wallet-goal p { margin: 9px 0 0; font-size: 12px; font-weight: 600; color: var(--ink2); letter-spacing: -.01em; }
+      .wallet-goal p em { font-style: normal; color: var(--ink); font-weight: 700; }
+
+      @keyframes majSolde {
+        0%   { transform: scale(1); }
+        40%  { transform: scale(1.09); }
+        100% { transform: scale(1); }
+      }
+      .wallet-sum b.maj { animation: majSolde .45s cubic-bezier(.3,1.3,.5,1); }
+
+      .jeton { display: block; }
+
+      /* ---------------- Filtres ---------------- */
+
+      .filtres { display: flex; gap: 7px; overflow-x: auto; padding: 0 18px 2px; margin: 0 -18px 12px; scrollbar-width: none; }
+      .filtres::-webkit-scrollbar { display: none; }
+      .filtre {
+        flex: 0 0 auto; font-family: inherit; font-size: 12.5px; font-weight: 600; letter-spacing: -.015em;
+        color: var(--ink2); background: transparent; border: 1px solid var(--line2);
+        border-radius: 999px; padding: 6px 14px; cursor: pointer;
+      }
+      .filtre:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+      .filtre[aria-pressed="true"] { background: var(--ink); color: #08090c; border-color: var(--ink); font-weight: 700; }
+
+      /* ---------------- Les listes (recompenses, offre du soir) ---------------- */
+
+      .liste {
+        border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+        background: var(--s1);
+      }
+      .liste.liste-soir { border-color: rgba(255,47,69,.4); }
+
+      .ligne {
+        display: flex; align-items: center; gap: 14px; width: 100%;
+        padding: 13px 15px; border: 0; border-top: 1px solid var(--line);
+        background: none; text-align: left; font-family: inherit; color: inherit; cursor: pointer;
+      }
+      .ligne:first-child { border-top: 0; }
+      .ligne:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+
+      /* Le visuel : une vraie photo, recadree carree, dans un
+         conteneur arrondi — le meme gabarit qu'un item de menu
+         Deliveroo ou Uber Eats. Le pictogramme au trait ne sert
+         plus que de filet de securite si la photo ne charge pas. */
+      .visuel {
+        position: relative; width: 48px; height: 48px; border-radius: 13px; flex: 0 0 auto;
+        overflow: hidden; background: linear-gradient(180deg, #1c2027, #14171c);
+        border: 1px solid var(--line2);
+      }
+      .visuel img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        display: block;
+      }
+      .visuel .secours {
+        position: absolute; inset: 0; display: grid; place-items: center; opacity: 0;
+      }
+      .visuel.hors-ligne img { display: none; }
+      .visuel.hors-ligne .secours { opacity: 1; }
+      .visuel .secours svg { width: 22px; height: 22px; stroke: rgba(255,255,255,.5); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; display: block; }
+
+      .ligne-txt { flex: 1; min-width: 0; }
+      .ligne-txt strong { display: block; font-size: 14px; font-weight: 650; letter-spacing: -.025em; }
+      .ligne-txt .court {
+        display: block; font-size: 11.5px; font-weight: 550; color: var(--ink3); margin-top: 2px;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .ligne-prix { flex: 0 0 auto; text-align: right; }
+      .ligne-prix .cout { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+      .ligne-prix .jeton { width: 14px; height: 14px; flex: 0 0 auto; }
+      .ligne-prix b { font-size: 15px; font-weight: 700; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+      .ligne-prix .manque {
+        display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3);
+        margin-top: 2px; font-variant-numeric: tabular-nums;
+      }
+      .ligne-prix del { font-size: 12px; font-weight: 600; color: var(--ink3); display: block; }
+      .ligne-prix .badge-offert {
+        font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+        color: var(--accent); border: 1px solid rgba(255,47,69,.45); border-radius: 5px;
+        padding: 3px 7px; display: inline-block; margin-bottom: 3px;
+      }
+
+      .ligne.loin .visuel { opacity: .42; }
+      .ligne.loin .ligne-txt strong { color: var(--ink2); }
+      .ligne.loin .ligne-prix b { color: var(--ink3); }
+      .ligne.epuise { opacity: .4; }
+
+      .soir-note { margin: 12px 2px 0; font-size: 11.5px; font-weight: 550; color: var(--ink3); line-height: 1.5; padding: 0 18px; }
+
+      /* ---------------- Mes bons ---------------- */
+
+      .bons { display: grid; gap: 8px; }
+      .bon {
+        display: flex; align-items: center; gap: 12px; padding: 10px 13px;
+        border: 1px solid var(--line2); border-radius: 16px; background: var(--s1);
+      }
+      .bon-qr {
+        width: 42px; height: 42px; border-radius: 9px; background: #fff; padding: 3px;
+        flex: 0 0 auto; overflow: hidden;
+      }
+      .bon-qr svg { display: block; width: 100%; height: 100%; }
+      .bon .txt { flex: 1; min-width: 0; }
+      .bon .txt strong { display: block; font-size: 13.5px; font-weight: 650; letter-spacing: -.025em; }
+      .bon .txt span { display: block; font-size: 11px; font-weight: 550; color: var(--ink3); margin-top: 2px; }
+      .bon-code {
+        font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .07em;
+        color: var(--ink3); flex: 0 0 auto;
+      }
+
+      @keyframes bonNeuf { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+      .bon.neuf { animation: bonNeuf .4s cubic-bezier(.22,.75,.3,1); }
+
+      /* ---------------- Le bareme, replie ---------------- */
+
+      .bareme { border: 1px solid var(--line); border-radius: 18px; background: var(--s1); overflow: hidden; }
+      .bareme summary {
+        display: flex; align-items: center; gap: 10px; padding: 15px;
+        cursor: pointer; list-style: none; font-size: 13.5px; font-weight: 650; letter-spacing: -.025em;
+      }
+      .bareme summary::-webkit-details-marker { display: none; }
+      .bareme summary:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+      .bareme summary .chev { margin-left: auto; display: block; transition: transform .25s ease; }
+      .bareme summary .chev svg { width: 14px; height: 14px; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+      .bareme[open] summary .chev { transform: rotate(180deg); }
+      .gain { display: flex; align-items: baseline; gap: 12px; padding: 11px 15px; border-top: 1px solid var(--line); }
+      .gain p { margin: 0; flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
+      .gain p span { display: block; font-size: 11px; font-weight: 500; color: var(--ink3); margin-top: 1px; }
+      .gain .val { font-size: 13px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+
+      /* ============================================================
+         BARRE D'ONGLETS ET FEUILLE — communes aux deux ecrans
+         ============================================================ */
+
+      .tabs {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
+        background: rgba(9,10,13,.86); border-top: 1px solid rgba(255,255,255,.1);
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
+      }
+      .tab { display: grid; place-items: center; background: none; border: 0; cursor: pointer; position: relative; padding: 0; }
+      .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
+      .tab svg { width: 28px; height: 28px; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; stroke: #838a96; }
+      .tab.on svg { stroke: var(--accent); }
+      .tab .badge { position: absolute; top: -4px; right: 50%; margin-right: -21px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+
+      .voile {
+        position: absolute; inset: 0; z-index: 30; background: rgba(3,4,6,.7);
+        opacity: 0; pointer-events: none; transition: opacity .3s ease;
+      }
+      .voile.on { opacity: 1; pointer-events: auto; }
+
+      .sheet {
+        position: absolute; left: 0; right: 0; bottom: 0; z-index: 34; overflow: hidden;
+        background: #101318; border-top: 1px solid var(--line2);
+        border-radius: 26px 26px 0 0; padding: 10px 22px 26px;
+        box-shadow: 0 -14px 44px rgba(0,0,0,.66);
+        transform: translateY(calc(100% + 24px)); transition: transform .36s cubic-bezier(.22,.75,.3,1);
+        max-height: 88%; overflow-y: auto;
+      }
+      .sheet.up { transform: translateY(0); }
+      @media (prefers-reduced-motion: reduce) {
+        .sheet, .voile, .bareme summary .chev { transition: none; }
+        .wallet-bar span { transition: none; }
+        .wallet-sum b.maj, .bon.neuf { animation: none; }
+      }
+
+      .grab { width: 40px; height: 4.5px; border-radius: 99px; background: rgba(255,255,255,.15); margin: 0 auto 4px; position: sticky; top: 0; }
+      .sheet-close {
+        position: absolute; top: 16px; right: 16px; z-index: 3;
+        width: 30px; height: 30px; border-radius: 50%; background: var(--s3); border: 0;
+        cursor: pointer; display: grid; place-items: center;
+      }
+      .sheet-close:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+      .sheet-close svg { width: 13px; height: 13px; stroke: var(--ink2); stroke-width: 2.4; fill: none; stroke-linecap: round; display: block; }
+
+      /* Le visuel de la feuille : la meme photo que dans la liste,
+         mais en bandeau plein cadre — comme la fiche produit d'une
+         appli de livraison. */
+      .sheet-visuel {
+        position: relative; height: 168px; margin: 0 -22px 16px; overflow: hidden;
+        background: linear-gradient(180deg, #1c2027, #14171c);
+      }
+      .sheet-visuel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+      .sheet-visuel .secours { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; }
+      .sheet-visuel.hors-ligne img { display: none; }
+      .sheet-visuel.hors-ligne .secours { opacity: 1; }
+      .sheet-visuel .secours svg { width: 34px; height: 34px; stroke: rgba(255,255,255,.35); fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; display: block; }
+      .sheet-visuel::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(180deg, rgba(16,19,24,0) 55%, rgba(16,19,24,.95) 100%);
+      }
+
+      /* Fiche club (carte) : le badge rond du club, repris tel quel
+         de son marqueur sur la carte. */
+      .sheet-club-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+      .sheet-club-top .club-badge { width: 50px; height: 50px; box-shadow: none; cursor: default; }
+      .sheet-chips { display: flex; gap: 7px; margin: 14px 0 16px; flex-wrap: wrap; }
+      .chip {
+        font-size: 11.5px; font-weight: 700; color: var(--ink2); background: var(--s2);
+        border: 1px solid var(--line2); border-radius: 999px; padding: 5px 11px;
+      }
+      .chip.warm { background: rgba(255,47,69,.14); color: #ff8290; border-color: rgba(255,47,69,.35); }
+      .who { display: flex; align-items: center; gap: 9px; margin-bottom: 18px; }
+      .who .stack { display: flex; }
+      .who .stack span {
+        width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 2px solid #101318;
+        margin-left: -9px; background: var(--s2); display: grid; place-items: center;
+      }
+      .who .stack span:first-child { margin-left: 0; }
+      .who .stack svg { width: 14px; height: 18px; }
+      .who p { margin: 0; font-size: 12px; font-weight: 650; color: var(--ink2); }
+
+      .sheet-fam {
+        display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .13em;
+        text-transform: uppercase; color: var(--ink3); margin-bottom: 8px;
+      }
+      .sheet h3 { margin: 0 0 8px; font-size: 23px; font-weight: 700; letter-spacing: -.045em; line-height: 1.12; }
+      .sheet .desc { margin: 0 0 16px; font-size: 13.5px; color: var(--ink2); font-weight: 550; line-height: 1.5; }
+      .sheet ul.regles { display: grid; gap: 8px; margin: 0 0 20px; padding: 0; }
+      .sheet ul.regles li { list-style: none; display: flex; gap: 9px; font-size: 12px; font-weight: 550; color: var(--ink2); line-height: 1.45; }
+      .sheet ul.regles svg { width: 13px; height: 13px; margin-top: 3px; flex: 0 0 auto; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+      .sheet-cta {
+        display: flex; align-items: center; justify-content: center; gap: 9px;
+        width: 100%; background: var(--accent); color: #fff; border: 0;
+        border-radius: 15px; padding: 16px; font-family: inherit; font-size: 15px;
+        font-weight: 700; letter-spacing: -.02em; cursor: pointer;
+      }
+      .sheet-cta:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+      .sheet-cta .jeton { width: 16px; height: 16px; flex: 0 0 auto; }
+      .sheet-cta[disabled] { background: var(--s3); color: var(--ink3); cursor: not-allowed; }
+      .sheet-cta.sobre { background: var(--ink); color: #08090c; }
+      .sheet-note { text-align: center; font-size: 11.5px; color: var(--ink3); margin: 11px 0 0; font-weight: 550; line-height: 1.45; }
+
+      /* Confirmation d'echange : le vrai QR code a scanner, avec le
+         code en secours en dessous pour le staff si le lecteur du
+         bar est en panne — exactement comme un billet de train ou
+         de cinema. */
+      .sheet-ok { text-align: center; padding: 4px 0 0; }
+      .sheet-ok h3 { font-size: 20px; margin-bottom: 4px; }
+      .sheet-ok .rond {
+        width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center;
+        background: rgba(87,217,138,.14); border: 1px solid rgba(87,217,138,.4);
+      }
+      .sheet-ok .rond svg { width: 24px; height: 24px; stroke: #57d98a; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+      .qr-carte {
+        width: 172px; margin: 18px auto 12px; padding: 14px; border-radius: 18px;
+        background: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.4);
+      }
+      .qr-carte svg { display: block; width: 100%; height: auto; }
+      .qr-code-txt {
+        font-family: var(--mono); font-size: 14px; font-weight: 600; letter-spacing: .18em;
+        color: var(--ink2); margin: 0 0 18px;
+      }
+
+      /* ---------------- Notes de la page ---------------- */
+
+      .notes {
+        margin-top: 34px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1px; background: var(--page-line); border: 1px solid var(--page-line);
+        border-radius: 5px; overflow: hidden;
+      }
+      .note { background: var(--page-2); padding: 24px 22px 26px; }
+      .note .mark {
+        display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--page-ink3); margin-bottom: 10px;
+      }
+      .note.warn .mark { color: var(--red); }
+      .note h3 { margin: 0 0 8px; font-size: 15.5px; font-weight: 700; letter-spacing: -.015em; }
+      .note p { margin: 0; font-size: 14px; color: var(--page-ink2); line-height: 1.55; }
+
+      footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--page-line); font-size: 13px; color: var(--page-ink3); }
+      code { font-family: var(--mono); font-size: 12.5px; color: var(--page-ink); }
+
+      @media (max-width: 430px) {
+        .wrap { padding: 38px 12px 70px; }
+        .phone { width: 100%; max-width: 360px; }
+      }
+    </style>
+  </head>
+  <body>
+
+<div class="wrap">
+
+  <span class="kicker">PWA clubbeur · carte + boutique assemblees · 18 août 2026</span>
+  <h1>ViralNight, en une seule appli</h1>
+  <p class="lede">
+    Les deux écrans précédents vivaient dans deux fichiers séparés et se rechargeaient
+    l'un l'autre. Ici ils sont montés ensemble : changer d'onglet ne recharge rien,
+    la carte garde sa position, et le solde de points est partagé partout — exactement
+    ce que ferait une vraie appli.
+  </p>
+
+  <div class="stage">
+    <div class="phone">
+      <div class="screen">
+
+        <!-- ================= ECRAN CARTE ================= -->
+        <div class="vue vue-carte" id="vue-carte">
+
+          <div id="map"></div>
+          <canvas id="arbres" aria-hidden="true"></canvas>
+          <canvas id="etoiles" aria-hidden="true"></canvas>
+
+          <button class="me-btn" id="me-btn" aria-label="Mon profil"><span class="dot"></span></button>
+
+          <button class="pts-pill" id="pts-pill" aria-label="Voir ma cagnotte dans la boutique">
+            <span class="jeton" id="pill-jeton"></span>
+            <b id="pill-solde">0</b>
+          </button>
+
+          <div class="carte-rail">
+            <button class="rbtn" id="rail-me" aria-label="Ma pinte"><span class="dot"></span></button>
+            <button class="rbtn" aria-label="Mode invisible">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c5 0 9 3.5 10 7-.5 1.6-1.5 3.1-2.8 4.2M6.6 6.6C4.5 7.9 3 9.7 2 11c1 3.5 5 7 10 7 1.4 0 2.7-.3 3.9-.7"/><path d="M9.9 10a3 3 0 0 0 4.2 4.2"/></svg>
+            </button>
+          </div>
+
+          <div class="friend-rail" id="friend-rail">
+            <button class="fr" aria-label="Ajouter un ami">
+              <span class="bub"><svg class="plus" viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.4"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0"/><path d="M18.5 7.5v6M21.5 10.5h-6"/></svg></span>
+              <b>Ajouter</b>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ================= ECRAN BOUTIQUE ================= -->
+        <div class="vue vue-boutique" id="vue-boutique">
+          <div class="app" id="app">
+
+            <header class="wallet">
+              <span class="wallet-lab">Ma cagnotte</span>
+              <div class="wallet-top">
+                <div class="wallet-sum">
+                  <span class="jeton" id="w-jeton"></span>
+                  <b id="w-solde">0</b>
+                  <i>pts</i>
+                </div>
+                <span class="wallet-mois" id="w-mois"></span>
+              </div>
+              <div class="wallet-goal">
+                <div class="wallet-bar"><span id="w-jauge"></span></div>
+                <p id="w-objectif"></p>
+              </div>
+            </header>
+
+            <section class="sec">
+              <div class="sec-head">
+                <h2>Ce soir au Mirage</h2>
+                <span class="sub" id="o-fin"></span>
+              </div>
+              <div class="liste liste-soir" id="liste-soir"></div>
+              <p class="soir-note" id="o-note"></p>
+            </section>
+
+            <section class="sec">
+              <div class="sec-head">
+                <h2>Récompenses</h2>
+                <span class="sub" id="g-compte"></span>
+              </div>
+              <div class="filtres" id="filtres">
+                <button class="filtre" type="button" data-fam="tout" aria-pressed="true">Tout</button>
+                <button class="filtre" type="button" data-fam="bar" aria-pressed="false">Bar</button>
+                <button class="filtre" type="button" data-fam="acces" aria-pressed="false">Accès</button>
+                <button class="filtre" type="button" data-fam="vip" aria-pressed="false">VIP</button>
+              </div>
+              <div class="liste" id="liste"></div>
+            </section>
+
+            <section class="sec">
+              <div class="sec-head"><h2>Mes bons</h2></div>
+              <div class="bons" id="bons"></div>
+            </section>
+
+            <section class="sec">
+              <details class="bareme">
+                <summary>
+                  Comment gagner des points
+                  <span class="chev"><svg viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></svg></span>
+                </summary>
+                <div id="gains"></div>
+              </details>
+            </section>
+
+          </div>
+        </div>
+
+        <!-- ================= COMMUN AUX DEUX ECRANS ================= -->
+
+        <div class="voile" id="voile"></div>
+
+        <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sh-titre">
+          <div class="grab"></div>
+          <button class="sheet-close" id="sh-close" aria-label="Fermer">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <div id="sh-corps"></div>
+        </div>
+
+        <nav class="tabs">
+          <button class="tab on" id="tab-carte" aria-label="Carte" aria-current="page">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>
+          </button>
+          <button class="tab" id="tab-boutique" aria-label="Boutique">
+            <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
+          </button>
+          <button class="tab" aria-label="Poster ma story">
+            <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
+          </button>
+          <button class="tab" aria-label="Amis">
+            <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
+          </button>
+          <button class="tab" aria-label="Profil">
+            <span class="badge"></span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.4 20.2a7.6 7.6 0 0 1 15.2 0"/></svg>
+          </button>
+        </nav>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <span class="mark">L'assemblage</span>
+      <h3>Un seul DOM, un seul etat</h3>
+      <p>
+        Les deux écrans sont montés en même temps ; l'onglet du bas bascule leur
+        visibilité au lieu de changer de page. La feuille du bas (fiche club, fiche
+        récompense) et la barre d'onglets sont communes aux deux — avant, chaque
+        écran en avait sa propre version.
+      </p>
+    </div>
+    <div class="note">
+      <span class="mark">Les récompenses</span>
+      <h3>Un vrai QR code à chaque échange</h3>
+      <p>
+        Le code de retrait n'est plus du texte à recopier : c'est un QR code généré
+        localement avec la librairie <code>qrcode</code>, déjà utilisée dans le projet
+        pour le QR d'entrée du club (<code>lib/tracking/qrCode.js</code>). Génération
+        illimitée, sans service externe ni clé à payer — c'est juste un algorithme
+        qui tourne dans le navigateur.
+      </p>
+    </div>
+    <div class="note warn">
+      <span class="mark">À brancher</span>
+      <h3>Encore une maquette</h3>
+      <p>
+        Le solde, les stocks et les bons vivent en mémoire dans la page : un
+        rechargement remet tout à zéro. Le branchement Supabase passera par
+        <code>rewards</code> et <code>reward_redemptions</code>, et le QR encodera
+        un identifiant que le club validera sur sa tablette.
+      </p>
+    </div>
+    <div class="note warn">
+      <span class="mark">Les photos</span>
+      <h3>Wikimedia Commons, à remplacer</h3>
+      <p>
+        Chaque récompense a une vraie photo (licence libre, source créditée en
+        commentaire dans le code) plutôt qu'un dessin — un cocktail générique,
+        pas le vôtre. Dès que tu as des photos du Mirage ou de tes propres
+        cocktails/soirées, ce sont elles qui devraient remplacer ces URLs.
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    Maquette interactive — carte et boutique de la PWA clubbeur assemblées dans une seule page,
+    à valider avant branchement des données. Anciennes versions isolées :
+    <code>carte-preview.html</code>, <code>boutique-preview.html</code>.
+  </footer>
+
+</div>
+
+<script type="module">
+import * as maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import QRCode from "qrcode";
+
+// Copie statique dans public/, servie telle quelle par Vite (dev et
+// prod) sans passer par sa chaine de transformation JS — voir la note
+// dans carte-preview.html pour le detail du probleme que ca evite.
+maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+
+var $ = function (s) { return document.querySelector(s); };
+var nb = function (n) { return n.toLocaleString("fr-FR"); };
+
+/* ==========================================================
+   LE JETON ET LES PICTOGRAMMES DE SECOURS
+
+   Le jeton reste dessine (c'est un symbole abstrait, une photo
+   n'aurait pas de sens ici). Les pictogrammes, eux, ne servent
+   plus a illustrer une recompense : ils ne s'affichent que si
+   sa photo ne charge pas, comme un vrai lecteur d'images qui
+   retombe sur une icone plutot que sur un cadre casse.
+   ========================================================== */
+
+function jeton(taille) {
+  return '<svg class="jeton" viewBox="0 0 24 24" width="' + taille + '" height="' + taille +
+    '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="10" fill="#ff2f45"/>' +
+    '<path d="M12 6.2l1.6 3.7 3.7 1.6-3.7 1.6-1.6 3.7-1.6-3.7L6.7 11.5l3.7-1.6z" fill="#fff"/>' +
+    "</svg>";
+}
+
+var PICTOS = {
+  cocktail: '<path d="M4.6 6h14.8L12 14.4z"/><path d="M12 14.4V19"/><path d="M8.4 19.4h7.2"/><path d="M17.2 3.4 14 8.6"/>',
+  shot:     '<path d="M8 8h8l-1 10.6a1.6 1.6 0 0 1-1.6 1.5h-2.8A1.6 1.6 0 0 1 9 18.6z"/><path d="M8.35 12.6h7.3"/>',
+  pinte:    '<path d="M6.9 4.4h10.2l-1.2 14.2a1.9 1.9 0 0 1-1.9 1.8h-4a1.9 1.9 0 0 1-1.9-1.8z"/><path d="M7.2 8.3h9.6"/>',
+  cintre:   '<path d="M12 4.4a2.3 2.3 0 0 1 2.3 2.3c0 1.7-2.3 1.3-2.3 3.1"/><path d="M12 9.8 3.9 16.3a1 1 0 0 0 .7 1.9h14.8a1 1 0 0 0 .7-1.9z"/>',
+  ticket:   '<path d="M3.4 8h17.2a1.4 1.4 0 0 1 1.4 1.4v1.1a1.7 1.7 0 0 0 0 3.4v1.1a1.4 1.4 0 0 1-1.4 1.4H3.4A1.4 1.4 0 0 1 2 15.9v-1.1a1.7 1.7 0 0 0 0-3.4V9.4A1.4 1.4 0 0 1 3.4 8z"/><path d="M14.6 8.5v1.8M14.6 13.7v1.8"/>',
+  bracelet: '<circle cx="12" cy="13.6" r="6.7"/><path d="M9.6 3.2h4.8a1.2 1.2 0 0 1 1.2 1.2v2.4a1.2 1.2 0 0 1-1.2 1.2H9.6a1.2 1.2 0 0 1-1.2-1.2V4.4a1.2 1.2 0 0 1 1.2-1.2z"/>',
+  bouteille:'<path d="M10.2 3h3.6v3.3c0 1.9 2.5 2.6 2.5 5.3v8.1a1.7 1.7 0 0 1-1.7 1.7H9.4a1.7 1.7 0 0 1-1.7-1.7v-8.1c0-2.7 2.5-3.4 2.5-5.3z"/><path d="M7.8 13.2h8.4"/>',
+  cordon:   '<path d="M4.6 7.9q7.4 5.8 14.8 0"/><path d="M4.6 8v11M19.4 8v11"/><circle cx="4.6" cy="6.1" r="1.5"/><circle cx="19.4" cy="6.1" r="1.5"/><path d="M2.4 19.6h4.4M17.2 19.6h4.4"/>',
+  fleche:   '<path d="M9 5.5 15.5 12 9 18.5"/>',
+  check:    '<path d="M4.5 12.5 9 17 19.5 6.5"/>'
+};
+function picto(nom) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + PICTOS[nom] + "</svg>"; }
+
+/* Un visuel = une photo qui remplit le cadre, avec un
+   pictogramme cache dessous qui n'apparait que si l'image ne
+   charge pas (reseau coupe, URL morte). `taille` choisit entre
+   le petit format des listes et le grand bandeau de la feuille. */
+function visuel(item, taille) {
+  var cls = taille === "grand" ? "sheet-visuel" : "visuel";
+  var img = item.photo
+    ? '<img src="' + item.photo + '" alt="" onerror="this.parentElement.classList.add(\'hors-ligne\')">'
+    : "";
+  if (!item.photo) cls += " hors-ligne";
+  return '<span class="' + cls + '">' + img + '<span class="secours">' + picto(item.picto) + "</span></span>";
+}
+
+/* ==========================================================
+   L'ETAT PARTAGE
+
+   Avant l'assemblage, la carte et la boutique avaient chacune
+   leur propre solde fictif. Maintenant qu'elles vivent dans la
+   meme page, il n'y en a plus qu'un — la fiche d'un club affiche
+   le meme chiffre que la cagnotte de la boutique, comme dans une
+   vraie appli ou les donnees ne sont jamais dupliquees.
+   ========================================================== */
+
+var ETAT = {
+  solde: 185,
+  bons: [
+    { code: "VN-7XQ2", titre: "Vestiaire offert", note: "Mirage · à utiliser avant 6 h" }
+  ]
+};
+
+/* ==========================================================
+   LA FEUILLE DU BAS — commune a la carte et a la boutique.
+
+   Chaque ecran construit son propre contenu HTML et appelle
+   ouvrirFeuille() : la feuille elle-meme ne sait rien de ce
+   qu'elle affiche, elle se contente de le monter et de gerer
+   l'ouverture/fermeture/focus/Echap, une seule fois pour toute
+   l'appli.
+   ========================================================== */
+
+var sheet = $("#sheet"), voile = $("#voile"), corps = $("#sh-corps");
+var rendeur = null;
+
+function ouvrirFeuille(html, focusSel) {
+  corps.innerHTML = html;
+  sheet.classList.add("up");
+  sheet.setAttribute("aria-hidden", "false");
+  voile.classList.add("on");
+  var cible = focusSel ? corps.querySelector(focusSel) : null;
+  (cible || $("#sh-close")).focus();
+}
+
+function fermerFeuille() {
+  sheet.classList.remove("up");
+  sheet.setAttribute("aria-hidden", "true");
+  voile.classList.remove("on");
+  if (rendeur && document.contains(rendeur)) rendeur.focus();
+  rendeur = null;
+}
+
+$("#sh-close").addEventListener("click", fermerFeuille);
+voile.addEventListener("click", fermerFeuille);
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && sheet.classList.contains("up")) fermerFeuille();
+});
+
+/* ==========================================================
+   LA BASCULE D'ONGLETS
+
+   Les deux ecrans restent montes en permanence : on ne fait
+   qu'ajouter/retirer la classe qui les rend visibles. La carte
+   MapLibre garde donc sa position et son zoom d'un aller-retour
+   a l'autre, exactement comme dans une vraie appli.
+   ========================================================== */
+
+var VUES = { carte: $("#vue-carte"), boutique: $("#vue-boutique") };
+var TAB_CARTE = $("#tab-carte"), TAB_BOUTIQUE = $("#tab-boutique");
+
+function activerVue(nom) {
+  Object.keys(VUES).forEach(function (k) {
+    var actif = k === nom;
+    VUES[k].classList.toggle("actif", actif);
+    VUES[k].toggleAttribute("inert", !actif);
+  });
+  TAB_CARTE.classList.toggle("on", nom === "carte");
+  TAB_CARTE.setAttribute("aria-current", nom === "carte" ? "page" : "false");
+  TAB_BOUTIQUE.classList.toggle("on", nom === "boutique");
+  TAB_BOUTIQUE.setAttribute("aria-current", nom === "boutique" ? "page" : "false");
+  history.replaceState(null, "", "#" + nom);
+}
+
+TAB_CARTE.addEventListener("click", function () { activerVue("carte"); });
+TAB_BOUTIQUE.addEventListener("click", function () { activerVue("boutique"); });
+$("#pts-pill").addEventListener("click", function () { activerVue("boutique"); });
+
+activerVue(location.hash === "#boutique" ? "boutique" : "carte");
+
+/* ==========================================================
+   LA CAGNOTTE — affichee sur les deux ecrans a partir du meme
+   ETAT.solde : la pastille de la carte et le solde de la
+   boutique se mettent a jour ensemble, jamais l'un sans l'autre.
+   ========================================================== */
+
+$("#w-jeton").outerHTML = jeton(24);
+$("#pill-jeton").outerHTML = jeton(20);
+
+function prochaine() {
+  return RECOMPENSES
+    .filter(function (r) { return r.cout > ETAT.solde && r.stock > 0; })
+    .sort(function (a, b) { return a.cout - b.cout; })[0] || null;
+}
+
+function majCagnotte(anime) {
+  var b = $("#w-solde");
+  b.textContent = nb(ETAT.solde);
+  $("#pill-solde").textContent = nb(ETAT.solde);
+  if (anime) {
+    b.classList.remove("maj");
+    void b.offsetWidth;
+    b.classList.add("maj");
+  }
+
+  var cible = prochaine();
+  if (cible) {
+    $("#w-jauge").style.width = Math.min(100, Math.max(3, Math.round((ETAT.solde / cible.cout) * 100))) + "%";
+    $("#w-objectif").innerHTML =
+      "Encore <em>" + nb(cible.cout - ETAT.solde) + " pts</em> avant " + cible.nom.toLowerCase() + ".";
+  } else {
+    $("#w-jauge").style.width = "100%";
+    $("#w-objectif").innerHTML = "<em>Tout le catalogue est à ta portée.</em>";
+  }
+}
+
+/* ==========================================================
+   ECRAN CARTE — moteur MapLibre GL JS + MapTiler, inchange par
+   rapport a carte-preview.html a l'exception de la feuille de
+   detail, qui passe desormais par ouvrirFeuille() partagee.
+   ========================================================== */
+
+var uid = 0;
+
+function pint(level, cls) {
+  var id = "pg" + (++uid);
+  var TOP = 26, BOT = 122;
+  var y = BOT - (BOT - TOP) * level;
+  var full = level > .06, foam = level > .25;
+
+  return '<svg class="pint ' + (cls || "") + '" viewBox="0 0 100 138" xmlns="http://www.w3.org/2000/svg" role="img">' +
+    '<defs><clipPath id="' + id + '"><path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z"/></clipPath></defs>' +
+    '<ellipse cx="50" cy="132" rx="24" ry="5" fill="#4a6b3f" opacity=".2"/>' +
+    '<path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z" fill="#dfe9ef" opacity=".85"/>' +
+    (full ? '<g clip-path="url(#' + id + ')">' +
+      '<rect x="20" y="' + y + '" width="60" height="' + (132 - y) + '" fill="#f0a91e"/>' +
+      '<rect x="20" y="' + (y + (132 - y) * .55) + '" width="60" height="' + ((132 - y) * .45) + '" fill="#d98a09"/>' +
+      '<circle cx="40" cy="' + (y + 24) + '" r="3" fill="#ffd98a" opacity=".75"/>' +
+      '<circle cx="59" cy="' + (y + 40) + '" r="2.2" fill="#ffd98a" opacity=".65"/>' +
+      '</g>' : "") +
+    (foam ? '<g><ellipse cx="50" cy="' + y + '" rx="27" ry="11" fill="#fffaf0"/>' +
+      '<circle cx="34" cy="' + (y - 6) + '" r="9" fill="#fffaf0"/>' +
+      '<circle cx="50" cy="' + (y - 11) + '" r="11" fill="#fffdf7"/>' +
+      '<circle cx="66" cy="' + (y - 6) + '" r="9" fill="#fffaf0"/></g>' : "") +
+    '<g clip-path="url(#' + id + ')">' +
+      '<rect x="31" y="20" width="7" height="112" fill="#fff" opacity=".55"/>' +
+      '<rect x="43" y="20" width="3" height="112" fill="#fff" opacity=".3"/>' +
+      '<rect x="66" y="20" width="5" height="112" fill="#fff" opacity=".25"/>' +
+    '</g>' +
+    '<ellipse cx="50" cy="20" rx="26" ry="7" fill="none" stroke="#c9d6de" stroke-width="3"/>' +
+    '<path d="M24 20h52l-6 100a10 10 0 0 1-10 9H40a10 10 0 0 1-10-9z" fill="none" stroke="#c9d6de" stroke-width="2.5"/>' +
+  '</svg>';
+}
+
+var CLUBS = {
+  mirage: {
+    nom: "Mirage", adr: "Rue de l'Écuyer · 400 m", n: "42", u: "ICI", c: "#ff2f45",
+    lngLat: [4.3554, 50.8479], hot: true,
+    chips: [["Ça chauffe", true], ["Ouvert jusqu'à 6h", false]],
+    amis: [1, 1, .3], qui: "Sarah et Léa sont là, Théo est parti"
+  },
+  fuse: {
+    nom: "Fuse", adr: "Rue Blaes · 1,2 km", n: "11", u: "ICI", c: "#3b4250",
+    lngLat: [4.3405, 50.8375],
+    chips: [["Ouvert jusqu'à 7h", false], ["Ça se remplit", false]],
+    amis: [.62], qui: "Nassym y était il y a une heure"
+  },
+  spirito: {
+    nom: "Spirito", adr: "Rue Stassart · 2,1 km", n: "1h", u: "OUVRE", c: "#8b929c",
+    lngLat: [4.3651, 50.8367], shut: true,
+    chips: [["Pas encore ouvert", false]],
+    amis: [], qui: "Personne de tes amis pour l'instant"
+  }
+};
+
+var AMIS = [
+  { nom: "Sarah",  q: 1,   lngLat: [4.3561, 50.8486] },
+  { nom: "Nassym", q: .62, lngLat: [4.3415, 50.8380] },
+  { nom: "Yanis",  q: .62 }, { nom: "Léa",    q: 1 },
+  { nom: "Théo",   q: .3 },  { nom: "Inès",   q: .3 },
+  { nom: "Malik",  q: 0 },   { nom: "Chloé",  q: 1 }
+];
+
+var BRUXELLES = [4.3517, 50.8503];
+
+var MAPTILER_KEY = "HRqda4Ggxp9Mx9bKwvTh";
+
+var map = new maplibregl.Map({
+  container: "map",
+  style: "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=" + MAPTILER_KEY,
+  center: BRUXELLES,
+  zoom: 16,
+  pitch: 55,
+  bearing: -12,
+  attributionControl: { compact: true }
+});
+map.on("error", function (e) {
+  console.error("[carte]", (e && e.error && (e.error.message)) || e);
+});
+
+map.on("load", function () {
+  map.setProjection({ type: "globe" });
+  map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 55, bearing: -12 });
+});
+
+function ambiance() {
+  map.setSky({
+    "sky-color": "#0a0d16",
+    "sky-horizon-blend": 0.55,
+    "horizon-color": "#1b2a44",
+    "horizon-fog-blend": 0.6,
+    "fog-color": "#0e1420",
+    "fog-ground-blend": 0.7,
+    "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+  });
+}
+
+var PALETTES_ARBRES = [
+  ["#3f7a34", "#4a8a3c", "#5a9c46", "#6bab54", "#7fbb60", "#8fc96a"],
+  ["#356b2a", "#417a34", "#4f9350", "#5cae5a", "#6cb562", "#79bb52"]
+];
+
+function arbreSur(ctx, x, y, r, teinte, graineArbre) {
+  var s = r / 14;
+  var palette = PALETTES_ARBRES[teinte % 2];
+  var espece = teinte % 5;
+  var R = 8.4 * s;
+  var trunc = "#8a5f36", truncOmbre = "#6e4a29";
+  var alphaBase = ctx.globalAlpha;
+
+  ctx.beginPath(); ctx.ellipse(x, y + 1.5 * s, R * .6, R * .22, 0, 0, 7);
+  ctx.fillStyle = "rgba(20,30,15,.25)"; ctx.fill();
+
+  function tronc(hauteur, largeur) {
+    ctx.fillStyle = trunc;
+    ctx.fillRect(x - largeur / 2, y - hauteur, largeur, hauteur);
+    ctx.fillStyle = truncOmbre;
+    ctx.fillRect(x, y - hauteur, largeur / 2, hauteur);
+  }
+
+  if (espece === 0 || espece === 1) {
+    var cy = y - R * 1.15;
+    tronc(R * 1.1, 2.4 * s);
+    ctx.beginPath(); ctx.arc(x, cy, R, 0, 7);
+    ctx.fillStyle = palette[1]; ctx.fill();
+    ctx.beginPath(); ctx.arc(x - R * .34, cy - R * .3, R * .58, 0, 7);
+    ctx.fillStyle = palette[3]; ctx.fill();
+    ctx.beginPath(); ctx.arc(x + R * .36, cy + R * .26, R * .38, 0, 7);
+    ctx.fillStyle = palette[0]; ctx.globalAlpha = alphaBase * .6; ctx.fill(); ctx.globalAlpha = alphaBase;
+  } else if (espece === 2) {
+    tronc(R * .55, 2.2 * s);
+    ctx.beginPath();
+    ctx.moveTo(x, y - R * 2.5); ctx.lineTo(x + R * .78, y - R * .5); ctx.lineTo(x - R * .78, y - R * .5);
+    ctx.closePath(); ctx.fillStyle = palette[2]; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x, y - R * 2.5); ctx.lineTo(x, y - R * .5); ctx.lineTo(x - R * .78, y - R * .5);
+    ctx.closePath(); ctx.fillStyle = palette[4]; ctx.fill();
+  } else if (espece === 3) {
+    tronc(R * .5, 2 * s);
+    [[2.55, .9, 1.35], [1.95, .74, .95], [1.4, .56, .55]].forEach(function (e, i) {
+      ctx.beginPath();
+      ctx.moveTo(x, y - R * e[0]);
+      ctx.lineTo(x + R * e[1], y - R * e[2]);
+      ctx.lineTo(x - R * e[1], y - R * e[2]);
+      ctx.closePath();
+      ctx.fillStyle = palette[i === 0 ? 1 : i === 1 ? 3 : 4]; ctx.fill();
+    });
+  } else {
+    tronc(R * .5, 2 * s);
+    var h = R * 2.4, w = R * .58;
+    ctx.beginPath();
+    ctx.moveTo(x - w, y - R * .45);
+    ctx.lineTo(x - w, y - h + w);
+    ctx.arc(x, y - h + w, w, Math.PI, 0);
+    ctx.lineTo(x + w, y - R * .45);
+    ctx.closePath();
+    ctx.fillStyle = palette[2]; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x - w, y - R * .45);
+    ctx.lineTo(x - w, y - h + w);
+    ctx.arc(x, y - h + w, w, Math.PI, Math.PI * 1.5);
+    ctx.lineTo(x, y - R * .45);
+    ctx.closePath();
+    ctx.fillStyle = palette[4]; ctx.fill();
+  }
+}
+
+var PALETTES_BATIMENTS = [
+  { mur: "#f4f1ea", murOmbre: "#e2ddd0", toit: "#3a3d47", fenetre: "#ffd873" },
+  { mur: "#eef2f6", murOmbre: "#d9e0e6", toit: "#2c2f38", fenetre: "#ffe08a" },
+  { mur: "#f7ece4", murOmbre: "#e6d5c8", toit: "#8a3b32", fenetre: "#ffd873" }
+];
+
+function batimentSur(ctx, x, y, r, teinte, graineBatiment) {
+  var s = r / 14;
+  var pal = PALETTES_BATIMENTS[teinte % PALETTES_BATIMENTS.length];
+  var graine = (graineBatiment >>> 0) || 1;
+  function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
+
+  var alphaBase = ctx.globalAlpha;
+  var type = Math.floor(rnd() * 4);
+  var largeur = (12 + rnd() * 3) * s;
+  var profondeur = largeur * .62;
+  var etages = type === 3 ? 3 + Math.floor(rnd() * 2) : (type === 2 ? 2 : 1);
+  var hauteurMur = (7 + etages * 4.5) * s;
+  var toitPointu = type === 0 || type === 2;
+  var hauteurToit = toitPointu ? largeur * .42 : largeur * .1;
+
+  var hautBas = y, hautMur = y - hauteurMur, hautToit = hautMur - hauteurToit;
+  var decal = profondeur * .3;
+
+  ctx.beginPath(); ctx.ellipse(x, y + 1.5 * s, largeur * .7, largeur * .24, 0, 0, 7);
+  ctx.fillStyle = "rgba(20,20,15,.22)"; ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(x - largeur / 2, hautBas); ctx.lineTo(x - largeur / 2, hautMur);
+  ctx.lineTo(x, hautMur - decal); ctx.lineTo(x, hautBas + decal);
+  ctx.closePath(); ctx.fillStyle = pal.mur; ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(x, hautBas + decal); ctx.lineTo(x, hautMur - decal);
+  ctx.lineTo(x + largeur / 2, hautMur); ctx.lineTo(x + largeur / 2, hautBas);
+  ctx.closePath(); ctx.fillStyle = pal.murOmbre; ctx.fill();
+
+  ctx.fillStyle = pal.fenetre;
+  var fw = largeur * .13, fh = largeur * .15;
+  for (var e = 0; e < etages; e++) {
+    var fy = hautMur + (e + .55) * (hauteurMur / etages) - fh / 2;
+    ctx.fillRect(x - largeur * .36, fy, fw, fh);
+    ctx.fillRect(x - largeur * .17, fy, fw, fh);
+    ctx.globalAlpha = alphaBase * .75;
+    ctx.fillRect(x + largeur * .12, fy + decal * .5, fw, fh);
+    ctx.fillRect(x + largeur * .3, fy + decal * .5, fw, fh);
+    ctx.globalAlpha = alphaBase;
+  }
+
+  if (toitPointu) {
+    ctx.beginPath();
+    ctx.moveTo(x - largeur / 2 - 1.2 * s, hautMur);
+    ctx.lineTo(x, hautMur - decal);
+    ctx.lineTo(x, hautToit - decal);
+    ctx.lineTo(x - largeur * .18, hautToit);
+    ctx.closePath();
+    ctx.fillStyle = pal.toit; ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(x, hautMur - decal);
+    ctx.lineTo(x + largeur / 2 + 1.2 * s, hautMur);
+    ctx.lineTo(x + largeur * .2, hautToit);
+    ctx.lineTo(x, hautToit - decal);
+    ctx.closePath();
+    ctx.fillStyle = pal.toit; ctx.globalAlpha = alphaBase * .82; ctx.fill(); ctx.globalAlpha = alphaBase;
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x - largeur / 2 - 1 * s, hautMur);
+    ctx.lineTo(x, hautMur - decal - hauteurToit);
+    ctx.lineTo(x + largeur / 2 + 1 * s, hautMur);
+    ctx.lineTo(x, hautMur + decal - hauteurToit * .2);
+    ctx.closePath();
+    ctx.fillStyle = pal.toit; ctx.fill();
+  }
+}
+
+function snapifie() {
+  var mentheClair = "#e3f3d3", mentheFonce = "#cbe8ac", eau = "#a9ddf7";
+
+  map.setPaintProperty("Background", "background-color", mentheClair);
+
+  ["Residential", "Industrial", "School", "Cemetery", "Hospital", "Pedestrian"].forEach(function (id) {
+    if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", mentheClair);
+  });
+
+  ["Forest", "Wood"].forEach(function (id) {
+    map.setPaintProperty(id, "fill-color", mentheFonce);
+    map.setPaintProperty(id, "fill-opacity", 1);
+    map.setLayoutProperty(id, "visibility", "visible");
+    map.setLayerZoomRange(id, 0, 24);
+  });
+  ["Grass", "Meadow"].forEach(function (id) {
+    map.setPaintProperty(id, "fill-color", mentheFonce);
+    map.setPaintProperty(id, "fill-opacity", 1);
+  });
+
+  map.setPaintProperty("Water", "fill-color", eau);
+
+  map.setPaintProperty("Building", "fill-color", "#efe9df");
+  map.setPaintProperty("Building", "fill-opacity", .9);
+  map.setLayerZoomRange("Building", 0, 24);
+  map.setLayoutProperty("Building 3D", "visibility", "none");
+
+  if (map.getLayer("Country border")) {
+    if (!map.getLayer("Contour pays halo")) {
+      map.addLayer({
+        id: "Contour pays halo", type: "line", source: "maptiler_planet", "source-layer": "boundary",
+        filter: ["all", ["==", "admin_level", 2], ["==", "disputed", 0], ["==", "maritime", 0]],
+        paint: {
+          "line-color": "#2c2e4e", "line-opacity": .55,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 2.2, 5, 3.4, 10, 4.4, 24, 6.5]
+        }
+      });
+    }
+    map.setPaintProperty("Country border", "line-color", "#ffffff");
+    map.setPaintProperty("Country border", "line-opacity", 1);
+    map.setPaintProperty("Country border", "line-width", [
+      "interpolate", ["linear"], ["zoom"], 1, 1.3, 5, 2.6, 10, 3.6, 24, 5
+    ]);
+    map.moveLayer("Contour pays halo");
+    map.moveLayer("Country border");
+  }
+
+  [
+    "Public", "Sport", "Education", "Tourism", "Culture", "Shopping",
+    "Food", "Transport", "Park", "Healthcare", "Station",
+    "Road labels", "Highway junction", "Highway shield", "Highway shield (US)",
+    "Highway shield interstate top (US)", "Highway shield interstate (US)",
+    "Housenumber", "Oneway", "Gondola", "Ferry",
+    "River labels", "Ocean labels", "Lake labels",
+    "Airport gate", "Airport", "Place labels"
+  ].forEach(function (id) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
+  });
+
+  var ROUTES_PLEINES = ["Motorway", "Trunk", "Primary", "Secondary", "Tertiary", "Minor", "Service", "Street"];
+  ROUTES_PLEINES.forEach(function (id) {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "line-color", "#fbf6ea");
+    map.setPaintProperty(id, "line-opacity", 1);
+  });
+  var CASINGS = ["Motorway casing", "Trunk casing", "Primary casing", "Secondary casing", "Tertiary casing"];
+  CASINGS.forEach(function (id) {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "line-color", "#d8cdb2");
+  });
+}
+
+var ARBRES = [];
+var ARBRES_VUS = {};
+var PAS_ARBRES = 0.00055;
+
+function genererArbres() {
+  if (ARBRES.length >= 1800) return;
+  var couches = ["Forest", "Wood", "Grass", "Meadow"].filter(function (id) { return map.getLayer(id); });
+  if (!couches.length) return;
+
+  var b = map.getBounds();
+  var lngMin = Math.floor(b.getWest() / PAS_ARBRES) * PAS_ARBRES;
+  var lngMax = b.getEast(), latMin = Math.floor(b.getSouth() / PAS_ARBRES) * PAS_ARBRES, latMax = b.getNorth();
+  if ((lngMax - lngMin) / PAS_ARBRES > 260) return;
+
+  for (var lng = lngMin; lng <= lngMax; lng += PAS_ARBRES) {
+    for (var lat = latMin; lat <= latMax; lat += PAS_ARBRES) {
+      if (ARBRES.length >= 1800) return;
+      var cle = Math.round(lng / PAS_ARBRES) + ":" + Math.round(lat / PAS_ARBRES);
+      if (ARBRES_VUS[cle]) continue;
+      ARBRES_VUS[cle] = true;
+
+      var h = 2166136261;
+      for (var k = 0; k < cle.length; k++) { h ^= cle.charCodeAt(k); h = (h * 16777619) >>> 0; }
+      function rnd() { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; }
+
+      var dLng = lng + (rnd() - .5) * PAS_ARBRES * .8;
+      var dLat = lat + (rnd() - .5) * PAS_ARBRES * .8;
+      var p = map.project([dLng, dLat]);
+      if (p.x < 0 || p.x > map.getCanvas().clientWidth || p.y < 0 || p.y > map.getCanvas().clientHeight) continue;
+      if (!map.queryRenderedFeatures([p.x, p.y], { layers: couches }).length) continue;
+
+      ARBRES.push({
+        lng: dLng, lat: dLat,
+        s: .8 + rnd() * .4,
+        teinte: Math.floor(rnd() * 5),
+        graine: Math.floor(rnd() * 4294967295) + 1
+      });
+    }
+  }
+}
+
+var BATIMENTS = [];
+var BATIMENTS_VUS = {};
+var BATIMENTS_GRAINE = 55221;
+
+function genererBatiments() {
+  if (!map.getLayer("Building") || BATIMENTS.length >= 2000) return;
+  var feats = map.queryRenderedFeatures({ layers: ["Building"] });
+  function rnd() { BATIMENTS_GRAINE = (BATIMENTS_GRAINE * 1664525 + 1013904223) >>> 0; return BATIMENTS_GRAINE / 4294967296; }
+  feats.forEach(function (f) {
+    if (BATIMENTS.length >= 2000) return;
+    var g = f.geometry;
+    if (!g) return;
+    var anneau = g.type === "Polygon" ? g.coordinates[0] : (g.type === "MultiPolygon" ? g.coordinates[0][0] : null);
+    if (!anneau || anneau.length < 3) return;
+    var sx = 0, sy = 0;
+    anneau.forEach(function (c) { sx += c[0]; sy += c[1]; });
+    var lng = sx / anneau.length, lat = sy / anneau.length;
+    var cle = lng.toFixed(5) + "," + lat.toFixed(5);
+    if (BATIMENTS_VUS[cle]) return;
+    BATIMENTS_VUS[cle] = true;
+    BATIMENTS.push({ lng: lng, lat: lat, teinte: Math.floor(rnd() * 3), graine: Math.floor(rnd() * 4294967295) + 1 });
+  });
+}
+
+(function () {
+  var cv = document.getElementById("arbres");
+  var ctx = cv.getContext("2d");
+  var W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
+
+  function dimensionner() {
+    var r = cv.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * DPR; cv.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  dimensionner();
+  window.addEventListener("resize", dimensionner);
+
+  function dessiner() {
+    ctx.clearRect(0, 0, W, H);
+    var z = map.getZoom();
+    var Z_PLEIN = 16.2, Z_VIDE = 14.8;
+    if (z < Z_VIDE) return;
+    var fondu = Math.min(1, (z - Z_VIDE) / (Z_PLEIN - Z_VIDE));
+
+    var pts = [];
+    for (var i = 0; i < ARBRES.length; i++) {
+      var a = ARBRES[i];
+      var p = map.project([a.lng, a.lat]);
+      if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) continue;
+      pts.push({ x: p.x, y: p.y, s: a.s, teinte: a.teinte, graine: a.graine, type: "arbre" });
+    }
+    for (var j = 0; j < BATIMENTS.length; j++) {
+      var b = BATIMENTS[j];
+      var pb = map.project([b.lng, b.lat]);
+      if (pb.x < -60 || pb.x > W + 60 || pb.y < -110 || pb.y > H + 60) continue;
+      pts.push({ x: pb.x, y: pb.y, s: 1, teinte: b.teinte, graine: b.graine, type: "batiment" });
+    }
+    pts.sort(function (a, b) { return a.y - b.y; });
+    ctx.globalAlpha = fondu;
+    pts.forEach(function (p) {
+      if (p.type === "arbre") arbreSur(ctx, p.x, p.y, 26 * p.s, p.teinte, p.graine);
+      else batimentSur(ctx, p.x, p.y, 30, p.teinte, p.graine);
+    });
+    ctx.globalAlpha = 1;
+  }
+  map.on("move", dessiner);
+  map.on("load", function () { genererBatiments(); genererArbres(); dessiner(); });
+  map.on("idle", function () { genererBatiments(); genererArbres(); dessiner(); });
+})();
+
+(function () {
+  var cv = document.getElementById("etoiles");
+  var ctx = cv.getContext("2d");
+  var W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
+  var REDUIT = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function dimensionner() {
+    var r = cv.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * DPR; cv.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  dimensionner();
+  window.addEventListener("resize", dimensionner);
+
+  var etoiles = [], filantes = [];
+  (function () {
+    var s = 20260817;
+    function r() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
+    for (var i = 0; i < 140; i++) {
+      etoiles.push({ x: r(), y: r(), r: .6 + r() * 1.5, ph: r() * 6.28, sp: .6 + r() * 1.6 });
+    }
+    for (var j = 0; j < 3; j++) filantes.push(neuve(j * 2.6));
+    function neuve(delai) {
+      return { a: -.55 + Math.random() * .4, v: 9 + Math.random() * 7, len: 110 + Math.random() * 150,
+        x: Math.random() * .8, y: Math.random() * .5,
+        t: -(delai + Math.random() * 4), vie: 1.1 + Math.random() * .5 };
+    }
+    window.__neuve = neuve;
+  })();
+
+  var opacite = 1, dernier = 0, raf = null;
+
+  function dessiner(temps, dt) {
+    ctx.clearRect(0, 0, W, H);
+    if (opacite <= 0) return;
+    ctx.globalAlpha = opacite;
+
+    etoiles.forEach(function (e) {
+      var a = REDUIT ? .7 : .4 + .6 * Math.abs(Math.sin(temps * e.sp + e.ph));
+      ctx.globalAlpha = opacite * a;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(e.x * W, e.y * H, e.r, 0, 6.29); ctx.fill();
+    });
+
+    if (!REDUIT) filantes.forEach(function (f, i) {
+      f.t += dt;
+      if (f.t < 0) return;
+      if (f.t > f.vie) { filantes[i] = window.__neuve(1.5 + Math.random() * 5); return; }
+      var d = f.t * f.v * 60;
+      var hx = f.x * W + Math.cos(f.a) * d, hy = f.y * H - Math.sin(f.a) * d;
+      var tx = hx - Math.cos(f.a) * f.len, ty = hy + Math.sin(f.a) * f.len;
+      var fade = Math.min(1, f.t / .18) * Math.min(1, (f.vie - f.t) / .3) * opacite;
+      var lg = ctx.createLinearGradient(tx, ty, hx, hy);
+      lg.addColorStop(0, "rgba(255,255,255,0)");
+      lg.addColorStop(1, "rgba(255,255,255," + (.9 * fade) + ")");
+      ctx.strokeStyle = lg; ctx.lineWidth = 2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.globalAlpha = fade; ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(hx, hy, 2.2, 0, 6.29); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function boucle(ts) {
+    var t = ts / 1000, dt = dernier ? Math.min(.05, t - dernier) : 0;
+    dernier = t;
+    dessiner(t, dt);
+    raf = requestAnimationFrame(boucle);
+  }
+  raf = requestAnimationFrame(boucle);
+
+  function majOpacite() {
+    var z = map.getZoom();
+    opacite = z < 2 ? 1 : z > 4 ? 0 : 1 - (z - 2) / 2;
+  }
+  majOpacite();
+  map.on("zoom", majOpacite);
+})();
+map.on("style.load", function () {
+  try { ambiance(); snapifie(); }
+  catch (e) { console.error("[carte] exception style.load:", e); }
+});
+
+/* --- Fiche club : construite en HTML complet a chaque ouverture,
+       comme la fiche recompense de la boutique, plutot que de
+       remplir des elements figes — c'est ce qui permet de partager
+       la meme feuille pour les deux ecrans. Le solde affiche vient
+       du meme ETAT que la boutique. --- */
+
+function ouvrirClub(c, src) {
+  rendeur = src || null;
+
+  var stack = c.amis.map(function (q) { return "<span>" + pint(q) + "</span>"; }).join("");
+
+  var html =
+    '<div class="sheet-club-top">' +
+      '<span class="club-badge" style="--c:' + c.c + '"><b>' + c.n + "</b><i>" + c.u + "</i></span>" +
+      '<span class="sheet-fam" style="margin:0"><strong style="display:block;color:var(--ink);font-size:19px;font-weight:800;letter-spacing:-.03em;text-transform:none">' +
+        c.nom + "</strong>" + c.adr + "</span>" +
+    "</div>" +
+    '<div class="sheet-chips">' + c.chips.map(function (ch) {
+      return '<span class="chip' + (ch[1] ? " warm" : "") + '">' + ch[0] + "</span>";
+    }).join("") + "</div>" +
+    (c.amis.length ? '<div class="who"><span class="stack">' + stack + '</span><p>' + c.qui + "</p></div>" : '<p class="desc">' + c.qui + "</p>") +
+    '<button class="sheet-cta" type="button">Poster ma story</button>' +
+    '<p class="sheet-note">' + noteRecompenseClub() + "</p>";
+
+  ouvrirFeuille(html, ".sheet-cta");
+}
+
+/* La note de la fiche pointe vers la recompense la plus proche du
+   solde actuel — le meme calcul que l'objectif de la boutique,
+   pour que la carte et la boutique racontent toujours la meme
+   histoire. */
+function noteRecompenseClub() {
+  var cible = prochaine();
+  if (!cible) return "Tout le catalogue de la boutique est déjà à ta portée.";
+  return cible.cout + " pts pour " + cible.nom.toLowerCase() + ". Tu en as " + nb(ETAT.solde) + ".";
+}
+
+map.on("load", function () {
+  Object.keys(CLUBS).forEach(function (key) {
+    var c = CLUBS[key];
+    var el = document.createElement("button");
+    el.className = "club-badge" + (c.hot ? " hot" : "") + (c.shut ? " shut" : "");
+    el.style.setProperty("--c", c.c);
+    el.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>";
+    el.setAttribute("aria-label", c.nom + " " + c.n + " " + c.u);
+    el.addEventListener("click", function () { ouvrirClub(c, el); });
+    new maplibregl.Marker({ element: el, anchor: "center" })
+      .setLngLat(c.lngLat)
+      .addTo(map);
+  });
+
+  AMIS.filter(function (a) { return a.lngLat; }).forEach(function (a) {
+    var el = document.createElement("div");
+    el.className = "friend-marker";
+    el.innerHTML = pint(a.q);
+    el.setAttribute("role", "img");
+    el.setAttribute("aria-label", a.nom);
+    new maplibregl.Marker({ element: el, anchor: "bottom" })
+      .setLngLat(a.lngLat)
+      .addTo(map);
+  });
+});
+
+$("#rail-me").addEventListener("click", function () {
+  map.flyTo({ center: BRUXELLES, zoom: 14.2, bearing: -12, pitch: 50, duration: 900 });
+});
+
+$("#me-btn").insertAdjacentHTML("afterbegin", pint(1));
+$("#rail-me").insertAdjacentHTML("afterbegin", pint(1));
+
+var friendRail = $("#friend-rail");
+AMIS.forEach(function (p) {
+  var b = document.createElement("button");
+  b.className = "fr";
+  b.setAttribute("aria-label", p.nom);
+  b.innerHTML = '<span class="bub">' + pint(p.q) + '</span><b>' + p.nom + '</b>';
+  if (p.lngLat) b.addEventListener("click", function () {
+    activerVue("carte");
+    map.flyTo({ center: p.lngLat, zoom: 16, duration: 800 });
+  });
+  friendRail.appendChild(b);
+});
+
+/* ==========================================================
+   ECRAN BOUTIQUE
+
+   Le catalogue reprend DEFAULT_REWARDS de dashboardData.js
+   (memes libelles, memes couts, memes stocks) et l'etend vers
+   le haut pour qu'il reste quelque chose a viser apres les
+   premieres soirees. Chaque entree porte desormais un champ
+   `photo` : une image reelle plutot qu'un dessin, comme dans
+   une appli de livraison. Les photos viennent de Wikimedia
+   Commons (licences libres, creditees a cote de chaque URL) —
+   a remplacer par de vraies photos du club des que possible.
+   ========================================================== */
+
+var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
+
+var RECOMPENSES = [
+  {
+    id: "vestiaire", nom: "Vestiaire offert", cout: 40, fam: "acces", stock: 100, picto: "cintre",
+    // Photo Wikimedia Commons, licence CC BY-SA 3.0 (Fortepan) — a remplacer par une photo du vestiaire du club des que possible
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Coat-stand_Fortepan_71982.jpg/960px-Coat-stand_Fortepan_71982.jpg",
+    court: "Ton manteau, sans payer",
+    desc: "Ton manteau au vestiaire, sans payer.",
+    regles: ["Valable la soirée où tu l'échanges", "À montrer au vestiaire avant de déposer"]
+  },
+  {
+    id: "shot", nom: "Shot maison", cout: 70, fam: "bar", stock: 50, picto: "shot",
+    // Photo Wikimedia Commons, licence CC BY-SA 2.5
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Three_shotglasses.jpg/960px-Three_shotglasses.jpg",
+    court: "Servi directement au bar",
+    desc: "Un shot de la maison, servi directement au bar.",
+    regles: ["Un seul shot par soirée", "Le bar peut demander ta carte d'identité"]
+  },
+  {
+    id: "pinte", nom: "Pinte offerte", cout: 90, fam: "bar", stock: 40, picto: "pinte",
+    // Photo Wikimedia Commons, licence CC BY-SA 3.0
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/IPA_in_a_pint_glass.jpeg/960px-IPA_in_a_pint_glass.jpeg",
+    court: "La pression, la pinte entière",
+    desc: "La pression du bar, la pinte entière.",
+    regles: ["Un seul verre par soirée", "Le bar peut demander ta carte d'identité"]
+  },
+  {
+    id: "cocktail", nom: "Cocktail signature", cout: 110, fam: "bar", stock: 30, picto: "cocktail",
+    // Photo Wikimedia Commons, licence CC BY 4.0
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Martini_glass_low_angle.jpg/960px-Martini_glass_low_angle.jpg",
+    court: "Le cocktail de la carte",
+    desc: "Le cocktail signature de la carte, préparé au bar.",
+    regles: ["Hors carte premium", "Un seul cocktail par soirée", "Le bar peut demander ta carte d'identité"]
+  },
+  {
+    id: "coupefile", nom: "Coupe-file", cout: 160, fam: "acces", stock: 20, picto: "ticket",
+    // Photo Wikimedia Commons, licence CC BY-SA 3.0
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Ticket_Fast_Pass.jpg/960px-Ticket_Fast_Pass.jpg",
+    court: "Toi + 1, devant la file",
+    desc: "Tu passes devant la file, avec une personne.",
+    regles: ["Toi + 1 accompagnant", "Valable jusqu'à 2 h du matin"]
+  },
+  {
+    id: "entree", nom: "Entrée gratuite", cout: 240, fam: "acces", stock: 10, picto: "bracelet",
+    // Photo Wikimedia Commons, licence CC BY-SA 4.0
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Wrist_Identification_Band.jpg/960px-Wrist_Identification_Band.jpg",
+    court: "L'entrée offerte, ce soir",
+    desc: "L'entrée offerte pour toi, ce soir.",
+    regles: ["Valable la soirée où tu l'échanges", "Hors soirées spéciales et privatisations"]
+  },
+  {
+    id: "table", nom: "Table + bouteille", cout: 900, fam: "vip", stock: 2, picto: "bouteille",
+    // Photo Wikimedia Commons, licence CC BY-SA 3.0
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Champagne_bottles_in_a_bucket_-_8439.jpg/960px-Champagne_bottles_in_a_bucket_-_8439.jpg",
+    court: "Jusqu'à 6 personnes",
+    desc: "Une table réservée et une bouteille pour ton groupe.",
+    regles: ["Sur réservation, 24 h à l'avance", "Jusqu'à 6 personnes", "Bouteille au choix dans la sélection maison"]
+  },
+  {
+    id: "carre", nom: "Carré VIP pour 4", cout: 1400, fam: "vip", stock: 1, picto: "cordon",
+    // Photo Wikimedia Commons, licence CC BY-SA 4.0
+    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Club_Tigerheat_on_the_Dance_Floor_with_Laser_Lights.jpg/960px-Club_Tigerheat_on_the_Dance_Floor_with_Laser_Lights.jpg",
+    court: "Toute la nuit, entrées comprises",
+    desc: "Le carré VIP pour toi et trois amis, toute la nuit.",
+    regles: ["Sur réservation, 48 h à l'avance", "Entrées comprises pour 4", "Une seule attribution par soirée"]
+  }
+];
+
+var OFFRE = {
+  id: "o-shot", nom: "Shot offert", court: "Dès ta première story de la soirée",
+  fam: "bar", picto: "shot",
+  // Meme photo que la recompense "Shot maison" : c'est le meme produit
+  photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Three_shotglasses.jpg/960px-Three_shotglasses.jpg",
+  cout: 0, avant: 70, stock: 20,
+  desc: "Poste ta première story de la soirée avec le tag du Mirage, et le shot est offert.",
+  regles: ["Story validée par le club", "Une seule fois par soirée", "Le bar peut demander ta carte d'identité"]
+};
+
+var MOIS = { nom: "août", cumul: 430 };
+$("#w-mois").textContent = nb(MOIS.cumul) + " pts en " + MOIS.nom;
+
+var GAINS = [
+  { t: "Scanner le QR au club",   s: "À l'entrée, une fois par soirée", v: 15 },
+  { t: "1 000 vues sur ta story", s: "Story taguée, une fois validée",  v: 80 },
+  { t: "1 000 vues sur ta vidéo", s: "TikTok, Reel ou Short",           v: 25 },
+  { t: "Contenu qui décolle",     s: "Bonus au-delà de 10 000 vues",    v: 90 },
+  { t: "Ambassadeur du mois",     s: "Le plus gros total du mois",      v: 350 }
+];
+
+var OUVERTURE = 23, FERMETURE = 6;
+
+function fenetreSoir() {
+  var n = new Date(), h = n.getHours();
+  if (h >= FERMETURE && h < OUVERTURE) return { ouvert: false, texte: "dès 23 h" };
+
+  var fin = new Date(n);
+  fin.setHours(FERMETURE, 0, 0, 0);
+  if (h >= OUVERTURE) fin.setDate(fin.getDate() + 1);
+  var m = Math.max(0, Math.round((fin - n) / 60000));
+  var hh = Math.floor(m / 60);
+  return { ouvert: true, texte: hh > 0 ? hh + " h " + String(m % 60).padStart(2, "0") : m + " min" };
+}
+
+function majRebours() {
+  var f = fenetreSoir();
+  $("#o-fin").textContent = f.ouvert ? "encore " + f.texte : f.texte;
+}
+
+function rendreOffre() {
+  var z = $("#liste-soir");
+  z.innerHTML = "";
+  var epuise = OFFRE.stock <= 0;
+
+  var b = document.createElement("button");
+  b.className = "ligne" + (epuise ? " epuise" : "");
+  b.type = "button";
+  b.setAttribute("aria-label", OFFRE.nom + " — " + OFFRE.court);
+  b.innerHTML =
+    visuel(OFFRE) +
+    '<span class="ligne-txt"><strong>' + OFFRE.nom + '</strong><span class="court">' + OFFRE.court + "</span></span>" +
+    '<span class="ligne-prix">' +
+      '<span class="badge-offert">' + (epuise ? "Épuisé" : "Offert") + "</span>" +
+      "<del>" + OFFRE.avant + " pts</del>" +
+    "</span>";
+
+  b.addEventListener("click", function () { ouvrirRecompense(OFFRE, b); });
+  z.appendChild(b);
+
+  $("#o-note").textContent =
+    "Points doublés sur tout ce que tu postes jusqu'à 1 h. Les offres du soir tombent à la fermeture.";
+}
+
+var filtreActif = "tout";
+
+function rendreListe() {
+  var z = $("#liste");
+  z.innerHTML = "";
+
+  var liste = RECOMPENSES.filter(function (r) {
+    return filtreActif === "tout" || r.fam === filtreActif;
+  });
+
+  $("#g-compte").textContent = liste.length + (liste.length > 1 ? " récompenses" : " récompense");
+
+  liste.forEach(function (r) {
+    var loin = r.cout > ETAT.solde;
+    var epuise = r.stock <= 0;
+
+    var b = document.createElement("button");
+    b.className = "ligne" + (loin ? " loin" : "") + (epuise ? " epuise" : "");
+    b.type = "button";
+    b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
+
+    var sous = epuise ? "Épuisé pour ce soir"
+      : (r.stock <= 5 ? "Il en reste " + r.stock : r.court);
+
+    b.innerHTML =
+      visuel(r) +
+      '<span class="ligne-txt"><strong>' + r.nom + '</strong><span class="court">' + sous + "</span></span>" +
+      '<span class="ligne-prix">' +
+        '<span class="cout">' + jeton(14) + "<b>" + nb(r.cout) + "</b></span>" +
+        (loin && !epuise ? '<span class="manque">encore ' + nb(r.cout - ETAT.solde) + "</span>" : "") +
+      "</span>";
+
+    b.addEventListener("click", function () { ouvrirRecompense(r, b); });
+    z.appendChild(b);
+  });
+}
+
+Array.prototype.forEach.call(document.querySelectorAll(".filtre"), function (btn) {
+  btn.addEventListener("click", function () {
+    filtreActif = btn.dataset.fam;
+    Array.prototype.forEach.call(document.querySelectorAll(".filtre"), function (o) {
+      o.setAttribute("aria-pressed", String(o === btn));
+    });
+    rendreListe();
+  });
+});
+
+/* --- Le QR d'un bon : genere localement, sans limite, avec la
+       meme librairie que le QR d'entree du club. Le niveau de
+       correction Q tolere les rayures et la penombre — voir
+       lib/tracking/qrCode.js pour la meme logique cote gerant. --- */
+function qrBon(code) {
+  return QRCode.toString("VN-REDEEM:" + code, {
+    type: "svg", errorCorrectionLevel: "Q", margin: 0,
+    color: { dark: "#0a0b0e", light: "#ffffff" }
+  });
+}
+
+async function rendreBons(neufCode) {
+  var z = $("#bons");
+  z.innerHTML = "";
+  for (var i = 0; i < ETAT.bons.length; i++) {
+    var bon = ETAT.bons[i];
+    var svgQr = await qrBon(bon.code);
+    var e = document.createElement("div");
+    e.className = "bon" + (bon.code === neufCode ? " neuf" : "");
+    e.innerHTML =
+      '<span class="bon-qr">' + svgQr + "</span>" +
+      '<span class="txt"><strong>' + bon.titre + "</strong><span>" + bon.note + "</span></span>" +
+      '<span class="bon-code">' + bon.code + "</span>";
+    z.appendChild(e);
+  }
+}
+
+(function rendreGains() {
+  var z = $("#gains");
+  GAINS.forEach(function (g) {
+    var e = document.createElement("div");
+    e.className = "gain";
+    e.innerHTML = "<p>" + g.t + "<span>" + g.s + "</span></p>" +
+      '<span class="val">+' + g.v + "</span>";
+    z.appendChild(e);
+  });
+})();
+
+function ouvrirRecompense(item, src) {
+  rendeur = src || null;
+  var epuise = item.stock <= 0;
+  var loin = item.cout > ETAT.solde;
+
+  var entete = FAMILLES[item.fam] + " · il en reste " + item.stock;
+
+  var cta, note;
+  if (epuise) {
+    cta = '<button class="sheet-cta" type="button" disabled>Épuisé pour ce soir</button>';
+    note = "Reviens demain, le club recharge ses stocks chaque soirée.";
+  } else if (loin) {
+    cta = '<button class="sheet-cta" type="button" disabled>Encore ' + nb(item.cout - ETAT.solde) + " pts</button>";
+    note = "Il te manque " + nb(item.cout - ETAT.solde) +
+      " pts. Une story taguée à 1 000 vues en rapporte 80.";
+  } else if (item.cout === 0) {
+    cta = '<button class="sheet-cta" id="sh-cta" type="button">Récupérer mon bon</button>';
+    note = "Offert ce soir. Ton solde ne bouge pas.";
+  } else {
+    cta = '<button class="sheet-cta" id="sh-cta" type="button">Échanger ' + jeton(16) +
+      "<span>" + nb(item.cout) + "</span></button>";
+    note = "Le bon est valable ce soir. Il te restera " + nb(ETAT.solde - item.cout) + " pts.";
+  }
+
+  var html =
+    visuel(item, "grand") +
+    '<span class="sheet-fam">' + entete + "</span>" +
+    '<h3 id="sh-titre">' + item.nom + "</h3>" +
+    '<p class="desc">' + item.desc + "</p>" +
+    '<ul class="regles">' + item.regles.map(function (r) {
+      return "<li>" + picto("check") + "<span>" + r + "</span></li>";
+    }).join("") + "</ul>" +
+    cta +
+    '<p class="sheet-note">' + note + "</p>";
+
+  ouvrirFeuille(html, "#sh-cta, .sheet-cta");
+
+  var btn = $("#sh-cta");
+  if (btn) btn.addEventListener("click", function () { echanger(item); });
+}
+
+var LETTRES = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function nouveauCode() {
+  var s = "";
+  for (var i = 0; i < 4; i++) s += LETTRES[Math.floor(Math.random() * LETTRES.length)];
+  return "VN-" + s;
+}
+
+async function echanger(item) {
+  var code = nouveauCode();
+  ETAT.solde -= item.cout;
+  item.stock -= 1;
+  ETAT.bons.unshift({ code: code, titre: item.nom, note: "Mirage · à utiliser avant 6 h" });
+
+  var svgQr = await qrBon(code);
+
+  corps.innerHTML =
+    '<div class="sheet-ok">' +
+      '<span class="rond">' + picto("check") + "</span>" +
+      '<h3 id="sh-titre">' + item.nom + "</h3>" +
+      '<p class="desc">Montre ce QR au ' + (item.fam === "bar" ? "bar" : "staff") +
+        ". Il le scanne sur sa tablette — ou tape le code à la main si le lecteur est en panne.</p>" +
+      '<div class="qr-carte">' + svgQr + "</div>" +
+      '<p class="qr-code-txt">' + code + "</p>" +
+      '<button class="sheet-cta sobre" id="sh-ok" type="button">Retour à la boutique</button>' +
+      '<p class="sheet-note">Le bon est aussi rangé dans « Mes bons ».</p>' +
+    "</div>";
+
+  $("#sh-ok").addEventListener("click", fermerFeuille);
+  $("#sh-ok").focus();
+
+  majCagnotte(true);
+  rendreListe();
+  rendreOffre();
+  rendreBons(code);
+}
+
+/* ==========================================================
+   DEPART
+   ========================================================== */
+
+majCagnotte(false);
+rendreOffre();
+rendreListe();
+rendreBons(null);
+majRebours();
+setInterval(majRebours, 30000);
+
+</script>
+
+  </body>
+</html>

@@ -3,27 +3,36 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b0d11" />
+    <meta name="theme-color" content="#08090c" />
     <meta name="robots" content="noindex" />
     <title>Boutique ViralNight — preview</title>
     <style>
       /* ============================================================
-         BOUTIQUE VIRALNIGHT — deuxieme onglet de la PWA clubbeur,
-         juste apres la carte. On y depense les points gagnes en
-         postant.
+         BOUTIQUE VIRALNIGHT — deuxieme onglet de la PWA clubbeur.
+         On y depense les points gagnes en postant.
 
-         Regle de fond : ici RIEN ne s'achete en euros. La seule
-         monnaie est le point, et le point ne s'obtient qu'en
-         publiant. Une boutique de jeu vend des gemmes ; celle-ci
-         ne vend rien, elle echange. Le vocabulaire suit partout :
-         « echanger », jamais « acheter ».
+         Regle de fond : rien ne s'achete en euros. La seule monnaie
+         est le point, et il ne s'obtient qu'en publiant. Le verbe
+         est « echanger » partout, jamais « acheter ».
 
-         L'ecran est sombre alors que la carte est claire : on
-         l'ouvre a 2 h du matin dans une salle noire. C'est aussi
-         ce que fait Snapchat (carte claire, reste de l'appli
-         sombre). La barre d'onglets garde exactement la meme
-         geometrie que sur la carte pour qu'on sente qu'on est
-         reste dans la meme application.
+         --- Deuxieme version -------------------------------------
+         La premiere empilait six sections, trois couleurs de
+         famille, un bandeau sur chaque tuile et des illustrations
+         en aplats. Trop de signaux : quand tout crie, plus rien ne
+         ressort, et l'ensemble faisait cheap.
+
+         Ce qui a change :
+         - quatre blocs au lieu de six (le pass tient en une ligne
+           dans l'entete, le bareme est replie en bas) ;
+         - une seule couleur d'accent, le rouge. Les familles ne
+           sont plus que des mots dans les filtres ;
+         - des rangees au lieu d'une grille de tuiles : l'oeil
+           descend une liste au lieu de trier des vignettes ;
+         - des pictogrammes au trait fin, tous du meme poids, au
+           lieu de huit dessins colories chacun a sa facon ;
+         - du contraste : blanc pur sur presque-noir, surfaces
+           eclairees par le haut. C'est ca qui corrige « terne »,
+           pas l'ajout de couleur.
          ============================================================ */
 
       :root {
@@ -67,26 +76,20 @@
         position: relative; width: 100%; height: 100%; border-radius: 43px;
         overflow: hidden; user-select: none;
 
-        /* Les jetons de style de l'appli. Scopes ici plutot que sur
-           :root pour qu'ils ne puissent jamais deteindre sur la
-           page sombre qui entoure le telephone. */
-        --ink:   #f3f5f9;
-        --ink2:  #98a0ad;
-        --ink3:  #6b7280;
-        --bg:    #0a0b0e;
-        --s1:    #131519;
-        --s2:    #1a1d24;
-        --s3:    #23272f;
-        --line:  rgba(255,255,255,.075);
-        --line2: rgba(255,255,255,.15);
-        --vert:  #57d98a;
-
-        /* Une couleur par famille de recompense, trois en tout.
-           Le relief vient des surfaces ; la couleur ne sert qu'a
-           ranger, jamais a decorer. */
-        --f-bar:   #ffb43d;
-        --f-acces: #ff2f45;
-        --f-vip:   #d9b26a;
+        /* Une seule couleur d'accent : le rouge. Il ne sert qu'a
+           trois choses — le jeton, la jauge, le bouton d'echange.
+           Partout ailleurs, du gris. C'est cette discipline-la qui
+           separe le premium de la vitrine de kermesse. */
+        --ink:   #ffffff;
+        --ink2:  #a3aab6;
+        --ink3:  #6e7581;
+        --bg:    #08090c;
+        --s1:    #101217;
+        --s2:    #171a20;
+        --s3:    #20242b;
+        --line:  rgba(255,255,255,.07);
+        --line2: rgba(255,255,255,.13);
+        --accent: #ff2f45;
 
         background: var(--bg); color: var(--ink);
       }
@@ -99,333 +102,274 @@
       }
       .app::-webkit-scrollbar { display: none; }
 
-      .sec { padding: 0 16px; margin-top: 30px; }
-      .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 13px; }
-      .sec-head h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.03em; }
-      .sec-head .sub { font-size: 11.5px; font-weight: 700; color: var(--ink3); margin-left: auto; white-space: nowrap; }
-      .sec-note { margin: 10px 2px 0; font-size: 11.5px; color: var(--ink3); font-weight: 600; line-height: 1.5; }
+      .sec { padding: 0 18px; margin-top: 32px; }
+
+      /* Les titres de section sont des surtitres, pas de grands
+         titres : sur 360 px de large, un h2 de 17 px en gras vole
+         la vedette au contenu qu'il annonce. */
+      .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; padding: 0 2px; }
+      .sec-head h2 {
+        margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--ink3);
+      }
+      .sec-head .sub { font-size: 11px; font-weight: 650; color: var(--ink3); margin-left: auto; white-space: nowrap; }
 
       /* ---------------- La cagnotte ---------------- */
 
       /* Collante : le solde est la seule information qu'on relit a
-         chaque carte de la boutique. Le laisser partir avec le
-         scroll obligerait a remonter en haut pour savoir si on
-         peut se payer ce qu'on est en train de regarder. */
+         chaque ligne de la boutique. */
       .wallet {
         position: sticky; top: 0; z-index: 20;
-        padding: 50px 16px 15px;
-        background: linear-gradient(180deg, #0e1015 0%, #0e1015 60%, rgba(14,16,21,.93) 100%);
+        padding: 54px 18px 18px;
+        background: linear-gradient(180deg, #0d0f14 0%, #0a0c10 70%, rgba(9,11,14,.94) 100%);
         border-bottom: 1px solid var(--line);
-        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       }
-      .wallet-top { display: flex; align-items: flex-end; gap: 10px; }
       .wallet-lab {
-        display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .13em;
-        text-transform: uppercase; color: var(--ink3); margin-bottom: 6px;
+        display: block; font-size: 11px; font-weight: 700; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--ink3); margin-bottom: 9px;
       }
-      .wallet-sum { display: flex; align-items: center; gap: 9px; }
-      .wallet-sum .jeton { width: 26px; height: 26px; flex: 0 0 auto; }
+      .wallet-top { display: flex; align-items: baseline; gap: 10px; }
+      .wallet-sum { display: flex; align-items: center; gap: 10px; }
+      .wallet-sum .jeton { width: 24px; height: 24px; flex: 0 0 auto; align-self: center; }
       .wallet-sum b {
-        font-size: 33px; font-weight: 800; letter-spacing: -.045em; line-height: 1;
+        font-size: 38px; font-weight: 700; letter-spacing: -.05em; line-height: 1;
         font-variant-numeric: tabular-nums; display: inline-block;
       }
-      .wallet-sum i { font-style: normal; font-size: 14px; font-weight: 800; color: var(--ink3); letter-spacing: -.01em; }
-      .wallet-week {
-        margin-left: auto; text-align: right; font-size: 11.5px; font-weight: 750;
-        color: var(--vert); white-space: nowrap; padding-bottom: 3px;
+      .wallet-sum i { font-style: normal; font-size: 15px; font-weight: 600; color: var(--ink3); letter-spacing: -.02em; }
+      .wallet-mois {
+        margin-left: auto; text-align: right; font-size: 11px; font-weight: 650;
+        color: var(--ink3); white-space: nowrap;
       }
-      .wallet-goal { margin-top: 14px; }
-      .wallet-bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,.09); overflow: hidden; }
+
+      .wallet-goal { margin-top: 18px; }
+      .wallet-bar { height: 3px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
       .wallet-bar span {
-        display: block; height: 100%; width: 0; border-radius: 99px;
-        background: linear-gradient(90deg, #ff6a3d, var(--red));
-        transition: width .5s cubic-bezier(.22,.75,.3,1);
+        display: block; height: 100%; width: 0; border-radius: 99px; background: var(--accent);
+        transition: width .55s cubic-bezier(.22,.75,.3,1);
       }
-      .wallet-goal p { margin: 8px 0 0; font-size: 11.5px; font-weight: 700; color: var(--ink2); }
-      .wallet-goal p em { font-style: normal; color: var(--ink); }
+      .wallet-goal p { margin: 9px 0 0; font-size: 12px; font-weight: 600; color: var(--ink2); letter-spacing: -.01em; }
+      .wallet-goal p em { font-style: normal; color: var(--ink); font-weight: 700; }
 
       /* Le solde tressaille une fois quand il change : sans ca, la
-         deduction apres un echange passe totalement inapercue. */
+         deduction apres un echange passe inapercue. */
       @keyframes majSolde {
         0%   { transform: scale(1); }
-        40%  { transform: scale(1.12); color: var(--red); }
+        40%  { transform: scale(1.09); }
         100% { transform: scale(1); }
       }
-      .wallet-sum b.maj { animation: majSolde .5s cubic-bezier(.3,1.4,.5,1); }
+      .wallet-sum b.maj { animation: majSolde .45s cubic-bezier(.3,1.3,.5,1); }
 
       .jeton { display: block; }
 
-      /* ---------------- Les offres du soir ---------------- */
+      /* ---------------- L'offre du soir ---------------- */
 
-      .rail {
-        display: flex; gap: 11px; overflow-x: auto; scroll-snap-type: x mandatory;
-        padding: 2px 16px 4px; margin: 0 -16px; scrollbar-width: none;
+      /* Une seule, en grand. La premiere version en alignait trois
+         dans un carrousel : trois offres « exceptionnelles » cote a
+         cote, aucune ne l'est plus. */
+      .soir {
+        position: relative; display: flex; align-items: center; gap: 15px; width: 100%;
+        text-align: left; font-family: inherit; color: inherit; cursor: pointer;
+        padding: 17px 18px; border-radius: 18px; border: 1px solid var(--line2);
+        background:
+          radial-gradient(120% 150% at 82% -30%, rgba(255,47,69,.13), transparent 62%),
+          linear-gradient(180deg, #16181e, #101217);
       }
-      .rail::-webkit-scrollbar { display: none; }
-      .rail > * { scroll-snap-align: start; }
+      .soir:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+      .soir .plinthe { width: 56px; height: 56px; border-radius: 17px; }
+      .soir .plinthe svg { width: 28px; height: 28px; }
+      .soir-txt { flex: 1; min-width: 0; }
+      .soir-txt strong { display: block; font-size: 15.5px; font-weight: 700; letter-spacing: -.03em; }
+      .soir-txt .court { display: block; font-size: 12px; font-weight: 550; color: var(--ink2); margin-top: 3px; line-height: 1.4; }
+      .soir-prix { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
+      .soir-prix .marque {
+        font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+        color: var(--accent); border: 1px solid rgba(255,47,69,.42); border-radius: 5px; padding: 3px 7px;
+      }
+      .soir-prix del { font-size: 12px; font-weight: 600; color: var(--ink3); }
+      .soir .fleche { flex: 0 0 auto; display: block; }
+      .soir .fleche svg { width: 15px; height: 15px; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
 
-      .deal {
-        position: relative; flex: 0 0 auto; width: 214px; text-align: left;
-        border: 1px solid var(--line2); border-radius: 20px; padding: 0; cursor: pointer;
-        background: var(--s1); color: inherit; font-family: inherit; overflow: hidden;
-      }
-      .deal:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-      .deal-art {
-        height: 118px; display: grid; place-items: center; position: relative;
-        background: radial-gradient(105% 88% at 50% 6%, var(--glow), transparent 70%), #0f1116;
-        border-bottom: 1px solid var(--line);
-      }
-      .deal-art svg.reco { width: 82px; height: 95px; }
-      .deal-body { padding: 12px 13px 13px; }
-      .deal-body strong { display: block; font-size: 14.5px; font-weight: 800; letter-spacing: -.028em; }
-      .deal-body .sous { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink2); margin-top: 3px; line-height: 1.4; min-height: 32px; }
-      .deal-cost { display: flex; align-items: center; gap: 6px; margin-top: 9px; }
-      .deal-cost .jeton { width: 16px; height: 16px; flex: 0 0 auto; }
-      .deal-cost b { font-size: 15px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-      .deal-cost del { font-size: 12px; font-weight: 700; color: var(--ink3); }
-      .deal-cost .offert { font-size: 14.5px; font-weight: 800; letter-spacing: -.02em; color: var(--vert); }
-
-      /* Le coin rabattu, facon etiquette de solde. Un seul par carte,
-         et jamais sur la grille du bas : si tout crie, plus rien ne
-         ressort. */
-      .flag {
-        position: absolute; top: 11px; right: 0; z-index: 2;
-        background: var(--c); color: #0a0b0e;
-        font-size: 10.5px; font-weight: 900; letter-spacing: .04em;
-        padding: 4px 9px 4px 10px; border-radius: 7px 0 0 7px;
-      }
-
-      .compte {
-        position: absolute; left: 10px; bottom: 10px; z-index: 2;
-        display: flex; align-items: center; gap: 5px;
-        background: rgba(8,9,12,.78); border: 1px solid var(--line2);
-        border-radius: 999px; padding: 4px 9px 4px 7px;
-        font-size: 10.5px; font-weight: 800; color: var(--ink);
-        font-variant-numeric: tabular-nums;
-      }
-      .compte svg { width: 11px; height: 11px; stroke: var(--red); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-
-      /* ---------------- Le pass du mois ---------------- */
-
-      .pass {
-        border: 1px solid var(--line); border-radius: 20px; overflow: hidden;
-        background: linear-gradient(180deg, #171a21, #101217);
-      }
-      .pass-head { display: flex; align-items: center; gap: 11px; padding: 15px 16px 0; }
-      .pass-head .sceau {
-        width: 40px; height: 40px; border-radius: 12px; flex: 0 0 auto; display: grid; place-items: center;
-        background: radial-gradient(90% 90% at 30% 20%, rgba(217,178,106,.3), rgba(217,178,106,.07));
-        border: 1px solid rgba(217,178,106,.35);
-      }
-      .pass-head .sceau svg { width: 21px; height: 21px; stroke: var(--f-vip); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-      .pass-head strong { display: block; font-size: 15px; font-weight: 800; letter-spacing: -.028em; }
-      .pass-head .dit { display: block; font-size: 11.5px; font-weight: 650; color: var(--ink2); margin-top: 2px; }
-
-      .track { position: relative; padding: 24px 16px 14px; }
-      .track-rail {
-        position: absolute; left: 44px; right: 44px; top: 38px; height: 4px;
-        border-radius: 99px; background: rgba(255,255,255,.09);
-      }
-      .track-rail span {
-        display: block; height: 100%; width: 0; border-radius: 99px;
-        background: linear-gradient(90deg, var(--f-vip), #f2d7a0);
-        transition: width .6s cubic-bezier(.22,.75,.3,1);
-      }
-      .track-steps { position: relative; display: flex; justify-content: space-between; }
-      .step { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 56px; text-align: center; }
-      .step .pastille {
-        width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
-        background: var(--s3); border: 2px solid rgba(255,255,255,.14);
-      }
-      .step .pastille svg { width: 14px; height: 14px; stroke: var(--ink3); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-      .step.ok .pastille { background: var(--f-vip); border-color: var(--f-vip); }
-      .step.ok .pastille svg { stroke: #12141a; stroke-width: 2.9; }
-      .step.now .pastille { border-color: var(--f-vip); box-shadow: 0 0 0 4px rgba(217,178,106,.16); }
-      .step.now .pastille svg { stroke: var(--f-vip); }
-      .step b { font-size: 10px; font-weight: 800; color: var(--ink2); font-variant-numeric: tabular-nums; }
-      .step.ok b, .step.now b { color: var(--ink); }
-      .step i { font-style: normal; font-size: 9px; font-weight: 700; color: var(--ink3); line-height: 1.25; }
-
-      .pass-foot {
-        display: flex; align-items: center; gap: 10px; padding: 12px 16px 14px;
-        border-top: 1px solid var(--line); background: rgba(255,255,255,.018);
-      }
-      .pass-foot p { margin: 0; font-size: 11.5px; font-weight: 700; color: var(--ink2); line-height: 1.45; }
-      .pass-foot p em { font-style: normal; color: var(--f-vip); }
+      .soir-note { margin: 12px 2px 0; font-size: 11.5px; font-weight: 550; color: var(--ink3); line-height: 1.5; }
 
       /* ---------------- Filtres ---------------- */
 
-      .filtres { display: flex; gap: 7px; overflow-x: auto; padding: 0 16px 2px; margin: 0 -16px 13px; scrollbar-width: none; }
+      .filtres { display: flex; gap: 7px; overflow-x: auto; padding: 0 18px 2px; margin: 0 -18px 12px; scrollbar-width: none; }
       .filtres::-webkit-scrollbar { display: none; }
       .filtre {
-        flex: 0 0 auto; font-family: inherit; font-size: 12.5px; font-weight: 750; letter-spacing: -.01em;
-        color: var(--ink2); background: var(--s2); border: 1px solid var(--line);
-        border-radius: 999px; padding: 7px 14px; cursor: pointer;
+        flex: 0 0 auto; font-family: inherit; font-size: 12.5px; font-weight: 600; letter-spacing: -.015em;
+        color: var(--ink2); background: transparent; border: 1px solid var(--line2);
+        border-radius: 999px; padding: 6px 14px; cursor: pointer;
       }
       .filtre:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-      .filtre[aria-pressed="true"] { background: var(--ink); color: #0a0b0e; border-color: var(--ink); }
+      .filtre[aria-pressed="true"] { background: var(--ink); color: #08090c; border-color: var(--ink); font-weight: 700; }
 
-      /* ---------------- Grille des recompenses ---------------- */
+      /* ---------------- La liste des recompenses ---------------- */
 
-      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+      /* Des rangees, pas des tuiles. Une tuile oblige a comparer des
+         vignettes ; une rangee se lit de gauche a droite — objet,
+         nom, prix — et se parcourt du pouce sans reflechir. */
+      .liste {
+        border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+        background: var(--s1);
+      }
+      .ligne {
+        display: flex; align-items: center; gap: 14px; width: 100%;
+        padding: 13px 15px; border: 0; border-top: 1px solid var(--line);
+        background: none; text-align: left; font-family: inherit; color: inherit; cursor: pointer;
+      }
+      .ligne:first-child { border-top: 0; }
+      .ligne:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
 
-      .reco-card {
-        position: relative; text-align: left; padding: 0; cursor: pointer; overflow: hidden;
-        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
-        color: inherit; font-family: inherit; display: flex; flex-direction: column;
+      .plinthe {
+        width: 48px; height: 48px; border-radius: 14px; flex: 0 0 auto;
+        display: grid; place-items: center;
+        background: linear-gradient(180deg, #1c2027, #14171c);
+        border: 1px solid var(--line2);
       }
-      .reco-card:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-      .reco-card .bandeau {
-        font-size: 9px; font-weight: 900; letter-spacing: .11em; text-transform: uppercase;
-        color: var(--c); background: rgba(0,0,0,.5); border-bottom: 1px solid var(--line);
-        padding: 5px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      .reco-card .art {
-        flex: 1; min-height: 106px; display: grid; place-items: center;
-        background: radial-gradient(112% 84% at 50% 8%, var(--glow), transparent 72%);
-      }
-      .reco-card .art svg.reco { width: 72px; height: 84px; }
-      .reco-card .nom {
-        padding: 10px 11px 0; font-size: 12.5px; font-weight: 800; letter-spacing: -.022em;
-        line-height: 1.25; min-height: 32px;
-      }
-      .reco-card .prix {
-        display: flex; align-items: center; gap: 6px; margin-top: 9px;
-        padding: 9px 11px; background: var(--s2); border-top: 1px solid var(--line);
-      }
-      .reco-card .prix .jeton { width: 15px; height: 15px; flex: 0 0 auto; }
-      .reco-card .prix b { font-size: 14.5px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-      .reco-card .prix .go {
-        margin-left: auto; width: 21px; height: 21px; border-radius: 50%; background: var(--red);
-        display: grid; place-items: center; flex: 0 0 auto;
-      }
-      .reco-card .prix .go svg { width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .plinthe svg { width: 25px; height: 25px; stroke: rgba(255,255,255,.86); fill: none; stroke-width: 1.55; stroke-linecap: round; stroke-linejoin: round; display: block; }
 
-      /* Hors budget : on ne masque pas la recompense, on affiche ce
-         qu'il manque. C'est ce chiffre-la qui donne envie de
-         reposter, pas un cadenas muet. */
-      .reco-card.loin .art { opacity: .36; }
-      .reco-card.loin .nom { color: var(--ink2); }
-      .reco-card.loin .prix b { color: var(--ink3); }
-      .reco-card .manque {
-        margin-left: auto; font-size: 10.5px; font-weight: 800; color: var(--ink3);
-        white-space: nowrap; font-variant-numeric: tabular-nums;
+      .ligne-txt { flex: 1; min-width: 0; }
+      .ligne-txt strong { display: block; font-size: 14px; font-weight: 650; letter-spacing: -.025em; }
+      .ligne-txt .court {
+        display: block; font-size: 11.5px; font-weight: 550; color: var(--ink3); margin-top: 2px;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
-      .reco-card.epuise { opacity: .45; }
+      .ligne-prix { flex: 0 0 auto; text-align: right; }
+      .ligne-prix .cout { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+      .ligne-prix .jeton { width: 14px; height: 14px; flex: 0 0 auto; }
+      .ligne-prix b { font-size: 15px; font-weight: 700; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+      .ligne-prix .manque {
+        display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3);
+        margin-top: 2px; font-variant-numeric: tabular-nums;
+      }
 
-      /* ---------------- Comment gagner des points ---------------- */
-
-      .gains { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--s1); }
-      .gain { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-top: 1px solid var(--line); }
-      .gain:first-child { border-top: 0; }
-      .gain .ic { width: 32px; height: 32px; border-radius: 10px; background: var(--s3); display: grid; place-items: center; flex: 0 0 auto; }
-      .gain .ic svg { width: 16px; height: 16px; stroke: var(--ink2); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-      .gain p { margin: 0; flex: 1; min-width: 0; font-size: 12.5px; font-weight: 750; letter-spacing: -.012em; line-height: 1.3; }
-      .gain p span { display: block; font-size: 11px; font-weight: 600; color: var(--ink3); margin-top: 2px; }
-      .gain .val { font-size: 13px; font-weight: 800; color: var(--vert); white-space: nowrap; font-variant-numeric: tabular-nums; }
+      /* Hors budget : on n'ecrase pas la ligne, on baisse le picto
+         et le prix, et on dit ce qu'il manque. C'est ce chiffre-la
+         qui fait reposter, pas un cadenas. */
+      .ligne.loin .plinthe { opacity: .42; }
+      .ligne.loin .ligne-txt strong { color: var(--ink2); }
+      .ligne.loin .ligne-prix b { color: var(--ink3); }
+      .ligne.epuise { opacity: .4; }
 
       /* ---------------- Mes bons ---------------- */
 
-      .bons { display: grid; gap: 9px; }
+      .bons { display: grid; gap: 8px; }
       .bon {
-        display: flex; align-items: center; gap: 12px; padding: 11px 13px;
-        border: 1px dashed var(--line2); border-radius: 16px; background: rgba(255,255,255,.022);
+        display: flex; align-items: center; gap: 13px; padding: 13px 15px;
+        border: 1px solid var(--line2); border-radius: 16px; background: var(--s1);
       }
       .bon .code {
-        font-family: var(--mono); font-size: 12.5px; font-weight: 700; letter-spacing: .06em;
-        color: var(--ink); background: #0a0b0e; border: 1px solid var(--line2);
-        border-radius: 9px; padding: 8px 9px; flex: 0 0 auto;
+        font-family: var(--mono); font-size: 12.5px; font-weight: 600; letter-spacing: .07em;
+        color: var(--ink); background: #08090c; border: 1px solid var(--line2);
+        border-radius: 9px; padding: 8px 10px; flex: 0 0 auto;
       }
       .bon .txt { flex: 1; min-width: 0; }
-      .bon .txt strong { display: block; font-size: 13px; font-weight: 800; letter-spacing: -.022em; }
-      .bon .txt span { display: block; font-size: 11px; font-weight: 650; color: var(--ink3); margin-top: 2px; }
+      .bon .txt strong { display: block; font-size: 13.5px; font-weight: 650; letter-spacing: -.025em; }
+      .bon .txt span { display: block; font-size: 11px; font-weight: 550; color: var(--ink3); margin-top: 2px; }
 
       @keyframes bonNeuf { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
-      .bon.neuf { animation: bonNeuf .4s cubic-bezier(.22,.75,.3,1); border-color: rgba(87,217,138,.5); }
+      .bon.neuf { animation: bonNeuf .4s cubic-bezier(.22,.75,.3,1); }
+
+      /* ---------------- Le bareme, replie ---------------- */
+
+      /* Une ligne fermee au lieu d'une section de cinq entrees : on
+         lit le bareme une fois dans sa vie, pas a chaque ouverture
+         de la boutique. */
+      .bareme { border: 1px solid var(--line); border-radius: 18px; background: var(--s1); overflow: hidden; }
+      .bareme summary {
+        display: flex; align-items: center; gap: 10px; padding: 15px;
+        cursor: pointer; list-style: none; font-size: 13.5px; font-weight: 650; letter-spacing: -.025em;
+      }
+      .bareme summary::-webkit-details-marker { display: none; }
+      .bareme summary:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+      .bareme summary .chev { margin-left: auto; display: block; transition: transform .25s ease; }
+      .bareme summary .chev svg { width: 14px; height: 14px; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+      .bareme[open] summary .chev { transform: rotate(180deg); }
+      .gain { display: flex; align-items: baseline; gap: 12px; padding: 11px 15px; border-top: 1px solid var(--line); }
+      .gain p { margin: 0; flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
+      .gain p span { display: block; font-size: 11px; font-weight: 500; color: var(--ink3); margin-top: 1px; }
+      .gain .val { font-size: 13px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
 
       /* ---------------- Onglets (identiques a la carte) ---------------- */
 
       .tabs {
         position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
-        background: #0e1015; border-top: 1px solid var(--line2);
+        background: #0c0e12; border-top: 1px solid var(--line2);
         display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
       }
       .tab { display: grid; place-items: center; background: none; border: 0; cursor: pointer; position: relative; padding: 0; }
       .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
-      .tab svg { width: 28px; height: 28px; stroke: #eef0f4; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; }
-      .tab.on svg { stroke: var(--red); }
-      .tab .badge { position: absolute; top: -4px; right: 50%; margin-right: -21px; width: 11px; height: 11px; border-radius: 50%; background: var(--red); }
+      .tab svg { width: 28px; height: 28px; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; }
+      .tab svg { stroke: #767c88; }
+      .tab.on svg { stroke: var(--accent); }
+      .tab .badge { position: absolute; top: -4px; right: 50%; margin-right: -21px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
 
       /* ---------------- Feuille de detail ---------------- */
 
       .voile {
-        position: absolute; inset: 0; z-index: 30; background: rgba(4,5,7,.66);
+        position: absolute; inset: 0; z-index: 30; background: rgba(3,4,6,.7);
         opacity: 0; pointer-events: none; transition: opacity .3s ease;
       }
       .voile.on { opacity: 1; pointer-events: auto; }
 
       .sheet {
         position: absolute; left: 0; right: 0; bottom: 0; z-index: 34; overflow: hidden;
-        background: #14171d; border-top: 1px solid var(--line2);
-        border-radius: 24px 24px 0 0; padding: 10px 20px 24px;
-        box-shadow: 0 -14px 44px rgba(0,0,0,.6);
+        background: #101318; border-top: 1px solid var(--line2);
+        border-radius: 26px 26px 0 0; padding: 10px 22px 26px;
+        box-shadow: 0 -14px 44px rgba(0,0,0,.66);
         transform: translateY(calc(100% + 24px)); transition: transform .36s cubic-bezier(.22,.75,.3,1);
       }
       .sheet.up { transform: translateY(0); }
       @media (prefers-reduced-motion: reduce) {
-        .sheet, .voile { transition: none; }
-        .wallet-bar span, .track-rail span { transition: none; }
+        .sheet, .voile, .bareme summary .chev { transition: none; }
+        .wallet-bar span { transition: none; }
         .wallet-sum b.maj, .bon.neuf { animation: none; }
       }
 
-      .grab { width: 40px; height: 4.5px; border-radius: 99px; background: rgba(255,255,255,.16); margin: 0 auto 12px; }
+      .grab { width: 40px; height: 4.5px; border-radius: 99px; background: rgba(255,255,255,.15); margin: 0 auto 18px; }
       .sheet-close {
-        position: absolute; top: 15px; right: 15px; z-index: 3;
-        width: 32px; height: 32px; border-radius: 50%; background: rgba(35,39,47,.9); border: 0;
+        position: absolute; top: 16px; right: 16px; z-index: 3;
+        width: 30px; height: 30px; border-radius: 50%; background: var(--s3); border: 0;
         cursor: pointer; display: grid; place-items: center;
       }
       .sheet-close:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-      .sheet-close svg { width: 14px; height: 14px; stroke: var(--ink2); stroke-width: 2.4; fill: none; stroke-linecap: round; }
+      .sheet-close svg { width: 13px; height: 13px; stroke: var(--ink2); stroke-width: 2.4; fill: none; stroke-linecap: round; display: block; }
 
-      .sheet-art {
-        height: 128px; margin: 0 -20px 6px; display: grid; place-items: center;
-        background: radial-gradient(72% 100% at 50% 20%, var(--glow), transparent 70%);
-      }
-      .sheet-art svg.reco { width: 106px; height: 122px; }
+      .sheet-plinthe { width: 68px; height: 68px; border-radius: 20px; margin-bottom: 16px; }
+      .sheet-plinthe svg { width: 34px; height: 34px; }
+
       .sheet-fam {
-        display: block; font-size: 9.5px; font-weight: 900; letter-spacing: .12em;
-        text-transform: uppercase; color: var(--c); margin-bottom: 7px;
+        display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .13em;
+        text-transform: uppercase; color: var(--ink3); margin-bottom: 8px;
       }
-      .sheet h3 { margin: 0 0 7px; font-size: 21px; font-weight: 800; letter-spacing: -.038em; line-height: 1.15; }
-      .sheet .desc { margin: 0 0 14px; font-size: 13px; color: var(--ink2); font-weight: 600; line-height: 1.5; }
-      .sheet ul.regles { display: grid; gap: 7px; margin: 0 0 17px; padding: 0; }
-      .sheet ul.regles li { list-style: none; display: flex; gap: 8px; font-size: 12px; font-weight: 650; color: var(--ink2); line-height: 1.45; }
-      .sheet ul.regles svg { width: 13px; height: 13px; margin-top: 3px; flex: 0 0 auto; stroke: var(--ink3); fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+      .sheet h3 { margin: 0 0 8px; font-size: 23px; font-weight: 700; letter-spacing: -.045em; line-height: 1.12; }
+      .sheet .desc { margin: 0 0 16px; font-size: 13.5px; color: var(--ink2); font-weight: 550; line-height: 1.5; }
+      .sheet ul.regles { display: grid; gap: 8px; margin: 0 0 20px; padding: 0; }
+      .sheet ul.regles li { list-style: none; display: flex; gap: 9px; font-size: 12px; font-weight: 550; color: var(--ink2); line-height: 1.45; }
+      .sheet ul.regles svg { width: 13px; height: 13px; margin-top: 3px; flex: 0 0 auto; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
       .sheet-cta {
         display: flex; align-items: center; justify-content: center; gap: 9px;
-        width: 100%; background: var(--red); color: #fff; border: 0;
-        border-radius: 16px; padding: 16px; font-family: inherit; font-size: 15.5px;
-        font-weight: 800; letter-spacing: -.015em; cursor: pointer;
+        width: 100%; background: var(--accent); color: #fff; border: 0;
+        border-radius: 15px; padding: 16px; font-family: inherit; font-size: 15px;
+        font-weight: 700; letter-spacing: -.02em; cursor: pointer;
       }
       .sheet-cta:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-      .sheet-cta .jeton { width: 17px; height: 17px; flex: 0 0 auto; }
+      .sheet-cta .jeton { width: 16px; height: 16px; flex: 0 0 auto; }
       .sheet-cta[disabled] { background: var(--s3); color: var(--ink3); cursor: not-allowed; }
-      .sheet-note { text-align: center; font-size: 11.5px; color: var(--ink3); margin: 10px 0 0; font-weight: 650; line-height: 1.45; }
+      .sheet-cta.sobre { background: var(--ink); color: #08090c; }
+      .sheet-note { text-align: center; font-size: 11.5px; color: var(--ink3); margin: 11px 0 0; font-weight: 550; line-height: 1.45; }
 
       /* Confirmation : le meme panneau bascule sur le code, on
-         n'empile pas une deuxieme feuille par-dessus. */
-      .sheet-ok { text-align: center; padding: 8px 0 0; }
-      .sheet-ok .rond {
-        width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center;
-        background: rgba(87,217,138,.14); border: 1px solid rgba(87,217,138,.4);
-      }
-      .sheet-ok .rond svg { width: 26px; height: 26px; stroke: var(--vert); fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-      .sheet-ok h3 { font-size: 19px; margin-bottom: 6px; }
+         n'empile pas une deuxieme surface par-dessus. */
+      .sheet-ok { text-align: center; padding: 4px 0 0; }
+      .sheet-ok .sheet-plinthe { margin: 0 auto 16px; }
+      .sheet-ok h3 { font-size: 20px; margin-bottom: 7px; }
       .sheet-ok .grand-code {
-        font-family: var(--mono); font-size: 26px; font-weight: 700; letter-spacing: .14em;
-        padding: 15px 0; margin: 16px 0 12px; border-radius: 14px;
-        background: #0a0b0e; border: 1px dashed var(--line2);
+        font-family: var(--mono); font-size: 27px; font-weight: 600; letter-spacing: .16em;
+        padding: 17px 0; margin: 18px 0 14px; border-radius: 14px;
+        background: #08090c; border: 1px solid var(--line2);
       }
 
       /* ---------------- Notes de la page ---------------- */
@@ -457,7 +401,7 @@
 
 <div class="wrap">
 
-  <span class="kicker">PWA clubbeur · écran boutique · 18 août 2026</span>
+  <span class="kicker">PWA clubbeur · écran boutique · version 2 · 18 août 2026</span>
   <h1>Boutique ViralNight</h1>
   <p class="lede">
     Le deuxième onglet, après la carte. On y dépense les points gagnés en postant :
@@ -472,16 +416,14 @@
         <div class="app" id="app">
 
           <header class="wallet">
+            <span class="wallet-lab">Ma cagnotte</span>
             <div class="wallet-top">
-              <div>
-                <span class="wallet-lab">Ma cagnotte</span>
-                <div class="wallet-sum">
-                  <span class="jeton" id="w-jeton"></span>
-                  <b id="w-solde">0</b>
-                  <i>pts</i>
-                </div>
+              <div class="wallet-sum">
+                <span class="jeton" id="w-jeton"></span>
+                <b id="w-solde">0</b>
+                <i>pts</i>
               </div>
-              <span class="wallet-week" id="w-semaine"></span>
+              <span class="wallet-mois" id="w-mois"></span>
             </div>
             <div class="wallet-goal">
               <div class="wallet-bar"><span id="w-jauge"></span></div>
@@ -494,30 +436,8 @@
               <h2>Ce soir au Mirage</h2>
               <span class="sub" id="o-fin"></span>
             </div>
-            <div class="rail" id="rail-offres"></div>
-            <p class="sec-note">Ces offres tombent à la fermeture. Elles ne sont pas reportées.</p>
-          </section>
-
-          <section class="sec">
-            <div class="sec-head"><h2>Pass du mois</h2></div>
-            <div class="pass">
-              <div class="pass-head">
-                <span class="sceau">
-                  <svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.2 5.5.8-4 3.9 1 5.6-5-2.7-5 2.7 1-5.6-4-3.9 5.5-.8z"/></svg>
-                </span>
-                <span>
-                  <strong id="p-titre">Pass Nuit · août</strong>
-                  <span class="dit" id="p-dit"></span>
-                </span>
-              </div>
-              <div class="track">
-                <div class="track-rail"><span id="p-jauge"></span></div>
-                <div class="track-steps" id="p-steps"></div>
-              </div>
-              <div class="pass-foot">
-                <p id="p-note"></p>
-              </div>
-            </div>
+            <div id="zone-soir"></div>
+            <p class="soir-note" id="o-note"></p>
           </section>
 
           <section class="sec">
@@ -531,19 +451,22 @@
               <button class="filtre" type="button" data-fam="acces" aria-pressed="false">Accès</button>
               <button class="filtre" type="button" data-fam="vip" aria-pressed="false">VIP</button>
             </div>
-            <div class="grille" id="grille"></div>
+            <div class="liste" id="liste"></div>
           </section>
 
           <section class="sec">
             <div class="sec-head"><h2>Mes bons</h2></div>
             <div class="bons" id="bons"></div>
-            <p class="sec-note">Un bon se montre au bar ou à l'entrée. Le club le valide sur sa tablette.</p>
           </section>
 
           <section class="sec">
-            <div class="sec-head"><h2>Gagner des points</h2></div>
-            <div class="gains" id="gains"></div>
-            <p class="sec-note">Les points arrivent une fois la publication vérifiée par le club, en général sous 24 h.</p>
+            <details class="bareme">
+              <summary>
+                Comment gagner des points
+                <span class="chev"><svg viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></svg></span>
+              </summary>
+              <div id="gains"></div>
+            </details>
           </section>
 
         </div>
@@ -583,22 +506,22 @@
 
   <div class="notes">
     <div class="note">
-      <span class="mark">Le parti pris</span>
-      <h3>Une boutique qui ne vend rien</h3>
+      <span class="mark">Ce qui a changé</span>
+      <h3>Moins de signaux, plus de contraste</h3>
       <p>
-        Les boutiques de jeu dont je me suis inspiré vendent une monnaie contre
-        de l'argent. Ici, la seule monnaie est le point, et il ne s'obtient qu'en
-        publiant. Aucun prix en euros nulle part, et le verbe est « échanger »,
-        jamais « acheter ».
+        Quatre blocs au lieu de six, une seule couleur d'accent au lieu de trois,
+        des rangées au lieu de tuiles à bandeaux, des pictogrammes d'un poids
+        unique. Le « terne » venait des gris moyens, pas du noir : c'est le
+        contraste qui a été remonté, pas la couleur ajoutée.
       </p>
     </div>
     <div class="note">
       <span class="mark">Les chiffres</span>
       <h3>Le vrai barème du produit</h3>
       <p>
-        Les coûts et les stocks viennent de <code>DEFAULT_REWARDS</code>, et les
-        gains de <code>DEFAULT_POINT_RULES</code> — les mêmes valeurs que la
-        landing et le dashboard du gérant. Rien n'est inventé pour la maquette.
+        Les coûts et les stocks viennent de <code>DEFAULT_REWARDS</code>, les gains
+        de <code>DEFAULT_POINT_RULES</code> — les mêmes valeurs que la landing et
+        le dashboard du gérant. Rien n'est inventé pour la maquette.
       </p>
     </div>
     <div class="note warn">
@@ -622,331 +545,174 @@
 <script type="module">
 
 /* ==========================================================
-   LES ILLUSTRATIONS
+   LES PICTOGRAMMES
 
-   Dessinees a la main plutot que prises dans une banque
-   d'icones : une recompense de club se reconnait a l'objet
-   (le verre, le cintre, le cordon), et un pictogramme au
-   trait ne donne pas cette matiere-la.
-
-   Chaque fonction rend un SVG complet. Les identifiants de
-   clip sont numerotes : le meme verre est dessine plusieurs
-   fois par ecran (grille + feuille), et deux clipPath de
-   meme id se marchent dessus.
+   Tous au trait, tous du meme poids (1,55 px sur une grille de
+   24), tous de la meme couleur. La premiere version les
+   coloriait chacun a sa facon : huit petits dessins qui se
+   disputaient l'attention. Ici c'est la silhouette de l'objet
+   qui porte l'information — un verre reste un verre en une
+   seule ligne.
    ========================================================== */
 
-var uid = 0;
-function nid(p) { return p + (++uid); }
+var PICTOS = {
+  cocktail: '<path d="M4.6 6h14.8L12 14.4z"/><path d="M12 14.4V19"/><path d="M8.4 19.4h7.2"/><path d="M17.2 3.4 14 8.6"/>',
+  shot:     '<path d="M8 8h8l-1 10.6a1.6 1.6 0 0 1-1.6 1.5h-2.8A1.6 1.6 0 0 1 9 18.6z"/><path d="M8.35 12.6h7.3"/>',
+  pinte:    '<path d="M6.9 4.4h10.2l-1.2 14.2a1.9 1.9 0 0 1-1.9 1.8h-4a1.9 1.9 0 0 1-1.9-1.8z"/><path d="M7.2 8.3h9.6"/>',
+  cintre:   '<path d="M12 4.4a2.3 2.3 0 0 1 2.3 2.3c0 1.7-2.3 1.3-2.3 3.1"/><path d="M12 9.8 3.9 16.3a1 1 0 0 0 .7 1.9h14.8a1 1 0 0 0 .7-1.9z"/>',
+  ticket:   '<path d="M3.4 8h17.2a1.4 1.4 0 0 1 1.4 1.4v1.1a1.7 1.7 0 0 0 0 3.4v1.1a1.4 1.4 0 0 1-1.4 1.4H3.4A1.4 1.4 0 0 1 2 15.9v-1.1a1.7 1.7 0 0 0 0-3.4V9.4A1.4 1.4 0 0 1 3.4 8z"/><path d="M14.6 8.5v1.8M14.6 13.7v1.8"/>',
+  bracelet: '<circle cx="12" cy="13.6" r="6.7"/><path d="M9.6 3.2h4.8a1.2 1.2 0 0 1 1.2 1.2v2.4a1.2 1.2 0 0 1-1.2 1.2H9.6a1.2 1.2 0 0 1-1.2-1.2V4.4a1.2 1.2 0 0 1 1.2-1.2z"/>',
+  bouteille:'<path d="M10.2 3h3.6v3.3c0 1.9 2.5 2.6 2.5 5.3v8.1a1.7 1.7 0 0 1-1.7 1.7H9.4a1.7 1.7 0 0 1-1.7-1.7v-8.1c0-2.7 2.5-3.4 2.5-5.3z"/><path d="M7.8 13.2h8.4"/>',
+  cordon:   '<path d="M4.6 7.9q7.4 5.8 14.8 0"/><path d="M4.6 8v11M19.4 8v11"/><circle cx="4.6" cy="6.1" r="1.5"/><circle cx="19.4" cy="6.1" r="1.5"/><path d="M2.4 19.6h4.4M17.2 19.6h4.4"/>',
+  fleche:   '<path d="M9 5.5 15.5 12 9 18.5"/>',
+  check:    '<path d="M4.5 12.5 9 17 19.5 6.5"/>'
+};
 
-function svg(inner) {
-  return '<svg class="reco" viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-    '<ellipse cx="50" cy="107" rx="25" ry="4.5" fill="rgba(0,0,0,.45)"/>' + inner + '</svg>';
+function picto(nom) {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true">' + PICTOS[nom] + "</svg>";
+}
+function plinthe(nom, cls) {
+  return '<span class="plinthe ' + (cls || "") + '">' + picto(nom) + "</span>";
 }
 
-/* --- Le cocktail : coupe, rondelle d'agrume, paille. --- */
-function artCocktail() {
-  return svg(
-    '<path d="M29 31h42L50 58z" fill="#ff4d6d"/>' +
-    '<path d="M29 31h42l-5 5H34z" fill="#ff8ea5" opacity=".75"/>' +
-    '<path d="M22 26h56L50 62z" fill="none" stroke="#e2e9f3" stroke-width="3.4" stroke-linejoin="round"/>' +
-    '<path d="M50 62v33" stroke="#e2e9f3" stroke-width="3.4" stroke-linecap="round"/>' +
-    '<path d="M34 97h32" stroke="#e2e9f3" stroke-width="3.8" stroke-linecap="round"/>' +
-    '<path d="M63 12 55 40" stroke="#ffb43d" stroke-width="3.4" stroke-linecap="round"/>' +
-    '<circle cx="73" cy="22" r="9" fill="#ffd166" stroke="#e59a12" stroke-width="2"/>' +
-    '<path d="M73 13v18M64 22h18" stroke="#e59a12" stroke-width="1.5"/>'
-  );
-}
-
-/* --- Le shot : petit verre epais et son quartier de citron. --- */
-function artShot() {
-  var id = nid("shot");
-  var corps = "M35 48h30l-3 45a7 7 0 0 1-7 6H45a7 7 0 0 1-7-6z";
-  return svg(
-    '<defs><clipPath id="' + id + '"><path d="' + corps + '"/></clipPath></defs>' +
-    '<path d="' + corps + '" fill="#e9eef5" opacity=".14"/>' +
-    '<g clip-path="url(#' + id + ')">' +
-      '<rect x="30" y="64" width="40" height="42" fill="#dc8f28"/>' +
-      '<rect x="30" y="64" width="40" height="6" fill="#f7bd5e"/>' +
-    '</g>' +
-    '<path d="' + corps + '" fill="none" stroke="#e2e9f3" stroke-width="3.2" stroke-linejoin="round"/>' +
-    '<ellipse cx="50" cy="48" rx="15" ry="4.4" fill="none" stroke="#e2e9f3" stroke-width="3.2"/>' +
-    '<path d="M64 33a11 11 0 0 1 0 22z" fill="#a8d84f" stroke="#7cae30" stroke-width="2" stroke-linejoin="round"/>' +
-    '<path d="M64 38v12M64 44h8" stroke="#7cae30" stroke-width="1.5"/>'
-  );
-}
-
-/* --- La pinte : reprise de la carte, ou elle sert deja de
-       marqueur d'ami. Le meme objet d'un ecran a l'autre. --- */
-function artPinte() {
-  var id = nid("pinte");
-  var corps = "M31 30h38l-4 62a8 8 0 0 1-8 7H43a8 8 0 0 1-8-7z";
-  return svg(
-    '<defs><clipPath id="' + id + '"><path d="' + corps + '"/></clipPath></defs>' +
-    '<path d="' + corps + '" fill="#dfe9ef" opacity=".2"/>' +
-    '<g clip-path="url(#' + id + ')">' +
-      '<rect x="28" y="44" width="46" height="60" fill="#f0a91e"/>' +
-      '<rect x="28" y="74" width="46" height="30" fill="#d98a09"/>' +
-      '<circle cx="42" cy="60" r="3" fill="#ffd98a" opacity=".75"/>' +
-      '<circle cx="59" cy="76" r="2.2" fill="#ffd98a" opacity=".65"/>' +
-      '<rect x="37" y="30" width="6" height="70" fill="#fff" opacity=".45"/>' +
-    '</g>' +
-    '<g><ellipse cx="50" cy="44" rx="21" ry="9" fill="#fffaf0"/>' +
-      '<circle cx="37" cy="39" r="8" fill="#fffaf0"/>' +
-      '<circle cx="50" cy="35" r="9.5" fill="#fffdf7"/>' +
-      '<circle cx="63" cy="39" r="8" fill="#fffaf0"/></g>' +
-    '<path d="' + corps + '" fill="none" stroke="#c9d6de" stroke-width="2.8" stroke-linejoin="round"/>'
-  );
-}
-
-/* --- Le vestiaire : le cintre et son numero. --- */
-function artCintre() {
-  return svg(
-    '<path d="M50 24a8.5 8.5 0 0 1 8.5 8.5c0 5-8.5 4-8.5 10.5" fill="none" stroke="#cfd8e4" stroke-width="4" stroke-linecap="round"/>' +
-    '<path d="M50 43 21 74a4 4 0 0 0 3 6.6h52a4 4 0 0 0 3-6.6z" fill="none" stroke="#cfd8e4" stroke-width="4.4" stroke-linejoin="round"/>' +
-    '<rect x="55" y="76" width="24" height="19" rx="4" fill="#1b2029" stroke="#ff2f45" stroke-width="2.6" transform="rotate(9 67 85)"/>' +
-    '<text x="67" y="92" transform="rotate(9 67 85)" text-anchor="middle" font-family="ui-monospace, monospace" font-size="12" font-weight="700" fill="#ff2f45">07</text>'
-  );
-}
-
-/* --- Le coupe-file : le ticket dechirable et son eclair. --- */
-function artTicket() {
-  return svg(
-    '<g transform="rotate(-7 50 62)">' +
-      '<rect x="13" y="40" width="74" height="44" rx="9" fill="#1d222b" stroke="#ff2f45" stroke-width="3"/>' +
-      '<path d="M62 42v40" stroke="#ff2f45" stroke-width="2.2" stroke-dasharray="4 5"/>' +
-      '<path d="M38 48l-10 17h9l-3 12 12-18h-9z" fill="#ff2f45"/>' +
-      '<path d="M69 55h10M69 62h10M69 69h6" stroke="#ff2f45" stroke-width="2.4" stroke-linecap="round" opacity=".5"/>' +
-    '</g>'
-  );
-}
-
-/* --- L'entree : le bracelet de soiree. --- */
-function artBracelet() {
-  return svg(
-    '<ellipse cx="50" cy="60" rx="29" ry="29" fill="none" stroke="#ff2f45" stroke-width="10"/>' +
-    '<ellipse cx="50" cy="60" rx="29" ry="29" fill="none" stroke="#ff6b7d" stroke-width="3" opacity=".55"/>' +
-    '<rect x="38" y="20" width="24" height="17" rx="5" fill="#1d222b" stroke="#ff2f45" stroke-width="3"/>' +
-    '<path d="M50 24.5l1.9 3.9 4.1.6-3 2.9.7 4.2-3.7-2-3.7 2 .7-4.2-3-2.9 4.1-.6z" fill="#ff2f45"/>'
-  );
-}
-
-/* --- La table : la bouteille et son cierge. --- */
-function artBouteille() {
-  return svg(
-    '<path d="M44 24h12v18c0 5 12 8 12 20v34a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V62c0-12 12-15 12-20z" fill="#17392c" stroke="#d9b26a" stroke-width="3" stroke-linejoin="round"/>' +
-    '<rect x="34" y="68" width="32" height="21" rx="3" fill="#d9b26a" opacity=".92"/>' +
-    '<path d="M40 75h20M40 81h13" stroke="#17392c" stroke-width="2.2" stroke-linecap="round"/>' +
-    '<rect x="42" y="20" width="16" height="8" rx="2.5" fill="#d9b26a"/>' +
-    '<path d="M50 14V6M41 17l-5-5M59 17l5-5" stroke="#f2d7a0" stroke-width="2.8" stroke-linecap="round"/>'
-  );
-}
-
-/* --- Le carre VIP : le cordon et ses deux poteaux. --- */
-function artCordon() {
-  return svg(
-    '<path d="M22 48q28 28 56 0" fill="none" stroke="#d9b26a" stroke-width="5.5" stroke-linecap="round"/>' +
-    '<g stroke="#c3c9d3" stroke-width="4.5" stroke-linecap="round"><path d="M22 50v44"/><path d="M78 50v44"/></g>' +
-    '<circle cx="22" cy="43" r="6.5" fill="#d9b26a"/>' +
-    '<circle cx="78" cy="43" r="6.5" fill="#d9b26a"/>' +
-    '<path d="M12 97h20M68 97h20" stroke="#c3c9d3" stroke-width="5.5" stroke-linecap="round"/>'
-  );
-}
-
-/* --- Les points doubles : le jeton, en grand, marque x2. --- */
-function artDouble() {
-  return svg(
-    '<circle cx="44" cy="56" r="28" fill="#2a1216" stroke="#ff2f45" stroke-width="3"/>' +
-    '<path d="M44 40l3.6 8.4L56 52l-8.4 3.6L44 64l-3.6-8.4L32 52l8.4-3.6z" fill="#ff2f45"/>' +
-    '<circle cx="66" cy="72" r="24" fill="#0f1116" stroke="#ff2f45" stroke-width="3"/>' +
-    '<text x="66" y="80" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="800" fill="#ff2f45">×2</text>'
-  );
-}
-
-/* --- Le jeton de points, decline en petit partout. --- */
+/* --- Le jeton de points : la seule tache de couleur de la
+       liste, et la raison pour laquelle un prix se repere sans
+       avoir a lire le mot « pts ». --- */
 function jeton(taille) {
-  return '<svg class="jeton" viewBox="0 0 24 24" width="' + taille + '" height="' + taille + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-    '<circle cx="12" cy="12" r="10.5" fill="#ff2f45"/>' +
-    '<circle cx="12" cy="12" r="10.5" fill="none" stroke="#ff8a99" stroke-width="1.2" opacity=".6"/>' +
-    '<path d="M12 5.6l1.7 3.9 3.9 1.7-3.9 1.7-1.7 3.9-1.7-3.9-3.9-1.7 3.9-1.7z" fill="#fff"/>' +
-    '</svg>';
+  return '<svg class="jeton" viewBox="0 0 24 24" width="' + taille + '" height="' + taille +
+    '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="10" fill="#ff2f45"/>' +
+    '<path d="M12 6.2l1.6 3.7 3.7 1.6-3.7 1.6-1.6 3.7-1.6-3.7L6.7 11.5l3.7-1.6z" fill="#fff"/>' +
+    "</svg>";
 }
-
-/* --- Petits pictogrammes au trait, eux, pour les lignes de
-       texte : la, une illustration serait du bruit. --- */
-var ICO = {
-  horloge: '<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/>',
-  check:   '<path d="M4 12.5l5 5L20 6.5"/>',
-  puce:    '<circle cx="12" cy="12" r="3"/>',
-  qr:      '<rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><path d="M13.5 13.5h3v3M20.5 16.5v4M16.5 20.5h-3"/>',
-  story:   '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1"/>',
-  video:   '<rect x="2.5" y="5" width="14" height="14" rx="3"/><path d="M16.5 10l5-3v10l-5-3z"/>',
-  flamme:  '<path d="M12 2.5s5.5 4.5 5.5 9.5a5.5 5.5 0 0 1-11 0c0-2 1-3.5 1-3.5s.5 2 2 2c0-3.5 2.5-6 2.5-8z"/>',
-  couronne:'<path d="M3 7l4 4 5-6.5L17 11l4-4v10.5H3z"/>'
-};
-function ico(nom, cls) {
-  return '<svg viewBox="0 0 24 24" class="' + (cls || "") + '" aria-hidden="true">' + ICO[nom] + '</svg>';
-}
-
-/* ==========================================================
-   LES FAMILLES — trois, pas une de plus. Elles servent a
-   ranger la grille, pas a la decorer.
-   ========================================================== */
-
-var FAMILLES = {
-  bar:   { nom: "Bar",   c: "#ffb43d", glow: "rgba(255,180,61,.16)" },
-  acces: { nom: "Accès", c: "#ff2f45", glow: "rgba(255,47,69,.15)" },
-  vip:   { nom: "VIP",   c: "#d9b26a", glow: "rgba(217,178,106,.15)" }
-};
 
 /* ==========================================================
    LE CATALOGUE
 
-   Les cinq premieres lignes sont exactement DEFAULT_REWARDS
-   de dashboardData.js — memes libelles, memes couts, memes
-   stocks. Les trois autres (pinte, table, carre) etendent la
-   grille vers le haut : une boutique ou tout est deja
-   accessible n'a plus rien a offrir au bout de deux soirees.
+   Les cinq premieres lignes sont exactement DEFAULT_REWARDS de
+   dashboardData.js — memes libelles, memes couts, memes stocks.
+   Les trois autres (pinte, table, carre) etendent la liste vers
+   le haut : une boutique ou tout est accessible des la deuxieme
+   soiree n'a plus rien a offrir.
+
+   Les familles ne sont plus que des mots : elles servent aux
+   filtres et a l'entete de la feuille, plus a colorer quoi que
+   ce soit.
    ========================================================== */
+
+var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
 
 var RECOMPENSES = [
   {
-    id: "vestiaire", nom: "Vestiaire offert", cout: 40, fam: "acces", stock: 100,
-    art: artCintre, bandeau: "Le plus pris",
+    id: "vestiaire", nom: "Vestiaire offert", cout: 40, fam: "acces", stock: 100, picto: "cintre",
+    court: "Ton manteau, sans payer",
     desc: "Ton manteau au vestiaire, sans payer.",
     regles: ["Valable la soirée où tu l'échanges", "À montrer au vestiaire avant de déposer"]
   },
   {
-    id: "shot", nom: "Shot maison", cout: 70, fam: "bar", stock: 50,
-    art: artShot, bandeau: null,
+    id: "shot", nom: "Shot maison", cout: 70, fam: "bar", stock: 50, picto: "shot",
+    court: "Servi directement au bar",
     desc: "Un shot de la maison, servi directement au bar.",
     regles: ["Un seul shot par soirée", "Le bar peut demander ta carte d'identité"]
   },
   {
-    id: "pinte", nom: "Pinte offerte", cout: 90, fam: "bar", stock: 40,
-    art: artPinte, bandeau: null,
+    id: "pinte", nom: "Pinte offerte", cout: 90, fam: "bar", stock: 40, picto: "pinte",
+    court: "La pression, la pinte entière",
     desc: "La pression du bar, la pinte entière.",
     regles: ["Un seul verre par soirée", "Le bar peut demander ta carte d'identité"]
   },
   {
-    id: "cocktail", nom: "Cocktail signature", cout: 110, fam: "bar", stock: 30,
-    art: artCocktail, bandeau: "Le préféré",
+    id: "cocktail", nom: "Cocktail signature", cout: 110, fam: "bar", stock: 30, picto: "cocktail",
+    court: "Le cocktail de la carte",
     desc: "Le cocktail signature de la carte, préparé au bar.",
     regles: ["Hors carte premium", "Un seul cocktail par soirée", "Le bar peut demander ta carte d'identité"]
   },
   {
-    id: "coupefile", nom: "Coupe-file", cout: 160, fam: "acces", stock: 20,
-    art: artTicket, bandeau: null,
+    id: "coupefile", nom: "Coupe-file", cout: 160, fam: "acces", stock: 20, picto: "ticket",
+    court: "Toi + 1, devant la file",
     desc: "Tu passes devant la file, avec une personne.",
     regles: ["Toi + 1 accompagnant", "Valable jusqu'à 2 h du matin"]
   },
   {
-    id: "entree", nom: "Entrée gratuite", cout: 240, fam: "acces", stock: 10,
-    art: artBracelet, bandeau: null,
+    id: "entree", nom: "Entrée gratuite", cout: 240, fam: "acces", stock: 10, picto: "bracelet",
+    court: "L'entrée offerte, ce soir",
     desc: "L'entrée offerte pour toi, ce soir.",
     regles: ["Valable la soirée où tu l'échanges", "Hors soirées spéciales et privatisations"]
   },
   {
-    id: "table", nom: "Table + bouteille", cout: 900, fam: "vip", stock: 2,
-    art: artBouteille, bandeau: null,
+    id: "table", nom: "Table + bouteille", cout: 900, fam: "vip", stock: 2, picto: "bouteille",
+    court: "Jusqu'à 6 personnes",
     desc: "Une table réservée et une bouteille pour ton groupe.",
     regles: ["Sur réservation, 24 h à l'avance", "Jusqu'à 6 personnes", "Bouteille au choix dans la sélection maison"]
   },
   {
-    id: "carre", nom: "Carré VIP pour 4", cout: 1400, fam: "vip", stock: 1,
-    art: artCordon, bandeau: null,
+    id: "carre", nom: "Carré VIP pour 4", cout: 1400, fam: "vip", stock: 1, picto: "cordon",
+    court: "Toute la nuit, entrées comprises",
     desc: "Le carré VIP pour toi et trois amis, toute la nuit.",
     regles: ["Sur réservation, 48 h à l'avance", "Entrées comprises pour 4", "Une seule attribution par soirée"]
   }
 ];
 
-/* --- Les offres du soir : elles ne vivent que cette nuit-la.
-       C'est ce qui les distingue du catalogue, et la raison
-       du compte a rebours affiche sur chacune. --- */
+/* --- Une seule offre du soir, en grand. Trois offres
+       « exceptionnelles » cote a cote, aucune ne l'est plus. --- */
 
-var OFFRES = [
-  {
-    id: "o-shot", nom: "Shot offert", sous: "Dès ta première story de la soirée",
-    fam: "bar", art: artShot, cout: 0, avant: 70, flag: "OFFERT", reste: null,
-    desc: "Poste ta première story de la soirée avec le tag du Mirage, et le shot est offert.",
-    regles: ["Story validée par le club", "Une seule fois par soirée", "Le bar peut demander ta carte d'identité"]
-  },
-  {
-    id: "o-cocktail", nom: "Cocktail signature", sous: "Moitié prix jusqu'à la fermeture",
-    fam: "bar", art: artCocktail, cout: 55, avant: 110, flag: "−50 %", reste: 7,
-    desc: "Le cocktail signature à moitié prix en points, réservé aux vingt premiers de la soirée.",
-    regles: ["Sept exemplaires restants", "Un seul cocktail par soirée", "Le bar peut demander ta carte d'identité"]
-  },
-  {
-    id: "o-double", nom: "Points doublés", sous: "Chaque vue compte double jusqu'à 1 h",
-    fam: "acces", art: artDouble, cout: null, flag: "CE SOIR", reste: null, info: true,
-    desc: "Jusqu'à 1 h du matin, chaque vue sur tes stories et tes vidéos rapporte le double de points.",
-    regles: ["Actif automatiquement, rien à échanger", "S'applique aux contenus postés avant 1 h", "Cumulable avec le bonus viral"]
-  }
-];
-
-/* --- Le pass du mois : la progression longue, celle qui fait
-       revenir la semaine d'apres. Le dernier palier vaut le
-       bonus « ambassadeur du mois » du barème (350 pts). --- */
-
-var PASS = {
-  mois: "août",
-  cumul: 430,
-  paliers: [
-    { pts: 100,  lab: "Vestiaire" },
-    { pts: 250,  lab: "Shot" },
-    { pts: 500,  lab: "Cocktail" },
-    { pts: 800,  lab: "Coupe-file" },
-    { pts: 1200, lab: "Ambassadeur" }
-  ]
+var OFFRE = {
+  id: "o-shot", nom: "Shot offert", court: "Dès ta première story de la soirée",
+  fam: "bar", picto: "shot", cout: 0, avant: 70, stock: 20,
+  desc: "Poste ta première story de la soirée avec le tag du Mirage, et le shot est offert.",
+  regles: ["Story validée par le club", "Une seule fois par soirée", "Le bar peut demander ta carte d'identité"]
 };
 
-/* --- Le barème, mot pour mot depuis DEFAULT_POINT_RULES. --- */
+/* --- Le pass tient desormais en une ligne dans l'entete : la
+       piste a paliers etait le bloc le plus « jeu mobile » de
+       l'ecran, et celui qu'on ne consultait jamais. --- */
+
+var MOIS = { nom: "août", cumul: 430 };
+
+/* --- Le bareme, mot pour mot depuis DEFAULT_POINT_RULES. --- */
 
 var GAINS = [
-  { ic: "qr",       t: "Scanner le QR au club",   s: "À l'entrée, une fois par soirée",  v: 15 },
-  { ic: "story",    t: "1 000 vues sur ta story", s: "Story taguée, une fois validée",   v: 80 },
-  { ic: "video",    t: "1 000 vues sur ta vidéo", s: "TikTok, Reel ou Short",            v: 25 },
-  { ic: "flamme",   t: "Contenu qui décolle",     s: "Bonus au-delà de 10 000 vues",     v: 90 },
-  { ic: "couronne", t: "Ambassadeur du mois",     s: "Le plus gros total du mois",       v: 350 }
+  { t: "Scanner le QR au club",   s: "À l'entrée, une fois par soirée", v: 15 },
+  { t: "1 000 vues sur ta story", s: "Story taguée, une fois validée",  v: 80 },
+  { t: "1 000 vues sur ta vidéo", s: "TikTok, Reel ou Short",           v: 25 },
+  { t: "Contenu qui décolle",     s: "Bonus au-delà de 10 000 vues",    v: 90 },
+  { t: "Ambassadeur du mois",     s: "Le plus gros total du mois",      v: 350 }
 ];
 
 /* ==========================================================
-   L'ETAT
-
-   Tout vit en memoire : c'est une maquette, un rechargement
-   remet le solde et les stocks a leur valeur de depart. Le
+   L'ETAT — tout vit en memoire : c'est une maquette. Le
    branchement Supabase remplacera cet objet, pas le rendu.
    ========================================================== */
 
 var ETAT = {
   solde: 185,
-  semaine: 130,
   bons: [
     { code: "VN-7XQ2", titre: "Vestiaire offert", note: "Mirage · à utiliser avant 6 h" }
   ]
 };
 
 var $ = function (s) { return document.querySelector(s); };
+var nb = function (n) { return n.toLocaleString("fr-FR"); };
 
 /* ==========================================================
    LA CAGNOTTE
    ========================================================== */
 
-$("#w-jeton").outerHTML = jeton(26);
-$("#w-semaine").textContent = "+" + ETAT.semaine + " cette semaine";
+$("#w-jeton").outerHTML = jeton(24);
+$("#w-mois").textContent = nb(MOIS.cumul) + " pts en " + MOIS.nom;
 
 /* L'objectif affiche est toujours la premiere recompense hors
-   budget, pas une cible fixe : c'est la seule facon que la
-   barre reste utile quand le solde monte. */
+   budget, jamais une cible fixe : c'est la seule facon que la
+   jauge reste utile a mesure que le solde monte. */
 function prochaine() {
-  var reste = RECOMPENSES.filter(function (r) { return r.cout > ETAT.solde && r.stock > 0; });
-  reste.sort(function (a, b) { return a.cout - b.cout; });
-  return reste[0] || null;
+  return RECOMPENSES
+    .filter(function (r) { return r.cout > ETAT.solde && r.stock > 0; })
+    .sort(function (a, b) { return a.cout - b.cout; })[0] || null;
 }
 
 function majCagnotte(anime) {
   var b = $("#w-solde");
-  b.textContent = ETAT.solde.toLocaleString("fr-FR");
+  b.textContent = nb(ETAT.solde);
   if (anime) {
     b.classList.remove("maj");
     void b.offsetWidth; // force le rejeu de l'animation
@@ -955,10 +721,9 @@ function majCagnotte(anime) {
 
   var cible = prochaine();
   if (cible) {
-    var part = Math.max(4, Math.round((ETAT.solde / cible.cout) * 100));
-    $("#w-jauge").style.width = Math.min(100, part) + "%";
+    $("#w-jauge").style.width = Math.min(100, Math.max(3, Math.round((ETAT.solde / cible.cout) * 100))) + "%";
     $("#w-objectif").innerHTML =
-      "Encore <em>" + (cible.cout - ETAT.solde).toLocaleString("fr-FR") + " pts</em> avant " + cible.nom.toLowerCase() + ".";
+      "Encore <em>" + nb(cible.cout - ETAT.solde) + " pts</em> avant " + cible.nom.toLowerCase() + ".";
   } else {
     $("#w-jauge").style.width = "100%";
     $("#w-objectif").innerHTML = "<em>Tout le catalogue est à ta portée.</em>";
@@ -966,22 +731,18 @@ function majCagnotte(anime) {
 }
 
 /* ==========================================================
-   LE COMPTE A REBOURS
+   LA FENETRE DE LA NUIT
 
-   La nuit court de 23 h a 6 h : les offres du soir tombent a
-   la fermeture, et le club recharge les siennes le lendemain.
-
-   Hors de cette fenetre, on annonce l'ouverture au lieu du
-   rebours : afficher « encore 14 h 58 » a trois heures de
-   l'apres-midi ne dit rien a personne, et fait passer une
-   offre de la nuit pour une offre permanente.
+   La nuit court de 23 h a 6 h. Hors de cette plage, on annonce
+   l'ouverture plutot qu'un rebours : « encore 14 h 58 » a trois
+   heures de l'apres-midi ne dit rien a personne, et fait passer
+   une offre de la nuit pour une offre permanente.
    ========================================================== */
 
 var OUVERTURE = 23, FERMETURE = 6;
 
 function fenetreSoir() {
-  var n = new Date();
-  var h = n.getHours();
+  var n = new Date(), h = n.getHours();
   if (h >= FERMETURE && h < OUVERTURE) return { ouvert: false, texte: "dès 23 h" };
 
   var fin = new Date(n);
@@ -995,101 +756,49 @@ function fenetreSoir() {
 function majRebours() {
   var f = fenetreSoir();
   $("#o-fin").textContent = f.ouvert ? "encore " + f.texte : f.texte;
-  Array.prototype.forEach.call(document.querySelectorAll(".compte b"), function (e) {
-    e.textContent = f.texte;
-  });
 }
 
 /* ==========================================================
-   LES OFFRES DU SOIR
+   L'OFFRE DU SOIR
    ========================================================== */
 
-function rendreOffres() {
-  var rail = $("#rail-offres");
-  rail.innerHTML = "";
+function rendreOffre() {
+  var z = $("#zone-soir");
+  z.innerHTML = "";
 
-  OFFRES.forEach(function (o) {
-    var f = FAMILLES[o.fam];
-    var b = document.createElement("button");
-    b.className = "deal";
-    b.type = "button";
-    b.style.setProperty("--glow", f.glow);
-    b.setAttribute("aria-label", o.nom + " — " + o.sous);
-
-    var cout;
-    if (o.info) cout = '<span class="offert">Actif ce soir</span>';
-    else if (o.cout === 0) cout = '<span class="offert">Offert</span>' +
-      '<del>' + o.avant + ' pts</del>';
-    else cout = jeton(16) + "<b>" + o.cout + "</b><del>" + o.avant + "</del>";
-
-    b.innerHTML =
-      '<span class="flag" style="--c:' + f.c + '">' + o.flag + "</span>" +
-      '<span class="deal-art">' + o.art() +
-        '<span class="compte">' + ico("horloge") + "<b></b></span>" +
+  var epuise = OFFRE.stock <= 0;
+  var b = document.createElement("button");
+  b.className = "soir" + (epuise ? " epuise" : "");
+  b.type = "button";
+  b.setAttribute("aria-label", OFFRE.nom + " — " + OFFRE.court);
+  b.innerHTML =
+    plinthe(OFFRE.picto) +
+    '<span class="soir-txt">' +
+      "<strong>" + OFFRE.nom + "</strong>" +
+      '<span class="court">' + OFFRE.court + "</span>" +
+      '<span class="soir-prix">' +
+        '<span class="marque">' + (epuise ? "Épuisé" : "Offert") + "</span>" +
+        "<del>" + OFFRE.avant + " pts</del>" +
       "</span>" +
-      '<span class="deal-body">' +
-        "<strong>" + o.nom + "</strong>" +
-        '<span class="sous">' + o.sous + "</span>" +
-        '<span class="deal-cost">' + cout + "</span>" +
-      "</span>";
+    "</span>" +
+    '<span class="fleche">' + picto("fleche") + "</span>";
 
-    b.addEventListener("click", function () { ouvrir(o, b); });
-    rail.appendChild(b);
-  });
+  b.addEventListener("click", function () { ouvrir(OFFRE, b); });
+  z.appendChild(b);
+
+  $("#o-note").textContent =
+    "Points doublés sur tout ce que tu postes jusqu'à 1 h. Les offres du soir tombent à la fermeture.";
 }
 
 /* ==========================================================
-   LE PASS DU MOIS
-   ========================================================== */
-
-function rendrePass() {
-  var p = PASS, n = p.paliers.length;
-  $("#p-titre").textContent = "Pass Nuit · " + p.mois;
-  $("#p-dit").textContent = p.cumul.toLocaleString("fr-FR") + " pts gagnés ce mois-ci";
-
-  var atteints = p.paliers.filter(function (x) { return p.cumul >= x.pts; }).length;
-  var suivant = p.paliers[atteints] || null;
-
-  /* La barre suit les pastilles, pas les valeurs : les paliers
-     sont espaces regulierement a l'ecran alors que leurs couts
-     ne le sont pas. Une progression calculee sur les points
-     bruts se decalerait visiblement des pastilles. */
-  var avance;
-  if (!suivant) avance = 100;
-  else {
-    var bas = atteints === 0 ? 0 : p.paliers[atteints - 1].pts;
-    var frac = (p.cumul - bas) / (suivant.pts - bas);
-    avance = ((atteints - 1 + frac) / (n - 1)) * 100;
-  }
-  $("#p-jauge").style.width = Math.max(0, Math.min(100, avance)) + "%";
-
-  var steps = $("#p-steps");
-  steps.innerHTML = "";
-  p.paliers.forEach(function (x, i) {
-    var etat = p.cumul >= x.pts ? "ok" : (i === atteints ? "now" : "");
-    var e = document.createElement("span");
-    e.className = "step " + etat;
-    e.innerHTML =
-      '<span class="pastille">' + ico(etat === "ok" ? "check" : "puce") + "</span>" +
-      "<b>" + x.pts + "</b><i>" + x.lab + "</i>";
-    steps.appendChild(e);
-  });
-
-  $("#p-note").innerHTML = suivant
-    ? "Encore <em>" + (suivant.pts - p.cumul) + " pts ce mois-ci</em> pour débloquer " +
-      suivant.lab.toLowerCase() + "."
-    : "<em>Pass terminé.</em> Tu es ambassadeur du mois.";
-}
-
-/* ==========================================================
-   LA GRILLE
+   LA LISTE
    ========================================================== */
 
 var filtreActif = "tout";
 
-function rendreGrille() {
-  var g = $("#grille");
-  g.innerHTML = "";
+function rendreListe() {
+  var z = $("#liste");
+  z.innerHTML = "";
 
   var liste = RECOMPENSES.filter(function (r) {
     return filtreActif === "tout" || r.fam === filtreActif;
@@ -1098,36 +807,29 @@ function rendreGrille() {
   $("#g-compte").textContent = liste.length + (liste.length > 1 ? " récompenses" : " récompense");
 
   liste.forEach(function (r) {
-    var f = FAMILLES[r.fam];
     var loin = r.cout > ETAT.solde;
     var epuise = r.stock <= 0;
 
     var b = document.createElement("button");
-    b.className = "reco-card" + (loin ? " loin" : "") + (epuise ? " epuise" : "");
+    b.className = "ligne" + (loin ? " loin" : "") + (epuise ? " epuise" : "");
     b.type = "button";
-    b.style.setProperty("--c", f.c);
-    b.style.setProperty("--glow", f.glow);
     b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
 
-    /* Le bandeau dit d'abord la rarete quand il en reste peu :
-       « il en reste 2 » pese plus lourd qu'un nom de famille. */
-    var bandeau = epuise ? "Épuisé"
-      : (r.stock <= 5 ? "Il en reste " + r.stock : (r.bandeau || f.nom));
-
-    var pied = epuise
-      ? '<span class="manque">Épuisé</span>'
-      : (loin
-        ? '<span class="manque">encore ' + (r.cout - ETAT.solde).toLocaleString("fr-FR") + "</span>"
-        : '<span class="go">' + ico("check") + "</span>");
+    /* Le sous-titre dit la rarete quand il en reste peu :
+       « il en reste 2 » pese plus lourd qu'un descriptif. */
+    var sous = epuise ? "Épuisé pour ce soir"
+      : (r.stock <= 5 ? "Il en reste " + r.stock : r.court);
 
     b.innerHTML =
-      '<span class="bandeau">' + bandeau + "</span>" +
-      '<span class="art">' + r.art() + "</span>" +
-      '<span class="nom">' + r.nom + "</span>" +
-      '<span class="prix">' + jeton(15) + "<b>" + r.cout.toLocaleString("fr-FR") + "</b>" + pied + "</span>";
+      plinthe(r.picto) +
+      '<span class="ligne-txt"><strong>' + r.nom + '</strong><span class="court">' + sous + "</span></span>" +
+      '<span class="ligne-prix">' +
+        '<span class="cout">' + jeton(14) + "<b>" + nb(r.cout) + "</b></span>" +
+        (loin && !epuise ? '<span class="manque">encore ' + nb(r.cout - ETAT.solde) + "</span>" : "") +
+      "</span>";
 
     b.addEventListener("click", function () { ouvrir(r, b); });
-    g.appendChild(b);
+    z.appendChild(b);
   });
 }
 
@@ -1137,7 +839,7 @@ Array.prototype.forEach.call(document.querySelectorAll(".filtre"), function (btn
     Array.prototype.forEach.call(document.querySelectorAll(".filtre"), function (o) {
       o.setAttribute("aria-pressed", String(o === btn));
     });
-    rendreGrille();
+    rendreListe();
   });
 });
 
@@ -1163,10 +865,8 @@ function rendreBons(neufCode) {
   GAINS.forEach(function (g) {
     var e = document.createElement("div");
     e.className = "gain";
-    e.innerHTML =
-      '<span class="ic">' + ico(g.ic) + "</span>" +
-      "<p>" + g.t + "<span>" + g.s + "</span></p>" +
-      '<span class="val">+' + g.v + " pts</span>";
+    e.innerHTML = "<p>" + g.t + "<span>" + g.s + "</span></p>" +
+      '<span class="val">+' + g.v + "</span>";
     z.appendChild(e);
   });
 })();
@@ -1174,10 +874,10 @@ function rendreBons(neufCode) {
 /* ==========================================================
    LA FEUILLE DE DETAIL
 
-   Meme composant que sur la carte : elle monte du bas, se
-   ferme au voile, a la croix ou avec Echap. L'echange
-   bascule le contenu de cette meme feuille sur le code,
-   plutot que d'empiler une deuxieme surface par-dessus.
+   Meme composant que sur la carte : elle monte du bas, se ferme
+   au voile, a la croix ou avec Echap. L'echange bascule le
+   contenu de cette meme feuille sur le code, plutot que
+   d'empiler une deuxieme surface par-dessus.
    ========================================================== */
 
 var sheet = $("#sheet"), voile = $("#voile"), corps = $("#sh-corps");
@@ -1185,50 +885,41 @@ var rendeur = null; // le bouton d'ou l'on vient, pour lui rendre le focus
 
 function ouvrir(item, src) {
   rendeur = src || null;
-  var f = FAMILLES[item.fam];
-  var stock = typeof item.stock === "number" ? item.stock : item.reste;
-  var epuise = stock === 0;
-  var loin = typeof item.cout === "number" && item.cout > ETAT.solde;
+  var epuise = item.stock <= 0;
+  var loin = item.cout > ETAT.solde;
 
-  var entete = f.nom;
-  if (typeof stock === "number") entete += " · il en reste " + stock;
+  var entete = FAMILLES[item.fam] + " · il en reste " + item.stock;
 
-  var cta;
-  if (item.info) {
-    cta = '<button class="sheet-cta" id="sh-cta" type="button">Compris</button>';
-  } else if (epuise) {
+  var cta, note;
+  if (epuise) {
     cta = '<button class="sheet-cta" type="button" disabled>Épuisé pour ce soir</button>';
+    note = "Reviens demain, le club recharge ses stocks chaque soirée.";
   } else if (loin) {
-    cta = '<button class="sheet-cta" type="button" disabled>Encore ' +
-      (item.cout - ETAT.solde).toLocaleString("fr-FR") + ' pts</button>';
+    cta = '<button class="sheet-cta" type="button" disabled>Encore ' + nb(item.cout - ETAT.solde) + " pts</button>";
+    note = "Il te manque " + nb(item.cout - ETAT.solde) +
+      " pts. Une story taguée à 1 000 vues en rapporte 80.";
+  } else if (item.cout === 0) {
+    cta = '<button class="sheet-cta" id="sh-cta" type="button">Récupérer mon bon</button>';
+    note = "Offert ce soir. Ton solde ne bouge pas.";
   } else {
-    cta = '<button class="sheet-cta" id="sh-cta" type="button">Échanger ' +
-      jeton(17) + "<span>" + item.cout.toLocaleString("fr-FR") + "</span></button>";
+    cta = '<button class="sheet-cta" id="sh-cta" type="button">Échanger ' + jeton(16) +
+      "<span>" + nb(item.cout) + "</span></button>";
+    note = "Le bon est valable ce soir. Il te restera " + nb(ETAT.solde - item.cout) + " pts.";
   }
 
-  var note;
-  if (item.info) note = "Rien à faire : le doublement est déjà actif sur ton compte.";
-  else if (epuise) note = "Reviens demain, le club recharge ses stocks chaque soirée.";
-  else if (loin) note = "Il te manque " + (item.cout - ETAT.solde).toLocaleString("fr-FR") + " pts. Une story taguée à 1 000 vues en rapporte 80.";
-  else note = "Le bon est valable ce soir. Il te restera " +
-    (ETAT.solde - item.cout).toLocaleString("fr-FR") + " pts.";
-
   corps.innerHTML =
-    '<div class="sheet-art" style="--glow:' + f.glow + '">' + item.art() + "</div>" +
-    '<span class="sheet-fam" style="--c:' + f.c + '">' + entete + "</span>" +
+    plinthe(item.picto, "sheet-plinthe") +
+    '<span class="sheet-fam">' + entete + "</span>" +
     '<h3 id="sh-titre">' + item.nom + "</h3>" +
     '<p class="desc">' + item.desc + "</p>" +
     '<ul class="regles">' + item.regles.map(function (r) {
-      return "<li>" + ico("check") + "<span>" + r + "</span></li>";
+      return "<li>" + picto("check") + "<span>" + r + "</span></li>";
     }).join("") + "</ul>" +
     cta +
     '<p class="sheet-note">' + note + "</p>";
 
   var btn = $("#sh-cta");
-  if (btn) btn.addEventListener("click", function () {
-    if (item.info) { fermer(); return; }
-    echanger(item);
-  });
+  if (btn) btn.addEventListener("click", function () { echanger(item); });
 
   sheet.classList.add("up");
   sheet.setAttribute("aria-hidden", "false");
@@ -1254,8 +945,8 @@ document.addEventListener("keydown", function (e) {
    L'ECHANGE
    ========================================================== */
 
-/* Alphabet volontairement ampute du 0/O et du 1/I : le code
-   est lu a voix haute au bar, dans le bruit. */
+/* Alphabet volontairement ampute du 0/O et du 1/I : le code est
+   lu a voix haute au bar, dans le bruit. */
 var LETTRES = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function nouveauCode() {
@@ -1267,39 +958,33 @@ function nouveauCode() {
 function echanger(item) {
   var code = nouveauCode();
   ETAT.solde -= item.cout;
-  if (typeof item.stock === "number") item.stock -= 1;
-  if (typeof item.reste === "number") item.reste -= 1;
+  item.stock -= 1;
 
-  ETAT.bons.unshift({
-    code: code,
-    titre: item.nom,
-    note: "Mirage · à utiliser avant 6 h"
-  });
+  ETAT.bons.unshift({ code: code, titre: item.nom, note: "Mirage · à utiliser avant 6 h" });
 
-  var f = FAMILLES[item.fam];
   corps.innerHTML =
     '<div class="sheet-ok">' +
-      '<span class="rond">' + ico("check") + "</span>" +
+      plinthe("check", "sheet-plinthe") +
       '<h3 id="sh-titre">' + item.nom + "</h3>" +
       '<p class="desc">Montre ce code au ' + (item.fam === "bar" ? "bar" : "staff") +
         ". Il le valide sur sa tablette.</p>" +
       '<div class="grand-code">' + code + "</div>" +
-      '<button class="sheet-cta" id="sh-ok" type="button" style="background:' + f.c +
-        ';color:#0a0b0e">Retour à la boutique</button>' +
-      '<p class="sheet-note">Le bon est aussi rangé dans « Mes bons », plus bas.</p>' +
+      '<button class="sheet-cta sobre" id="sh-ok" type="button">Retour à la boutique</button>' +
+      '<p class="sheet-note">Le bon est aussi rangé dans « Mes bons ».</p>' +
     "</div>";
 
   $("#sh-ok").addEventListener("click", fermer);
   $("#sh-ok").focus();
 
   majCagnotte(true);
-  rendreGrille();
+  rendreListe();
+  rendreOffre();
   rendreBons(code);
 }
 
 /* ==========================================================
-   LES ONGLETS — seul celui de la carte mene quelque part,
-   les autres ecrans n'existent pas encore.
+   LES ONGLETS — seul celui de la carte mene quelque part, les
+   autres ecrans n'existent pas encore.
    ========================================================== */
 
 $("#tab-carte").addEventListener("click", function () {
@@ -1311,9 +996,8 @@ $("#tab-carte").addEventListener("click", function () {
    ========================================================== */
 
 majCagnotte(false);
-rendreOffres();
-rendrePass();
-rendreGrille();
+rendreOffre();
+rendreListe();
 rendreBons(null);
 majRebours();
 setInterval(majRebours, 30000);
