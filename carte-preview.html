@@ -516,6 +516,9 @@ function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   var espece = teinte % 5;
   var R = 8.4 * s;
   var trunc = "#8a5f36", truncOmbre = "#6e4a29";
+  // l'appelant peut avoir pose un fondu global : on multiplie par
+  // cette base plutot que de la remettre a 1, sinon le fondu saute
+  var alphaBase = ctx.globalAlpha;
 
   ctx.beginPath(); ctx.ellipse(x, y + 1.5 * s, R * .6, R * .22, 0, 0, 7);
   ctx.fillStyle = "rgba(20,30,15,.25)"; ctx.fill();
@@ -536,7 +539,7 @@ function arbreSur(ctx, x, y, r, teinte, graineArbre) {
     ctx.beginPath(); ctx.arc(x - R * .34, cy - R * .3, R * .58, 0, 7);
     ctx.fillStyle = palette[3]; ctx.fill();
     ctx.beginPath(); ctx.arc(x + R * .36, cy + R * .26, R * .38, 0, 7);
-    ctx.fillStyle = palette[0]; ctx.globalAlpha = .6; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = palette[0]; ctx.globalAlpha = alphaBase * .6; ctx.fill(); ctx.globalAlpha = alphaBase;
   } else if (espece === 2) {
     // conique : un cone simple, comme le 3e arbre du pack
     tronc(R * .55, 2.2 * s);
@@ -622,6 +625,7 @@ function batimentSur(ctx, x, y, r, teinte, graineBatiment) {
   var graine = (graineBatiment >>> 0) || 1;
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
 
+  var alphaBase = ctx.globalAlpha;
   var type = Math.floor(rnd() * 4);
   var largeur = (12 + rnd() * 3) * s;
   var profondeur = largeur * .62;
@@ -654,10 +658,10 @@ function batimentSur(ctx, x, y, r, teinte, graineBatiment) {
     var fy = hautMur + (e + .55) * (hauteurMur / etages) - fh / 2;
     ctx.fillRect(x - largeur * .36, fy, fw, fh);
     ctx.fillRect(x - largeur * .17, fy, fw, fh);
-    ctx.globalAlpha = .75;
+    ctx.globalAlpha = alphaBase * .75;
     ctx.fillRect(x + largeur * .12, fy + decal * .5, fw, fh);
     ctx.fillRect(x + largeur * .3, fy + decal * .5, fw, fh);
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = alphaBase;
   }
 
   if (toitPointu) {
@@ -676,7 +680,7 @@ function batimentSur(ctx, x, y, r, teinte, graineBatiment) {
     ctx.lineTo(x + largeur * .2, hautToit);
     ctx.lineTo(x, hautToit - decal);
     ctx.closePath();
-    ctx.fillStyle = pal.toit; ctx.globalAlpha = .82; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = pal.toit; ctx.globalAlpha = alphaBase * .82; ctx.fill(); ctx.globalAlpha = alphaBase;
   } else {
     // toiture plate legerement debordante
     ctx.beginPath();
@@ -926,38 +930,34 @@ function genererBatiments() {
     ctx.clearRect(0, 0, W, H);
     var z = map.getZoom();
     if (z < 12.5) return; // trop dezoome pour distinguer un objet d'un pixel de bruit
-    // les objets grossissent avec le zoom, comme n'importe quoi au
-    // sol (routes, empreintes de batiments) — avant, leur taille en
-    // pixels etait plafonnee des le zoom 14.5, donc plus on zoomait,
-    // plus ils paraissaient petits par rapport au reste qui
-    // continuait de grossir. Un fondu d'apparition reste applique
-    // juste apres le seuil de visibilite pour eviter un "pop" brutal.
-    var echelleZoom = Math.pow(2, z - 16);
-    var fondu = Math.min(1, (z - 12.5) / 2);
-    var echelle = echelleZoom * fondu;
+    // TAILLE FIXE A L'ECRAN, comme les icones de Snap Map : un arbre
+    // fait toujours le meme nombre de pixels, quel que soit le zoom.
+    // La version precedente les mettait a l'echelle du sol (x2 par
+    // niveau de zoom), donc ils paraissaient minuscules des qu'on
+    // reculait un peu. Seul un fondu d'apparition subsiste juste
+    // apres le seuil de visibilite, pour eviter un "pop" brutal.
+    var fondu = Math.min(1, (z - 12.5) / 1.5);
 
     var pts = [];
     for (var i = 0; i < ARBRES.length; i++) {
       var a = ARBRES[i];
       var p = map.project([a.lng, a.lat]);
       if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) continue;
-      var s = a.s * echelle;
-      if (s <= .03) continue;
-      pts.push({ x: p.x, y: p.y, s: s, teinte: a.teinte, graine: a.graine, type: "arbre" });
+      pts.push({ x: p.x, y: p.y, s: a.s, teinte: a.teinte, graine: a.graine, type: "arbre" });
     }
     for (var j = 0; j < BATIMENTS.length; j++) {
       var b = BATIMENTS[j];
       var pb = map.project([b.lng, b.lat]);
       if (pb.x < -60 || pb.x > W + 60 || pb.y < -110 || pb.y > H + 60) continue;
-      var sb = echelle;
-      if (sb <= .03) continue;
-      pts.push({ x: pb.x, y: pb.y, s: sb, teinte: b.teinte, graine: b.graine, type: "batiment" });
+      pts.push({ x: pb.x, y: pb.y, s: 1, teinte: b.teinte, graine: b.graine, type: "batiment" });
     }
     pts.sort(function (a, b) { return a.y - b.y; });
+    ctx.globalAlpha = fondu;
     pts.forEach(function (p) {
-      if (p.type === "arbre") arbreSur(ctx, p.x, p.y, 20 * p.s, p.teinte, p.graine);
-      else batimentSur(ctx, p.x, p.y, 20 * p.s, p.teinte, p.graine);
+      if (p.type === "arbre") arbreSur(ctx, p.x, p.y, 26 * p.s, p.teinte, p.graine);
+      else batimentSur(ctx, p.x, p.y, 30, p.teinte, p.graine);
     });
+    ctx.globalAlpha = 1;
   }
   map.on("move", dessiner);
   map.on("load", function () { genererBatiments(); dessiner(); });
