@@ -99,11 +99,12 @@ dans un tiroir.
 - **Mise à jour (19 août 2026) : les dessins faits main ont été jugés
   "IA dégueulasse" par Julien pour les objets identifiables** (cocktail,
   bouteille, shot, cordon VIP, ticket). Remplacés par de vraies photos
-  libres de droits (licence Unsplash), recadrées en cercle et teintées
-  dans la couleur de la récompense pour rester cohérentes avec le reste
-  de l'écran plutôt que de flotter comme des vignettes de stock. Ce
-  n'est toujours pas une vraie photo du club Mirage — reste un objet
-  générique, jamais présenté comme si c'était le lieu réel.
+  libres de droits (licence Unsplash), affichées telles quelles (sans
+  filtre de teinte — essayé puis retiré) dans des cartes au format
+  proche d'une vraie appli de réservation (référence explicite fournie
+  par Julien : Pad'up). Ce n'est toujours pas une vraie photo du club
+  Mirage — reste un objet générique, jamais présenté comme si c'était
+  le lieu réel.
 
 ## Product Principles
 

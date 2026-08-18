@@ -89,6 +89,13 @@
         --line:  rgba(255,235,220,.08);
         --line2: rgba(255,235,220,.14);
         --accent: #ff2f45;
+        /* Couleur des boutons d'action pleins (sheet-cta, filtre actif).
+           Distinct de --accent pour que la boutique puisse mettre ses
+           CTA en noir (façon Pad'up) sans changer la couleur du corail
+           utilisee ailleurs pour les prix/points. Vaut --accent par
+           defaut : la fiche club de la carte n'a jamais surcharge
+           cette variable, son bouton "Poster ma story" reste corail. */
+        --bouton: var(--accent);
         /* Le meme ambre que le cadran d'un vieux mixeur de DJ ou le
            tube d'un compteur a lampes : chaque nombre de points se
            lit comme une mesure, pas comme une decoration. Distinct du
@@ -285,94 +292,108 @@
          le prompt v2 (Airbnb/Spotify/Figma) : icone posee sur un aplat
          de couleur par famille, prix en gros, bouton d'echange en
          pleine largeur. Utilisee uniquement par la boutique
-         (.screen.boutique-sombre) ; la fiche club de l'ecran carte ne
+         (.screen.boutique-pro) ; la fiche club de l'ecran carte ne
          s'en sert pas. */
-      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      /* Carte "photo en haut, infos en dessous" — modele repris de la
+         reference que Julien a montree (Pad'up) : vraie photo pleine
+         largeur, prix en pilule blanche posee sur la photo (meme role
+         que la pilule note "5.0 (2)" de la reference), bouton
+         d'echange en pilule pleine largeur sous le texte. Remplace
+         l'ancienne carte a pastille d'icone dans le coin. */
+      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
       .carte-reco {
-        position: relative; display: flex; flex-direction: column; align-items: flex-start; text-align: left;
-        background: linear-gradient(165deg, var(--s2) 0%, var(--s1) 55%);
-        border: 1px solid var(--line); border-radius: 18px;
-        padding: 14px; cursor: pointer; font-family: inherit; color: inherit;
-        box-shadow: 0 1px 3px rgba(0,0,0,.2);
+        position: relative; display: flex; flex-direction: column; text-align: left;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        overflow: hidden; padding: 0; cursor: pointer; font-family: inherit; color: inherit;
+        box-shadow: 0 1px 3px rgba(20,20,25,.05);
         transition: transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s ease, border-color .16s ease;
       }
-      .carte-reco:hover { box-shadow: 0 10px 26px rgba(0,0,0,.4); transform: translateY(-2px) scale(1.015); border-color: var(--line2); }
+      .carte-reco:hover { box-shadow: 0 10px 24px rgba(20,20,25,.12); transform: translateY(-2px); border-color: var(--line2); }
       .carte-reco:active { transform: translateY(-1px) scale(.99); }
-      .carte-reco:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-      .carte-reco .visuel-badge {
-        position: relative; width: 56px; height: 56px; border-radius: 16px; margin-bottom: 10px; flex: 0 0 auto;
-        overflow: hidden; display: grid; place-items: center; background: var(--tinte, #fdece9);
+      .carte-reco:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
+
+      .carte-reco .photo {
+        position: relative; width: 100%; aspect-ratio: 1 / 1; background: var(--tinte, #f0f0f2);
+        overflow: hidden;
       }
-      .carte-reco .visuel-badge svg { width: 62%; height: 62%; display: block; }
-      .carte-reco .visuel-badge.foto img {
+      .carte-reco .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        filter: saturate(1.3) contrast(1.08);
+        filter: saturate(1.15) contrast(1.05);
       }
-      .carte-reco .visuel-badge.foto::after {
-        content: ""; position: absolute; inset: 0; background: var(--tinte-vive, var(--tinte));
-        mix-blend-mode: color; opacity: .45; pointer-events: none;
+      .carte-reco .photo svg { width: 46%; height: 46%; display: block; position: absolute; inset: 0; margin: auto; }
+      .carte-reco .photo .prix-pastille {
+        position: absolute; left: 8px; bottom: 8px; display: flex; align-items: baseline; gap: 3px;
+        background: rgba(255,255,255,.95); border-radius: 999px; padding: 5px 10px;
+        font-family: var(--mono); font-size: 12.5px; font-weight: 800; color: var(--ink);
+        box-shadow: 0 2px 6px rgba(20,20,25,.15);
       }
+      .carte-reco .photo .prix-pastille span {
+        font-family: var(--sans); font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--ink3);
+      }
+
+      .carte-reco .corps { padding: 11px 12px 12px; display: flex; flex-direction: column; flex: 1; }
       .carte-reco strong { display: block; font-size: 13.5px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; color: var(--ink); }
       .carte-reco .code {
         display: block; font-family: var(--mono); font-size: 10px; color: var(--ink3);
         margin-top: 3px; letter-spacing: .03em;
       }
-      .carte-reco .prix {
-        margin-top: 11px; font-family: var(--mono); font-size: 17px; font-weight: 800;
-        color: var(--accent); font-variant-numeric: tabular-nums;
+      .carte-reco .manque { display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3); margin-top: 3px; }
+      .carte-reco .cta-visuelle {
+        margin-top: 10px; display: block; text-align: center; border-radius: 999px;
+        background: var(--bouton); color: #fff; font-size: 12px; font-weight: 700;
+        letter-spacing: -.01em; padding: 8px 10px;
       }
-      .carte-reco .prix span { font-size: 10px; font-weight: 700; color: var(--ink3); margin-left: 3px; text-transform: uppercase; font-family: var(--sans); }
-      .carte-reco .manque { display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3); margin-top: 2px; }
-      .carte-reco.loin { opacity: .55; }
-      .carte-reco.epuise { opacity: .4; pointer-events: none; }
+      .carte-reco.loin .cta-visuelle { background: var(--s3); color: var(--ink3); }
+      .carte-reco.epuise { opacity: .55; pointer-events: none; }
+      .carte-reco.epuise .cta-visuelle { background: var(--s3); color: var(--ink3); }
 
       /* ---------------- Offre du soir : banniere photo pleine largeur ---------------- */
 
       /* L'offre du soir vivait dans la meme ligne plate que l'ancien
          catalogue "tracklist" — depassee des que le catalogue est
-         devenu une grille de cartes a cote, et jugee "pas fou" par
-         Julien. Elle devient sa propre banniere : photo pleine largeur
-         (meme photo que la carte "Shot maison", FOTOS.artShot),
-         degrade sombre pour la lisibilite du texte, "OFFERT" en
-         evidence — le traitement d'une vraie promo, pas d'une ligne
-         de liste parmi d'autres. */
+         devenu une grille de cartes a cote, jugee "pas fou" par
+         Julien. Meme famille que .carte-reco desormais : photo en
+         haut (texte blanc sur degrade sombre essaye puis abandonne —
+         la reference Pad'up garde ses photos "propres", texte en
+         dessous sur fond blanc), pilule "Offert" posee sur la photo
+         comme la pilule note "5.0 (2)" de la reference, contenu en
+         dessous avec bouton pilule noire pleine largeur. */
       .offre-hero {
-        position: relative; display: block; width: 100%; aspect-ratio: 16 / 8;
-        border: 0; border-radius: 20px; overflow: hidden; padding: 0; cursor: pointer;
+        display: flex; flex-direction: column; width: 100%;
+        border: 1px solid var(--line); border-radius: 20px; overflow: hidden; padding: 0; cursor: pointer;
         font-family: inherit; color: inherit; background: var(--s1);
+        box-shadow: 0 1px 3px rgba(20,20,25,.05);
+        transition: transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s ease;
       }
-      .offre-hero:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-      .offre-hero img {
+      .offre-hero:hover { box-shadow: 0 10px 24px rgba(20,20,25,.12); transform: translateY(-2px); }
+      .offre-hero:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
+      .offre-hero .photo { position: relative; width: 100%; aspect-ratio: 16 / 9; }
+      .offre-hero .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        filter: saturate(1.15) contrast(1.05) brightness(.82);
-      }
-      .offre-hero::before {
-        content: ""; position: absolute; inset: 0;
-        background: linear-gradient(195deg, rgba(13,14,17,.1) 0%, rgba(13,14,17,.25) 45%, rgba(13,14,17,.92) 100%);
+        filter: saturate(1.1) contrast(1.03);
       }
       .offre-hero .badge-offert {
-        position: absolute; top: 12px; right: 12px; z-index: 1;
-        font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-        color: #fff; background: var(--accent); border-radius: 999px; padding: 5px 11px;
+        position: absolute; left: 10px; bottom: 10px;
+        font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+        color: var(--bouton); background: rgba(255,255,255,.95); border-radius: 999px; padding: 5px 11px;
+        box-shadow: 0 2px 6px rgba(20,20,25,.15);
       }
-      .offre-hero .corps {
-        position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 14px 16px;
-      }
+      .offre-hero .corps { padding: 13px 16px 16px; text-align: left; }
       .offre-hero strong {
-        display: block; font-size: 17px; font-weight: 800; letter-spacing: -.02em;
-        color: #fff; margin-bottom: 3px;
+        display: block; font-size: 16px; font-weight: 800; letter-spacing: -.02em;
+        color: var(--ink); margin-bottom: 3px;
       }
-      .offre-hero p {
-        margin: 0; font-size: 12.5px; font-weight: 550; line-height: 1.4;
-        color: rgba(255,255,255,.8); max-width: 78%;
+      .offre-hero p { margin: 0 0 12px; font-size: 12.5px; font-weight: 550; line-height: 1.4; color: var(--ink2); }
+      .offre-hero del { font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink3); }
+      .offre-hero .cta-visuelle {
+        display: block; text-align: center; border-radius: 999px;
+        background: var(--bouton); color: #fff; font-size: 13px; font-weight: 700;
+        letter-spacing: -.01em; padding: 11px;
       }
-      .offre-hero del {
-        font-family: var(--mono); font-size: 11.5px; font-weight: 600;
-        color: rgba(255,255,255,.55);
-      }
-      .offre-hero.epuise::before { background: rgba(13,14,17,.72); }
-      .offre-hero.epuise img { filter: grayscale(.6) brightness(.5); }
+      .offre-hero.epuise { opacity: .55; pointer-events: none; }
+      .offre-hero.epuise .photo img { filter: grayscale(.6); }
       .offre-hero.epuise .badge-offert { background: var(--s3); color: var(--ink3); }
+      .offre-hero.epuise .cta-visuelle { background: var(--s3); color: var(--ink3); }
 
       /* ---------------- Recompenses : visuel circulaire (fiche detail) ----------------
          La taille/le fond de base de .sheet-visuel vivent plus bas,
@@ -381,17 +402,17 @@
       /* Variante photo : les dessins faits main pour les familles
          restaient trop proches du "clip art" pour Julien ("on dirait
          de l'IA degueulasse"). Quand une vraie photo libre de droits
-         existe pour l'objet (FOTOS, JS), elle remplace le dessin —
-         recadree en cercle, teintee dans la couleur de la recompense
-         pour rester cohérente avec le reste de l'interface plutot que
-         de flotter comme un aplat photo brut. */
+         existe pour l'objet (FOTOS, JS), elle remplace le dessin,
+         recadree en cercle. Plus de voile colore dessus (essaye, puis
+         retire) : la reference que Julien a montree (Pad'up) affiche
+         ses photos telles quelles, sans teinte — juste un fin liseré
+         pour la detacher du fond. */
       .sheet-visuel.foto img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        filter: saturate(1.3) contrast(1.08);
+        filter: saturate(1.1) contrast(1.03);
       }
       .sheet-visuel.foto::after {
         content: ""; position: absolute; inset: 0; border-radius: inherit;
-        background: var(--glow); mix-blend-mode: color; opacity: .5;
         box-shadow: inset 0 0 0 1px var(--line2); pointer-events: none;
       }
 
@@ -537,7 +558,7 @@
 
       .sheet-cta {
         display: flex; align-items: center; justify-content: center; gap: 9px;
-        width: 100%; background: var(--accent); color: #fff; border: 0;
+        width: 100%; background: var(--bouton); color: #fff; border: 0;
         border-radius: 15px; padding: 16px; font-family: inherit; font-size: 15px;
         font-weight: 700; letter-spacing: -.02em; cursor: pointer;
       }
@@ -618,60 +639,60 @@
       code { font-family: var(--mono); font-size: 12.5px; color: var(--page-ink); }
 
       /* ============================================================
-         THEME BOUTIQUE — noir neutre, boutique uniquement.
+         THEME BOUTIQUE — clair et pro, boutique uniquement.
 
-         Troisieme palette pour cet ecran : la piste vinyle/brun a ete
-         rejetee ("trop alcoolise"), puis la piste claire/Cali a ete
-         jugee correcte sur la structure (grille de cartes, corail en
-         CTA et en indicateur de points — ca reste) mais Julien a
-         demande un fond noir. Pas un retour au brun/laiton d'origine :
-         un noir neutre, proche de Spotify/Discord, sur lequel les
-         pastilles d'icone pastel (TEINTES, JS) ressortent comme des
-         pavés de couleur plutot que de se fondre dans un halo sombre.
+         Quatrieme palette pour cet ecran. Julien a fini par montrer un
+         vrai exemple (capture de Pad'up, une appli de reservation de
+         padel) en disant explicitement de s'en inspirer : fond clair,
+         cartes blanches avec vraie photo pleine largeur, boutons noirs
+         en pilule, badges pilule blanche/texte gras sur les photos,
+         beaucoup de blanc. Le noir "neutre" precedent a ete juge "trop
+         ambiance" une fois de plus.
 
-         La classe .boutique-sombre est posee sur .screen par
+         Le corail redevient ce qu'il etait avant la piste v2 : reserve
+         aux points/prix (--accent, --ambre), jamais aux boutons — les
+         CTA passent en noir plein (--bouton) pour matcher les pilules
+         "Rejoindre" de la reference. C'est un retour a la regle
+         d'origine du projet, pas une nouvelle exception.
+
+         La classe .boutique-pro est posee sur .screen par
          activerVue() quand l'onglet boutique est actif, jamais sur
          l'ecran carte : la carte garde sa nuit d'origine (ciel,
-         arbres, halo), qui n'a rien a voir avec ce noir-ci. Comme la
-         barre d'onglets et la feuille du bas sont des enfants directs
-         de .screen, elles heritent des memes variables sans regle
+         arbres, halo), sans lien avec ce theme clair. Comme la barre
+         d'onglets et la feuille du bas sont des enfants directs de
+         .screen, elles heritent des memes variables sans regle
          dupliquee. */
-      .screen.boutique-sombre {
-        --ink: #f4f5f7; --ink2: #9aa0ab; --ink3: #6b7078;
-        --bg: #0d0e11; --s1: #17181c; --s2: #1e2025; --s3: #26282e;
-        --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.14);
-        --accent: #ff6b5b; --ambre: #ff6b5b;
+      .screen.boutique-pro {
+        --ink: #16171c; --ink2: #6b6f76; --ink3: #9a9ea5;
+        --bg: #f5f5f7; --s1: #ffffff; --s2: #f0f0f2; --s3: #e7e7ea;
+        --line: #e9e9ec; --line2: #dedee2;
+        --accent: #ff6b5b; --ambre: #ff6b5b; --bouton: #16171c;
       }
-      .screen.boutique-sombre .wallet {
-        background: linear-gradient(180deg, #15161a 0%, #0d0e11 82%, rgba(13,14,17,.95) 100%);
+      .screen.boutique-pro .wallet {
+        background: #ffffff;
         border-bottom: 1px solid var(--line);
       }
-      /* Le degrade radial pose sous la cagnotte etait trop marque —
-         "trop ambiance" selon Julien, il voulait plus pro. Fond quasi
-         plat, juste une nuance a peine visible plutot qu'un halo. */
-      .screen.boutique-sombre .app {
-        background: var(--bg);
+      .screen.boutique-pro .app { background: var(--bg); }
+      .screen.boutique-pro .sheet-note em { text-shadow: none; }
+      .screen.boutique-pro .filtre { border-color: var(--line2); color: var(--ink2); background: #fff; }
+      .screen.boutique-pro .filtre[aria-pressed="true"] { background: var(--bouton); color: #fff; border-color: var(--bouton); }
+      .screen.boutique-pro .sheet-visuel {
+        background: radial-gradient(120% 120% at 32% 24%, var(--glow), var(--s2) 72%);
+        box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 11px var(--s1), inset 0 0 0 12px rgba(0,0,0,.03), 0 16px 32px -14px rgba(20,20,25,.18);
       }
-      .screen.boutique-sombre .sheet-note em { text-shadow: none; }
-      .screen.boutique-sombre .filtre { border-color: var(--line2); color: var(--ink2); }
-      .screen.boutique-sombre .filtre[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
-      .screen.boutique-sombre .sheet-visuel {
-        background: radial-gradient(120% 120% at 32% 24%, var(--glow), var(--s1) 72%);
-        box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 11px var(--s1), inset 0 0 0 12px rgba(255,255,255,.06), 0 16px 32px -14px rgba(0,0,0,.55);
-      }
-      .screen.boutique-sombre .sheet { background: #131418; border-top-color: var(--line2); box-shadow: 0 -14px 34px rgba(0,0,0,.5); }
-      .screen.boutique-sombre .grab { background: rgba(255,255,255,.16); }
-      .screen.boutique-sombre .sheet-close { background: var(--s2); }
-      .screen.boutique-sombre .sheet-close svg { stroke: var(--ink2); }
-      .screen.boutique-sombre .sheet-cta.sobre { background: var(--s2); color: var(--ink); }
-      .screen.boutique-sombre .bareme summary .chev svg { stroke: var(--ink3); }
-      .screen.boutique-sombre .tabs { background: rgba(13,14,17,.88); border-top-color: var(--line2); }
-      .screen.boutique-sombre .tab svg { stroke: #6b7078; }
-      .screen.boutique-sombre .tab.on svg { stroke: var(--accent); }
-      /* Le QR reste blanc (obligatoire pour scanner), mais sur ce fond
-         noir le cadre --s2 fait deja toute la rupture de contraste
-         necessaire — plus besoin de l'attenuer comme sur fond clair. */
-      .screen.boutique-sombre .qr-carte { box-shadow: 0 10px 26px rgba(0,0,0,.5); }
+      .screen.boutique-pro .sheet { background: #ffffff; border-top-color: var(--line2); box-shadow: 0 -14px 34px rgba(20,20,25,.14); }
+      .screen.boutique-pro .grab { background: rgba(0,0,0,.13); }
+      .screen.boutique-pro .sheet-close { background: var(--s2); }
+      .screen.boutique-pro .sheet-close svg { stroke: var(--ink2); }
+      .screen.boutique-pro .sheet-cta.sobre { background: var(--s2); color: var(--ink); }
+      .screen.boutique-pro .bareme summary .chev svg { stroke: var(--ink3); }
+      .screen.boutique-pro .tabs { background: rgba(255,255,255,.92); border-top-color: var(--line2); }
+      .screen.boutique-pro .tab svg { stroke: #b4b7bd; }
+      .screen.boutique-pro .tab.on svg { stroke: var(--bouton); }
+      /* Le QR reste blanc (obligatoire pour scanner) ; sur un fond deja
+         clair, un simple cadre gris (--s2) suffit a le distinguer, pas
+         besoin d'ombre marquee. */
+      .screen.boutique-pro .qr-carte { box-shadow: 0 4px 14px rgba(20,20,25,.1); }
 
       @media (max-width: 430px) {
         .wrap { padding: 38px 12px 70px; }
@@ -707,11 +728,21 @@
 
   MISE A JOUR v3 (fond) : la v2 est passee par un fond clair (#fafafa)
   avant que Julien ne demande explicitement un fond noir. La structure
-  de la v2 (grille de cartes, corail partout) reste ; seule la palette
-  change vers un noir neutre — ni le brun/laiton de la toute premiere
-  version, ni le blanc de la v2. Applique uniquement a #vue-boutique
-  via .screen.boutique-sombre ; l'ecran carte garde son theme nocturne
-  d'origine, sans lien avec ce noir-ci.
+  de la v2 (grille de cartes) reste ; seule la palette change vers un
+  noir neutre.
+
+  MISE A JOUR v4 (reference concrete) : Julien a fini par montrer une
+  vraie capture d'ecran (Pad'up, appli de reservation de padel) avec
+  la consigne explicite de s'en inspirer. Fond a nouveau clair — pas
+  un retour a la v2, la structure des cartes change aussi : photo
+  pleine largeur en haut de chaque carte (pas une pastille d'icone
+  dans un coin), prix en pilule blanche posee sur la photo, bouton
+  d'echange en pilule NOIRE pleine largeur sous le texte. Le corail
+  redevient reserve aux points/prix, jamais aux boutons — c'est un
+  retour a la regle d'origine du projet (voir PRODUCT.md), pas une
+  nouvelle exception. Applique uniquement a #vue-boutique via
+  .screen.boutique-pro ; l'ecran carte garde son theme nocturne
+  d'origine, sans lien avec ce theme clair.
 -->
 
 <div class="wrap">
@@ -1144,7 +1175,7 @@ function activerVue(nom) {
   // classe vit sur .screen : la barre d'onglets et la feuille du bas,
   // communes aux deux ecrans, en heritent au passage sans regle
   // dupliquee, et repassent a la nuit d'origine sur la carte.
-  SCREEN.classList.toggle("boutique-sombre", nom === "boutique");
+  SCREEN.classList.toggle("boutique-pro", nom === "boutique");
   TAB_CARTE.classList.toggle("on", nom === "carte");
   TAB_CARTE.setAttribute("aria-current", nom === "carte" ? "page" : "false");
   TAB_BOUTIQUE.classList.toggle("on", nom === "boutique");
@@ -1960,12 +1991,15 @@ function rendreOffre() {
   b.type = "button";
   b.setAttribute("aria-label", OFFRE.nom + " — " + OFFRE.court);
   b.innerHTML =
-    (OFFRE.foto ? '<img src="' + OFFRE.foto + '" alt="" loading="lazy">' : "") +
-    '<span class="badge-offert">' + (epuise ? "Épuisé" : "Offert") + "</span>" +
+    '<span class="photo">' +
+      (OFFRE.foto ? '<img src="' + OFFRE.foto + '" alt="" loading="lazy">' : "") +
+      '<span class="badge-offert">' + (epuise ? "Épuisé" : "Offert") + "</span>" +
+    "</span>" +
     '<span class="corps">' +
       "<strong>" + OFFRE.nom + "</strong>" +
       "<p>" + OFFRE.court + "</p>" +
       "<del>au lieu de " + OFFRE.avant + " pts</del>" +
+      '<span class="cta-visuelle">' + (epuise ? "Épuisé pour ce soir" : "Récupérer") + "</span>" +
     "</span>";
 
   b.addEventListener("click", function () { ouvrirRecompense(OFFRE, b); });
@@ -1978,12 +2012,6 @@ var filtreActif = "tout";
 // halo sombre du theme precedent. Repli sur la teinte "bar" si le
 // gerant a laisse une famille inconnue.
 var TEINTES = { bar: "#ffece0", acces: "#fdeaf1", vip: "#eef0fe" };
-
-// Teinte plus soutenue, utilisee uniquement pour le voile colore
-// pose sur les photos (mix-blend-mode: color) : le pastel de TEINTES
-// est fait pour un aplat derriere un dessin, trop pale pour teinter
-// une photo sans la laver completement.
-var TEINTES_VIVES = { bar: "#ff8a5c", acces: "#ef5da8", vip: "#6366f1" };
 
 function rendreListe() {
   var z = $("#liste");
@@ -2005,17 +2033,22 @@ function rendreListe() {
     b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
 
     var statut = epuise ? "épuisé" : (r.stock <= 5 ? "plus que " + r.stock : "");
-    var badge = r.foto
-      ? '<span class="visuel-badge foto" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) +
-        ";--tinte-vive:" + (TEINTES_VIVES[r.fam] || TEINTES_VIVES.bar) + '"><img src="' + r.foto + '" alt="" loading="lazy"></span>'
-      : '<span class="visuel-badge" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' + r.art() + "</span>";
+    var visuelInterieur = r.foto
+      ? '<img src="' + r.foto + '" alt="" loading="lazy">'
+      : r.art();
+    var cta = epuise ? "Épuisé" : (loin ? "Encore " + nb(r.cout - ETAT.solde) + " pts" : "Échanger");
 
     b.innerHTML =
-      badge +
-      "<strong>" + r.nom + "</strong>" +
-      '<span class="code">' + r.code + (statut ? " · " + statut : "") + "</span>" +
-      '<span class="prix">' + nb(r.cout) + "<span> pts</span></span>" +
-      (loin && !epuise ? '<span class="manque">encore ' + nb(r.cout - ETAT.solde) + "</span>" : "");
+      '<span class="photo" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' +
+        visuelInterieur +
+        '<span class="prix-pastille">' + nb(r.cout) + "<span> pts</span></span>" +
+      "</span>" +
+      '<span class="corps">' +
+        "<strong>" + r.nom + "</strong>" +
+        '<span class="code">' + r.code + (statut ? " · " + statut : "") + "</span>" +
+        (loin && !epuise ? '<span class="manque">encore ' + nb(r.cout - ETAT.solde) + "</span>" : "") +
+        '<span class="cta-visuelle">' + cta + "</span>" +
+      "</span>";
 
     b.addEventListener("click", function () { ouvrirRecompense(r, b); });
     z.appendChild(b);
