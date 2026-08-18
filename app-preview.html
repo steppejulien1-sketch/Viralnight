@@ -89,9 +89,17 @@
         --line:  rgba(255,235,220,.08);
         --line2: rgba(255,235,220,.14);
         --accent: #ff2f45;
+        /* Le meme ambre que le cadran d'un vieux mixeur de DJ ou le
+           tube d'un compteur a lampes : chaque nombre de points se
+           lit comme une mesure, pas comme une decoration. Distinct du
+           corail — le corail reste reserve au bouton d'action, jamais
+           partage avec l'ambre des chiffres. */
+        --ambre: #ffb020;
+        --papier: #f2e9d8;
       }
 
       /* Les deux ecrans sont superposes en permanence. On bascule
+         l'opacite et les interactions, jamais le display : la carte
          l'opacite et les interactions, jamais le display : la carte
          garde ainsi une taille de conteneur stable, ce qui evite
          d'avoir a rappeler map.resize() a chaque changement d'onglet. */
@@ -143,7 +151,10 @@
       }
       .pts-pill:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
       .pts-pill .jeton { width: 20px; height: 20px; flex: 0 0 auto; }
-      .pts-pill b { color: #fff; font-size: 14px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+      .pts-pill b {
+        color: var(--ambre); font-family: var(--mono); font-size: 14px; font-weight: 800;
+        letter-spacing: -.02em; font-variant-numeric: tabular-nums; text-shadow: 0 0 8px rgba(255,176,32,.4);
+      }
 
       .club-badge {
         width: 50px; height: 50px; border-radius: 50%;
@@ -221,45 +232,62 @@
       }
       .sec-head .sub { font-size: 11px; font-weight: 650; color: var(--ink3); margin-left: auto; white-space: nowrap; }
 
+      /* La cagnotte comme un cadran de mesure — VU-metre ou compteur a
+         lampes d'une console de mix — plutot qu'une carte "gros
+         chiffre + barre". L'ambre est reserve a ce role dans toute
+         l'appli : un nombre de points se lit toujours dans cette
+         couleur-la, jamais ailleurs. */
       .wallet {
         position: sticky; top: 0; z-index: 20;
-        padding: 54px 18px 18px;
-        background: linear-gradient(180deg, #17110f 0%, #120d0c 70%, rgba(18,13,12,.94) 100%);
+        display: flex; align-items: center; gap: 16px;
+        padding: 50px 18px 20px;
+        background: linear-gradient(180deg, #17110f 0%, #120d0c 78%, rgba(18,13,12,.94) 100%);
         border-bottom: 1px solid var(--line);
         backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       }
+      .cadran { position: relative; width: 74px; height: 74px; flex: 0 0 auto; }
+      .cadran svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+      .cadran-piste { fill: none; stroke: rgba(255,235,220,.1); stroke-width: 6; }
+      .cadran-valeur {
+        fill: none; stroke: var(--ambre); stroke-width: 6; stroke-linecap: round;
+        stroke-dasharray: 276.5; stroke-dashoffset: 276.5;
+        transition: stroke-dashoffset .6s cubic-bezier(.22,.75,.3,1);
+        filter: drop-shadow(0 0 5px rgba(255,176,32,.5));
+      }
+      .cadran-centre {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; text-align: center;
+      }
+      .cadran-centre b {
+        font-family: var(--mono); font-size: 19px; font-weight: 700; color: var(--ambre);
+        letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums;
+        text-shadow: 0 0 10px rgba(255,176,32,.4);
+      }
+      .cadran-centre i {
+        font-style: normal; font-size: 7.5px; font-weight: 700; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--ink3); margin-top: 2px;
+      }
+
+      /* Un chiffre de mesure ne rebondit pas : il s'allume plus fort un
+         instant, comme un digit qui vient de changer sur un vrai
+         afficheur, puis retombe a son eclat normal — un seul sens de
+         parcours, decroissance exponentielle, jamais de survitesse. */
+      @keyframes majSolde {
+        0%   { text-shadow: 0 0 18px rgba(255,176,32,.9); }
+        100% { text-shadow: 0 0 10px rgba(255,176,32,.4); }
+      }
+      .cadran-centre b.maj { animation: majSolde .6s cubic-bezier(.16,1,.3,1); }
+
+      .wallet-texte { flex: 1; min-width: 0; }
       .wallet-lab {
         display: block; font-size: 11px; font-weight: 700; letter-spacing: .14em;
-        text-transform: uppercase; color: var(--ink3); margin-bottom: 9px;
+        text-transform: uppercase; color: var(--ink3);
       }
-      .wallet-top { display: flex; align-items: baseline; gap: 10px; }
-      .wallet-sum { display: flex; align-items: center; gap: 10px; }
-      .wallet-sum .jeton { width: 24px; height: 24px; flex: 0 0 auto; align-self: center; }
-      .wallet-sum b {
-        font-size: 38px; font-weight: 700; letter-spacing: -.05em; line-height: 1;
-        font-variant-numeric: tabular-nums; display: inline-block;
+      .wallet-mois { display: block; font-size: 11px; font-weight: 600; color: var(--ink3); margin-top: 2px; }
+      .wallet-goal { margin: 9px 0 0; font-size: 12px; font-weight: 600; color: var(--ink2); letter-spacing: -.01em; line-height: 1.4; }
+      .wallet-goal em {
+        font-style: normal; color: var(--ambre); font-weight: 700; font-family: var(--mono);
       }
-      .wallet-sum i { font-style: normal; font-size: 15px; font-weight: 600; color: var(--ink3); letter-spacing: -.02em; }
-      .wallet-mois {
-        margin-left: auto; text-align: right; font-size: 11px; font-weight: 650;
-        color: var(--ink3); white-space: nowrap;
-      }
-
-      .wallet-goal { margin-top: 18px; }
-      .wallet-bar { height: 3px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
-      .wallet-bar span {
-        display: block; height: 100%; width: 0; border-radius: 99px; background: var(--accent);
-        transition: width .55s cubic-bezier(.22,.75,.3,1);
-      }
-      .wallet-goal p { margin: 9px 0 0; font-size: 12px; font-weight: 600; color: var(--ink2); letter-spacing: -.01em; }
-      .wallet-goal p em { font-style: normal; color: var(--ink); font-weight: 700; }
-
-      @keyframes majSolde {
-        0%   { transform: scale(1); }
-        40%  { transform: scale(1.09); }
-        100% { transform: scale(1); }
-      }
-      .wallet-sum b.maj { animation: majSolde .45s cubic-bezier(.3,1.3,.5,1); }
 
       .jeton { display: block; }
 
@@ -291,42 +319,52 @@
       .ligne:first-child { border-top: 0; }
       .ligne:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
 
-      /* Le visuel : une illustration dessinee a la main, posee sur
-         un halo de couleur propre a l'objet — pas une photo de banque
-         d'images (trop disparate d'une source a l'autre) ni une simple
-         icone au trait plat (trop pauvre a cote d'un vrai dessin). Le
-         halo est calme et attenue, jamais aussi vif que l'accent rouge
-         des boutons : la couleur illustre, elle ne sert pas a agir. */
+      /* Le visuel : un label de disque, pas une case d'icone. Anneau
+         exterieur (le bord du label), anneau interieur discret (le
+         sillon), dessin au centre. Meme famille d'objet que le cadran
+         de la cagnotte — les deux sont des cercles, pas un melange de
+         formes different d'un module a l'autre. */
       .visuel {
-        position: relative; width: 48px; height: 48px; border-radius: 13px; flex: 0 0 auto;
-        overflow: hidden; border: 1px solid var(--line2);
-        background: radial-gradient(120% 120% at 30% 20%, var(--glow), #14171c 72%);
+        position: relative; width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto;
+        overflow: hidden;
+        background: radial-gradient(120% 120% at 32% 24%, var(--glow), #14100e 70%);
+        box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 5px rgba(18,13,12,.55), inset 0 0 0 6px rgba(255,235,220,.09);
         display: grid; place-items: center;
       }
-      .visuel svg { width: 78%; height: 78%; display: block; }
+      .visuel svg { width: 66%; height: 66%; display: block; }
 
       .ligne-txt { flex: 1; min-width: 0; }
       .ligne-txt strong { display: block; font-size: 14px; font-weight: 650; letter-spacing: -.025em; }
+      /* Le numero de catalogue remplace la legende generique
+         ("Bar", "Ton manteau, sans payer...") par quelque chose qui
+         vient vraiment du monde du disque — chaque recompense est
+         une reference, comme un titre sur une pochette. */
       .ligne-txt .court {
-        display: block; font-size: 12px; font-weight: 600; color: var(--ink2); margin-top: 2px;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        display: flex; align-items: baseline; gap: 6px; margin-top: 3px;
+        font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .04em;
+        color: var(--ink3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
+      .ligne-txt .court .reste { color: var(--ambre); font-weight: 700; }
       /* L'offre du soir est seule dans sa liste : elle peut se permettre
          une deuxieme ligne plutot que de couper "Des ta premiere story
          de la..." en plein mot, comme le forcerait le nowrap ci-dessus. */
       .liste-soir .ligne-txt .court {
         white-space: normal; display: -webkit-box; -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.35;
+        -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.35; font-family: inherit;
+        font-size: 12px; letter-spacing: normal; text-transform: none; color: var(--ink2);
       }
       .ligne-prix { flex: 0 0 auto; text-align: right; }
       .ligne-prix .cout { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
       .ligne-prix .jeton { width: 14px; height: 14px; flex: 0 0 auto; }
-      .ligne-prix b { font-size: 15px; font-weight: 700; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+      .ligne-prix b {
+        font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: -.02em;
+        font-variant-numeric: tabular-nums; color: var(--ambre); text-shadow: 0 0 8px rgba(255,176,32,.35);
+      }
       .ligne-prix .manque {
         display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3);
-        margin-top: 2px; font-variant-numeric: tabular-nums;
+        margin-top: 2px; font-variant-numeric: tabular-nums; font-family: var(--mono);
       }
-      .ligne-prix del { font-size: 12px; font-weight: 600; color: var(--ink3); display: block; }
+      .ligne-prix del { font-size: 12px; font-weight: 600; color: var(--ink3); display: block; font-family: var(--mono); }
       .ligne-prix .badge-offert {
         font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
         color: var(--accent); border: 1px solid rgba(255,47,69,.45); border-radius: 5px;
@@ -335,7 +373,7 @@
 
       .ligne.loin .visuel { opacity: .42; }
       .ligne.loin .ligne-txt strong { color: var(--ink2); }
-      .ligne.loin .ligne-prix b { color: var(--ink3); }
+      .ligne.loin .ligne-prix b { color: var(--ink3); text-shadow: none; }
       .ligne.epuise { opacity: .4; }
 
 
@@ -377,7 +415,10 @@
       .gain { display: flex; align-items: baseline; gap: 12px; padding: 11px 15px; border-top: 1px solid var(--line); }
       .gain p { margin: 0; flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
       .gain p span { display: block; font-size: 11px; font-weight: 500; color: var(--ink3); margin-top: 1px; }
-      .gain .val { font-size: 13px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+      .gain .val {
+        font-family: var(--mono); font-size: 13px; font-weight: 700; white-space: nowrap;
+        font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--ambre);
+      }
 
       /* ============================================================
          BARRE D'ONGLETS ET FEUILLE — communes aux deux ecrans
@@ -425,18 +466,21 @@
       .sheet-close:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
       .sheet-close svg { width: 13px; height: 13px; stroke: var(--ink2); stroke-width: 2.4; fill: none; stroke-linecap: round; display: block; }
 
-      /* Le visuel de la feuille : la meme illustration que dans la
-         liste, en grand, sur le meme halo calme. */
+      /* Le visuel de la feuille : le meme label de disque que dans la
+         liste, agrandi et pose au centre — pas un bandeau plein cadre.
+         Le disque flotte sur la feuille comme sur une pochette ouverte. */
       .sheet-visuel {
-        position: relative; height: 168px; margin: 0 -22px 16px; overflow: hidden;
-        background: radial-gradient(85% 100% at 50% 30%, var(--glow), #14171c 75%);
+        position: relative; width: 132px; height: 132px; margin: 6px auto 18px;
+        border-radius: 50%; overflow: hidden;
+        background: radial-gradient(120% 120% at 32% 24%, var(--glow), #14100e 72%);
+        box-shadow:
+          0 0 0 1px var(--line2),
+          inset 0 0 0 11px rgba(18,13,12,.55),
+          inset 0 0 0 12px rgba(255,235,220,.08),
+          0 16px 32px -12px rgba(0,0,0,.65);
         display: grid; place-items: center;
       }
-      .sheet-visuel svg { width: 118px; height: 118px; display: block; }
-      .sheet-visuel::after {
-        content: ""; position: absolute; inset: 0; pointer-events: none;
-        background: linear-gradient(180deg, rgba(16,19,24,0) 60%, rgba(16,19,24,.95) 100%);
-      }
+      .sheet-visuel svg { width: 58%; height: 58%; display: block; }
 
       /* Fiche club (carte) : le badge rond du club, repris tel quel
          de son marqueur sur la carte. */
@@ -475,11 +519,13 @@
         font-weight: 700; letter-spacing: -.02em; cursor: pointer;
       }
       .sheet-cta:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-      .sheet-cta .jeton { width: 16px; height: 16px; flex: 0 0 auto; }
       .sheet-cta[disabled] { background: var(--s3); color: var(--ink3); cursor: not-allowed; }
       .sheet-cta.sobre { background: var(--ink); color: #120d0d; }
       .sheet-note { text-align: center; font-size: 12.5px; color: var(--ink2); margin: 12px 0 0; font-weight: 600; line-height: 1.45; }
-      .sheet-note em { font-style: normal; color: var(--ink); font-weight: 700; }
+      .sheet-note em {
+        font-style: normal; color: var(--ambre); font-weight: 700; font-family: var(--mono);
+        text-shadow: 0 0 8px rgba(255,176,32,.3);
+      }
 
       /* Confirmation d'echange : le vrai QR code a scanner, avec le
          code en secours en dessous pour le staff si le lecteur du
@@ -528,6 +574,24 @@
     </style>
   </head>
   <body>
+
+<!--
+  THESIS : la boutique est une pochette de disque, pas un dashboard —
+  chaque recompense est cataloguee comme un titre sur un vinyle, le
+  solde de points se lit comme un compteur a lampes, pas comme une
+  barre de progression generique.
+  OWN-WORLD : noir sleeve chaud, ambre de mesure (--ambre) reserve aux
+  chiffres, corail reserve au seul bouton d'action. Puits d'illustration
+  circulaires façon label de disque (anneau + trou de spindle), petits
+  caps traces pour le texte de pochette, chiffres tabulaires monospace.
+  STORY : le clubbeur feuillette le catalogue du soir, voit ses points
+  comme une mesure en direct, echange un titre comme on sort un disque.
+  FIRST VIEWPORT : cagnotte en cadran circulaire ambre en tete de liste,
+  rangees "tracklist" a puits circulaire et numero de catalogue.
+  FORM : monde vinyle/label (new-work, direction assignee index 4,
+  seed c3276dbf), fusionne avec le grain "tube a lampes" du challenger
+  nixie pour le rendu des chiffres.
+-->
 
 <div class="wrap">
 
@@ -579,18 +643,20 @@
           <div class="app" id="app">
 
             <header class="wallet">
-              <span class="wallet-lab">Ma cagnotte</span>
-              <div class="wallet-top">
-                <div class="wallet-sum">
-                  <span class="jeton" id="w-jeton"></span>
+              <div class="cadran">
+                <svg viewBox="0 0 100 100" aria-hidden="true">
+                  <circle class="cadran-piste" cx="50" cy="50" r="44"></circle>
+                  <circle class="cadran-valeur" id="w-anneau" cx="50" cy="50" r="44"></circle>
+                </svg>
+                <div class="cadran-centre">
                   <b id="w-solde">0</b>
                   <i>pts</i>
                 </div>
-                <span class="wallet-mois" id="w-mois"></span>
               </div>
-              <div class="wallet-goal">
-                <div class="wallet-bar"><span id="w-jauge"></span></div>
-                <p id="w-objectif"></p>
+              <div class="wallet-texte">
+                <span class="wallet-lab">Ma cagnotte</span>
+                <span class="wallet-mois" id="w-mois"></span>
+                <p class="wallet-goal" id="w-objectif"></p>
               </div>
             </header>
 
@@ -740,11 +806,16 @@ var nb = function (n) { return n.toLocaleString("fr-FR"); };
    LE JETON ET LES ICONES D'INTERFACE
    ========================================================== */
 
+/* Un point, c'est un disque miniature — pas une piece a etoile, cliche
+   habituel des applis a recompenses. Anneau sombre, label ambre, trou
+   de spindle : le meme objet qu'ailleurs dans l'appli, juste plus
+   petit. */
 function jeton(taille) {
   return '<svg class="jeton" viewBox="0 0 24 24" width="' + taille + '" height="' + taille +
     '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-    '<circle cx="12" cy="12" r="10" fill="#ff2f45"/>' +
-    '<path d="M12 6.2l1.6 3.7 3.7 1.6-3.7 1.6-1.6 3.7-1.6-3.7L6.7 11.5l3.7-1.6z" fill="#fff"/>' +
+    '<circle cx="12" cy="12" r="10.5" fill="#1c1512" stroke="#ffb020" stroke-width="1.1"/>' +
+    '<circle cx="12" cy="12" r="4.2" fill="#ffb020"/>' +
+    '<circle cx="12" cy="12" r="1.1" fill="#1c1512"/>' +
     "</svg>";
 }
 
@@ -974,8 +1045,12 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
    boutique se mettent a jour ensemble, jamais l'un sans l'autre.
    ========================================================== */
 
-$("#w-jeton").outerHTML = jeton(24);
 $("#pill-jeton").outerHTML = jeton(20);
+
+// Perimetre du cadran (r=44) : 2 * PI * 44. Fige ici plutot que
+// recalcule a chaque appel, comme le stroke-dasharray fixe dans le CSS
+// auquel ce chiffre doit rester identique.
+var PERIMETRE_CADRAN = 276.5;
 
 function prochaine() {
   return RECOMPENSES
@@ -994,12 +1069,13 @@ function majCagnotte(anime) {
   }
 
   var cible = prochaine();
+  var part = cible ? Math.min(1, Math.max(.03, ETAT.solde / cible.cout)) : 1;
+  $("#w-anneau").style.strokeDashoffset = Math.round(PERIMETRE_CADRAN * (1 - part));
+
   if (cible) {
-    $("#w-jauge").style.width = Math.min(100, Math.max(3, Math.round((ETAT.solde / cible.cout) * 100))) + "%";
     $("#w-objectif").innerHTML =
       "Encore <em>" + nb(cible.cout - ETAT.solde) + " pts</em> avant " + cible.nom.toLowerCase() + ".";
   } else {
-    $("#w-jauge").style.width = "100%";
     $("#w-objectif").innerHTML = "<em>Tout le catalogue est à ta portée.</em>";
   }
 }
@@ -1656,12 +1732,21 @@ function choisirArt(titre, categorie) {
    dashboard — pas de description ni de regles. On complete avec un
    texte honnete plutot que d'inventer des details qui n'existent
    nulle part cote club. */
-function completerRecompense(r) {
+/* Le numero de catalogue : 3 lettres du club + un ordinal, comme la
+   reference matrice gravee au centre d'un disque. Assigne une seule
+   fois au chargement (pas recalcule au filtrage), pour qu'une
+   recompense garde toujours le meme numero. */
+function prefixeClub(nom) {
+  var sansAccents = (nom || "CLB").normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return sansAccents.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3).padEnd(3, "X");
+}
+
+function completerRecompense(r, index, prefixe) {
   var visuel = choisirArt(r.titre, r.categorie);
   return {
     id: r.id, nom: r.titre, cout: r.cout, fam: r.categorie, stock: r.stock,
     art: visuel.art, glow: visuel.glow,
-    court: FAMILLES[r.categorie] || "",
+    code: prefixe + "·" + String(index + 1).padStart(3, "0"),
     desc: "Échange tes points contre « " + r.titre + " », proposé par le club.",
     regles: ["Valable ce soir", "Montre ce bon au bar ou à l'entrée"]
   };
@@ -1679,7 +1764,8 @@ async function chargerRecompenses() {
     var reponse = await fetch("/api/rewards-public?c=" + CODE_CLUB);
     var corps = await reponse.json();
     if (!reponse.ok) throw new Error(corps.error || "HTTP " + reponse.status);
-    RECOMPENSES = (corps.recompenses || []).map(completerRecompense);
+    var prefixe = prefixeClub(corps.club);
+    RECOMPENSES = (corps.recompenses || []).map(function (r, i) { return completerRecompense(r, i, prefixe); });
   } catch (erreur) {
     console.error("[boutique] catalogue indisponible:", erreur.message);
     RECOMPENSES = [];
@@ -1773,14 +1859,19 @@ function rendreListe() {
     b.type = "button";
     b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
 
-    var sous = epuise ? "Épuisé pour ce soir"
-      : (r.stock <= 5 ? "Il en reste " + r.stock : r.court);
+    // Le numero de catalogue reste toujours visible (c'est la reference
+    // de la recompense, comme une reference de disque) ; seul le statut
+    // qui le suit change — rien en dessous de 5 en stock, sinon un
+    // simple point d'ecart, sinon "epuise".
+    var statut = epuise ? "épuisé"
+      : (r.stock <= 5 ? '<span class="reste">plus que ' + r.stock + "</span>" : "");
 
     b.innerHTML =
       visuel(r) +
-      '<span class="ligne-txt"><strong>' + r.nom + '</strong><span class="court">' + sous + "</span></span>" +
+      '<span class="ligne-txt"><strong>' + r.nom + '</strong><span class="court">' + r.code +
+        (statut ? " — " + statut : "") + "</span></span>" +
       '<span class="ligne-prix">' +
-        '<span class="cout">' + jeton(14) + "<b>" + nb(r.cout) + "</b></span>" +
+        '<span class="cout"><b>' + nb(r.cout) + "</b></span>" +
         (loin && !epuise ? '<span class="manque">encore ' + nb(r.cout - ETAT.solde) + "</span>" : "") +
       "</span>";
 
@@ -1844,8 +1935,11 @@ function ouvrirRecompense(item, src) {
 
   // Meme seuil que la liste (rendreListe) : "il en reste 50" ne cree
   // aucune urgence et n'est qu'un chiffre en trop, alors que "il en
-  // reste 2" pousse vraiment a se decider.
-  var entete = FAMILLES[item.fam] + (item.stock <= 5 ? " · il en reste " + item.stock : "");
+  // reste 2" pousse vraiment a se decider. Le numero de catalogue
+  // (absent sur l'offre du soir, qui n'en a pas) ouvre la ligne comme
+  // une reference de disque.
+  var entete = (item.code ? item.code + " · " : "") + FAMILLES[item.fam] +
+    (item.stock > 0 && item.stock <= 5 ? " · plus que " + item.stock : "");
 
   var cta, note;
   if (epuise) {
@@ -1858,8 +1952,7 @@ function ouvrirRecompense(item, src) {
     cta = '<button class="sheet-cta" id="sh-cta" type="button">Récupérer mon bon</button>';
     note = "Offert ce soir, ton solde ne bouge pas.";
   } else {
-    cta = '<button class="sheet-cta" id="sh-cta" type="button">Échanger ' + jeton(16) +
-      "<span>" + nb(item.cout) + "</span></button>";
+    cta = '<button class="sheet-cta" id="sh-cta" type="button">Échanger · ' + nb(item.cout) + " pts</button>";
     note = "Il te restera <em>" + nb(ETAT.solde - item.cout) + " pts</em> ce soir.";
   }
 
