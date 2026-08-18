@@ -314,13 +314,15 @@
          s'en sert pas. */
       .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .carte-reco {
-        display: flex; flex-direction: column; align-items: flex-start; text-align: left;
-        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        position: relative; display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+        background: linear-gradient(165deg, var(--s2) 0%, var(--s1) 55%);
+        border: 1px solid var(--line); border-radius: 18px;
         padding: 14px; cursor: pointer; font-family: inherit; color: inherit;
-        box-shadow: 0 1px 3px rgba(20,20,25,.05);
-        transition: transform .16s ease, box-shadow .16s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,.2);
+        transition: transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s ease, border-color .16s ease;
       }
-      .carte-reco:hover { box-shadow: 0 8px 22px rgba(20,20,25,.09); transform: translateY(-2px); }
+      .carte-reco:hover { box-shadow: 0 10px 26px rgba(0,0,0,.4); transform: translateY(-2px) scale(1.015); border-color: var(--line2); }
+      .carte-reco:active { transform: translateY(-1px) scale(.99); }
       .carte-reco:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .carte-reco .visuel-badge {
         width: 56px; height: 56px; border-radius: 16px; margin-bottom: 10px; flex: 0 0 auto;
@@ -340,6 +342,18 @@
       .carte-reco .manque { display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3); margin-top: 2px; }
       .carte-reco.loin { opacity: .55; }
       .carte-reco.epuise { opacity: .4; pointer-events: none; }
+
+      /* Palier de rareté : distinction discrete pour les recompenses
+         qui se meritent, dans l'esprit du jeu evoque par Julien — mais
+         silencieuse sur les recompenses courantes plutot que d'etiqueter
+         tout le catalogue, meme logique que le stock qui ne s'affiche
+         que sous 5 unites. */
+      .carte-reco .palier {
+        position: absolute; top: 10px; right: 10px; font-size: 9px; font-weight: 800;
+        letter-spacing: .07em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px;
+        color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent);
+        border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+      }
 
       /* ---------------- Les listes (recompenses, offre du soir) ---------------- */
 
@@ -582,6 +596,23 @@
       }
       .sheet-ok .rond svg { width: 24px; height: 24px; stroke: #57d98a; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 
+      /* Petite salve de confettis autour du rond de confirmation — le
+         cote "drole"/gamifie demande par Julien, sans en faire une
+         animation lourde : six points colores qui partent du centre
+         et s'effacent, une seule fois, jamais en boucle. */
+      .sheet-ok .rond { position: relative; }
+      .confettis { position: absolute; inset: -22px; pointer-events: none; }
+      .confettis i {
+        position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; border-radius: 2px;
+        margin: -3px 0 0 -3px; background: var(--c);
+        animation: confettiPop .6s cubic-bezier(.2,.8,.3,1) both;
+      }
+      @keyframes confettiPop {
+        from { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+        to   { transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(.4); opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) { .confettis { display: none; } }
+
       /* Le module QR doit rester blanc pour scanner correctement — le
          cadre --s2 (fonce depuis le passage au noir) cree la rupture
          de contraste autour, sans toucher au blanc du QR lui-meme.
@@ -648,6 +679,13 @@
       .screen.boutique-sombre .wallet {
         background: linear-gradient(180deg, #15161a 0%, #0d0e11 82%, rgba(13,14,17,.95) 100%);
         border-bottom: 1px solid var(--line);
+      }
+      /* Un noir plat sur toute la hauteur de l'ecran lisait "vide"
+         plutot que "premium" — un tres leger degrade en profondeur
+         (plus clair vers le haut, sous la cagnotte) donne du relief
+         sans reintroduire les tons brun/laiton de la version vinyle. */
+      .screen.boutique-sombre .app {
+        background: radial-gradient(120% 46% at 50% 0%, #1a1b20 0%, var(--bg) 60%);
       }
       .screen.boutique-sombre .cadran-piste { stroke: rgba(255,255,255,.1); }
       .screen.boutique-sombre .cadran-valeur { filter: none; }
@@ -1979,6 +2017,16 @@ var filtreActif = "tout";
 // gerant a laisse une famille inconnue.
 var TEINTES = { bar: "#ffece0", acces: "#fdeaf1", vip: "#eef0fe" };
 
+// Palier de rarete, derive du prix plutot que configure par le gerant
+// (qui ne tape qu'un nom, un cout, une famille — jamais un niveau).
+// Volontairement silencieux sous 500 pts : etiqueter tout le catalogue
+// aurait juste ajoute du bruit sur les recompenses courantes.
+function tierDe(cout) {
+  if (cout >= 1500) return { nom: "Légendaire", c: "#e2b23f" };
+  if (cout >= 500) return { nom: "Rare", c: "#818cf8" };
+  return null;
+}
+
 function rendreListe() {
   var z = $("#liste");
   z.innerHTML = "";
@@ -1999,8 +2047,10 @@ function rendreListe() {
     b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
 
     var statut = epuise ? "épuisé" : (r.stock <= 5 ? "plus que " + r.stock : "");
+    var tier = tierDe(r.cout);
 
     b.innerHTML =
+      (tier ? '<span class="palier" style="--c:' + tier.c + '">' + tier.nom + "</span>" : "") +
       '<span class="visuel-badge" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' + r.art() + "</span>" +
       "<strong>" + r.nom + "</strong>" +
       '<span class="code">' + r.code + (statut ? " · " + statut : "") + "</span>" +
@@ -2133,6 +2183,22 @@ function nouveauCode() {
   return "VN-" + s;
 }
 
+// Six eclats colores qui partent du rond de confirmation — la touche
+// "drole" demandee par Julien, une seule fois par echange, jamais en
+// boucle. Coupee via prefers-reduced-motion (regle CSS .confettis).
+var COULEURS_CONFETTI = ["#ff6b5b", "#e2b23f", "#818cf8", "#57d98a", "#ff6b5b", "#818cf8"];
+function confettis() {
+  var s = "";
+  for (var i = 0; i < 6; i++) {
+    var a = (i / 6) * Math.PI * 2 + (Math.random() - .5) * .5;
+    var d = 26 + Math.random() * 14;
+    var x = Math.round(Math.cos(a) * d), y = Math.round(Math.sin(a) * d);
+    s += '<i style="--x:' + x + 'px;--y:' + y + 'px;--r:' + Math.round(Math.random() * 240 - 120) +
+      "deg;--c:" + COULEURS_CONFETTI[i] + ";animation-delay:" + Math.round(Math.random() * 60) + 'ms"></i>';
+  }
+  return '<span class="confettis">' + s + "</span>";
+}
+
 async function echanger(item) {
   var code = nouveauCode();
   ETAT.solde -= item.cout;
@@ -2143,7 +2209,7 @@ async function echanger(item) {
 
   corps.innerHTML =
     '<div class="sheet-ok">' +
-      '<span class="rond">' + picto("check") + "</span>" +
+      '<span class="rond">' + picto("check") + confettis() + "</span>" +
       '<h3 id="sh-titre">' + item.nom + "</h3>" +
       '<p class="desc">Montre ce QR au ' + (item.fam === "bar" ? "bar" : "staff") +
         ". Il le scanne sur sa tablette — ou tape le code à la main si le lecteur est en panne.</p>" +

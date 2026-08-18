@@ -71,16 +71,26 @@ Deux registres :
 
 - **Cadran (cagnotte)** : anneau SVG (stroke-dasharray/dashoffset,
   périmètre fixe `PERIMETRE_CADRAN = 276.5` pour r=44), chiffre corail
-  tabulaire au centre. Forme conservée de l'ancienne direction, glow
-  et pulse retirés en thème clair (`.screen.clair .cadran-valeur`
-  n'a plus de `filter`, `.cadran-centre b.maj` n'a plus d'animation) —
-  les effets "néon" appartenaient à l'ancienne palette sombre.
-- **Carte récompense** (`.carte-reco`, grille `.grille`) : icône dans
-  une pastille pastel par famille (`.visuel-badge`, couleur via
-  `--tinte`), titre, numéro de catalogue, prix corail en gros, état
-  visuel `.loin`/`.epuise`. Remplace l'ancienne ligne "tracklist"
-  (`.ligne`) pour le catalogue ; l'offre du soir garde la ligne
-  horizontale (une seule entrée, pas besoin de grille).
+  tabulaire au centre. Forme conservée depuis la toute première
+  direction, glow et pulse retirés (`.cadran-valeur` sans `filter`,
+  `.cadran-centre b.maj` sans animation) — les effets "néon"
+  appartenaient à l'ancienne palette vinyle.
+- **Carte récompense** (`.carte-reco`, grille `.grille`) : surface en
+  léger dégradé (`--s2` → `--s1`, pas un aplat plat), icône dans une
+  pastille pastel par famille (`.visuel-badge`, couleur via `--tinte`),
+  titre, numéro de catalogue, prix corail en gros, état visuel
+  `.loin`/`.epuise`. Au survol : légère montée + `scale(1.015)` + ombre
+  qui se creuse. Remplace l'ancienne ligne "tracklist" (`.ligne`) pour
+  le catalogue ; l'offre du soir garde la ligne horizontale (une seule
+  entrée, pas besoin de grille).
+- **Palier de rareté** (`.palier`, `tierDe()` en JS) : badge discret
+  ("Rare" dès 500 pts, "Légendaire" dès 1500 pts), dérivé du prix —
+  le gérant ne configure jamais de niveau, juste un coût. Volontairement
+  absent sous 500 pts : même logique de silence sélectif que le stock
+  (`.reste`), pour ne pas étiqueter tout le catalogue.
+- **Confettis de confirmation** (`confettis()` en JS) : six éclats
+  colorés qui partent du rond de succès à l'échange, une fois,
+  jamais en boucle ; coupés sous `prefers-reduced-motion`.
 - **Visuel circulaire** (`.visuel`, `.sheet-visuel`) : anneau via
   `box-shadow` inset double, dessin au centre. Conservé tel quel ;
   seul le fallback de couleur change (`#ffffff` en thème clair au
