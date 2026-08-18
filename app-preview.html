@@ -284,37 +284,19 @@
       .ligne:first-child { border-top: 0; }
       .ligne:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
 
-      /* Le visuel : une vraie photo, recadree carree, dans un
-         conteneur arrondi — le meme gabarit qu'un item de menu
-         Deliveroo ou Uber Eats. Le pictogramme au trait ne sert
-         plus que de filet de securite si la photo ne charge pas. */
+      /* Le visuel : une illustration dessinee a la main, posee sur
+         un halo de couleur propre a l'objet — pas une photo de banque
+         d'images (trop disparate d'une source a l'autre) ni une simple
+         icone au trait plat (trop pauvre a cote d'un vrai dessin). Le
+         halo est calme et attenue, jamais aussi vif que l'accent rouge
+         des boutons : la couleur illustre, elle ne sert pas a agir. */
       .visuel {
         position: relative; width: 48px; height: 48px; border-radius: 13px; flex: 0 0 auto;
-        overflow: hidden; background: linear-gradient(180deg, #1c2027, #14171c);
-        border: 1px solid var(--line2);
+        overflow: hidden; border: 1px solid var(--line2);
+        background: radial-gradient(120% 120% at 30% 20%, var(--glow), #14171c 72%);
+        display: grid; place-items: center;
       }
-      /* Les photos viennent de sources tres differentes (studio,
-         instantane, rue de nuit) : sans retouche, la liste ressemble
-         a un dossier de stock plutot qu'a une seule seance. Un meme
-         etalonnage — legerement plus sombre, moins sature, plus
-         contraste — plus un lavis rouge de marque en degrade
-         (le corail de theme.css, utilise comme accent jamais comme
-         fond plat) suffit a faire tenir l'ensemble ensemble. */
-      .visuel img {
-        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        display: block; filter: saturate(.78) contrast(1.12) brightness(.82);
-      }
-      .visuel::after {
-        content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-        background: linear-gradient(155deg, rgba(255,99,99,.22) 0%, rgba(8,9,12,.08) 45%, rgba(8,9,12,.46) 100%);
-      }
-      .visuel .secours {
-        position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; opacity: 0;
-      }
-      .visuel.hors-ligne img { display: none; }
-      .visuel.hors-ligne::after { display: none; }
-      .visuel.hors-ligne .secours { opacity: 1; }
-      .visuel .secours svg { width: 22px; height: 22px; stroke: rgba(255,255,255,.5); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; display: block; }
+      .visuel svg { width: 78%; height: 78%; display: block; }
 
       .ligne-txt { flex: 1; min-width: 0; }
       .ligne-txt strong { display: block; font-size: 14px; font-weight: 650; letter-spacing: -.025em; }
@@ -430,27 +412,17 @@
       .sheet-close:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
       .sheet-close svg { width: 13px; height: 13px; stroke: var(--ink2); stroke-width: 2.4; fill: none; stroke-linecap: round; display: block; }
 
-      /* Le visuel de la feuille : la meme photo que dans la liste,
-         mais en bandeau plein cadre — comme la fiche produit d'une
-         appli de livraison. */
+      /* Le visuel de la feuille : la meme illustration que dans la
+         liste, en grand, sur le meme halo calme. */
       .sheet-visuel {
         position: relative; height: 168px; margin: 0 -22px 16px; overflow: hidden;
-        background: linear-gradient(180deg, #1c2027, #14171c);
+        background: radial-gradient(85% 100% at 50% 30%, var(--glow), #14171c 75%);
+        display: grid; place-items: center;
       }
-      .sheet-visuel img {
-        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
-        filter: saturate(.78) contrast(1.12) brightness(.82);
-      }
-      .sheet-visuel .secours { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; opacity: 0; }
-      .sheet-visuel.hors-ligne img { display: none; }
-      .sheet-visuel.hors-ligne::after { display: none; }
-      .sheet-visuel.hors-ligne .secours { opacity: 1; }
-      .sheet-visuel .secours svg { width: 34px; height: 34px; stroke: rgba(255,255,255,.35); fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; display: block; }
+      .sheet-visuel svg { width: 118px; height: 118px; display: block; }
       .sheet-visuel::after {
-        content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-        background:
-          linear-gradient(155deg, rgba(255,99,99,.2) 0%, rgba(16,19,24,0) 40%),
-          linear-gradient(180deg, rgba(16,19,24,0) 55%, rgba(16,19,24,.95) 100%);
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(180deg, rgba(16,19,24,0) 60%, rgba(16,19,24,.95) 100%);
       }
 
       /* Fiche club (carte) : le badge rond du club, repris tel quel
@@ -716,14 +688,16 @@
         un identifiant que le club validera sur sa tablette.
       </p>
     </div>
-    <div class="note warn">
-      <span class="mark">Les photos</span>
-      <h3>Wikimedia Commons, à remplacer</h3>
+    <div class="note">
+      <span class="mark">Les illustrations</span>
+      <h3>Dessinées, pas piochées dans une banque d'images</h3>
       <p>
-        Chaque récompense a une vraie photo (licence libre, source créditée en
-        commentaire dans le code) plutôt qu'un dessin — un cocktail générique,
-        pas le vôtre. Dès que tu as des photos du Mirage ou de tes propres
-        cocktails/soirées, ce sont elles qui devraient remplacer ces URLs.
+        Deux essais précédents (photos de stock, icônes plates) ne rendaient pas
+        bien : les photos venaient de sources trop différentes pour se lire comme
+        une identité, et les icônes seules faisaient pauvre. Chaque récompense a
+        maintenant un petit dessin propre à elle — dégradé doux, ombre portée,
+        posé sur un halo de sa couleur, jamais aussi vif que l'accent rouge des
+        boutons pour ne pas lui faire concurrence.
       </p>
     </div>
   </div>
@@ -750,13 +724,7 @@ var $ = function (s) { return document.querySelector(s); };
 var nb = function (n) { return n.toLocaleString("fr-FR"); };
 
 /* ==========================================================
-   LE JETON ET LES PICTOGRAMMES DE SECOURS
-
-   Le jeton reste dessine (c'est un symbole abstrait, une photo
-   n'aurait pas de sens ici). Les pictogrammes, eux, ne servent
-   plus a illustrer une recompense : ils ne s'affichent que si
-   sa photo ne charge pas, comme un vrai lecteur d'images qui
-   retombe sur une icone plutot que sur un cadre casse.
+   LE JETON ET LES ICONES D'INTERFACE
    ========================================================== */
 
 function jeton(taille) {
@@ -767,31 +735,140 @@ function jeton(taille) {
     "</svg>";
 }
 
-var PICTOS = {
-  cocktail: '<path d="M4.6 6h14.8L12 14.4z"/><path d="M12 14.4V19"/><path d="M8.4 19.4h7.2"/><path d="M17.2 3.4 14 8.6"/>',
-  shot:     '<path d="M8 8h8l-1 10.6a1.6 1.6 0 0 1-1.6 1.5h-2.8A1.6 1.6 0 0 1 9 18.6z"/><path d="M8.35 12.6h7.3"/>',
-  pinte:    '<path d="M6.9 4.4h10.2l-1.2 14.2a1.9 1.9 0 0 1-1.9 1.8h-4a1.9 1.9 0 0 1-1.9-1.8z"/><path d="M7.2 8.3h9.6"/>',
-  cintre:   '<path d="M12 4.4a2.3 2.3 0 0 1 2.3 2.3c0 1.7-2.3 1.3-2.3 3.1"/><path d="M12 9.8 3.9 16.3a1 1 0 0 0 .7 1.9h14.8a1 1 0 0 0 .7-1.9z"/>',
-  ticket:   '<path d="M3.4 8h17.2a1.4 1.4 0 0 1 1.4 1.4v1.1a1.7 1.7 0 0 0 0 3.4v1.1a1.4 1.4 0 0 1-1.4 1.4H3.4A1.4 1.4 0 0 1 2 15.9v-1.1a1.7 1.7 0 0 0 0-3.4V9.4A1.4 1.4 0 0 1 3.4 8z"/><path d="M14.6 8.5v1.8M14.6 13.7v1.8"/>',
-  bracelet: '<circle cx="12" cy="13.6" r="6.7"/><path d="M9.6 3.2h4.8a1.2 1.2 0 0 1 1.2 1.2v2.4a1.2 1.2 0 0 1-1.2 1.2H9.6a1.2 1.2 0 0 1-1.2-1.2V4.4a1.2 1.2 0 0 1 1.2-1.2z"/>',
-  bouteille:'<path d="M10.2 3h3.6v3.3c0 1.9 2.5 2.6 2.5 5.3v8.1a1.7 1.7 0 0 1-1.7 1.7H9.4a1.7 1.7 0 0 1-1.7-1.7v-8.1c0-2.7 2.5-3.4 2.5-5.3z"/><path d="M7.8 13.2h8.4"/>',
-  cordon:   '<path d="M4.6 7.9q7.4 5.8 14.8 0"/><path d="M4.6 8v11M19.4 8v11"/><circle cx="4.6" cy="6.1" r="1.5"/><circle cx="19.4" cy="6.1" r="1.5"/><path d="M2.4 19.6h4.4M17.2 19.6h4.4"/>',
-  fleche:   '<path d="M9 5.5 15.5 12 9 18.5"/>',
-  check:    '<path d="M4.5 12.5 9 17 19.5 6.5"/>'
-};
-function picto(nom) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + PICTOS[nom] + "</svg>"; }
+function picto(nom) {
+  var d = { check: "M4.5 12.5 9 17 19.5 6.5" }[nom];
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
+}
 
-/* Un visuel = une photo qui remplit le cadre, avec un
-   pictogramme cache dessous qui n'apparait que si l'image ne
-   charge pas (reseau coupe, URL morte). `taille` choisit entre
-   le petit format des listes et le grand bandeau de la feuille. */
+/* ==========================================================
+   LES ILLUSTRATIONS DE LA BOUTIQUE
+
+   Ni une photo de banque d'images (trop disparate d'une source
+   a l'autre, ca finit par ressembler a un dossier de stock),
+   ni une icone plate au trait (trop pauvre a cote d'un vrai
+   dessin) : un petit dessin fait a la main, degrade doux et
+   ombre portee, pose sur un halo de sa propre couleur. Le halo
+   reste toujours attenue — la couleur illustre l'objet, elle ne
+   sert jamais a agir (l'accent rouge des boutons reste seul a
+   porter cette charge-la, comme l'exige la regle de design du
+   projet sur le corail).
+   ========================================================== */
+
+function nid(p) { return p + (++uid); }
+
+function grad(id, c1, c2) {
+  return '<linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1">' +
+    '<stop offset="0" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/></linearGradient>';
+}
+
+function art(defs, corps) {
+  return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    (defs ? "<defs>" + defs + "</defs>" : "") +
+    '<ellipse cx="50" cy="93" rx="24" ry="4.5" fill="rgba(10,8,6,.28)"/>' + corps + "</svg>";
+}
+
+/* --- Vestiaire : le cintre en bois, etiquette numerotee. --- */
+function artCintre() {
+  var g = nid("g");
+  return art(
+    grad(g, "#e3c08f", "#b4854c"),
+    '<path d="M50 30a8 8 0 0 1 8 8c0 5-8 4-8 10" fill="none" stroke="url(#' + g + ')" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M50 48 24 76a3.4 3.4 0 0 0 2.2 6h47.6a3.4 3.4 0 0 0 2.2-6z" fill="url(#' + g + ')"/>' +
+    '<path d="M50 48 24 76a3.4 3.4 0 0 0 2.2 6h23.8z" fill="#fff" opacity=".16"/>' +
+    '<rect x="58" y="78" width="21" height="15" rx="4" fill="#3a2f27" transform="rotate(8 68.5 85.5)"/>' +
+    '<text x="68.5" y="90.5" transform="rotate(8 68.5 85.5)" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" font-weight="700" fill="#e3c08f">07</text>'
+  );
+}
+
+/* --- Shot maison : petit verre epais, quartier de citron vert. --- */
+function artShot() {
+  var c = nid("c"), g = nid("g");
+  var corps = "M36 42h28l-3 40a6 6 0 0 1-6 5.5H45a6 6 0 0 1-6-5.5z";
+  return art(
+    grad(g, "#ffcf7e", "#dd8f2c"),
+    '<clipPath id="' + c + '"><path d="' + corps + '"/></clipPath>' +
+    '<g clip-path="url(#' + c + ')"><rect x="30" y="56" width="40" height="34" fill="url(#' + g + ')"/></g>' +
+    '<path d="' + corps + '" fill="none" stroke="#f3ead9" stroke-width="2.6" stroke-linejoin="round"/>' +
+    '<ellipse cx="50" cy="42" rx="14" ry="3.6" fill="none" stroke="#f3ead9" stroke-width="2.6"/>' +
+    '<path d="M63 30a9 9 0 0 1 0 18z" fill="#a9c96a"/>'
+  );
+}
+
+/* --- Pinte : verre haut, mousse claire. --- */
+function artPinte() {
+  var c = nid("c"), g = nid("g");
+  var corps = "M33 26h34l-3.4 54a7 7 0 0 1-7 6.5H43.4a7 7 0 0 1-7-6.5z";
+  return art(
+    grad(g, "#f3bb4e", "#d98a12"),
+    '<clipPath id="' + c + '"><path d="' + corps + '"/></clipPath>' +
+    '<g clip-path="url(#' + c + ')"><rect x="28" y="40" width="44" height="46" fill="url(#' + g + ')"/></g>' +
+    '<ellipse cx="50" cy="38" rx="18" ry="7" fill="#fdf6e8"/>' +
+    '<path d="' + corps + '" fill="none" stroke="#e7ddcb" stroke-width="2.4" stroke-linejoin="round"/>'
+  );
+}
+
+/* --- Cocktail signature : coupe rose poudre, rondelle d'agrume. --- */
+function artCocktail() {
+  var g = nid("g");
+  return art(
+    grad(g, "#f2a1a8", "#c96b7c"),
+    '<path d="M28 32h44L50 56z" fill="url(#' + g + ')"/>' +
+    '<path d="M23 27h58L50 60z" fill="none" stroke="#f3ead9" stroke-width="2.6" stroke-linejoin="round"/>' +
+    '<path d="M50 60v27" stroke="#f3ead9" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<path d="M37 89h26" stroke="#f3ead9" stroke-width="3" stroke-linecap="round"/>' +
+    '<circle cx="70" cy="24" r="7.5" fill="#f2c879" stroke="#c98f2e" stroke-width="1.6"/>' +
+    '<path d="M70 17v14M63 24h14" stroke="#c98f2e" stroke-width="1.2"/>'
+  );
+}
+
+/* --- Coupe-file : le ticket dechirable. --- */
+function artTicket() {
+  return art(null,
+    '<g transform="rotate(-6 50 56)">' +
+      '<rect x="18" y="38" width="64" height="38" rx="8" fill="#2a2420" stroke="#d9a15a" stroke-width="2.4"/>' +
+      '<path d="M58 40v34" stroke="#d9a15a" stroke-width="1.8" stroke-dasharray="3.5 4.5"/>' +
+      '<path d="M36 46l-8 14h7l-2 10 10-15h-7z" fill="#d9a15a"/>' +
+    "</g>"
+  );
+}
+
+/* --- Entree : le bracelet en tissu de la soiree. --- */
+function artBracelet() {
+  var g = nid("g");
+  return art(
+    grad(g, "#f2b3ae", "#d97e78"),
+    '<ellipse cx="50" cy="58" rx="26" ry="26" fill="none" stroke="url(#' + g + ')" stroke-width="9"/>' +
+    '<rect x="39" y="22" width="22" height="15" rx="4.5" fill="#2a2420" stroke="#d9a15a" stroke-width="2"/>' +
+    '<path d="M50 25.5l1.7 3.5 3.7.5-2.7 2.6.6 3.8-3.3-1.8-3.3 1.8.6-3.8-2.7-2.6 3.7-.5z" fill="#d9a15a"/>'
+  );
+}
+
+/* --- Table VIP : la bouteille, seau dore. --- */
+function artBouteille() {
+  var g = nid("g");
+  return art(
+    grad(g, "#2c5c47", "#153428"),
+    '<path d="M41 20h18v16c0 4 11 7 11 18v30a7 7 0 0 1-7 7H37a7 7 0 0 1-7-7V54c0-11 11-14 11-18z" fill="url(#' + g + ')" stroke="#d9b26a" stroke-width="2.4" stroke-linejoin="round"/>' +
+    '<rect x="32" y="62" width="30" height="19" rx="3" fill="#d9b26a" opacity=".92"/>' +
+    '<rect x="39" y="17" width="15" height="7" rx="2.2" fill="#d9b26a"/>'
+  );
+}
+
+/* --- Carre VIP : le cordon dore entre deux poteaux. --- */
+function artCordon() {
+  return art(null,
+    '<path d="M24 44q26 26 52 0" fill="none" stroke="#d9b26a" stroke-width="5" stroke-linecap="round"/>' +
+    '<g stroke="#8f96a3" stroke-width="4" stroke-linecap="round"><path d="M24 46v42"/><path d="M76 46v42"/></g>' +
+    '<circle cx="24" cy="40" r="6" fill="#d9b26a"/><circle cx="76" cy="40" r="6" fill="#d9b26a"/>'
+  );
+}
+
+/* Le halo derriere l'illustration : la teinte dominante du dessin,
+   tres attenuee. `taille` choisit entre le petit format des listes
+   et le grand bandeau de la feuille — meme dessin, meme halo. */
 function visuel(item, taille) {
   var cls = taille === "grand" ? "sheet-visuel" : "visuel";
-  var img = item.photo
-    ? '<img src="' + item.photo + '" alt="" onerror="this.parentElement.classList.add(\'hors-ligne\')">'
-    : "";
-  if (!item.photo) cls += " hors-ligne";
-  return '<span class="' + cls + '">' + img + '<span class="secours">' + picto(item.picto) + "</span></span>";
+  return '<span class="' + cls + '" style="--glow:' + item.glow + '">' + item.art() + "</span>";
 }
 
 /* ==========================================================
@@ -1518,76 +1595,67 @@ AMIS.forEach(function (p) {
    Le catalogue reprend DEFAULT_REWARDS de dashboardData.js
    (memes libelles, memes couts, memes stocks) et l'etend vers
    le haut pour qu'il reste quelque chose a viser apres les
-   premieres soirees. Chaque entree porte desormais un champ
-   `photo` : une image reelle plutot qu'un dessin, comme dans
-   une appli de livraison. Les photos viennent de Wikimedia
-   Commons (licences libres, creditees a cote de chaque URL) —
-   a remplacer par de vraies photos du club des que possible.
+   premieres soirees. Chaque entree porte un champ `art` (la
+   fonction qui dessine l'illustration) et un `glow` (le halo de
+   couleur attenue derriere) plutot qu'une photo — voir plus haut
+   pourquoi.
    ========================================================== */
 
 var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
 
 var RECOMPENSES = [
   {
-    id: "vestiaire", nom: "Vestiaire offert", cout: 40, fam: "acces", stock: 100, picto: "cintre",
-    // Photo Wikimedia Commons, licence CC BY-SA 3.0 (Fortepan) — a remplacer par une photo du vestiaire du club des que possible
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Coat-stand_Fortepan_71982.jpg/960px-Coat-stand_Fortepan_71982.jpg",
+    id: "vestiaire", nom: "Vestiaire offert", cout: 40, fam: "acces", stock: 100,
+    art: artCintre, glow: "rgba(227,192,143,.22)",
     court: "Ton manteau, sans payer",
     desc: "Ton manteau au vestiaire, sans payer.",
     regles: ["Valable la soirée où tu l'échanges", "À montrer au vestiaire avant de déposer"]
   },
   {
-    id: "shot", nom: "Shot maison", cout: 70, fam: "bar", stock: 50, picto: "shot",
-    // Photo Wikimedia Commons, licence CC BY-SA 2.5
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Three_shotglasses.jpg/960px-Three_shotglasses.jpg",
+    id: "shot", nom: "Shot maison", cout: 70, fam: "bar", stock: 50,
+    art: artShot, glow: "rgba(243,187,78,.24)",
     court: "Servi directement au bar",
     desc: "Un shot de la maison, servi directement au bar.",
     regles: ["Un seul shot par soirée", "Le bar peut demander ta carte d'identité"]
   },
   {
-    id: "pinte", nom: "Pinte offerte", cout: 90, fam: "bar", stock: 40, picto: "pinte",
-    // Photo Wikimedia Commons, licence CC BY-SA 3.0
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/IPA_in_a_pint_glass.jpeg/960px-IPA_in_a_pint_glass.jpeg",
+    id: "pinte", nom: "Pinte offerte", cout: 90, fam: "bar", stock: 40,
+    art: artPinte, glow: "rgba(243,187,78,.2)",
     court: "La pression, la pinte entière",
     desc: "La pression du bar, la pinte entière.",
     regles: ["Un seul verre par soirée", "Le bar peut demander ta carte d'identité"]
   },
   {
-    id: "cocktail", nom: "Cocktail signature", cout: 110, fam: "bar", stock: 30, picto: "cocktail",
-    // Photo Wikimedia Commons, licence CC BY-SA 4.0 (scene de bar, Pattaya)
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/DFC_1074_A_dimly_lit_bar_scene_with_a_half-full_cocktail_glass_and_straw_in_the_foreground_colorful_neon_lights_casting_purple_and_blue_hues_on_a_blurred_figure_in_the_background.jpg/960px-thumbnail.jpg",
+    id: "cocktail", nom: "Cocktail signature", cout: 110, fam: "bar", stock: 30,
+    art: artCocktail, glow: "rgba(242,161,168,.22)",
     court: "Le cocktail de la carte",
     desc: "Le cocktail signature de la carte, préparé au bar.",
     regles: ["Hors carte premium", "Un seul cocktail par soirée", "Le bar peut demander ta carte d'identité"]
   },
   {
-    id: "coupefile", nom: "Coupe-file", cout: 160, fam: "acces", stock: 20, picto: "ticket",
-    // Photo Wikimedia Commons, licence CC BY-SA 3.0
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Ticket_Fast_Pass.jpg/960px-Ticket_Fast_Pass.jpg",
+    id: "coupefile", nom: "Coupe-file", cout: 160, fam: "acces", stock: 20,
+    art: artTicket, glow: "rgba(217,161,90,.2)",
     court: "Toi + 1, devant la file",
     desc: "Tu passes devant la file, avec une personne.",
     regles: ["Toi + 1 accompagnant", "Valable jusqu'à 2 h du matin"]
   },
   {
-    id: "entree", nom: "Entrée gratuite", cout: 240, fam: "acces", stock: 10, picto: "bracelet",
-    // Photo Wikimedia Commons, licence CC BY 2.0
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Vancouver_Folk_Music_Festival_Wristband_%28190525923%29.jpg/960px-Vancouver_Folk_Music_Festival_Wristband_%28190525923%29.jpg",
+    id: "entree", nom: "Entrée gratuite", cout: 240, fam: "acces", stock: 10,
+    art: artBracelet, glow: "rgba(242,179,174,.22)",
     court: "L'entrée offerte, ce soir",
     desc: "L'entrée offerte pour toi, ce soir.",
     regles: ["Valable la soirée où tu l'échanges", "Hors soirées spéciales et privatisations"]
   },
   {
-    id: "table", nom: "Table + bouteille", cout: 900, fam: "vip", stock: 2, picto: "bouteille",
-    // Photo Wikimedia Commons, licence CC BY-SA 3.0
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Champagne_bottles_in_a_bucket_-_8439.jpg/960px-Champagne_bottles_in_a_bucket_-_8439.jpg",
+    id: "table", nom: "Table + bouteille", cout: 900, fam: "vip", stock: 2,
+    art: artBouteille, glow: "rgba(44,92,71,.34)",
     court: "Jusqu'à 6 personnes",
     desc: "Une table réservée et une bouteille pour ton groupe.",
     regles: ["Sur réservation, 24 h à l'avance", "Jusqu'à 6 personnes", "Bouteille au choix dans la sélection maison"]
   },
   {
-    id: "carre", nom: "Carré VIP pour 4", cout: 1400, fam: "vip", stock: 1, picto: "cordon",
-    // Photo Wikimedia Commons, licence CC BY-SA 4.0
-    photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Club_Tigerheat_on_the_Dance_Floor_with_Laser_Lights.jpg/960px-Club_Tigerheat_on_the_Dance_Floor_with_Laser_Lights.jpg",
+    id: "carre", nom: "Carré VIP pour 4", cout: 1400, fam: "vip", stock: 1,
+    art: artCordon, glow: "rgba(217,178,106,.24)",
     court: "Toute la nuit, entrées comprises",
     desc: "Le carré VIP pour toi et trois amis, toute la nuit.",
     regles: ["Sur réservation, 48 h à l'avance", "Entrées comprises pour 4", "Une seule attribution par soirée"]
@@ -1596,9 +1664,9 @@ var RECOMPENSES = [
 
 var OFFRE = {
   id: "o-shot", nom: "Shot offert", court: "Dès ta première story de la soirée",
-  fam: "bar", picto: "shot",
-  // Meme photo que la recompense "Shot maison" : c'est le meme produit
-  photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Three_shotglasses.jpg/960px-Three_shotglasses.jpg",
+  fam: "bar",
+  // Meme dessin que la recompense "Shot maison" : c'est le meme produit
+  art: artShot, glow: "rgba(243,187,78,.24)",
   cout: 0, avant: 70, stock: 20,
   desc: "Poste ta première story de la soirée avec le tag du Mirage, et le shot est offert.",
   regles: ["Story validée par le club", "Une seule fois par soirée", "Le bar peut demander ta carte d'identité"]
