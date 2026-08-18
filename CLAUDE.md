@@ -105,7 +105,14 @@ Migrations dans `supabase/migrations/`, appliquees par `npm run db:apply`.
 Tables : `establishments`, `establishment_owners`, `establishment_point_rules`,
 `establishment_point_rule_items`, `establishment_opening_hours`,
 `establishment_schedule`, `events`, `event_metrics`, `submissions`, `qr_scans`,
-`rewards`, `reward_redemptions`, `demo_requests`.
+`rewards`, `reward_redemptions`, `demo_requests`, `establishment_instagram_accounts`,
+`instagram_mentions`.
+
+⚠️ `npm run db:apply` ne rejoue en realite que `supabase/migrations/SETUP_COMPLET.sql`,
+pas chaque fichier numerote individuellement — et ce fichier a deja pris du retard sur
+au moins une migration recente (`202608150001_lien_vers_story_pwa.sql`, absente).
+`outils/ecart_migrations.cjs` compare le depot a la base reelle et repere ce genre
+d'ecart ; utile a lancer avant de supposer qu'une migration recente est appliquee.
 
 ## 5. Securite — regle non negociable
 
@@ -159,8 +166,15 @@ npm run db:test    # verifie les migrations sans les appliquer
   quand le premier vrai client arrive.
 - **`.env.local` ne contient que les cles `VITE_*`** (URL et cle anon). Les cles serveur
   (`SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_PLACES_API_KEY`,
-  `NOTIFICATION_EMAIL`, `NOTIFICATION_FROM`, `SITE_URL`) ne vivent que sur Vercel. En local,
-  les routes qui en dependent repondent `Configuration serveur incomplete`. C'est normal.
+  `NOTIFICATION_EMAIL`, `NOTIFICATION_FROM`, `SITE_URL`, `INSTAGRAM_APP_ID`,
+  `INSTAGRAM_APP_SECRET`, `INSTAGRAM_REDIRECT_URI`, `INSTAGRAM_STATE_SECRET`,
+  `INSTAGRAM_WEBHOOK_VERIFY_TOKEN`) ne vivent que sur Vercel. En local, les routes qui en
+  dependent repondent `Configuration serveur incomplete`. C'est normal.
+- **La connexion Instagram (`api/instagram-*.js`, `lib/instagram/`) exige une app Meta for
+  Developers** (produit "Facebook Login for Business") cote Julien : le compte Instagram du
+  club doit etre en mode Business/Creator et relie a une Page Facebook. Tant que l'app Meta
+  est en mode developpement, seuls les comptes ajoutes comme testeurs dans le dashboard Meta
+  peuvent se connecter — pas besoin d'attendre l'App Review pour les premiers clients.
 - **Le formulaire de demande de demo ecrit dans la vraie base de production, meme en local** :
   `landing.js` bascule sur une insertion Supabase directe avec la cle anon si
   `/api/demo-request` echoue. Ne pas le soumettre "pour tester".

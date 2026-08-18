@@ -23,6 +23,9 @@ const dashboardContent = document.querySelectorAll("[data-dashboard-content]");
 const lockedDashboard = document.querySelector("[data-dashboard-locked]");
 const lockedTitle = document.querySelector("[data-locked-title]");
 const lockedMessage = document.querySelector("[data-locked-message]");
+const instagramBanner = document.querySelector("[data-instagram-banner]");
+const instagramSubtitle = document.querySelector("[data-instagram-subtitle]");
+const instagramBody = document.querySelector("[data-instagram-body]");
 const INITIAL_REWARD_COUNT = 5;
 const LOCAL_REWARD_PREFIX = "local-reward-";
 const LOCAL_POINT_RULE_PREFIX = "local-point-rule-";
@@ -783,6 +786,146 @@ async function persistPointRules() {
   setDataStatus("Barème de points sauvegardé pour cet établissement.", "connected");
 }
 
+/* ==========================================================
+   INSTAGRAM
+
+   Bouton de connexion OAuth (Facebook Login for Business) pour que
+   le gerant voie le nombre de mentions en story recues. Comme le
+   reste du dashboard, jamais de vraie-fausse donnee sur une session
+   demo : la section reste neutre tant qu'il n'y a pas un vrai
+   establishment rattache a un vrai compte connecte.
+   ========================================================== */
+
+function instagramBannerCopy(statut) {
+  return (
+    {
+      connecte: ["Compte Instagram connecté.", "connected"],
+      refuse: ["Connexion annulée : rien n'a été modifié.", "warning"],
+      aucun_compte_pro: [
+        "Aucun compte Instagram professionnel trouvé sur la Page Facebook liée. Passe le compte du club en mode Business ou Creator, relie-le à une Page, puis réessaie.",
+        "error",
+      ],
+      session_expiree: ["La demande de connexion a expiré. Relance-la.", "warning"],
+      erreur: ["La connexion Instagram a échoué. Réessaie dans un instant.", "error"],
+    }[statut] || null
+  );
+}
+
+// Facebook redirige vers app.html#instagram?instagram=<statut> : on lit ce
+// statut une seule fois, puis on nettoie l'URL pour qu'un simple
+// rafraichissement ne rejoue pas le message.
+function consumeInstagramRedirectFeedback() {
+  if (!instagramBanner) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const statut = params.get("instagram");
+  if (!statut) return;
+
+  params.delete("instagram");
+  const query = params.toString();
+  history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
+
+  const copie = instagramBannerCopy(statut);
+  if (!copie) return;
+  instagramBanner.textContent = copie[0];
+  instagramBanner.dataset.state = copie[1];
+  instagramBanner.hidden = false;
+}
+
+async function chargerStatutInstagram(session) {
+  const reponse = await fetch("/api/instagram-status", {
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  const corps = await reponse.json().catch(() => null);
+  if (!reponse.ok) throw new Error(corps?.error || `HTTP ${reponse.status}`);
+  return corps;
+}
+
+function renderInstagramConnecte(statut, session) {
+  const expireLe = statut.jetonExpireLe
+    ? new Date(statut.jetonExpireLe).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })
+    : null;
+  const mentions = Number(statut.mentions || 0);
+
+  instagramSubtitle.textContent = `Connecté à @${statut.username}`;
+  instagramBody.innerHTML = `
+    <p class="instagram-stat"><strong>${numberFormatter.format(mentions)}</strong> mention${mentions > 1 ? "s" : ""} reçue${mentions > 1 ? "s" : ""} en story depuis la connexion.</p>
+    ${
+      statut.webhookActif
+        ? ""
+        : `<p class="instagram-warning">La réception automatique des mentions n'est pas encore active côté Meta : les nouvelles mentions ne remonteront pas tant que ce n'est pas résolu.</p>`
+    }
+    ${expireLe ? `<p class="instagram-meta">Connexion à renouveler avant le ${expireLe}.</p>` : ""}
+    <button type="button" class="button button-secondary" data-instagram-disconnect>Déconnecter</button>
+  `;
+
+  instagramBody.querySelector("[data-instagram-disconnect]")?.addEventListener("click", async (event) => {
+    event.currentTarget.disabled = true;
+    try {
+      await fetch("/api/instagram-disconnect", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+    } catch (error) {
+      console.error("[instagram] déconnexion", error);
+    } finally {
+      renderInstagramSection(dashboardState);
+    }
+  });
+}
+
+function renderInstagramDeconnecte(session) {
+  instagramSubtitle.textContent = "Pas encore connecté";
+  instagramBody.innerHTML = `
+    <p>Voyez combien de personnes vous mentionnent en story, directement depuis Instagram.</p>
+    <p class="instagram-meta">Le compte Instagram du club doit être en mode Business ou Creator, et relié à une Page Facebook.</p>
+    <button type="button" class="button button-primary" data-instagram-connect>Connecter mon compte Instagram</button>
+  `;
+
+  instagramBody.querySelector("[data-instagram-connect]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.textContent = "Redirection…";
+    try {
+      const reponse = await fetch("/api/instagram-connect", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const corps = await reponse.json().catch(() => null);
+      if (!reponse.ok || !corps?.url) throw new Error(corps?.error || "URL de connexion manquante.");
+      window.location.href = corps.url;
+    } catch (error) {
+      console.error("[instagram] connexion", error);
+      instagramSubtitle.textContent = "Connexion impossible pour le moment.";
+      button.disabled = false;
+      button.textContent = "Connecter mon compte Instagram";
+    }
+  });
+}
+
+async function renderInstagramSection(data) {
+  if (!instagramBody || !instagramSubtitle) return;
+
+  consumeInstagramRedirectFeedback();
+
+  if (data.source !== "supabase" || !data.session || !data.establishment?.id) {
+    instagramSubtitle.textContent = "Connecte-toi avec un compte de club pour lier Instagram.";
+    instagramBody.innerHTML = "";
+    return;
+  }
+
+  instagramSubtitle.textContent = "Vérification en cours…";
+  instagramBody.innerHTML = "";
+
+  try {
+    const statut = await chargerStatutInstagram(data.session);
+    if (statut.connecte) renderInstagramConnecte(statut, data.session);
+    else renderInstagramDeconnecte(data.session);
+  } catch (error) {
+    console.error("[instagram] statut", error);
+    instagramSubtitle.textContent = "Statut Instagram indisponible pour le moment.";
+  }
+}
+
 function renderDashboard(data) {
   dashboardState = data;
   renderDataSource(data);
@@ -792,6 +935,7 @@ function renderDashboard(data) {
   renderOverview(data);
   renderPointRules(data);
   renderRewardEditor(data);
+  renderInstagramSection(data);
 }
 
 async function refreshDashboard() {
