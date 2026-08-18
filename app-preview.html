@@ -306,12 +306,12 @@
       /* ---------------- Grille de cartes (catalogue) ---------------- */
 
       /* Le catalogue quitte la liste "tracklist" pour une grille de
-         cartes claires — c'est la structure que demandait Julien en
-         reprenant le prompt v2 (Airbnb/Spotify/Figma) : icone posee
-         sur un aplat de couleur par famille, prix en gros, bouton
-         d'echange en pleine largeur. Actif seulement en theme clair
-         (.screen.clair), la carte reste inutilisee sur la fiche club
-         de l'ecran carte. */
+         cartes — c'est la structure que demandait Julien en reprenant
+         le prompt v2 (Airbnb/Spotify/Figma) : icone posee sur un aplat
+         de couleur par famille, prix en gros, bouton d'echange en
+         pleine largeur. Utilisee uniquement par la boutique
+         (.screen.boutique-sombre) ; la fiche club de l'ecran carte ne
+         s'en sert pas. */
       .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .carte-reco {
         display: flex; flex-direction: column; align-items: flex-start; text-align: left;
@@ -582,12 +582,11 @@
       }
       .sheet-ok .rond svg { width: 24px; height: 24px; stroke: #57d98a; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 
-      /* Le module QR doit rester blanc pour scanner correctement, mais
-         le poser directement sur la feuille (elle-meme blanche depuis
-         le theme clair) donnait un aplat blanc sur blanc sans aucune
-         limite — agressif pour les yeux, surtout en boite ou l'ecran
-         est pousse a fond. Le cadre chaud (--s2) cree la rupture de
-         contraste qui manquait, sans toucher au blanc du QR lui-meme. */
+      /* Le module QR doit rester blanc pour scanner correctement — le
+         cadre --s2 (fonce depuis le passage au noir) cree la rupture
+         de contraste autour, sans toucher au blanc du QR lui-meme.
+         Avant le fond noir, ce cadre servait deja a eviter un blanc
+         sur blanc qui flashait en boite, ecran pousse a fond. */
       .qr-frame {
         display: inline-block; background: var(--s2); border: 1px solid var(--line2);
         border-radius: 26px; padding: 16px; margin: 18px auto 12px;
@@ -622,58 +621,63 @@
       code { font-family: var(--mono); font-size: 12.5px; color: var(--page-ink); }
 
       /* ============================================================
-         THEME CLAIR — boutique uniquement.
+         THEME BOUTIQUE — noir neutre, boutique uniquement.
 
-         Julien a rejete la piste sombre/vinyle apres coup, en reprenant
-         le prompt "v2" d'une conversation Claude web (Airbnb, Spotify,
-         Discord, Figma, Twitch comme references) : fond clair, aplats
-         de couleur francs par famille, corail en CTA ET en indicateur
-         de points (le prompt ne separe pas les deux, contrairement a
-         la regle "corail = marque jamais action" qui valait pour la
-         version precedente — assumee ici comme changement de direction
-         explicite, pas un oubli).
+         Troisieme palette pour cet ecran : la piste vinyle/brun a ete
+         rejetee ("trop alcoolise"), puis la piste claire/Cali a ete
+         jugee correcte sur la structure (grille de cartes, corail en
+         CTA et en indicateur de points — ca reste) mais Julien a
+         demande un fond noir. Pas un retour au brun/laiton d'origine :
+         un noir neutre, proche de Spotify/Discord, sur lequel les
+         pastilles d'icone pastel (TEINTES, JS) ressortent comme des
+         pavés de couleur plutot que de se fondre dans un halo sombre.
 
-         La classe .clair est posee sur .screen par activerVue() quand
-         l'onglet boutique est actif, jamais sur l'ecran carte : la
-         carte garde son ambiance nocturne (ciel, arbres, halo neon),
-         la boutique bascule vers ce theme. Comme la barre d'onglets et
-         la feuille du bas sont des enfants directs de .screen, elles
-         heritent des memes variables sans regle dupliquee. */
-      .screen.clair {
-        --ink: #1f2937; --ink2: #6b7280; --ink3: #98a0ab;
-        --bg: #fafafa; --s1: #ffffff; --s2: #f6f6f7; --s3: #eeeeef;
-        --line: #ececef; --line2: #e5e5e9;
+         La classe .boutique-sombre est posee sur .screen par
+         activerVue() quand l'onglet boutique est actif, jamais sur
+         l'ecran carte : la carte garde sa nuit d'origine (ciel,
+         arbres, halo), qui n'a rien a voir avec ce noir-ci. Comme la
+         barre d'onglets et la feuille du bas sont des enfants directs
+         de .screen, elles heritent des memes variables sans regle
+         dupliquee. */
+      .screen.boutique-sombre {
+        --ink: #f4f5f7; --ink2: #9aa0ab; --ink3: #6b7078;
+        --bg: #0d0e11; --s1: #17181c; --s2: #1e2025; --s3: #26282e;
+        --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.14);
         --accent: #ff6b5b; --ambre: #ff6b5b;
       }
-      .screen.clair .wallet {
-        background: linear-gradient(180deg, #ffffff 0%, #fdfaf8 82%, rgba(253,250,248,.95) 100%);
+      .screen.boutique-sombre .wallet {
+        background: linear-gradient(180deg, #15161a 0%, #0d0e11 82%, rgba(13,14,17,.95) 100%);
         border-bottom: 1px solid var(--line);
       }
-      .screen.clair .cadran-piste { stroke: rgba(15,15,20,.07); }
-      .screen.clair .cadran-valeur { filter: none; }
-      .screen.clair .cadran-centre b,
-      .screen.clair .cadran-centre b.maj,
-      .screen.clair .ligne-prix b,
-      .screen.clair .sheet-note em { text-shadow: none; }
-      .screen.clair .cadran-centre b.maj { animation: none; }
-      .screen.clair .filtre { border-color: var(--line2); color: var(--ink2); }
-      .screen.clair .filtre[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
-      .screen.clair .visuel, .screen.clair .sheet-visuel {
-        background: radial-gradient(120% 120% at 32% 24%, var(--glow), #ffffff 72%);
-        box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 5px #fff, inset 0 0 0 6px rgba(15,15,20,.05);
+      .screen.boutique-sombre .cadran-piste { stroke: rgba(255,255,255,.1); }
+      .screen.boutique-sombre .cadran-valeur { filter: none; }
+      .screen.boutique-sombre .cadran-centre b,
+      .screen.boutique-sombre .cadran-centre b.maj,
+      .screen.boutique-sombre .ligne-prix b,
+      .screen.boutique-sombre .sheet-note em { text-shadow: none; }
+      .screen.boutique-sombre .cadran-centre b.maj { animation: none; }
+      .screen.boutique-sombre .filtre { border-color: var(--line2); color: var(--ink2); }
+      .screen.boutique-sombre .filtre[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .screen.boutique-sombre .visuel, .screen.boutique-sombre .sheet-visuel {
+        background: radial-gradient(120% 120% at 32% 24%, var(--glow), var(--s1) 72%);
+        box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 5px var(--s1), inset 0 0 0 6px rgba(255,255,255,.06);
       }
-      .screen.clair .sheet-visuel { box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 11px #fff, inset 0 0 0 12px rgba(15,15,20,.05), 0 16px 32px -14px rgba(20,20,25,.18); }
-      .screen.clair .sheet { background: #ffffff; border-top-color: var(--line2); box-shadow: 0 -14px 34px rgba(20,20,25,.16); }
-      .screen.clair .grab { background: rgba(15,15,20,.14); }
-      .screen.clair .sheet-close { background: var(--s2); }
-      .screen.clair .sheet-close svg { stroke: var(--ink2); }
-      .screen.clair .sheet-cta.sobre { background: var(--s2); color: var(--ink); }
-      .screen.clair .bareme summary .chev svg { stroke: var(--ink3); }
-      .screen.clair .tabs { background: rgba(255,255,255,.92); border-top-color: var(--line2); }
-      .screen.clair .tab svg { stroke: #a2a8b2; }
-      .screen.clair .tab.on svg { stroke: var(--accent); }
-      .screen.clair .liste, .screen.clair .liste.liste-soir { border-color: var(--line); }
-      .screen.clair .liste.liste-soir { border-color: rgba(255,107,91,.35); }
+      .screen.boutique-sombre .sheet-visuel { box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 11px var(--s1), inset 0 0 0 12px rgba(255,255,255,.06), 0 16px 32px -14px rgba(0,0,0,.55); }
+      .screen.boutique-sombre .sheet { background: #131418; border-top-color: var(--line2); box-shadow: 0 -14px 34px rgba(0,0,0,.5); }
+      .screen.boutique-sombre .grab { background: rgba(255,255,255,.16); }
+      .screen.boutique-sombre .sheet-close { background: var(--s2); }
+      .screen.boutique-sombre .sheet-close svg { stroke: var(--ink2); }
+      .screen.boutique-sombre .sheet-cta.sobre { background: var(--s2); color: var(--ink); }
+      .screen.boutique-sombre .bareme summary .chev svg { stroke: var(--ink3); }
+      .screen.boutique-sombre .tabs { background: rgba(13,14,17,.88); border-top-color: var(--line2); }
+      .screen.boutique-sombre .tab svg { stroke: #6b7078; }
+      .screen.boutique-sombre .tab.on svg { stroke: var(--accent); }
+      .screen.boutique-sombre .liste, .screen.boutique-sombre .liste.liste-soir { border-color: var(--line); }
+      .screen.boutique-sombre .liste.liste-soir { border-color: rgba(255,107,91,.35); }
+      /* Le QR reste blanc (obligatoire pour scanner), mais sur ce fond
+         noir le cadre --s2 fait deja toute la rupture de contraste
+         necessaire — plus besoin de l'attenuer comme sur fond clair. */
+      .screen.boutique-sombre .qr-carte { box-shadow: 0 10px 26px rgba(0,0,0,.5); }
 
       @media (max-width: 430px) {
         .wrap { padding: 38px 12px 70px; }
@@ -703,11 +707,17 @@
   MISE A JOUR v2 (remplace ci-dessus) : Julien a rejete cette piste
   apres coup, en reprenant un prompt d'une conversation Claude web
   citant Airbnb/Spotify/Discord/Figma/Twitch. Nouvelle direction :
-  grille de cartes claires (fond #fafafa), corail (#ff6b5b) portant
-  a la fois les points ET les boutons d'action — changement assume,
-  contraire a la regle precedente qui separait les deux. Applique
-  uniquement a #vue-boutique via .screen.clair ; l'ecran carte garde
-  son theme nocturne d'origine.
+  grille de cartes, corail (#ff6b5b) portant a la fois les points ET
+  les boutons d'action — changement assume, contraire a la regle
+  precedente qui separait les deux.
+
+  MISE A JOUR v3 (fond) : la v2 est passee par un fond clair (#fafafa)
+  avant que Julien ne demande explicitement un fond noir. La structure
+  de la v2 (grille de cartes, corail partout) reste ; seule la palette
+  change vers un noir neutre — ni le brun/laiton de la toute premiere
+  version, ni le blanc de la v2. Applique uniquement a #vue-boutique
+  via .screen.boutique-sombre ; l'ecran carte garde son theme nocturne
+  d'origine, sans lien avec ce noir-ci.
 -->
 
 <div class="wrap">
@@ -1144,11 +1154,12 @@ function activerVue(nom) {
     VUES[k].classList.toggle("actif", actif);
     VUES[k].toggleAttribute("inert", !actif);
   });
-  // Le theme clair (grille de cartes, corail partout) n'habille que la
-  // boutique. La classe vit sur .screen : la barre d'onglets et la
-  // feuille du bas, communes aux deux ecrans, en heritent au passage
-  // sans regle dupliquee, et repassent au theme sombre sur la carte.
-  SCREEN.classList.toggle("clair", nom === "boutique");
+  // Le theme boutique (noir neutre, grille de cartes) n'habille que la
+  // boutique — ce n'est pas le meme noir que celui de la carte. La
+  // classe vit sur .screen : la barre d'onglets et la feuille du bas,
+  // communes aux deux ecrans, en heritent au passage sans regle
+  // dupliquee, et repassent a la nuit d'origine sur la carte.
+  SCREEN.classList.toggle("boutique-sombre", nom === "boutique");
   TAB_CARTE.classList.toggle("on", nom === "carte");
   TAB_CARTE.setAttribute("aria-current", nom === "carte" ? "page" : "false");
   TAB_BOUTIQUE.classList.toggle("on", nom === "boutique");

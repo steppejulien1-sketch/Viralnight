@@ -4,47 +4,58 @@
 
 ## World
 
-**Mise à jour (18-19 août 2026) : la direction "pochette de disque"
-ci-dessous a été remplacée.** Julien a rejeté cette piste après coup
-et a redirigé vers une conversation Claude web où il avait déjà
-travaillé un brief détaillé ("prompt v2") citant Airbnb, Spotify,
-Discord, Figma et Twitch comme références — grille de cartes claires,
-pas de dashboard sombre. Ce brief prime désormais sur la thèse
-vinyle/nixie décrite plus bas, conservée uniquement comme trace
-historique de ce qui a été essayé et écarté.
+**Mise à jour (19 août 2026) : troisième palette pour cet écran.** La
+direction "pochette de disque" a été rejetée en premier, remplacée par
+un brief clair/Cali ("prompt v2", Airbnb/Spotify/Discord/Figma/Twitch)
+dont la structure (grille de cartes, corail en CTA et en indicateur de
+points) a été jugée bonne — mais Julien a ensuite demandé explicitement
+un fond noir. La grille de cartes reste ; seule la palette change à
+nouveau, vers un noir neutre (pas un retour au brun/laiton de la toute
+première version).
 
-Nouvelle thèse : la boutique de la PWA clubbeur (`app-preview.html`,
-`#vue-boutique`) est une grille de cartes lumineuses — chaque
-récompense a sa propre carte avec icône sur aplat pastel, titre, prix
-en gros, plutôt qu'une ligne de "tracklist" sombre. Le thème clair vit
-dans la classe `.screen.clair`, posée uniquement sur l'écran boutique
-par `activerVue()` — l'écran carte garde sa nuit (ciel, arbres, halo)
-sans aucune modification.
+Thèse actuelle : la boutique de la PWA clubbeur (`app-preview.html`,
+`#vue-boutique`) est une grille de cartes sur fond noir neutre — chaque
+récompense a sa propre carte avec icône sur aplat pastel vif (qui
+ressort d'autant plus sur le noir), titre, prix corail en gros. Le
+thème vit dans la classe `.screen.boutique-sombre`, posée uniquement
+sur l'écran boutique par `activerVue()` — l'écran carte garde sa
+propre nuit (ciel, arbres, halo), sans lien avec ce noir-ci : les deux
+noirs ne partagent aucune règle, ce sont deux identités différentes.
 
-*Ancienne thèse (abandonnée) : pochette de disque, catalogue façon
-matrice de vinyle, cadran ambre circulaire pour la cagnotte — direction
-tirée via le skill Impeccable (`concept-seed.mjs --scope direction
---mode operate`, seed `c3276dbf`, index 4), qui remplaçait elle-même
-trois tentatives antérieures rejetées comme "trop IA" (photos de
-banque d'images, icônes plates génériques, palette froide #08090c).
-La forme du cadran circulaire (`.cadran`) est réutilisée telle quelle
-dans la nouvelle direction — seule sa palette change.*
+*Étapes abandonnées (traces historiques) :*
+- *Pochette de disque, catalogue façon matrice de vinyle, cadran ambre
+  circulaire — direction tirée via le skill Impeccable
+  (`concept-seed.mjs --scope direction --mode operate`, seed
+  `c3276dbf`, index 4), qui remplaçait elle-même trois tentatives
+  antérieures rejetées comme "trop IA" (photos de banque d'images,
+  icônes plates génériques, palette froide #08090c). Rejetée à son
+  tour comme "trop alcoolisée".*
+- *Fond clair `#fafafa` (v2 Cali) : structure conservée, fond rejeté.*
+
+La forme du cadran circulaire (`.cadran`) traverse les trois versions
+sans changer — seule sa palette est recolorée à chaque fois.
 
 ## Palette
 
-- `--bg` #fafafa, `--s1` #ffffff, `--s2` #f6f6f7, `--s3` #eeeeef —
-  quasi blanc, jamais de noir/brun "alcoolé" (rejeté explicitement).
-- `--accent` (corail) #ff6b5b, aussi assigné à `--ambre` en theme
-  clair : **le corail porte maintenant à la fois les points ET les
-  boutons d'action.** Ceci renverse la règle précédente ("corail =
-  marque, jamais une quantité") sur demande explicite de Julien
-  reprenant son brief externe — changement assumé, pas un oubli.
-  Cette règle inversée ne vaut que pour `#vue-boutique` ; le dashboard
-  B2B (`app.html`) garde sa règle d'origine (voir `CLAUDE.md` §6).
-- `--ink` #1f2937 / `--ink2` #6b7280 / `--ink3` #98a0ab — gris neutres
-  sur fond clair (jamais de blanc-sur-blanc : voir piège ci-dessous).
+- `--bg` #0d0e11, `--s1` #17181c, `--s2` #1e2025, `--s3` #26282e — noir
+  neutre (ni bleuté, ni brun/laiton — les deux ont déjà été rejetés).
+- `--accent` (corail) #ff6b5b, aussi assigné à `--ambre` : **le corail
+  porte à la fois les points ET les boutons d'action.** Ceci renverse
+  la règle du dashboard B2B ("corail = marque, jamais une quantité"),
+  sur demande explicite de Julien reprenant un brief externe —
+  changement assumé, pas un oubli. Cette règle inversée ne vaut que
+  pour `#vue-boutique` ; `app.html` garde sa règle d'origine (voir
+  `CLAUDE.md` §6).
+- `--ink` #f4f5f7 / `--ink2` #9aa0ab / `--ink3` #6b7078 — blanc cassé
+  puis gris neutres sur fond noir (voir piège ci-dessous : `.sheet` ne
+  reçoit rien de ce token par héritage automatique, il faut l'écrire).
 - Pastilles d'icône par famille : bar `#ffece0`, accès `#fdeaf1`, vip
-  `#eef0fe` — aplat léger derrière chaque dessin, pas de halo sombre.
+  `#eef0fe` — restées pastel/claires à dessein : sur le fond noir, ce
+  sont des pavés de couleur qui ressortent, pas un halo qui se fond.
+- Le QR code d'un bon reste blanc à modules sombres, quel que soit le
+  thème : c'est une contrainte de scannabilité, pas un choix
+  esthétique. Le cadre autour (`.qr-frame`, `--s2`) porte tout le
+  travail de contraste avec le fond.
 
 ## Typography
 
