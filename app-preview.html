@@ -232,40 +232,26 @@
       }
       .sec-head .sub { font-size: 11px; font-weight: 650; color: var(--ink3); margin-left: auto; white-space: nowrap; }
 
-      /* La cagnotte comme un cadran de mesure — VU-metre ou compteur a
-         lampes d'une console de mix — plutot qu'une carte "gros
-         chiffre + barre". L'ambre est reserve a ce role dans toute
-         l'appli : un nombre de points se lit toujours dans cette
-         couleur-la, jamais ailleurs. */
+      /* Le solde etait un cadran circulaire avec label "Ma cagnotte",
+         cumul du mois et objectif vers la prochaine recompense —
+         Julien a trouve tout ca inutile ("le rond, c'est bizarre") et
+         a demande juste son nombre de points. Retour a l'essentiel :
+         un chiffre, rien autour. */
       .wallet {
         position: sticky; top: 0; z-index: 20;
-        display: flex; align-items: center; gap: 16px;
-        padding: 50px 18px 20px;
+        padding: 50px 18px 22px;
         background: linear-gradient(180deg, #17110f 0%, #120d0c 78%, rgba(18,13,12,.94) 100%);
         border-bottom: 1px solid var(--line);
         backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       }
-      .cadran { position: relative; width: 74px; height: 74px; flex: 0 0 auto; }
-      .cadran svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
-      .cadran-piste { fill: none; stroke: rgba(255,235,220,.1); stroke-width: 6; }
-      .cadran-valeur {
-        fill: none; stroke: var(--ambre); stroke-width: 6; stroke-linecap: round;
-        stroke-dasharray: 276.5; stroke-dashoffset: 276.5;
-        transition: stroke-dashoffset .6s cubic-bezier(.22,.75,.3,1);
-        filter: drop-shadow(0 0 5px rgba(255,176,32,.5));
+      .solde { display: flex; align-items: baseline; gap: 6px; }
+      .solde b {
+        font-family: var(--mono); font-size: 34px; font-weight: 800; color: var(--ambre);
+        letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums;
       }
-      .cadran-centre {
-        position: absolute; inset: 0; display: flex; flex-direction: column;
-        align-items: center; justify-content: center; text-align: center;
-      }
-      .cadran-centre b {
-        font-family: var(--mono); font-size: 19px; font-weight: 700; color: var(--ambre);
-        letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums;
-        text-shadow: 0 0 10px rgba(255,176,32,.4);
-      }
-      .cadran-centre i {
-        font-style: normal; font-size: 7.5px; font-weight: 700; letter-spacing: .1em;
-        text-transform: uppercase; color: var(--ink3); margin-top: 2px;
+      .solde i {
+        font-style: normal; font-size: 13px; font-weight: 700; letter-spacing: .04em;
+        color: var(--ink3);
       }
 
       /* Un chiffre de mesure ne rebondit pas : il s'allume plus fort un
@@ -274,20 +260,9 @@
          parcours, decroissance exponentielle, jamais de survitesse. */
       @keyframes majSolde {
         0%   { text-shadow: 0 0 18px rgba(255,176,32,.9); }
-        100% { text-shadow: 0 0 10px rgba(255,176,32,.4); }
+        100% { text-shadow: 0 0 0 rgba(255,176,32,0); }
       }
-      .cadran-centre b.maj { animation: majSolde .6s cubic-bezier(.16,1,.3,1); }
-
-      .wallet-texte { flex: 1; min-width: 0; }
-      .wallet-lab {
-        display: block; font-size: 11px; font-weight: 700; letter-spacing: .14em;
-        text-transform: uppercase; color: var(--ink3);
-      }
-      .wallet-mois { display: block; font-size: 11px; font-weight: 600; color: var(--ink3); margin-top: 2px; }
-      .wallet-goal { margin: 9px 0 0; font-size: 12px; font-weight: 600; color: var(--ink2); letter-spacing: -.01em; line-height: 1.4; }
-      .wallet-goal em {
-        font-style: normal; color: var(--ambre); font-weight: 700; font-family: var(--mono);
-      }
+      .solde b.maj { animation: majSolde .6s cubic-bezier(.16,1,.3,1); }
 
       .jeton { display: block; }
 
@@ -325,10 +300,18 @@
       .carte-reco:active { transform: translateY(-1px) scale(.99); }
       .carte-reco:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .carte-reco .visuel-badge {
-        width: 56px; height: 56px; border-radius: 16px; margin-bottom: 10px; flex: 0 0 auto;
-        display: grid; place-items: center; background: var(--tinte, #fdece9);
+        position: relative; width: 56px; height: 56px; border-radius: 16px; margin-bottom: 10px; flex: 0 0 auto;
+        overflow: hidden; display: grid; place-items: center; background: var(--tinte, #fdece9);
       }
       .carte-reco .visuel-badge svg { width: 62%; height: 62%; display: block; }
+      .carte-reco .visuel-badge.foto img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        filter: saturate(1.3) contrast(1.08);
+      }
+      .carte-reco .visuel-badge.foto::after {
+        content: ""; position: absolute; inset: 0; background: var(--tinte-vive, var(--tinte));
+        mix-blend-mode: color; opacity: .45; pointer-events: none;
+      }
       .carte-reco strong { display: block; font-size: 13.5px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; color: var(--ink); }
       .carte-reco .code {
         display: block; font-family: var(--mono); font-size: 10px; color: var(--ink3);
@@ -342,18 +325,6 @@
       .carte-reco .manque { display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3); margin-top: 2px; }
       .carte-reco.loin { opacity: .55; }
       .carte-reco.epuise { opacity: .4; pointer-events: none; }
-
-      /* Palier de rareté : distinction discrete pour les recompenses
-         qui se meritent, dans l'esprit du jeu evoque par Julien — mais
-         silencieuse sur les recompenses courantes plutot que d'etiqueter
-         tout le catalogue, meme logique que le stock qui ne s'affiche
-         que sous 5 unites. */
-      .carte-reco .palier {
-        position: absolute; top: 10px; right: 10px; font-size: 9px; font-weight: 800;
-        letter-spacing: .07em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px;
-        color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent);
-        border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
-      }
 
       /* ---------------- Les listes (recompenses, offre du soir) ---------------- */
 
@@ -373,9 +344,8 @@
 
       /* Le visuel : un label de disque, pas une case d'icone. Anneau
          exterieur (le bord du label), anneau interieur discret (le
-         sillon), dessin au centre. Meme famille d'objet que le cadran
-         de la cagnotte — les deux sont des cercles, pas un melange de
-         formes different d'un module a l'autre. */
+         sillon), dessin au centre. Cercle, comme le jeton — pas un
+         melange de formes different d'un module a l'autre. */
       .visuel {
         position: relative; width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto;
         overflow: hidden;
@@ -384,6 +354,23 @@
         display: grid; place-items: center;
       }
       .visuel svg { width: 66%; height: 66%; display: block; }
+
+      /* Variante photo : les dessins faits main pour les familles
+         restaient trop proches du "clip art" pour Julien ("on dirait
+         de l'IA degueulasse"). Quand une vraie photo libre de droits
+         existe pour l'objet (FOTOS, JS), elle remplace le dessin —
+         recadree en cercle, teintee dans la couleur de la recompense
+         pour rester cohérente avec le reste de l'interface plutot que
+         de flotter comme un aplat photo brut. */
+      .visuel.foto img, .sheet-visuel.foto img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        filter: saturate(1.3) contrast(1.08);
+      }
+      .visuel.foto::after, .sheet-visuel.foto::after {
+        content: ""; position: absolute; inset: 0; border-radius: inherit;
+        background: var(--glow); mix-blend-mode: color; opacity: .5;
+        box-shadow: inset 0 0 0 1px var(--line2); pointer-events: none;
+      }
 
       .ligne-txt { flex: 1; min-width: 0; }
       .ligne-txt strong { display: block; font-size: 14px; font-weight: 650; letter-spacing: -.025em; }
@@ -687,13 +674,8 @@
       .screen.boutique-sombre .app {
         background: radial-gradient(120% 46% at 50% 0%, #1a1b20 0%, var(--bg) 60%);
       }
-      .screen.boutique-sombre .cadran-piste { stroke: rgba(255,255,255,.1); }
-      .screen.boutique-sombre .cadran-valeur { filter: none; }
-      .screen.boutique-sombre .cadran-centre b,
-      .screen.boutique-sombre .cadran-centre b.maj,
       .screen.boutique-sombre .ligne-prix b,
       .screen.boutique-sombre .sheet-note em { text-shadow: none; }
-      .screen.boutique-sombre .cadran-centre b.maj { animation: none; }
       .screen.boutique-sombre .filtre { border-color: var(--line2); color: var(--ink2); }
       .screen.boutique-sombre .filtre[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
       .screen.boutique-sombre .visuel, .screen.boutique-sombre .sheet-visuel {
@@ -808,20 +790,8 @@
           <div class="app" id="app">
 
             <header class="wallet">
-              <div class="cadran">
-                <svg viewBox="0 0 100 100" aria-hidden="true">
-                  <circle class="cadran-piste" cx="50" cy="50" r="44"></circle>
-                  <circle class="cadran-valeur" id="w-anneau" cx="50" cy="50" r="44"></circle>
-                </svg>
-                <div class="cadran-centre">
-                  <b id="w-solde">0</b>
-                  <i>pts</i>
-                </div>
-              </div>
-              <div class="wallet-texte">
-                <span class="wallet-lab">Ma cagnotte</span>
-                <span class="wallet-mois" id="w-mois"></span>
-                <p class="wallet-goal" id="w-objectif"></p>
+              <div class="solde">
+                <b id="w-solde">0</b><i>pts</i>
               </div>
             </header>
 
@@ -1117,6 +1087,9 @@ function artCordon() {
    et le grand bandeau de la feuille — meme dessin, meme halo. */
 function visuel(item, taille) {
   var cls = taille === "grand" ? "sheet-visuel" : "visuel";
+  if (item.foto) {
+    return '<span class="' + cls + ' foto" style="--glow:' + item.glow + '"><img src="' + item.foto + '" alt="" loading="lazy"></span>';
+  }
   return '<span class="' + cls + '" style="--glow:' + item.glow + '">' + item.art() + "</span>";
 }
 
@@ -1219,11 +1192,10 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
 
 $("#pill-jeton").outerHTML = jeton(20);
 
-// Perimetre du cadran (r=44) : 2 * PI * 44. Fige ici plutot que
-// recalcule a chaque appel, comme le stroke-dasharray fixe dans le CSS
-// auquel ce chiffre doit rester identique.
-var PERIMETRE_CADRAN = 276.5;
-
+// Reste utilisee par la fiche club de la carte (noteRecompenseClub) :
+// la prochaine recompense accessible, pour "X pts pour Y". Le meme
+// calcul alimentait aussi l'objectif affiche dans la boutique, retire
+// a la demande de Julien ("inutile").
 function prochaine() {
   return RECOMPENSES
     .filter(function (r) { return r.cout > ETAT.solde && r.stock > 0; })
@@ -1238,17 +1210,6 @@ function majCagnotte(anime) {
     b.classList.remove("maj");
     void b.offsetWidth;
     b.classList.add("maj");
-  }
-
-  var cible = prochaine();
-  var part = cible ? Math.min(1, Math.max(.03, ETAT.solde / cible.cout)) : 1;
-  $("#w-anneau").style.strokeDashoffset = Math.round(PERIMETRE_CADRAN * (1 - part));
-
-  if (cible) {
-    $("#w-objectif").innerHTML =
-      "Encore <em>" + nb(cible.cout - ETAT.solde) + " pts</em> avant " + cible.nom.toLowerCase() + ".";
-  } else {
-    $("#w-objectif").innerHTML = "<em>Tout le catalogue est à ta portée.</em>";
   }
 }
 
@@ -1857,9 +1818,12 @@ AMIS.forEach(function (p) {
    (memes libelles, memes couts, memes stocks) et l'etend vers
    le haut pour qu'il reste quelque chose a viser apres les
    premieres soirees. Chaque entree porte un champ `art` (la
-   fonction qui dessine l'illustration) et un `glow` (le halo de
-   couleur attenue derriere) plutot qu'une photo — voir plus haut
-   pourquoi.
+   fonction qui dessine l'illustration, utilisee si aucune photo
+   ne correspond), un `glow` (le halo/la teinte derriere) et un
+   `foto` optionnel (URL Unsplash, licence libre) qui remplace le
+   dessin quand l'objet en a une — le dessin fait main a ete juge
+   "IA degueulasse" par Julien, une vraie photo recadree et teintee
+   rend mieux pour les objets identifiables (verre, bouteille...).
    ========================================================== */
 
 var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
@@ -1869,6 +1833,23 @@ var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
    pour cette maquette, celui de Mirage — le seul vrai club existant
    aujourd'hui. */
 var CODE_CLUB = "6VAUMQB5";
+
+/* Photos libres de droits (licence Unsplash — usage commercial libre,
+   sans attribution requise), une par objet identifiable. Verifiees a
+   la main (recherche + verification du contenu + verification que le
+   lien repond bien une image) avant d'etre integrees ; pas d'URL
+   devinee. Cle = nom de la fonction art* correspondante, pour associer
+   la photo au dessin qu'elle remplace sans dupliquer les tables
+   ci-dessous. Pas de photo pour artPinte/artCintre/artBracelet : ces
+   familles ne sont pas visibles dans le catalogue reel aujourd'hui,
+   pas la peine d'en chercher tant qu'elles ne servent pas. */
+var FOTOS = {
+  artCocktail:  "https://images.unsplash.com/photo-1605270012917-bf157c5a9541?w=240&q=70&auto=format&fit=crop",
+  artBouteille: "https://images.unsplash.com/photo-1514242879996-d7b3bb2dd531?w=240&q=70&auto=format&fit=crop",
+  artShot:      "https://images.unsplash.com/photo-1678667593664-792513e9ff7b?w=240&q=70&auto=format&fit=crop",
+  artCordon:    "https://images.unsplash.com/photo-1776982298320-888d9f0ee1cd?w=240&q=70&auto=format&fit=crop",
+  artTicket:    "https://images.unsplash.com/photo-1515139372923-c923c9e9a18c?w=240&q=70&auto=format&fit=crop"
+};
 
 /* Reconnait le type d'objet dans le TITRE tape par le gerant, pour lui
    donner un dessin precis (un cocktail plutot qu'un pictogramme
@@ -1894,10 +1875,13 @@ var INDICES_TITRE = [
 
 function choisirArt(titre, categorie) {
   for (var i = 0; i < INDICES_TITRE.length; i++) {
-    if (INDICES_TITRE[i][0].test(titre)) return { art: INDICES_TITRE[i][1], glow: INDICES_TITRE[i][2] };
+    if (INDICES_TITRE[i][0].test(titre)) {
+      var fnMatch = INDICES_TITRE[i][1];
+      return { art: fnMatch, glow: INDICES_TITRE[i][2], foto: FOTOS[fnMatch.name] || null };
+    }
   }
   var repli = REPLIS_FAMILLE[categorie] || REPLIS_FAMILLE.bar;
-  return { art: repli[0], glow: repli[1] };
+  return { art: repli[0], glow: repli[1], foto: FOTOS[repli[0].name] || null };
 }
 
 /* Le gerant ne tape qu'un nom, un seuil et une famille dans son
@@ -1917,7 +1901,7 @@ function completerRecompense(r, index, prefixe) {
   var visuel = choisirArt(r.titre, r.categorie);
   return {
     id: r.id, nom: r.titre, cout: r.cout, fam: r.categorie, stock: r.stock,
-    art: visuel.art, glow: visuel.glow,
+    art: visuel.art, glow: visuel.glow, foto: visuel.foto,
     code: prefixe + "·" + String(index + 1).padStart(3, "0"),
     desc: "Échange tes points contre « " + r.titre + " », proposé par le club.",
     regles: ["Valable ce soir", "Montre ce bon au bar ou à l'entrée"]
@@ -1950,7 +1934,7 @@ var OFFRE = {
   id: "o-shot", nom: "Shot offert", court: "Dès ta première story de la soirée",
   fam: "bar",
   // Meme dessin que la recompense "Shot maison" : c'est le meme produit
-  art: artShot, glow: "rgba(243,187,78,.24)",
+  art: artShot, glow: "rgba(243,187,78,.24)", foto: FOTOS.artShot,
   cout: 0, avant: 70, stock: 20,
   desc: "Poste ta première story de la soirée avec le tag du Mirage, et le shot est offert.",
   regles: [
@@ -1958,9 +1942,6 @@ var OFFRE = {
     "Bonus : tout ce que tu postes compte double en points jusqu'à 1 h",
   ]
 };
-
-var MOIS = { nom: "août", cumul: 430 };
-$("#w-mois").textContent = nb(MOIS.cumul) + " pts en " + MOIS.nom;
 
 var GAINS = [
   { t: "Scanner le QR au club",   s: "À l'entrée, une fois par soirée", v: 15 },
@@ -2017,15 +1998,11 @@ var filtreActif = "tout";
 // gerant a laisse une famille inconnue.
 var TEINTES = { bar: "#ffece0", acces: "#fdeaf1", vip: "#eef0fe" };
 
-// Palier de rarete, derive du prix plutot que configure par le gerant
-// (qui ne tape qu'un nom, un cout, une famille — jamais un niveau).
-// Volontairement silencieux sous 500 pts : etiqueter tout le catalogue
-// aurait juste ajoute du bruit sur les recompenses courantes.
-function tierDe(cout) {
-  if (cout >= 1500) return { nom: "Légendaire", c: "#e2b23f" };
-  if (cout >= 500) return { nom: "Rare", c: "#818cf8" };
-  return null;
-}
+// Teinte plus soutenue, utilisee uniquement pour le voile colore
+// pose sur les photos (mix-blend-mode: color) : le pastel de TEINTES
+// est fait pour un aplat derriere un dessin, trop pale pour teinter
+// une photo sans la laver completement.
+var TEINTES_VIVES = { bar: "#ff8a5c", acces: "#ef5da8", vip: "#6366f1" };
 
 function rendreListe() {
   var z = $("#liste");
@@ -2047,11 +2024,13 @@ function rendreListe() {
     b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
 
     var statut = epuise ? "épuisé" : (r.stock <= 5 ? "plus que " + r.stock : "");
-    var tier = tierDe(r.cout);
+    var badge = r.foto
+      ? '<span class="visuel-badge foto" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) +
+        ";--tinte-vive:" + (TEINTES_VIVES[r.fam] || TEINTES_VIVES.bar) + '"><img src="' + r.foto + '" alt="" loading="lazy"></span>'
+      : '<span class="visuel-badge" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' + r.art() + "</span>";
 
     b.innerHTML =
-      (tier ? '<span class="palier" style="--c:' + tier.c + '">' + tier.nom + "</span>" : "") +
-      '<span class="visuel-badge" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' + r.art() + "</span>" +
+      badge +
       "<strong>" + r.nom + "</strong>" +
       '<span class="code">' + r.code + (statut ? " · " + statut : "") + "</span>" +
       '<span class="prix">' + nb(r.cout) + "<span> pts</span></span>" +

@@ -31,9 +31,11 @@ noirs ne partagent aucune règle, ce sont deux identités différentes.
   icônes plates génériques, palette froide #08090c). Rejetée à son
   tour comme "trop alcoolisée".*
 - *Fond clair `#fafafa` (v2 Cali) : structure conservée, fond rejeté.*
-
-La forme du cadran circulaire (`.cadran`) traverse les trois versions
-sans changer — seule sa palette est recolorée à chaque fois.
+- *Cadran circulaire pour le solde (anneau SVG, label "Ma cagnotte",
+  cumul du mois, objectif vers la prochaine récompense) : a traversé
+  les trois versions de palette sans changer de forme, puis retiré
+  d'un coup — Julien l'a trouvé inutile ("bizarre"). Remplacé par un
+  simple chiffre (`.solde`, voir Components).*
 
 ## Palette
 
@@ -69,32 +71,43 @@ Deux registres :
 
 ## Components
 
-- **Cadran (cagnotte)** : anneau SVG (stroke-dasharray/dashoffset,
-  périmètre fixe `PERIMETRE_CADRAN = 276.5` pour r=44), chiffre corail
-  tabulaire au centre. Forme conservée depuis la toute première
-  direction, glow et pulse retirés (`.cadran-valeur` sans `filter`,
-  `.cadran-centre b.maj` sans animation) — les effets "néon"
-  appartenaient à l'ancienne palette vinyle.
+- **Solde** (`.solde`) : juste le nombre de points, gros et corail,
+  plus le mot "pts". **Remplace le cadran circulaire** (anneau SVG,
+  label "Ma cagnotte", cumul du mois, objectif vers la prochaine
+  récompense) — Julien a trouvé tout ça inutile et "bizarre" ("c'est
+  quoi ce rond ?"). Le solde n'est plus qu'un chiffre, sans habillage
+  autour. La fonction `prochaine()` reste utilisée par la fiche club
+  de l'écran carte (`noteRecompenseClub()`), qui n'a pas été critiquée.
 - **Carte récompense** (`.carte-reco`, grille `.grille`) : surface en
   léger dégradé (`--s2` → `--s1`, pas un aplat plat), icône dans une
-  pastille pastel par famille (`.visuel-badge`, couleur via `--tinte`),
-  titre, numéro de catalogue, prix corail en gros, état visuel
-  `.loin`/`.epuise`. Au survol : légère montée + `scale(1.015)` + ombre
-  qui se creuse. Remplace l'ancienne ligne "tracklist" (`.ligne`) pour
-  le catalogue ; l'offre du soir garde la ligne horizontale (une seule
-  entrée, pas besoin de grille).
-- **Palier de rareté** (`.palier`, `tierDe()` en JS) : badge discret
-  ("Rare" dès 500 pts, "Légendaire" dès 1500 pts), dérivé du prix —
-  le gérant ne configure jamais de niveau, juste un coût. Volontairement
-  absent sous 500 pts : même logique de silence sélectif que le stock
-  (`.reste`), pour ne pas étiqueter tout le catalogue.
-- **Confettis de confirmation** (`confettis()` en JS) : six éclats
-  colorés qui partent du rond de succès à l'échange, une fois,
-  jamais en boucle ; coupés sous `prefers-reduced-motion`.
+  pastille par famille (`.visuel-badge`), titre, numéro de catalogue,
+  prix corail en gros, état visuel `.loin`/`.epuise`. Au survol :
+  légère montée + `scale(1.015)` + ombre qui se creuse. Remplace
+  l'ancienne ligne "tracklist" (`.ligne`) pour le catalogue ; l'offre
+  du soir garde la ligne horizontale (une seule entrée, pas besoin de
+  grille). Pas de badge de rareté ("Rare"/"Légendaire") : essayé puis
+  retiré, Julien a trouvé ça "éclaté".
+- **Confettis de confirmation** (`confettis()` en JS) : éclats colorés
+  qui partent du rond de succès à l'échange, une fois, jamais en
+  boucle ; coupés sous `prefers-reduced-motion`. Demandés explicitement
+  ("ça peut être stylé") — à vérifier après déploiement que Julien les
+  voit bien (le pipeline Vercel a été bloqué plusieurs fois cette
+  semaine, donc "je ne vois pas X" peut vouloir dire "X n'est pas
+  encore en prod" plutôt qu'un bug).
+- **Illustration photo** (`.visuel.foto`, `.visuel-badge.foto`,
+  `FOTOS` en JS) : **remplace le dessin fait main pour les objets
+  identifiables.** Julien a jugé les dessins vectoriels "IA
+  dégueulasse" ; remplacés par de vraies photos Unsplash (licence
+  libre, vérifiées une par une), recadrées en cercle/carré-arrondi et
+  teintées dans la couleur de la récompense (`mix-blend-mode: color`
+  sur un `::after`, + `filter: saturate(1.3) contrast(1.08)` sur
+  l'image) pour ne pas flotter comme une vignette de stock brute. Le
+  dessin vectoriel (`art()`) reste le repli quand aucune photo
+  n'existe pour l'objet (`FOTOS[nomDeLaFonction]`).
 - **Visuel circulaire** (`.visuel`, `.sheet-visuel`) : anneau via
-  `box-shadow` inset double, dessin au centre. Conservé tel quel ;
-  seul le fallback de couleur change (`#ffffff` en thème clair au
-  lieu du brun sombre `#14100e`).
+  `box-shadow` inset double, dessin ou photo au centre. Le fallback de
+  couleur derrière le dessin reste `var(--s1)` (pas de photo → cercle
+  sombre uni, cohérent avec les cartes).
 - **Numéro de catalogue** (`.code` dans `.carte-reco`, `.sheet-fam`) :
   `PREFIXE·NNN` (3 lettres du club, dérivées de son nom via
   `prefixeClub()`, + ordinal). Assigné une fois au chargement, stable
@@ -107,18 +120,21 @@ Deux registres :
 ## Patterns
 
 - Toute quantité de points et tout bouton d'action s'affichent en
-  `var(--accent)` (= `var(--ambre)` en thème clair, les deux pointent
-  vers le même corail #ff6b5b) — **changement volontaire** par rapport
-  à la règle du dashboard B2B, qui elle continue de réserver le corail
-  à l'action seule.
+  `var(--accent)` (= `var(--ambre)`, les deux pointent vers le même
+  corail #ff6b5b) — **changement volontaire** par rapport à la règle
+  du dashboard B2B, qui elle continue de réserver le corail à l'action
+  seule.
 - Le stock ne s'affiche que sous 5 unités ("plus que N") — au-dessus,
-  silence plutôt que "il en reste 50" qui ne crée aucune urgence.
+  silence plutôt que "il en reste 50" qui ne crée aucune urgence. Même
+  logique appliquée puis retirée pour la rareté des récompenses (voir
+  Components) : le silence sélectif reste, mais seulement là où Julien
+  l'a validé.
 - Le catalogue vient de la vraie table `rewards` via
   `/api/rewards-public` ; aucune donnée inventée quand le club n'a
   rien configuré (liste vide honnête).
-- Le thème clair (`.screen.clair`) n'est posé que sur `#vue-boutique`
-  par `activerVue()` — jamais sur l'écran carte, qui garde son
-  ambiance nocturne d'origine.
+- Le thème boutique (`.screen.boutique-sombre`) n'est posé que sur
+  `#vue-boutique` par `activerVue()` — jamais sur l'écran carte, qui
+  garde son ambiance nocturne d'origine (différente de ce noir-ci).
 
 ## Piège rencontré
 

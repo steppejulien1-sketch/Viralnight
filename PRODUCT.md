@@ -94,12 +94,16 @@ dans un tiroir.
   (carte MapLibre réelle, échange de récompenses avec vrai QR code
   généré localement, données réelles du club Mirage).
 - Illustrations dessinées à la main pour 8 familles d'objets (verre,
-  bouteille, cordon VIP, bracelet, etc.), réutilisables comme matière
-  existante.
-- Pas de photo produit réelle du club Mirage ni de captures d'écran
-  d'appli concurrente fournies à ce jour : toute imagerie doit rester
-  dessinée/synthétique et clairement présentée comme telle, jamais
-  passée pour une vraie photo du club.
+  bouteille, cordon VIP, bracelet, etc.) — encore utilisées comme repli
+  quand aucune photo ne correspond à l'objet (voir point suivant).
+- **Mise à jour (19 août 2026) : les dessins faits main ont été jugés
+  "IA dégueulasse" par Julien pour les objets identifiables** (cocktail,
+  bouteille, shot, cordon VIP, ticket). Remplacés par de vraies photos
+  libres de droits (licence Unsplash), recadrées en cercle et teintées
+  dans la couleur de la récompense pour rester cohérentes avec le reste
+  de l'écran plutôt que de flotter comme des vignettes de stock. Ce
+  n'est toujours pas une vraie photo du club Mirage — reste un objet
+  générique, jamais présenté comme si c'était le lieu réel.
 
 ## Product Principles
 
