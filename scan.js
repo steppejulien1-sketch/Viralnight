@@ -87,7 +87,7 @@ async function checkIn() {
   els.stepError.hidden = true;
   els.stepCheckin.hidden = false;
 
-  const { ok, body } = await postJson("/api/track-scan", { code, customerId });
+  const { ok, body } = await postJson("/api/track?type=scan", { code, customerId });
 
   if (!ok) {
     // Hors horaires : le club est ferme, ce n'est pas une panne.
@@ -142,7 +142,7 @@ async function submitPost(event) {
   const declaredViews = els.views.value ? Number(els.views.value) : null;
 
   try {
-    const { ok, body } = await postJson("/api/track-post", {
+    const { ok, body } = await postJson("/api/track?type=post", {
       code,
       customerId,
       url,

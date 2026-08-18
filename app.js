@@ -860,7 +860,7 @@ function consumeInstagramRedirectFeedback() {
 }
 
 async function chargerStatutInstagram(session) {
-  const reponse = await fetch("/api/instagram-status", {
+  const reponse = await fetch("/api/instagram?action=status", {
     headers: { Authorization: `Bearer ${session.access_token}` },
   });
   const corps = await reponse.json().catch(() => null);
@@ -889,7 +889,7 @@ function renderInstagramConnecte(statut, session) {
   instagramBody.querySelector("[data-instagram-disconnect]")?.addEventListener("click", async (event) => {
     event.currentTarget.disabled = true;
     try {
-      await fetch("/api/instagram-disconnect", {
+      await fetch("/api/instagram?action=disconnect", {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
@@ -914,7 +914,7 @@ function renderInstagramDeconnecte(session) {
     button.disabled = true;
     button.textContent = "Redirection…";
     try {
-      const reponse = await fetch("/api/instagram-connect", {
+      const reponse = await fetch("/api/instagram?action=connect", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const corps = await reponse.json().catch(() => null);

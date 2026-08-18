@@ -2,7 +2,7 @@
 // Ces routes sont publiques et ecrivent en base avec la cle service_role :
 // tout ce qui n'est pas strictement valide doit etre refuse.
 
-import { parseSocialUrl } from "../api/track-post.js";
+import { parseSocialUrl } from "../api/track.js";
 import { isValidCustomerId, isValidPublicCode } from "../lib/tracking/publicEndpoint.js";
 import { buildScanUrl, renderQrSvg } from "../lib/tracking/qrCode.js";
 

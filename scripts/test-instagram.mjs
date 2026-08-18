@@ -6,7 +6,7 @@
 process.env.INSTAGRAM_STATE_SECRET = "secret-de-test-ne-pas-utiliser-en-prod";
 process.env.INSTAGRAM_APP_ID = "123456789";
 process.env.INSTAGRAM_APP_SECRET = "app-secret-test";
-process.env.INSTAGRAM_REDIRECT_URI = "https://viralnight-koif.vercel.app/api/instagram-callback";
+process.env.INSTAGRAM_REDIRECT_URI = "https://viralnight-koif.vercel.app/api/instagram?action=callback";
 
 const { signerState, verifierState } = await import("../lib/instagram/state.js");
 const { urlAutorisation, echangerCode, prolongerJeton, trouverCompteInstagram, MissingConfigError } = await import(

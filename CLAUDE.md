@@ -170,11 +170,17 @@ npm run db:test    # verifie les migrations sans les appliquer
   `INSTAGRAM_APP_SECRET`, `INSTAGRAM_REDIRECT_URI`, `INSTAGRAM_STATE_SECRET`,
   `INSTAGRAM_WEBHOOK_VERIFY_TOKEN`) ne vivent que sur Vercel. En local, les routes qui en
   dependent repondent `Configuration serveur incomplete`. C'est normal.
-- **La connexion Instagram (`api/instagram-*.js`, `lib/instagram/`) exige une app Meta for
+- **La connexion Instagram (`api/instagram.js`, `lib/instagram/`) exige une app Meta for
   Developers** (produit "Facebook Login for Business") cote Julien : le compte Instagram du
   club doit etre en mode Business/Creator et relie a une Page Facebook. Tant que l'app Meta
   est en mode developpement, seuls les comptes ajoutes comme testeurs dans le dashboard Meta
   peuvent se connecter — pas besoin d'attendre l'App Review pour les premiers clients.
+- **Plan Vercel Hobby : 12 fonctions serverless maximum par deploiement.** Deja touche une
+  fois (17 fonctions fin aout 2026 → tous les deploiements echouaient a "Deploying outputs",
+  build reussi mais rien en ligne, sans message d'erreur clair). `api/` est actuellement a
+  12 pile. Avant d'ajouter une nouvelle route API, verifier `ls api/*.js | wc -l` — si ca
+  approche 12, fusionner plutot que d'ajouter (voir `api/instagram.js` et `api/track.js`,
+  qui dispatchent plusieurs actions via `?action=` / `?type=` au lieu d'un fichier chacune).
 - **Le formulaire de demande de demo ecrit dans la vraie base de production, meme en local** :
   `landing.js` bascule sur une insertion Supabase directe avec la cle anon si
   `/api/demo-request` echoue. Ne pas le soumettre "pour tester".
