@@ -303,6 +303,44 @@
       .filtre:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
       .filtre[aria-pressed="true"] { background: var(--ink); color: #120d0d; border-color: var(--ink); font-weight: 700; }
 
+      /* ---------------- Grille de cartes (catalogue) ---------------- */
+
+      /* Le catalogue quitte la liste "tracklist" pour une grille de
+         cartes claires — c'est la structure que demandait Julien en
+         reprenant le prompt v2 (Airbnb/Spotify/Figma) : icone posee
+         sur un aplat de couleur par famille, prix en gros, bouton
+         d'echange en pleine largeur. Actif seulement en theme clair
+         (.screen.clair), la carte reste inutilisee sur la fiche club
+         de l'ecran carte. */
+      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .carte-reco {
+        display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        padding: 14px; cursor: pointer; font-family: inherit; color: inherit;
+        box-shadow: 0 1px 3px rgba(20,20,25,.05);
+        transition: transform .16s ease, box-shadow .16s ease;
+      }
+      .carte-reco:hover { box-shadow: 0 8px 22px rgba(20,20,25,.09); transform: translateY(-2px); }
+      .carte-reco:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+      .carte-reco .visuel-badge {
+        width: 56px; height: 56px; border-radius: 16px; margin-bottom: 10px; flex: 0 0 auto;
+        display: grid; place-items: center; background: var(--tinte, #fdece9);
+      }
+      .carte-reco .visuel-badge svg { width: 62%; height: 62%; display: block; }
+      .carte-reco strong { display: block; font-size: 13.5px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; color: var(--ink); }
+      .carte-reco .code {
+        display: block; font-family: var(--mono); font-size: 10px; color: var(--ink3);
+        margin-top: 3px; letter-spacing: .03em;
+      }
+      .carte-reco .prix {
+        margin-top: 11px; font-family: var(--mono); font-size: 17px; font-weight: 800;
+        color: var(--accent); font-variant-numeric: tabular-nums;
+      }
+      .carte-reco .prix span { font-size: 10px; font-weight: 700; color: var(--ink3); margin-left: 3px; text-transform: uppercase; font-family: var(--sans); }
+      .carte-reco .manque { display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3); margin-top: 2px; }
+      .carte-reco.loin { opacity: .55; }
+      .carte-reco.epuise { opacity: .4; pointer-events: none; }
+
       /* ---------------- Les listes (recompenses, offre du soir) ---------------- */
 
       .liste {
@@ -381,9 +419,13 @@
 
       .bons { display: grid; gap: 8px; }
       .bon {
-        display: flex; align-items: center; gap: 12px; padding: 10px 13px;
+        display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 13px;
         border: 1px solid var(--line2); border-radius: 16px; background: var(--s1);
+        font-family: inherit; color: inherit; text-align: left; cursor: pointer;
+        transition: box-shadow .16s ease, transform .16s ease;
       }
+      .bon:hover { box-shadow: 0 6px 16px rgba(20,20,25,.08); transform: translateY(-1px); }
+      .bon:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .bon-qr {
         width: 42px; height: 42px; border-radius: 9px; background: #fff; padding: 3px;
         flex: 0 0 auto; overflow: hidden;
@@ -444,6 +486,7 @@
 
       .sheet {
         position: absolute; left: 0; right: 0; bottom: 0; z-index: 34; overflow: hidden;
+        color: var(--ink);
         background: #1c1512; border-top: 1px solid var(--line2);
         border-radius: 26px 26px 0 0; padding: 10px 22px 26px;
         box-shadow: 0 -14px 44px rgba(0,0,0,.66);
@@ -506,7 +549,7 @@
         display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .13em;
         text-transform: uppercase; color: var(--ink3); margin-bottom: 8px;
       }
-      .sheet h3 { margin: 0 0 8px; font-size: 23px; font-weight: 700; letter-spacing: -.045em; line-height: 1.12; }
+      .sheet h3 { margin: 0 0 8px; font-size: 23px; font-weight: 700; letter-spacing: -.045em; line-height: 1.12; color: var(--ink); }
       .sheet .desc { margin: 0 0 16px; font-size: 13.5px; color: var(--ink2); font-weight: 550; line-height: 1.5; }
       .sheet ul.regles { display: grid; gap: 8px; margin: 0 0 20px; padding: 0; }
       .sheet ul.regles li { list-style: none; display: flex; gap: 9px; font-size: 12px; font-weight: 550; color: var(--ink2); line-height: 1.45; }
@@ -538,9 +581,20 @@
         background: rgba(87,217,138,.14); border: 1px solid rgba(87,217,138,.4);
       }
       .sheet-ok .rond svg { width: 24px; height: 24px; stroke: #57d98a; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* Le module QR doit rester blanc pour scanner correctement, mais
+         le poser directement sur la feuille (elle-meme blanche depuis
+         le theme clair) donnait un aplat blanc sur blanc sans aucune
+         limite — agressif pour les yeux, surtout en boite ou l'ecran
+         est pousse a fond. Le cadre chaud (--s2) cree la rupture de
+         contraste qui manquait, sans toucher au blanc du QR lui-meme. */
+      .qr-frame {
+        display: inline-block; background: var(--s2); border: 1px solid var(--line2);
+        border-radius: 26px; padding: 16px; margin: 18px auto 12px;
+      }
       .qr-carte {
-        width: 172px; margin: 18px auto 12px; padding: 14px; border-radius: 18px;
-        background: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.4);
+        width: 160px; margin: 0; padding: 14px; border-radius: 16px;
+        background: #fff; box-shadow: 0 6px 18px rgba(20,20,25,.14);
       }
       .qr-carte svg { display: block; width: 100%; height: auto; }
       .qr-code-txt {
@@ -567,6 +621,60 @@
       footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--page-line); font-size: 13px; color: var(--page-ink3); }
       code { font-family: var(--mono); font-size: 12.5px; color: var(--page-ink); }
 
+      /* ============================================================
+         THEME CLAIR — boutique uniquement.
+
+         Julien a rejete la piste sombre/vinyle apres coup, en reprenant
+         le prompt "v2" d'une conversation Claude web (Airbnb, Spotify,
+         Discord, Figma, Twitch comme references) : fond clair, aplats
+         de couleur francs par famille, corail en CTA ET en indicateur
+         de points (le prompt ne separe pas les deux, contrairement a
+         la regle "corail = marque jamais action" qui valait pour la
+         version precedente — assumee ici comme changement de direction
+         explicite, pas un oubli).
+
+         La classe .clair est posee sur .screen par activerVue() quand
+         l'onglet boutique est actif, jamais sur l'ecran carte : la
+         carte garde son ambiance nocturne (ciel, arbres, halo neon),
+         la boutique bascule vers ce theme. Comme la barre d'onglets et
+         la feuille du bas sont des enfants directs de .screen, elles
+         heritent des memes variables sans regle dupliquee. */
+      .screen.clair {
+        --ink: #1f2937; --ink2: #6b7280; --ink3: #98a0ab;
+        --bg: #fafafa; --s1: #ffffff; --s2: #f6f6f7; --s3: #eeeeef;
+        --line: #ececef; --line2: #e5e5e9;
+        --accent: #ff6b5b; --ambre: #ff6b5b;
+      }
+      .screen.clair .wallet {
+        background: linear-gradient(180deg, #ffffff 0%, #fdfaf8 82%, rgba(253,250,248,.95) 100%);
+        border-bottom: 1px solid var(--line);
+      }
+      .screen.clair .cadran-piste { stroke: rgba(15,15,20,.07); }
+      .screen.clair .cadran-valeur { filter: none; }
+      .screen.clair .cadran-centre b,
+      .screen.clair .cadran-centre b.maj,
+      .screen.clair .ligne-prix b,
+      .screen.clair .sheet-note em { text-shadow: none; }
+      .screen.clair .cadran-centre b.maj { animation: none; }
+      .screen.clair .filtre { border-color: var(--line2); color: var(--ink2); }
+      .screen.clair .filtre[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .screen.clair .visuel, .screen.clair .sheet-visuel {
+        background: radial-gradient(120% 120% at 32% 24%, var(--glow), #ffffff 72%);
+        box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 5px #fff, inset 0 0 0 6px rgba(15,15,20,.05);
+      }
+      .screen.clair .sheet-visuel { box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 11px #fff, inset 0 0 0 12px rgba(15,15,20,.05), 0 16px 32px -14px rgba(20,20,25,.18); }
+      .screen.clair .sheet { background: #ffffff; border-top-color: var(--line2); box-shadow: 0 -14px 34px rgba(20,20,25,.16); }
+      .screen.clair .grab { background: rgba(15,15,20,.14); }
+      .screen.clair .sheet-close { background: var(--s2); }
+      .screen.clair .sheet-close svg { stroke: var(--ink2); }
+      .screen.clair .sheet-cta.sobre { background: var(--s2); color: var(--ink); }
+      .screen.clair .bareme summary .chev svg { stroke: var(--ink3); }
+      .screen.clair .tabs { background: rgba(255,255,255,.92); border-top-color: var(--line2); }
+      .screen.clair .tab svg { stroke: #a2a8b2; }
+      .screen.clair .tab.on svg { stroke: var(--accent); }
+      .screen.clair .liste, .screen.clair .liste.liste-soir { border-color: var(--line); }
+      .screen.clair .liste.liste-soir { border-color: rgba(255,107,91,.35); }
+
       @media (max-width: 430px) {
         .wrap { padding: 38px 12px 70px; }
         .phone { width: 100%; max-width: 360px; }
@@ -591,6 +699,15 @@
   FORM : monde vinyle/label (new-work, direction assignee index 4,
   seed c3276dbf), fusionne avec le grain "tube a lampes" du challenger
   nixie pour le rendu des chiffres.
+
+  MISE A JOUR v2 (remplace ci-dessus) : Julien a rejete cette piste
+  apres coup, en reprenant un prompt d'une conversation Claude web
+  citant Airbnb/Spotify/Discord/Figma/Twitch. Nouvelle direction :
+  grille de cartes claires (fond #fafafa), corail (#ff6b5b) portant
+  a la fois les points ET les boutons d'action — changement assume,
+  contraire a la regle precedente qui separait les deux. Applique
+  uniquement a #vue-boutique via .screen.clair ; l'ecran carte garde
+  son theme nocturne d'origine.
 -->
 
 <div class="wrap">
@@ -679,7 +796,7 @@
                 <button class="filtre" type="button" data-fam="acces" aria-pressed="false">Accès</button>
                 <button class="filtre" type="button" data-fam="vip" aria-pressed="false">VIP</button>
               </div>
-              <div class="liste" id="liste"></div>
+              <div class="grille" id="liste"></div>
             </section>
 
             <section class="sec">
@@ -1019,6 +1136,7 @@ document.addEventListener("keydown", function (e) {
 
 var VUES = { carte: $("#vue-carte"), boutique: $("#vue-boutique") };
 var TAB_CARTE = $("#tab-carte"), TAB_BOUTIQUE = $("#tab-boutique");
+var SCREEN = $(".screen");
 
 function activerVue(nom) {
   Object.keys(VUES).forEach(function (k) {
@@ -1026,6 +1144,11 @@ function activerVue(nom) {
     VUES[k].classList.toggle("actif", actif);
     VUES[k].toggleAttribute("inert", !actif);
   });
+  // Le theme clair (grille de cartes, corail partout) n'habille que la
+  // boutique. La classe vit sur .screen : la barre d'onglets et la
+  // feuille du bas, communes aux deux ecrans, en heritent au passage
+  // sans regle dupliquee, et repassent au theme sombre sur la carte.
+  SCREEN.classList.toggle("clair", nom === "boutique");
   TAB_CARTE.classList.toggle("on", nom === "carte");
   TAB_CARTE.setAttribute("aria-current", nom === "carte" ? "page" : "false");
   TAB_BOUTIQUE.classList.toggle("on", nom === "boutique");
@@ -1840,6 +1963,11 @@ function rendreOffre() {
 
 var filtreActif = "tout";
 
+// Aplat pastel derriere chaque icone de carte, par famille — pas le
+// halo sombre du theme precedent. Repli sur la teinte "bar" si le
+// gerant a laisse une famille inconnue.
+var TEINTES = { bar: "#ffece0", acces: "#fdeaf1", vip: "#eef0fe" };
+
 function rendreListe() {
   var z = $("#liste");
   z.innerHTML = "";
@@ -1855,25 +1983,18 @@ function rendreListe() {
     var epuise = r.stock <= 0;
 
     var b = document.createElement("button");
-    b.className = "ligne" + (loin ? " loin" : "") + (epuise ? " epuise" : "");
+    b.className = "carte-reco" + (loin ? " loin" : "") + (epuise ? " epuise" : "");
     b.type = "button";
     b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
 
-    // Le numero de catalogue reste toujours visible (c'est la reference
-    // de la recompense, comme une reference de disque) ; seul le statut
-    // qui le suit change — rien en dessous de 5 en stock, sinon un
-    // simple point d'ecart, sinon "epuise".
-    var statut = epuise ? "épuisé"
-      : (r.stock <= 5 ? '<span class="reste">plus que ' + r.stock + "</span>" : "");
+    var statut = epuise ? "épuisé" : (r.stock <= 5 ? "plus que " + r.stock : "");
 
     b.innerHTML =
-      visuel(r) +
-      '<span class="ligne-txt"><strong>' + r.nom + '</strong><span class="court">' + r.code +
-        (statut ? " — " + statut : "") + "</span></span>" +
-      '<span class="ligne-prix">' +
-        '<span class="cout"><b>' + nb(r.cout) + "</b></span>" +
-        (loin && !epuise ? '<span class="manque">encore ' + nb(r.cout - ETAT.solde) + "</span>" : "") +
-      "</span>";
+      '<span class="visuel-badge" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' + r.art() + "</span>" +
+      "<strong>" + r.nom + "</strong>" +
+      '<span class="code">' + r.code + (statut ? " · " + statut : "") + "</span>" +
+      '<span class="prix">' + nb(r.cout) + "<span> pts</span></span>" +
+      (loin && !epuise ? '<span class="manque">encore ' + nb(r.cout - ETAT.solde) + "</span>" : "");
 
     b.addEventListener("click", function () { ouvrirRecompense(r, b); });
     z.appendChild(b);
@@ -1907,14 +2028,35 @@ async function rendreBons(neufCode) {
   for (var i = 0; i < ETAT.bons.length; i++) {
     var bon = ETAT.bons[i];
     var svgQr = await qrBon(bon.code);
-    var e = document.createElement("div");
+    var e = document.createElement("button");
+    e.type = "button";
     e.className = "bon" + (bon.code === neufCode ? " neuf" : "");
+    e.setAttribute("aria-label", "Voir le QR de " + bon.titre);
     e.innerHTML =
       '<span class="bon-qr">' + svgQr + "</span>" +
       '<span class="txt"><strong>' + bon.titre + "</strong><span>" + bon.note + "</span></span>" +
       '<span class="bon-code">' + bon.code + "</span>";
+    e.addEventListener("click", function (b, src) { return function () { ouvrirBon(b, src); }; }(bon, e));
     z.appendChild(e);
   }
+}
+
+/* Reprend exactement l'affichage de la confirmation d'echange, pour
+   qu'un bon deja obtenu se consulte a tout moment — avant, le seul
+   moyen de revoir son QR en grand etait de re-echanger. */
+async function ouvrirBon(bon, src) {
+  rendeur = src || null;
+  var svgQr = await qrBon(bon.code);
+  var html =
+    '<div class="sheet-ok">' +
+      '<h3 id="sh-titre">' + bon.titre + "</h3>" +
+      '<p class="desc">' + bon.note + "</p>" +
+      '<div class="qr-frame"><div class="qr-carte">' + svgQr + "</div></div>" +
+      '<p class="qr-code-txt">' + bon.code + "</p>" +
+      '<button class="sheet-cta sobre" id="sh-ok" type="button">Fermer</button>' +
+    "</div>";
+  ouvrirFeuille(html, "#sh-ok");
+  $("#sh-ok").addEventListener("click", fermerFeuille);
 }
 
 (function rendreGains() {
@@ -1994,7 +2136,7 @@ async function echanger(item) {
       '<h3 id="sh-titre">' + item.nom + "</h3>" +
       '<p class="desc">Montre ce QR au ' + (item.fam === "bar" ? "bar" : "staff") +
         ". Il le scanne sur sa tablette — ou tape le code à la main si le lecteur est en panne.</p>" +
-      '<div class="qr-carte">' + svgQr + "</div>" +
+      '<div class="qr-frame"><div class="qr-carte">' + svgQr + "</div></div>" +
       '<p class="qr-code-txt">' + code + "</p>" +
       '<button class="sheet-cta sobre" id="sh-ok" type="button">Retour à la boutique</button>' +
       '<p class="sheet-note">Le bon est aussi rangé dans « Mes bons ».</p>' +
