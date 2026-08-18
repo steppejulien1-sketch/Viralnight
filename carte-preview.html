@@ -581,27 +581,6 @@ function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   }
 }
 
-/* --- Le motif tuile : la vraie reponse a "des arbres partout dans
-       le monde, sans faire planter le navigateur". Une tuile de
-       200x200 dessinee une seule fois avec arbreSur() (donc meme
-       style que les arbres de Bruxelles), puis repetee par le GPU
-       sur toutes les vraies zones vegetalisees de la carte — foret,
-       herbe, zones residentielles... Le GPU gere la repetition a
-       l'infini sans qu'on ait besoin d'un seul objet JS de plus :
-       c'est ce qui permet de couvrir des continents entiers. --- */
-function motifArbresTuile() {
-  // tuile plus grande, moins d'arbres dedans : c'etait trop charge
-  // des qu'on zoomait (3 arbres au lieu de 5, plus d'espace vide
-  // entre chacun).
-  var s = 260, c = document.createElement("canvas");
-  c.width = s; c.height = s;
-  var ctx = c.getContext("2d");
-  arbreSur(ctx, 50, 80, 14, 1, 918273);
-  arbreSur(ctx, 175, 60, 12, 2, 445561);
-  arbreSur(ctx, 110, 190, 13, 1, 771122);
-  return ctx.getImageData(0, 0, s, s);
-}
-
 /* --- Le batiment « jeu » : mur clair + toit pointu sombre, comme
        le pack d'assets low-poly envoye. Une vraie extrusion MapLibre
        ne peut pas faire de toit en pointe (juste un prisme a sommet
@@ -713,11 +692,12 @@ function snapifie() {
     if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", mentheClair);
   });
 
-  // le sol boise : un vert plus soutenu, plus la texture d'arbres en
-  // motif tuile — c'est ce motif qui couvre le monde entier, pas les
-  // arbres dessines un par un (reserves au detail de Bruxelles).
-  map.addImage("motif-arbres", motifArbresTuile(), { pixelRatio: 2 });
-
+  // le sol boise : juste un vert plus soutenu. Le motif d'arbres en
+  // tuile GPU a ete retire : comme il etait a l'echelle du sol, le
+  // nombre d'arbres a l'ecran doublait a chaque niveau de zoom (d'ou
+  // les arbres "qui se multiplient" en zoomant), et il se superposait
+  // en plus aux arbres dessines en icone. Il ne reste plus qu'un seul
+  // systeme d'arbres, celui du calque canvas, en nombre fixe.
   ["Forest", "Wood"].forEach(function (id) {
     map.setPaintProperty(id, "fill-color", mentheFonce);
     map.setPaintProperty(id, "fill-opacity", 1);
@@ -727,19 +707,6 @@ function snapifie() {
   ["Grass", "Meadow"].forEach(function (id) {
     map.setPaintProperty(id, "fill-color", mentheFonce);
     map.setPaintProperty(id, "fill-opacity", 1);
-  });
-
-  [
-    { id: "Texture arbres foret", sourceLayer: "landcover", filtre: ["==", "class", "wood"] },
-    { id: "Texture arbres globallandcover", sourceLayer: "globallandcover", filtre: ["in", "class", "forest", "tree"] },
-    { id: "Texture arbres herbe", sourceLayer: "landcover", filtre: ["==", "class", "grass"] },
-    { id: "Texture arbres residentiel", sourceLayer: "landuse", filtre: ["in", "class", "residential", "suburbs", "neighbourhood", "cemetery", "school", "college", "university"] },
-    { id: "Texture arbres pietonne", sourceLayer: "landuse", filtre: ["==", "class", "pedestrian"] }
-  ].forEach(function (l) {
-    map.addLayer({
-      id: l.id, type: "fill", source: "maptiler_planet", "source-layer": l.sourceLayer,
-      filter: l.filtre, paint: { "fill-pattern": "motif-arbres" }
-    }, "Building");
   });
 
   map.setPaintProperty("Water", "fill-color", eau);
@@ -819,62 +786,63 @@ function snapifie() {
 }
 
 /* ==========================================================
-   LES ARBRES — une liste FIXE, calculee une seule fois au demarrage.
-   L'essai precedent interrogeait les polygones verts affiches a
-   l'ecran a chaque "idle"/"moveend" et semait des arbres dedans :
-   comme MapLibre decoupe un meme parc en plusieurs morceaux de
-   tuiles differents selon le zoom/la position, la forme (et donc la
-   cle de cache) changeait sans arret, et les arbres se regeneraient
-   ailleurs a chaque image — d'ou l'effet "ils volent". Ici, la
-   position de chaque arbre est tiree au hasard une fois pour toutes
-   et ne change plus jamais, exactement comme pour les clubs/amis.
+   LES ARBRES — exactement le meme principe que les batiments : on
+   pose un arbre sur les vraies zones vertes de la carte, une fois
+   pour toutes, a une position figee. Plus de motif GPU repete (qui
+   doublait le nombre d'arbres a chaque niveau de zoom), plus de
+   liste codee en dur limitee a Bruxelles : ca marche partout dans
+   le monde et le nombre d'arbres visibles ne bouge jamais.
+
+   La grille de semis est calee sur des coordonnees ARRONDIES (pas
+   sur la forme du polygone, qui change de decoupage selon la tuile
+   et le zoom) : c'est ce qui garantit qu'un arbre tombe toujours
+   au meme endroit, quel que soit le chemin par lequel on arrive.
    ========================================================== */
 
-var ARBRES = (function () {
-  var arr = [];
-  var graine = 20260818;
-  function rnd() { graine = (graine * 1664525 + 1013904223) % 4294967296; return graine / 4294967296; }
+var ARBRES = [];
+var ARBRES_VUS = {};
+var PAS_ARBRES = 0.00055; // ~60 m entre deux arbres
 
-  function versDeg(lat) {
-    return { dlng: 1 / (111320 * Math.cos(lat * Math.PI / 180)), dlat: 1 / 110540 };
-  }
+function genererArbres() {
+  if (ARBRES.length >= 1800) return;
+  var couches = ["Forest", "Wood", "Grass", "Meadow"].filter(function (id) { return map.getLayer(id); });
+  if (!couches.length) return;
 
-  function grappe(centre, rayonM, n) {
-    var conv = versDeg(centre[1]);
-    for (var i = 0; i < n; i++) {
-      var a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * rayonM;
-      arr.push({
-        lng: centre[0] + Math.cos(a) * d * conv.dlng,
-        lat: centre[1] + Math.sin(a) * d * conv.dlat,
-        s: .55 + rnd() * .5,
+  var b = map.getBounds();
+  var lngMin = Math.floor(b.getWest() / PAS_ARBRES) * PAS_ARBRES;
+  var lngMax = b.getEast(), latMin = Math.floor(b.getSouth() / PAS_ARBRES) * PAS_ARBRES, latMax = b.getNorth();
+  // au-dela d'une certaine etendue, la grille ferait des dizaines de
+  // milliers de tests : on ne seme qu'une fois assez proche du sol
+  if ((lngMax - lngMin) / PAS_ARBRES > 260) return;
+
+  for (var lng = lngMin; lng <= lngMax; lng += PAS_ARBRES) {
+    for (var lat = latMin; lat <= latMax; lat += PAS_ARBRES) {
+      if (ARBRES.length >= 1800) return;
+      var cle = Math.round(lng / PAS_ARBRES) + ":" + Math.round(lat / PAS_ARBRES);
+      if (ARBRES_VUS[cle]) continue;
+      ARBRES_VUS[cle] = true;
+
+      // decalage pseudo-aleatoire stable, pour que la grille ne se
+      // voie pas comme un quadrillage regulier
+      var h = 2166136261;
+      for (var k = 0; k < cle.length; k++) { h ^= cle.charCodeAt(k); h = (h * 16777619) >>> 0; }
+      function rnd() { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; }
+
+      var dLng = lng + (rnd() - .5) * PAS_ARBRES * .8;
+      var dLat = lat + (rnd() - .5) * PAS_ARBRES * .8;
+      var p = map.project([dLng, dLat]);
+      if (p.x < 0 || p.x > map.getCanvas().clientWidth || p.y < 0 || p.y > map.getCanvas().clientHeight) continue;
+      if (!map.queryRenderedFeatures([p.x, p.y], { layers: couches }).length) continue;
+
+      ARBRES.push({
+        lng: dLng, lat: dLat,
+        s: .8 + rnd() * .4,
         teinte: Math.floor(rnd() * 5),
         graine: Math.floor(rnd() * 4294967295) + 1
       });
     }
   }
-
-  // uniquement le detail de Bruxelles ici (arbres dessines un par un,
-  // haute qualite) — la couverture partout ailleurs dans le monde
-  // vient maintenant d'un motif tuile par le GPU (voir plus bas,
-  // "Texture arbres"), pas d'une liste de points JS : impossible de
-  // couvrir des continents entiers avec des points individuels sans
-  // exploser les performances (ou carrement planter le navigateur,
-  // ce que ferait un "million d'arbres" pris au pied de la lettre).
-  // densites revues nettement a la baisse (essai precedent : trop
-  // charge des qu'on zoomait) — environ moitie moins partout
-  grappe([4.3653, 50.8465], 140, 26); // Parc de Bruxelles
-  grappe([4.3746, 50.8395], 110, 18); // Parc Leopold
-  grappe([4.3540, 50.8410], 70, 10);  // Square du Petit Sablon
-  grappe([4.3939, 50.8398], 150, 22); // Parc du Cinquantenaire
-  grappe([4.3475, 50.8523], 120, 14); // Botanique
-  grappe([4.3625, 50.8515], 90, 10);  // Jardins du Mont des Arts
-  grappe(BRUXELLES, 900, 26);
-  grappe([4.3554, 50.8479], 300, 12);
-  grappe([4.3405, 50.8375], 300, 12);
-  grappe([4.3651, 50.8367], 300, 12);
-
-  return arr;
-})();
+}
 
 /* --- Les batiments : chaque polygone "Building" rendu donne son
        centroide, ajoute une fois pour toutes a un tableau fige —
@@ -960,8 +928,8 @@ function genererBatiments() {
     ctx.globalAlpha = 1;
   }
   map.on("move", dessiner);
-  map.on("load", function () { genererBatiments(); dessiner(); });
-  map.on("idle", function () { genererBatiments(); dessiner(); });
+  map.on("load", function () { genererBatiments(); genererArbres(); dessiner(); });
+  map.on("idle", function () { genererBatiments(); genererArbres(); dessiner(); });
 })();
 
 /* ==========================================================
