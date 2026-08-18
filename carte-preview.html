@@ -508,44 +508,31 @@ var PALETTES_ARBRES = [
 function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   var s = r / 14;
   var palette = PALETTES_ARBRES[teinte === 1 ? 0 : 1];
-  var R = 6.2 * s;
-  var cy = y - R * .55;
+  var R = 6.4 * s;
+  var cy = y - R * .95;
 
-  // la graine doit venir de l'identite fixe de l'arbre (fournie par
-  // l'appelant), jamais de sa position ecran x/y — sinon le feuillage
-  // change de dessin a chaque frame pendant un zoom (x/y bougent en
-  // continu), ce qui donnait l'impression que les feuilles "bougent".
-  var graine = (graineArbre >>> 0) || 1;
-  function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
+  // meme principe que le pack de jeu envoye : une boule nette (pas
+  // une texture de photo), avec 2-3 facettes plus claires en haut a
+  // gauche pour un effet low-poly plutot qu'un aplat plat.
+  ctx.beginPath(); ctx.ellipse(x, y + 1.5 * s, R * .62, R * .24, 0, 0, 7);
+  ctx.fillStyle = "rgba(20,30,15,.25)"; ctx.fill();
 
-  ctx.beginPath(); ctx.ellipse(x + 1.4 * s, y + 3.6 * s, R * .8, R * .3, 0, 0, 7);
-  ctx.fillStyle = "rgba(30,45,20,.22)"; ctx.fill();
+  ctx.fillStyle = "#8a5f36";
+  ctx.fillRect(x - 1.1 * s, y - 1.7 * R - .3 * s, 2.2 * s, 1.7 * R + .8 * s);
 
-  ctx.fillStyle = "#5c4128";
-  ctx.fillRect(x - 1.3 * s, y - .5 * s, 2.6 * s, 4.2 * s);
+  ctx.beginPath(); ctx.arc(x, cy, R, 0, 7);
+  ctx.fillStyle = palette[1]; ctx.fill();
 
-  // base pleine, mais en 5 lobes decales plutot qu'un seul cercle
-  // net — un vrai contour rond lisse est ce qui donne l'aspect
-  // "sticker" ; des lobes qui debordent les uns des autres cassent
-  // cette silhouette parfaite tout en garantissant zero trou.
-  var lobes = [[0, 0, 1], [-.42, -.08, .72], [.4, -.15, .68], [-.15, .38, .62], [.32, .32, .6]];
-  lobes.forEach(function (l) {
-    ctx.beginPath(); ctx.arc(x + l[0] * R, cy + l[1] * R, l[2] * R, 0, 7);
-    ctx.fillStyle = palette[2]; ctx.fill();
-  });
+  ctx.beginPath(); ctx.arc(x - R * .34, cy - R * .32, R * .58, 0, 7);
+  ctx.fillStyle = palette[2]; ctx.fill();
 
-  var n = Math.max(14, Math.min(90, Math.round(R * R * .7)));
-  for (var i = 0; i < n; i++) {
-    var a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * R * 1.02;
-    var px = x + Math.cos(a) * d, py = cy + Math.sin(a) * d * .92;
-    var eclaire = (Math.cos(a - .7) + 1) / 2;
-    var ombreFeuille = rnd() < .22;
-    ctx.beginPath(); ctx.arc(px, py, R * (.14 + rnd() * .13), 0, 7);
-    ctx.globalAlpha = ombreFeuille ? .5 : .6 + eclaire * .4;
-    ctx.fillStyle = ombreFeuille ? palette[0] : palette[Math.floor(rnd() * palette.length)];
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
+  ctx.beginPath(); ctx.moveTo(x - R * .55, cy - R * .05);
+  ctx.lineTo(x - R * .05, cy - R * .68); ctx.lineTo(x + R * .12, cy - R * .18);
+  ctx.closePath();
+  ctx.fillStyle = palette[3]; ctx.fill();
+
+  ctx.beginPath(); ctx.arc(x + R * .3, cy + R * .28, R * .34, 0, 7);
+  ctx.fillStyle = palette[0]; ctx.globalAlpha = .55; ctx.fill(); ctx.globalAlpha = 1;
 }
 
 /* --- Le motif tuile : la vraie reponse a "des arbres partout dans
@@ -569,6 +556,57 @@ function motifArbresTuile() {
   return ctx.getImageData(0, 0, s, s);
 }
 
+/* --- Le batiment « jeu » : mur clair + toit pointu sombre, comme
+       le pack d'assets low-poly envoye. Une vraie extrusion MapLibre
+       ne peut pas faire de toit en pointe (juste un prisme a sommet
+       plat) — c'est pour ca que ces batiments sont dessines en icone
+       sur le calque canvas, exactement comme les arbres, plutot que
+       stylises via fill-extrusion. --- */
+var PALETTES_BATIMENTS = [
+  { mur: "#f4f1ea", murOmbre: "#e2ddd0", toit: "#3a3d47", fenetre: "#ffd873" },
+  { mur: "#eef2f6", murOmbre: "#d9e0e6", toit: "#2c2f38", fenetre: "#ffe08a" },
+  { mur: "#f7ece4", murOmbre: "#e6d5c8", toit: "#8a3b32", fenetre: "#ffd873" }
+];
+
+function batimentSur(ctx, x, y, r, teinte, graineBatiment) {
+  var s = r / 14;
+  var pal = PALETTES_BATIMENTS[teinte % PALETTES_BATIMENTS.length];
+  var graine = (graineBatiment >>> 0) || 1;
+  function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
+
+  var largeur = 9 * s, profondeur = 6 * s, hauteurMur = (7 + rnd() * 4) * s, hauteurToit = 5.5 * s;
+  var hautBas = y, hautMur = y - hauteurMur, hautToit = hautMur - hauteurToit;
+
+  ctx.beginPath(); ctx.ellipse(x, y + 1.5 * s, largeur * .72, largeur * .26, 0, 0, 7);
+  ctx.fillStyle = "rgba(20,20,15,.22)"; ctx.fill();
+
+  // face avant (claire) et face laterale (ombree), en faux 3D isometrique
+  ctx.beginPath();
+  ctx.moveTo(x - largeur / 2, hautBas); ctx.lineTo(x - largeur / 2, hautMur);
+  ctx.lineTo(x, hautMur - profondeur * .3); ctx.lineTo(x, hautBas + profondeur * .3);
+  ctx.closePath(); ctx.fillStyle = pal.mur; ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(x, hautBas + profondeur * .3); ctx.lineTo(x, hautMur - profondeur * .3);
+  ctx.lineTo(x + largeur / 2, hautMur); ctx.lineTo(x + largeur / 2, hautBas);
+  ctx.closePath(); ctx.fillStyle = pal.murOmbre; ctx.fill();
+
+  // fenetres allumees, sur la face claire
+  ctx.fillStyle = pal.fenetre;
+  var fy = hautMur + hauteurMur * .3;
+  ctx.fillRect(x - largeur * .34, fy, largeur * .14, largeur * .14);
+  if (hauteurMur > 9 * s) ctx.fillRect(x - largeur * .34, fy - largeur * .22, largeur * .14, largeur * .14);
+
+  // toit en pointe
+  ctx.beginPath();
+  ctx.moveTo(x - largeur / 2 - 1 * s, hautMur);
+  ctx.lineTo(x + largeur / 2 + 1 * s, hautMur - profondeur * .1);
+  ctx.lineTo(x + profondeur * .15, hautToit - profondeur * .1);
+  ctx.lineTo(x - profondeur * .55, hautToit);
+  ctx.closePath();
+  ctx.fillStyle = pal.toit; ctx.fill();
+}
+
 function snapifie() {
 
   // La palette relevee sur tes captures : le sol est vert menthe
@@ -577,11 +615,7 @@ function snapifie() {
   // (heritage de sa version "dark") des qu'on sort d'un batiment
   // ou d'une route — c'est ce fond-la, pas les couleurs des parcs,
   // qui faisait "vraie carte".
-  // Les batiments reprennent exactement la palette du tout premier
-  // prototype canvas (les 3 tons de toit "roofs" retrouves dans
-  // l'historique git) : des creme/greige doux, pas des couleurs vives.
-  var mentheClair = "#e3f3d3", mentheFonce = "#cbe8ac", vertArbre = "#6dbb52",
-      indigo = "#eae2d6", indigoClair = "#eae2d6", eau = "#a9ddf7";
+  var mentheClair = "#e3f3d3", mentheFonce = "#cbe8ac", eau = "#a9ddf7";
 
   map.setPaintProperty("Background", "background-color", mentheClair);
 
@@ -629,58 +663,16 @@ function snapifie() {
   // de terracotta et de sable) — plus de variete d'un immeuble a
   // l'autre, pour casser l'effet "blocs identiques" plutot qu'une
   // vraie couleur vive.
-  var indigo2 = "#f2efe9", indigo3 = "#e3ded6", indigo4 = "#e0c4a8", indigo5 = "#ddd8c8", indigo6 = "#ecdfd0";
-  var teinteBatiment = [
-    "step", ["%", ["id"], 6],
-    indigo, 1, indigo2, 2, indigo3, 3, indigo4, 4, indigo5, 5, indigo6
-  ];
-  map.setPaintProperty("Building", "fill-color", indigo);
-  map.setPaintProperty("Building", "fill-opacity", .95);
-  map.setLayerZoomRange("Building", 0, 15.5);
-
-  map.setLayerZoomRange("Building 3D", 13, 24);
-  try {
-    map.setPaintProperty("Building 3D", "fill-extrusion-color", teinteBatiment);
-  } catch (e) {
-    map.setPaintProperty("Building 3D", "fill-extrusion-color", indigoClair);
-  }
-  map.setPaintProperty("Building 3D", "fill-extrusion-opacity", 1);
-  // fill-extrusion-pattern essaye puis abandonne : sur des petits
-  // batiments, la texture ne se plaque pas facade par facade mais
-  // s'etire selon les coordonnees monde, ce qui donne un effet
-  // moire (petits carreaux) quelle que soit la taille de la tuile —
-  // limite du moteur, pas un reglage a corriger. La variete de
-  // teintes ci-dessus + le degrade font le travail de detail a la place.
-  // le degrade vertical assombrit la base et eclaircit le sommet —
-  // c'est la principale source de relief ici : les proprietes plus
-  // recentes (ambient occlusion, flood-light) ne sont pas supportees
-  // par la version du style-spec que sert ce moteur (teste : chaque
-  // appel leve une exception).
-  map.setPaintProperty("Building 3D", "fill-extrusion-vertical-gradient", true);
-  // encore trop imposants au dernier essai (.5/34) — on redescend
-  // nettement, des petits blocs discrets plutot que des immeubles
-  // qui dominent l'ecran. Une legere variation aleatoire (+/- 15%,
-  // tiree de l'id) casse en plus l'effet "tous les immeubles a
-  // exactement la meme hauteur" d'un quartier residentiel uniforme.
-  map.setPaintProperty("Building 3D", "fill-extrusion-height", [
-    "interpolate", ["linear"], ["zoom"],
-    13, 0,
-    15, ["min", 20, ["*", ["get", "render_height"], .34, ["+", .85, ["*", .3, ["/", ["%", ["id"], 11], 11]]]]]
-  ]);
-
-  // une lumiere un peu plus contrastee : ca dessine mieux les aretes
-  // de chaque bloc (toit clair / face a l'ombre) sans retomber dans
-  // le trop sombre de l'essai d'avant
-  map.setLight({ anchor: "viewport", color: "#fff6e6", intensity: .48, position: [1.15, 70, 58] });
-
-  // un fin trait a la base de chaque immeuble — separe nettement
-  // les blocs les uns des autres au lieu de les laisser fondre
-  // dans le sol et entre eux
-  map.addLayer({
-    id: "Contour toits", type: "line", source: "maptiler_planet", "source-layer": "building",
-    minzoom: 13,
-    paint: { "line-color": "#b9ae9c", "line-width": 1, "line-opacity": .55 }
-  });
+  // les batiments sont maintenant des icones dessinees a la main
+  // (voir batimentSur plus haut) — l'extrusion 3D native ne peut pas
+  // faire de toit en pointe comme le pack d'assets envoye, donc elle
+  // est desactivee. Il reste juste l'empreinte au sol en aplat clair,
+  // visible a tout zoom, comme fond sous les icones et partout ou
+  // aucune icone n'a ete generee (loin de Bruxelles).
+  map.setPaintProperty("Building", "fill-color", "#efe9df");
+  map.setPaintProperty("Building", "fill-opacity", .9);
+  map.setLayerZoomRange("Building", 0, 24);
+  map.setLayoutProperty("Building 3D", "visibility", "none");
 
   // la demarcation des pays : un trait net, avec une bordure sombre
   // en dessous pour qu'il ressorte aussi bien sur le fond clair que
@@ -798,6 +790,42 @@ var ARBRES = (function () {
   return arr;
 })();
 
+/* --- Les batiments : chaque polygone "Building" rendu donne son
+       centroide, ajoute une fois pour toutes a un tableau fige —
+       jamais deplace ni regenere ensuite, pour eviter exactement le
+       bug qui avait fait "voler" les arbres (des positions
+       recalculees a chaque image a partir de polygones decoupes
+       differemment par tuile). La fonction tourne a chaque "idle"
+       mais n'AJOUTE que les batiments pas encore vus (le "vus" est
+       garde en dehors de la fonction) : au fil de l'exploration, la
+       couverture s'etend, sans jamais rien recalculer sous les
+       icones deja posees. En dehors des zones visitees, l'empreinte
+       au sol en aplat clair (calque "Building") reste le seul rendu
+       des batiments. --- */
+var BATIMENTS = [];
+var BATIMENTS_VUS = {};
+var BATIMENTS_GRAINE = 55221;
+
+function genererBatiments() {
+  if (!map.getLayer("Building") || BATIMENTS.length >= 2000) return;
+  var feats = map.queryRenderedFeatures({ layers: ["Building"] });
+  function rnd() { BATIMENTS_GRAINE = (BATIMENTS_GRAINE * 1664525 + 1013904223) >>> 0; return BATIMENTS_GRAINE / 4294967296; }
+  feats.forEach(function (f) {
+    if (BATIMENTS.length >= 2000) return;
+    var g = f.geometry;
+    if (!g) return;
+    var anneau = g.type === "Polygon" ? g.coordinates[0] : (g.type === "MultiPolygon" ? g.coordinates[0][0] : null);
+    if (!anneau || anneau.length < 3) return;
+    var sx = 0, sy = 0;
+    anneau.forEach(function (c) { sx += c[0]; sy += c[1]; });
+    var lng = sx / anneau.length, lat = sy / anneau.length;
+    var cle = lng.toFixed(5) + "," + lat.toFixed(5);
+    if (BATIMENTS_VUS[cle]) return;
+    BATIMENTS_VUS[cle] = true;
+    BATIMENTS.push({ lng: lng, lat: lat, teinte: Math.floor(rnd() * 3), graine: Math.floor(rnd() * 4294967295) + 1 });
+  });
+}
+
 (function () {
   var cv = document.getElementById("arbres");
   var ctx = cv.getContext("2d");
@@ -812,58 +840,46 @@ var ARBRES = (function () {
   dimensionner();
   window.addEventListener("resize", dimensionner);
 
-  // Interroger le moteur (queryRenderedFeatures) pour chaque arbre a
-  // chaque frame pendant un zoom/glisser rendait la carte saccadee —
-  // c'est une requete GPU par arbre visible, repetee en continu
-  // pendant tout le geste. Desormais cette requete ne tourne qu'une
-  // fois le geste termine ("moveend"), et le dessin a chaque frame
-  // ("move") ne fait plus que projeter des points deja tries —
-  // beaucoup plus leger, donc fluide meme en plein zoom.
-  var exclus = {};
-
-  function recalculerExclusions() {
-    var z = map.getZoom();
-    exclus = {};
-    if (z < 12.5) return;
-    var couchesBatiments = ["Building", "Building 3D"].filter(function (id) { return map.getLayer(id); });
-    if (!couchesBatiments.length) return;
-    for (var i = 0; i < ARBRES.length; i++) {
-      var p = map.project([ARBRES[i].lng, ARBRES[i].lat]);
-      if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) continue;
-      if (map.queryRenderedFeatures([p.x, p.y], { layers: couchesBatiments }).length > 0) exclus[i] = true;
-    }
-  }
-
   function dessiner() {
     ctx.clearRect(0, 0, W, H);
     var z = map.getZoom();
-    if (z < 12.5) return; // trop dezoome pour distinguer un arbre d'un pixel de bruit
-    // les arbres grossissent avec le zoom, comme n'importe quel objet
-    // au sol (batiments, routes) — avant, leur taille en pixels etait
-    // plafonnee des le zoom 14.5, donc plus on zoomait, plus ils
-    // paraissaient petits par rapport au reste qui continuait de
-    // grossir. Un fondu d'apparition reste applique juste apres le
-    // seuil de visibilite pour eviter un "pop" brutal.
+    if (z < 12.5) return; // trop dezoome pour distinguer un objet d'un pixel de bruit
+    // les objets grossissent avec le zoom, comme n'importe quoi au
+    // sol (routes, empreintes de batiments) — avant, leur taille en
+    // pixels etait plafonnee des le zoom 14.5, donc plus on zoomait,
+    // plus ils paraissaient petits par rapport au reste qui
+    // continuait de grossir. Un fondu d'apparition reste applique
+    // juste apres le seuil de visibilite pour eviter un "pop" brutal.
     var echelleZoom = Math.pow(2, z - 16);
     var fondu = Math.min(1, (z - 12.5) / 2);
     var echelle = echelleZoom * fondu;
 
     var pts = [];
     for (var i = 0; i < ARBRES.length; i++) {
-      if (exclus[i]) continue;
       var a = ARBRES[i];
       var p = map.project([a.lng, a.lat]);
       if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) continue;
       var s = a.s * echelle;
       if (s <= .03) continue;
-      pts.push({ x: p.x, y: p.y, s: s, teinte: a.teinte, graine: a.graine });
+      pts.push({ x: p.x, y: p.y, s: s, teinte: a.teinte, graine: a.graine, type: "arbre" });
+    }
+    for (var j = 0; j < BATIMENTS.length; j++) {
+      var b = BATIMENTS[j];
+      var pb = map.project([b.lng, b.lat]);
+      if (pb.x < -60 || pb.x > W + 60 || pb.y < -110 || pb.y > H + 60) continue;
+      var sb = echelle;
+      if (sb <= .03) continue;
+      pts.push({ x: pb.x, y: pb.y, s: sb, teinte: b.teinte, graine: b.graine, type: "batiment" });
     }
     pts.sort(function (a, b) { return a.y - b.y; });
-    pts.forEach(function (p) { arbreSur(ctx, p.x, p.y, 14 * p.s, p.teinte, p.graine); });
+    pts.forEach(function (p) {
+      if (p.type === "arbre") arbreSur(ctx, p.x, p.y, 14 * p.s, p.teinte, p.graine);
+      else batimentSur(ctx, p.x, p.y, 14 * p.s, p.teinte, p.graine);
+    });
   }
   map.on("move", dessiner);
-  map.on("moveend", function () { recalculerExclusions(); dessiner(); });
-  map.on("load", function () { recalculerExclusions(); dessiner(); });
+  map.on("load", function () { genererBatiments(); dessiner(); });
+  map.on("idle", function () { genererBatiments(); dessiner(); });
 })();
 
 /* ==========================================================
