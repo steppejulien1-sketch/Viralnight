@@ -79,22 +79,6 @@
       .maplibregl-popup { display: none; } /* on utilise notre propre feuille, pas les bulles MapLibre */
       .maplibregl-ctrl-logo { display: none !important; }
 
-      /* ---------------- Barre d'etat ---------------- */
-
-      .statusbar {
-        position: absolute; top: 0; left: 0; right: 0; height: 54px; z-index: 30;
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 0 26px; font-size: 16px; font-weight: 700; color: #fff; pointer-events: none;
-        text-shadow: 0 1px 6px rgba(0,0,0,.5);
-      }
-      .statusbar .right { display: flex; align-items: center; gap: 6px; }
-      .bars { display: flex; align-items: flex-end; gap: 2px; height: 11px; }
-      .bars i { width: 3px; background: currentColor; border-radius: 1px; display: block; }
-      .bars i:nth-child(1){height:4px} .bars i:nth-child(2){height:6.5px}
-      .bars i:nth-child(3){height:9px} .bars i:nth-child(4){height:11px;opacity:.28}
-      .batt { width: 25px; height: 12px; border: 1.6px solid currentColor; border-radius: 3.5px; padding: 1.6px; }
-      .batt span { display: block; height: 100%; width: 74%; background: currentColor; border-radius: 1px; }
-
       /* ---------------- Coin superieur ---------------- */
 
       .me-btn {
@@ -276,14 +260,6 @@
         <div id="map"></div>
         <canvas id="arbres" aria-hidden="true"></canvas>
         <canvas id="etoiles" aria-hidden="true"></canvas>
-
-        <div class="statusbar">
-          <span>0:41</span>
-          <span class="right">
-            <span class="bars"><i></i><i></i><i></i><i></i></span>
-            <span class="batt"><span></span></span>
-          </span>
-        </div>
 
         <button class="me-btn" id="me-btn" aria-label="Mon profil"><span class="dot"></span></button>
 
@@ -581,14 +557,15 @@ function arbreSur(ctx, x, y, r, teinte, graineArbre) {
        l'infini sans qu'on ait besoin d'un seul objet JS de plus :
        c'est ce qui permet de couvrir des continents entiers. --- */
 function motifArbresTuile() {
-  var s = 200, c = document.createElement("canvas");
+  // tuile plus grande, moins d'arbres dedans : c'etait trop charge
+  // des qu'on zoomait (3 arbres au lieu de 5, plus d'espace vide
+  // entre chacun).
+  var s = 260, c = document.createElement("canvas");
   c.width = s; c.height = s;
   var ctx = c.getContext("2d");
-  arbreSur(ctx, 42, 66, 15, 1, 918273);
-  arbreSur(ctx, 138, 50, 12, 2, 445561);
-  arbreSur(ctx, 96, 140, 14, 1, 771122);
-  arbreSur(ctx, 26, 152, 11, 2, 332211);
-  arbreSur(ctx, 160, 148, 12, 1, 663399);
+  arbreSur(ctx, 50, 80, 14, 1, 918273);
+  arbreSur(ctx, 175, 60, 12, 2, 445561);
+  arbreSur(ctx, 110, 190, 13, 1, 771122);
   return ctx.getImageData(0, 0, s, s);
 }
 
@@ -802,16 +779,18 @@ var ARBRES = (function () {
   // couvrir des continents entiers avec des points individuels sans
   // exploser les performances (ou carrement planter le navigateur,
   // ce que ferait un "million d'arbres" pris au pied de la lettre).
-  grappe([4.3653, 50.8465], 140, 55); // Parc de Bruxelles
-  grappe([4.3746, 50.8395], 110, 38); // Parc Leopold
-  grappe([4.3540, 50.8410], 70, 20);  // Square du Petit Sablon
-  grappe([4.3939, 50.8398], 150, 48); // Parc du Cinquantenaire
-  grappe([4.3475, 50.8523], 120, 30); // Botanique
-  grappe([4.3625, 50.8515], 90, 22);  // Jardins du Mont des Arts
-  grappe(BRUXELLES, 900, 60);
-  grappe([4.3554, 50.8479], 300, 26);
-  grappe([4.3405, 50.8375], 300, 26);
-  grappe([4.3651, 50.8367], 300, 26);
+  // densites revues nettement a la baisse (essai precedent : trop
+  // charge des qu'on zoomait) — environ moitie moins partout
+  grappe([4.3653, 50.8465], 140, 26); // Parc de Bruxelles
+  grappe([4.3746, 50.8395], 110, 18); // Parc Leopold
+  grappe([4.3540, 50.8410], 70, 10);  // Square du Petit Sablon
+  grappe([4.3939, 50.8398], 150, 22); // Parc du Cinquantenaire
+  grappe([4.3475, 50.8523], 120, 14); // Botanique
+  grappe([4.3625, 50.8515], 90, 10);  // Jardins du Mont des Arts
+  grappe(BRUXELLES, 900, 26);
+  grappe([4.3554, 50.8479], 300, 12);
+  grappe([4.3405, 50.8375], 300, 12);
+  grappe([4.3651, 50.8367], 300, 12);
 
   return arr;
 })();
