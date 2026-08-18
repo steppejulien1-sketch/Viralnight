@@ -36,6 +36,17 @@ noirs ne partagent aucune règle, ce sont deux identités différentes.
   les trois versions de palette sans changer de forme, puis retiré
   d'un coup — Julien l'a trouvé inutile ("bizarre"). Remplacé par un
   simple chiffre (`.solde`, voir Components).*
+- *Dégradé radial sous la cagnotte (`.app` en fond de la boutique) :
+  ajouté pour donner du relief au noir plat, retiré presque aussitôt —
+  Julien l'a trouvé "trop ambiance", pas assez professionnel. Le fond
+  de `.app` est revenu à un aplat `var(--bg)`.*
+- *Offre du soir en ligne "tracklist" (`.ligne`/`.liste`, identique aux
+  anciennes lignes du catalogue) : jugée "pas fou" une fois le
+  catalogue passé en grille de cartes à côté — la ligne plate détonnait.
+  Remplacée par `.offre-hero`, une bannière photo pleine largeur (voir
+  Components). Les classes `.ligne`/`.liste`/`.ligne-txt`/`.ligne-prix`/
+  `.visuel` (petit format) ont été supprimées du CSS, plus aucun
+  élément ne les utilise.*
 
 ## Palette
 
@@ -83,10 +94,16 @@ Deux registres :
   pastille par famille (`.visuel-badge`), titre, numéro de catalogue,
   prix corail en gros, état visuel `.loin`/`.epuise`. Au survol :
   légère montée + `scale(1.015)` + ombre qui se creuse. Remplace
-  l'ancienne ligne "tracklist" (`.ligne`) pour le catalogue ; l'offre
-  du soir garde la ligne horizontale (une seule entrée, pas besoin de
-  grille). Pas de badge de rareté ("Rare"/"Légendaire") : essayé puis
+  l'ancienne ligne "tracklist" (`.ligne`, supprimée du CSS) pour le
+  catalogue. Pas de badge de rareté ("Rare"/"Légendaire") : essayé puis
   retiré, Julien a trouvé ça "éclaté".
+- **Bannière de l'offre du soir** (`.offre-hero`) : photo pleine
+  largeur (même image que la carte "Shot maison", `FOTO_OFFRE_HERO` —
+  résolution plus haute que la version 240px des pastilles, floue à
+  cette taille), dégradé sombre en bas pour la lisibilité du texte,
+  badge "Offert" en haut à droite. Remplace la ligne horizontale
+  partagée avec l'ancien catalogue : une fois le catalogue passé en
+  grille de cartes, cette ligne plate détonnait ("pas fou").
 - **Confettis de confirmation** (`confettis()` en JS) : éclats colorés
   qui partent du rond de succès à l'échange, une fois, jamais en
   boucle ; coupés sous `prefers-reduced-motion`. Demandés explicitement

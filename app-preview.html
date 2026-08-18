@@ -326,34 +326,57 @@
       .carte-reco.loin { opacity: .55; }
       .carte-reco.epuise { opacity: .4; pointer-events: none; }
 
-      /* ---------------- Les listes (recompenses, offre du soir) ---------------- */
+      /* ---------------- Offre du soir : banniere photo pleine largeur ---------------- */
 
-      .liste {
-        border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
-        background: var(--s1);
+      /* L'offre du soir vivait dans la meme ligne plate que l'ancien
+         catalogue "tracklist" — depassee des que le catalogue est
+         devenu une grille de cartes a cote, et jugee "pas fou" par
+         Julien. Elle devient sa propre banniere : photo pleine largeur
+         (meme photo que la carte "Shot maison", FOTOS.artShot),
+         degrade sombre pour la lisibilite du texte, "OFFERT" en
+         evidence — le traitement d'une vraie promo, pas d'une ligne
+         de liste parmi d'autres. */
+      .offre-hero {
+        position: relative; display: block; width: 100%; aspect-ratio: 16 / 8;
+        border: 0; border-radius: 20px; overflow: hidden; padding: 0; cursor: pointer;
+        font-family: inherit; color: inherit; background: var(--s1);
       }
-      .liste.liste-soir { border-color: rgba(255,47,69,.4); }
+      .offre-hero:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+      .offre-hero img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        filter: saturate(1.15) contrast(1.05) brightness(.82);
+      }
+      .offre-hero::before {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(195deg, rgba(13,14,17,.1) 0%, rgba(13,14,17,.25) 45%, rgba(13,14,17,.92) 100%);
+      }
+      .offre-hero .badge-offert {
+        position: absolute; top: 12px; right: 12px; z-index: 1;
+        font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+        color: #fff; background: var(--accent); border-radius: 999px; padding: 5px 11px;
+      }
+      .offre-hero .corps {
+        position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 14px 16px;
+      }
+      .offre-hero strong {
+        display: block; font-size: 17px; font-weight: 800; letter-spacing: -.02em;
+        color: #fff; margin-bottom: 3px;
+      }
+      .offre-hero p {
+        margin: 0; font-size: 12.5px; font-weight: 550; line-height: 1.4;
+        color: rgba(255,255,255,.8); max-width: 78%;
+      }
+      .offre-hero del {
+        font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+        color: rgba(255,255,255,.55);
+      }
+      .offre-hero.epuise::before { background: rgba(13,14,17,.72); }
+      .offre-hero.epuise img { filter: grayscale(.6) brightness(.5); }
+      .offre-hero.epuise .badge-offert { background: var(--s3); color: var(--ink3); }
 
-      .ligne {
-        display: flex; align-items: center; gap: 14px; width: 100%;
-        padding: 13px 15px; border: 0; border-top: 1px solid var(--line);
-        background: none; text-align: left; font-family: inherit; color: inherit; cursor: pointer;
-      }
-      .ligne:first-child { border-top: 0; }
-      .ligne:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
-
-      /* Le visuel : un label de disque, pas une case d'icone. Anneau
-         exterieur (le bord du label), anneau interieur discret (le
-         sillon), dessin au centre. Cercle, comme le jeton — pas un
-         melange de formes different d'un module a l'autre. */
-      .visuel {
-        position: relative; width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto;
-        overflow: hidden;
-        background: radial-gradient(120% 120% at 32% 24%, var(--glow), #14100e 70%);
-        box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 5px rgba(18,13,12,.55), inset 0 0 0 6px rgba(255,235,220,.09);
-        display: grid; place-items: center;
-      }
-      .visuel svg { width: 66%; height: 66%; display: block; }
+      /* ---------------- Recompenses : visuel circulaire (fiche detail) ----------------
+         La taille/le fond de base de .sheet-visuel vivent plus bas,
+         section "Fiche recompense" — ici seulement la variante photo. */
 
       /* Variante photo : les dessins faits main pour les familles
          restaient trop proches du "clip art" pour Julien ("on dirait
@@ -362,59 +385,15 @@
          recadree en cercle, teintee dans la couleur de la recompense
          pour rester cohérente avec le reste de l'interface plutot que
          de flotter comme un aplat photo brut. */
-      .visuel.foto img, .sheet-visuel.foto img {
+      .sheet-visuel.foto img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
         filter: saturate(1.3) contrast(1.08);
       }
-      .visuel.foto::after, .sheet-visuel.foto::after {
+      .sheet-visuel.foto::after {
         content: ""; position: absolute; inset: 0; border-radius: inherit;
         background: var(--glow); mix-blend-mode: color; opacity: .5;
         box-shadow: inset 0 0 0 1px var(--line2); pointer-events: none;
       }
-
-      .ligne-txt { flex: 1; min-width: 0; }
-      .ligne-txt strong { display: block; font-size: 14px; font-weight: 650; letter-spacing: -.025em; }
-      /* Le numero de catalogue remplace la legende generique
-         ("Bar", "Ton manteau, sans payer...") par quelque chose qui
-         vient vraiment du monde du disque — chaque recompense est
-         une reference, comme un titre sur une pochette. */
-      .ligne-txt .court {
-        display: flex; align-items: baseline; gap: 6px; margin-top: 3px;
-        font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .04em;
-        color: var(--ink3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-      .ligne-txt .court .reste { color: var(--ambre); font-weight: 700; }
-      /* L'offre du soir est seule dans sa liste : elle peut se permettre
-         une deuxieme ligne plutot que de couper "Des ta premiere story
-         de la..." en plein mot, comme le forcerait le nowrap ci-dessus. */
-      .liste-soir .ligne-txt .court {
-        white-space: normal; display: -webkit-box; -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.35; font-family: inherit;
-        font-size: 12px; letter-spacing: normal; text-transform: none; color: var(--ink2);
-      }
-      .ligne-prix { flex: 0 0 auto; text-align: right; }
-      .ligne-prix .cout { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-      .ligne-prix .jeton { width: 14px; height: 14px; flex: 0 0 auto; }
-      .ligne-prix b {
-        font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: -.02em;
-        font-variant-numeric: tabular-nums; color: var(--ambre); text-shadow: 0 0 8px rgba(255,176,32,.35);
-      }
-      .ligne-prix .manque {
-        display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3);
-        margin-top: 2px; font-variant-numeric: tabular-nums; font-family: var(--mono);
-      }
-      .ligne-prix del { font-size: 12px; font-weight: 600; color: var(--ink3); display: block; font-family: var(--mono); }
-      .ligne-prix .badge-offert {
-        font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
-        color: var(--accent); border: 1px solid rgba(255,47,69,.45); border-radius: 5px;
-        padding: 3px 7px; display: inline-block; margin-bottom: 3px;
-      }
-
-      .ligne.loin .visuel { opacity: .42; }
-      .ligne.loin .ligne-txt strong { color: var(--ink2); }
-      .ligne.loin .ligne-prix b { color: var(--ink3); text-shadow: none; }
-      .ligne.epuise { opacity: .4; }
-
 
       /* ---------------- Mes bons ---------------- */
 
@@ -667,22 +646,19 @@
         background: linear-gradient(180deg, #15161a 0%, #0d0e11 82%, rgba(13,14,17,.95) 100%);
         border-bottom: 1px solid var(--line);
       }
-      /* Un noir plat sur toute la hauteur de l'ecran lisait "vide"
-         plutot que "premium" — un tres leger degrade en profondeur
-         (plus clair vers le haut, sous la cagnotte) donne du relief
-         sans reintroduire les tons brun/laiton de la version vinyle. */
+      /* Le degrade radial pose sous la cagnotte etait trop marque —
+         "trop ambiance" selon Julien, il voulait plus pro. Fond quasi
+         plat, juste une nuance a peine visible plutot qu'un halo. */
       .screen.boutique-sombre .app {
-        background: radial-gradient(120% 46% at 50% 0%, #1a1b20 0%, var(--bg) 60%);
+        background: var(--bg);
       }
-      .screen.boutique-sombre .ligne-prix b,
       .screen.boutique-sombre .sheet-note em { text-shadow: none; }
       .screen.boutique-sombre .filtre { border-color: var(--line2); color: var(--ink2); }
       .screen.boutique-sombre .filtre[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
-      .screen.boutique-sombre .visuel, .screen.boutique-sombre .sheet-visuel {
+      .screen.boutique-sombre .sheet-visuel {
         background: radial-gradient(120% 120% at 32% 24%, var(--glow), var(--s1) 72%);
-        box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 5px var(--s1), inset 0 0 0 6px rgba(255,255,255,.06);
+        box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 11px var(--s1), inset 0 0 0 12px rgba(255,255,255,.06), 0 16px 32px -14px rgba(0,0,0,.55);
       }
-      .screen.boutique-sombre .sheet-visuel { box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 11px var(--s1), inset 0 0 0 12px rgba(255,255,255,.06), 0 16px 32px -14px rgba(0,0,0,.55); }
       .screen.boutique-sombre .sheet { background: #131418; border-top-color: var(--line2); box-shadow: 0 -14px 34px rgba(0,0,0,.5); }
       .screen.boutique-sombre .grab { background: rgba(255,255,255,.16); }
       .screen.boutique-sombre .sheet-close { background: var(--s2); }
@@ -692,8 +668,6 @@
       .screen.boutique-sombre .tabs { background: rgba(13,14,17,.88); border-top-color: var(--line2); }
       .screen.boutique-sombre .tab svg { stroke: #6b7078; }
       .screen.boutique-sombre .tab.on svg { stroke: var(--accent); }
-      .screen.boutique-sombre .liste, .screen.boutique-sombre .liste.liste-soir { border-color: var(--line); }
-      .screen.boutique-sombre .liste.liste-soir { border-color: rgba(255,107,91,.35); }
       /* Le QR reste blanc (obligatoire pour scanner), mais sur ce fond
          noir le cadre --s2 fait deja toute la rupture de contraste
          necessaire — plus besoin de l'attenuer comme sur fond clair. */
@@ -800,7 +774,7 @@
                 <h2>Ce soir au Mirage</h2>
                 <span class="sub" id="o-fin"></span>
               </div>
-              <div class="liste liste-soir" id="liste-soir"></div>
+              <div id="liste-soir"></div>
             </section>
 
             <section class="sec">
@@ -1851,6 +1825,11 @@ var FOTOS = {
   artTicket:    "https://images.unsplash.com/photo-1515139372923-c923c9e9a18c?w=240&q=70&auto=format&fit=crop"
 };
 
+// Meme photo que FOTOS.artShot, en plus grand : la banniere de
+// l'offre du soir (.offre-hero) l'affiche pleine largeur, la version
+// 240px des pastilles de carte serait floue a cette taille.
+var FOTO_OFFRE_HERO = "https://images.unsplash.com/photo-1678667593664-792513e9ff7b?w=700&q=70&auto=format&fit=crop";
+
 /* Reconnait le type d'objet dans le TITRE tape par le gerant, pour lui
    donner un dessin precis (un cocktail plutot qu'un pictogramme
    generique "bar") quand c'est possible, et retombe sur un dessin
@@ -1933,8 +1912,9 @@ async function chargerRecompenses() {
 var OFFRE = {
   id: "o-shot", nom: "Shot offert", court: "Dès ta première story de la soirée",
   fam: "bar",
-  // Meme dessin que la recompense "Shot maison" : c'est le meme produit
-  art: artShot, glow: "rgba(243,187,78,.24)", foto: FOTOS.artShot,
+  // Meme dessin/photo que la recompense "Shot maison" : c'est le meme
+  // produit, juste en plus grand pour la banniere (FOTO_OFFRE_HERO).
+  art: artShot, glow: "rgba(243,187,78,.24)", foto: FOTO_OFFRE_HERO,
   cout: 0, avant: 70, stock: 20,
   desc: "Poste ta première story de la soirée avec le tag du Mirage, et le shot est offert.",
   regles: [
@@ -1976,15 +1956,16 @@ function rendreOffre() {
   var epuise = OFFRE.stock <= 0;
 
   var b = document.createElement("button");
-  b.className = "ligne" + (epuise ? " epuise" : "");
+  b.className = "offre-hero" + (epuise ? " epuise" : "");
   b.type = "button";
   b.setAttribute("aria-label", OFFRE.nom + " — " + OFFRE.court);
   b.innerHTML =
-    visuel(OFFRE) +
-    '<span class="ligne-txt"><strong>' + OFFRE.nom + '</strong><span class="court">' + OFFRE.court + "</span></span>" +
-    '<span class="ligne-prix">' +
-      '<span class="badge-offert">' + (epuise ? "Épuisé" : "Offert") + "</span>" +
-      "<del>" + OFFRE.avant + " pts</del>" +
+    (OFFRE.foto ? '<img src="' + OFFRE.foto + '" alt="" loading="lazy">' : "") +
+    '<span class="badge-offert">' + (epuise ? "Épuisé" : "Offert") + "</span>" +
+    '<span class="corps">' +
+      "<strong>" + OFFRE.nom + "</strong>" +
+      "<p>" + OFFRE.court + "</p>" +
+      "<del>au lieu de " + OFFRE.avant + " pts</del>" +
     "</span>";
 
   b.addEventListener("click", function () { ouvrirRecompense(OFFRE, b); });
