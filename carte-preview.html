@@ -897,14 +897,18 @@ function genererBatiments() {
   function dessiner() {
     ctx.clearRect(0, 0, W, H);
     var z = map.getZoom();
-    if (z < 12.5) return; // trop dezoome pour distinguer un objet d'un pixel de bruit
     // TAILLE FIXE A L'ECRAN, comme les icones de Snap Map : un arbre
     // fait toujours le meme nombre de pixels, quel que soit le zoom.
-    // La version precedente les mettait a l'echelle du sol (x2 par
-    // niveau de zoom), donc ils paraissaient minuscules des qu'on
-    // reculait un peu. Seul un fondu d'apparition subsiste juste
-    // apres le seuil de visibilite, pour eviter un "pop" brutal.
-    var fondu = Math.min(1, (z - 12.5) / 1.5);
+    //
+    // Consequence : en dezoomant, les icones ne retrecissent pas mais
+    // se rapprochent, jusqu'a former un tapis opaque qui masque
+    // completement la carte (et le globe). C'est pour ca qu'elles
+    // s'effacent en dessous du niveau "rue" — exactement comme Snap
+    // Map, qui ne montre ses batiments qu'une fois zoome pres du sol
+    // et laisse la carte nue des qu'on prend de la hauteur.
+    var Z_PLEIN = 16.2, Z_VIDE = 14.8;
+    if (z < Z_VIDE) return;
+    var fondu = Math.min(1, (z - Z_VIDE) / (Z_PLEIN - Z_VIDE));
 
     var pts = [];
     for (var i = 0; i < ARBRES.length; i++) {
