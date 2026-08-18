@@ -27,6 +27,16 @@ const instagramBanner = document.querySelector("[data-instagram-banner]");
 const instagramSubtitle = document.querySelector("[data-instagram-subtitle]");
 const instagramBody = document.querySelector("[data-instagram-body]");
 const INITIAL_REWARD_COUNT = 5;
+// Choisit l'illustration generique affichee dans la boutique de la PWA
+// clubbeur : un gerant qui cree "Shot cadeau anniversaire" n'a pas de dessin
+// sur-mesure, seulement une famille. Memes trois valeurs que les filtres et
+// halos de couleur de la boutique — ne pas en ajouter une quatrieme sans
+// aussi l'ajouter la-bas.
+const REWARD_CATEGORIES = [
+  { value: "bar", label: "Bar" },
+  { value: "acces", label: "Accès" },
+  { value: "vip", label: "VIP" },
+];
 const LOCAL_REWARD_PREFIX = "local-reward-";
 const LOCAL_POINT_RULE_PREFIX = "local-point-rule-";
 
@@ -519,6 +529,14 @@ function renderRewardEditor(data) {
             <span>Stock max</span>
             <input type="number" value="${formatRewardLimitInput(reward.max_redemptions)}" min="0" step="1" placeholder="Illimité" data-reward-limit="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" />
           </label>
+          <label>
+            <span>Famille</span>
+            <select data-reward-category="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}">
+              ${REWARD_CATEGORIES.map(
+                (cat) => `<option value="${cat.value}" ${reward.category === cat.value ? "selected" : ""}>${cat.label}</option>`,
+              ).join("")}
+            </select>
+          </label>
         </div>
       `,
     )
@@ -534,11 +552,13 @@ function getEditedRewards() {
       const index = input.dataset.rewardName;
       const thresholdInput = document.querySelector(`[data-reward-threshold="${index}"]`);
       const limitInput = document.querySelector(`[data-reward-limit="${index}"]`);
+      const categoryInput = document.querySelector(`[data-reward-category="${index}"]`);
       return {
         id: input.dataset.rewardId,
         title: input.value || "Récompense",
         points_required: Number(thresholdInput?.value || 0),
         max_redemptions: parseRewardLimit(limitInput?.value),
+        category: categoryInput?.value || "bar",
         active: true,
         added: input.dataset.rewardAdded === "true",
       };
@@ -602,16 +622,22 @@ function attachRewardHandlers() {
     });
     input.addEventListener("change", () => persistReward(input));
   });
+  // Un <select> n'emet pas d'evenement "input" au fil de la frappe : "change"
+  // seul suffit, il se declenche des que l'utilisateur choisit une option.
+  document.querySelectorAll("[data-reward-category]").forEach((select) => {
+    select.addEventListener("change", () => persistReward(select));
+  });
 }
 
 async function persistReward(input) {
   if (dashboardState.source !== "supabase" || !supabase) return;
 
   const rewardId = input.dataset.rewardId;
-  const index = input.dataset.rewardName || input.dataset.rewardThreshold || input.dataset.rewardLimit;
+  const index = input.dataset.rewardName || input.dataset.rewardThreshold || input.dataset.rewardLimit || input.dataset.rewardCategory;
   const nameInput = document.querySelector(`[data-reward-name="${index}"]`);
   const thresholdInput = document.querySelector(`[data-reward-threshold="${index}"]`);
   const limitInput = document.querySelector(`[data-reward-limit="${index}"]`);
+  const categoryInput = document.querySelector(`[data-reward-category="${index}"]`);
 
   if (!nameInput || !thresholdInput || !limitInput) return;
 
@@ -619,6 +645,7 @@ async function persistReward(input) {
     title: nameInput.value || "Récompense",
     points_required: Number(thresholdInput.value || 0),
     max_redemptions: parseRewardLimit(limitInput.value),
+    category: categoryInput?.value || "bar",
   };
 
   if (!rewardId || isLocalRewardId(rewardId)) {
@@ -636,7 +663,7 @@ async function persistReward(input) {
         establishment_id: establishmentId,
         active: true,
       })
-      .select("id, title, points_required, max_redemptions, active, created_at")
+      .select("id, title, points_required, max_redemptions, category, active, created_at")
       .single();
 
     if (error) {
@@ -997,6 +1024,7 @@ addRewardButton?.addEventListener("click", () => {
     title: "Nouvelle récompense",
     points_required: Math.ceil((lastThreshold + 50) / 10) * 10,
     max_redemptions: null,
+    category: "bar",
     active: true,
     added: true,
   });

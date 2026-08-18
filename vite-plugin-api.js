@@ -76,7 +76,13 @@ export function apiPlugin({ apiDir = "api", envFile = ".env.local" } = {}) {
 function loadEnvFile(path) {
   if (!existsSync(path)) return;
 
-  for (const line of readFileSync(path, "utf8").split("\n")) {
+  // \r?\n et pas juste \n : sur un .env.local sauvegarde avec des fins de
+  // ligne Windows (CRLF), chaque ligne finit par un \r que `.` ne matche pas
+  // (c'est un terminateur de ligne pour les regex JS) — la regex ci-dessous
+  // echouait alors sur TOUTE variable, silencieusement (aucune erreur, juste
+  // un `getSupabaseAdmin` qui repond "non configure" comme si le fichier
+  // etait vide).
+  for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
     const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?$/);
     if (!match) continue;
     const [, key, rawValue = ""] = match;

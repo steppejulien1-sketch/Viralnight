@@ -1616,64 +1616,77 @@ AMIS.forEach(function (p) {
 
 var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
 
-var RECOMPENSES = [
-  {
-    id: "vestiaire", nom: "Vestiaire offert", cout: 40, fam: "acces", stock: 100,
-    art: artCintre, glow: "rgba(227,192,143,.22)",
-    court: "Ton manteau, sans payer",
-    desc: "Ton manteau au vestiaire, sans payer.",
-    regles: ["Valable la soirée où tu l'échanges", "À montrer au vestiaire avant de déposer"]
-  },
-  {
-    id: "shot", nom: "Shot maison", cout: 70, fam: "bar", stock: 50,
-    art: artShot, glow: "rgba(243,187,78,.24)",
-    court: "Servi directement au bar",
-    desc: "Un shot de la maison, servi directement au bar.",
-    regles: ["Un seul shot par soirée", "Le bar peut demander ta carte d'identité"]
-  },
-  {
-    id: "pinte", nom: "Pinte offerte", cout: 90, fam: "bar", stock: 40,
-    art: artPinte, glow: "rgba(243,187,78,.2)",
-    court: "La pression, la pinte entière",
-    desc: "La pression du bar, la pinte entière.",
-    regles: ["Un seul verre par soirée", "Le bar peut demander ta carte d'identité"]
-  },
-  {
-    id: "cocktail", nom: "Cocktail signature", cout: 110, fam: "bar", stock: 30,
-    art: artCocktail, glow: "rgba(242,161,168,.22)",
-    court: "Le cocktail de la carte",
-    desc: "Le cocktail signature de la carte, préparé au bar.",
-    regles: ["Hors carte premium", "Un seul cocktail par soirée", "Le bar peut demander ta carte d'identité"]
-  },
-  {
-    id: "coupefile", nom: "Coupe-file", cout: 160, fam: "acces", stock: 20,
-    art: artTicket, glow: "rgba(217,161,90,.2)",
-    court: "Toi + 1, devant la file",
-    desc: "Tu passes devant la file, avec une personne.",
-    regles: ["Toi + 1 accompagnant", "Valable jusqu'à 2 h du matin"]
-  },
-  {
-    id: "entree", nom: "Entrée gratuite", cout: 240, fam: "acces", stock: 10,
-    art: artBracelet, glow: "rgba(242,179,174,.22)",
-    court: "L'entrée offerte, ce soir",
-    desc: "L'entrée offerte pour toi, ce soir.",
-    regles: ["Valable la soirée où tu l'échanges", "Hors soirées spéciales et privatisations"]
-  },
-  {
-    id: "table", nom: "Table + bouteille", cout: 900, fam: "vip", stock: 2,
-    art: artBouteille, glow: "rgba(44,92,71,.34)",
-    court: "Jusqu'à 6 personnes",
-    desc: "Une table réservée et une bouteille pour ton groupe.",
-    regles: ["Sur réservation, 24 h à l'avance", "Jusqu'à 6 personnes", "Bouteille au choix dans la sélection maison"]
-  },
-  {
-    id: "carre", nom: "Carré VIP pour 4", cout: 1400, fam: "vip", stock: 1,
-    art: artCordon, glow: "rgba(217,178,106,.24)",
-    court: "Toute la nuit, entrées comprises",
-    desc: "Le carré VIP pour toi et trois amis, toute la nuit.",
-    regles: ["Sur réservation, 48 h à l'avance", "Entrées comprises pour 4", "Une seule attribution par soirée"]
-  }
+/* Le code public du club. Dans la vraie PWA, il viendrait du QR scanne
+   (meme parametre `c` que scan.html) ou de la session client ; ici,
+   pour cette maquette, celui de Mirage — le seul vrai club existant
+   aujourd'hui. */
+var CODE_CLUB = "6VAUMQB5";
+
+/* Reconnait le type d'objet dans le TITRE tape par le gerant, pour lui
+   donner un dessin precis (un cocktail plutot qu'un pictogramme
+   generique "bar") quand c'est possible, et retombe sur un dessin
+   generique de sa famille sinon. Le gerant ne choisit qu'un nom et une
+   famille dans son dashboard — jamais un dessin — donc "shot cadeau
+   anniversaire" doit quand meme trouver le bon verre tout seul. */
+var REPLIS_FAMILLE = {
+  bar:   [artCocktail, "rgba(242,161,168,.22)"],
+  acces: [artBracelet, "rgba(242,179,174,.22)"],
+  vip:   [artCordon,   "rgba(217,178,106,.24)"]
+};
+var INDICES_TITRE = [
+  [/bouteille|champagne|magnum/i, artBouteille, "rgba(44,92,71,.34)"],
+  [/cordon|carr[ée].?vip|salon/i, artCordon, "rgba(217,178,106,.24)"],
+  [/cocktail/i, artCocktail, "rgba(242,161,168,.22)"],
+  [/shot/i, artShot, "rgba(243,187,78,.24)"],
+  [/pinte|bi[èe]re/i, artPinte, "rgba(243,187,78,.2)"],
+  [/vestiaire|manteau/i, artCintre, "rgba(227,192,143,.22)"],
+  [/coupe.?file|file/i, artTicket, "rgba(217,161,90,.2)"],
+  [/entr[ée]e|bracelet/i, artBracelet, "rgba(242,179,174,.22)"]
 ];
+
+function choisirArt(titre, categorie) {
+  for (var i = 0; i < INDICES_TITRE.length; i++) {
+    if (INDICES_TITRE[i][0].test(titre)) return { art: INDICES_TITRE[i][1], glow: INDICES_TITRE[i][2] };
+  }
+  var repli = REPLIS_FAMILLE[categorie] || REPLIS_FAMILLE.bar;
+  return { art: repli[0], glow: repli[1] };
+}
+
+/* Le gerant ne tape qu'un nom, un seuil et une famille dans son
+   dashboard — pas de description ni de regles. On complete avec un
+   texte honnete plutot que d'inventer des details qui n'existent
+   nulle part cote club. */
+function completerRecompense(r) {
+  var visuel = choisirArt(r.titre, r.categorie);
+  return {
+    id: r.id, nom: r.titre, cout: r.cout, fam: r.categorie, stock: r.stock,
+    art: visuel.art, glow: visuel.glow,
+    court: FAMILLES[r.categorie] || "",
+    desc: "Échange tes points contre « " + r.titre + " », proposé par le club.",
+    regles: ["Valable ce soir", "Montre ce bon au bar ou à l'entrée"]
+  };
+}
+
+var RECOMPENSES = [];
+
+/* Catalogue reel du club, lu via la route publique (service_role cote
+   serveur, jamais la table `rewards` directement depuis le navigateur
+   — meme principe que le reste de la collecte publique). Si l'appel
+   echoue (reseau, club introuvable), la liste reste simplement vide :
+   pas de faux catalogue invente pour combler le vide. */
+async function chargerRecompenses() {
+  try {
+    var reponse = await fetch("/api/rewards-public?c=" + CODE_CLUB);
+    var corps = await reponse.json();
+    if (!reponse.ok) throw new Error(corps.error || "HTTP " + reponse.status);
+    RECOMPENSES = (corps.recompenses || []).map(completerRecompense);
+  } catch (erreur) {
+    console.error("[boutique] catalogue indisponible:", erreur.message);
+    RECOMPENSES = [];
+  }
+  rendreListe();
+  majCagnotte(false);
+}
 
 var OFFRE = {
   id: "o-shot", nom: "Shot offert", court: "Dès ta première story de la soirée",
@@ -1910,6 +1923,7 @@ async function echanger(item) {
 majCagnotte(false);
 rendreOffre();
 rendreListe();
+chargerRecompenses();
 rendreBons(null);
 majRebours();
 setInterval(majRebours, 30000);

@@ -10,11 +10,11 @@ export const DEFAULT_POINT_RULES = {
 };
 
 export const DEFAULT_REWARDS = [
-  { key: "cloakroom", title: "Vestiaire offert", pointsRequired: 40, maxRedemptions: 100 },
-  { key: "softDrink", title: "Boisson soft ou shot", pointsRequired: 70, maxRedemptions: 50 },
-  { key: "premiumDrink", title: "Boisson premium", pointsRequired: 110, maxRedemptions: 30 },
-  { key: "fastPass", title: "Coupe-file", pointsRequired: 160, maxRedemptions: 20 },
-  { key: "freeEntry", title: "Entrée gratuite", pointsRequired: 240, maxRedemptions: 10 },
+  { key: "cloakroom", title: "Vestiaire offert", pointsRequired: 40, maxRedemptions: 100, category: "acces" },
+  { key: "softDrink", title: "Boisson soft ou shot", pointsRequired: 70, maxRedemptions: 50, category: "bar" },
+  { key: "premiumDrink", title: "Boisson premium", pointsRequired: 110, maxRedemptions: 30, category: "bar" },
+  { key: "fastPass", title: "Coupe-file", pointsRequired: 160, maxRedemptions: 20, category: "acces" },
+  { key: "freeEntry", title: "Entrée gratuite", pointsRequired: 240, maxRedemptions: 10, category: "acces" },
 ];
 
 const now = new Date();
@@ -26,11 +26,12 @@ const daysAgo = (days) => {
   return date.toISOString();
 };
 
-const fallbackRewards = DEFAULT_REWARDS.map(({ title, pointsRequired, maxRedemptions }, index) => ({
+const fallbackRewards = DEFAULT_REWARDS.map(({ title, pointsRequired, maxRedemptions, category }, index) => ({
   id: `demo-reward-${index + 1}`,
   title,
   points_required: pointsRequired,
   max_redemptions: maxRedemptions,
+  category,
   active: true,
   created_at: daysAgo(index + 1),
 }));
