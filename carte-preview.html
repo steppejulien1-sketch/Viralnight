@@ -541,64 +541,47 @@ function ambiance() {
        pousse vers le haut a partir de la, exactement comme dans
        le prototype d'origine — juste transpose ici en motif de
        tuile plutot qu'en objets dessinees un par un a la volee. */
-/* --- Les arbres, comme sur les captures Snap Map : plusieurs types
-       (boule irreguliere, sapin, buisson large, petit arbuste), plus
-       petits qu'avant, avec un tronc bien visible qui depasse sous
-       la canopee. "variante" (0-3) choisit la silhouette, "teinte"
-       (1-2) varie juste la couleur au sein d'un meme type. --- */
-function arbreSur(ctx, x, y, r, teinte, variante) {
-  var s = r / 22;
-  var fonce = teinte === 1 ? "#5c9c42" : "#4f9350";
-  var moyen = teinte === 1 ? "#79bb52" : "#6cb562";
-  var clair = teinte === 1 ? "#9bd977" : "#8fd684";
+/* --- L'arbre « photo » : une base pleine (aucun trou, contrairement
+       a un tas de points juxtaposes) recouverte de dizaines de
+       petites touches de vert de teintes variees, comme une texture
+       de feuillage vue d'avion — plus proche d'une vraie photo
+       aerienne qu'une icone plate. Le nombre de touches suit l'aire
+       du cercle (r au carre) pour rester dense a toutes les tailles. */
+var PALETTES_ARBRES = [
+  ["#3f7a34", "#4a8a3c", "#5a9c46", "#6bab54", "#7fbb60", "#8fc96a"],
+  ["#356b2a", "#417a34", "#4f9350", "#5cae5a", "#6cb562", "#79bb52"]
+];
 
-  function ombre(rx) {
-    ctx.beginPath(); ctx.ellipse(x, y + 3.5 * s, rx * s, rx * .38 * s, 0, 0, 7);
-    ctx.fillStyle = "rgba(40,60,30,.2)"; ctx.fill();
-  }
-  function tronc(h) {
-    ctx.fillStyle = "#7a5a38";
-    ctx.fillRect(x - 1.6 * s, y - h * .6 * s, 3.2 * s, h * s);
-    ctx.fillStyle = "#63472a";
-    ctx.fillRect(x + .3 * s, y - h * .6 * s, 1.2 * s, h * s);
-  }
-  function lobe(dx, dy, r2, col) {
-    ctx.beginPath(); ctx.arc(x + dx * s, y + dy * s, r2 * s, 0, 7);
-    ctx.fillStyle = col; ctx.fill();
-  }
+function arbreSur(ctx, x, y, r, teinte) {
+  var s = r / 14;
+  var palette = PALETTES_ARBRES[teinte === 1 ? 0 : 1];
+  var R = 6.2 * s;
 
-  var v = variante % 4;
+  ctx.beginPath(); ctx.ellipse(x + 1.4 * s, y + 3.6 * s, R * .78, R * .3, 0, 0, 7);
+  ctx.fillStyle = "rgba(30,45,20,.22)"; ctx.fill();
 
-  if (v === 0) {
-    // boule irreguliere : plusieurs lobes decales, pas un cercle net
-    ombre(8); tronc(9);
-    lobe(1.5, -12, 9, fonce);
-    lobe(-4, -14.5, 7.5, moyen);
-    lobe(3, -16.5, 6, moyen);
-    lobe(-2, -18, 5, clair);
-  } else if (v === 1) {
-    // sapin : silhouette pointue, 3 etages qui retrecissent
-    ombre(7); tronc(6);
-    ctx.beginPath(); ctx.moveTo(x - 9 * s, y - 5 * s); ctx.lineTo(x + 9 * s, y - 5 * s); ctx.lineTo(x, y - 16 * s); ctx.closePath();
-    ctx.fillStyle = fonce; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(x - 7 * s, y - 12 * s); ctx.lineTo(x + 7 * s, y - 12 * s); ctx.lineTo(x, y - 21 * s); ctx.closePath();
-    ctx.fillStyle = moyen; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(x - 4.5 * s, y - 18 * s); ctx.lineTo(x + 4.5 * s, y - 18 * s); ctx.lineTo(x, y - 25 * s); ctx.closePath();
-    ctx.fillStyle = clair; ctx.fill();
-  } else if (v === 2) {
-    // buisson large et bas, plutot que haut
-    ombre(10); tronc(4);
-    lobe(-5, -7, 8, fonce);
-    lobe(4, -6.5, 7.5, fonce);
-    lobe(0, -10, 8.5, moyen);
-    lobe(-2.5, -12.5, 5, clair);
-  } else {
-    // petit arbuste, plus discret que les autres
-    ombre(5.5); tronc(4.5);
-    lobe(0, -9, 6.5, fonce);
-    lobe(-2, -11, 5, moyen);
-    lobe(1.5, -12.5, 3.2, clair);
+  ctx.fillStyle = "#5c4128";
+  ctx.fillRect(x - 1.4 * s, y - .5 * s, 2.8 * s, 4.2 * s);
+
+  // base pleine : garantit qu'il n'y a jamais de blanc/fond qui
+  // transparaisse entre les touches de texture posees par-dessus
+  ctx.beginPath(); ctx.arc(x, y - R * .55, R, 0, 7);
+  ctx.fillStyle = palette[2];
+  ctx.fill();
+
+  var n = Math.max(10, Math.min(70, Math.round(R * R * .55)));
+  var graine = Math.floor(x * 977 + y * 331) >>> 0 || 1;
+  function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
+  for (var i = 0; i < n; i++) {
+    var a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * R;
+    var px = x + Math.cos(a) * d, py = (y - R * .55) + Math.sin(a) * d * .92;
+    var eclaire = (Math.cos(a - .7) + 1) / 2;
+    ctx.beginPath(); ctx.arc(px, py, R * (.16 + rnd() * .12), 0, 7);
+    ctx.globalAlpha = .55 + eclaire * .4;
+    ctx.fillStyle = palette[Math.floor(rnd() * palette.length)];
+    ctx.fill();
   }
+  ctx.globalAlpha = 1;
 }
 
 function snapifie() {
