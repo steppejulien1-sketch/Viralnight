@@ -88,18 +88,24 @@ Deux registres :
 
 ## Components
 
-- **Solde** (`.solde-carte`) : un compteur plein — pilule corail
-  opaque, chiffre blanc, mini-jeton blanc translucide à gauche
-  (`.jeton-halo`, réutilise `jeton()` du JS, recoloré via
-  `--jeton-fond`/`--jeton-anneau` définies dans `.screen.boutique-pro`
-  sans toucher au disque brun/ambre d'origine que l'écran carte garde).
-  Deux tentatives précédentes rejetées : le cadran circulaire ("le rond,
-  c'est bizarre") puis un chiffre nu à côté d'un halo gris ("tu as
-  juste mis un point à côté, c'est encore pire") — un chiffre et une
-  pastille séparés ne lisent jamais comme un compteur, seul un bloc
-  plein le fait. Tick de mise à jour : `scale(1.22 → 1)`, pas de
-  couleur (le texte est déjà blanc sur corail, un flash de couleur n'y
-  serait pas visible).
+- **Solde** (`.solde-carte`) : une souche de billet, pas un compteur
+  générique — pilule corail avec deux encoches rondes découpées sur les
+  bords (`::before`/`::after`, cercles `var(--s1)` qui "perforent" la
+  pilule), ligne de déchirure en pointillés (`.solde-dents`) séparant
+  le jeton + "PTS" du chiffre. Reprend le vocabulaire déjà utilisé pour
+  les bons échangés (`.bon-qr`, ticket avec QR) plutôt qu'un motif de
+  jeu générique — la récompense doit "sembler réelle, ce soir" (voir
+  PRODUCT.md), pas un score. Historique de rejets sur cet élément :
+  cadran circulaire ("le rond, c'est bizarre"), chiffre nu à côté d'un
+  halo gris ("tu as juste mis un point à côté, c'est encore pire"),
+  pilule pleine générique jeton+chiffre ("dégueulasse, pire qu'avant").
+  Sous le ticket, `.activite` liste les derniers gains de la soirée en
+  petites pilules ("+15 Scan à l'entrée", "+80 Story taguée",
+  `ACTIVITE_RECENTE` en JS) — ajouté parce que le chiffre seul, même
+  bien dessiné, ne répondait pas à "on ne voit pas d'où viennent les
+  points, il n'y a aucune logique". Tick de mise à jour du chiffre :
+  `scale(1.22 → 1)`, pas de couleur (le texte est déjà blanc sur
+  corail, un flash de couleur n'y serait pas visible).
 - **Carte récompense** (`.carte-reco`, grille `.grille`) : photo
   carrée pleine largeur en haut (`.photo`, vraie photo ou repli SVG
   `art()`), pilule de prix blanche posée en bas à gauche de la photo

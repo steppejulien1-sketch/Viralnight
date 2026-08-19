@@ -256,31 +256,65 @@
         border-bottom: 1px solid var(--line);
         backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       }
-      /* Amplifie une deuxieme fois le meme soir : un halo gris a cote
-         du chiffre lisait comme "un point qui traine", pas comme un
-         compteur — deux formes juxtaposees plutot qu'une seule chose
-         decidee. Un vrai compteur (jeu, appli de recompenses) est un
-         seul bloc plein, pas un chiffre et une pastille cote a cote :
-         la pilule elle-meme passe en aplat corail, le chiffre en blanc
-         dessus — plus de surface neutre en dessous, un seul objet. */
+      /* Troisieme essai le meme soir, changement de concept plutot que
+         de reglage : un compteur générique (pilule + icone + chiffre)
+         a ete juge "pire qu'avant". L'appli a deja un vocabulaire a
+         elle — le ticket dechirable de "Mes bons" (bon-qr, code en
+         var(--mono)) — que le solde n'empruntait pas. Le repli ici
+         emprunte exactement cette forme : une souche de billet
+         (encoches rondes decoupees sur les bords, comme une place de
+         concert), le prix imprime en gros a droite de la ligne de
+         dechirure. Ce n'est plus "un compteur de points" generique,
+         c'est visuellement la meme famille d'objet qu'un bon a
+         echanger — coherent avec le principe produit "la recompense
+         doit sembler reelle, ce soir", pas un score de jeu. */
       .solde-carte {
-        display: inline-flex; align-items: center; gap: 9px;
-        background: var(--accent); border-radius: 999px;
-        padding: 9px 20px 9px 10px;
-        --jeton-fond: rgba(255,255,255,.24); --jeton-anneau: #fff;
+        position: relative; display: inline-flex; align-items: stretch;
+        background: var(--accent); border-radius: 12px;
+        overflow: visible;
       }
-      .solde-carte .jeton-halo {
-        width: 24px; height: 24px; flex: 0 0 auto;
-        display: grid; place-items: center;
+      .solde-carte::before, .solde-carte::after {
+        content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+        width: 17px; height: 17px; border-radius: 50%; background: var(--s1);
       }
-      .solde { display: flex; align-items: baseline; gap: 5px; }
-      .solde b {
-        font-family: var(--mono); font-size: 26px; font-weight: 800; color: #fff;
+      .solde-carte::before { left: -8.5px; }
+      .solde-carte::after { right: -8.5px; }
+      .solde-souche {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 3px; padding: 12px 14px;
+      }
+      .solde-souche .jeton-halo { width: 20px; height: 20px; display: grid; place-items: center; }
+      .solde-souche i {
+        font-style: normal; font-size: 9px; font-weight: 800; letter-spacing: .1em;
+        text-transform: uppercase; color: rgba(255,255,255,.85);
+      }
+      .solde-dents {
+        flex: 0 0 auto; width: 0; margin: 10px 0;
+        border-left: 2px dashed rgba(255,255,255,.45);
+      }
+      .solde-carte b {
+        display: flex; align-items: center;
+        font-family: var(--mono); font-size: 28px; font-weight: 800; color: #fff;
         letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums;
+        padding: 12px 22px;
       }
-      .solde i {
-        font-style: normal; font-size: 13px; font-weight: 700; letter-spacing: .04em;
-        color: rgba(255,255,255,.8);
+
+      /* "On ne voit pas d'ou viennent les points" : le ticket dit
+         combien, pas pourquoi. Cette bande montre les derniers gains
+         de la soiree (memes libelles que le bareme "Comment gagner des
+         points" plus bas, juste au singulier/recent) — le solde cesse
+         d'etre un chiffre qui tombe du ciel. */
+      .activite { display: flex; gap: 8px; overflow-x: auto; padding: 14px 18px 2px; margin: 0 -18px; scrollbar-width: none; }
+      .activite::-webkit-scrollbar { display: none; }
+      .activite .puce {
+        flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
+        background: var(--s2); border: 1px solid var(--line); border-radius: 999px;
+        padding: 6px 13px 6px 6px; font-size: 12px; font-weight: 650; color: var(--ink2);
+      }
+      .activite .puce b {
+        font-family: var(--mono); font-size: 11.5px; font-weight: 800; color: #fff;
+        background: var(--accent); border-radius: 999px; padding: 3px 7px;
+        font-variant-numeric: tabular-nums;
       }
 
       /* Retour visuel quand le solde change : un tick de compteur —
@@ -293,7 +327,7 @@
         0%   { transform: scale(1.22); }
         100% { transform: scale(1); }
       }
-      .solde b.maj { display: inline-block; transform-origin: left center; animation: majSolde .4s cubic-bezier(.16,1,.3,1); }
+      .solde-carte b.maj { transform-origin: left center; animation: majSolde .4s cubic-bezier(.16,1,.3,1); }
 
       .jeton { display: block; }
 
@@ -520,7 +554,7 @@
       .sheet.up { transform: translateY(0); }
       @media (prefers-reduced-motion: reduce) {
         .sheet, .voile, .bareme summary .chev { transition: none; }
-        .solde b.maj, .bon.neuf { animation: none; }
+        .solde-carte b.maj, .bon.neuf { animation: none; }
       }
 
       .grab { width: 40px; height: 4.5px; border-radius: 99px; background: rgba(255,255,255,.15); margin: 0 auto 4px; position: sticky; top: 0; }
@@ -817,11 +851,14 @@
 
             <header class="wallet">
               <div class="solde-carte">
-                <span class="jeton-halo" id="w-jeton"></span>
-                <div class="solde">
-                  <b id="w-solde">0</b><i>pts</i>
-                </div>
+                <span class="solde-souche">
+                  <span class="jeton-halo" id="w-jeton"></span>
+                  <i>pts</i>
+                </span>
+                <span class="solde-dents" aria-hidden="true"></span>
+                <b id="w-solde">0</b>
               </div>
+              <div class="activite" id="activite"></div>
             </header>
 
             <section class="sec">
@@ -2006,6 +2043,24 @@ var GAINS = [
   { t: "Contenu qui décolle",     s: "Bonus au-delà de 10 000 vues",    v: 90 },
   { t: "Ambassadeur du mois",     s: "Le plus gros total du mois",      v: 350 }
 ];
+
+// Derniers gains reels de la soiree (contrairement a GAINS ci-dessus,
+// qui est le bareme general) — affiches sous le ticket pour repondre
+// a "on ne voit pas d'ou viennent les points, il n'y a aucune logique".
+// Meme provenance de donnees que GAINS dans la vraie appli (table
+// points_events ou equivalent), ici en dur pour la maquette.
+var ACTIVITE_RECENTE = [
+  { t: "Scan à l'entrée", v: 15 },
+  { t: "Story taguée", v: 80 },
+  { t: "Bonus x2 jusqu'à 1h", v: 40 }
+];
+
+(function rendreActivite() {
+  var z = $("#activite");
+  z.innerHTML = ACTIVITE_RECENTE.map(function (a) {
+    return '<span class="puce"><b>+' + a.v + "</b>" + a.t + "</span>";
+  }).join("");
+})();
 
 var OUVERTURE = 23, FERMETURE = 6;
 
