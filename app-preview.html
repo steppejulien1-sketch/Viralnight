@@ -1390,66 +1390,34 @@ var PALETTES_ARBRES = [
   ["#356b2a", "#417a34", "#4f9350", "#5cae5a", "#6cb562", "#79bb52"]
 ];
 
-/* Version 2D (19 aout) : les arbres etaient dessines en pseudo-relief
-   (tronc, feuillage en plusieurs disques decales pour simuler du
-   volume, ombre au sol) — juge "moche" par Julien. Repli sur un
-   simple disque de feuillage vu du dessus, comme sur un plan/Maps en
-   mode plat, avec juste une pointe plus claire pour eviter un aplat
-   totalement uni. Plus de tronc, plus d'ombre, plus d'especes
-   distinctes : cinq variantes 3D differentes n'avaient plus de sens
-   une fois la forme reduite a un disque. */
+/* Version 2D (19 aout), puis seul element garde sur la carte une fois
+   les batiments retires ("mets juste des beaux arbres... esthetiques,
+   qui rentrent bien") : un disque unique lisait trop comme un pictogramme
+   plat. Le feuillage devient trois lobes ronds legerement decales (avec
+   une pointe de jitter par arbre via sa graine, pour eviter un tampon
+   identique repete partout) — reste totalement plat (pas de tronc, pas
+   d'ombre), juste un contour moins mecanique qu'un cercle parfait. */
 function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   var s = r / 14;
   var palette = PALETTES_ARBRES[teinte % 2];
   var R = 8.4 * s;
   var alphaBase = ctx.globalAlpha;
-
-  ctx.beginPath(); ctx.arc(x, y, R * .72, 0, 7);
-  ctx.fillStyle = palette[1]; ctx.fill();
-
-  ctx.beginPath(); ctx.arc(x - R * .18, y - R * .18, R * .34, 0, 7);
-  ctx.fillStyle = palette[4]; ctx.globalAlpha = alphaBase * .8; ctx.fill();
-  ctx.globalAlpha = alphaBase;
-}
-
-var PALETTES_BATIMENTS = [
-  { mur: "#f4f1ea", murOmbre: "#e2ddd0", toit: "#3a3d47", fenetre: "#ffd873" },
-  { mur: "#eef2f6", murOmbre: "#d9e0e6", toit: "#2c2f38", fenetre: "#ffe08a" },
-  { mur: "#f7ece4", murOmbre: "#e6d5c8", toit: "#8a3b32", fenetre: "#ffd873" }
-];
-
-/* Version 2D (19 aout) : les batiments etaient dessines en blocs
-   isometriques (mur face + mur ombre decale, toit pointu ou plat en
-   volume) — meme verdict que les arbres, "moche". Repli sur une simple
-   empreinte au sol vue du dessus (rectangle arrondi), comme un
-   batiment sur un plan en mode plat (Apple/Google Maps 2D) : plus de
-   mur, plus de toit en volume, plus de fenetres — juste la forme au
-   sol dans la teinte du toit d'origine, avec un contour fin. */
-function batimentSur(ctx, x, y, r, teinte, graineBatiment) {
-  var s = r / 14;
-  var pal = PALETTES_BATIMENTS[teinte % PALETTES_BATIMENTS.length];
-  var graine = (graineBatiment >>> 0) || 1;
+  var graine = (graineArbre >>> 0) || 1;
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
 
-  var largeur = (12 + rnd() * 4) * s;
-  var profondeur = largeur * (0.6 + rnd() * .25);
-  var rx = largeur / 2, ry = profondeur / 2;
-  var rayon = Math.min(rx, ry) * .3;
+  var lobes = [
+    { dx: 0, dy: -R * .06, r: R * .7, c: palette[2] },
+    { dx: -R * (.34 + rnd() * .1), dy: R * (.14 + rnd() * .1), r: R * (.42 + rnd() * .08), c: palette[0] },
+    { dx: R * (.32 + rnd() * .1), dy: R * (.16 + rnd() * .1), r: R * (.4 + rnd() * .08), c: palette[1] }
+  ];
+  lobes.forEach(function (l) {
+    ctx.beginPath(); ctx.arc(x + l.dx, y + l.dy, l.r, 0, 7);
+    ctx.fillStyle = l.c; ctx.fill();
+  });
 
-  ctx.beginPath();
-  ctx.moveTo(x - rx + rayon, y - ry);
-  ctx.lineTo(x + rx - rayon, y - ry);
-  ctx.arcTo(x + rx, y - ry, x + rx, y - ry + rayon, rayon);
-  ctx.lineTo(x + rx, y + ry - rayon);
-  ctx.arcTo(x + rx, y + ry, x + rx - rayon, y + ry, rayon);
-  ctx.lineTo(x - rx + rayon, y + ry);
-  ctx.arcTo(x - rx, y + ry, x - rx, y + ry - rayon, rayon);
-  ctx.lineTo(x - rx, y - ry + rayon);
-  ctx.arcTo(x - rx, y - ry, x - rx + rayon, y - ry, rayon);
-  ctx.closePath();
-
-  ctx.fillStyle = pal.toit; ctx.fill();
-  ctx.strokeStyle = pal.murOmbre; ctx.lineWidth = Math.max(1, s * .5); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x - R * .22, y - R * .26, R * .26, 0, 7);
+  ctx.fillStyle = palette[5]; ctx.globalAlpha = alphaBase * .7; ctx.fill();
+  ctx.globalAlpha = alphaBase;
 }
 
 function snapifie() {
@@ -1524,12 +1492,17 @@ function snapifie() {
   });
 }
 
+/* Plus de batiments sur la carte (retires a la demande de Julien,
+   "on ne mets plus de maison") : seuls les arbres restent, en plus
+   grande densite ("des arbres partout") — pas plus de 0.00038 au lieu
+   de 0.00055 pour resserrer la grille, plafond releve a 3200 pour
+   couvrir davantage de vegetation avant de s'arreter. */
 var ARBRES = [];
 var ARBRES_VUS = {};
-var PAS_ARBRES = 0.00055;
+var PAS_ARBRES = 0.00038;
 
 function genererArbres() {
-  if (ARBRES.length >= 1800) return;
+  if (ARBRES.length >= 3200) return;
   var couches = ["Forest", "Wood", "Grass", "Meadow"].filter(function (id) { return map.getLayer(id); });
   if (!couches.length) return;
 
@@ -1540,7 +1513,7 @@ function genererArbres() {
 
   for (var lng = lngMin; lng <= lngMax; lng += PAS_ARBRES) {
     for (var lat = latMin; lat <= latMax; lat += PAS_ARBRES) {
-      if (ARBRES.length >= 1800) return;
+      if (ARBRES.length >= 3200) return;
       var cle = Math.round(lng / PAS_ARBRES) + ":" + Math.round(lat / PAS_ARBRES);
       if (ARBRES_VUS[cle]) continue;
       ARBRES_VUS[cle] = true;
@@ -1563,30 +1536,6 @@ function genererArbres() {
       });
     }
   }
-}
-
-var BATIMENTS = [];
-var BATIMENTS_VUS = {};
-var BATIMENTS_GRAINE = 55221;
-
-function genererBatiments() {
-  if (!map.getLayer("Building") || BATIMENTS.length >= 2000) return;
-  var feats = map.queryRenderedFeatures({ layers: ["Building"] });
-  function rnd() { BATIMENTS_GRAINE = (BATIMENTS_GRAINE * 1664525 + 1013904223) >>> 0; return BATIMENTS_GRAINE / 4294967296; }
-  feats.forEach(function (f) {
-    if (BATIMENTS.length >= 2000) return;
-    var g = f.geometry;
-    if (!g) return;
-    var anneau = g.type === "Polygon" ? g.coordinates[0] : (g.type === "MultiPolygon" ? g.coordinates[0][0] : null);
-    if (!anneau || anneau.length < 3) return;
-    var sx = 0, sy = 0;
-    anneau.forEach(function (c) { sx += c[0]; sy += c[1]; });
-    var lng = sx / anneau.length, lat = sy / anneau.length;
-    var cle = lng.toFixed(5) + "," + lat.toFixed(5);
-    if (BATIMENTS_VUS[cle]) return;
-    BATIMENTS_VUS[cle] = true;
-    BATIMENTS.push({ lng: lng, lat: lat, teinte: Math.floor(rnd() * 3), graine: Math.floor(rnd() * 4294967295) + 1 });
-  });
 }
 
 (function () {
@@ -1615,25 +1564,16 @@ function genererBatiments() {
       var a = ARBRES[i];
       var p = map.project([a.lng, a.lat]);
       if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) continue;
-      pts.push({ x: p.x, y: p.y, s: a.s, teinte: a.teinte, graine: a.graine, type: "arbre" });
-    }
-    for (var j = 0; j < BATIMENTS.length; j++) {
-      var b = BATIMENTS[j];
-      var pb = map.project([b.lng, b.lat]);
-      if (pb.x < -60 || pb.x > W + 60 || pb.y < -110 || pb.y > H + 60) continue;
-      pts.push({ x: pb.x, y: pb.y, s: 1, teinte: b.teinte, graine: b.graine, type: "batiment" });
+      pts.push({ x: p.x, y: p.y, s: a.s, teinte: a.teinte, graine: a.graine });
     }
     pts.sort(function (a, b) { return a.y - b.y; });
     ctx.globalAlpha = fondu;
-    pts.forEach(function (p) {
-      if (p.type === "arbre") arbreSur(ctx, p.x, p.y, 26 * p.s, p.teinte, p.graine);
-      else batimentSur(ctx, p.x, p.y, 30, p.teinte, p.graine);
-    });
+    pts.forEach(function (p) { arbreSur(ctx, p.x, p.y, 26 * p.s, p.teinte, p.graine); });
     ctx.globalAlpha = 1;
   }
   map.on("move", dessiner);
-  map.on("load", function () { genererBatiments(); genererArbres(); dessiner(); });
-  map.on("idle", function () { genererBatiments(); genererArbres(); dessiner(); });
+  map.on("load", function () { genererArbres(); dessiner(); });
+  map.on("idle", function () { genererArbres(); dessiner(); });
 })();
 
 (function () {
