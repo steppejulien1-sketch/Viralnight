@@ -239,6 +239,34 @@
          l'ancien header sticky, pour ne pas coller au bord de l'ecran. */
       .sec-premiere { padding-top: 22px; }
 
+      /* Le solde de points : retire de la boutique le 19 aout (pour ne
+         vivre que sur la pastille flottante de l'ecran carte), puis
+         cette pastille a son tour retiree le 20 aout ("inutile") — plus
+         aucun affichage de points nulle part. Remis ici, en tete de
+         boutique, en carte simple : chiffre corail (seul role autorise
+         pour cette couleur), jeton en rappel, rien d'autre. Pas de
+         cadran ni de pilule pleine, deja essayes et rejetes par le
+         passe pour ce meme role (voir DESIGN.md). */
+      .carte-solde {
+        display: flex; align-items: center; gap: 13px;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        padding: 15px 17px; margin-bottom: 4px;
+      }
+      .carte-solde-jeton { width: 32px; height: 32px; flex: 0 0 auto; }
+      .carte-solde-jeton svg { width: 100%; height: 100%; display: block; }
+      .carte-solde-corps { min-width: 0; }
+      .carte-solde-lab {
+        display: block; font-size: 12.5px; font-weight: 650; color: var(--ink2);
+        margin-bottom: 1px;
+      }
+      .carte-solde-num {
+        display: block; font-family: var(--mono); font-size: 28px; font-weight: 800;
+        letter-spacing: -.02em; color: var(--accent); font-variant-numeric: tabular-nums;
+      }
+      .carte-solde-num::after { content: " pts"; font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--ink3); margin-left: 3px; }
+      @keyframes majSolde { 0% { transform: scale(1.22); } 100% { transform: scale(1); } }
+      .carte-solde-num.maj { animation: majSolde .38s cubic-bezier(.2,.8,.3,1); }
+
       .jeton { display: block; }
 
       /* ---------------- Filtres ---------------- */
@@ -754,6 +782,16 @@
           <div class="app" id="app">
 
             <section class="sec sec-premiere">
+              <div class="carte-solde">
+                <span class="carte-solde-jeton" id="solde-jeton"></span>
+                <div class="carte-solde-corps">
+                  <span class="carte-solde-lab">Tes points</span>
+                  <strong class="carte-solde-num" id="solde-num">0</strong>
+                </div>
+              </div>
+            </section>
+
+            <section class="sec">
               <div class="sec-head">
                 <h2>Ce soir au Mirage</h2>
                 <span class="sub" id="o-fin"></span>
@@ -1146,11 +1184,15 @@ TAB_BOUTIQUE.addEventListener("click", function () { activerVue("boutique"); });
 activerVue(location.hash === "#boutique" ? "boutique" : "carte");
 
 /* ==========================================================
-   LA CAGNOTTE — ETAT.solde n'a plus d'affichage flottant nulle
-   part (pastille carte retiree, compteur boutique deja retire
-   avant elle) ; il alimente juste les feuilles de detail et les
-   CTA d'echange, ci-dessous.
+   LA CAGNOTTE — ETAT.solde s'affiche en tete de boutique
+   (.carte-solde) : seul endroit restant, depuis que la pastille
+   flottante de l'ecran carte (#pts-pill) a ete retiree le 20 aout
+   ("inutile") — sans remplacement a l'epoque, ce qui rendait le
+   solde invisible partout. Le compteur de la grille (au-dessus des
+   photos) reste supprime, lui, c'etait une decision separee.
    ========================================================== */
+
+$("#solde-jeton").innerHTML = jeton(32);
 
 // Reste utilisee par la fiche club de la carte (noteRecompenseClub) :
 // la prochaine recompense accessible, pour "X pts pour Y". Le meme
@@ -1162,7 +1204,15 @@ function prochaine() {
     .sort(function (a, b) { return a.cout - b.cout; })[0] || null;
 }
 
-function majCagnotte() {}
+function majCagnotte(animer) {
+  var el = $("#solde-num");
+  el.textContent = nb(ETAT.solde);
+  if (animer) {
+    el.classList.remove("maj");
+    void el.offsetWidth;
+    el.classList.add("maj");
+  }
+}
 
 /* ==========================================================
    ECRAN CARTE — moteur MapLibre GL JS + MapTiler, inchange par
