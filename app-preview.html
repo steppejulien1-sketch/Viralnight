@@ -300,21 +300,21 @@
       }
 
       /* "On ne voit pas d'ou viennent les points" : le ticket dit
-         combien, pas pourquoi. Cette bande montre les derniers gains
-         de la soiree (memes libelles que le bareme "Comment gagner des
-         points" plus bas, juste au singulier/recent) — le solde cesse
-         d'etre un chiffre qui tombe du ciel. */
-      .activite { display: flex; gap: 8px; overflow-x: auto; padding: 14px 18px 2px; margin: 0 -18px; scrollbar-width: none; }
-      .activite::-webkit-scrollbar { display: none; }
-      .activite .puce {
-        flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
-        background: var(--s2); border: 1px solid var(--line); border-radius: 999px;
-        padding: 6px 13px 6px 6px; font-size: 12px; font-weight: 650; color: var(--ink2);
+         combien, pas pourquoi. Premier essai en rangee de pastilles
+         colorees, rejete a son tour ("c'est degueulasse") — trop
+         charge a cote d'un ticket deja tres present, et un mot coupe a
+         la bordure droite (scroll horizontal sans indice visuel) avait
+         l'air casse. Repli sur un releve discret, imprime comme une
+         suite du ticket (meme famille que .qr-code-txt : monospace,
+         petit, silencieux) plutot qu'une deuxieme rangee de couleur. */
+      .activite {
+        padding: 12px 4px 0; display: grid; gap: 5px;
+        font-family: var(--mono); font-size: 12px;
       }
-      .activite .puce b {
-        font-family: var(--mono); font-size: 11.5px; font-weight: 800; color: #fff;
-        background: var(--accent); border-radius: 999px; padding: 3px 7px;
-        font-variant-numeric: tabular-nums;
+      .activite .ligne { display: flex; justify-content: space-between; gap: 10px; color: var(--ink3); }
+      .activite .ligne b {
+        color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums;
+        flex: 0 0 auto;
       }
 
       /* Retour visuel quand le solde change : un tick de compteur —
@@ -2058,7 +2058,7 @@ var ACTIVITE_RECENTE = [
 (function rendreActivite() {
   var z = $("#activite");
   z.innerHTML = ACTIVITE_RECENTE.map(function (a) {
-    return '<span class="puce"><b>+' + a.v + "</b>" + a.t + "</span>";
+    return '<span class="ligne"><span>' + a.t + "</span><b>+" + a.v + "</b></span>";
   }).join("");
 })();
 
