@@ -1295,78 +1295,60 @@ function ambiance() {
   });
 }
 
-/* Reference explicite : captures d'ecran de Snap Map fournies par Julien
-   ("je veux exactement pareil, aucune difference"). Arbres = boule/dome
-   plein avec un cote ombre (pas un degrade complexe, un aplat plus fonce),
-   un tronc court visible, une ombre au sol. Trois silhouettes vues sur les
-   captures (boule, cone, oeuf) pour varier sans sortir du style. */
-var ESPECES_ARBRES = [
-  { corps: "#6fbb5c", ombre: "#4f9c46", clair: "#93d17c", forme: "boule" },
-  { corps: "#5aab6a", ombre: "#3e8a50", clair: "#7ec98c", forme: "cone" },
-  { corps: "#7abf5e", ombre: "#589a46", clair: "#9ad381", forme: "oeuf" }
-];
+/* Deuxieme passe apres retour de Julien ("ce n'est vraiment pas pareil") :
+   comparaison image par image des 6 captures Snap Map. Les arbres y sont
+   TOUJOURS une simple boule verte plate (un seul aplat, pas de degrade ni
+   de reflet visible) sur un tronc court et net, avec une ombre portee
+   franche — jamais de cone ni d'oeuf, une seule silhouette repetee partout.
+   Les batiments sont des blocs beiges quasi unis (le cote n'est que
+   legerement plus sombre que la facade, pas un vrai contraste clair/fonce)
+   avec des fenetres bleues nettement plus saturees que du bleu pastel. */
+var VERT_ARBRE = "#6cb956";
+var VERT_ARBRE_OMBRE = "#4f9a44";
 var TRONC = "#8a6540";
 
 function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   var s = r / 14;
-  var espece = ESPECES_ARBRES[teinte % ESPECES_ARBRES.length];
   var R = 7.6 * s;
-  var alphaBase = ctx.globalAlpha;
   var graine = (graineArbre >>> 0) || 1;
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
-  var pencheX = (rnd() - .5) * R * .12;
+  var vRayon = R * (.92 + rnd() * .16);
 
   // ombre au sol, decalee vers le bas-droite (source de lumiere haut-gauche)
   ctx.beginPath();
-  ctx.ellipse(x + R * .3, y + R * .18, R * .68, R * .26, 0, 0, 7);
-  ctx.fillStyle = "rgba(35,50,20,.16)";
+  ctx.ellipse(x + R * .32, y + R * .16, R * .62, R * .24, 0, 0, 7);
+  ctx.fillStyle = "rgba(35,50,20,.18)";
   ctx.fill();
 
   // tronc
-  var troncH = R * .34;
+  var troncH = R * .4, troncL = R * .22;
   ctx.fillStyle = TRONC;
-  ctx.fillRect(x - R * .08, y - troncH * .55, R * .16, troncH);
+  ctx.fillRect(x - troncL / 2, y - troncH * .6, troncL, troncH);
 
-  var cy = y - R * .78;
+  // boule de feuillage, un seul aplat plus la moitie basse legerement
+  // assombrie (pas de degrade, pas de reflet) — c'est tout ce que montrent
+  // les captures.
+  var cy = y - R * .82;
+  ctx.beginPath();
+  ctx.ellipse(x, cy, vRayon * .62, vRayon * .62, 0, 0, 7);
+  ctx.fillStyle = VERT_ARBRE;
+  ctx.fill();
 
   ctx.save();
   ctx.beginPath();
-  if (espece.forme === "cone") {
-    ctx.moveTo(x + pencheX, cy - R * .95);
-    ctx.lineTo(x - R * .62, cy + R * .78);
-    ctx.lineTo(x + R * .62, cy + R * .78);
-    ctx.closePath();
-  } else if (espece.forme === "oeuf") {
-    ctx.ellipse(x + pencheX * .5, cy, R * .54, R * .82, 0, 0, 7);
-  } else {
-    ctx.ellipse(x + pencheX * .5, cy, R * .66, R * .66, 0, 0, 7);
-  }
-  ctx.fillStyle = espece.corps;
-  ctx.fill();
+  ctx.ellipse(x, cy, vRayon * .62, vRayon * .62, 0, 0, 7);
   ctx.clip();
-
-  // aplat d'ombre sur le cote bas-droit du feuillage (2 tons, pas de degrade)
   ctx.beginPath();
-  ctx.ellipse(x + R * .3, cy + R * .18, R * .68, R * .82, 0, 0, 7);
-  ctx.fillStyle = espece.ombre;
-  ctx.globalAlpha = alphaBase * .55;
+  ctx.ellipse(x + vRayon * .18, cy + vRayon * .22, vRayon * .5, vRayon * .5, 0, 0, 7);
+  ctx.fillStyle = VERT_ARBRE_OMBRE;
   ctx.fill();
-
-  // reflet clair en haut-gauche
-  ctx.beginPath();
-  ctx.ellipse(x - R * .26, cy - R * .32, R * .28, R * .3, 0, 0, 7);
-  ctx.fillStyle = espece.clair;
-  ctx.globalAlpha = alphaBase * .6;
-  ctx.fill();
-  ctx.globalAlpha = alphaBase;
   ctx.restore();
 }
 
-/* Batiments Snap Map : blocs 3D simples (pas de toit pointu), facade avant
-   plus claire, facade laterale plus sombre, une ou deux petites fenetres
-   bleu pale, ombre au sol. Palette calquee sur les captures (creme, pas la
-   palette coloree qu'on avait avant). */
-var PALETTE_BATIMENT = { face: "#efe4d5", cote: "#d9cab3", toit: "#f5eee2", fenetre: "#a9d3e6" };
+/* Batiments Snap Map : blocs presque unis (le cote ne fonce que d'un cran,
+   pas un vrai clair/fonce), toit a peine plus clair, fenetres bleues
+   franches, ombre nette au sol. */
+var PALETTE_BATIMENT = { face: "#efe4d4", cote: "#e4d8c4", toit: "#f2ead9", fenetre: "#4f9fc7" };
 
 function batimentSur(ctx, x, y, r, graineBatiment) {
   var s = r / 14;
@@ -1374,17 +1356,17 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
 
   var largeur = (10 + rnd() * 6) * s;
-  var hauteur = (5 + rnd() * 5) * s;
+  var hauteur = (4.5 + rnd() * 4) * s;
   var decal = largeur * (.22 + rnd() * .1);
   var hautBas = y, hautHaut = y - hauteur;
 
   // ombre au sol
   ctx.beginPath();
-  ctx.ellipse(x + decal * .4, y + hauteur * .05, largeur * .58, largeur * .2, 0, 0, 7);
-  ctx.fillStyle = "rgba(30,35,20,.14)";
+  ctx.ellipse(x + decal * .4, y + hauteur * .05, largeur * .56, largeur * .19, 0, 0, 7);
+  ctx.fillStyle = "rgba(30,35,20,.16)";
   ctx.fill();
 
-  // facade avant (claire)
+  // facade avant
   ctx.beginPath();
   ctx.moveTo(x - largeur / 2, hautBas);
   ctx.lineTo(x - largeur / 2, hautHaut);
@@ -1394,7 +1376,7 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.fillStyle = PALETTE_BATIMENT.face;
   ctx.fill();
 
-  // facade laterale (sombre)
+  // facade laterale, a peine plus sombre
   ctx.beginPath();
   ctx.moveTo(x, hautBas + decal);
   ctx.lineTo(x, hautHaut - decal);
@@ -1414,11 +1396,11 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.fillStyle = PALETTE_BATIMENT.toit;
   ctx.fill();
 
-  // fenetres, posees bas sur la facade avant
-  var fw = largeur * .1, fh = largeur * .15;
+  // fenetre(s), franches et bien visibles sur la facade avant
+  var fw = largeur * .1, fh = largeur * .2;
   ctx.fillStyle = PALETTE_BATIMENT.fenetre;
-  ctx.fillRect(x - largeur * .34, hautBas - fh * 1.4, fw, fh);
-  if (largeur > 13 * s) ctx.fillRect(x - largeur * .12, hautBas - fh * 1.4 + decal * .5, fw, fh);
+  ctx.fillRect(x - largeur * .32, hautBas - fh * 1.5, fw, fh);
+  if (largeur > 12 * s) ctx.fillRect(x - largeur * .1, hautBas - fh * 1.5 + decal * .5, fw, fh);
 }
 
 function snapifie() {
