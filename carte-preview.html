@@ -79,20 +79,6 @@
       .maplibregl-popup { display: none; } /* on utilise notre propre feuille, pas les bulles MapLibre */
       .maplibregl-ctrl-logo { display: none !important; }
 
-      /* ---------------- Coin superieur ---------------- */
-
-      .me-btn {
-        position: absolute; top: 62px; left: 16px; z-index: 26;
-        width: 56px; height: 56px; border-radius: 50%; background: #fff;
-        border: 0; padding: 0; cursor: pointer; box-shadow: 0 3px 12px rgba(0,0,0,.35);
-        display: grid; place-items: center;
-      }
-      .me-btn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
-      .me-btn svg { width: 34px; height: 44px; display: block; }
-      .me-btn .dot {
-        position: absolute; top: 1px; right: 1px; width: 14px; height: 14px;
-        border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
-      }
 
       /* ---------------- Marqueur de club ---------------- */
 
@@ -128,12 +114,21 @@
         box-shadow: 0 3px 11px rgba(0,0,0,.24);
       }
       .rbtn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
-      .rbtn svg.ico { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .rbtn svg.ico { width: 24px; height: 24px; color: #1b1f25; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
       .rbtn svg.pint { width: 30px; height: 39px; }
       .rbtn .dot {
         position: absolute; right: 0; bottom: 1px; width: 13px; height: 13px;
         border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
       }
+      /* "Mode invisible" et "Ajouter un ami" n'avaient aucun clic
+         branche — signale comme "inutile". Le bouton invisible
+         bascule maintenant un vrai etat (aria-pressed), visible au
+         fond qui passe au noir, comme les pilules de filtre ailleurs
+         dans l'appli. */
+      .rbtn[aria-pressed="true"] { background: #1b1f25; }
+      .rbtn[aria-pressed="true"] svg.ico { color: #fff; stroke: #fff; }
+      #rail-me { transition: opacity .25s ease, transform .25s ease; }
+      #rail-me.cache { opacity: 0; transform: scale(.7); pointer-events: none; }
 
       /* ---------------- Pastille d'activite ---------------- */
 
@@ -261,12 +256,10 @@
         <canvas id="arbres" aria-hidden="true"></canvas>
         <canvas id="etoiles" aria-hidden="true"></canvas>
 
-        <button class="me-btn" id="me-btn" aria-label="Mon profil"><span class="dot"></span></button>
-
         <div class="rail">
           <button class="rbtn" id="rail-me" aria-label="Ma pinte"><span class="dot"></span></button>
-          <button class="rbtn" aria-label="Mode invisible">
-            <svg class="ico" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c5 0 9 3.5 10 7-.5 1.6-1.5 3.1-2.8 4.2M6.6 6.6C4.5 7.9 3 9.7 2 11c1 3.5 5 7 10 7 1.4 0 2.7-.3 3.9-.7"/><path d="M9.9 10a3 3 0 0 0 4.2 4.2"/></svg>
+          <button class="rbtn" id="btn-invisible" aria-label="Mode invisible" aria-pressed="false">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M6 20v-8.5a6 6 0 0 1 12 0V20l-2.2-1.8L14 20l-2-1.8L10 20l-1.8-1.8z"/><circle cx="9.6" cy="11" r=".9" fill="currentColor" stroke="none"/><circle cx="14.4" cy="11" r=".9" fill="currentColor" stroke="none"/></svg>
           </button>
         </div>
 
@@ -469,19 +462,45 @@ map.on("load", function () {
   map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 40, bearing: -12 });
 });
 
-/* --- Le globe : etoiles et brume fournies par MapLibre lui-meme
-       (fog + halo atmospherique), pas dessinees a la main. --- */
-function ambiance() {
-  map.setSky({
-    "sky-color": "#0a0d16",
-    "sky-horizon-blend": 0.55,
-    "horizon-color": "#1b2a44",
-    "horizon-fog-blend": 0.6,
-    "fog-color": "#0e1420",
-    "fog-ground-blend": 0.7,
-    "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
-  });
+/* --- Jour/nuit : sur l'heure LOCALE de l'appareil (Date().getHours()),
+       donc deja au bon fuseau horaire sans geolocalisation ni cle API
+       — le navigateur connait l'heure locale, un point c'est tout.
+       Simplifie a une plage fixe (19h-7h = nuit) plutot qu'un vrai
+       calcul de lever/coucher du soleil par coordonnees GPS, qui
+       demanderait une API externe pour un gain minime ici. --- */
+function estNuit() {
+  var h = new Date().getHours();
+  return h >= 19 || h < 7;
 }
+
+/* --- Le globe : etoiles et brume fournies par MapLibre lui-meme
+       (fog + halo atmospherique), pas dessinees a la main. Change de
+       palette selon estNuit() — rappele toutes les 5 minutes (voir
+       plus bas) pour traverser minuit/l'aube sans recharger la page. --- */
+function ambiance() {
+  if (estNuit()) {
+    map.setSky({
+      "sky-color": "#0a0d16",
+      "sky-horizon-blend": 0.55,
+      "horizon-color": "#1b2a44",
+      "horizon-fog-blend": 0.6,
+      "fog-color": "#0e1420",
+      "fog-ground-blend": 0.7,
+      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+    });
+  } else {
+    map.setSky({
+      "sky-color": "#4fa8e0",
+      "sky-horizon-blend": 0.5,
+      "horizon-color": "#cbe9fb",
+      "horizon-fog-blend": 0.5,
+      "fog-color": "#e8f5fc",
+      "fog-ground-blend": 0.6,
+      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+    });
+  }
+}
+setInterval(function () { try { ambiance(); } catch (e) {} }, 5 * 60 * 1000);
 
 /* --- Un motif d'arbre, dessine une fois sur un petit canvas et
        repete par MapLibre sur chaque parcelle boisee — c'est
@@ -850,12 +869,87 @@ function genererArbres() {
     window.__neuve = neuve;
   })();
 
+  // Meme position pour les deux (jamais affiches en meme temps) : en
+  // haut a gauche, la ou vivait l'icone de pinte du bouton profil
+  // avant qu'on la retire — cet espace se retrouvait vide sinon.
+  var CIEL_X = .24, CIEL_Y = .15;
+
+  /* --- La lune : corps en degrade (ombre legere en bas-droite, comme
+         eclairee de haut-gauche) et trois cirques lunaires en aplat
+         plus sombre. Plus de halo/glow autour — juste le disque, plus
+         net, moins "jeu video". --- */
+  function dessinerLune() {
+    var mx = CIEL_X * W, my = CIEL_Y * H, mr = Math.min(W, H) * .095;
+    var corps = ctx.createRadialGradient(mx - mr * .3, my - mr * .3, mr * .2, mx, my, mr);
+    corps.addColorStop(0, "#fffef6");
+    corps.addColorStop(1, "#d5d1ba");
+    ctx.fillStyle = corps;
+    ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.29); ctx.fill();
+
+    ctx.fillStyle = "rgba(160,154,128,.4)";
+    [[-.25, -.12, .22], [.18, .3, .16], [.36, -.22, .12]].forEach(function (c) {
+      ctx.beginPath(); ctx.arc(mx + c[0] * mr, my + c[1] * mr, c[2] * mr, 0, 6.29); ctx.fill();
+    });
+  }
+
+  /* --- Le soleil : disque avec assombrissement centre-bord (le
+         "limb darkening" d'une vraie photo du soleil — le centre est
+         plus clair/blanc, le bord plus rouge/dense), sans glow externe
+         ni rayons en triangle : plus realiste qu'un halo neon. --- */
+  function dessinerSoleil() {
+    var sx = CIEL_X * W, sy = CIEL_Y * H, sr = Math.min(W, H) * .1;
+    var corps = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+    corps.addColorStop(0, "#fffdf2");
+    corps.addColorStop(.55, "#ffe27a");
+    corps.addColorStop(.85, "#ffb238");
+    corps.addColorStop(1, "#e8871f");
+    ctx.fillStyle = corps;
+    ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.29); ctx.fill();
+  }
+
+  /* --- Le fond du mode jour : la "nuit spatiale" que MapLibre peint
+         derriere le globe (voir ambiance()) reste noire meme en plein
+         jour — le fog/sky de MapLibre n'agit que sur l'atmosphere pres
+         de l'horizon, jamais sur le vide au-dela. Recouvert ici par un
+         degrade radial (transparent au centre, ou vit le globe, bleu
+         clair vers les bords) : approximatif plutot que physiquement
+         exact, mais un fond noir en plein jour se voyait pire. --- */
+  function dessinerFondJour() {
+    var cx = W / 2, cy = H / 2, r0 = Math.min(W, H) * .38, r1 = Math.max(W, H) * .8;
+    var g = ctx.createRadialGradient(cx, cy, r0, cx, cy, r1);
+    g.addColorStop(0, "rgba(191,233,251,0)");
+    g.addColorStop(1, "rgba(191,233,251,.9)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // deux nuages simples, aplats blancs a bords doux — un peu de vie
+    // dans le mode jour plutot qu'un ciel entierement vide.
+    ctx.fillStyle = "rgba(255,255,255,.8)";
+    [[.62, .08, 1], [.15, .32, .7]].forEach(function (c) {
+      var nx = c[0] * W, ny = c[1] * H, s = Math.min(W, H) * .05 * c[2];
+      ctx.beginPath();
+      ctx.ellipse(nx, ny, s * 1.6, s * .62, 0, 0, 6.29);
+      ctx.ellipse(nx - s * .9, ny + s * .12, s, s * .5, 0, 0, 6.29);
+      ctx.ellipse(nx + s * .95, ny + s * .1, s * 1.05, s * .52, 0, 0, 6.29);
+      ctx.fill();
+    });
+  }
+
   var opacite = 1, dernier = 0, raf = null;
 
   function dessiner(temps, dt) {
     ctx.clearRect(0, 0, W, H);
     if (opacite <= 0) return;
     ctx.globalAlpha = opacite;
+
+    if (!estNuit()) {
+      dessinerFondJour();
+      dessinerSoleil();
+      ctx.globalAlpha = 1;
+      return;
+    }
+
+    dessinerLune();
 
     etoiles.forEach(function (e) {
       var a = REDUIT ? .7 : .4 + .6 * Math.abs(Math.sin(temps * e.sp + e.ph));
@@ -1005,6 +1099,72 @@ document.getElementById("rail-me").addEventListener("click", function () {
   map.flyTo({ center: BRUXELLES, zoom: 14.2, bearing: -12, pitch: 50, duration: 900 });
 });
 
+// "Mode invisible" ne faisait rien au clic — bascule maintenant un
+// vrai etat visible (voir aria-pressed dans le CSS). Pas de backend
+// ici (maquette), mais un vrai etat qui se voit, pas un bouton mort.
+document.getElementById("btn-invisible").addEventListener("click", function () {
+  var actif = this.getAttribute("aria-pressed") === "true";
+  this.setAttribute("aria-pressed", String(!actif));
+  this.setAttribute("aria-label", actif ? "Mode invisible" : "Redevenir visible");
+  // Le mode invisible cache reellement "Ma pinte" — ta propre pastille
+  // dans le rail, celle que tes amis voient — pas juste un etat visuel
+  // sur ce bouton-ci. Reapparait au meme endroit des qu'on redeclique.
+  document.getElementById("rail-me").classList.toggle("cache", !actif);
+});
+
+// "Ajouter un ami" ne faisait rien non plus — partage un lien
+// d'invitation via le partage natif du telephone (deja installe sur
+// tous les mobiles, pas de nouveau service). Sur desktop, sans
+// navigator.share, on copie le lien dans le presse-papiers a la
+// place et on le confirme brievement sur le bouton lui-meme.
+document.querySelector('.fr[aria-label="Ajouter un ami"]').addEventListener("click", function () {
+  var btn = this;
+  var lien = location.origin + "/inscription.html?invite=mirage";
+  var partage = { title: "ViralNight", text: "Rejoins-moi sur ViralNight !", url: lien };
+  if (navigator.share) {
+    navigator.share(partage).catch(function () {});
+    return;
+  }
+  var confirmer = function () {
+    var label = btn.querySelector("b");
+    var avant = label.textContent;
+    label.textContent = "Lien copié";
+    setTimeout(function () { label.textContent = avant; }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(lien).then(confirmer).catch(function () {});
+  }
+});
+
+// Le rail d'amis scrolle nativement au doigt (overflow-x: auto), mais
+// rien ne le fait au clic-glisser a la souris (pas de scrollbar
+// visible, cache expres) — sur desktop, sans trackpad ni molette
+// horizontale, il paraissait fige. Glisser-deposer classique, comme
+// pour la carte elle-meme.
+(function () {
+  var rail = document.getElementById("friend-rail");
+  var bas = false, x0 = 0, scroll0 = 0, bouge = false;
+  rail.addEventListener("mousedown", function (e) {
+    bas = true; bouge = false; x0 = e.clientX; scroll0 = rail.scrollLeft;
+  });
+  window.addEventListener("mousemove", function (e) {
+    if (!bas) return;
+    var dx = e.clientX - x0;
+    if (Math.abs(dx) > 4) bouge = true;
+    rail.scrollLeft = scroll0 - dx;
+  });
+  window.addEventListener("mouseup", function () {
+    bas = false;
+    // Empeche le clic d'ouvrir un ami/le bouton "Ajouter" juste
+    // apres un glisser — sinon relacher la souris en fin de scroll
+    // declenche aussi son clic.
+    if (bouge) {
+      var bloquer = function (e) { e.stopPropagation(); rail.removeEventListener("click", bloquer, true); };
+      rail.addEventListener("click", bloquer, true);
+    }
+  });
+})();
+
 // L'onglet boutique mene a la maquette unifiee (carte+boutique) :
 // l'ancien fichier separe boutique-preview.html a ete abandonne en
 // route, jamais mis a jour avec la refonte, puis supprime.
@@ -1016,7 +1176,6 @@ document.getElementById("tab-boutique").addEventListener("click", function () {
    LE RESTE DU MONTAGE : ma pinte, le rail d'amis
    ========================================================== */
 
-document.getElementById("me-btn").insertAdjacentHTML("afterbegin", pint(1));
 document.getElementById("rail-me").insertAdjacentHTML("afterbegin", pint(1));
 
 var rail = document.getElementById("friend-rail");
