@@ -130,19 +130,6 @@
       .maplibregl-popup { display: none; }
       .maplibregl-ctrl-logo { display: none !important; }
 
-      .me-btn {
-        position: absolute; top: 62px; left: 16px; z-index: 26;
-        width: 56px; height: 56px; border-radius: 50%; background: #fff;
-        border: 0; padding: 0; cursor: pointer; box-shadow: 0 3px 12px rgba(0,0,0,.35);
-        display: grid; place-items: center;
-      }
-      .me-btn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
-      .me-btn svg { width: 34px; height: 44px; display: block; }
-      .me-btn .dot {
-        position: absolute; top: 1px; right: 1px; width: 14px; height: 14px;
-        border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
-      }
-
 
       .club-badge {
         width: 50px; height: 50px; border-radius: 50%;
@@ -174,12 +161,18 @@
         box-shadow: 0 3px 11px rgba(0,0,0,.24);
       }
       .rbtn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
-      .rbtn svg.ico { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .rbtn svg.ico { width: 24px; height: 24px; color: #1b1f25; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
       .rbtn svg.pint { width: 30px; height: 39px; }
       .rbtn .dot {
         position: absolute; right: 0; bottom: 1px; width: 13px; height: 13px;
         border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
       }
+      /* Meme detail que carte-preview.html : "Mode invisible" et
+         "Ajouter un ami" n'avaient aucun clic branche. */
+      .rbtn[aria-pressed="true"] { background: #1b1f25; }
+      .rbtn[aria-pressed="true"] svg.ico { color: #fff; stroke: #fff; }
+      #rail-me { transition: opacity .25s ease, transform .25s ease; }
+      #rail-me.cache { opacity: 0; transform: scale(.7); pointer-events: none; }
 
       .friend-rail {
         position: absolute; left: 0; right: 0; bottom: 92px; z-index: 24;
@@ -212,23 +205,23 @@
       }
       .app::-webkit-scrollbar { display: none; }
 
-      .sec { padding: 0 18px; margin-top: 32px; }
-      .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; padding: 0 2px; }
-      /* Amplifie le 19 aout (skill Impeccable, commande "bolder") :
-         Julien a trouve la boutique "exactement la meme chose... pas
-         beau" apres la passe polish, en visant nommement les titres de
-         section (petit label gris tout-capitales, illisible comme du
-         chrome de dashboard) et le solde (un chiffre nu qui flotte).
-         Le reste de l'ecran porte deja un langage fort — cartes
-         blanches, pilules, photo — ces deux elements etaient les
-         seuls a ne pas le parler. Les titres passent a la meme echelle
-         que les titres de carte (gras, sombre, plus grand) plutot
-         qu'un petit label utilitaire. */
+      .sec { padding: 0 20px; margin-top: 40px; }
+      .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; padding: 0 2px; }
+      /* Amplifie le 19 aout (skill Impeccable, commande "bolder"), puis
+         encore le 20 aout : la premiere passe visait les titres de
+         section et le solde isolement, mais Julien a fini par juger
+         l'ecran entier "pas premium" — presque tout le texte tournait
+         entre 9px et 13px, y compris les titres de recompense et les
+         boutons d'echange. Deuxieme amplification, cette fois sur
+         l'echelle typo ET les espacements de tout l'ecran d'un coup,
+         pas section par section : rien n'invente une nouvelle couleur
+         ou un nouveau radius, tout pousse plus fort ce que le systeme
+         possede deja (voir chaque regle ci-dessous). */
       .sec-head h2 {
-        margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.02em;
+        margin: 0; font-size: 23px; font-weight: 800; letter-spacing: -.025em;
         color: var(--ink);
       }
-      .sec-head .sub { font-size: 12px; font-weight: 650; color: var(--ink3); margin-left: auto; white-space: nowrap; }
+      .sec-head .sub { font-size: 13px; font-weight: 650; color: var(--ink3); margin-left: auto; white-space: nowrap; }
 
       /* Le solde de points a ete tente en six formes differentes cote
          boutique (dial, texte nu, pilule+jeton, compteur plein, ticket
@@ -239,47 +232,35 @@
          l'ancien header sticky, pour ne pas coller au bord de l'ecran. */
       .sec-premiere { padding-top: 22px; }
 
-      /* Le solde de points : retire de la boutique le 19 aout (pour ne
-         vivre que sur la pastille flottante de l'ecran carte), puis
-         cette pastille a son tour retiree le 20 aout ("inutile") — plus
-         aucun affichage de points nulle part. Remis ici, en tete de
-         boutique, en carte simple : chiffre corail (seul role autorise
-         pour cette couleur), jeton en rappel, rien d'autre. Pas de
-         cadran ni de pilule pleine, deja essayes et rejetes par le
-         passe pour ce meme role (voir DESIGN.md). */
-      .carte-solde {
-        display: flex; align-items: center; gap: 13px;
-        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
-        padding: 15px 17px; margin-bottom: 4px;
+      /* Quatrieme version du solde (20 aout, nuit) : les trois
+         versions precedentes (chiffre nu, puis grosse carte en
+         degrade avec jeton) ont toutes ete jugees ratees — la
+         derniere "gache tout", trop presente a cote d'un reste
+         d'ecran tout en cartes blanches sobres. Copie fidele cette
+         fois, pas une synthese : chez Quick (MyQuick, verifie en
+         direct), le solde n'est PAS une carte a part — juste un
+         petit badge rond + chiffre, pose simplement dans l'entete,
+         sans fond, sans bordure, sans ombre. Meme traitement ici :
+         une ligne, pas une carte. Le corail reste le seul a porter
+         la couleur (regle du projet), mais en beaucoup plus discret. */
+      .solde-ligne {
+        display: flex; align-items: center; gap: 10px;
+        padding: 2px 2px 0;
       }
-      .carte-solde-jeton { width: 32px; height: 32px; flex: 0 0 auto; }
-      .carte-solde-jeton svg { width: 100%; height: 100%; display: block; }
-      .carte-solde-corps { min-width: 0; }
-      .carte-solde-lab {
-        display: block; font-size: 12.5px; font-weight: 650; color: var(--ink2);
-        margin-bottom: 1px;
+      .solde-badge {
+        width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%;
+        background: var(--accent); display: grid; place-items: center;
       }
+      .solde-badge svg { width: 17px; height: 17px; fill: #fff; }
       .carte-solde-num {
-        display: block; font-family: var(--mono); font-size: 28px; font-weight: 800;
+        font-family: var(--mono); font-size: 22px; font-weight: 800;
         letter-spacing: -.02em; color: var(--accent); font-variant-numeric: tabular-nums;
       }
       .carte-solde-num::after { content: " pts"; font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--ink3); margin-left: 3px; }
-      @keyframes majSolde { 0% { transform: scale(1.22); } 100% { transform: scale(1); } }
-      .carte-solde-num.maj { animation: majSolde .38s cubic-bezier(.2,.8,.3,1); }
+      @keyframes majSolde { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
+      .carte-solde-num.maj { display: inline-block; animation: majSolde .38s cubic-bezier(.2,.8,.3,1); transform-origin: left center; }
 
       .jeton { display: block; }
-
-      /* ---------------- Filtres ---------------- */
-
-      .filtres { display: flex; gap: 7px; overflow-x: auto; padding: 0 18px 2px; margin: 0 -18px 12px; scrollbar-width: none; }
-      .filtres::-webkit-scrollbar { display: none; }
-      .filtre {
-        flex: 0 0 auto; font-family: inherit; font-size: 12.5px; font-weight: 600; letter-spacing: -.015em;
-        color: var(--ink2); background: transparent; border: 1px solid var(--line2);
-        border-radius: 999px; padding: 6px 14px; cursor: pointer;
-      }
-      .filtre:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-      .filtre[aria-pressed="true"] { background: var(--ink); color: #120d0d; border-color: var(--ink); font-weight: 700; }
 
       /* ---------------- Grille de cartes (catalogue) ---------------- */
 
@@ -296,15 +277,15 @@
          que la pilule note "5.0 (2)" de la reference), bouton
          d'echange en pilule pleine largeur sous le texte. Remplace
          l'ancienne carte a pastille d'icone dans le coin. */
-      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
       .carte-reco {
         position: relative; display: flex; flex-direction: column; text-align: left;
-        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 22px;
         overflow: hidden; padding: 0; cursor: pointer; font-family: inherit; color: inherit;
-        box-shadow: 0 1px 3px rgba(20,20,25,.05);
+        box-shadow: 0 14px 28px -20px rgba(20,20,25,.28), 0 2px 5px rgba(20,20,25,.04);
         transition: transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s ease, border-color .16s ease;
       }
-      .carte-reco:hover { box-shadow: 0 10px 24px rgba(20,20,25,.12); transform: translateY(-2px); border-color: var(--line2); }
+      .carte-reco:hover { box-shadow: 0 20px 36px -18px rgba(20,20,25,.28); transform: translateY(-3px); border-color: var(--line2); }
       .carte-reco:active { transform: translateY(-1px) scale(.99); }
       .carte-reco:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
 
@@ -314,29 +295,49 @@
       }
       .carte-reco .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        filter: saturate(1.15) contrast(1.05);
+        filter: saturate(1.3) contrast(1.12);
+      }
+      /* Le verre du shot n'est pas cadre au centre dans la photo
+         source (repere par Julien) — l'aspect-ratio du fichier colle
+         presque exactement a celui de la carte, donc object-position
+         seul n'a rien a redistribuer. Zoom leger + recadrage vers le
+         verre, uniquement sur cette photo (selecteur par nom de
+         fichier, pas de champ de position a ajouter aux donnees). */
+      .carte-reco .photo img[src*="shot-carte"] {
+        transform: scale(1.22); object-position: 42% 58%;
+      }
+      /* Voile bas, degrade neutre (jamais colore, jamais un glow) —
+         reference Quick.be : leurs photos produit foncent nettement
+         en bas de carte, ce qui rend le badge de prix plus net quelle
+         que soit la photo et donne plus de "poids" a l'image, moins
+         plate qu'une simple photo posee sans retouche. */
+      .carte-reco .photo:has(img)::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(10,10,12,.5) 0%, rgba(10,10,12,0) 45%);
+        pointer-events: none;
       }
       .carte-reco .photo svg { width: 46%; height: 46%; display: block; position: absolute; inset: 0; margin: auto; }
       .carte-reco .photo .prix-pastille {
-        position: absolute; left: 8px; bottom: 8px; display: flex; align-items: baseline; gap: 3px;
-        background: rgba(255,255,255,.95); border-radius: 999px; padding: 5px 10px;
-        font-family: var(--mono); font-size: 12.5px; font-weight: 800; color: var(--ink);
+        position: absolute; left: 9px; bottom: 9px; display: flex; align-items: baseline; gap: 3px;
+        background: rgba(255,255,255,.95); border-radius: 999px; padding: 6px 12px;
+        font-family: var(--mono); font-size: 14px; font-weight: 800; color: var(--ink);
         box-shadow: 0 2px 6px rgba(20,20,25,.15);
       }
       .carte-reco .photo .prix-pastille span {
-        font-family: var(--sans); font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--ink3);
+        font-family: var(--sans); font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--ink3);
       }
 
-      .carte-reco .corps { padding: 11px 12px 12px; display: flex; flex-direction: column; flex: 1; }
-      .carte-reco strong { display: block; font-size: 13.5px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; color: var(--ink); }
+      .carte-reco .corps { padding: 14px 14px 15px; display: flex; flex-direction: column; flex: 1; }
+      .carte-reco strong { display: block; font-size: 16px; font-weight: 750; letter-spacing: -.015em; line-height: 1.25; color: var(--ink); }
       .carte-reco .code {
-        display: block; font-family: var(--mono); font-size: 10px; color: var(--ink3);
-        margin-top: 3px; letter-spacing: .03em;
+        display: block; font-family: var(--mono); font-size: 11px; color: var(--ink3);
+        margin-top: 4px; letter-spacing: .03em;
       }
       .carte-reco .cta-visuelle {
-        margin-top: 10px; display: block; text-align: center; border-radius: 999px;
-        background: var(--bouton); color: #fff; font-size: 12px; font-weight: 700;
-        letter-spacing: -.01em; padding: 8px 10px;
+        margin-top: 12px; display: block; text-align: center; border-radius: 999px;
+        background: var(--bouton); color: #fff; font-size: 13.5px; font-weight: 700;
+        letter-spacing: -.01em; padding: 11px 10px;
+        box-shadow: 0 8px 16px -8px rgba(20,20,25,.4);
       }
       .carte-reco.loin .cta-visuelle { background: var(--s3); color: var(--ink3); }
       .carte-reco.epuise { opacity: .55; pointer-events: none; }
@@ -355,35 +356,46 @@
          dessous avec bouton pilule noire pleine largeur. */
       .offre-hero {
         display: flex; flex-direction: column; width: 100%;
-        border: 1px solid var(--line); border-radius: 20px; overflow: hidden; padding: 0; cursor: pointer;
+        border: 1px solid var(--line); border-radius: 24px; overflow: hidden; padding: 0; cursor: pointer;
         font-family: inherit; color: inherit; background: var(--s1);
-        box-shadow: 0 1px 3px rgba(20,20,25,.05);
+        box-shadow: 0 16px 32px -20px rgba(20,20,25,.3), 0 2px 5px rgba(20,20,25,.04);
         transition: transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s ease;
       }
-      .offre-hero:hover { box-shadow: 0 10px 24px rgba(20,20,25,.12); transform: translateY(-2px); }
+      .offre-hero:hover { box-shadow: 0 22px 40px -18px rgba(20,20,25,.3); transform: translateY(-3px); }
       .offre-hero:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
-      .offre-hero .photo { position: relative; width: 100%; aspect-ratio: 16 / 9; }
+      .offre-hero .photo { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; }
       .offre-hero .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        filter: saturate(1.1) contrast(1.03);
+        filter: saturate(1.25) contrast(1.1);
+      }
+      /* Meme recadrage que la carte (voir .carte-reco .photo img) sur
+         le fichier 16:9 du verre, pour la banniere de l'offre du soir. */
+      .offre-hero .photo img[src*="shot-hero"] {
+        transform: scale(1.15); object-position: 40% 55%;
+      }
+      .offre-hero .photo::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(10,10,12,.45) 0%, rgba(10,10,12,0) 40%);
+        pointer-events: none;
       }
       .offre-hero .badge-offert {
-        position: absolute; left: 10px; bottom: 10px;
-        font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
-        color: var(--bouton); background: rgba(255,255,255,.95); border-radius: 999px; padding: 5px 11px;
+        position: absolute; left: 12px; bottom: 12px;
+        font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+        color: var(--bouton); background: rgba(255,255,255,.95); border-radius: 999px; padding: 6px 13px;
         box-shadow: 0 2px 6px rgba(20,20,25,.15);
       }
-      .offre-hero .corps { padding: 13px 16px 16px; text-align: left; }
+      .offre-hero .corps { padding: 17px 18px 18px; text-align: left; }
       .offre-hero strong {
-        display: block; font-size: 16px; font-weight: 800; letter-spacing: -.02em;
-        color: var(--ink); margin-bottom: 3px;
+        display: block; font-size: 21px; font-weight: 800; letter-spacing: -.025em;
+        color: var(--ink); margin-bottom: 4px;
       }
-      .offre-hero p { margin: 0 0 12px; font-size: 12.5px; font-weight: 550; line-height: 1.4; color: var(--ink2); }
-      .offre-hero del { font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink3); }
+      .offre-hero p { margin: 0 0 14px; font-size: 13.5px; font-weight: 550; line-height: 1.4; color: var(--ink2); }
+      .offre-hero del { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink3); }
       .offre-hero .cta-visuelle {
         display: block; text-align: center; border-radius: 999px;
-        background: var(--bouton); color: #fff; font-size: 13px; font-weight: 700;
-        letter-spacing: -.01em; padding: 11px;
+        background: var(--bouton); color: #fff; font-size: 15px; font-weight: 700;
+        letter-spacing: -.01em; padding: 13px;
+        box-shadow: 0 10px 20px -8px rgba(20,20,25,.4);
       }
       .offre-hero.epuise { opacity: .55; pointer-events: none; }
       .offre-hero.epuise .photo img { filter: grayscale(.6); }
@@ -413,25 +425,26 @@
 
       /* ---------------- Mes bons ---------------- */
 
-      .bons { display: grid; gap: 8px; }
+      .bons { display: grid; gap: 10px; }
       .bon {
-        display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 13px;
-        border: 1px solid var(--line2); border-radius: 16px; background: var(--s1);
+        display: flex; align-items: center; gap: 13px; width: 100%; padding: 13px 15px;
+        border: 1px solid var(--line2); border-radius: 18px; background: var(--s1);
         font-family: inherit; color: inherit; text-align: left; cursor: pointer;
+        box-shadow: 0 10px 20px -16px rgba(20,20,25,.25);
         transition: box-shadow .16s ease, transform .16s ease;
       }
-      .bon:hover { box-shadow: 0 6px 16px rgba(20,20,25,.08); transform: translateY(-1px); }
+      .bon:hover { box-shadow: 0 12px 24px -12px rgba(20,20,25,.18); transform: translateY(-2px); }
       .bon:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .bon-qr {
-        width: 42px; height: 42px; border-radius: 9px; background: #fff; padding: 3px;
+        width: 46px; height: 46px; border-radius: 10px; background: #fff; padding: 3px;
         flex: 0 0 auto; overflow: hidden;
       }
       .bon-qr svg { display: block; width: 100%; height: 100%; }
       .bon .txt { flex: 1; min-width: 0; }
-      .bon .txt strong { display: block; font-size: 13.5px; font-weight: 650; letter-spacing: -.025em; }
-      .bon .txt span { display: block; font-size: 11px; font-weight: 550; color: var(--ink3); margin-top: 2px; }
+      .bon .txt strong { display: block; font-size: 15px; font-weight: 700; letter-spacing: -.025em; }
+      .bon .txt span { display: block; font-size: 12px; font-weight: 550; color: var(--ink3); margin-top: 2px; }
       .bon-code {
-        font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .07em;
+        font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .07em;
         color: var(--ink3); flex: 0 0 auto;
       }
 
@@ -440,21 +453,21 @@
 
       /* ---------------- Le bareme, replie ---------------- */
 
-      .bareme { border: 1px solid var(--line); border-radius: 18px; background: var(--s1); overflow: hidden; }
+      .bareme { border: 1px solid var(--line); border-radius: 20px; background: var(--s1); overflow: hidden; }
       .bareme summary {
-        display: flex; align-items: center; gap: 10px; padding: 15px;
-        cursor: pointer; list-style: none; font-size: 13.5px; font-weight: 650; letter-spacing: -.025em;
+        display: flex; align-items: center; gap: 10px; padding: 16px 17px;
+        cursor: pointer; list-style: none; font-size: 15px; font-weight: 700; letter-spacing: -.025em;
       }
       .bareme summary::-webkit-details-marker { display: none; }
       .bareme summary:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
       .bareme summary .chev { margin-left: auto; display: block; transition: transform .25s ease; }
-      .bareme summary .chev svg { width: 14px; height: 14px; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+      .bareme summary .chev svg { width: 15px; height: 15px; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
       .bareme[open] summary .chev { transform: rotate(180deg); }
-      .gain { display: flex; align-items: baseline; gap: 12px; padding: 11px 15px; border-top: 1px solid var(--line); }
-      .gain p { margin: 0; flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
-      .gain p span { display: block; font-size: 11px; font-weight: 500; color: var(--ink3); margin-top: 1px; }
+      .gain { display: flex; align-items: baseline; gap: 12px; padding: 13px 17px; border-top: 1px solid var(--line); }
+      .gain p { margin: 0; flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
+      .gain p span { display: block; font-size: 12px; font-weight: 500; color: var(--ink3); margin-top: 1px; }
       .gain .val {
-        font-family: var(--mono); font-size: 13px; font-weight: 700; white-space: nowrap;
+        font-family: var(--mono); font-size: 14px; font-weight: 700; white-space: nowrap;
         font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--ambre);
       }
 
@@ -541,25 +554,26 @@
       .who p { margin: 0; font-size: 12px; font-weight: 650; color: var(--ink2); }
 
       .sheet-fam {
-        display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .13em;
-        text-transform: uppercase; color: var(--ink3); margin-bottom: 8px;
+        display: block; font-size: 11px; font-weight: 700; letter-spacing: .13em;
+        text-transform: uppercase; color: var(--ink3); margin-bottom: 9px;
       }
-      .sheet h3 { margin: 0 0 8px; font-size: 23px; font-weight: 700; letter-spacing: -.045em; line-height: 1.12; color: var(--ink); }
-      .sheet .desc { margin: 0 0 16px; font-size: 13.5px; color: var(--ink2); font-weight: 550; line-height: 1.5; }
-      .sheet ul.regles { display: grid; gap: 8px; margin: 0 0 20px; padding: 0; }
-      .sheet ul.regles li { list-style: none; display: flex; gap: 9px; font-size: 12px; font-weight: 550; color: var(--ink2); line-height: 1.45; }
-      .sheet ul.regles svg { width: 13px; height: 13px; margin-top: 3px; flex: 0 0 auto; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .sheet h3 { margin: 0 0 9px; font-size: 27px; font-weight: 750; letter-spacing: -.045em; line-height: 1.12; color: var(--ink); }
+      .sheet .desc { margin: 0 0 18px; font-size: 15px; color: var(--ink2); font-weight: 550; line-height: 1.5; }
+      .sheet ul.regles { display: grid; gap: 9px; margin: 0 0 22px; padding: 0; }
+      .sheet ul.regles li { list-style: none; display: flex; gap: 9px; font-size: 13.5px; font-weight: 550; color: var(--ink2); line-height: 1.45; }
+      .sheet ul.regles svg { width: 14px; height: 14px; margin-top: 3px; flex: 0 0 auto; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
       .sheet-cta {
         display: flex; align-items: center; justify-content: center; gap: 9px;
         width: 100%; background: var(--bouton); color: #fff; border: 0;
-        border-radius: 15px; padding: 16px; font-family: inherit; font-size: 15px;
+        border-radius: 17px; padding: 17px; font-family: inherit; font-size: 16px;
         font-weight: 700; letter-spacing: -.02em; cursor: pointer;
+        box-shadow: 0 12px 24px -10px rgba(20,20,25,.4);
       }
       .sheet-cta:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
       .sheet-cta[disabled] { background: var(--s3); color: var(--ink3); cursor: not-allowed; }
       .sheet-cta.sobre { background: var(--ink); color: #120d0d; }
-      .sheet-note { text-align: center; font-size: 12.5px; color: var(--ink2); margin: 12px 0 0; font-weight: 600; line-height: 1.45; }
+      .sheet-note { text-align: center; font-size: 13.5px; color: var(--ink2); margin: 13px 0 0; font-weight: 600; line-height: 1.45; }
       .sheet-note em {
         font-style: normal; color: var(--ambre); font-weight: 700; font-family: var(--mono);
       }
@@ -667,8 +681,6 @@
         border-bottom: 1px solid var(--line);
       }
       .screen.boutique-pro .app { background: var(--bg); }
-      .screen.boutique-pro .filtre { border-color: var(--line2); color: var(--ink2); background: #fff; }
-      .screen.boutique-pro .filtre[aria-pressed="true"] { background: var(--bouton); color: #fff; border-color: var(--bouton); }
       .screen.boutique-pro .sheet-visuel {
         background: radial-gradient(120% 120% at 32% 24%, var(--glow), var(--s2) 72%);
         box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 11px var(--s1), inset 0 0 0 12px rgba(0,0,0,.03), 0 16px 32px -14px rgba(20,20,25,.18);
@@ -759,12 +771,10 @@
           <div id="map"></div>
           <canvas id="etoiles" aria-hidden="true"></canvas>
 
-          <button class="me-btn" id="me-btn" aria-label="Mon profil"><span class="dot"></span></button>
-
           <div class="carte-rail">
             <button class="rbtn" id="rail-me" aria-label="Ma pinte"><span class="dot"></span></button>
-            <button class="rbtn" aria-label="Mode invisible">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c5 0 9 3.5 10 7-.5 1.6-1.5 3.1-2.8 4.2M6.6 6.6C4.5 7.9 3 9.7 2 11c1 3.5 5 7 10 7 1.4 0 2.7-.3 3.9-.7"/><path d="M9.9 10a3 3 0 0 0 4.2 4.2"/></svg>
+            <button class="rbtn" id="btn-invisible" aria-label="Mode invisible" aria-pressed="false">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M6 20v-8.5a6 6 0 0 1 12 0V20l-2.2-1.8L14 20l-2-1.8L10 20l-1.8-1.8z"/><circle cx="9.6" cy="11" r=".9" fill="currentColor" stroke="none"/><circle cx="14.4" cy="11" r=".9" fill="currentColor" stroke="none"/></svg>
             </button>
           </div>
 
@@ -782,12 +792,11 @@
           <div class="app" id="app">
 
             <section class="sec sec-premiere">
-              <div class="carte-solde">
-                <span class="carte-solde-jeton" id="solde-jeton"></span>
-                <div class="carte-solde-corps">
-                  <span class="carte-solde-lab">Tes points</span>
-                  <strong class="carte-solde-num" id="solde-num">0</strong>
-                </div>
+              <div class="solde-ligne">
+                <span class="solde-badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+                </span>
+                <strong class="carte-solde-num" id="solde-num">0</strong>
               </div>
             </section>
 
@@ -803,12 +812,6 @@
               <div class="sec-head">
                 <h2>Récompenses</h2>
                 <span class="sub" id="g-compte"></span>
-              </div>
-              <div class="filtres" id="filtres">
-                <button class="filtre" type="button" data-fam="tout" aria-pressed="true">Tout</button>
-                <button class="filtre" type="button" data-fam="bar" aria-pressed="false">Bar</button>
-                <button class="filtre" type="button" data-fam="acces" aria-pressed="false">Accès</button>
-                <button class="filtre" type="button" data-fam="vip" aria-pressed="false">VIP</button>
               </div>
               <div class="grille" id="liste"></div>
             </section>
@@ -1103,12 +1106,27 @@ function visuel(item, taille) {
    vraie appli ou les donnees ne sont jamais dupliquees.
    ========================================================== */
 
+// Duree de vie d'un bon : 3h a partir de l'echange, pas une heure de
+// fermeture fixe ("avant 6h") — demande de Julien, plus proche de
+// l'usage reel ("je l'ai eu a 1h, je veux pas qu'il traine jusqu'au
+// lendemain"). expireA est un timestamp ; le texte et la suppression
+// se calculent au moment du rendu, voir compteARebours()/rendreBons().
+var DUREE_BON_MS = 3 * 60 * 60 * 1000;
+
 var ETAT = {
   solde: 185,
   bons: [
-    { code: "VN-7XQ2", titre: "Vestiaire offert", note: "Mirage · à utiliser avant 6 h" }
+    { code: "VN-7XQ2", titre: "Vestiaire offert", expireA: Date.now() + DUREE_BON_MS }
   ]
 };
+
+function compteARebours(expireA) {
+  var ms = expireA - Date.now();
+  if (ms <= 0) return "Expiré";
+  var h = Math.floor(ms / 3600000);
+  var m = Math.floor((ms % 3600000) / 60000);
+  return "Mirage · expire dans " + (h > 0 ? h + " h " + String(m).padStart(2, "0") : m + " min");
+}
 
 /* ==========================================================
    LA FEUILLE DU BAS — commune a la carte et a la boutique.
@@ -1191,8 +1209,6 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
    solde invisible partout. Le compteur de la grille (au-dessus des
    photos) reste supprime, lui, c'etait une decision separee.
    ========================================================== */
-
-$("#solde-jeton").innerHTML = jeton(32);
 
 // Reste utilisee par la fiche club de la carte (noteRecompenseClub) :
 // la prochaine recompense accessible, pour "X pts pour Y". Le meme
@@ -1303,17 +1319,38 @@ map.on("load", function () {
   map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 40, bearing: -12 });
 });
 
-function ambiance() {
-  map.setSky({
-    "sky-color": "#0a0d16",
-    "sky-horizon-blend": 0.55,
-    "horizon-color": "#1b2a44",
-    "horizon-fog-blend": 0.6,
-    "fog-color": "#0e1420",
-    "fog-ground-blend": 0.7,
-    "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
-  });
+/* --- Jour/nuit : sur l'heure LOCALE de l'appareil, deja au bon
+       fuseau horaire sans geolocalisation ni cle API. Voir
+       carte-preview.html pour le meme detail. --- */
+function estNuit() {
+  var h = new Date().getHours();
+  return h >= 19 || h < 7;
 }
+
+function ambiance() {
+  if (estNuit()) {
+    map.setSky({
+      "sky-color": "#0a0d16",
+      "sky-horizon-blend": 0.55,
+      "horizon-color": "#1b2a44",
+      "horizon-fog-blend": 0.6,
+      "fog-color": "#0e1420",
+      "fog-ground-blend": 0.7,
+      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+    });
+  } else {
+    map.setSky({
+      "sky-color": "#4fa8e0",
+      "sky-horizon-blend": 0.5,
+      "horizon-color": "#cbe9fb",
+      "horizon-fog-blend": 0.5,
+      "fog-color": "#e8f5fc",
+      "fog-ground-blend": 0.6,
+      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+    });
+  }
+}
+setInterval(function () { try { ambiance(); } catch (e) {} }, 5 * 60 * 1000);
 
 
 function snapifie() {
@@ -1437,12 +1474,69 @@ function snapifie() {
     window.__neuve = neuve;
   })();
 
+  /* --- Lune, soleil, fond du mode jour : voir carte-preview.html
+         pour le detail, code identique. --- */
+  var CIEL_X = .24, CIEL_Y = .15;
+
+  function dessinerLune() {
+    var mx = CIEL_X * W, my = CIEL_Y * H, mr = Math.min(W, H) * .095;
+    var corps = ctx.createRadialGradient(mx - mr * .3, my - mr * .3, mr * .2, mx, my, mr);
+    corps.addColorStop(0, "#fffef6");
+    corps.addColorStop(1, "#d5d1ba");
+    ctx.fillStyle = corps;
+    ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.29); ctx.fill();
+
+    ctx.fillStyle = "rgba(160,154,128,.4)";
+    [[-.25, -.12, .22], [.18, .3, .16], [.36, -.22, .12]].forEach(function (c) {
+      ctx.beginPath(); ctx.arc(mx + c[0] * mr, my + c[1] * mr, c[2] * mr, 0, 6.29); ctx.fill();
+    });
+  }
+
+  function dessinerSoleil() {
+    var sx = CIEL_X * W, sy = CIEL_Y * H, sr = Math.min(W, H) * .1;
+    var corps = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+    corps.addColorStop(0, "#fffdf2");
+    corps.addColorStop(.55, "#ffe27a");
+    corps.addColorStop(.85, "#ffb238");
+    corps.addColorStop(1, "#e8871f");
+    ctx.fillStyle = corps;
+    ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.29); ctx.fill();
+  }
+
+  function dessinerFondJour() {
+    var cx = W / 2, cy = H / 2, r0 = Math.min(W, H) * .38, r1 = Math.max(W, H) * .8;
+    var g = ctx.createRadialGradient(cx, cy, r0, cx, cy, r1);
+    g.addColorStop(0, "rgba(191,233,251,0)");
+    g.addColorStop(1, "rgba(191,233,251,.9)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = "rgba(255,255,255,.8)";
+    [[.62, .08, 1], [.15, .32, .7]].forEach(function (c) {
+      var nx = c[0] * W, ny = c[1] * H, s = Math.min(W, H) * .05 * c[2];
+      ctx.beginPath();
+      ctx.ellipse(nx, ny, s * 1.6, s * .62, 0, 0, 6.29);
+      ctx.ellipse(nx - s * .9, ny + s * .12, s, s * .5, 0, 0, 6.29);
+      ctx.ellipse(nx + s * .95, ny + s * .1, s * 1.05, s * .52, 0, 0, 6.29);
+      ctx.fill();
+    });
+  }
+
   var opacite = 1, dernier = 0, raf = null;
 
   function dessiner(temps, dt) {
     ctx.clearRect(0, 0, W, H);
     if (opacite <= 0) return;
     ctx.globalAlpha = opacite;
+
+    if (!estNuit()) {
+      dessinerFondJour();
+      dessinerSoleil();
+      ctx.globalAlpha = 1;
+      return;
+    }
+
+    dessinerLune();
 
     etoiles.forEach(function (e) {
       var a = REDUIT ? .7 : .4 + .6 * Math.abs(Math.sin(temps * e.sp + e.ph));
@@ -1557,8 +1651,57 @@ $("#rail-me").addEventListener("click", function () {
   map.flyTo({ center: BRUXELLES, zoom: 14.2, bearing: -12, pitch: 50, duration: 900 });
 });
 
-$("#me-btn").insertAdjacentHTML("afterbegin", pint(1));
 $("#rail-me").insertAdjacentHTML("afterbegin", pint(1));
+
+// Meme trois correctifs que carte-preview.html : "Mode invisible" et
+// "Ajouter un ami" ne faisaient rien au clic, et le rail d'amis ne
+// se glissait qu'au doigt, pas a la souris.
+$("#btn-invisible").addEventListener("click", function () {
+  var actif = this.getAttribute("aria-pressed") === "true";
+  this.setAttribute("aria-pressed", String(!actif));
+  this.setAttribute("aria-label", actif ? "Mode invisible" : "Redevenir visible");
+  $("#rail-me").classList.toggle("cache", !actif);
+});
+
+$('.fr[aria-label="Ajouter un ami"]').addEventListener("click", function () {
+  var btn = this;
+  var lien = location.origin + "/inscription.html?invite=mirage";
+  var partage = { title: "ViralNight", text: "Rejoins-moi sur ViralNight !", url: lien };
+  if (navigator.share) {
+    navigator.share(partage).catch(function () {});
+    return;
+  }
+  var confirmer = function () {
+    var label = btn.querySelector("b");
+    var avant = label.textContent;
+    label.textContent = "Lien copié";
+    setTimeout(function () { label.textContent = avant; }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(lien).then(confirmer).catch(function () {});
+  }
+});
+
+(function () {
+  var rail = $("#friend-rail");
+  var bas = false, x0 = 0, scroll0 = 0, bouge = false;
+  rail.addEventListener("mousedown", function (e) {
+    bas = true; bouge = false; x0 = e.clientX; scroll0 = rail.scrollLeft;
+  });
+  window.addEventListener("mousemove", function (e) {
+    if (!bas) return;
+    var dx = e.clientX - x0;
+    if (Math.abs(dx) > 4) bouge = true;
+    rail.scrollLeft = scroll0 - dx;
+  });
+  window.addEventListener("mouseup", function () {
+    bas = false;
+    if (bouge) {
+      var bloquer = function (e) { e.stopPropagation(); rail.removeEventListener("click", bloquer, true); };
+      rail.addEventListener("click", bloquer, true);
+    }
+  });
+})();
 
 var friendRail = $("#friend-rail");
 AMIS.forEach(function (p) {
@@ -1783,8 +1926,6 @@ function rendreOffre() {
   z.appendChild(b);
 }
 
-var filtreActif = "tout";
-
 // Aplat pastel derriere chaque icone de carte, par famille — pas le
 // halo sombre du theme precedent. Repli sur la teinte "bar" si le
 // gerant a laisse une famille inconnue.
@@ -1794,9 +1935,11 @@ function rendreListe() {
   var z = $("#liste");
   z.innerHTML = "";
 
-  var liste = RECOMPENSES.filter(function (r) {
-    return filtreActif === "tout" || r.fam === filtreActif;
-  });
+  // Les filtres Bar/Acces/VIP ont ete retires le 20 aout ("pas
+  // utile") : le catalogue tient sur 4 recompenses aujourd'hui, une
+  // categorisation n'apportait rien. La liste complete s'affiche
+  // directement.
+  var liste = RECOMPENSES;
 
   $("#g-compte").textContent = liste.length + (liste.length > 1 ? " récompenses" : " récompense");
 
@@ -1813,7 +1956,12 @@ function rendreListe() {
     var visuelInterieur = r.foto
       ? '<img src="' + r.foto + '" alt="" loading="lazy">'
       : r.art();
-    var cta = epuise ? "Épuisé" : (loin ? "Encore " + nb(r.cout - ETAT.solde) + " pts" : "Échanger");
+    // Pas de "pts" ici : le badge sur la photo, juste au-dessus,
+    // l'affiche deja ("1 200 PTS") — le repeter faisait passer le
+    // bouton sur deux lignes des que le montant manquant depassait
+    // 3 chiffres (ex. "Encore 2835 pts"), cassant l'alignement de
+    // la grille de cartes.
+    var cta = epuise ? "Épuisé" : (loin ? "Encore " + nb(r.cout - ETAT.solde) : "Échanger");
 
     b.innerHTML =
       '<span class="photo" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' +
@@ -1831,16 +1979,6 @@ function rendreListe() {
   });
 }
 
-Array.prototype.forEach.call(document.querySelectorAll(".filtre"), function (btn) {
-  btn.addEventListener("click", function () {
-    filtreActif = btn.dataset.fam;
-    Array.prototype.forEach.call(document.querySelectorAll(".filtre"), function (o) {
-      o.setAttribute("aria-pressed", String(o === btn));
-    });
-    rendreListe();
-  });
-});
-
 /* --- Le QR d'un bon : genere localement, sans limite, avec la
        meme librairie que le QR d'entree du club. Le niveau de
        correction Q tolere les rayures et la penombre — voir
@@ -1853,6 +1991,11 @@ function qrBon(code) {
 }
 
 async function rendreBons(neufCode) {
+  // Un bon perime (plus de 3h depuis l'echange) disparait de la
+  // liste tout seul — pas juste une mention "expire", il n'est plus
+  // utilisable donc il n'a plus rien a faire dans "Mes bons".
+  ETAT.bons = ETAT.bons.filter(function (b) { return b.expireA > Date.now(); });
+
   var z = $("#bons");
   z.innerHTML = "";
   for (var i = 0; i < ETAT.bons.length; i++) {
@@ -1864,12 +2007,18 @@ async function rendreBons(neufCode) {
     e.setAttribute("aria-label", "Voir le QR de " + bon.titre);
     e.innerHTML =
       '<span class="bon-qr">' + svgQr + "</span>" +
-      '<span class="txt"><strong>' + bon.titre + "</strong><span>" + bon.note + "</span></span>" +
+      '<span class="txt"><strong>' + bon.titre + "</strong><span>" + compteARebours(bon.expireA) + "</span></span>" +
       '<span class="bon-code">' + bon.code + "</span>";
     e.addEventListener("click", function (b, src) { return function () { ouvrirBon(b, src); }; }(bon, e));
     z.appendChild(e);
   }
 }
+
+// Le compte a rebours doit avancer sans que le clubbeur touche a
+// rien — une minute lui suffit largement (l'affichage est en minutes,
+// pas en secondes), et ca purge au passage les bons perimes pendant
+// qu'il regarde autre chose dans l'appli.
+setInterval(function () { rendreBons(); }, 60000);
 
 /* Reprend exactement l'affichage de la confirmation d'echange, pour
    qu'un bon deja obtenu se consulte a tout moment — avant, le seul
@@ -1880,7 +2029,7 @@ async function ouvrirBon(bon, src) {
   var html =
     '<div class="sheet-ok">' +
       '<h3 id="sh-titre">' + bon.titre + "</h3>" +
-      '<p class="desc">' + bon.note + "</p>" +
+      '<p class="desc">' + compteARebours(bon.expireA) + "</p>" +
       '<div class="qr-frame"><div class="qr-carte">' + svgQr + "</div></div>" +
       '<p class="qr-code-txt">' + bon.code + "</p>" +
       '<button class="sheet-cta sobre" id="sh-ok" type="button">Fermer</button>' +
@@ -1975,7 +2124,7 @@ async function echanger(item) {
   var code = nouveauCode();
   ETAT.solde -= item.cout;
   item.stock -= 1;
-  ETAT.bons.unshift({ code: code, titre: item.nom, note: "Mirage · à utiliser avant 6 h" });
+  ETAT.bons.unshift({ code: code, titre: item.nom, expireA: Date.now() + DUREE_BON_MS });
 
   var svgQr = await qrBon(code);
 
