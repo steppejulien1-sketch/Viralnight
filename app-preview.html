@@ -249,85 +249,15 @@
       }
       .sec-head .sub { font-size: 12px; font-weight: 650; color: var(--ink3); margin-left: auto; white-space: nowrap; }
 
-      .wallet {
-        position: sticky; top: 0; z-index: 20;
-        padding: 50px 18px 22px;
-        background: linear-gradient(180deg, #17110f 0%, #120d0c 78%, rgba(18,13,12,.94) 100%);
-        border-bottom: 1px solid var(--line);
-        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      }
-      /* Troisieme essai le meme soir, changement de concept plutot que
-         de reglage : un compteur générique (pilule + icone + chiffre)
-         a ete juge "pire qu'avant". L'appli a deja un vocabulaire a
-         elle — le ticket dechirable de "Mes bons" (bon-qr, code en
-         var(--mono)) — que le solde n'empruntait pas. Le repli ici
-         emprunte exactement cette forme : une souche de billet
-         (encoches rondes decoupees sur les bords, comme une place de
-         concert), le prix imprime en gros a droite de la ligne de
-         dechirure. Ce n'est plus "un compteur de points" generique,
-         c'est visuellement la meme famille d'objet qu'un bon a
-         echanger — coherent avec le principe produit "la recompense
-         doit sembler reelle, ce soir", pas un score de jeu. */
-      .solde-carte {
-        position: relative; display: inline-flex; align-items: stretch;
-        background: var(--accent); border-radius: 12px;
-        overflow: visible;
-      }
-      .solde-carte::before, .solde-carte::after {
-        content: ""; position: absolute; top: 50%; transform: translateY(-50%);
-        width: 17px; height: 17px; border-radius: 50%; background: var(--s1);
-      }
-      .solde-carte::before { left: -8.5px; }
-      .solde-carte::after { right: -8.5px; }
-      .solde-souche {
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 3px; padding: 12px 14px;
-      }
-      .solde-souche .jeton-halo { width: 20px; height: 20px; display: grid; place-items: center; }
-      .solde-souche i {
-        font-style: normal; font-size: 9px; font-weight: 800; letter-spacing: .1em;
-        text-transform: uppercase; color: rgba(255,255,255,.85);
-      }
-      .solde-dents {
-        flex: 0 0 auto; width: 0; margin: 10px 0;
-        border-left: 2px dashed rgba(255,255,255,.45);
-      }
-      .solde-carte b {
-        display: flex; align-items: center;
-        font-family: var(--mono); font-size: 28px; font-weight: 800; color: #fff;
-        letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums;
-        padding: 12px 22px;
-      }
-
-      /* "On ne voit pas d'ou viennent les points" : le ticket dit
-         combien, pas pourquoi. Premier essai en rangee de pastilles
-         colorees, rejete a son tour ("c'est degueulasse") — trop
-         charge a cote d'un ticket deja tres present, et un mot coupe a
-         la bordure droite (scroll horizontal sans indice visuel) avait
-         l'air casse. Repli sur un releve discret, imprime comme une
-         suite du ticket (meme famille que .qr-code-txt : monospace,
-         petit, silencieux) plutot qu'une deuxieme rangee de couleur. */
-      .activite {
-        padding: 12px 4px 0; display: grid; gap: 5px;
-        font-family: var(--mono); font-size: 12px;
-      }
-      .activite .ligne { display: flex; justify-content: space-between; gap: 10px; color: var(--ink3); }
-      .activite .ligne b {
-        color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums;
-        flex: 0 0 auto;
-      }
-
-      /* Retour visuel quand le solde change : un tick de compteur —
-         le chiffre grossit puis retombe, comme un digit qui vient de
-         tourner. Un flash de couleur ne se verrait plus (le chiffre
-         est blanc sur la pilule corail depuis le passage en compteur
-         plein) ; l'ancien glow appartenait de toute facon a l'ancienne
-         direction sombre. */
-      @keyframes majSolde {
-        0%   { transform: scale(1.22); }
-        100% { transform: scale(1); }
-      }
-      .solde-carte b.maj { transform-origin: left center; animation: majSolde .4s cubic-bezier(.16,1,.3,1); }
+      /* Le solde de points a ete tente en six formes differentes cote
+         boutique (dial, texte nu, pilule+jeton, compteur plein, ticket
+         dechirable...) et rejete a chaque fois. Julien a tranche : plus
+         de compteur du tout ici ("retire le compteur de points au
+         dessus le 185") — le solde reste visible ailleurs, sur la
+         pilule flottante de l'ecran carte (#pts-pill). La premiere
+         section reprend juste le padding haut que portait l'ancien
+         header sticky, pour ne pas coller au bord de l'ecran. */
+      .sec-premiere { padding-top: 22px; }
 
       .jeton { display: block; }
 
@@ -554,7 +484,7 @@
       .sheet.up { transform: translateY(0); }
       @media (prefers-reduced-motion: reduce) {
         .sheet, .voile, .bareme summary .chev { transition: none; }
-        .solde-carte b.maj, .bon.neuf { animation: none; }
+        .bon.neuf { animation: none; }
       }
 
       .grab { width: 40px; height: 4.5px; border-radius: 99px; background: rgba(255,255,255,.15); margin: 0 auto 4px; position: sticky; top: 0; }
@@ -849,19 +779,7 @@
         <div class="vue vue-boutique" id="vue-boutique">
           <div class="app" id="app">
 
-            <header class="wallet">
-              <div class="solde-carte">
-                <span class="solde-souche">
-                  <span class="jeton-halo" id="w-jeton"></span>
-                  <i>pts</i>
-                </span>
-                <span class="solde-dents" aria-hidden="true"></span>
-                <b id="w-solde">0</b>
-              </div>
-              <div class="activite" id="activite"></div>
-            </header>
-
-            <section class="sec">
+            <section class="sec sec-premiere">
               <div class="sec-head">
                 <h2>Ce soir au Mirage</h2>
                 <span class="sub" id="o-fin"></span>
@@ -1261,7 +1179,6 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
    ========================================================== */
 
 $("#pill-jeton").outerHTML = jeton(20);
-$("#w-jeton").innerHTML = jeton(20);
 
 // Reste utilisee par la fiche club de la carte (noteRecompenseClub) :
 // la prochaine recompense accessible, pour "X pts pour Y". Le meme
@@ -1273,15 +1190,8 @@ function prochaine() {
     .sort(function (a, b) { return a.cout - b.cout; })[0] || null;
 }
 
-function majCagnotte(anime) {
-  var b = $("#w-solde");
-  b.textContent = nb(ETAT.solde);
+function majCagnotte() {
   $("#pill-solde").textContent = nb(ETAT.solde);
-  if (anime) {
-    b.classList.remove("maj");
-    void b.offsetWidth;
-    b.classList.add("maj");
-  }
 }
 
 /* ==========================================================
@@ -1385,39 +1295,130 @@ function ambiance() {
   });
 }
 
-var PALETTES_ARBRES = [
-  ["#3f7a34", "#4a8a3c", "#5a9c46", "#6bab54", "#7fbb60", "#8fc96a"],
-  ["#356b2a", "#417a34", "#4f9350", "#5cae5a", "#6cb562", "#79bb52"]
+/* Reference explicite : captures d'ecran de Snap Map fournies par Julien
+   ("je veux exactement pareil, aucune difference"). Arbres = boule/dome
+   plein avec un cote ombre (pas un degrade complexe, un aplat plus fonce),
+   un tronc court visible, une ombre au sol. Trois silhouettes vues sur les
+   captures (boule, cone, oeuf) pour varier sans sortir du style. */
+var ESPECES_ARBRES = [
+  { corps: "#6fbb5c", ombre: "#4f9c46", clair: "#93d17c", forme: "boule" },
+  { corps: "#5aab6a", ombre: "#3e8a50", clair: "#7ec98c", forme: "cone" },
+  { corps: "#7abf5e", ombre: "#589a46", clair: "#9ad381", forme: "oeuf" }
 ];
+var TRONC = "#8a6540";
 
-/* Version 2D (19 aout), puis seul element garde sur la carte une fois
-   les batiments retires ("mets juste des beaux arbres... esthetiques,
-   qui rentrent bien") : un disque unique lisait trop comme un pictogramme
-   plat. Le feuillage devient trois lobes ronds legerement decales (avec
-   une pointe de jitter par arbre via sa graine, pour eviter un tampon
-   identique repete partout) — reste totalement plat (pas de tronc, pas
-   d'ombre), juste un contour moins mecanique qu'un cercle parfait. */
 function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   var s = r / 14;
-  var palette = PALETTES_ARBRES[teinte % 2];
-  var R = 8.4 * s;
+  var espece = ESPECES_ARBRES[teinte % ESPECES_ARBRES.length];
+  var R = 7.6 * s;
   var alphaBase = ctx.globalAlpha;
   var graine = (graineArbre >>> 0) || 1;
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
+  var pencheX = (rnd() - .5) * R * .12;
 
-  var lobes = [
-    { dx: 0, dy: -R * .06, r: R * .7, c: palette[2] },
-    { dx: -R * (.34 + rnd() * .1), dy: R * (.14 + rnd() * .1), r: R * (.42 + rnd() * .08), c: palette[0] },
-    { dx: R * (.32 + rnd() * .1), dy: R * (.16 + rnd() * .1), r: R * (.4 + rnd() * .08), c: palette[1] }
-  ];
-  lobes.forEach(function (l) {
-    ctx.beginPath(); ctx.arc(x + l.dx, y + l.dy, l.r, 0, 7);
-    ctx.fillStyle = l.c; ctx.fill();
-  });
+  // ombre au sol, decalee vers le bas-droite (source de lumiere haut-gauche)
+  ctx.beginPath();
+  ctx.ellipse(x + R * .3, y + R * .18, R * .68, R * .26, 0, 0, 7);
+  ctx.fillStyle = "rgba(35,50,20,.16)";
+  ctx.fill();
 
-  ctx.beginPath(); ctx.arc(x - R * .22, y - R * .26, R * .26, 0, 7);
-  ctx.fillStyle = palette[5]; ctx.globalAlpha = alphaBase * .7; ctx.fill();
+  // tronc
+  var troncH = R * .34;
+  ctx.fillStyle = TRONC;
+  ctx.fillRect(x - R * .08, y - troncH * .55, R * .16, troncH);
+
+  var cy = y - R * .78;
+
+  ctx.save();
+  ctx.beginPath();
+  if (espece.forme === "cone") {
+    ctx.moveTo(x + pencheX, cy - R * .95);
+    ctx.lineTo(x - R * .62, cy + R * .78);
+    ctx.lineTo(x + R * .62, cy + R * .78);
+    ctx.closePath();
+  } else if (espece.forme === "oeuf") {
+    ctx.ellipse(x + pencheX * .5, cy, R * .54, R * .82, 0, 0, 7);
+  } else {
+    ctx.ellipse(x + pencheX * .5, cy, R * .66, R * .66, 0, 0, 7);
+  }
+  ctx.fillStyle = espece.corps;
+  ctx.fill();
+  ctx.clip();
+
+  // aplat d'ombre sur le cote bas-droit du feuillage (2 tons, pas de degrade)
+  ctx.beginPath();
+  ctx.ellipse(x + R * .3, cy + R * .18, R * .68, R * .82, 0, 0, 7);
+  ctx.fillStyle = espece.ombre;
+  ctx.globalAlpha = alphaBase * .55;
+  ctx.fill();
+
+  // reflet clair en haut-gauche
+  ctx.beginPath();
+  ctx.ellipse(x - R * .26, cy - R * .32, R * .28, R * .3, 0, 0, 7);
+  ctx.fillStyle = espece.clair;
+  ctx.globalAlpha = alphaBase * .6;
+  ctx.fill();
   ctx.globalAlpha = alphaBase;
+  ctx.restore();
+}
+
+/* Batiments Snap Map : blocs 3D simples (pas de toit pointu), facade avant
+   plus claire, facade laterale plus sombre, une ou deux petites fenetres
+   bleu pale, ombre au sol. Palette calquee sur les captures (creme, pas la
+   palette coloree qu'on avait avant). */
+var PALETTE_BATIMENT = { face: "#efe4d5", cote: "#d9cab3", toit: "#f5eee2", fenetre: "#a9d3e6" };
+
+function batimentSur(ctx, x, y, r, graineBatiment) {
+  var s = r / 14;
+  var graine = (graineBatiment >>> 0) || 1;
+  function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
+
+  var largeur = (10 + rnd() * 6) * s;
+  var hauteur = (5 + rnd() * 5) * s;
+  var decal = largeur * (.22 + rnd() * .1);
+  var hautBas = y, hautHaut = y - hauteur;
+
+  // ombre au sol
+  ctx.beginPath();
+  ctx.ellipse(x + decal * .4, y + hauteur * .05, largeur * .58, largeur * .2, 0, 0, 7);
+  ctx.fillStyle = "rgba(30,35,20,.14)";
+  ctx.fill();
+
+  // facade avant (claire)
+  ctx.beginPath();
+  ctx.moveTo(x - largeur / 2, hautBas);
+  ctx.lineTo(x - largeur / 2, hautHaut);
+  ctx.lineTo(x, hautHaut - decal);
+  ctx.lineTo(x, hautBas + decal);
+  ctx.closePath();
+  ctx.fillStyle = PALETTE_BATIMENT.face;
+  ctx.fill();
+
+  // facade laterale (sombre)
+  ctx.beginPath();
+  ctx.moveTo(x, hautBas + decal);
+  ctx.lineTo(x, hautHaut - decal);
+  ctx.lineTo(x + largeur / 2, hautHaut);
+  ctx.lineTo(x + largeur / 2, hautBas);
+  ctx.closePath();
+  ctx.fillStyle = PALETTE_BATIMENT.cote;
+  ctx.fill();
+
+  // toit plat (losange)
+  ctx.beginPath();
+  ctx.moveTo(x - largeur / 2, hautHaut);
+  ctx.lineTo(x, hautHaut - decal);
+  ctx.lineTo(x + largeur / 2, hautHaut);
+  ctx.lineTo(x, hautHaut + decal * .7);
+  ctx.closePath();
+  ctx.fillStyle = PALETTE_BATIMENT.toit;
+  ctx.fill();
+
+  // fenetres, posees bas sur la facade avant
+  var fw = largeur * .1, fh = largeur * .15;
+  ctx.fillStyle = PALETTE_BATIMENT.fenetre;
+  ctx.fillRect(x - largeur * .34, hautBas - fh * 1.4, fw, fh);
+  if (largeur > 13 * s) ctx.fillRect(x - largeur * .12, hautBas - fh * 1.4 + decal * .5, fw, fh);
 }
 
 function snapifie() {
@@ -1492,11 +1493,10 @@ function snapifie() {
   });
 }
 
-/* Plus de batiments sur la carte (retires a la demande de Julien,
-   "on ne mets plus de maison") : seuls les arbres restent, en plus
-   grande densite ("des arbres partout") — pas plus de 0.00038 au lieu
-   de 0.00055 pour resserrer la grille, plafond releve a 3200 pour
-   couvrir davantage de vegetation avant de s'arreter. */
+/* Copie du style Snap Map ("je veux exactement pareil") : arbres sur la
+   vegetation, batiments 3D sur l'emprise des batiments reels de la carte
+   vectorielle (couche "Building"), pour rester colles aux rues plutot que
+   de tomber au hasard dans le vide. */
 var ARBRES = [];
 var ARBRES_VUS = {};
 var PAS_ARBRES = 0.00038;
@@ -1538,6 +1538,40 @@ function genererArbres() {
   }
 }
 
+var BATIMENTS = [];
+var BATIMENTS_VUS = {};
+
+function genererBatiments() {
+  if (BATIMENTS.length >= 1400) return;
+  if (!map.getLayer("Building")) return;
+
+  var feats = map.queryRenderedFeatures({ layers: ["Building"] });
+  for (var i = 0; i < feats.length; i++) {
+    if (BATIMENTS.length >= 1400) return;
+    var f = feats[i];
+    var id = f.id != null ? f.id : (f.properties && (f.properties.id || f.properties.osm_id));
+    var cle = id != null ? String(id) : JSON.stringify(f.geometry && f.geometry.coordinates && f.geometry.coordinates[0] && f.geometry.coordinates[0][0]);
+    if (BATIMENTS_VUS[cle]) continue;
+    BATIMENTS_VUS[cle] = true;
+
+    var ring = f.geometry && (f.geometry.type === "Polygon" ? f.geometry.coordinates[0] : f.geometry.type === "MultiPolygon" ? f.geometry.coordinates[0][0] : null);
+    if (!ring || ring.length < 3) continue;
+    var sLng = 0, sLat = 0;
+    for (var k = 0; k < ring.length; k++) { sLng += ring[k][0]; sLat += ring[k][1]; }
+    var cLng = sLng / ring.length, cLat = sLat / ring.length;
+
+    var h = 2166136261;
+    for (var c = 0; c < cle.length; c++) { h ^= cle.charCodeAt(c); h = (h * 16777619) >>> 0; }
+    function rnd() { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; }
+
+    BATIMENTS.push({
+      lng: cLng, lat: cLat,
+      s: .85 + rnd() * .45,
+      graine: Math.floor(rnd() * 4294967295) + 1
+    });
+  }
+}
+
 (function () {
   var cv = document.getElementById("arbres");
   var ctx = cv.getContext("2d");
@@ -1564,16 +1598,25 @@ function genererArbres() {
       var a = ARBRES[i];
       var p = map.project([a.lng, a.lat]);
       if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) continue;
-      pts.push({ x: p.x, y: p.y, s: a.s, teinte: a.teinte, graine: a.graine });
+      pts.push({ type: "arbre", x: p.x, y: p.y, s: a.s, teinte: a.teinte, graine: a.graine });
+    }
+    for (var j = 0; j < BATIMENTS.length; j++) {
+      var bt = BATIMENTS[j];
+      var pb = map.project([bt.lng, bt.lat]);
+      if (pb.x < -60 || pb.x > W + 60 || pb.y < -90 || pb.y > H + 40) continue;
+      pts.push({ type: "batiment", x: pb.x, y: pb.y, s: bt.s, graine: bt.graine });
     }
     pts.sort(function (a, b) { return a.y - b.y; });
     ctx.globalAlpha = fondu;
-    pts.forEach(function (p) { arbreSur(ctx, p.x, p.y, 26 * p.s, p.teinte, p.graine); });
+    pts.forEach(function (p) {
+      if (p.type === "batiment") batimentSur(ctx, p.x, p.y, 26 * p.s, p.graine);
+      else arbreSur(ctx, p.x, p.y, 26 * p.s, p.teinte, p.graine);
+    });
     ctx.globalAlpha = 1;
   }
   map.on("move", dessiner);
-  map.on("load", function () { genererArbres(); dessiner(); });
-  map.on("idle", function () { genererArbres(); dessiner(); });
+  map.on("load", function () { genererArbres(); genererBatiments(); dessiner(); });
+  map.on("idle", function () { genererArbres(); genererBatiments(); dessiner(); });
 })();
 
 (function () {
@@ -1904,24 +1947,6 @@ var GAINS = [
   { t: "Contenu qui décolle",     s: "Bonus au-delà de 10 000 vues",    v: 90 },
   { t: "Ambassadeur du mois",     s: "Le plus gros total du mois",      v: 350 }
 ];
-
-// Derniers gains reels de la soiree (contrairement a GAINS ci-dessus,
-// qui est le bareme general) — affiches sous le ticket pour repondre
-// a "on ne voit pas d'ou viennent les points, il n'y a aucune logique".
-// Meme provenance de donnees que GAINS dans la vraie appli (table
-// points_events ou equivalent), ici en dur pour la maquette.
-var ACTIVITE_RECENTE = [
-  { t: "Scan à l'entrée", v: 15 },
-  { t: "Story taguée", v: 80 },
-  { t: "Bonus x2 jusqu'à 1h", v: 40 }
-];
-
-(function rendreActivite() {
-  var z = $("#activite");
-  z.innerHTML = ACTIVITE_RECENTE.map(function (a) {
-    return '<span class="ligne"><span>' + a.t + "</span><b>+" + a.v + "</b></span>";
-  }).join("");
-})();
 
 var OUVERTURE = 23, FERMETURE = 6;
 
