@@ -876,8 +876,8 @@
 
   <footer>
     Maquette interactive — carte et boutique de la PWA clubbeur assemblées dans une seule page,
-    à valider avant branchement des données. Anciennes versions isolées :
-    <code>carte-preview.html</code>, <code>boutique-preview.html</code>.
+    à valider avant branchement des données. Ancienne carte isolée encore utile en autonome :
+    <code>carte-preview.html</code>.
   </footer>
 
 </div>
@@ -1590,31 +1590,35 @@ var FOTO_OFFRE_HERO = "/recompenses/shot-hero.jpg";
    generique de sa famille sinon. Le gerant ne choisit qu'un nom et une
    famille dans son dashboard — jamais un dessin — donc "shot cadeau
    anniversaire" doit quand meme trouver le bon verre tout seul. */
+// La cle de FOTOS est ecrite en dur ici (pas fn.name) : le build de
+// prod minifie/renomme les fonctions, donc `fn.name` ne vaut plus
+// "artCocktail" une fois deploye — FOTOS[fn.name] renvoyait alors
+// toujours undefined et tout retombait sur le dessin, invisible en
+// dev (noms preserves) mais casse en prod. Piege paye une fois.
 var REPLIS_FAMILLE = {
-  bar:   [artCocktail, "rgba(242,161,168,.22)"],
-  acces: [artBracelet, "rgba(242,179,174,.22)"],
-  vip:   [artCordon,   "rgba(217,178,106,.24)"]
+  bar:   [artCocktail, "rgba(242,161,168,.22)", "artCocktail"],
+  acces: [artBracelet, "rgba(242,179,174,.22)", "artBracelet"],
+  vip:   [artCordon,   "rgba(217,178,106,.24)", "artCordon"]
 };
 var INDICES_TITRE = [
-  [/bouteille|champagne|magnum/i, artBouteille, "rgba(44,92,71,.34)"],
-  [/cordon|carr[ée].?vip|salon/i, artCordon, "rgba(217,178,106,.24)"],
-  [/cocktail/i, artCocktail, "rgba(242,161,168,.22)"],
-  [/shot/i, artShot, "rgba(243,187,78,.24)"],
-  [/pinte|bi[èe]re/i, artPinte, "rgba(243,187,78,.2)"],
-  [/vestiaire|manteau/i, artCintre, "rgba(227,192,143,.22)"],
-  [/coupe.?file|file/i, artTicket, "rgba(217,161,90,.2)"],
-  [/entr[ée]e|bracelet/i, artBracelet, "rgba(242,179,174,.22)"]
+  [/bouteille|champagne|magnum/i, artBouteille, "rgba(44,92,71,.34)", "artBouteille"],
+  [/cordon|carr[ée].?vip|salon/i, artCordon, "rgba(217,178,106,.24)", "artCordon"],
+  [/cocktail/i, artCocktail, "rgba(242,161,168,.22)", "artCocktail"],
+  [/shot/i, artShot, "rgba(243,187,78,.24)", "artShot"],
+  [/pinte|bi[èe]re/i, artPinte, "rgba(243,187,78,.2)", "artPinte"],
+  [/vestiaire|manteau/i, artCintre, "rgba(227,192,143,.22)", "artCintre"],
+  [/coupe.?file|file/i, artTicket, "rgba(217,161,90,.2)", "artTicket"],
+  [/entr[ée]e|bracelet/i, artBracelet, "rgba(242,179,174,.22)", "artBracelet"]
 ];
 
 function choisirArt(titre, categorie) {
   for (var i = 0; i < INDICES_TITRE.length; i++) {
     if (INDICES_TITRE[i][0].test(titre)) {
-      var fnMatch = INDICES_TITRE[i][1];
-      return { art: fnMatch, glow: INDICES_TITRE[i][2], foto: FOTOS[fnMatch.name] || null };
+      return { art: INDICES_TITRE[i][1], glow: INDICES_TITRE[i][2], foto: FOTOS[INDICES_TITRE[i][3]] || null };
     }
   }
   var repli = REPLIS_FAMILLE[categorie] || REPLIS_FAMILLE.bar;
-  return { art: repli[0], glow: repli[1], foto: FOTOS[repli[0].name] || null };
+  return { art: repli[0], glow: repli[1], foto: FOTOS[repli[2]] || null };
 }
 
 /* Le gerant ne tape qu'un nom, un seuil et une famille dans son
