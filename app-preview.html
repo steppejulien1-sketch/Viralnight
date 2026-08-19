@@ -1295,32 +1295,41 @@ function ambiance() {
   });
 }
 
-/* Quatrieme passe : Julien a fait recadrer et zoomer trois captures Snap
-   Map au pixel (voir crop_batiments.png / crop_arbre.png) pour comparer
-   les couleurs reelles plutot que deviner. Deux ecarts expliquaient le
-   "sans plus" :
-   1) les arbres Snapchat ont un vrai degrade radial (vert-jaune vif en
-      haut-gauche vers un vert plus sature en bas-droite, comme une bille
-      brillante) — pas un aplat en deux tons plats comme avant.
-   2) les fenetres sont une large bande vitree pale au pied de la facade
-      (bleu tres doux, pres de la moitie de la largeur du mur), pas une
-      petite pastille saturee ; le mur et le toit sont eux tres proches en
-      teinte (contraste faible), toute la lecture "3D" vient de l'ombre et
-      de l'angle, pas d'un contraste de couleur fort entre les faces.
-   Plus aucun liseré : les vraies captures n'ont pas de contour visible,
-   juste un anti-aliasing propre. */
+/* Cinquieme passe : "pousse le delire, un truc qui fait waouh". La forme
+   collait deja aux captures (voir crop_batiments.png / crop_arbre.png),
+   ce qui manquait c'etait la richesse d'une vraie scene — Snapchat ne
+   repete jamais exactement le meme arbre ou le meme batiment. Ajouts :
+   - 3 variantes de vert par arbre (au lieu d'un seul degrade repete a
+     l'identique 3200 fois) + un reflet specular, comme une bille vernie.
+   - 3 palettes de batiments (creme chaud / creme neutre / taupe clair)
+     et une hauteur bien plus variee, avec de rares "immeubles" plus
+     hauts qui cassent la silhouette plate d'un quartier pavillonnaire.
+   - Un filet de contact sombre au pied de chaque volume : c'est ce trait
+     tres fin qui "pose" un objet au sol au lieu de le faire flotter. */
 var TRONC = "#c49a6c";
+var TEINTES_ARBRES = [
+  { haut: "#c3ec7e", mil: "#93c95d", bas: "#5f9a44" },
+  { haut: "#d3ef9c", mil: "#a2cf6c", bas: "#6ba24e" },
+  { haut: "#aee27e", mil: "#7fbd58", bas: "#4c8a3c" }
+];
 
 function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   var s = r / 14;
   var R = 7.6 * s;
   var graine = (graineArbre >>> 0) || 1;
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
-  var vRayon = R * (.92 + rnd() * .16);
+  var vRayon = R * (.88 + rnd() * .3);
   var rBoule = vRayon * .64;
   var cy = y - R * .8;
+  var pal = TEINTES_ARBRES[teinte % TEINTES_ARBRES.length];
 
-  // ombre au sol : douce, froide, plus large que le feuillage
+  // filet de contact : pose l'arbre au sol
+  ctx.beginPath();
+  ctx.ellipse(x, y + R * .04, R * .14, R * .05, 0, 0, 7);
+  ctx.fillStyle = "rgba(60,70,40,.22)";
+  ctx.fill();
+
+  // ombre portee : douce, froide, plus large que le feuillage
   ctx.save();
   ctx.filter = "blur(2px)";
   ctx.beginPath();
@@ -1347,20 +1356,31 @@ function arbreSur(ctx, x, y, r, teinte, graineArbre) {
     x - rBoule * .38, cy - rBoule * .42, rBoule * .12,
     x, cy, rBoule * 1.15
   );
-  grad.addColorStop(0, "#c3ec7e");
-  grad.addColorStop(.55, "#93c95d");
-  grad.addColorStop(1, "#5f9a44");
+  grad.addColorStop(0, pal.haut);
+  grad.addColorStop(.55, pal.mil);
+  grad.addColorStop(1, pal.bas);
   ctx.beginPath();
   ctx.ellipse(x, cy, rBoule, rBoule, 0, 0, 7);
   ctx.fillStyle = grad;
   ctx.fill();
+
+  // reflet specular : le petit point qui vend l'effet "verni"
+  ctx.beginPath();
+  ctx.ellipse(x - rBoule * .34, cy - rBoule * .4, rBoule * .18, rBoule * .12, -.5, 0, 7);
+  ctx.fillStyle = "rgba(255,255,255,.5)";
+  ctx.fill();
 }
 
 /* Batiments Snap Map : mur et toit tres proches en teinte (contraste
-   faible), large bande vitree pale au pied de la facade, ombre douce et
-   froide. Une seule direction d'extrusion pour toute la scene
-   (proportionnelle a la hauteur) pour que la scene reste coherente. */
-var PALETTE_BATIMENT = { face: "#e8dccb", cote: "#e0d3c1", toit: "#efe4d6", fenetre: "#aecfe0" };
+   faible), large bande vitree pale au pied de la facade avec un leger
+   reflet, ombre douce et froide, filet de contact au sol. Une seule
+   direction d'extrusion pour toute la scene (proportionnelle a la
+   hauteur) pour que la scene reste coherente. */
+var PALETTES_BATIMENTS = [
+  { face: "#e8dccb", cote: "#e0d3c1", toit: "#efe4d6", fenetre: "#aecfe0" },
+  { face: "#e6e0d4", cote: "#dcd5c6", toit: "#f0ebe0", fenetre: "#b6d3d9" },
+  { face: "#ddd2c6", cote: "#d3c7b8", toit: "#e8ddce", fenetre: "#a8c9d6" }
+];
 var RATIO_DECAL_BATIMENT = .5;
 
 function batimentSur(ctx, x, y, r, graineBatiment) {
@@ -1368,12 +1388,25 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   var graine = (graineBatiment >>> 0) || 1;
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
 
-  var largeur = (10 + rnd() * 6) * s;
-  var hauteur = (4.5 + rnd() * 4) * s;
+  var pal = PALETTES_BATIMENTS[Math.floor(rnd() * PALETTES_BATIMENTS.length)];
+  var largeur = (9 + rnd() * 7) * s;
+  // la plupart des volumes restent bas (pavillon), un batiment sur huit
+  // environ prend nettement plus de hauteur — silhouette de quartier
+  // vivante plutot qu'une rangee de boites identiques.
+  var hauteur = (rnd() < .12 ? 11 + rnd() * 7 : 4 + rnd() * 4.5) * s;
   var decal = hauteur * RATIO_DECAL_BATIMENT;
   var hautBas = y, hautHaut = y - hauteur;
 
-  // ombre au sol, douce et froide
+  // filet de contact : pose le batiment au sol
+  ctx.beginPath();
+  ctx.moveTo(x - largeur / 2, hautBas);
+  ctx.lineTo(x, hautBas + decal);
+  ctx.lineTo(x + largeur / 2, hautBas);
+  ctx.strokeStyle = "rgba(60,50,35,.16)";
+  ctx.lineWidth = Math.max(.5, s * .3);
+  ctx.stroke();
+
+  // ombre portee, douce et froide
   ctx.save();
   ctx.filter = "blur(2.5px)";
   ctx.beginPath();
@@ -1389,7 +1422,7 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.lineTo(x, hautHaut - decal);
   ctx.lineTo(x, hautBas + decal);
   ctx.closePath();
-  ctx.fillStyle = PALETTE_BATIMENT.face;
+  ctx.fillStyle = pal.face;
   ctx.fill();
 
   // facade laterale, a peine plus sombre
@@ -1399,30 +1432,54 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.lineTo(x + largeur / 2, hautHaut);
   ctx.lineTo(x + largeur / 2, hautBas);
   ctx.closePath();
-  ctx.fillStyle = PALETTE_BATIMENT.cote;
+  ctx.fillStyle = pal.cote;
   ctx.fill();
 
-  // toit plat (losange)
+  // toit : leger degrade au lieu d'un aplat, pour ne pas "melanger" tous
+  // les batiments dans le meme gris-beige uniforme vu de loin.
+  var gradToit = ctx.createLinearGradient(x - largeur / 2, hautHaut - decal, x + largeur / 2, hautHaut);
+  gradToit.addColorStop(0, pal.toit);
+  gradToit.addColorStop(1, pal.face);
   ctx.beginPath();
   ctx.moveTo(x - largeur / 2, hautHaut);
   ctx.lineTo(x, hautHaut - decal);
   ctx.lineTo(x + largeur / 2, hautHaut);
   ctx.lineTo(x, hautHaut + decal * .7);
   ctx.closePath();
-  ctx.fillStyle = PALETTE_BATIMENT.toit;
+  ctx.fillStyle = gradToit;
   ctx.fill();
 
-  // large bande vitree au pied de la facade avant, comme sur les captures
+  // large bande vitree au pied de la facade avant, comme sur les
+  // captures, avec un leger reflet vertical (verre, pas un aplat mat).
   var margeBas = Math.min(hauteur * .12, decal * .5);
   var vitrH = hauteur * .42;
+  var gradVitre = ctx.createLinearGradient(x - largeur * .42, 0, x - largeur * .06, 0);
+  gradVitre.addColorStop(0, pal.fenetre);
+  gradVitre.addColorStop(.5, "#e8f2f6");
+  gradVitre.addColorStop(1, pal.fenetre);
   ctx.beginPath();
   ctx.moveTo(x - largeur * .42, hautBas - margeBas);
   ctx.lineTo(x - largeur * .42, hautBas - margeBas - vitrH);
   ctx.lineTo(x - largeur * .06, hautBas - margeBas - vitrH + decal * .1);
   ctx.lineTo(x - largeur * .06, hautBas - margeBas + decal * .1);
   ctx.closePath();
-  ctx.fillStyle = PALETTE_BATIMENT.fenetre;
+  ctx.fillStyle = gradVitre;
   ctx.fill();
+
+  // batiment plus haut : deuxieme bande vitree en etage, pour eviter un
+  // grand mur vide au-dessus du rez-de-chaussee.
+  if (hauteur > 9 * s) {
+    var vitrH2 = hauteur * .22;
+    var y2 = hautBas - margeBas - vitrH - hauteur * .14;
+    ctx.beginPath();
+    ctx.moveTo(x - largeur * .42, y2);
+    ctx.lineTo(x - largeur * .42, y2 - vitrH2);
+    ctx.lineTo(x - largeur * .06, y2 - vitrH2 + decal * .1);
+    ctx.lineTo(x - largeur * .06, y2 + decal * .1);
+    ctx.closePath();
+    ctx.fillStyle = gradVitre;
+    ctx.fill();
+  }
 }
 
 function snapifie() {
