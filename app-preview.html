@@ -1329,14 +1329,13 @@ function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   ctx.fillStyle = "rgba(60,70,40,.22)";
   ctx.fill();
 
-  // ombre portee : douce, froide, plus large que le feuillage
-  ctx.save();
-  ctx.filter = "blur(2px)";
+  // ombre portee : douce (alpha faible, pas de flou — ctx.filter coute
+  // cher a repeter des milliers de fois par frame, source du "ca bug"
+  // signale par Julien), plus large que le feuillage
   ctx.beginPath();
   ctx.ellipse(x + R * .38, y + R * .14, R * .62, R * .24, 0, 0, 7);
-  ctx.fillStyle = "rgba(90,120,80,.28)";
+  ctx.fillStyle = "rgba(90,120,80,.18)";
   ctx.fill();
-  ctx.restore();
 
   // tronc : trapeze large a la base, pas un simple trait
   var troncH = R * .5, troncBas = R * .3, troncHaut = R * .16;
@@ -1424,14 +1423,11 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.lineWidth = Math.max(.5, s * .3);
   ctx.stroke();
 
-  // ombre portee, douce et froide
-  ctx.save();
-  ctx.filter = "blur(2.5px)";
+  // ombre portee, douce et froide (pas de flou, meme raison que l'arbre)
   ctx.beginPath();
   ctx.ellipse(x + decal * .5, y + hauteur * .08, largeur * .56, largeur * .18, 0, 0, 7);
-  ctx.fillStyle = "rgba(90,120,80,.24)";
+  ctx.fillStyle = "rgba(90,120,80,.16)";
   ctx.fill();
-  ctx.restore();
 
   // facade avant
   ctx.beginPath();
@@ -1600,10 +1596,10 @@ function snapifie() {
    de tomber au hasard dans le vide. */
 var ARBRES = [];
 var ARBRES_VUS = {};
-var PAS_ARBRES = 0.00038;
+var PAS_ARBRES = 0.00046;
 
 function genererArbres() {
-  if (ARBRES.length >= 3200) return;
+  if (ARBRES.length >= 1800) return;
   var couches = ["Forest", "Wood", "Grass", "Meadow"].filter(function (id) { return map.getLayer(id); });
   if (!couches.length) return;
 
@@ -1614,7 +1610,7 @@ function genererArbres() {
 
   for (var lng = lngMin; lng <= lngMax; lng += PAS_ARBRES) {
     for (var lat = latMin; lat <= latMax; lat += PAS_ARBRES) {
-      if (ARBRES.length >= 3200) return;
+      if (ARBRES.length >= 1800) return;
       var cle = Math.round(lng / PAS_ARBRES) + ":" + Math.round(lat / PAS_ARBRES);
       if (ARBRES_VUS[cle]) continue;
       ARBRES_VUS[cle] = true;
@@ -1639,17 +1635,21 @@ function genererArbres() {
   }
 }
 
-/* Deuxieme correction le meme soir : la densite "partout" faisait
-   "bug" (trop de volumes, chacun avec une ombre floutee + un degrade =
-   cher a dessiner) et donnait une rue pleine plutot que "un peu partout"
-   comme demande. Grille bien plus large et un batiment sur trois
-   seulement generе — de la couverture sur toute la carte, mais clairsemee. */
+/* Troisieme correction le meme soir : Julien a encore signale "ca bug",
+   sans savoir dire exactement quoi ("je ne sais pas, ce n'est pas faux
+   si ca bug") — marge de securite plutot qu'un diagnostic precis. Le vrai
+   cout etait ctx.filter = "blur()" sur l'ombre de CHAQUE arbre et
+   CHAQUE batiment (jusqu'a plusieurs milliers par frame) : le filtre CSS
+   applique au canvas est nettement plus lourd qu'un simple alpha faible
+   sans flou, qui donne un resultat presque aussi doux pour une fraction
+   du cout. Plafonds redescendus en plus (arbres 1800, batiments 450) par
+   securite. */
 var BATIMENTS = [];
 var BATIMENTS_VUS = {};
 var PAS_BATIMENTS = 0.00095;
 
 function genererBatiments() {
-  if (BATIMENTS.length >= 700) return;
+  if (BATIMENTS.length >= 450) return;
   var couchesExclues = ["Water", "Forest", "Wood", "Grass", "Meadow", "Park", "Cemetery"]
     .filter(function (id) { return map.getLayer(id); });
 
@@ -1660,7 +1660,7 @@ function genererBatiments() {
 
   for (var lng = lngMin; lng <= lngMax; lng += PAS_BATIMENTS) {
     for (var lat = latMin; lat <= latMax; lat += PAS_BATIMENTS) {
-      if (BATIMENTS.length >= 700) return;
+      if (BATIMENTS.length >= 450) return;
       var cle = Math.round(lng / PAS_BATIMENTS) + ":" + Math.round(lat / PAS_BATIMENTS);
       if (BATIMENTS_VUS[cle]) continue;
       BATIMENTS_VUS[cle] = true;
