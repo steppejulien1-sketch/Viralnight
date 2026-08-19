@@ -44,13 +44,31 @@
      dans les surfaces : que du gris neutre sur du noir. La seule couleur de
      la page est le corail de marque. Les essais teintes (gris-bleu, encre
      chaude) ont tous ete rejetes - ne pas reintroduire de dominante. */
-  --void: #000000; /* fond de page - noir */
-  --surface-1: #141414; /* premier niveau de carte/section */
-  --surface-2: #1e1e1e; /* cartes sur fond deja surface-1, pastilles */
-  --surface-3: #292929; /* badges, elements les plus "hauts" */
-  --ink: #141414; /* alias retro-compatible = surface-1 */
-  --obsidian: #1e1e1e; /* alias retro-compatible = surface-2 */
-  --graphite: #292929; /* alias retro-compatible = surface-3 */
+  /* 20 aout : Julien decrit la page comme "noir, gris, noir et gris",
+     "pas propre", en citant des SaaS dont il aime le rendu (EKO,
+     Klosers, Refutor). Le diagnostic n'est pas la teinte mais l'ECART :
+     un fond a #000 pur avec des cartes a #1e1e1e (30 niveaux d'ecart)
+     lit comme des blocs gris poses sur du noir, pas comme une surface
+     qui s'eleve. Les references citees gardent toutes leurs cartes tres
+     proches du fond. Correction : le fond quitte le noir pur (ce que
+     CLAUDE.md demandait deja - "jamais de noir pur", regle a laquelle
+     le code avait derive) et les surfaces se resserrent autour de lui.
+     La consigne "aucune teinte, que du gris neutre" reste respectee. */
+  /* 20 aout, seconde passe : la regle "aucune teinte" ci-dessus est
+     LEVEE, avec accord explicite de Julien. Ses references (EKO,
+     Klosers, Refutor) tiennent leur rendu premium en partie de leur
+     teinte de fond ; le gris neutre corrige restait plus plat. Rampe
+     violet-nuit tres desaturee : la teinte se sent sans jamais lire
+     comme "du violet", et le corail de marque ressort mieux dessus
+     que sur du gris. Les anciens essais teintes rejetes etaient des
+     gris-bleu et des encres chaudes, pas cette famille. */
+  --void: #0a0810; /* fond de page - violet-nuit tres sombre */
+  --surface-1: #12101a; /* premier niveau de carte/section */
+  --surface-2: #171522; /* cartes sur fond deja surface-1, pastilles */
+  --surface-3: #201d2d; /* badges, elements les plus "hauts" */
+  --ink: #12101a; /* alias retro-compatible = surface-1 */
+  --obsidian: #171522; /* alias retro-compatible = surface-2 */
+  --graphite: #201d2d; /* alias retro-compatible = surface-3 */
   --slate: #2a2d33;
   --iron: #40434a;
   --smoke: #6f7278; /* texte tertiaire */
@@ -70,7 +88,7 @@
      d'opacite ils etaient invisibles, et ils tentaient d'imiter le hero -
      or le hero est une video dont les teintes defilent, donc une reference
      mouvante. Simple degrade de profondeur, fixe au viewport. */
-  --bg-living: #000000;
+  --bg-living: #0a0810;
 
   /* Degrade de marque - reserve aux tout petits details (barre de
      classement du dashboard). Retire des cartes/boutons/chiffres :
@@ -357,14 +375,14 @@ h3 {
 
 .card-lg {
   border-radius: var(--r-lg);
-  background: linear-gradient(160deg, #0a0d13, var(--ink) 55%);
+  background: linear-gradient(160deg, #131120, var(--ink) 55%);
   box-shadow: var(--key-shadow);
   overflow: hidden;
 }
 
 .card-xl {
   border-radius: var(--r-xl);
-  background: linear-gradient(155deg, #0b0d12, var(--ink) 55%);
+  background: linear-gradient(155deg, #131120, var(--ink) 55%);
   box-shadow: var(--key-shadow-strong);
   overflow: hidden;
 }
@@ -562,15 +580,15 @@ h3 {
   padding: 120px 0;
 }
 
-/* Chaque grande section respire sur un niveau de gris legerement
-   different (surface-1 en alternance avec le fond void) - la
-   variation est presque imperceptible isolement, mais cree une vraie
-   sensation de profondeur en scrollant, plutot qu'un aplat uniforme
-   du haut en bas de la page. */
-#fonctionnement,
-#faq {
-  background: var(--surface-1);
-}
+/* L'alternance de fond entre sections (#fonctionnement et #faq en
+   surface-1, le reste sur le fond de page) a ete RETIREE le 20 aout.
+   Elle etait censee creer "une sensation de profondeur en scrollant",
+   mais Julien la lit exactement comme ce qu'elle est : "noir, gris,
+   noir et gris... ca ne fait pas propre". Les SaaS qu'il cite en
+   reference (EKO, Klosers, Refutor) tiennent tous UN seul fond continu
+   du haut en bas, et creent la profondeur avec des halos atmospheriques
+   et des cartes, jamais en changeant la couleur d'une section sur deux.
+   Ne pas reintroduire : la profondeur passe par .section-atmos. */
 
 /* Halo decoratif discret pour casser le tout-noir sur une section
    donnee - jamais sur un element fonctionnel (bouton, input, statut),
@@ -580,28 +598,35 @@ h3 {
   overflow: clip;
 }
 
+/* 21 aout : halos remontes a une vraie presence (0.06-0.07 -> 0.14-0.18)
+   et l'iris redevient reellement teinte iris, pas du corail recolorie -
+   Julien cite EKO/Klosers comme reference, dont les blobs violets se
+   voient franchement, pas un "on devine plus qu'on ne voit". Toujours
+   purement atmospherique (jamais sur un element fonctionnel). */
 .section-glow {
   position: absolute;
-  width: 720px;
-  height: 720px;
+  width: 780px;
+  height: 780px;
   border-radius: 50%;
-  filter: blur(110px);
+  filter: blur(100px);
   pointer-events: none;
   z-index: 0;
 }
 
-.section-glow-coral {
-  top: -220px;
-  right: -160px;
-  background: radial-gradient(closest-side, rgba(255, 99, 99, 0.07), transparent 72%);
+/* Une seule teinte pour tout le site : un halo corail sur une section et un halo
+   violet sur la suivante donnait l'impression que le fond changeait de couleur
+   au scroll. Seule la POSITION varie desormais, pour eviter une repetition
+   mecanique d'une section a l'autre. */
+.section-glow-haut {
+  top: -260px;
+  right: -180px;
+  background: radial-gradient(closest-side, rgba(146, 129, 247, 0.1), transparent 72%);
 }
 
-/* Iris comme teinte d'atmosphere secondaire, tres discrete - un
-   halo qu'on devine plus qu'on ne voit, jamais un aplat de couleur. */
-.section-glow-iris {
-  bottom: -220px;
-  left: -160px;
-  background: radial-gradient(closest-side, rgba(255, 99, 99, 0.06), transparent 72%);
+.section-glow-bas {
+  bottom: -260px;
+  left: -180px;
+  background: radial-gradient(closest-side, rgba(146, 129, 247, 0.1), transparent 72%);
 }
 
 .section-atmos > .wrap {
