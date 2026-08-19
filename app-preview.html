@@ -1295,16 +1295,21 @@ function ambiance() {
   });
 }
 
-/* Troisieme passe : "ce n'est pas aussi propre que Snapchat". La forme
-   generale collait deja, ce qui manquait c'etait la coherence d'une
-   vraie scene 3D (chez Snapchat, tout partage la meme direction
-   d'extrusion) et des bords doux plutot que des aplats a bord dur.
-   Ombres passees au flou (ctx.filter), liseré tres discret pour detacher
-   proprement chaque forme du fond plutot que de s'y fondre. */
-var VERT_ARBRE = "#6cb956";
-var VERT_ARBRE_OMBRE = "#4f9a44";
-var TRONC = "#8a6540";
-var LISERE_SOMBRE = "rgba(60,50,35,.14)";
+/* Quatrieme passe : Julien a fait recadrer et zoomer trois captures Snap
+   Map au pixel (voir crop_batiments.png / crop_arbre.png) pour comparer
+   les couleurs reelles plutot que deviner. Deux ecarts expliquaient le
+   "sans plus" :
+   1) les arbres Snapchat ont un vrai degrade radial (vert-jaune vif en
+      haut-gauche vers un vert plus sature en bas-droite, comme une bille
+      brillante) — pas un aplat en deux tons plats comme avant.
+   2) les fenetres sont une large bande vitree pale au pied de la facade
+      (bleu tres doux, pres de la moitie de la largeur du mur), pas une
+      petite pastille saturee ; le mur et le toit sont eux tres proches en
+      teinte (contraste faible), toute la lecture "3D" vient de l'ombre et
+      de l'angle, pas d'un contraste de couleur fort entre les faces.
+   Plus aucun liseré : les vraies captures n'ont pas de contour visible,
+   juste un anti-aliasing propre. */
+var TRONC = "#c49a6c";
 
 function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   var s = r / 14;
@@ -1312,50 +1317,50 @@ function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   var graine = (graineArbre >>> 0) || 1;
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
   var vRayon = R * (.92 + rnd() * .16);
+  var rBoule = vRayon * .64;
+  var cy = y - R * .8;
 
-  // ombre au sol, douce (floue) et decalee vers le bas-droite
+  // ombre au sol : douce, froide, plus large que le feuillage
   ctx.save();
-  ctx.filter = "blur(1.5px)";
+  ctx.filter = "blur(2px)";
   ctx.beginPath();
-  ctx.ellipse(x + R * .34, y + R * .18, R * .58, R * .22, 0, 0, 7);
-  ctx.fillStyle = "rgba(35,50,20,.22)";
+  ctx.ellipse(x + R * .38, y + R * .14, R * .62, R * .24, 0, 0, 7);
+  ctx.fillStyle = "rgba(90,120,80,.28)";
   ctx.fill();
   ctx.restore();
 
-  // tronc
-  var troncH = R * .4, troncL = R * .22;
+  // tronc : trapeze large a la base, pas un simple trait
+  var troncH = R * .5, troncBas = R * .3, troncHaut = R * .16;
+  ctx.beginPath();
+  ctx.moveTo(x - troncBas / 2, y + R * .05);
+  ctx.lineTo(x - troncHaut / 2, y - troncH);
+  ctx.lineTo(x + troncHaut / 2, y - troncH);
+  ctx.lineTo(x + troncBas / 2, y + R * .05);
+  ctx.closePath();
   ctx.fillStyle = TRONC;
-  ctx.fillRect(x - troncL / 2, y - troncH * .6, troncL, troncH);
+  ctx.fill();
 
-  // boule de feuillage, un seul aplat plus la moitie basse legerement
-  // assombrie (pas de degrade, pas de reflet) — c'est tout ce que montrent
-  // les captures. Liseré discret pour un contour net.
-  var cy = y - R * .82;
-  var rBoule = vRayon * .62;
+  // boule de feuillage : degrade radial clair (haut-gauche) -> sature
+  // (bas-droit), comme une sphere brillante — c'est ce qui rend l'arbre
+  // Snapchat "beau" plutot que plat.
+  var grad = ctx.createRadialGradient(
+    x - rBoule * .38, cy - rBoule * .42, rBoule * .12,
+    x, cy, rBoule * 1.15
+  );
+  grad.addColorStop(0, "#c3ec7e");
+  grad.addColorStop(.55, "#93c95d");
+  grad.addColorStop(1, "#5f9a44");
   ctx.beginPath();
   ctx.ellipse(x, cy, rBoule, rBoule, 0, 0, 7);
-  ctx.fillStyle = VERT_ARBRE;
+  ctx.fillStyle = grad;
   ctx.fill();
-  ctx.lineWidth = Math.max(.6, s * .4);
-  ctx.strokeStyle = LISERE_SOMBRE;
-  ctx.stroke();
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(x, cy, rBoule, rBoule, 0, 0, 7);
-  ctx.clip();
-  ctx.beginPath();
-  ctx.ellipse(x + rBoule * .18, cy + rBoule * .22, rBoule * .8, rBoule * .8, 0, 0, 7);
-  ctx.fillStyle = VERT_ARBRE_OMBRE;
-  ctx.fill();
-  ctx.restore();
 }
 
-/* Batiments Snap Map : blocs presque unis, UNE SEULE direction
-   d'extrusion pour toute la scene (proportionnelle a la hauteur, plus de
-   facteur aleatoire independant qui desalignait chaque batiment), toit a
-   peine plus clair, fenetres bleues franches, ombre douce au sol. */
-var PALETTE_BATIMENT = { face: "#efe4d4", cote: "#e4d8c4", toit: "#f4ede0", fenetre: "#4f9fc7" };
+/* Batiments Snap Map : mur et toit tres proches en teinte (contraste
+   faible), large bande vitree pale au pied de la facade, ombre douce et
+   froide. Une seule direction d'extrusion pour toute la scene
+   (proportionnelle a la hauteur) pour que la scene reste coherente. */
+var PALETTE_BATIMENT = { face: "#e8dccb", cote: "#e0d3c1", toit: "#efe4d6", fenetre: "#aecfe0" };
 var RATIO_DECAL_BATIMENT = .5;
 
 function batimentSur(ctx, x, y, r, graineBatiment) {
@@ -1368,17 +1373,14 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   var decal = hauteur * RATIO_DECAL_BATIMENT;
   var hautBas = y, hautHaut = y - hauteur;
 
-  // ombre au sol, douce
+  // ombre au sol, douce et froide
   ctx.save();
-  ctx.filter = "blur(2px)";
+  ctx.filter = "blur(2.5px)";
   ctx.beginPath();
-  ctx.ellipse(x + decal * .5, y + hauteur * .08, largeur * .54, largeur * .17, 0, 0, 7);
-  ctx.fillStyle = "rgba(30,35,20,.2)";
+  ctx.ellipse(x + decal * .5, y + hauteur * .08, largeur * .56, largeur * .18, 0, 0, 7);
+  ctx.fillStyle = "rgba(90,120,80,.24)";
   ctx.fill();
   ctx.restore();
-
-  ctx.lineWidth = Math.max(.6, s * .35);
-  ctx.strokeStyle = LISERE_SOMBRE;
 
   // facade avant
   ctx.beginPath();
@@ -1389,7 +1391,6 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.closePath();
   ctx.fillStyle = PALETTE_BATIMENT.face;
   ctx.fill();
-  ctx.stroke();
 
   // facade laterale, a peine plus sombre
   ctx.beginPath();
@@ -1400,7 +1401,6 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.closePath();
   ctx.fillStyle = PALETTE_BATIMENT.cote;
   ctx.fill();
-  ctx.stroke();
 
   // toit plat (losange)
   ctx.beginPath();
@@ -1411,13 +1411,18 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.closePath();
   ctx.fillStyle = PALETTE_BATIMENT.toit;
   ctx.fill();
-  ctx.stroke();
 
-  // fenetre(s), franches et bien visibles sur la facade avant
-  var fw = largeur * .1, fh = largeur * .2;
+  // large bande vitree au pied de la facade avant, comme sur les captures
+  var margeBas = Math.min(hauteur * .12, decal * .5);
+  var vitrH = hauteur * .42;
+  ctx.beginPath();
+  ctx.moveTo(x - largeur * .42, hautBas - margeBas);
+  ctx.lineTo(x - largeur * .42, hautBas - margeBas - vitrH);
+  ctx.lineTo(x - largeur * .06, hautBas - margeBas - vitrH + decal * .1);
+  ctx.lineTo(x - largeur * .06, hautBas - margeBas + decal * .1);
+  ctx.closePath();
   ctx.fillStyle = PALETTE_BATIMENT.fenetre;
-  ctx.fillRect(x - largeur * .32, hautBas - fh * 1.5, fw, fh);
-  if (largeur > 12 * s) ctx.fillRect(x - largeur * .1, hautBas - fh * 1.5 + decal * .5, fw, fh);
+  ctx.fill();
 }
 
 function snapifie() {
