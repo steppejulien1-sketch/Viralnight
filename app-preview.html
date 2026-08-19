@@ -1385,15 +1385,16 @@ var RATIO_DECAL_BATIMENT = .5;
 
 /* Plusieurs "modeles" de batiment plutot qu'une seule boite qu'on
    redimensionne au hasard : une petite maison, une longere basse et
-   tres etiree, une villa large, une tour etroite qui monte haut. Chaque
-   modele a son propre ratio largeur/hauteur — c'est ce qui donne un
-   vrai quartier avec des silhouettes differentes, pas une rue de boites
-   identiques a l'echelle pres. */
+   tres etiree, une villa large. Chaque modele a son propre ratio
+   largeur/hauteur — c'est ce qui donne un vrai quartier avec des
+   silhouettes differentes, pas une rue de boites identiques a l'echelle
+   pres. La tour etroite et haute a ete retiree : vue de cote, sa grande
+   baie vitree lisait mal ("elle n'est pas tres belle", Julien) — aucune
+   des captures Snap Map ne montre ce genre de silhouette trop elancee. */
 var MODELES_BATIMENTS = [
   { poids: 5, largeurMin: 8, largeurMax: 12, hauteurMin: 3.4, hauteurMax: 5 },
   { poids: 3, largeurMin: 16, largeurMax: 24, hauteurMin: 3, hauteurMax: 4.2 },
-  { poids: 3, largeurMin: 12, largeurMax: 17, hauteurMin: 6, hauteurMax: 9 },
-  { poids: 1, largeurMin: 7, largeurMax: 9, hauteurMin: 13, hauteurMax: 20 }
+  { poids: 3, largeurMin: 12, largeurMax: 17, hauteurMin: 6, hauteurMax: 9 }
 ];
 var POIDS_TOTAL_MODELES = MODELES_BATIMENTS.reduce(function (t, m) { return t + m.poids; }, 0);
 
@@ -1638,37 +1639,54 @@ function genererArbres() {
   }
 }
 
+/* Premiere version calee sur l'emprise reelle des batiments OSM
+   ("Building") : correct mais trop clairseme la ou les donnees
+   vectorielles sont pauvres — "il n'y a pas des maisons partout" chez
+   Julien alors que Snap Map en montre partout ailleurs qu'un parc ou
+   l'eau. Meme technique que les arbres : grille + jitter, mais en
+   EXCLUANT vegetation/eau plutot qu'en dependant d'une couche qui peut
+   etre vide. */
 var BATIMENTS = [];
 var BATIMENTS_VUS = {};
+var PAS_BATIMENTS = 0.00048;
 
 function genererBatiments() {
-  if (BATIMENTS.length >= 1400) return;
-  if (!map.getLayer("Building")) return;
+  if (BATIMENTS.length >= 2200) return;
+  var couchesExclues = ["Water", "Forest", "Wood", "Grass", "Meadow", "Park", "Cemetery"]
+    .filter(function (id) { return map.getLayer(id); });
 
-  var feats = map.queryRenderedFeatures({ layers: ["Building"] });
-  for (var i = 0; i < feats.length; i++) {
-    if (BATIMENTS.length >= 1400) return;
-    var f = feats[i];
-    var id = f.id != null ? f.id : (f.properties && (f.properties.id || f.properties.osm_id));
-    var cle = id != null ? String(id) : JSON.stringify(f.geometry && f.geometry.coordinates && f.geometry.coordinates[0] && f.geometry.coordinates[0][0]);
-    if (BATIMENTS_VUS[cle]) continue;
-    BATIMENTS_VUS[cle] = true;
+  var b = map.getBounds();
+  var lngMin = Math.floor(b.getWest() / PAS_BATIMENTS) * PAS_BATIMENTS;
+  var lngMax = b.getEast(), latMin = Math.floor(b.getSouth() / PAS_BATIMENTS) * PAS_BATIMENTS, latMax = b.getNorth();
+  if ((lngMax - lngMin) / PAS_BATIMENTS > 220) return;
 
-    var ring = f.geometry && (f.geometry.type === "Polygon" ? f.geometry.coordinates[0] : f.geometry.type === "MultiPolygon" ? f.geometry.coordinates[0][0] : null);
-    if (!ring || ring.length < 3) continue;
-    var sLng = 0, sLat = 0;
-    for (var k = 0; k < ring.length; k++) { sLng += ring[k][0]; sLat += ring[k][1]; }
-    var cLng = sLng / ring.length, cLat = sLat / ring.length;
+  for (var lng = lngMin; lng <= lngMax; lng += PAS_BATIMENTS) {
+    for (var lat = latMin; lat <= latMax; lat += PAS_BATIMENTS) {
+      if (BATIMENTS.length >= 2200) return;
+      var cle = Math.round(lng / PAS_BATIMENTS) + ":" + Math.round(lat / PAS_BATIMENTS);
+      if (BATIMENTS_VUS[cle]) continue;
+      BATIMENTS_VUS[cle] = true;
 
-    var h = 2166136261;
-    for (var c = 0; c < cle.length; c++) { h ^= cle.charCodeAt(c); h = (h * 16777619) >>> 0; }
-    function rnd() { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; }
+      var h = 2166136261;
+      for (var k = 0; k < cle.length; k++) { h ^= cle.charCodeAt(k); h = (h * 16777619) >>> 0; }
+      function rnd() { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; }
 
-    BATIMENTS.push({
-      lng: cLng, lat: cLat,
-      s: .85 + rnd() * .45,
-      graine: Math.floor(rnd() * 4294967295) + 1
-    });
+      // un batiment sur cinq saute son tour, pour eviter une trame trop
+      // parfaitement reguliere une fois la densite montee.
+      if (rnd() < .2) continue;
+
+      var dLng = lng + (rnd() - .5) * PAS_BATIMENTS * .75;
+      var dLat = lat + (rnd() - .5) * PAS_BATIMENTS * .75;
+      var p = map.project([dLng, dLat]);
+      if (p.x < 0 || p.x > map.getCanvas().clientWidth || p.y < 0 || p.y > map.getCanvas().clientHeight) continue;
+      if (couchesExclues.length && map.queryRenderedFeatures([p.x, p.y], { layers: couchesExclues }).length) continue;
+
+      BATIMENTS.push({
+        lng: dLng, lat: dLat,
+        s: .85 + rnd() * .45,
+        graine: Math.floor(rnd() * 4294967295) + 1
+      });
+    }
   }
 }
 
