@@ -160,7 +160,7 @@
       .pts-pill .jeton { width: 20px; height: 20px; flex: 0 0 auto; }
       .pts-pill b {
         color: var(--ambre); font-family: var(--mono); font-size: 14px; font-weight: 800;
-        letter-spacing: -.02em; font-variant-numeric: tabular-nums; text-shadow: 0 0 8px rgba(255,176,32,.4);
+        letter-spacing: -.02em; font-variant-numeric: tabular-nums;
       }
 
       .club-badge {
@@ -261,15 +261,16 @@
         color: var(--ink3);
       }
 
-      /* Un chiffre de mesure ne rebondit pas : il s'allume plus fort un
-         instant, comme un digit qui vient de changer sur un vrai
-         afficheur, puis retombe a son eclat normal — un seul sens de
-         parcours, decroissance exponentielle, jamais de survitesse. */
+      /* Retour visuel discret quand le solde change : un flash de
+         couleur (plus clair vers le corail normal), sans halo ni
+         ombre — le glow appartenait a l'ancienne direction sombre,
+         plus rien dans la boutique n'en garde depuis le passage au
+         theme clair. */
       @keyframes majSolde {
-        0%   { text-shadow: 0 0 18px rgba(255,176,32,.9); }
-        100% { text-shadow: 0 0 0 rgba(255,176,32,0); }
+        0%   { color: #ffb3a8; }
+        100% { color: var(--accent); }
       }
-      .solde b.maj { animation: majSolde .6s cubic-bezier(.16,1,.3,1); }
+      .solde b.maj { animation: majSolde .5s ease-out; }
 
       .jeton { display: block; }
 
@@ -337,7 +338,6 @@
         display: block; font-family: var(--mono); font-size: 10px; color: var(--ink3);
         margin-top: 3px; letter-spacing: .03em;
       }
-      .carte-reco .manque { display: block; font-size: 10.5px; font-weight: 600; color: var(--ink3); margin-top: 3px; }
       .carte-reco .cta-visuelle {
         margin-top: 10px; display: block; text-align: center; border-radius: 999px;
         background: var(--bouton); color: #fff; font-size: 12px; font-weight: 700;
@@ -568,7 +568,6 @@
       .sheet-note { text-align: center; font-size: 12.5px; color: var(--ink2); margin: 12px 0 0; font-weight: 600; line-height: 1.45; }
       .sheet-note em {
         font-style: normal; color: var(--ambre); font-weight: 700; font-family: var(--mono);
-        text-shadow: 0 0 8px rgba(255,176,32,.3);
       }
 
       /* Confirmation d'echange : le vrai QR code a scanner, avec le
@@ -673,7 +672,6 @@
         border-bottom: 1px solid var(--line);
       }
       .screen.boutique-pro .app { background: var(--bg); }
-      .screen.boutique-pro .sheet-note em { text-shadow: none; }
       .screen.boutique-pro .filtre { border-color: var(--line2); color: var(--ink2); background: #fff; }
       .screen.boutique-pro .filtre[aria-pressed="true"] { background: var(--bouton); color: #fff; border-color: var(--bouton); }
       .screen.boutique-pro .sheet-visuel {
@@ -1868,7 +1866,7 @@ var FOTOS = {
   artCocktail:  "/recompenses/cocktail-carte.jpg",
   artBouteille: "https://images.unsplash.com/photo-1514242879996-d7b3bb2dd531?w=240&q=70&auto=format&fit=crop",
   artShot:      "/recompenses/shot-carte.jpg",
-  artCordon:    "https://images.unsplash.com/photo-1776982298320-888d9f0ee1cd?w=240&q=70&auto=format&fit=crop",
+  artCordon:    "https://images.unsplash.com/photo-1640292767657-3c817244f77b?w=240&q=70&auto=format&fit=crop",
   artTicket:    "https://images.unsplash.com/photo-1515139372923-c923c9e9a18c?w=240&q=70&auto=format&fit=crop"
 };
 
@@ -2062,7 +2060,6 @@ function rendreListe() {
       '<span class="corps">' +
         "<strong>" + r.nom + "</strong>" +
         '<span class="code">' + r.code + (statut ? " · " + statut : "") + "</span>" +
-        (loin && !epuise ? '<span class="manque">encore ' + nb(r.cout - ETAT.solde) + "</span>" : "") +
         '<span class="cta-visuelle">' + cta + "</span>" +
       "</span>";
 
@@ -2159,7 +2156,10 @@ function ouvrirRecompense(item, src) {
     note = "Le club recharge ses stocks chaque soirée.";
   } else if (loin) {
     cta = '<button class="sheet-cta" type="button" disabled>Encore ' + nb(item.cout - ETAT.solde) + " pts</button>";
-    note = "Il manque <em>" + nb(item.cout - ETAT.solde) + " pts</em> — une story à 1 000 vues en rapporte 80.";
+    // Le montant manquant est deja sur le bouton juste au-dessus : la note
+    // n'a plus besoin de le repeter, seulement d'expliquer comment gagner
+    // les points — sinon le meme chiffre s'affiche deux fois cote a cote.
+    note = "Une story à 1 000 vues rapporte 80 pts.";
   } else if (item.cout === 0) {
     cta = '<button class="sheet-cta" id="sh-cta" type="button">Récupérer mon bon</button>';
     note = "Offert ce soir, ton solde ne bouge pas.";

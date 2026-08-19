@@ -99,7 +99,12 @@ Deux registres :
   (`.cta-visuelle` — texte seul, pas un `<button>` imbriqué : toute la
   carte est le bouton cliquable qui ouvre la fiche détail). États
   `.loin`/`.epuise` : la pilule passe en gris avec le texte adapté
-  ("Encore N pts" / "Épuisé").
+  ("Encore N pts" / "Épuisé"). Le montant manquant ne s'affiche qu'une
+  fois, sur la pilule — un `.manque` séparé au-dessus répétait le même
+  chiffre deux fois, retiré lors de la passe `polish` du 19 août
+  (même correction sur la note de la fiche détail : "Il manque X pts —"
+  faisait doublon avec le bouton juste au-dessus, devenue un simple
+  conseil actionnable sans redire le chiffre).
 - **Bannière de l'offre du soir** (`.offre-hero`) : même famille que
   `.carte-reco` — photo 16:9 en haut avec badge "Offert" en pilule
   blanche, corps blanc en dessous (titre, description, prix barré,
@@ -107,9 +112,15 @@ Deux registres :
 - **Illustration photo** (`.foto`, `FOTOS` en JS) : remplace le dessin
   vectoriel fait main pour les objets identifiables (cocktail,
   bouteille, shot, cordon VIP, tickets) — jugé "IA dégueulasse" par
-  Julien. Photos Unsplash (licence libre, vérifiées une par une avant
-  intégration), affichées telles quelles, sans filtre de teinte. Le
-  dessin vectoriel (`art()`) reste le repli pour les objets sans photo
+  Julien. Cocktail et shot sont ses propres photos (`public/recompenses/`,
+  retrouvées dans son dossier Téléchargements — voir Evidence dans
+  PRODUCT.md) ; bouteille/cordon/ticket restent des photos Unsplash
+  (licence libre, vérifiées une par une avant intégration), affichées
+  telles quelles, sans filtre de teinte. La première photo "cordon VIP"
+  (une entrée à arche, lue comme une église plutôt qu'un accès VIP) a
+  été remplacée par un rideau de velours rouge, sans architecture
+  identifiable, lors de la passe `polish` du 19 août. Le dessin
+  vectoriel (`art()`) reste le repli pour les objets sans photo
   (`FOTOS[nomDeLaFonctionArt]`).
 - **Numéro de catalogue** (`.code`, `.sheet-fam`) : `PREFIXE·NNN` (3
   lettres du club via `prefixeClub()` + ordinal). Assigné une fois au
@@ -123,6 +134,19 @@ Deux registres :
 
 ## Patterns
 
+- Zéro `text-shadow`/glow colorée nulle part dans la boutique — la
+  passe `polish` du 19 août a retiré trois restes (pastille de points
+  sur la carte, note de fiche détail, flash de mise à jour du solde)
+  hérités de l'ancienne direction sombre ; le détecteur du skill
+  Impeccable (`detect.mjs`) les repère si un futur ajout en
+  réintroduit une. Le flash de mise à jour du solde (`@keyframes
+  majSolde`) reste, mais change de couleur au lieu de projeter une
+  ombre.
+- Les images des cartes (`.photo img`) chargent en `loading="lazy"` :
+  un test qui lit `img.complete`/`naturalWidth` juste après le rendu
+  doit d'abord amener la carte dans le viewport (le scroll de la page
+  englobante ne suffit pas — `.app` a son propre scroll interne),
+  sinon l'image lit à tort comme cassée.
 - Les prix/points sont toujours en corail (`var(--accent)`) ; les
   boutons d'action sont toujours en noir (`var(--bouton)`) — les deux
   rôles ne se mélangent jamais, contrairement à la version précédente
