@@ -88,9 +88,18 @@ Deux registres :
 
 ## Components
 
-- **Solde** (`.solde`) : juste le nombre de points en corail, gros,
-  plus "pts". Pas d'anneau, pas de label, pas d'objectif — retiré
-  après que Julien l'a trouvé inutile.
+- **Solde** (`.solde-carte`) : un compteur plein — pilule corail
+  opaque, chiffre blanc, mini-jeton blanc translucide à gauche
+  (`.jeton-halo`, réutilise `jeton()` du JS, recoloré via
+  `--jeton-fond`/`--jeton-anneau` définies dans `.screen.boutique-pro`
+  sans toucher au disque brun/ambre d'origine que l'écran carte garde).
+  Deux tentatives précédentes rejetées : le cadran circulaire ("le rond,
+  c'est bizarre") puis un chiffre nu à côté d'un halo gris ("tu as
+  juste mis un point à côté, c'est encore pire") — un chiffre et une
+  pastille séparés ne lisent jamais comme un compteur, seul un bloc
+  plein le fait. Tick de mise à jour : `scale(1.22 → 1)`, pas de
+  couleur (le texte est déjà blanc sur corail, un flash de couleur n'y
+  serait pas visible).
 - **Carte récompense** (`.carte-reco`, grille `.grille`) : photo
   carrée pleine largeur en haut (`.photo`, vraie photo ou repli SVG
   `art()`), pilule de prix blanche posée en bas à gauche de la photo
@@ -109,6 +118,13 @@ Deux registres :
   `.carte-reco` — photo 16:9 en haut avec badge "Offert" en pilule
   blanche, corps blanc en dessous (titre, description, prix barré,
   pilule noire).
+- **Titres de section** (`.sec-head h2` — "Ce soir au Mirage",
+  "Récompenses", "Mes bons") : gras, sombres, 19px — même famille que
+  les titres de carte, pas un petit label gris tout-capitales. La
+  version précédente (11px, `letter-spacing` large, `--ink3`) était le
+  seul élément de l'écran à ne pas parler le langage carte/pilule du
+  reste ; amplifiée lors de la passe `bolder` du 19 août plutôt que
+  redessinée, même diagnostic que le solde.
 - **Illustration photo** (`.foto`, `FOTOS` en JS) : remplace le dessin
   vectoriel fait main pour les objets identifiables (cocktail,
   bouteille, shot, cordon VIP, tickets) — jugé "IA dégueulasse" par

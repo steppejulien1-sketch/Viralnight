@@ -233,17 +233,22 @@
 
       .sec { padding: 0 18px; margin-top: 32px; }
       .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; padding: 0 2px; }
+      /* Amplifie le 19 aout (skill Impeccable, commande "bolder") :
+         Julien a trouve la boutique "exactement la meme chose... pas
+         beau" apres la passe polish, en visant nommement les titres de
+         section (petit label gris tout-capitales, illisible comme du
+         chrome de dashboard) et le solde (un chiffre nu qui flotte).
+         Le reste de l'ecran porte deja un langage fort — cartes
+         blanches, pilules, photo — ces deux elements etaient les
+         seuls a ne pas le parler. Les titres passent a la meme echelle
+         que les titres de carte (gras, sombre, plus grand) plutot
+         qu'un petit label utilitaire. */
       .sec-head h2 {
-        margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .14em;
-        text-transform: uppercase; color: var(--ink3);
+        margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.02em;
+        color: var(--ink);
       }
-      .sec-head .sub { font-size: 11px; font-weight: 650; color: var(--ink3); margin-left: auto; white-space: nowrap; }
+      .sec-head .sub { font-size: 12px; font-weight: 650; color: var(--ink3); margin-left: auto; white-space: nowrap; }
 
-      /* Le solde etait un cadran circulaire avec label "Ma cagnotte",
-         cumul du mois et objectif vers la prochaine recompense —
-         Julien a trouve tout ca inutile ("le rond, c'est bizarre") et
-         a demande juste son nombre de points. Retour a l'essentiel :
-         un chiffre, rien autour. */
       .wallet {
         position: sticky; top: 0; z-index: 20;
         padding: 50px 18px 22px;
@@ -251,26 +256,44 @@
         border-bottom: 1px solid var(--line);
         backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       }
-      .solde { display: flex; align-items: baseline; gap: 6px; }
+      /* Amplifie une deuxieme fois le meme soir : un halo gris a cote
+         du chiffre lisait comme "un point qui traine", pas comme un
+         compteur — deux formes juxtaposees plutot qu'une seule chose
+         decidee. Un vrai compteur (jeu, appli de recompenses) est un
+         seul bloc plein, pas un chiffre et une pastille cote a cote :
+         la pilule elle-meme passe en aplat corail, le chiffre en blanc
+         dessus — plus de surface neutre en dessous, un seul objet. */
+      .solde-carte {
+        display: inline-flex; align-items: center; gap: 9px;
+        background: var(--accent); border-radius: 999px;
+        padding: 9px 20px 9px 10px;
+        --jeton-fond: rgba(255,255,255,.24); --jeton-anneau: #fff;
+      }
+      .solde-carte .jeton-halo {
+        width: 24px; height: 24px; flex: 0 0 auto;
+        display: grid; place-items: center;
+      }
+      .solde { display: flex; align-items: baseline; gap: 5px; }
       .solde b {
-        font-family: var(--mono); font-size: 34px; font-weight: 800; color: var(--ambre);
+        font-family: var(--mono); font-size: 26px; font-weight: 800; color: #fff;
         letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums;
       }
       .solde i {
         font-style: normal; font-size: 13px; font-weight: 700; letter-spacing: .04em;
-        color: var(--ink3);
+        color: rgba(255,255,255,.8);
       }
 
-      /* Retour visuel discret quand le solde change : un flash de
-         couleur (plus clair vers le corail normal), sans halo ni
-         ombre — le glow appartenait a l'ancienne direction sombre,
-         plus rien dans la boutique n'en garde depuis le passage au
-         theme clair. */
+      /* Retour visuel quand le solde change : un tick de compteur —
+         le chiffre grossit puis retombe, comme un digit qui vient de
+         tourner. Un flash de couleur ne se verrait plus (le chiffre
+         est blanc sur la pilule corail depuis le passage en compteur
+         plein) ; l'ancien glow appartenait de toute facon a l'ancienne
+         direction sombre. */
       @keyframes majSolde {
-        0%   { color: #ffb3a8; }
-        100% { color: var(--accent); }
+        0%   { transform: scale(1.22); }
+        100% { transform: scale(1); }
       }
-      .solde b.maj { animation: majSolde .5s ease-out; }
+      .solde b.maj { display: inline-block; transform-origin: left center; animation: majSolde .4s cubic-bezier(.16,1,.3,1); }
 
       .jeton { display: block; }
 
@@ -497,8 +520,7 @@
       .sheet.up { transform: translateY(0); }
       @media (prefers-reduced-motion: reduce) {
         .sheet, .voile, .bareme summary .chev { transition: none; }
-        .wallet-bar span { transition: none; }
-        .wallet-sum b.maj, .bon.neuf { animation: none; }
+        .solde b.maj, .bon.neuf { animation: none; }
       }
 
       .grab { width: 40px; height: 4.5px; border-radius: 99px; background: rgba(255,255,255,.15); margin: 0 auto 4px; position: sticky; top: 0; }
@@ -666,6 +688,7 @@
         --bg: #f5f5f7; --s1: #ffffff; --s2: #f0f0f2; --s3: #e7e7ea;
         --line: #e9e9ec; --line2: #dedee2;
         --accent: #ff6b5b; --ambre: #ff6b5b; --bouton: #16171c;
+        --jeton-fond: var(--bouton); --jeton-anneau: var(--accent);
       }
       .screen.boutique-pro .wallet {
         background: #ffffff;
@@ -793,8 +816,11 @@
           <div class="app" id="app">
 
             <header class="wallet">
-              <div class="solde">
-                <b id="w-solde">0</b><i>pts</i>
+              <div class="solde-carte">
+                <span class="jeton-halo" id="w-jeton"></span>
+                <div class="solde">
+                  <b id="w-solde">0</b><i>pts</i>
+                </div>
               </div>
             </header>
 
@@ -948,12 +974,16 @@ var nb = function (n) { return n.toLocaleString("fr-FR"); };
    habituel des applis a recompenses. Anneau sombre, label ambre, trou
    de spindle : le meme objet qu'ailleurs dans l'appli, juste plus
    petit. */
+// Couleurs en custom properties plutot qu'en dur : la carte garde son
+// disque brun/ambre d'origine (jamais retouchee), mais la boutique peut
+// le reteindre dans sa propre palette (--jeton-fond/--jeton-anneau,
+// definies dans .screen.boutique-pro) sans dupliquer ce SVG.
 function jeton(taille) {
   return '<svg class="jeton" viewBox="0 0 24 24" width="' + taille + '" height="' + taille +
     '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-    '<circle cx="12" cy="12" r="10.5" fill="#1c1512" stroke="#ffb020" stroke-width="1.1"/>' +
-    '<circle cx="12" cy="12" r="4.2" fill="#ffb020"/>' +
-    '<circle cx="12" cy="12" r="1.1" fill="#1c1512"/>' +
+    '<circle cx="12" cy="12" r="10.5" fill="var(--jeton-fond,#1c1512)" stroke="var(--jeton-anneau,#ffb020)" stroke-width="1.1"/>' +
+    '<circle cx="12" cy="12" r="4.2" fill="var(--jeton-anneau,#ffb020)"/>' +
+    '<circle cx="12" cy="12" r="1.1" fill="var(--jeton-fond,#1c1512)"/>' +
     "</svg>";
 }
 
@@ -1194,6 +1224,7 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
    ========================================================== */
 
 $("#pill-jeton").outerHTML = jeton(20);
+$("#w-jeton").innerHTML = jeton(20);
 
 // Reste utilisee par la fiche club de la carte (noteRecompenseClub) :
 // la prochaine recompense accessible, pour "X pts pour Y". Le meme
