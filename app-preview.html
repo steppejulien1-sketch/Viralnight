@@ -1449,36 +1449,48 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.fillStyle = gradToit;
   ctx.fill();
 
-  // large bande vitree au pied de la facade avant, comme sur les
-  // captures, avec un leger reflet vertical (verre, pas un aplat mat).
-  var margeBas = Math.min(hauteur * .12, decal * .5);
-  var vitrH = hauteur * .42;
-  var gradVitre = ctx.createLinearGradient(x - largeur * .42, 0, x - largeur * .06, 0);
+  // une seule et grande baie vitree, presque toute la largeur et presque
+  // toute la hauteur de la facade — c'est elle qui doit se voir de loin,
+  // pas une rangee de petites fenetres. Reflet vertical (verre, pas un
+  // aplat mat).
+  var margeBas = Math.min(hauteur * .1, decal * .5);
+  var margeHaut = hauteur * .16;
+  var vitrH = hauteur - margeBas - margeHaut;
+  var gradVitre = ctx.createLinearGradient(x - largeur * .43, 0, x - largeur * .07, 0);
   gradVitre.addColorStop(0, pal.fenetre);
-  gradVitre.addColorStop(.5, "#e8f2f6");
+  gradVitre.addColorStop(.5, "#eef6f8");
   gradVitre.addColorStop(1, pal.fenetre);
   ctx.beginPath();
-  ctx.moveTo(x - largeur * .42, hautBas - margeBas);
-  ctx.lineTo(x - largeur * .42, hautBas - margeBas - vitrH);
-  ctx.lineTo(x - largeur * .06, hautBas - margeBas - vitrH + decal * .1);
-  ctx.lineTo(x - largeur * .06, hautBas - margeBas + decal * .1);
+  ctx.moveTo(x - largeur * .43, hautBas - margeBas);
+  ctx.lineTo(x - largeur * .43, hautBas - margeBas - vitrH);
+  ctx.lineTo(x - largeur * .07, hautBas - margeBas - vitrH + decal * .12);
+  ctx.lineTo(x - largeur * .07, hautBas - margeBas + decal * .12);
   ctx.closePath();
   ctx.fillStyle = gradVitre;
   ctx.fill();
+  // meneau central discret, pour lire "baie vitree" plutot qu'un aplat
+  ctx.beginPath();
+  ctx.moveTo(x - largeur * .25, hautBas - margeBas + decal * .06);
+  ctx.lineTo(x - largeur * .25, hautBas - margeBas - vitrH + decal * .06);
+  ctx.strokeStyle = "rgba(255,255,255,.4)";
+  ctx.lineWidth = Math.max(.5, s * .25);
+  ctx.stroke();
 
-  // batiment plus haut : deuxieme bande vitree en etage, pour eviter un
-  // grand mur vide au-dessus du rez-de-chaussee.
-  if (hauteur > 9 * s) {
-    var vitrH2 = hauteur * .22;
-    var y2 = hautBas - margeBas - vitrH - hauteur * .14;
+  // petite cheminee, discrete, posee pres du faitage — le detail qui
+  // donne du caractere sans surcharger le batiment.
+  if (rnd() < .45) {
+    var chW = largeur * .07, chH = hauteur * .3;
+    var chX = x - largeur * .28, chY = hautHaut - decal * .35;
     ctx.beginPath();
-    ctx.moveTo(x - largeur * .42, y2);
-    ctx.lineTo(x - largeur * .42, y2 - vitrH2);
-    ctx.lineTo(x - largeur * .06, y2 - vitrH2 + decal * .1);
-    ctx.lineTo(x - largeur * .06, y2 + decal * .1);
+    ctx.moveTo(chX - chW / 2, chY);
+    ctx.lineTo(chX - chW / 2, chY - chH);
+    ctx.lineTo(chX + chW / 2, chY - chH);
+    ctx.lineTo(chX + chW / 2, chY);
     ctx.closePath();
-    ctx.fillStyle = gradVitre;
+    ctx.fillStyle = pal.cote;
     ctx.fill();
+    ctx.fillStyle = "rgba(60,50,35,.35)";
+    ctx.fillRect(chX - chW / 2, chY - chH, chW, chH * .16);
   }
 }
 
