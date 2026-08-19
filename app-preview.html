@@ -1390,69 +1390,26 @@ var PALETTES_ARBRES = [
   ["#356b2a", "#417a34", "#4f9350", "#5cae5a", "#6cb562", "#79bb52"]
 ];
 
+/* Version 2D (19 aout) : les arbres etaient dessines en pseudo-relief
+   (tronc, feuillage en plusieurs disques decales pour simuler du
+   volume, ombre au sol) — juge "moche" par Julien. Repli sur un
+   simple disque de feuillage vu du dessus, comme sur un plan/Maps en
+   mode plat, avec juste une pointe plus claire pour eviter un aplat
+   totalement uni. Plus de tronc, plus d'ombre, plus d'especes
+   distinctes : cinq variantes 3D differentes n'avaient plus de sens
+   une fois la forme reduite a un disque. */
 function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   var s = r / 14;
   var palette = PALETTES_ARBRES[teinte % 2];
-  var espece = teinte % 5;
   var R = 8.4 * s;
-  var trunc = "#8a5f36", truncOmbre = "#6e4a29";
   var alphaBase = ctx.globalAlpha;
 
-  ctx.beginPath(); ctx.ellipse(x, y + 1.5 * s, R * .6, R * .22, 0, 0, 7);
-  ctx.fillStyle = "rgba(20,30,15,.25)"; ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, R * .72, 0, 7);
+  ctx.fillStyle = palette[1]; ctx.fill();
 
-  function tronc(hauteur, largeur) {
-    ctx.fillStyle = trunc;
-    ctx.fillRect(x - largeur / 2, y - hauteur, largeur, hauteur);
-    ctx.fillStyle = truncOmbre;
-    ctx.fillRect(x, y - hauteur, largeur / 2, hauteur);
-  }
-
-  if (espece === 0 || espece === 1) {
-    var cy = y - R * 1.15;
-    tronc(R * 1.1, 2.4 * s);
-    ctx.beginPath(); ctx.arc(x, cy, R, 0, 7);
-    ctx.fillStyle = palette[1]; ctx.fill();
-    ctx.beginPath(); ctx.arc(x - R * .34, cy - R * .3, R * .58, 0, 7);
-    ctx.fillStyle = palette[3]; ctx.fill();
-    ctx.beginPath(); ctx.arc(x + R * .36, cy + R * .26, R * .38, 0, 7);
-    ctx.fillStyle = palette[0]; ctx.globalAlpha = alphaBase * .6; ctx.fill(); ctx.globalAlpha = alphaBase;
-  } else if (espece === 2) {
-    tronc(R * .55, 2.2 * s);
-    ctx.beginPath();
-    ctx.moveTo(x, y - R * 2.5); ctx.lineTo(x + R * .78, y - R * .5); ctx.lineTo(x - R * .78, y - R * .5);
-    ctx.closePath(); ctx.fillStyle = palette[2]; ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(x, y - R * 2.5); ctx.lineTo(x, y - R * .5); ctx.lineTo(x - R * .78, y - R * .5);
-    ctx.closePath(); ctx.fillStyle = palette[4]; ctx.fill();
-  } else if (espece === 3) {
-    tronc(R * .5, 2 * s);
-    [[2.55, .9, 1.35], [1.95, .74, .95], [1.4, .56, .55]].forEach(function (e, i) {
-      ctx.beginPath();
-      ctx.moveTo(x, y - R * e[0]);
-      ctx.lineTo(x + R * e[1], y - R * e[2]);
-      ctx.lineTo(x - R * e[1], y - R * e[2]);
-      ctx.closePath();
-      ctx.fillStyle = palette[i === 0 ? 1 : i === 1 ? 3 : 4]; ctx.fill();
-    });
-  } else {
-    tronc(R * .5, 2 * s);
-    var h = R * 2.4, w = R * .58;
-    ctx.beginPath();
-    ctx.moveTo(x - w, y - R * .45);
-    ctx.lineTo(x - w, y - h + w);
-    ctx.arc(x, y - h + w, w, Math.PI, 0);
-    ctx.lineTo(x + w, y - R * .45);
-    ctx.closePath();
-    ctx.fillStyle = palette[2]; ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(x - w, y - R * .45);
-    ctx.lineTo(x - w, y - h + w);
-    ctx.arc(x, y - h + w, w, Math.PI, Math.PI * 1.5);
-    ctx.lineTo(x, y - R * .45);
-    ctx.closePath();
-    ctx.fillStyle = palette[4]; ctx.fill();
-  }
+  ctx.beginPath(); ctx.arc(x - R * .18, y - R * .18, R * .34, 0, 7);
+  ctx.fillStyle = palette[4]; ctx.globalAlpha = alphaBase * .8; ctx.fill();
+  ctx.globalAlpha = alphaBase;
 }
 
 var PALETTES_BATIMENTS = [
@@ -1461,74 +1418,38 @@ var PALETTES_BATIMENTS = [
   { mur: "#f7ece4", murOmbre: "#e6d5c8", toit: "#8a3b32", fenetre: "#ffd873" }
 ];
 
+/* Version 2D (19 aout) : les batiments etaient dessines en blocs
+   isometriques (mur face + mur ombre decale, toit pointu ou plat en
+   volume) — meme verdict que les arbres, "moche". Repli sur une simple
+   empreinte au sol vue du dessus (rectangle arrondi), comme un
+   batiment sur un plan en mode plat (Apple/Google Maps 2D) : plus de
+   mur, plus de toit en volume, plus de fenetres — juste la forme au
+   sol dans la teinte du toit d'origine, avec un contour fin. */
 function batimentSur(ctx, x, y, r, teinte, graineBatiment) {
   var s = r / 14;
   var pal = PALETTES_BATIMENTS[teinte % PALETTES_BATIMENTS.length];
   var graine = (graineBatiment >>> 0) || 1;
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
 
-  var alphaBase = ctx.globalAlpha;
-  var type = Math.floor(rnd() * 4);
-  var largeur = (12 + rnd() * 3) * s;
-  var profondeur = largeur * .62;
-  var etages = type === 3 ? 3 + Math.floor(rnd() * 2) : (type === 2 ? 2 : 1);
-  var hauteurMur = (7 + etages * 4.5) * s;
-  var toitPointu = type === 0 || type === 2;
-  var hauteurToit = toitPointu ? largeur * .42 : largeur * .1;
-
-  var hautBas = y, hautMur = y - hauteurMur, hautToit = hautMur - hauteurToit;
-  var decal = profondeur * .3;
-
-  ctx.beginPath(); ctx.ellipse(x, y + 1.5 * s, largeur * .7, largeur * .24, 0, 0, 7);
-  ctx.fillStyle = "rgba(20,20,15,.22)"; ctx.fill();
+  var largeur = (12 + rnd() * 4) * s;
+  var profondeur = largeur * (0.6 + rnd() * .25);
+  var rx = largeur / 2, ry = profondeur / 2;
+  var rayon = Math.min(rx, ry) * .3;
 
   ctx.beginPath();
-  ctx.moveTo(x - largeur / 2, hautBas); ctx.lineTo(x - largeur / 2, hautMur);
-  ctx.lineTo(x, hautMur - decal); ctx.lineTo(x, hautBas + decal);
-  ctx.closePath(); ctx.fillStyle = pal.mur; ctx.fill();
+  ctx.moveTo(x - rx + rayon, y - ry);
+  ctx.lineTo(x + rx - rayon, y - ry);
+  ctx.arcTo(x + rx, y - ry, x + rx, y - ry + rayon, rayon);
+  ctx.lineTo(x + rx, y + ry - rayon);
+  ctx.arcTo(x + rx, y + ry, x + rx - rayon, y + ry, rayon);
+  ctx.lineTo(x - rx + rayon, y + ry);
+  ctx.arcTo(x - rx, y + ry, x - rx, y + ry - rayon, rayon);
+  ctx.lineTo(x - rx, y - ry + rayon);
+  ctx.arcTo(x - rx, y - ry, x - rx + rayon, y - ry, rayon);
+  ctx.closePath();
 
-  ctx.beginPath();
-  ctx.moveTo(x, hautBas + decal); ctx.lineTo(x, hautMur - decal);
-  ctx.lineTo(x + largeur / 2, hautMur); ctx.lineTo(x + largeur / 2, hautBas);
-  ctx.closePath(); ctx.fillStyle = pal.murOmbre; ctx.fill();
-
-  ctx.fillStyle = pal.fenetre;
-  var fw = largeur * .13, fh = largeur * .15;
-  for (var e = 0; e < etages; e++) {
-    var fy = hautMur + (e + .55) * (hauteurMur / etages) - fh / 2;
-    ctx.fillRect(x - largeur * .36, fy, fw, fh);
-    ctx.fillRect(x - largeur * .17, fy, fw, fh);
-    ctx.globalAlpha = alphaBase * .75;
-    ctx.fillRect(x + largeur * .12, fy + decal * .5, fw, fh);
-    ctx.fillRect(x + largeur * .3, fy + decal * .5, fw, fh);
-    ctx.globalAlpha = alphaBase;
-  }
-
-  if (toitPointu) {
-    ctx.beginPath();
-    ctx.moveTo(x - largeur / 2 - 1.2 * s, hautMur);
-    ctx.lineTo(x, hautMur - decal);
-    ctx.lineTo(x, hautToit - decal);
-    ctx.lineTo(x - largeur * .18, hautToit);
-    ctx.closePath();
-    ctx.fillStyle = pal.toit; ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(x, hautMur - decal);
-    ctx.lineTo(x + largeur / 2 + 1.2 * s, hautMur);
-    ctx.lineTo(x + largeur * .2, hautToit);
-    ctx.lineTo(x, hautToit - decal);
-    ctx.closePath();
-    ctx.fillStyle = pal.toit; ctx.globalAlpha = alphaBase * .82; ctx.fill(); ctx.globalAlpha = alphaBase;
-  } else {
-    ctx.beginPath();
-    ctx.moveTo(x - largeur / 2 - 1 * s, hautMur);
-    ctx.lineTo(x, hautMur - decal - hauteurToit);
-    ctx.lineTo(x + largeur / 2 + 1 * s, hautMur);
-    ctx.lineTo(x, hautMur + decal - hauteurToit * .2);
-    ctx.closePath();
-    ctx.fillStyle = pal.toit; ctx.fill();
-  }
+  ctx.fillStyle = pal.toit; ctx.fill();
+  ctx.strokeStyle = pal.murOmbre; ctx.lineWidth = Math.max(1, s * .5); ctx.stroke();
 }
 
 function snapifie() {
