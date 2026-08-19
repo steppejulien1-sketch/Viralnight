@@ -1383,17 +1383,34 @@ var PALETTES_BATIMENTS = [
 ];
 var RATIO_DECAL_BATIMENT = .5;
 
+/* Plusieurs "modeles" de batiment plutot qu'une seule boite qu'on
+   redimensionne au hasard : une petite maison, une longere basse et
+   tres etiree, une villa large, une tour etroite qui monte haut. Chaque
+   modele a son propre ratio largeur/hauteur — c'est ce qui donne un
+   vrai quartier avec des silhouettes differentes, pas une rue de boites
+   identiques a l'echelle pres. */
+var MODELES_BATIMENTS = [
+  { poids: 5, largeurMin: 8, largeurMax: 12, hauteurMin: 3.4, hauteurMax: 5 },
+  { poids: 3, largeurMin: 16, largeurMax: 24, hauteurMin: 3, hauteurMax: 4.2 },
+  { poids: 3, largeurMin: 12, largeurMax: 17, hauteurMin: 6, hauteurMax: 9 },
+  { poids: 1, largeurMin: 7, largeurMax: 9, hauteurMin: 13, hauteurMax: 20 }
+];
+var POIDS_TOTAL_MODELES = MODELES_BATIMENTS.reduce(function (t, m) { return t + m.poids; }, 0);
+
 function batimentSur(ctx, x, y, r, graineBatiment) {
   var s = r / 14;
   var graine = (graineBatiment >>> 0) || 1;
   function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
 
   var pal = PALETTES_BATIMENTS[Math.floor(rnd() * PALETTES_BATIMENTS.length)];
-  var largeur = (9 + rnd() * 7) * s;
-  // la plupart des volumes restent bas (pavillon), un batiment sur huit
-  // environ prend nettement plus de hauteur — silhouette de quartier
-  // vivante plutot qu'une rangee de boites identiques.
-  var hauteur = (rnd() < .12 ? 11 + rnd() * 7 : 4 + rnd() * 4.5) * s;
+  var tirage = rnd() * POIDS_TOTAL_MODELES;
+  var modele = MODELES_BATIMENTS[0];
+  for (var m = 0; m < MODELES_BATIMENTS.length; m++) {
+    if (tirage < MODELES_BATIMENTS[m].poids) { modele = MODELES_BATIMENTS[m]; break; }
+    tirage -= MODELES_BATIMENTS[m].poids;
+  }
+  var largeur = (modele.largeurMin + rnd() * (modele.largeurMax - modele.largeurMin)) * s;
+  var hauteur = (modele.hauteurMin + rnd() * (modele.hauteurMax - modele.hauteurMin)) * s;
   var decal = hauteur * RATIO_DECAL_BATIMENT;
   var hautBas = y, hautHaut = y - hauteur;
 
@@ -1476,21 +1493,31 @@ function batimentSur(ctx, x, y, r, graineBatiment) {
   ctx.lineWidth = Math.max(.5, s * .25);
   ctx.stroke();
 
-  // petite cheminee, discrete, posee pres du faitage — le detail qui
-  // donne du caractere sans surcharger le batiment.
+  // cheminee en briques, bien visible pres du faitage — le detail qui
+  // donne du caractere. Corps en brique rouge avec des joints de mortier
+  // (fines lignes plus claires), petit chapeau sombre en haut.
   if (rnd() < .45) {
-    var chW = largeur * .07, chH = hauteur * .3;
-    var chX = x - largeur * .28, chY = hautHaut - decal * .35;
+    var chW = largeur * .12, chH = hauteur * .5;
+    var chX = x - largeur * .3, chY = hautHaut - decal * .3;
+    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(chX - chW / 2, chY);
-    ctx.lineTo(chX - chW / 2, chY - chH);
-    ctx.lineTo(chX + chW / 2, chY - chH);
-    ctx.lineTo(chX + chW / 2, chY);
-    ctx.closePath();
-    ctx.fillStyle = pal.cote;
-    ctx.fill();
-    ctx.fillStyle = "rgba(60,50,35,.35)";
-    ctx.fillRect(chX - chW / 2, chY - chH, chW, chH * .16);
+    ctx.rect(chX - chW / 2, chY - chH, chW, chH);
+    ctx.clip();
+    ctx.fillStyle = "#a8543c";
+    ctx.fillRect(chX - chW / 2, chY - chH, chW, chH);
+    ctx.strokeStyle = "rgba(70,30,20,.4)";
+    ctx.lineWidth = Math.max(.5, s * .18);
+    var rangs = Math.max(2, Math.round(chH / (chW * .55)));
+    for (var br = 1; br < rangs; br++) {
+      var by = chY - (chH * br) / rangs;
+      ctx.beginPath();
+      ctx.moveTo(chX - chW / 2, by);
+      ctx.lineTo(chX + chW / 2, by);
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.fillStyle = "#5c3a2e";
+    ctx.fillRect(chX - chW * .62, chY - chH - chH * .12, chW * 1.24, chH * .16);
   }
 }
 
