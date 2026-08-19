@@ -143,24 +143,6 @@
         border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
       }
 
-      /* La pastille de solde, en miroir du bouton profil. C'est le
-         seul endroit sur la carte qui parle de points : elle sert
-         de pont vers la boutique, comme le compteur de Snaps chez
-         Snapchat ou le compteur de pieces dans la plupart des
-         applis a recompenses. */
-      .pts-pill {
-        position: absolute; top: 68px; right: 16px; z-index: 26;
-        display: flex; align-items: center; gap: 6px;
-        background: rgba(10,11,14,.86); border: 1px solid rgba(255,255,255,.14);
-        border-radius: 999px; padding: 7px 13px 7px 8px; cursor: pointer;
-        backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-      }
-      .pts-pill:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-      .pts-pill .jeton { width: 20px; height: 20px; flex: 0 0 auto; }
-      .pts-pill b {
-        color: var(--ambre); font-family: var(--mono); font-size: 14px; font-weight: 800;
-        letter-spacing: -.02em; font-variant-numeric: tabular-nums;
-      }
 
       .club-badge {
         width: 50px; height: 50px; border-radius: 50%;
@@ -250,12 +232,11 @@
 
       /* Le solde de points a ete tente en six formes differentes cote
          boutique (dial, texte nu, pilule+jeton, compteur plein, ticket
-         dechirable...) et rejete a chaque fois. Julien a tranche : plus
-         de compteur du tout ici ("retire le compteur de points au
-         dessus le 185") — le solde reste visible ailleurs, sur la
-         pilule flottante de l'ecran carte (#pts-pill). La premiere
-         section reprend juste le padding haut que portait l'ancien
-         header sticky, pour ne pas coller au bord de l'ecran. */
+         dechirable...) et rejete a chaque fois, puis retire aussi de
+         l'ecran carte (l'ancienne pilule #pts-pill, jugee inutile) :
+         plus aucun compteur de points flottant nulle part. La
+         premiere section reprend juste le padding haut que portait
+         l'ancien header sticky, pour ne pas coller au bord de l'ecran. */
       .sec-premiere { padding-top: 22px; }
 
       .jeton { display: block; }
@@ -752,11 +733,6 @@
 
           <button class="me-btn" id="me-btn" aria-label="Mon profil"><span class="dot"></span></button>
 
-          <button class="pts-pill" id="pts-pill" aria-label="Voir ma cagnotte dans la boutique">
-            <span class="jeton" id="pill-jeton"></span>
-            <b id="pill-solde">0</b>
-          </button>
-
           <div class="carte-rail">
             <button class="rbtn" id="rail-me" aria-label="Ma pinte"><span class="dot"></span></button>
             <button class="rbtn" aria-label="Mode invisible">
@@ -1166,17 +1142,15 @@ function activerVue(nom) {
 
 TAB_CARTE.addEventListener("click", function () { activerVue("carte"); });
 TAB_BOUTIQUE.addEventListener("click", function () { activerVue("boutique"); });
-$("#pts-pill").addEventListener("click", function () { activerVue("boutique"); });
 
 activerVue(location.hash === "#boutique" ? "boutique" : "carte");
 
 /* ==========================================================
-   LA CAGNOTTE — affichee sur les deux ecrans a partir du meme
-   ETAT.solde : la pastille de la carte et le solde de la
-   boutique se mettent a jour ensemble, jamais l'un sans l'autre.
+   LA CAGNOTTE — ETAT.solde n'a plus d'affichage flottant nulle
+   part (pastille carte retiree, compteur boutique deja retire
+   avant elle) ; il alimente juste les feuilles de detail et les
+   CTA d'echange, ci-dessous.
    ========================================================== */
-
-$("#pill-jeton").outerHTML = jeton(20);
 
 // Reste utilisee par la fiche club de la carte (noteRecompenseClub) :
 // la prochaine recompense accessible, pour "X pts pour Y". Le meme
@@ -1188,9 +1162,7 @@ function prochaine() {
     .sort(function (a, b) { return a.cout - b.cout; })[0] || null;
 }
 
-function majCagnotte() {
-  $("#pill-solde").textContent = nb(ETAT.solde);
-}
+function majCagnotte() {}
 
 /* ==========================================================
    ECRAN CARTE — moteur MapLibre GL JS + MapTiler, inchange par
