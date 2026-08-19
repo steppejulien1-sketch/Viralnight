@@ -1639,19 +1639,17 @@ function genererArbres() {
   }
 }
 
-/* Premiere version calee sur l'emprise reelle des batiments OSM
-   ("Building") : correct mais trop clairseme la ou les donnees
-   vectorielles sont pauvres — "il n'y a pas des maisons partout" chez
-   Julien alors que Snap Map en montre partout ailleurs qu'un parc ou
-   l'eau. Meme technique que les arbres : grille + jitter, mais en
-   EXCLUANT vegetation/eau plutot qu'en dependant d'une couche qui peut
-   etre vide. */
+/* Deuxieme correction le meme soir : la densite "partout" faisait
+   "bug" (trop de volumes, chacun avec une ombre floutee + un degrade =
+   cher a dessiner) et donnait une rue pleine plutot que "un peu partout"
+   comme demande. Grille bien plus large et un batiment sur trois
+   seulement generе — de la couverture sur toute la carte, mais clairsemee. */
 var BATIMENTS = [];
 var BATIMENTS_VUS = {};
-var PAS_BATIMENTS = 0.00048;
+var PAS_BATIMENTS = 0.00095;
 
 function genererBatiments() {
-  if (BATIMENTS.length >= 2200) return;
+  if (BATIMENTS.length >= 700) return;
   var couchesExclues = ["Water", "Forest", "Wood", "Grass", "Meadow", "Park", "Cemetery"]
     .filter(function (id) { return map.getLayer(id); });
 
@@ -1662,7 +1660,7 @@ function genererBatiments() {
 
   for (var lng = lngMin; lng <= lngMax; lng += PAS_BATIMENTS) {
     for (var lat = latMin; lat <= latMax; lat += PAS_BATIMENTS) {
-      if (BATIMENTS.length >= 2200) return;
+      if (BATIMENTS.length >= 700) return;
       var cle = Math.round(lng / PAS_BATIMENTS) + ":" + Math.round(lat / PAS_BATIMENTS);
       if (BATIMENTS_VUS[cle]) continue;
       BATIMENTS_VUS[cle] = true;
@@ -1671,12 +1669,12 @@ function genererBatiments() {
       for (var k = 0; k < cle.length; k++) { h ^= cle.charCodeAt(k); h = (h * 16777619) >>> 0; }
       function rnd() { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; }
 
-      // un batiment sur cinq saute son tour, pour eviter une trame trop
-      // parfaitement reguliere une fois la densite montee.
-      if (rnd() < .2) continue;
+      // seule une case sur trois donne un batiment : "un peu partout",
+      // pas une rue pleine.
+      if (rnd() < .67) continue;
 
-      var dLng = lng + (rnd() - .5) * PAS_BATIMENTS * .75;
-      var dLat = lat + (rnd() - .5) * PAS_BATIMENTS * .75;
+      var dLng = lng + (rnd() - .5) * PAS_BATIMENTS * .7;
+      var dLat = lat + (rnd() - .5) * PAS_BATIMENTS * .7;
       var p = map.project([dLng, dLat]);
       if (p.x < 0 || p.x > map.getCanvas().clientWidth || p.y < 0 || p.y > map.getCanvas().clientHeight) continue;
       if (couchesExclues.length && map.queryRenderedFeatures([p.x, p.y], { layers: couchesExclues }).length) continue;
