@@ -452,7 +452,7 @@ var map = new maplibregl.Map({
   style: "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=" + MAPTILER_KEY,
   center: BRUXELLES,
   zoom: 16,
-  pitch: 55,
+  pitch: 40,
   bearing: -12,
   attributionControl: { compact: true }
 });
@@ -466,7 +466,7 @@ map.on("load", function () {
   // sur une vue large (globe/Europe) apres l'activation du globe,
   // meme si `getZoom()` renvoyait deja 16 — le rendu et l'etat
   // interne se desynchronisaient au tout premier chargement.
-  map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 55, bearing: -12 });
+  map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 40, bearing: -12 });
 });
 
 /* --- Le globe : etoiles et brume fournies par MapLibre lui-meme
@@ -581,97 +581,6 @@ function arbreSur(ctx, x, y, r, teinte, graineArbre) {
   }
 }
 
-/* --- Le batiment « jeu » : mur clair + toit pointu sombre, comme
-       le pack d'assets low-poly envoye. Une vraie extrusion MapLibre
-       ne peut pas faire de toit en pointe (juste un prisme a sommet
-       plat) — c'est pour ca que ces batiments sont dessines en icone
-       sur le calque canvas, exactement comme les arbres, plutot que
-       stylises via fill-extrusion. --- */
-var PALETTES_BATIMENTS = [
-  { mur: "#f4f1ea", murOmbre: "#e2ddd0", toit: "#3a3d47", fenetre: "#ffd873" },
-  { mur: "#eef2f6", murOmbre: "#d9e0e6", toit: "#2c2f38", fenetre: "#ffe08a" },
-  { mur: "#f7ece4", murOmbre: "#e6d5c8", toit: "#8a3b32", fenetre: "#ffd873" }
-];
-
-/* 4 types de batiment, comme les rangees "maisons" et "immeubles"
-   du pack : pavillon a toit pointu, maison a toit plat, maison a
-   deux etages, petit immeuble a plusieurs rangees de fenetres. Le
-   type vient de la graine figee du batiment, donc il ne change
-   jamais d'une image a l'autre. */
-function batimentSur(ctx, x, y, r, teinte, graineBatiment) {
-  var s = r / 14;
-  var pal = PALETTES_BATIMENTS[teinte % PALETTES_BATIMENTS.length];
-  var graine = (graineBatiment >>> 0) || 1;
-  function rnd() { graine = (graine * 1664525 + 1013904223) >>> 0; return graine / 4294967296; }
-
-  var alphaBase = ctx.globalAlpha;
-  var type = Math.floor(rnd() * 4);
-  var largeur = (12 + rnd() * 3) * s;
-  var profondeur = largeur * .62;
-  var etages = type === 3 ? 3 + Math.floor(rnd() * 2) : (type === 2 ? 2 : 1);
-  var hauteurMur = (7 + etages * 4.5) * s;
-  var toitPointu = type === 0 || type === 2;
-  var hauteurToit = toitPointu ? largeur * .42 : largeur * .1;
-
-  var hautBas = y, hautMur = y - hauteurMur, hautToit = hautMur - hauteurToit;
-  var decal = profondeur * .3;
-
-  ctx.beginPath(); ctx.ellipse(x, y + 1.5 * s, largeur * .7, largeur * .24, 0, 0, 7);
-  ctx.fillStyle = "rgba(20,20,15,.22)"; ctx.fill();
-
-  // face avant (claire) et face laterale (ombree), en faux 3D isometrique
-  ctx.beginPath();
-  ctx.moveTo(x - largeur / 2, hautBas); ctx.lineTo(x - largeur / 2, hautMur);
-  ctx.lineTo(x, hautMur - decal); ctx.lineTo(x, hautBas + decal);
-  ctx.closePath(); ctx.fillStyle = pal.mur; ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(x, hautBas + decal); ctx.lineTo(x, hautMur - decal);
-  ctx.lineTo(x + largeur / 2, hautMur); ctx.lineTo(x + largeur / 2, hautBas);
-  ctx.closePath(); ctx.fillStyle = pal.murOmbre; ctx.fill();
-
-  // fenetres allumees, une rangee par etage, sur les deux faces
-  ctx.fillStyle = pal.fenetre;
-  var fw = largeur * .13, fh = largeur * .15;
-  for (var e = 0; e < etages; e++) {
-    var fy = hautMur + (e + .55) * (hauteurMur / etages) - fh / 2;
-    ctx.fillRect(x - largeur * .36, fy, fw, fh);
-    ctx.fillRect(x - largeur * .17, fy, fw, fh);
-    ctx.globalAlpha = alphaBase * .75;
-    ctx.fillRect(x + largeur * .12, fy + decal * .5, fw, fh);
-    ctx.fillRect(x + largeur * .3, fy + decal * .5, fw, fh);
-    ctx.globalAlpha = alphaBase;
-  }
-
-  if (toitPointu) {
-    // deux pans qui se rejoignent en arete, comme les maisons du pack
-    ctx.beginPath();
-    ctx.moveTo(x - largeur / 2 - 1.2 * s, hautMur);
-    ctx.lineTo(x, hautMur - decal);
-    ctx.lineTo(x, hautToit - decal);
-    ctx.lineTo(x - largeur * .18, hautToit);
-    ctx.closePath();
-    ctx.fillStyle = pal.toit; ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(x, hautMur - decal);
-    ctx.lineTo(x + largeur / 2 + 1.2 * s, hautMur);
-    ctx.lineTo(x + largeur * .2, hautToit);
-    ctx.lineTo(x, hautToit - decal);
-    ctx.closePath();
-    ctx.fillStyle = pal.toit; ctx.globalAlpha = alphaBase * .82; ctx.fill(); ctx.globalAlpha = alphaBase;
-  } else {
-    // toiture plate legerement debordante
-    ctx.beginPath();
-    ctx.moveTo(x - largeur / 2 - 1 * s, hautMur);
-    ctx.lineTo(x, hautMur - decal - hauteurToit);
-    ctx.lineTo(x + largeur / 2 + 1 * s, hautMur);
-    ctx.lineTo(x, hautMur + decal - hauteurToit * .2);
-    ctx.closePath();
-    ctx.fillStyle = pal.toit; ctx.fill();
-  }
-}
-
 function snapifie() {
 
   // La palette relevee sur tes captures : le sol est vert menthe
@@ -711,21 +620,30 @@ function snapifie() {
 
   map.setPaintProperty("Water", "fill-color", eau);
 
-  // les batiments : 6 tons plutot que 3 (toujours dans la famille
-  // creme/greige du tout premier prototype, avec en plus une pointe
-  // de terracotta et de sable) — plus de variete d'un immeuble a
-  // l'autre, pour casser l'effet "blocs identiques" plutot qu'une
-  // vraie couleur vive.
-  // les batiments sont maintenant des icones dessinees a la main
-  // (voir batimentSur plus haut) — l'extrusion 3D native ne peut pas
-  // faire de toit en pointe comme le pack d'assets envoye, donc elle
-  // est desactivee. Il reste juste l'empreinte au sol en aplat clair,
-  // visible a tout zoom, comme fond sous les icones et partout ou
-  // aucune icone n'a ete generee (loin de Bruxelles).
-  map.setPaintProperty("Building", "fill-color", "#efe9df");
-  map.setPaintProperty("Building", "fill-opacity", .9);
-  map.setLayerZoomRange("Building", 0, 24);
-  map.setLayoutProperty("Building 3D", "visibility", "none");
+  // les batiments : empreinte au sol en aplat clair (zoom moyen, sous
+  // les toits), puis vrais volumes 3D (fill-extrusion native, calque
+  // "Building 3D" deja fourni par MapTiler avec render_height /
+  // render_min_height issus d'OpenStreetMap) des qu'on est assez
+  // proche du sol. Hauteur reduite (x0.55, plafonnee) et teinte unie
+  // (pas de degrade, pas de motif de facade) pour rester minimaliste
+  // et ne jamais ecraser les marqueurs des clubs — le degre de detail
+  // de Snap Map, pas une carte "realiste".
+  map.setPaintProperty("Building", "fill-color", "#f2ead6");
+  map.setPaintProperty("Building", "fill-opacity", .5);
+
+  map.setLayoutProperty("Building 3D", "visibility", "visible");
+  map.setPaintProperty("Building 3D", "fill-extrusion-color", "#f2ead6");
+  map.setPaintProperty("Building 3D", "fill-extrusion-base", [
+    "*", ["coalesce", ["get", "render_min_height"], 0], .55
+  ]);
+  map.setPaintProperty("Building 3D", "fill-extrusion-height", [
+    "min", ["*", ["coalesce", ["get", "render_height"], 8], .55], 45
+  ]);
+  // fondu progressif au zoom, comme les arbres : pas de pop brutal
+  // quand le calque devient actif.
+  map.setPaintProperty("Building 3D", "fill-extrusion-opacity", [
+    "interpolate", ["linear"], ["zoom"], 15, 0, 15.6, .88
+  ]);
 
   // la demarcation des pays : un trait net, avec une bordure sombre
   // en dessous pour qu'il ressorte aussi bien sur le fond clair que
@@ -752,11 +670,9 @@ function snapifie() {
     map.moveLayer("Country border");
   }
 
-  // La carte ne montre que les clubs et les gens — pas les
-  // restaurants, boutiques, musees ni parcs que le fond de carte
-  // affiche par defaut. On coupe toutes les icones/etiquettes de
-  // lieux, sauf les noms de villes/pays qui servent a se reperer
-  // en dezoomant.
+  // La carte ne montre que les clubs et les gens — aucune indication
+  // textuelle : ni restaurants/boutiques/musees/parcs, ni noms de
+  // rues, ni noms de villes/regions/pays. Juste la forme de la ville.
   [
     "Public", "Sport", "Education", "Tourism", "Culture", "Shopping",
     "Food", "Transport", "Park", "Healthcare", "Station",
@@ -764,7 +680,9 @@ function snapifie() {
     "Highway shield interstate top (US)", "Highway shield interstate (US)",
     "Housenumber", "Oneway", "Gondola", "Ferry",
     "River labels", "Ocean labels", "Lake labels",
-    "Airport gate", "Airport", "Place labels"
+    "Airport gate", "Airport", "Place labels",
+    "State labels", "Town labels", "City labels", "Capital city labels",
+    "Country labels", "Continent labels"
   ].forEach(function (id) {
     if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
   });
@@ -844,42 +762,6 @@ function genererArbres() {
   }
 }
 
-/* --- Les batiments : chaque polygone "Building" rendu donne son
-       centroide, ajoute une fois pour toutes a un tableau fige —
-       jamais deplace ni regenere ensuite, pour eviter exactement le
-       bug qui avait fait "voler" les arbres (des positions
-       recalculees a chaque image a partir de polygones decoupes
-       differemment par tuile). La fonction tourne a chaque "idle"
-       mais n'AJOUTE que les batiments pas encore vus (le "vus" est
-       garde en dehors de la fonction) : au fil de l'exploration, la
-       couverture s'etend, sans jamais rien recalculer sous les
-       icones deja posees. En dehors des zones visitees, l'empreinte
-       au sol en aplat clair (calque "Building") reste le seul rendu
-       des batiments. --- */
-var BATIMENTS = [];
-var BATIMENTS_VUS = {};
-var BATIMENTS_GRAINE = 55221;
-
-function genererBatiments() {
-  if (!map.getLayer("Building") || BATIMENTS.length >= 2000) return;
-  var feats = map.queryRenderedFeatures({ layers: ["Building"] });
-  function rnd() { BATIMENTS_GRAINE = (BATIMENTS_GRAINE * 1664525 + 1013904223) >>> 0; return BATIMENTS_GRAINE / 4294967296; }
-  feats.forEach(function (f) {
-    if (BATIMENTS.length >= 2000) return;
-    var g = f.geometry;
-    if (!g) return;
-    var anneau = g.type === "Polygon" ? g.coordinates[0] : (g.type === "MultiPolygon" ? g.coordinates[0][0] : null);
-    if (!anneau || anneau.length < 3) return;
-    var sx = 0, sy = 0;
-    anneau.forEach(function (c) { sx += c[0]; sy += c[1]; });
-    var lng = sx / anneau.length, lat = sy / anneau.length;
-    var cle = lng.toFixed(5) + "," + lat.toFixed(5);
-    if (BATIMENTS_VUS[cle]) return;
-    BATIMENTS_VUS[cle] = true;
-    BATIMENTS.push({ lng: lng, lat: lat, teinte: Math.floor(rnd() * 3), graine: Math.floor(rnd() * 4294967295) + 1 });
-  });
-}
-
 (function () {
   var cv = document.getElementById("arbres");
   var ctx = cv.getContext("2d");
@@ -915,25 +797,18 @@ function genererBatiments() {
       var a = ARBRES[i];
       var p = map.project([a.lng, a.lat]);
       if (p.x < -40 || p.x > W + 40 || p.y < -70 || p.y > H + 40) continue;
-      pts.push({ x: p.x, y: p.y, s: a.s, teinte: a.teinte, graine: a.graine, type: "arbre" });
-    }
-    for (var j = 0; j < BATIMENTS.length; j++) {
-      var b = BATIMENTS[j];
-      var pb = map.project([b.lng, b.lat]);
-      if (pb.x < -60 || pb.x > W + 60 || pb.y < -110 || pb.y > H + 60) continue;
-      pts.push({ x: pb.x, y: pb.y, s: 1, teinte: b.teinte, graine: b.graine, type: "batiment" });
+      pts.push({ x: p.x, y: p.y, s: a.s, teinte: a.teinte, graine: a.graine });
     }
     pts.sort(function (a, b) { return a.y - b.y; });
     ctx.globalAlpha = fondu;
     pts.forEach(function (p) {
-      if (p.type === "arbre") arbreSur(ctx, p.x, p.y, 26 * p.s, p.teinte, p.graine);
-      else batimentSur(ctx, p.x, p.y, 30, p.teinte, p.graine);
+      arbreSur(ctx, p.x, p.y, 26 * p.s, p.teinte, p.graine);
     });
     ctx.globalAlpha = 1;
   }
   map.on("move", dessiner);
-  map.on("load", function () { genererBatiments(); genererArbres(); dessiner(); });
-  map.on("idle", function () { genererBatiments(); genererArbres(); dessiner(); });
+  map.on("load", function () { genererArbres(); dessiner(); });
+  map.on("idle", function () { genererArbres(); dessiner(); });
 })();
 
 /* ==========================================================

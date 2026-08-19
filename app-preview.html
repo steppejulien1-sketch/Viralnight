@@ -1240,7 +1240,7 @@ var map = new maplibregl.Map({
   style: "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=" + MAPTILER_KEY,
   center: BRUXELLES,
   zoom: 16,
-  pitch: 55,
+  pitch: 40,
   bearing: -12,
   attributionControl: { compact: true }
 });
@@ -1250,7 +1250,7 @@ map.on("error", function (e) {
 
 map.on("load", function () {
   map.setProjection({ type: "globe" });
-  map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 55, bearing: -12 });
+  map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 40, bearing: -12 });
 });
 
 function ambiance() {
@@ -1288,17 +1288,27 @@ function snapifie() {
 
   map.setPaintProperty("Water", "fill-color", eau);
 
-  // La couche plate "Building" du style de base ne couvre que les zooms
-  // 13-15 (MapTiler bascule ensuite sur "Building 3D", qu'on masque
-  // volontairement) : a zoom 16, la vue par defaut de l'appli, plus rien
-  // ne s'affiche. On etend seulement le PLAFOND de zoom (13 -> 24), pas
-  // le plancher : a zoom pays/Paris (bien en dessous de 13), la couche
-  // reste invisible, comme avant. C'est le fond de la couche plafond a 24
-  // sans toucher au minimum qui avait cree les traces roses au zoom large.
-  map.setPaintProperty("Building", "fill-color", "#efe9df");
-  map.setPaintProperty("Building", "fill-opacity", .9);
-  map.setLayerZoomRange("Building", 13, 24);
-  map.setLayoutProperty("Building 3D", "visibility", "none");
+  // Empreinte au sol en aplat clair (zoom 13-15, plage native du style),
+  // puis vrais volumes 3D (fill-extrusion native "Building 3D", deja
+  // fournie par MapTiler avec render_height / render_min_height issus
+  // d'OpenStreetMap) des qu'on est assez proche du sol. Hauteur reduite
+  // (x0.55, plafonnee) et teinte unie (pas de degrade, pas de motif de
+  // facade) pour rester minimaliste et ne jamais ecraser les marqueurs
+  // des clubs — le degre de detail de Snap Map, pas une carte "realiste".
+  map.setPaintProperty("Building", "fill-color", "#f2ead6");
+  map.setPaintProperty("Building", "fill-opacity", .5);
+
+  map.setLayoutProperty("Building 3D", "visibility", "visible");
+  map.setPaintProperty("Building 3D", "fill-extrusion-color", "#f2ead6");
+  map.setPaintProperty("Building 3D", "fill-extrusion-base", [
+    "*", ["coalesce", ["get", "render_min_height"], 0], .55
+  ]);
+  map.setPaintProperty("Building 3D", "fill-extrusion-height", [
+    "min", ["*", ["coalesce", ["get", "render_height"], 8], .55], 45
+  ]);
+  map.setPaintProperty("Building 3D", "fill-extrusion-opacity", [
+    "interpolate", ["linear"], ["zoom"], 15, 0, 15.6, .88
+  ]);
 
   if (map.getLayer("Country border")) {
     if (!map.getLayer("Contour pays halo")) {
@@ -1327,7 +1337,9 @@ function snapifie() {
     "Highway shield interstate top (US)", "Highway shield interstate (US)",
     "Housenumber", "Oneway", "Gondola", "Ferry",
     "River labels", "Ocean labels", "Lake labels",
-    "Airport gate", "Airport", "Place labels"
+    "Airport gate", "Airport", "Place labels",
+    "State labels", "Town labels", "City labels", "Capital city labels",
+    "Country labels", "Continent labels"
   ].forEach(function (id) {
     if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
   });
