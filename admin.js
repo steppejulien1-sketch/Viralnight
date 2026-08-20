@@ -449,7 +449,7 @@ async function chargerClients() {
   renderClients();
 
   const [establishmentsResult, ownersResult] = await Promise.all([
-    supabase.from("establishments").select("id, name, city, subscription_status, created_at").order("created_at", { ascending: false }),
+    supabase.from("establishments").select("id, name, city, phone, subscription_status, created_at").order("created_at", { ascending: false }),
     supabase.from("establishment_owners").select("email, establishment_id"),
   ]);
 
@@ -495,7 +495,7 @@ function renderClients() {
       <span>Ville</span>
       <span>Statut</span>
       <span>Client depuis</span>
-      <span>Email proprietaire</span>
+      <span>Contact</span>
       <span>Action</span>
     </div>
   `;
@@ -530,7 +530,7 @@ function renderClients() {
             <span>${escapeHtml(client.city || "—")}</span>
             <span class="confidence-pill ${pillClass}">${escapeHtml(statut)}</span>
             <span>${escapeHtml(depuis)}</span>
-            <span>${escapeHtml(email)}</span>
+            <span>${escapeHtml(email)}${client.phone ? `<br /><small>${escapeHtml(client.phone)}</small>` : ""}</span>
             <span>
               ${
                 email === "—"
@@ -542,6 +542,53 @@ function renderClients() {
       })
       .join("");
 }
+
+/**
+ * Export CSV : "toute la base de donnees" des clients, telle que demandee --
+ * email, nom du club, numero, ville, statut, date d'entree. Genere cote
+ * client depuis state.clients (deja charge, memes donnees que le tableau),
+ * pas besoin d'appel serveur supplementaire.
+ */
+function cellulesCsv(valeurs) {
+  return valeurs.map((v) => `"${String(v ?? "").replaceAll('"', '""')}"`).join(";");
+}
+
+function exporterClientsCsv() {
+  const lignes = [cellulesCsv(["Club", "Ville", "Téléphone", "Email propriétaire", "Statut", "Client depuis"])];
+
+  for (const client of state.clients) {
+    lignes.push(
+      cellulesCsv([
+        client.name || "",
+        client.city || "",
+        client.phone || "",
+        client.ownerEmails[0] || "",
+        STATUT_LABEL[client.subscription_status] || client.subscription_status || "",
+        client.created_at ? dateFormatter.format(new Date(client.created_at)) : "",
+      ]),
+    );
+  }
+
+  // BOM UTF-8 : sans lui, Excel ouvre les caracteres accentues en charabia.
+  const contenu = "﻿" + lignes.join("\r\n");
+  const blob = new Blob([contenu], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const lien = document.createElement("a");
+  lien.href = url;
+  lien.download = `viralnight-clients-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(lien);
+  lien.click();
+  lien.remove();
+  URL.revokeObjectURL(url);
+}
+
+document.querySelector("[data-clients-export]")?.addEventListener("click", () => {
+  if (!state.clients.length) {
+    if (clientsStatus) clientsStatus.textContent = "Aucun club a exporter pour l'instant.";
+    return;
+  }
+  exporterClientsCsv();
+});
 
 function useDemoData(message) {
   state.source = "demo";
@@ -1046,6 +1093,7 @@ createClientForm?.addEventListener("submit", async (event) => {
     establishment_name: String(formData.get("establishment_name") || "").trim(),
     owner_email: String(formData.get("owner_email") || "").trim().toLowerCase(),
     city: String(formData.get("city") || "").trim(),
+    phone: String(formData.get("phone") || "").trim(),
     subscription_status: String(formData.get("subscription_status") || "essai").trim(),
     category: "club",
   };

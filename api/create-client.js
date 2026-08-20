@@ -84,6 +84,7 @@ export default async function handler(request, response) {
   const establishmentName = String(payload.establishment_name || "").trim();
   const ownerEmail = String(payload.owner_email || "").trim().toLowerCase();
   const city = String(payload.city || "").trim();
+  const phone = String(payload.phone || "").trim();
   const category = String(payload.category || "club").trim();
   const allowedStatuses = new Set(["actif", "essai", "suspendu"]);
   const subscriptionStatus = allowedStatuses.has(payload.subscription_status) ? payload.subscription_status : "essai";
@@ -130,6 +131,7 @@ export default async function handler(request, response) {
     .insert({
       name: establishmentName,
       city: city || null,
+      phone: phone || null,
       category,
       subscription_status: subscriptionStatus,
     })

@@ -916,3 +916,16 @@ create policy "establishment_owners_select_admin"
   on public.establishment_owners
   for select
   using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
+
+-- ============================================================
+-- 202608200002_telephone_etablissement.sql
+-- ------------------------------------------------------------
+-- Numero de contact du club, demande par Julien pour l'export client
+-- (email, nom du club, numero). Aucune colonne ni champ ne l'accueillait.
+-- ============================================================
+
+alter table public.establishments
+  add column if not exists phone text;
+
+comment on column public.establishments.phone is
+  'Numero de contact du club, saisi a la creation dans l''admin. Facultatif.';
