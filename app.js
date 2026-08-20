@@ -370,6 +370,313 @@ function renderEstablishment(data) {
   }
 }
 
+/**
+ * Reach, activite, repartition par format, top clients.
+ *
+ * Meme grammaire visuelle que simulateur.html (graphique, flux, barres de
+ * repartition, classement) : Julien voulait "pareil que le simulateur, sauf
+ * que les donnees viennent apres". Toutes les fonctions ci-dessous lisent
+ * dashboardState.submissions, les vraies soumissions de l'etablissement --
+ * aucune ne genere de valeur inventee. Etat honnete si rien n'existe encore.
+ *
+ * Limite assumee : submissions n'a qu'un customer_id (uuid), aucune table
+ * ne relie un client a un pseudo ou un compte Instagram reel. "Top clients"
+ * affiche donc un identifiant anonymise, jamais un faux @handle.
+ */
+
+const AVATAR_PAIRS = [
+  ["#333333", "#1a1a1a"],
+  ["#292929", "#141414"],
+  ["#2b2b2b", "#161616"],
+  ["#363636", "#1c1c1c"],
+  ["#2e2e2e", "#171717"],
+  ["#303030", "#181818"],
+];
+
+const LABEL_PLATEFORME = {
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+};
+
+function hashCode(value) {
+  let hash = 0;
+  for (const car of String(value)) hash = (hash * 31 + car.charCodeAt(0)) | 0;
+  return hash;
+}
+
+function shortCustomerLabel(customerId) {
+  if (!customerId) return "Client anonyme";
+  return `Client ${String(customerId).replace(/-/g, "").slice(-4).toUpperCase()}`;
+}
+
+function avatarInitials(label) {
+  const car = label.match(/[A-Z0-9]/g) || [];
+  return car.slice(-2).join("") || "??";
+}
+
+function avatarPairFor(seed) {
+  return AVATAR_PAIRS[Math.abs(hashCode(seed)) % AVATAR_PAIRS.length];
+}
+
+function labelPlateforme(platform) {
+  return LABEL_PLATEFORME[String(platform || "").toLowerCase()] || "Autre";
+}
+
+/* Chemin lisse facon Catmull-Rom -> bezier cubique, repris tel quel de
+   simulateur.html : une courbe douce plutot que des segments droits. */
+function smoothLine(points) {
+  if (points.length < 2) return points.length ? `M ${points[0][0]} ${points[0][1]}` : "";
+  let d = `M ${points[0][0]} ${points[0][1]}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] || points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] || p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C ${c1x} ${c1y} ${c2x} ${c2y} ${p2[0]} ${p2[1]}`;
+  }
+  return d;
+}
+
+function getReachSeries(stats, nbJours = 7) {
+  // Cle en date UTC pure des deux cotes (aujourd'hui inclus, calcule sans
+  // passer par un minuit LOCAL) : submitted_at vient de Postgres deja en
+  // UTC, et le slice(0,10) direct sur sa chaine ISO donne sa date UTC. Une
+  // premiere version calait "aujourd'hui" sur minuit local puis relisait sa
+  // date via toISOString() -- en UTC+1/+2 (Belgique), minuit local tombe la
+  // veille en UTC, ce qui decalait tout le graphique d'un jour. Limite
+  // assumee : un jour = un jour calendaire UTC, pas la nuit d'ouverture du
+  // club (qui peut deborder sur le lendemain matin, geree ailleurs par
+  // lib/scheduling) -- une simplification correcte pour une vue sur 7 jours.
+  const dates = [];
+  for (let i = nbJours - 1; i >= 0; i--) {
+    dates.push(new Date(Date.now() - i * 86_400_000));
+  }
+
+  const vuesParJour = new Map(dates.map((jour) => [jour.toISOString().slice(0, 10), 0]));
+
+  for (const submission of stats.validated) {
+    const cle = String(submission.submitted_at || "").slice(0, 10);
+    if (vuesParJour.has(cle)) {
+      vuesParJour.set(cle, vuesParJour.get(cle) + Number(submission.views_count || 0));
+    }
+  }
+
+  // Le libelle du jour est recalcule depuis la MEME cle UTC (et non depuis
+  // l'instant `jour`, interprete en heure locale) : entre 00h et 2h du
+  // matin en Belgique -- les heures de pointe d'un club -- le jour local a
+  // deja change mais le jour UTC pas encore, ce qui aurait affiche le
+  // mauvais nom de jour au-dessus de la bonne valeur.
+  return {
+    labels: dates.map((jour) => {
+      const cle = jour.toISOString().slice(0, 10);
+      return new Date(`${cle}T00:00:00Z`)
+        .toLocaleDateString("fr-FR", { weekday: "short", timeZone: "UTC" })
+        .replace(".", "")
+        .toUpperCase();
+    }),
+    values: dates.map((jour) => vuesParJour.get(jour.toISOString().slice(0, 10)) || 0),
+  };
+}
+
+function renderReachChart(stats) {
+  const plotContainer = document.querySelector("[data-reach-chart]");
+  const xAxis = document.querySelector("[data-reach-chart-x]");
+  if (!plotContainer) return;
+
+  const { labels, values } = getReachSeries(stats, 7);
+  plotContainer.innerHTML = "";
+  if (xAxis) xAxis.innerHTML = "";
+
+  const total = values.reduce((somme, v) => somme + v, 0);
+  if (!total) {
+    plotContainer.innerHTML =
+      '<p class="chart-empty">Aucune vue validée sur les 7 derniers jours. Le graphique se remplit dès la première publication validée.</p>';
+    return;
+  }
+
+  const max = Math.max(...values, 1);
+
+  [0, 0.5, 1].forEach((fraction) => {
+    const gridline = document.createElement("div");
+    gridline.className = "gridline";
+    gridline.style.bottom = `${fraction * 100}%`;
+    gridline.innerHTML = `<span class="gl">${formatNumber(Math.round(max * fraction))}</span>`;
+    plotContainer.appendChild(gridline);
+  });
+
+  const points = values.map((value, index) => {
+    const x = values.length > 1 ? (index / (values.length - 1)) * 1000 : 500;
+    const y = 260 - (value / max) * 260;
+    return [Math.round(x), Math.round(y)];
+  });
+  const lignePath = smoothLine(points);
+  const dernier = points[points.length - 1];
+  const airePath = `${lignePath} L ${dernier[0]} 260 L ${points[0][0]} 260 Z`;
+
+  const plot = document.createElement("div");
+  plot.className = "c-plot";
+  plot.innerHTML = `
+    <svg class="c-svg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="reachGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ff6363" stop-opacity=".18"/>
+        <stop offset="1" stop-color="#ff6363" stop-opacity="0"/>
+      </linearGradient></defs>
+      <path class="c-area" fill="url(#reachGrad)" d="${airePath}"/>
+      <path class="c-line" d="${lignePath}"/>
+    </svg>
+  `;
+  points.forEach(([x, y], index) => {
+    const dot = document.createElement("div");
+    dot.className = `c-dot${index === points.length - 1 ? " live" : ""}`;
+    dot.style.left = `${values.length > 1 ? (index / (values.length - 1)) * 100 : 50}%`;
+    dot.style.bottom = `${((260 - y) / 260) * 100}%`;
+    dot.title = `${labels[index]} : ${formatNumber(values[index])} vues`;
+    plot.appendChild(dot);
+  });
+  plotContainer.appendChild(plot);
+
+  if (xAxis) {
+    labels.forEach((label, index) => {
+      const tick = document.createElement("span");
+      if (index === labels.length - 1) tick.classList.add("live");
+      tick.innerHTML = `<b class="xval">${formatNumber(values[index])}</b>${escapeHtml(label)}`;
+      xAxis.appendChild(tick);
+    });
+  }
+}
+
+function renderActivityFeed(stats) {
+  const container = document.querySelector("[data-activity-feed]");
+  if (!container) return;
+
+  const recentes = [...stats.submissions]
+    .sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0))
+    .slice(0, 6);
+
+  if (!recentes.length) {
+    container.innerHTML = '<p class="chart-empty">Aucun contenu depose pour l\'instant.</p>';
+    return;
+  }
+
+  const STATUT_TAG = {
+    validated: { texte: "VALIDÉ", warm: false },
+    pending: { texte: "EN ATTENTE", warm: false },
+    review: { texte: "À REVOIR", warm: true },
+    rejected: { texte: "REJETÉ", warm: true },
+  };
+
+  container.innerHTML = recentes
+    .map((submission) => {
+      const label = shortCustomerLabel(submission.customer_id);
+      const [a, b] = avatarPairFor(submission.customer_id || submission.id);
+      const tag = STATUT_TAG[submission.status] || { texte: submission.status || "—", warm: false };
+      const heure = submission.submitted_at
+        ? new Date(submission.submitted_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+        : "—";
+      const points = submission.status === "validated" ? `+${formatNumber(submission.points_awarded || 0)}` : "—";
+
+      return `
+        <div class="feed-item">
+          <div class="fi-ava" style="--a:${a};--b:${b}">${escapeHtml(avatarInitials(label))}</div>
+          <div class="fi-main">
+            <div class="fi-top">
+              <span class="fi-handle">${escapeHtml(label)}</span>
+              <span class="fi-tag${tag.warm ? " warm" : ""}">${escapeHtml(tag.texte)}</span>
+            </div>
+            <div class="fi-sub">${escapeHtml(labelPlateforme(submission.platform))} · ${escapeHtml(formatNumber(submission.views_count || 0))} vues</div>
+          </div>
+          <div class="fi-right">
+            <span class="fi-pts${submission.status !== "validated" ? " neg" : ""}">${escapeHtml(points)}</span>
+            <span class="fi-time">${escapeHtml(heure)}</span>
+          </div>
+        </div>`;
+    })
+    .join("");
+}
+
+function renderFormatSplit(stats) {
+  const container = document.querySelector("[data-format-split]");
+  if (!container) return;
+
+  const totalVues = stats.validated.reduce((somme, s) => somme + Number(s.views_count || 0), 0);
+  if (!totalVues) {
+    container.innerHTML = '<p class="chart-empty">Aucune vue validée pour l\'instant.</p>';
+    return;
+  }
+
+  const vuesParFormat = new Map();
+  for (const submission of stats.validated) {
+    const cle = labelPlateforme(submission.platform);
+    vuesParFormat.set(cle, (vuesParFormat.get(cle) || 0) + Number(submission.views_count || 0));
+  }
+
+  const lignes = [...vuesParFormat.entries()].sort((a, b) => b[1] - a[1]);
+
+  container.innerHTML = lignes
+    .map(([nom, vues]) => {
+      const pourcentage = Math.round((vues / totalVues) * 100);
+      return `
+        <div class="fmt-row">
+          <span class="fmt-name">${escapeHtml(nom)}</span>
+          <span class="fmt-track"><i style="width:${pourcentage}%"></i></span>
+          <span class="fmt-val"><b>${pourcentage} %</b><small>${escapeHtml(formatNumber(vues))} vues</small></span>
+        </div>`;
+    })
+    .join("");
+}
+
+function renderTopAmbassadors(stats) {
+  const container = document.querySelector("[data-top-ambassadors]");
+  if (!container) return;
+
+  const parClient = new Map();
+  for (const submission of stats.validated) {
+    if (!submission.customer_id) continue;
+    const entree = parClient.get(submission.customer_id) || { vues: 0, points: 0, contenus: 0, plateformes: new Set() };
+    entree.vues += Number(submission.views_count || 0);
+    entree.points += Number(submission.points_awarded || 0);
+    entree.contenus += 1;
+    entree.plateformes.add(labelPlateforme(submission.platform));
+    parClient.set(submission.customer_id, entree);
+  }
+
+  const classement = [...parClient.entries()].sort((a, b) => b[1].points - a[1].points).slice(0, 5);
+
+  if (!classement.length) {
+    container.innerHTML = '<p class="chart-empty">Aucun client identifié pour l\'instant.</p>';
+    return;
+  }
+
+  const maxPoints = classement[0][1].points || 1;
+
+  container.innerHTML = classement
+    .map(([customerId, entree], index) => {
+      const label = shortCustomerLabel(customerId);
+      const [a, b] = avatarPairFor(customerId);
+      const rang = String(index + 1).padStart(2, "0");
+      const largeur = Math.round((entree.points / maxPoints) * 100);
+
+      return `
+        <div class="amb-row">
+          <span class="amb-rank">${rang}</span>
+          <span class="fi-ava" style="--a:${a};--b:${b}">${escapeHtml(avatarInitials(label))}</span>
+          <span class="amb-handle">
+            <span class="h">${escapeHtml(label)}</span>
+            <span class="t">${escapeHtml([...entree.plateformes].join(", ").toUpperCase())} · ${entree.contenus} contenu${entree.contenus > 1 ? "s" : ""}</span>
+          </span>
+          <span class="amb-views">${escapeHtml(formatNumber(entree.vues))} vues</span>
+          <span class="amb-pts">${escapeHtml(formatNumber(entree.points))} pts</span>
+          <span class="amb-bar"><i style="width:${largeur}%"></i></span>
+        </div>`;
+    })
+    .join("");
+}
+
 function renderOverview(data) {
   const stats = getDashboardStats(data);
 
@@ -388,6 +695,10 @@ function renderOverview(data) {
 
   renderPipeline(stats);
   renderDemarrage(stats);
+  renderReachChart(stats);
+  renderActivityFeed(stats);
+  renderFormatSplit(stats);
+  renderTopAmbassadors(stats);
 }
 
 /**
