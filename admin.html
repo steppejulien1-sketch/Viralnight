@@ -36,78 +36,50 @@
       </aside>
 
       <section class="admin-workspace" id="queue">
+        <!-- Fil d'ariane + compte : la connexion et le reste ne se
+             disputaient pas la meme ligne que le titre de page avant. Le
+             formulaire de connexion, rarement utilise (la session tient),
+             se replie derriere "Compte" comme un menu — meme logique que
+             .access-menu sur app.html. -->
+        <div class="admin-crumb">
+          <span>ViralNight Admin</span>
+          <span class="admin-crumb-sep">/</span>
+          <span class="admin-crumb-current">Validation</span>
+
+          <details class="admin-account">
+            <summary>Compte</summary>
+            <div class="admin-account-panel">
+              <form data-admin-login>
+                <label>
+                  <span>Email admin</span>
+                  <input data-admin-email type="email" placeholder="viralnight001@gmail.com" autocomplete="email" />
+                </label>
+                <label>
+                  <span>Mot de passe</span>
+                  <input data-admin-password type="password" placeholder="Mot de passe admin" autocomplete="current-password" />
+                </label>
+                <div class="admin-auth-actions">
+                  <button class="button button-secondary" type="submit">Connexion admin</button>
+                  <button class="button button-secondary" type="button" data-admin-password-reset>Nouveau mot de passe</button>
+                  <button class="button button-secondary" type="submit" data-admin-password-save hidden>Enregistrer</button>
+                  <button class="button button-secondary" type="button" data-admin-logout hidden>Déconnexion</button>
+                </div>
+                <label data-admin-password-update hidden>
+                  <span>Nouveau mot de passe</span>
+                  <input data-admin-new-password type="password" placeholder="8 caractères minimum, dont 1 chiffre" autocomplete="new-password" pattern="(?=.*[0-9]).{8,}" title="Minimum 8 caractères, dont 1 chiffre" />
+                </label>
+                <p data-admin-auth-status>Connecte-toi pour charger les vraies validations Supabase.</p>
+              </form>
+            </div>
+          </details>
+        </div>
+
         <header class="admin-topbar">
           <div>
             <p class="eyebrow">Opérations ViralNight</p>
             <h1>Validation multi-clients</h1>
             <p>Traitez les stories, Reels, TikToks et Shorts depuis une seule file, sans donner ce travail aux clubs.</p>
           </div>
-          <form class="admin-auth" data-admin-login>
-            <label>
-              <span>Email admin</span>
-              <input data-admin-email type="email" placeholder="viralnight001@gmail.com" autocomplete="email" />
-            </label>
-            <label>
-              <span>Mot de passe</span>
-              <input data-admin-password type="password" placeholder="Mot de passe admin" autocomplete="current-password" />
-            </label>
-            <div class="admin-auth-actions">
-              <button class="button button-secondary" type="submit">Connexion admin</button>
-              <button class="button button-secondary" type="button" data-admin-password-reset>Enregistrer un nouveau mot de passe</button>
-              <button class="button button-secondary" type="submit" data-admin-password-save hidden>Enregistrer le mot de passe</button>
-              <button class="button button-secondary" type="button" data-admin-logout hidden>Déconnexion</button>
-            </div>
-            <label data-admin-password-update hidden>
-              <span>Nouveau mot de passe</span>
-              <input data-admin-new-password type="password" placeholder="8 caractères minimum, dont 1 chiffre" autocomplete="new-password" pattern="(?=.*[0-9]).{8,}" title="Minimum 8 caractères, dont 1 chiffre" />
-            </label>
-            <p data-admin-auth-status>Connecte-toi pour charger les vraies validations Supabase.</p>
-          </form>
-          <form class="client-dashboard-form" data-client-dashboard-form hidden>
-            <label>
-              <span>Dashboard client</span>
-              <input name="client_email" type="email" placeholder="email du club" autocomplete="off" />
-            </label>
-            <button class="button button-secondary" type="submit">Ouvrir le dashboard</button>
-          </form>
-          <form class="client-dashboard-form" data-create-client-form hidden>
-            <label>
-              <span>Créer un client</span>
-              <input name="establishment_name" type="text" placeholder="Nom du club" autocomplete="organization" />
-            </label>
-            <label>
-              <span>Email du club</span>
-              <input name="owner_email" type="email" placeholder="email du client" autocomplete="off" />
-            </label>
-            <label>
-              <span>Ville</span>
-              <input name="city" type="text" placeholder="Bruxelles" autocomplete="address-level2" />
-            </label>
-            <label>
-              <span>Accès dashboard</span>
-              <select name="subscription_status">
-                <option value="essai">Essai / non payé</option>
-                <option value="actif">Actif / payé</option>
-                <option value="suspendu">Suspendu</option>
-              </select>
-            </label>
-            <button class="button button-secondary" type="submit">Créer le client</button>
-          </form>
-          <form class="client-dashboard-form" data-client-access-form hidden>
-            <label>
-              <span>Activer / suspendre un client</span>
-              <input name="owner_email" type="email" placeholder="email du client" autocomplete="off" />
-            </label>
-            <label>
-              <span>Statut d'accès</span>
-              <select name="subscription_status">
-                <option value="actif">Actif / dashboard ouvert</option>
-                <option value="essai">Essai / dashboard fermé</option>
-                <option value="suspendu">Suspendu / dashboard fermé</option>
-              </select>
-            </label>
-            <button class="button button-secondary" type="submit">Mettre à jour l'accès</button>
-          </form>
         </header>
 
         <section class="admin-metrics" aria-label="Résumé validation">
@@ -127,6 +99,72 @@
             <span>Établissements actifs</span>
             <strong data-admin-metric="establishments">0</strong>
           </article>
+        </section>
+
+        <!-- Les 3 actions de gestion client, avant eparpillees dans l'en-tete
+             en formulaires flottants, regroupees dans un seul panneau avec
+             des sous-titres clairs -- ce que Julien pointait comme "tout et
+             n'importe quoi". Toujours masque au visiteur non-admin par
+             admin.js, seul le conteneur change. -->
+        <section class="admin-panel admin-quickactions" data-quickactions hidden>
+          <div class="admin-panel-heading">
+            <div>
+              <h2>Gestion rapide</h2>
+              <p>Ouvrir, créer ou activer un client, sans changer de page.</p>
+            </div>
+          </div>
+          <div class="quickactions-grid">
+            <form class="quickaction" data-client-dashboard-form>
+              <h3>Ouvrir un dashboard</h3>
+              <label>
+                <span>Email du club</span>
+                <input name="client_email" type="email" placeholder="email du club" autocomplete="off" />
+              </label>
+              <button class="button button-secondary" type="submit">Ouvrir</button>
+            </form>
+
+            <form class="quickaction" data-create-client-form>
+              <h3>Créer un client</h3>
+              <label>
+                <span>Nom du club</span>
+                <input name="establishment_name" type="text" placeholder="Nom du club" autocomplete="organization" />
+              </label>
+              <label>
+                <span>Email du club</span>
+                <input name="owner_email" type="email" placeholder="email du client" autocomplete="off" />
+              </label>
+              <label>
+                <span>Ville</span>
+                <input name="city" type="text" placeholder="Bruxelles" autocomplete="address-level2" />
+              </label>
+              <label>
+                <span>Accès dashboard</span>
+                <select name="subscription_status">
+                  <option value="essai">Essai / non payé</option>
+                  <option value="actif">Actif / payé</option>
+                  <option value="suspendu">Suspendu</option>
+                </select>
+              </label>
+              <button class="button button-secondary" type="submit">Créer</button>
+            </form>
+
+            <form class="quickaction" data-client-access-form>
+              <h3>Activer / suspendre</h3>
+              <label>
+                <span>Email du client</span>
+                <input name="owner_email" type="email" placeholder="email du client" autocomplete="off" />
+              </label>
+              <label>
+                <span>Statut d'accès</span>
+                <select name="subscription_status">
+                  <option value="actif">Actif / dashboard ouvert</option>
+                  <option value="essai">Essai / dashboard fermé</option>
+                  <option value="suspendu">Suspendu / dashboard fermé</option>
+                </select>
+              </label>
+              <button class="button button-secondary" type="submit">Mettre à jour</button>
+            </form>
+          </div>
         </section>
 
         <section class="admin-panel">

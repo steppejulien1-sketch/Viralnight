@@ -592,9 +592,11 @@ function updateAuthUi() {
     .map((champ) => champ?.closest("label"))
     .filter(Boolean);
   for (const champ of champsConnexion) champ.hidden = Boolean(state.session);
-  if (clientDashboardForm) clientDashboardForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
-  if (createClientForm) createClientForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
-  if (clientAccessForm) clientAccessForm.hidden = email.toLowerCase() !== ADMIN_EMAIL;
+  // Les 3 formulaires de gestion client vivent dans UN panneau (Gestion
+  // rapide) : seul son conteneur bascule desormais, pas chaque formulaire
+  // individuellement.
+  const quickactions = document.querySelector("[data-quickactions]");
+  if (quickactions) quickactions.hidden = email.toLowerCase() !== ADMIN_EMAIL;
   if (prospectStatus) {
     prospectStatus.textContent =
       email.toLowerCase() === ADMIN_EMAIL
