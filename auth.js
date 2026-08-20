@@ -181,7 +181,14 @@ async function inscription(email, password, club) {
     return;
   }
 
-  window.location.href = destination(email);
+  // A la CREATION du compte (pas a une connexion ulterieure), un petit
+  // ecran d'accueil explique la boucle avant le tableau de bord — vide
+  // au premier lancement, il ne dit sinon rien du fonctionnement du
+  // produit. destination() garde la main sur les cas particuliers
+  // (deep-link ?suivant=, compte admin) : bienvenue.html ne remplace
+  // que l'atterrissage par defaut sur app.html.
+  const cible = destination(email);
+  window.location.href = cible === "./app.html" ? "./bienvenue.html" : cible;
 }
 
 async function envoyer(event) {

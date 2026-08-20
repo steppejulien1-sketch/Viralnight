@@ -26,6 +26,7 @@ export default defineConfig({
         live: resolve(__dirname, "live.html"),
         connexion: resolve(__dirname, "connexion.html"),
         inscription: resolve(__dirname, "inscription.html"),
+        bienvenue: resolve(__dirname, "bienvenue.html"),
         mentionsLegales: resolve(__dirname, "mentions-legales.html"),
         confidentialite: resolve(__dirname, "confidentialite.html"),
         cgu: resolve(__dirname, "cgu.html"),
