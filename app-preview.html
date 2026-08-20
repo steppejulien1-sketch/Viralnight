@@ -128,29 +128,24 @@
         position: absolute; inset: 0; z-index: 30;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         gap: 4px; padding: 28px 26px 34px; text-align: center;
-        background:
-          radial-gradient(120% 70% at 50% -10%, rgba(255,47,69,.14), transparent 60%),
-          var(--bg);
+        /* Ecran en blanc, sur demande de Julien -- seul cet ecran :
+           le reste de l'appli (carte, boutique) reste sombre. On
+           redefinit --ink/--ink2/--ink3/--line2 localement plutot que
+           globalement sur .screen : la cascade CSS ne les change alors
+           que pour les descendants de .vue-accueil. */
+        --ink: #15181d;
+        --ink2: #5c6370;
+        --ink3: #9aa1ac;
+        --line2: rgba(15,17,20,.14);
+        background: #ffffff;
         color: var(--ink);
         transition: opacity .35s ease, visibility .35s ease;
       }
       .vue-accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
       @media (prefers-reduced-motion: reduce) { .vue-accueil { transition: none; } }
 
-      .ac-mascot { width: 112px; margin-bottom: 6px; }
-      .ac-mascot svg { display: block; width: 100%; height: auto; overflow: visible; }
-      .ac-mascot-ball { transform-origin: 80px 38px; animation: ac-spin 7s linear infinite; }
-      @keyframes ac-spin { to { transform: rotate(360deg); } }
-      .ac-mascot-lights circle { animation: ac-twinkle 2.4s ease-in-out infinite; transform-origin: center; }
-      .ac-mascot-lights circle:nth-child(1) { animation-delay: 0s; }
-      .ac-mascot-lights circle:nth-child(2) { animation-delay: .35s; }
-      .ac-mascot-lights circle:nth-child(3) { animation-delay: .7s; }
-      .ac-mascot-lights circle:nth-child(4) { animation-delay: 1.05s; }
-      .ac-mascot-lights circle:nth-child(5) { animation-delay: 1.4s; }
-      @keyframes ac-twinkle { 0%,100% { opacity:.35; transform:scale(.8); } 50% { opacity:1; transform:scale(1.15); } }
-      @media (prefers-reduced-motion: reduce) {
-        .ac-mascot-ball, .ac-mascot-lights circle { animation: none; }
-      }
+      .ac-mascot { width: 100px; margin-bottom: 10px; }
+      .ac-mascot canvas { display: block; width: 100%; height: auto; }
 
       .ac-title { margin: 4px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
       .ac-lead { margin: 6px 0 26px; font-size: 13.5px; color: var(--ink2); max-width: 30ch; }
@@ -164,7 +159,7 @@
       }
       .ac-btn:active { transform: scale(.97); }
       .ac-btn svg { width: 17px; height: 17px; flex: none; }
-      .ac-btn-google { background: #fff; color: #1a1a1a; }
+      .ac-btn-google { background: #fff; color: #1a1a1a; box-shadow: inset 0 0 0 1px rgba(0,0,0,.14); }
       .ac-btn-apple { background: #000; color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
       .ac-btn-google:hover, .ac-btn-apple:hover { filter: brightness(1.06); }
       .ac-sep { margin: 2px 0; font-size: 11px; color: var(--ink3); }
@@ -172,7 +167,7 @@
         background: transparent; color: var(--ink2);
         box-shadow: inset 0 0 0 1px var(--line2);
       }
-      .ac-btn-ghost:hover { color: var(--ink); box-shadow: inset 0 0 0 1px rgba(255,255,255,.28); }
+      .ac-btn-ghost:hover { color: var(--ink); box-shadow: inset 0 0 0 1px rgba(0,0,0,.28); }
       .ac-btn-quiet {
         background: none; color: var(--ink3); min-height: 32px; margin-top: 2px;
         font-size: 11.5px; text-decoration: underline; text-underline-offset: 2px;
@@ -180,13 +175,13 @@
       .ac-btn-quiet:hover { color: var(--ink2); }
       .ac-input {
         width: 100%; min-height: 42px; padding: 0 14px; border: 0; border-radius: 999px;
-        background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px var(--line2);
+        background: rgba(0,0,0,.035); box-shadow: inset 0 0 0 1px var(--line2);
         color: var(--ink); font-size: 13.5px; font-family: var(--sans);
       }
       .ac-input::placeholder { color: var(--ink3); }
       .ac-input:focus { outline: none; box-shadow: inset 0 0 0 1px #ff2f45; }
       .ac-msg { margin: 0; font-size: 11.5px; color: var(--ink2); text-align: center; }
-      .ac-msg.err { color: #ff8080; }
+      .ac-msg.err { color: #e0223a; }
 
       /* ============================================================
          ECRAN 1 — LA CARTE
@@ -848,49 +843,7 @@
              (activerVue), qui gere la navigation APRES l'accueil. -->
         <div class="vue-accueil" id="vue-accueil">
           <div class="ac-mascot" aria-hidden="true">
-            <svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <radialGradient id="acBallShine" cx="35%" cy="30%" r="70%">
-                  <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
-                  <stop offset="45%" stop-color="#d8d8de" stop-opacity="0.55" />
-                  <stop offset="100%" stop-color="#8d8d97" stop-opacity="0.3" />
-                </radialGradient>
-                <linearGradient id="acBodyShade" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#2a2733" />
-                  <stop offset="100%" stop-color="#15131b" />
-                </linearGradient>
-              </defs>
-              <g class="ac-mascot-lights">
-                <circle cx="80" cy="12" r="3" fill="#ff2f45" />
-                <circle cx="106" cy="24" r="2.4" fill="#9281f7" />
-                <circle cx="112" cy="46" r="2" fill="#ffe27a" />
-                <circle cx="48" cy="46" r="2" fill="#63a1ff" />
-                <circle cx="54" cy="24" r="2.4" fill="#ff2f45" />
-              </g>
-              <g class="ac-mascot-ball">
-                <circle cx="80" cy="38" r="17" fill="url(#acBallShine)" stroke="rgba(255,255,255,0.35)" stroke-width="0.6" />
-                <g stroke="rgba(10,8,16,0.35)" stroke-width="0.6" fill="none">
-                  <path d="M63 38h34M80 21v34M67 25l26 26M93 25 67 51" />
-                  <circle cx="80" cy="38" r="10" />
-                </g>
-              </g>
-              <line x1="80" y1="55" x2="80" y2="76" stroke="rgba(255,255,255,0.25)" stroke-width="1.4" />
-              <g class="ac-mascot-body">
-                <ellipse cx="80" cy="140" rx="46" ry="50" fill="url(#acBodyShade)" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
-                <circle cx="38" cy="128" r="9" fill="url(#acBodyShade)" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
-                <circle cx="122" cy="128" r="9" fill="url(#acBodyShade)" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
-                <g>
-                  <rect x="46" y="124" width="30" height="22" rx="11" fill="#0b0d11" stroke="#ff2f45" stroke-width="2" />
-                  <rect x="84" y="124" width="30" height="22" rx="11" fill="#0b0d11" stroke="#ff2f45" stroke-width="2" />
-                  <path d="M76 133h8" stroke="#ff2f45" stroke-width="2" stroke-linecap="round" />
-                  <path d="M52 130q6-4 12 0" stroke="rgba(255,255,255,0.45)" stroke-width="1.6" fill="none" stroke-linecap="round" />
-                  <path d="M90 130q6-4 12 0" stroke="rgba(255,255,255,0.45)" stroke-width="1.6" fill="none" stroke-linecap="round" />
-                </g>
-                <path d="M68 160q12 10 24 0" stroke="#edeff4" stroke-width="2.6" fill="none" stroke-linecap="round" />
-                <path d="M36 158q-14 6-16 20" stroke="url(#acBodyShade)" stroke-width="10" fill="none" stroke-linecap="round" />
-                <path d="M124 158q14 6 16 20" stroke="url(#acBodyShade)" stroke-width="10" fill="none" stroke-linecap="round" />
-              </g>
-            </svg>
+            <canvas id="ac-mascot-canvas"></canvas>
           </div>
 
           <h2 class="ac-title">Bienvenue sur ViralNight</h2>
@@ -1382,6 +1335,50 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
    a donnees figees : se connecter ne branche pas ces donnees sur
    le compte reel.
    ========================================================== */
+// Le fond noir de la photo (public/mascotte-belier.png) doit disparaitre
+// sur l'ecran blanc, mais un simple seuil de luminosite mangerait les
+// lunettes de soleil (elles aussi tres sombres). Solution : un flood-fill
+// depuis les bords du canevas -- seul le noir RELIE au bord devient
+// transparent, ce qui epargne le noir isole a l'interieur du sujet.
+(function () {
+  var canvas = document.getElementById("ac-mascot-canvas");
+  if (!canvas) return;
+  var img = new Image();
+  img.onload = function () {
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    var w = canvas.width, h = canvas.height;
+    var frame = ctx.getImageData(0, 0, w, h);
+    var px = frame.data;
+    var SEUIL = 26;
+    var vu = new Uint8Array(w * h);
+    var pile = [];
+    function luminosite(i) {
+      var r = px[i * 4], g = px[i * 4 + 1], b = px[i * 4 + 2];
+      return r > g ? (r > b ? r : b) : (g > b ? g : b);
+    }
+    function empiler(x, y) {
+      if (x < 0 || y < 0 || x >= w || y >= h) return;
+      var i = y * w + x;
+      if (vu[i]) return;
+      vu[i] = 1;
+      if (luminosite(i) < SEUIL) pile.push(i);
+    }
+    for (var x = 0; x < w; x++) { empiler(x, 0); empiler(x, h - 1); }
+    for (var y = 0; y < h; y++) { empiler(0, y); empiler(w - 1, y); }
+    while (pile.length) {
+      var i = pile.pop();
+      px[i * 4 + 3] = 0;
+      var x = i % w, y = (i / w) | 0;
+      empiler(x - 1, y); empiler(x + 1, y); empiler(x, y - 1); empiler(x, y + 1);
+    }
+    ctx.putImageData(frame, 0, 0);
+  };
+  img.src = "/mascotte-belier.png";
+})();
+
 var VUE_ACCUEIL = $("#vue-accueil");
 var BOUTON_GOOGLE = $("#ac-google");
 var BOUTON_APPLE = $("#ac-apple");
