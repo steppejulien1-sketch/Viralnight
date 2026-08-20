@@ -103,8 +103,8 @@ function updateMetric(name, value, caption) {
   const metric = document.querySelector(`[data-metric="${name}"]`);
   if (!metric) return;
 
-  const valeur = metric.querySelector(".metric-value");
-  const legende = metric.querySelector(".metric-caption");
+  const valeur = metric.querySelector(".kpi-value");
+  const legende = metric.querySelector(".kpi-sub");
 
   if (valeur) valeur.textContent = value;
   if (legende && caption) legende.textContent = caption;
