@@ -9,9 +9,6 @@
 // que d'afficher un espace vide sans explication.
 
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
-import { injecterMascotte } from "./mascotte.js";
-
-injecterMascotte();
 
 /** Compte disposant du back-office complet. Doit rester aligne avec admin.js. */
 const ADMIN_EMAIL = "viralnight001@gmail.com";
