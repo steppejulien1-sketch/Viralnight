@@ -125,9 +125,12 @@
          cette maquette : aucun des boutons n'authentifie reellement.
          ============================================================ */
       .vue-accueil {
-        position: absolute; inset: 0; z-index: 30;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 4px; padding: 28px 26px 34px; text-align: center;
+        /* inset a -1px plutot que 0 : evite un liseré sombre visible aux
+           4 coins arrondis de l'ecran (sous-pixel entre le clip de
+           .screen et ce calque blanc), signale par Julien. */
+        position: absolute; inset: -1px; border-radius: inherit; z-index: 30;
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+        gap: 4px; padding: 24px 26px 46px; text-align: center;
         /* Ecran en blanc, sur demande de Julien -- seul cet ecran :
            le reste de l'appli (carte, boutique) reste sombre. On
            redefinit --ink/--ink2/--ink3/--line2 localement plutot que
@@ -144,8 +147,22 @@
       .vue-accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
       @media (prefers-reduced-motion: reduce) { .vue-accueil { transition: none; } }
 
-      .ac-mascot { width: 100px; margin-bottom: 10px; }
-      .ac-mascot canvas { display: block; width: 100%; height: auto; }
+      .ac-mascot { position: relative; width: 100px; margin: 0 0 10px; }
+      .ac-mascot canvas { position: relative; z-index: 1; display: block; width: 100%; height: auto; }
+      /* Les sabots du belier sont quasi noir pur dans la photo, comme le
+         fond : aucun seuil de detourage ne les separe proprement, ca les
+         "coupe" bizarrement pile aux pieds. Plutot que de forcer un
+         cutout parfait impossible, on cache la jonction sous une flaque
+         de lumiere sombre -- coherent avec la boule disco -- qui fond le
+         bord irregulier au lieu de l'exposer sur le blanc. */
+      .ac-mascot::before {
+        content: "";
+        position: absolute; z-index: 0;
+        left: 50%; bottom: 4%; width: 96%; height: 26%;
+        transform: translateX(-50%);
+        background: radial-gradient(closest-side, rgba(18,15,15,.4), rgba(18,15,15,0) 72%);
+        border-radius: 50%;
+      }
 
       .ac-title { margin: 4px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
       .ac-lead { margin: 6px 0 26px; font-size: 13.5px; color: var(--ink2); max-width: 30ch; }
@@ -1352,7 +1369,7 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
     var w = canvas.width, h = canvas.height;
     var frame = ctx.getImageData(0, 0, w, h);
     var px = frame.data;
-    var SEUIL = 26;
+    var SEUIL = 12;
     var vu = new Uint8Array(w * h);
     var pile = [];
     function luminosite(i) {
