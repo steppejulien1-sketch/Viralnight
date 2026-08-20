@@ -1450,7 +1450,7 @@ var map = new maplibregl.Map({
   style: "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=" + MAPTILER_KEY,
   center: BRUXELLES,
   zoom: 16,
-  minZoom: 2.2,
+  minZoom: 0.6,
   maxZoom: 18.5,
   pitch: 40,
   bearing: -12,
@@ -1469,6 +1469,12 @@ map.on("load", function () {
        fuseau horaire sans geolocalisation ni cle API. Voir
        carte-preview.html pour le meme detail. --- */
 function estNuit() {
+  // ?jour ou ?nuit force le mode pour verifier l'autre sans attendre
+  // l'heure reelle -- pratique pour Julien (teste souvent la nuit,
+  // ne peut jamais voir le mode jour naturellement).
+  var force = new URLSearchParams(location.search).get("ciel");
+  if (force === "jour") return false;
+  if (force === "nuit") return true;
   var h = new Date().getHours();
   return h >= 19 || h < 7;
 }
