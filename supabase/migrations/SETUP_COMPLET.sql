@@ -883,3 +883,36 @@ grant execute on function public.establishment_by_public_code(text) to anon, aut
 -- directement des scans ou des publications avec la cle anon.
 create index if not exists submissions_establishment_source_idx
   on public.submissions (establishment_id, source, submitted_at desc);
+
+-- ============================================================
+-- 202608200001_lecture_admin_rls.sql
+-- ------------------------------------------------------------
+-- Le compte admin (viralnight001@gmail.com) n'a jamais de ligne dans
+-- establishment_owners (ce n'est pas un club), donc current_establishment_id()
+-- lui renvoie NULL et les policies scopees par etablissement ne matchaient
+-- jamais rien pour lui : la file de validation d'admin.html renvoyait
+-- toujours une liste vide, et valider un contenu n'ecrivait rien.
+-- Policies permissives supplementaires : elles s'additionnent en OU aux
+-- policies existantes, qui restent inchangees pour les clubs.
+-- ============================================================
+
+create policy "submissions_select_admin"
+  on public.submissions
+  for select
+  using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
+
+create policy "submissions_update_admin"
+  on public.submissions
+  for update
+  using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com')
+  with check (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
+
+create policy "establishments_select_admin"
+  on public.establishments
+  for select
+  using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
+
+create policy "establishment_owners_select_admin"
+  on public.establishment_owners
+  for select
+  using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');

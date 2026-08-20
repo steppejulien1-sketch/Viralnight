@@ -72,6 +72,8 @@ const prospectStorageKey = "viralnight.prospects.v1";
 const state = {
   submissions: demoSubmissions.map((submission) => ({ ...submission })),
   prospects: loadProspects(),
+  clients: [],
+  clientsLoading: false,
   establishment: "all",
   status: "all",
   source: "demo",
@@ -80,6 +82,8 @@ const state = {
   prospectLoading: false,
 };
 
+const clientsTable = document.querySelector("[data-clients-table]");
+const clientsStatus = document.querySelector("[data-clients-status]");
 const table = document.querySelector("[data-admin-table]");
 const establishmentFilter = document.querySelector("[data-filter-establishment]");
 const statusFilter = document.querySelector("[data-filter-status]");
@@ -402,6 +406,7 @@ function render() {
   renderEstablishmentOptions();
   renderTable();
   renderProspects();
+  renderClients();
 }
 
 function normalizeSubmission(row) {
@@ -424,6 +429,118 @@ function normalizeSubmission(row) {
     contentType,
     source: row.source || "staff",
   };
+}
+
+const dateFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+const STATUT_LABEL = { actif: "Actif", essai: "Essai", suspendu: "Suspendu" };
+const STATUT_PILL = { actif: "high", essai: "medium", suspendu: "low" };
+
+/**
+ * Liste de tous les clubs, tous statuts confondus, avec l'email de leur
+ * proprietaire — la seule vue qui manquait pour repondre a "combien de
+ * clients j'ai, lesquels sont en essai, lesquels payent". Necessite la
+ * policy RLS admin ajoutee dans 202608200001_lecture_admin_rls.sql :
+ * sans elle, ces deux requetes renvoient toujours zero ligne pour l'admin.
+ */
+async function chargerClients() {
+  if (!supabase) return;
+
+  state.clientsLoading = true;
+  renderClients();
+
+  const [establishmentsResult, ownersResult] = await Promise.all([
+    supabase.from("establishments").select("id, name, city, subscription_status, created_at").order("created_at", { ascending: false }),
+    supabase.from("establishment_owners").select("email, establishment_id"),
+  ]);
+
+  state.clientsLoading = false;
+
+  if (establishmentsResult.error) {
+    if (clientsStatus) clientsStatus.textContent = `Lecture des clients refusée : ${establishmentsResult.error.message}`;
+    return;
+  }
+
+  const emailParEtablissement = new Map();
+  for (const owner of ownersResult.data || []) {
+    const liste = emailParEtablissement.get(owner.establishment_id) || [];
+    liste.push(owner.email);
+    emailParEtablissement.set(owner.establishment_id, liste);
+  }
+
+  state.clients = (establishmentsResult.data || []).map((etablissement) => ({
+    ...etablissement,
+    ownerEmails: emailParEtablissement.get(etablissement.id) || [],
+  }));
+
+  if (clientsStatus) {
+    clientsStatus.textContent = state.clients.length
+      ? `${state.clients.length} club${state.clients.length > 1 ? "s" : ""} au total.`
+      : "Aucun club cree pour l'instant.";
+  }
+
+  renderClients();
+}
+
+function setClientMetric(name, value) {
+  const element = document.querySelector(`[data-clients-metric="${name}"]`);
+  if (element) element.textContent = numberFormatter.format(value);
+}
+
+function renderClients() {
+  if (!clientsTable) return;
+
+  const head = `
+    <div class="admin-row admin-head">
+      <span>Club</span>
+      <span>Ville</span>
+      <span>Statut</span>
+      <span>Client depuis</span>
+      <span>Email proprietaire</span>
+      <span>Action</span>
+    </div>
+  `;
+
+  setClientMetric("total", state.clients.length);
+  setClientMetric("essai", state.clients.filter((c) => c.subscription_status === "essai").length);
+  setClientMetric("actif", state.clients.filter((c) => c.subscription_status === "actif").length);
+  setClientMetric("suspendu", state.clients.filter((c) => c.subscription_status === "suspendu").length);
+
+  if (state.clientsLoading) {
+    clientsTable.innerHTML = `${head}<div class="empty-state">Chargement des clients...</div>`;
+    return;
+  }
+
+  if (state.clients.length === 0) {
+    clientsTable.innerHTML = `${head}<div class="empty-state">Aucun club cree pour l'instant. Utilise "Creer un client" ci-dessus.</div>`;
+    return;
+  }
+
+  clientsTable.innerHTML =
+    head +
+    state.clients
+      .map((client) => {
+        const statut = STATUT_LABEL[client.subscription_status] || client.subscription_status || "—";
+        const pillClass = STATUT_PILL[client.subscription_status] || "low";
+        const depuis = client.created_at ? dateFormatter.format(new Date(client.created_at)) : "—";
+        const email = client.ownerEmails[0] || "—";
+
+        return `
+          <div class="admin-row">
+            <strong>${escapeHtml(client.name)}</strong>
+            <span>${escapeHtml(client.city || "—")}</span>
+            <span class="confidence-pill ${pillClass}">${escapeHtml(statut)}</span>
+            <span>${escapeHtml(depuis)}</span>
+            <span>${escapeHtml(email)}</span>
+            <span>
+              ${
+                email === "—"
+                  ? "—"
+                  : `<button type="button" class="button button-secondary" data-client-cycle-status="${escapeHtml(email)}" data-current-status="${escapeHtml(client.subscription_status || "essai")}">Changer le statut</button>`
+              }
+            </span>
+          </div>`;
+      })
+      .join("");
 }
 
 function useDemoData(message) {
@@ -1002,6 +1119,49 @@ clientAccessForm?.addEventListener("submit", async (event) => {
   setAuthStatus(`Accès mis à jour : ${result.establishment_name} est maintenant ${result.subscription_status}.`);
 });
 
+// Delegue sur le conteneur plutot que sur chaque bouton : la table est
+// entierement reconstruite (innerHTML) a chaque renderClients(), des
+// listeners attaches directement sur les boutons seraient perdus a
+// chaque rafraichissement.
+const CYCLE_STATUT = { essai: "actif", actif: "suspendu", suspendu: "essai" };
+
+clientsTable?.addEventListener("click", async (event) => {
+  const bouton = event.target.closest("[data-client-cycle-status]");
+  if (!bouton) return;
+
+  if (!supabase || !state.session?.access_token) {
+    if (clientsStatus) clientsStatus.textContent = "Connecte-toi en admin avant de changer un statut.";
+    return;
+  }
+
+  const email = bouton.dataset.clientCycleStatus;
+  const statutActuel = bouton.dataset.currentStatus;
+  const prochainStatut = CYCLE_STATUT[statutActuel] || "essai";
+
+  bouton.disabled = true;
+  bouton.textContent = "Mise à jour...";
+
+  const response = await fetch("/api/update-client-status", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${state.session.access_token}`,
+    },
+    body: JSON.stringify({ owner_email: email, subscription_status: prochainStatut }),
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    if (clientsStatus) clientsStatus.textContent = `Changement impossible : ${result.error || response.statusText}`;
+    bouton.disabled = false;
+    bouton.textContent = "Changer le statut";
+    return;
+  }
+
+  await chargerClients();
+});
+
 prospectForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -1091,7 +1251,7 @@ async function init() {
   updateAuthUi();
 
   if (session) {
-    await loadSupabaseSubmissions();
+    await Promise.all([loadSupabaseSubmissions(), chargerClients()]);
   }
 
   supabase.auth.onAuthStateChange((event, sessionState) => {
@@ -1104,8 +1264,12 @@ async function init() {
     }
     if (sessionState) {
       loadSupabaseSubmissions();
+      chargerClients();
     } else {
       useDemoData("Déconnecté : affichage en mode démonstration.");
+      state.clients = [];
+      if (clientsStatus) clientsStatus.textContent = "Connecte-toi en admin pour voir tes clients.";
+      renderClients();
     }
   });
 }
