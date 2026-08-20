@@ -294,6 +294,8 @@ function updateMetrics() {
 }
 
 function renderEstablishmentOptions() {
+  if (!establishmentFilter) return;
+
   const selectedValue = state.establishment;
   const establishments = [...new Set(state.submissions.map((submission) => submission.establishment))].sort();
 
@@ -308,6 +310,8 @@ function renderEstablishmentOptions() {
 }
 
 function renderTable() {
+  if (!table) return;
+
   const head = `
     <div class="admin-row admin-head">
       <span>Établissement</span>
@@ -1057,12 +1061,18 @@ prospectForm?.addEventListener("submit", async (event) => {
   if (prospectStatus) prospectStatus.textContent = `Club qualifié : ${result.prospect.club} · score ${result.prospect.score}/100.`;
 });
 
-establishmentFilter.addEventListener("change", () => {
+// Optionnel : absent de admin-prospection.html, qui n'a pas de file de
+// contenus a filtrer. Sans le ?., ce module entier plantait au chargement
+// sur cette page (throw synchrone = plus rien ne s'executait apres, pas
+// meme la connexion admin).
+establishmentFilter?.addEventListener("change", () => {
   state.establishment = establishmentFilter.value;
   renderTable();
 });
 
-statusFilter.addEventListener("change", () => {
+// Meme raison que establishmentFilter juste au-dessus : absent sur
+// admin-prospection.html.
+statusFilter?.addEventListener("change", () => {
   state.status = statusFilter.value;
   renderTable();
 });

@@ -15,6 +15,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         app: resolve(__dirname, "app.html"),
         admin: resolve(__dirname, "admin.html"),
+        adminProspection: resolve(__dirname, "admin-prospection.html"),
         simulateur: resolve(__dirname, "simulateur.html"),
         viralIntelligence: resolve(__dirname, "viral-intelligence.html"),
         demo: resolve(__dirname, "demo.html"),

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ViralNight Admin | Prospection</title>
+    <meta
+      name="description"
+      content="Back-office interne ViralNight pour qualifier de nouveaux clubs a prospecter."
+    />
+    <link rel="icon" href="./assets/favicon-vn.svg" type="image/svg+xml" />
+    <link rel="preload" href="./assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <meta name="theme-color" content="#040506" />
+    <meta name="robots" content="noindex" />
+    <link rel="stylesheet" href="./base.css" />
+    <link rel="stylesheet" href="./theme.css" />
+    <link rel="stylesheet" href="./admin.css" />
+  </head>
+  <body>
+    <main class="admin-shell">
+      <aside class="admin-sidebar">
+        <a class="brand" href="./index.html" aria-label="Retour ViralNight">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/></svg>
+          <span>ViralNight Admin</span>
+        </a>
+        <nav aria-label="Navigation admin">
+          <a href="./admin.html">Validation</a>
+          <a class="is-active" href="./admin-prospection.html">Prospection</a>
+          <a href="./app.html">Dashboard client</a>
+          <a href="./live.html">Soirée en cours</a>
+          <a href="./viral-intelligence.html">Analyse des soirées</a>
+          <a href="./qr.html">QR code du club</a>
+          <a href="./index.html">Site vitrine</a>
+        </nav>
+        <p>Recherche et qualification de nouveaux clubs a demarcher, separee de la validation quotidienne.</p>
+      </aside>
+
+      <section class="admin-workspace" id="prospection">
+        <!-- Connexion dupliquee de admin.html : chaque page admin doit
+             fonctionner seule (lien direct, rafraichissement), sans dependre
+             d'une connexion faite au prealable sur l'autre. Supabase garde la
+             session en local, donc si tu es deja connecte ici via admin.html,
+             ce formulaire se cache tout seul. -->
+        <header class="admin-topbar">
+          <div>
+            <p class="eyebrow">Prospection</p>
+            <h1>Trouver et qualifier de nouveaux clubs.</h1>
+            <p>Recherche separee de la validation du quotidien : la qualification ne bloque jamais la file de contenus.</p>
+          </div>
+          <form class="admin-auth" data-admin-login>
+            <label>
+              <span>Email admin</span>
+              <input data-admin-email type="email" placeholder="viralnight001@gmail.com" autocomplete="email" />
+            </label>
+            <label>
+              <span>Mot de passe</span>
+              <input data-admin-password type="password" placeholder="Mot de passe admin" autocomplete="current-password" />
+            </label>
+            <div class="admin-auth-actions">
+              <button class="button button-secondary" type="submit">Connexion admin</button>
+              <button class="button button-secondary" type="button" data-admin-password-reset>Enregistrer un nouveau mot de passe</button>
+              <button class="button button-secondary" type="submit" data-admin-password-save hidden>Enregistrer le mot de passe</button>
+              <button class="button button-secondary" type="button" data-admin-logout hidden>Déconnexion</button>
+            </div>
+            <label data-admin-password-update hidden>
+              <span>Nouveau mot de passe</span>
+              <input data-admin-new-password type="password" placeholder="8 caractères minimum, dont 1 chiffre" autocomplete="new-password" pattern="(?=.*[0-9]).{8,}" title="Minimum 8 caractères, dont 1 chiffre" />
+            </label>
+            <p data-admin-auth-status>Connecte-toi pour lancer une qualification.</p>
+          </form>
+        </header>
+
+        <section class="admin-panel prospect-panel" id="qualification">
+          <div class="admin-panel-heading">
+            <div>
+              <p class="eyebrow">Prospection</p>
+              <h2>Qualification avancée des clubs</h2>
+              <p>
+                Ajoute un club trouvé, puis ViralNight tente d’enrichir la fiche avec les données publiques fiables :
+                site, réseaux, capacité, activité et score de contact.
+              </p>
+              <p class="admin-mode" data-prospect-status>Connecte-toi en admin pour lancer une qualification.</p>
+            </div>
+          </div>
+
+          <form class="prospect-form" data-prospect-form>
+            <label>
+              <span>Club</span>
+              <input name="club" type="text" placeholder="Nom du club" autocomplete="organization" required />
+            </label>
+            <label>
+              <span>Ville</span>
+              <input name="city" type="text" placeholder="Bruxelles" autocomplete="address-level2" />
+            </label>
+            <label>
+              <span>Adresse</span>
+              <input name="address" type="text" placeholder="Adresse si connue" autocomplete="street-address" />
+            </label>
+            <label>
+              <span>Site officiel</span>
+              <input name="site" type="url" placeholder="https://club.com" autocomplete="url" />
+            </label>
+            <label>
+              <span>Email</span>
+              <input name="email" type="email" placeholder="contact@club.com" autocomplete="email" />
+            </label>
+            <label>
+              <span>Téléphone</span>
+              <input name="phone" type="tel" placeholder="+32 ..." autocomplete="tel" />
+            </label>
+            <label>
+              <span>Instagram déjà connu</span>
+              <input name="instagram" type="url" placeholder="https://instagram.com/..." />
+            </label>
+            <label>
+              <span>TikTok déjà connu</span>
+              <input name="tiktok" type="url" placeholder="https://tiktok.com/@..." />
+            </label>
+            <label>
+              <span>Facebook déjà connu</span>
+              <input name="facebook" type="url" placeholder="https://facebook.com/..." />
+            </label>
+            <label>
+              <span>LinkedIn déjà connu</span>
+              <input name="linkedin" type="url" placeholder="https://linkedin.com/company/..." />
+            </label>
+            <label>
+              <span>YouTube déjà connu</span>
+              <input name="youtube" type="url" placeholder="https://youtube.com/..." />
+            </label>
+            <button class="button button-secondary" type="submit">Qualifier le club</button>
+          </form>
+
+          <div class="prospect-table-wrap" aria-live="polite">
+            <table class="prospect-table">
+              <thead>
+                <tr>
+                  <th>Club</th>
+                  <th>Ville</th>
+                  <th>Adresse</th>
+                  <th>Site</th>
+                  <th>Email</th>
+                  <th>Téléphone</th>
+                  <th>Instagram</th>
+                  <th>TikTok</th>
+                  <th>Facebook</th>
+                  <th>LinkedIn</th>
+                  <th>YouTube</th>
+                  <th>Capacité max</th>
+                  <th>Type capacité</th>
+                  <th>Source capacité</th>
+                  <th>Taille estimée</th>
+                  <th>Activité réseaux</th>
+                  <th>Score prospect</th>
+                  <th>Message personnalisé</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody data-prospect-table>
+                <tr>
+                  <td colspan="19">Aucun club qualifié pour le moment.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+      </section>
+    </main>
+
+    <script type="module" src="./admin.js"></script>
+  </body>
+</html>
