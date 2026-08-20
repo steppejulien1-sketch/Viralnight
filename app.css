@@ -135,8 +135,7 @@ a {
   min-height: 40px;
   padding: 0 10px;
   color: var(--muted);
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
+  border-radius: 9px;
   font-weight: 520;
   font-size: 13px;
   transition: color 0.2s, background 0.2s;
@@ -155,18 +154,19 @@ a {
   content: "";
   position: absolute;
   left: 0;
-  width: 3px;
-  height: 18px;
-  border-radius: 4px;
+  top: 9px;
+  bottom: 9px;
+  width: 2px;
+  border-radius: 99px;
   background: transparent;
 }
 
 .app-nav a:hover,
 .app-nav a:focus-visible,
 .app-nav a.is-active {
-  color: var(--app-ink);
+  color: var(--white);
   background: rgba(255, 255, 255, 0.055);
-  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   outline: none;
 }
 
@@ -197,14 +197,13 @@ a {
   margin: 6px 0;
 }
 
+/* Fond uni. Le quadrillage 34px qui trainait ici donnait un air de papier
+   millimetre : dans le simulateur, ce sont les surfaces des cartes qui
+   portent le relief, pas une trame derriere elles. */
 .workspace {
   min-width: 0;
-  padding: 24px;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(180deg, var(--workspace), var(--night) 78%);
-  background-size: 34px 34px, 34px 34px, auto;
+  padding: 0 26px 70px;
+  background: var(--void);
 }
 
 .topbar {
@@ -215,11 +214,12 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  min-height: 66px;
-  padding: 8px 0 12px;
-  background: rgba(4, 5, 6, 0.9);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(18px);
+  min-height: 58px;
+  padding: 8px 0 10px;
+  background: rgba(4, 5, 6, 0.72);
+  border-bottom: 1px solid var(--hairline-soft);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
 }
 
 .topbar-title {
@@ -227,13 +227,11 @@ a {
   gap: 5px;
 }
 
+/* Pas de redefinition de .eyebrow : celui de theme.css (mono, capitales
+   espacees, losange corail) est deja celui du simulateur. La surcharge
+   ambre qui existait ici cassait la continuite entre les pages. */
 .eyebrow {
   margin: 0 0 6px;
-  color: var(--amber);
-  font-size: 0.74rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .topbar h1,
@@ -242,7 +240,9 @@ a {
 }
 
 .topbar h1 {
-  font-size: 1.2rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
   line-height: 1.1;
 }
 
@@ -1489,27 +1489,41 @@ progress::-moz-progress-bar {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 16px 17px;
-  border-radius: var(--r-card);
-  background: var(--surface-1);
-  border: 1px solid var(--hairline);
+  padding: 18px 20px 16px;
+  border-radius: 3px;
+  background: var(--ink);
+  box-shadow: var(--key-shadow);
+  transition: box-shadow 0.4s var(--ease), transform 0.4s var(--ease);
+}
+
+.metric:hover {
+  box-shadow: var(--key-shadow-strong);
+  transform: translateY(-2px);
 }
 
 .metric-label {
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--smoke);
 }
 
 .metric-value {
-  font-size: 24px;
-  font-weight: 700;
+  margin-top: 7px;
+  font-family: var(--font-mono);
+  font-size: clamp(23px, 2.1vw, 28px);
+  font-weight: 600;
   color: var(--white);
-  letter-spacing: -0.015em;
+  line-height: 1;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 
 .metric-caption {
-  font-size: 11px;
+  margin-top: 8px;
+  font-size: 11.5px;
   line-height: 1.4;
   color: var(--smoke);
 }

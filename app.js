@@ -90,9 +90,13 @@ function setDataStatus(message, state = "warning") {
   dataStatus.dataset.state = state;
 }
 
+// Remplit TOUS les elements correspondants, pas seulement le premier : le
+// nom de l'etablissement est affiche a deux endroits (barre laterale et
+// barre du haut), et un querySelector simple en laissait un sur "—".
 function setText(selector, value) {
-  const element = document.querySelector(selector);
-  if (element) element.textContent = value;
+  document.querySelectorAll(selector).forEach((element) => {
+    element.textContent = value;
+  });
 }
 
 function updateMetric(name, value, caption) {
@@ -350,6 +354,7 @@ function renderOverview(data) {
   );
 
   renderPipeline(stats);
+  renderDemarrage(stats);
 }
 
 /**
@@ -395,6 +400,20 @@ function renderPipeline(stats) {
   } else {
     note.textContent = "Tout est à jour.";
   }
+}
+
+/**
+ * Encart de demarrage.
+ *
+ * Un tableau de bord entierement a zero est un etat legitime — c'est celui
+ * de tout club le jour de son arrivee — mais il ne dit pas quoi faire. Tant
+ * que rien n'a ete collecte, on met la premiere action utile en tete de
+ * page ; des le premier scan, l'encart disparait de lui-meme.
+ */
+function renderDemarrage(stats) {
+  const encart = document.querySelector("[data-demarrage]");
+  if (!encart) return;
+  encart.hidden = Boolean(stats.scanCount || stats.receivedCount || stats.reach);
 }
 
 function updatePointRuleExamples(rules = getPointRules()) {

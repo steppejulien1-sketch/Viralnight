@@ -14,65 +14,72 @@
     <link rel="stylesheet" href="./base.css" />
     <link rel="stylesheet" href="./theme.css" />
     <link rel="stylesheet" href="./app.css" />
+    <!-- Chargee APRES app.css : c'est elle qui donne au tableau de bord
+         l'allure du simulateur (Julien : "le meme dashboard, juste avec
+         les donnees du client"). app.css reste pour les formulaires,
+         recompenses et Instagram, qui n'existent pas dans la demo. -->
+    <link rel="stylesheet" href="./dashboard.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar" aria-label="Navigation SaaS">
-        <a class="brand" href="./index.html" aria-label="Retour au site ViralNight">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/></svg>
-          <span>ViralNight OS</span>
-        </a>
+    <div class="noise" aria-hidden="true"></div>
 
-        <p class="sidebar-label">Pilotage</p>
-        <nav class="app-nav" aria-label="Raccourcis dashboard">
-          <a class="is-active" href="#overview" data-view-link="overview"><span>01</span>Vue générale</a>
-          <a href="#points" data-view-link="points"><span>02</span>Points &amp; récompenses</a>
-          <a href="#instagram" data-view-link="instagram"><span>03</span>Instagram</a>
-        </nav>
+    <!-- Ossature reprise de simulateur.html. Les classes de mise en page
+         (.side, .s-link, .topbar, .content) viennent de dashboard.css ;
+         tous les crochets data-* de app.js sont conserves tels quels. -->
+    <aside class="side" id="sideBar" aria-label="Navigation du tableau de bord">
+      <div class="side-logo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/></svg>
+        <span class="name">ViralNight OS</span>
+      </div>
 
-        <p class="sidebar-label">Collecte &amp; analyse</p>
-        <nav class="app-nav" aria-label="Collecte et analyse">
-          <a href="./live.html">Soirée en cours</a>
-          <a href="./viral-intelligence.html">Analyse des soirées</a>
-          <a href="./qr.html">QR code du club</a>
-          <!-- ⚠️ « Valider les contenus » RETIRE : il pointait sur
-               admin.html, le back-office INTERNE de ViralNight. Un gerant
-               de club y atterrissait sur « Validation multi-clients »,
-               « Creer un client » et « Qualification clubs » — vos outils
-               internes, montres a votre client.
-               Et la promesse etait fausse dans les deux sens : la
-               validation est centralisee chez ViralNight, volontairement
-               (« sans donner ce travail aux clubs », admin.html), donc le
-               club ne peut de toute facon pas valider lui-meme.
-               L'admin garde son acces : admin.html est atteignable
-               directement, et depuis le back-office il existe deja un
-               lien « Dashboard client » dans l'autre sens. -->
-        </nav>
+      <p class="s-label">Pilotage</p>
+      <nav aria-label="Raccourcis du tableau de bord">
+        <a class="s-link is-active" href="#overview" data-view-link="overview"><span class="n">01</span>Vue générale</a>
+        <a class="s-link" href="#points" data-view-link="points"><span class="n">02</span>Points &amp; récompenses</a>
+        <a class="s-link" href="#instagram" data-view-link="instagram"><span class="n">03</span>Instagram</a>
+      </nav>
 
-        <div class="sidebar-note">
-          <span>Mode dashboard</span>
-          <strong>Vue monitoring</strong>
-          <small>Tous les panels visibles au même endroit</small>
+      <p class="s-label">Collecte &amp; analyse</p>
+      <nav aria-label="Collecte et analyse">
+        <a class="s-link" href="./live.html">Soirée en cours</a>
+        <a class="s-link" href="./viral-intelligence.html">Analyse des soirées</a>
+        <a class="s-link" href="./qr.html">QR code du club</a>
+        <!-- « Valider les contenus » reste hors de cette liste : il menait a
+             admin.html, le back-office INTERNE de ViralNight. La validation
+             est centralisee chez vous, volontairement — le club ne peut pas
+             la faire lui-meme, et n'a pas a voir vos outils. -->
+      </nav>
+
+      <div class="side-foot">
+        <div class="side-card sidebar-note">
+          <span class="k">Établissement</span>
+          <span class="v" data-establishment-name>—</span>
+          <span class="s" data-data-status>Vérification du compte…</span>
         </div>
-      </aside>
+        <a class="side-back" href="./index.html?vitrine">← Retour au site</a>
+      </div>
+    </aside>
+    <div class="side-scrim" id="sideScrim" aria-hidden="true"></div>
 
-      <main class="workspace">
-        <header class="topbar">
-          <div class="topbar-title">
-            <h1 data-establishment-name>Mirage Club Brussels</h1>
-            <p class="data-status" data-data-status>Mode démo</p>
-          </div>
-          <div class="topbar-actions">
-            <details class="access-menu" data-access-menu>
-              <summary>Compte</summary>
-              <div class="access-panel">
-                <button type="button" class="button button-secondary" data-sign-out hidden>Déconnexion</button>
-                <p class="auth-feedback" data-auth-feedback aria-live="polite"></p>
-              </div>
-            </details>
-          </div>
-        </header>
+    <div class="main">
+      <header class="topbar">
+        <button class="tb-burger" id="tbBurger" type="button" aria-label="Ouvrir la navigation" aria-expanded="false"><span></span><span></span></button>
+        <div class="tb-club">
+          <span class="name" data-establishment-name>—</span>
+        </div>
+        <div class="tb-right">
+          <span class="tb-clock" id="tbClock">--:--:--</span>
+          <details class="access-menu" data-access-menu>
+            <summary>Compte</summary>
+            <div class="access-panel">
+              <button type="button" class="button button-secondary" data-sign-out hidden>Déconnexion</button>
+              <p class="auth-feedback" data-auth-feedback aria-live="polite"></p>
+            </div>
+          </details>
+        </div>
+      </header>
 
+      <main class="content">
         <section class="locked-dashboard" data-dashboard-locked hidden>
           <div>
             <span class="lock-badge">Accès verrouillé</span>
@@ -87,33 +94,52 @@
         </section>
 
         <section class="view is-active" id="overview" data-view="overview" aria-labelledby="overview-title" data-dashboard-content>
-          <div class="view-heading">
+          <div class="page-head">
             <div>
-              <p class="eyebrow">Vue générale</p>
+              <span class="eyebrow">01 · Vue générale</span>
               <h2 id="overview-title">Où en est votre club.</h2>
             </div>
-            <p data-promesse-chiffres>Chiffres mesurés sur vos contenus validés. Rien n'est estimé.</p>
+            <p class="note" data-promesse-chiffres>Chiffres mesurés sur vos contenus validés. Rien n'est estimé.</p>
           </div>
 
+          <!-- Visible tant qu'aucune donnee n'est arrivee. Un tableau de bord
+               a zero est un etat legitime, mais il ne dit pas quoi faire :
+               cet encart porte la premiere action utile. app.js le montre ou
+               le cache selon les chiffres reels. -->
+          <section class="demarrage" data-demarrage hidden>
+            <div>
+              <span class="eyebrow">Premiers pas</span>
+              <h3>Votre club est prêt, il manque le QR.</h3>
+              <p>
+                Tout part de là : affichez le QR code à l'entrée ou au bar. Dès le premier
+                scan, les chiffres de cette page se remplissent tout seuls.
+              </p>
+            </div>
+            <div class="demarrage-actions">
+              <a class="btn btn-mist btn-xs" href="./qr.html">Obtenir le QR code</a>
+              <a class="demarrage-lien" href="#points">Régler le barème de points</a>
+            </div>
+          </section>
+
           <div class="metrics">
-            <article class="metric" data-metric="reach">
-              <span class="metric-label">Vues validées</span>
-              <strong class="metric-value">0</strong>
+            <article class="metric spot" data-metric="reach">
+              <div class="metric-top"><span class="metric-label">Vues validées</span></div>
+              <div class="metric-line"><strong class="metric-value">0</strong><span class="metric-unit">vues</span></div>
               <span class="metric-caption">—</span>
             </article>
-            <article class="metric" data-metric="points">
-              <span class="metric-label">Points distribués</span>
-              <strong class="metric-value">0</strong>
+            <article class="metric spot" data-metric="points">
+              <div class="metric-top"><span class="metric-label">Points distribués</span></div>
+              <div class="metric-line"><strong class="metric-value">0</strong><span class="metric-unit">pts</span></div>
               <span class="metric-caption">—</span>
             </article>
-            <article class="metric" data-metric="scans">
-              <span class="metric-label">Scans QR</span>
-              <strong class="metric-value">0</strong>
+            <article class="metric spot" data-metric="scans">
+              <div class="metric-top"><span class="metric-label">Scans QR</span></div>
+              <div class="metric-line"><strong class="metric-value">0</strong><span class="metric-unit">scans</span></div>
               <span class="metric-caption">—</span>
             </article>
-            <article class="metric" data-metric="rewards">
-              <span class="metric-label">Récompenses réclamées</span>
-              <strong class="metric-value">0</strong>
+            <article class="metric spot" data-metric="rewards">
+              <div class="metric-top"><span class="metric-label">Récompenses réclamées</span></div>
+              <div class="metric-line"><strong class="metric-value">0</strong><span class="metric-unit">retirées</span></div>
               <span class="metric-caption">—</span>
             </article>
           </div>
@@ -164,12 +190,12 @@
         </section>
 
         <section class="view" id="points" data-view="points" aria-labelledby="points-title" data-dashboard-content>
-          <div class="view-heading">
+          <div class="page-head">
             <div>
-              <p class="eyebrow">Points & récompenses</p>
+              <span class="eyebrow">02 · Points &amp; récompenses</span>
               <h2 id="points-title">Configurer ce que le client gagne.</h2>
             </div>
-            <p>Barème, stock et seuils en une seule vue.</p>
+            <p class="note">Barème, stock et seuils en une seule vue.</p>
           </div>
 
           <div class="config-grid">
@@ -221,12 +247,12 @@
         </section>
 
         <section class="view" id="instagram" data-view="instagram" aria-labelledby="instagram-title" data-dashboard-content>
-          <div class="view-heading">
+          <div class="page-head">
             <div>
-              <p class="eyebrow">Instagram</p>
+              <span class="eyebrow">03 · Instagram</span>
               <h2 id="instagram-title">Connecter le compte Instagram du club.</h2>
             </div>
-            <p>Voyez combien de personnes vous mentionnent en story.</p>
+            <p class="note">Voyez combien de personnes vous mentionnent en story.</p>
           </div>
 
           <p class="instagram-banner" data-instagram-banner hidden></p>
@@ -242,38 +268,14 @@
           </section>
         </section>
 
-        </main>
+      </main>
     </div>
 
     <script type="module" src="./app.js"></script>
-    <script type="module">
-      // Comptage des KPI depuis 0 a l'arrivee sur l'ecran (audit
-      // dashboard #8) : purement visuel, s'execute une fois sur la
-      // valeur deja rendue dans le HTML, n'interfere pas avec les
-      // mises a jour dynamiques ulterieures de app.js.
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!reduceMotion) {
-        document.querySelectorAll(".kpi strong[data-metric]").forEach((el) => {
-          const raw = el.textContent.trim();
-          const match = raw.match(/[\d\s]+/);
-          if (!match) return;
-          const target = parseInt(match[0].replace(/\s/g, ""), 10);
-          if (!Number.isFinite(target)) return;
-          const prefix = raw.slice(0, match.index);
-          const suffix = raw.slice(match.index + match[0].length);
-          const duration = 800;
-          const start = performance.now();
-          function frame(now) {
-            const t = Math.min(1, (now - start) / duration);
-            const eased = 1 - Math.pow(1 - t, 3);
-            const value = Math.round(target * eased);
-            el.textContent = prefix + value.toLocaleString("fr-FR") + suffix;
-            if (t < 1) requestAnimationFrame(frame);
-            else el.textContent = raw;
-          }
-          requestAnimationFrame(frame);
-        });
-      }
-    </script>
+    <script type="module" src="./dashboardChrome.js"></script>
+    <!-- Le comptage anime des KPI qui vivait ici ciblait
+         « .kpi strong[data-metric] », un selecteur sans correspondance dans
+         la page : il n'a jamais rien anime. Retire plutot que repare, car
+         app.js reecrit ces chiffres des que Supabase repond. -->
   </body>
 </html>
