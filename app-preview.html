@@ -170,7 +170,7 @@
       }
 
       .ac-title { margin: 4px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
-      .ac-lead { margin: 6px 0 26px; font-size: 13.5px; color: var(--ink2); max-width: 30ch; }
+      .ac-lead { margin: 6px 0 26px; font-size: 13.5px; color: var(--ink2); max-width: 34ch; }
 
       .ac-actions { width: 100%; max-width: 280px; display: grid; gap: 10px; }
       .ac-btn {
@@ -878,7 +878,7 @@
           </div>
 
           <h2 class="ac-title">Bienvenue sur ViralNight</h2>
-          <p class="ac-lead">Scanne, poste ta soirée, débloque tes récompenses.</p>
+          <p class="ac-lead">Scanne le QR code du club, poste ta soirée en story et débloque des récompenses à chaque sortie.</p>
 
           <div class="ac-actions">
             <button type="button" class="ac-btn ac-btn-google" id="ac-google">
@@ -1402,6 +1402,26 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
       px[i * 4 + 3] = 0;
       var x = i % w, y = (i / w) | 0;
       empiler(x - 1, y); empiler(x + 1, y); empiler(x, y - 1); empiler(x, y + 1);
+    }
+    // Le flood-fill donne un alpha 0/255 net -- silhouette en escalier
+    // (visible, "buggee" selon Julien). Un flou 3x3 rien que sur le canal
+    // alpha adoucit le bord sans etaler les couleurs du sujet.
+    var alphaAvant = new Uint8Array(w * h);
+    for (var p = 0; p < w * h; p++) alphaAvant[p] = px[p * 4 + 3];
+    for (var yy = 0; yy < h; yy++) {
+      for (var xx = 0; xx < w; xx++) {
+        var idx = yy * w + xx;
+        if (alphaAvant[idx] === 0) continue;
+        var somme = 0, n = 0;
+        for (var dy = -1; dy <= 1; dy++) {
+          for (var dx = -1; dx <= 1; dx++) {
+            var vx = xx + dx, vy = yy + dy;
+            if (vx < 0 || vy < 0 || vx >= w || vy >= h) continue;
+            somme += alphaAvant[vy * w + vx]; n++;
+          }
+        }
+        px[idx * 4 + 3] = Math.round(somme / n);
+      }
     }
     ctx.putImageData(frame, 0, 0);
   };
