@@ -1385,7 +1385,17 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
 var VUE_ACCUEIL = $("#vue-accueil");
 var BOUTON_GOOGLE = $("#ac-google");
 var BOUTON_APPLE = $("#ac-apple");
+var CHAMP_EMAIL = $("#ac-email");
+var BOUTON_EMAIL = $("#ac-email-submit");
+var MESSAGE_ACCUEIL = $("#ac-msg");
 var BOUTON_COMMENCER = $("#ac-start");
+
+function afficherMessageAccueil(texte, estErreur) {
+  if (!MESSAGE_ACCUEIL) return;
+  MESSAGE_ACCUEIL.textContent = texte;
+  MESSAGE_ACCUEIL.hidden = false;
+  MESSAGE_ACCUEIL.classList.toggle("err", Boolean(estErreur));
+}
 
 if (BOUTON_GOOGLE) {
   BOUTON_GOOGLE.addEventListener("click", function () {
@@ -1398,27 +1408,38 @@ if (BOUTON_GOOGLE) {
 
 if (BOUTON_APPLE) {
   BOUTON_APPLE.addEventListener("click", function () {
-    window.alert("Connexion Apple bientot disponible. En attendant, utilise Google ou ton email.");
+    afficherMessageAccueil("Connexion Apple bientot disponible (ca demande un compte Apple Developer payant). Utilise Google ou ton email en attendant.", true);
   });
 }
 
-if (BOUTON_COMMENCER) {
-  BOUTON_COMMENCER.addEventListener("click", function () {
-    var adresse = window.prompt("Ton adresse email pour recevoir un lien de connexion :");
-    if (!adresse) return;
+if (BOUTON_EMAIL) {
+  BOUTON_EMAIL.addEventListener("click", function () {
+    var adresse = (CHAMP_EMAIL && CHAMP_EMAIL.value || "").trim();
+    if (!adresse || adresse.indexOf("@") === -1) {
+      afficherMessageAccueil("Adresse email invalide.", true);
+      if (CHAMP_EMAIL) CHAMP_EMAIL.focus();
+      return;
+    }
+    BOUTON_EMAIL.disabled = true;
     supabaseClubbeur.auth
       .signInWithOtp({
         email: adresse,
         options: { emailRedirectTo: window.location.origin + window.location.pathname },
       })
       .then(function (res) {
+        BOUTON_EMAIL.disabled = false;
         if (res.error) {
-          window.alert("Adresse invalide, reessaie.");
+          afficherMessageAccueil("Adresse invalide, reessaie.", true);
         } else {
-          window.alert("Lien envoye a " + adresse + ", regarde tes mails.");
-          VUE_ACCUEIL.classList.add("masque");
+          afficherMessageAccueil("Lien envoye a " + adresse + ", regarde tes mails.", false);
         }
       });
+  });
+}
+
+if (BOUTON_COMMENCER) {
+  BOUTON_COMMENCER.addEventListener("click", function () {
+    VUE_ACCUEIL.classList.add("masque");
   });
 }
 
