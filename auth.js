@@ -188,7 +188,21 @@ async function inscription(email, password, club) {
   // (deep-link ?suivant=, compte admin) : bienvenue.html ne remplace
   // que l'atterrissage par defaut sur app.html.
   const cible = destination(email);
-  window.location.href = cible === "./app.html" ? "./bienvenue.html" : cible;
+  if (cible === "./app.html") {
+    // Meme drapeau que la detection cote app.js (compte Google tout
+    // juste cree) : sans lui, cliquer "Aller a mon tableau de bord"
+    // depuis bienvenue.html declenchait une SECONDE redirection vers
+    // bienvenue.html, puisque le compte reste "tout neuf" pendant les
+    // deux premieres minutes.
+    try {
+      sessionStorage.setItem("vn:bienvenue-vue", "1");
+    } catch {
+      // Navigation privee : tant pis, au pire l'ecran s'affiche une fois de trop.
+    }
+    window.location.href = "./bienvenue.html";
+    return;
+  }
+  window.location.href = cible;
 }
 
 async function envoyer(event) {

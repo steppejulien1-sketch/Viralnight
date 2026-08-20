@@ -194,6 +194,39 @@ function renderAccessGate(data) {
     return false;
   }
 
+  // La connexion Google renvoie TOUJOURS ici, meme a la toute premiere
+  // creation de compte (l'adresse de retour OAuth est figee, elle ne peut
+  // pas dependre de savoir a l'avance si le compte existe deja) — contrairement
+  // a l'inscription par email/mot de passe, qui passe par bienvenue.html avant
+  // d'arriver la (voir inscription() dans auth.js). Un compte tout juste cree
+  // se reconnait a `created_at` et `last_sign_in_at` quasi identiques ; sur un
+  // compte existant, last_sign_in_at est recent mais created_at est ancien.
+  // Le sessionStorage garantit un seul passage par onglet, et sert aussi de
+  // garde-fou pour l'inscription email/mot de passe : bienvenue.html y pose
+  // le meme drapeau avant de rediriger ici, pour ne pas montrer l'ecran deux
+  // fois quand on clique "Aller a mon tableau de bord".
+  const utilisateur = data.session?.user;
+  if (utilisateur?.created_at && utilisateur?.last_sign_in_at) {
+    const ecartMs = new Date(utilisateur.last_sign_in_at) - new Date(utilisateur.created_at);
+    const compteTouTNeuf = ecartMs >= 0 && ecartMs < 120_000;
+    let dejaVu = true;
+    try {
+      dejaVu = sessionStorage.getItem("vn:bienvenue-vue") === "1";
+    } catch {
+      // Navigation privee : sessionStorage peut lever. On considere alors
+      // l'ecran comme deja vu plutot que de risquer une boucle infinie.
+    }
+    if (compteTouTNeuf && !dejaVu) {
+      try {
+        sessionStorage.setItem("vn:bienvenue-vue", "1");
+      } catch {
+        // Idem : l'echec de memorisation ne doit pas bloquer la redirection.
+      }
+      window.location.replace("./bienvenue.html");
+      return false;
+    }
+  }
+
   dashboardContent.forEach((section) => {
     section.hidden = !allowed;
   });
