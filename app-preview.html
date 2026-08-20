@@ -125,10 +125,15 @@
          cette maquette : aucun des boutons n'authentifie reellement.
          ============================================================ */
       .vue-accueil {
-        /* inset a -1px plutot que 0 : evite un liseré sombre visible aux
-           4 coins arrondis de l'ecran (sous-pixel entre le clip de
-           .screen et ce calque blanc), signale par Julien. */
-        position: absolute; inset: -1px; border-radius: inherit; z-index: 30;
+        /* Le rayon sur CE calque (meme "inherit") pouvait laisser un
+           filet sombre aux 4 coins : deux clips arrondis superposes
+           (celui-ci + celui de .screen) ne se recalculent pas toujours
+           au pixel pres. Un seul responsable du rayon suffit : celui de
+           .screen (overflow: hidden). Ce calque reste un rectangle plat
+           mais deborde de -3px de chaque cote, donc rien ne depasse du
+           coin arrondi du parent -- aucun bord courbe ici, tout est blanc
+           jusqu'au bord reellement visible. */
+        position: absolute; inset: -3px; border-radius: 0; z-index: 30;
         display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
         gap: 4px; padding: 24px 26px 46px; text-align: center;
         /* Ecran en blanc, sur demande de Julien -- seul cet ecran :
