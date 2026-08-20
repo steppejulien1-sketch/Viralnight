@@ -40,6 +40,77 @@ async function findUserByEmail(supabase, email) {
   return null;
 }
 
+/**
+ * Cree l'etablissement, le rattachement, le bareme par defaut et les
+ * recompenses par defaut. Partage entre le chemin admin (creation pour un
+ * tiers) et le chemin libre-service (creation pour soi-meme) : les deux
+ * doivent finir avec exactement le meme etat, un club qui marche des la
+ * premiere connexion, pas une coquille vide a completer plus tard.
+ */
+async function provisionnerEtablissement(supabase, { name, city, phone, category, subscriptionStatus, ownerId, ownerEmail }) {
+  const establishmentResult = await supabase
+    .from("establishments")
+    .insert({
+      name,
+      city: city || null,
+      phone: phone || null,
+      category,
+      subscription_status: subscriptionStatus,
+    })
+    .select("id, name")
+    .single();
+
+  if (establishmentResult.error) {
+    return { error: establishmentResult.error.message };
+  }
+
+  const establishmentId = establishmentResult.data.id;
+
+  const ownerResult = await supabase.from("establishment_owners").insert({
+    id: ownerId,
+    email: ownerEmail,
+    establishment_id: establishmentId,
+    role: "owner",
+  });
+
+  if (ownerResult.error) {
+    return { error: ownerResult.error.message };
+  }
+
+  await supabase.from("establishment_point_rules").insert({
+    establishment_id: establishmentId,
+    validated_publication: 0,
+    video_views_per_thousand: 25,
+    validated_story: 0,
+    story_views_per_thousand: 80,
+    viral_bonus: 90,
+    club_mention: 0,
+    qr_checkin: 15,
+    monthly_ambassador: 350,
+  });
+
+  // ⚠️ L'ERREUR EST LUE. Sans ce controle, cette insertion a echoue en
+  // silence pendant des mois : `max_redemptions` n'existait pas en base
+  // (migration 202607030002 jamais appliquee), Postgres rejetait la
+  // ligne, et le nouveau client etait cree avec ZERO recompense — sans
+  // que personne ne le sache. C'est exactement ce qui est arrive au
+  // Mirage. Un `await` sans lecture de l'erreur, c'est un echec qu'on
+  // s'interdit de voir.
+  const { error: erreurRecompenses } = await supabase.from("rewards").insert(
+    defaultRewards.map((reward) => ({
+      ...reward,
+      establishment_id: establishmentId,
+      active: true,
+    })),
+  );
+
+  if (erreurRecompenses) {
+    console.error("[api/create-client] recompenses par defaut non creees :", erreurRecompenses.message);
+  }
+
+  return { establishmentId };
+}
+
 export default async function handler(request, response) {
   if (request.method !== "POST") {
     return json(response, { error: "Method not allowed" }, 405);
@@ -56,7 +127,7 @@ export default async function handler(request, response) {
   const token = authHeader.replace(/^Bearer\s+/i, "");
 
   if (!token) {
-    return json(response, { error: "Missing admin session" }, 401);
+    return json(response, { error: "Missing session" }, 401);
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -66,11 +137,11 @@ export default async function handler(request, response) {
     },
   });
 
-  const { data: adminData, error: adminError } = await supabase.auth.getUser(token);
-  const adminEmail = adminData?.user?.email?.toLowerCase();
+  const { data: callerData, error: callerError } = await supabase.auth.getUser(token);
+  const caller = callerData?.user;
 
-  if (adminError || adminEmail !== ADMIN_EMAIL) {
-    return json(response, { error: "Unauthorized admin" }, 403);
+  if (callerError || !caller) {
+    return json(response, { error: "Invalid session" }, 401);
   }
 
   let payload;
@@ -80,6 +151,66 @@ export default async function handler(request, response) {
     return json(response, { error: "Invalid JSON body" }, 400);
   }
   payload ||= {};
+
+  const isAdmin = caller.email?.toLowerCase() === ADMIN_EMAIL;
+
+  // ---------------- Libre-service : l'appelant cree SON PROPRE club ----------------
+  //
+  // Un compte cree via l'inscription (email/mot de passe ou Google) n'avait
+  // jusqu'ici aucun club derriere : le nom saisi a l'inscription partait
+  // dans user_metadata et n'etait jamais lu nulle part. Résultat, un
+  // "gerant" qui vient de creer son compte tombe sur un dashboard verrouille
+  // ("Aucun etablissement lie a ce compte") — repere par Julien via une
+  // connexion Google. Ce chemin cree l'etablissement au nom de l'appelant
+  // LUI-MEME : ownerId/ownerEmail viennent du jeton verifie ci-dessus,
+  // jamais du corps de la requete, pour qu'on ne puisse pas s'attribuer le
+  // club de quelqu'un d'autre en passant un autre id.
+  if (!isAdmin) {
+    const dejaProprietaire = await supabase
+      .from("establishment_owners")
+      .select("establishment_id")
+      .eq("id", caller.id)
+      .maybeSingle();
+
+    if (dejaProprietaire.error) {
+      return json(response, { error: dejaProprietaire.error.message }, 500);
+    }
+
+    // Idempotent : si l'ecran d'accueil appelle deux fois (double clic,
+    // retour arriere), on renvoie le club existant plutot que d'en creer un
+    // second pour la meme personne.
+    if (dejaProprietaire.data?.establishment_id) {
+      return json(response, {
+        establishment_id: dejaProprietaire.data.establishment_id,
+        already_existed: true,
+      });
+    }
+
+    const establishmentName = String(payload.establishment_name || "").trim();
+    const city = String(payload.city || "").trim();
+
+    if (!establishmentName) {
+      return json(response, { error: "Le nom du club est requis." }, 400);
+    }
+
+    const resultat = await provisionnerEtablissement(supabase, {
+      name: establishmentName,
+      city,
+      phone: "",
+      category: "club",
+      subscriptionStatus: "essai",
+      ownerId: caller.id,
+      ownerEmail: caller.email.toLowerCase(),
+    });
+
+    if (resultat.error) {
+      return json(response, { error: resultat.error }, 500);
+    }
+
+    return json(response, { establishment_id: resultat.establishmentId, already_existed: false });
+  }
+
+  // ---------------- Admin : cree un club pour un tiers ----------------
 
   const establishmentName = String(payload.establishment_name || "").trim();
   const ownerEmail = String(payload.owner_email || "").trim().toLowerCase();
@@ -126,65 +257,21 @@ export default async function handler(request, response) {
     authUser = created.data.user;
   }
 
-  const establishmentResult = await supabase
-    .from("establishments")
-    .insert({
-      name: establishmentName,
-      city: city || null,
-      phone: phone || null,
-      category,
-      subscription_status: subscriptionStatus,
-    })
-    .select("id, name")
-    .single();
-
-  if (establishmentResult.error) {
-    return json(response, { error: establishmentResult.error.message }, 500);
-  }
-
-  const establishmentId = establishmentResult.data.id;
-
-  const ownerResult = await supabase.from("establishment_owners").insert({
-    id: authUser.id,
-    email: ownerEmail,
-    establishment_id: establishmentId,
-    role: "owner",
+  const resultat = await provisionnerEtablissement(supabase, {
+    name: establishmentName,
+    city,
+    phone,
+    category,
+    subscriptionStatus,
+    ownerId: authUser.id,
+    ownerEmail,
   });
 
-  if (ownerResult.error) {
-    return json(response, { error: ownerResult.error.message }, 500);
+  if (resultat.error) {
+    return json(response, { error: resultat.error }, 500);
   }
 
-  await supabase.from("establishment_point_rules").insert({
-    establishment_id: establishmentId,
-    validated_publication: 0,
-    video_views_per_thousand: 25,
-    validated_story: 0,
-    story_views_per_thousand: 80,
-    viral_bonus: 90,
-    club_mention: 0,
-    qr_checkin: 15,
-    monthly_ambassador: 350,
-  });
-
-  // ⚠️ L'ERREUR EST LUE. Sans ce controle, cette insertion a echoue en
-  // silence pendant des mois : `max_redemptions` n'existait pas en base
-  // (migration 202607030002 jamais appliquee), Postgres rejetait la
-  // ligne, et le nouveau client etait cree avec ZERO recompense — sans
-  // que personne ne le sache. C'est exactement ce qui est arrive au
-  // Mirage. Un `await` sans lecture de l'erreur, c'est un echec qu'on
-  // s'interdit de voir.
-  const { error: erreurRecompenses } = await supabase.from("rewards").insert(
-    defaultRewards.map((reward) => ({
-      ...reward,
-      establishment_id: establishmentId,
-      active: true,
-    })),
-  );
-
-  if (erreurRecompenses) {
-    console.error("[api/create-client] recompenses par defaut non creees :", erreurRecompenses.message);
-  }
+  const establishmentId = resultat.establishmentId;
 
   const resetResult = await supabase.auth.resetPasswordForEmail(ownerEmail, {
     redirectTo: `${getSiteUrl(request)}/app.html`,

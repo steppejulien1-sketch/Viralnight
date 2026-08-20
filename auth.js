@@ -171,7 +171,10 @@ async function inscription(email, password, club) {
 
   if (error) throw error;
 
-  // Sans session, Supabase attend une confirmation par email.
+  // Sans session, Supabase attend une confirmation par email : pas de jeton
+  // pour appeler l'API, le club sera cree plus tard. bienvenue.html detecte
+  // ce cas (aucune ligne dans establishment_owners) et redemande le nom du
+  // club a la premiere vraie connexion, plutot que de le perdre ici.
   if (!data.session) {
     message(
       `Compte créé. Ouvrez l'email envoyé à ${email} pour confirmer votre adresse, puis connectez-vous.`,
@@ -179,6 +182,29 @@ async function inscription(email, password, club) {
     );
     els.form.reset();
     return;
+  }
+
+  // Cree l'etablissement tout de suite, avec le nom deja saisi dans ce
+  // formulaire : sans cet appel, le nom de club partait dans user_metadata
+  // et n'etait jamais lu nulle part — un compte cree via l'inscription
+  // n'avait jusqu'ici JAMAIS de club derriere, quel que soit le chemin
+  // (email ou Google). Volontairement non bloquant : si l'appel echoue
+  // (reseau, etc.), on laisse quand meme passer vers bienvenue.html, qui
+  // redemandera le nom du club plutot que de coincer l'inscription entiere
+  // sur cet appel secondaire.
+  if (club) {
+    try {
+      await fetch("/api/create-client", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
+        body: JSON.stringify({ establishment_name: club }),
+      });
+    } catch (erreurProvisionnement) {
+      console.error("[inscription] creation du club", erreurProvisionnement);
+    }
   }
 
   // A la CREATION du compte (pas a une connexion ulterieure), un petit
