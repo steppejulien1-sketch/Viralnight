@@ -2,6 +2,7 @@
 
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { buildScanUrl, renderQrSvg, renderQrPngDataUrl } from "./lib/tracking/qrCode.js";
+import { escapeHtml } from "./lib/html/escape.js";
 
 const els = {
   banner: document.getElementById("banner"),
@@ -69,22 +70,48 @@ async function printPoster() {
   }
 
   // Affiche volontairement en noir sur blanc : c'est ce qui s'imprime le mieux
-  // et ce qui se lit le plus surement dans une salle sombre.
+  // et ce qui se lit le plus surement dans une salle sombre. Le corail reste
+  // la seule touche de couleur (regle du design system) — un simple filet
+  // autour du QR, pas un aplat qui mange l'encre a l'impression.
   win.document.write(`<!doctype html>
-<html lang="fr"><head><meta charset="UTF-8"><title>QR ViralNight</title>
+<html lang="fr"><head><meta charset="UTF-8"><title>QR ViralNight — ${escapeHtml(state.establishmentName)}</title>
 <style>
-  @page { margin: 14mm; }
-  body { margin:0; font-family: system-ui, sans-serif; color:#000; text-align:center;
-         display:flex; flex-direction:column; justify-content:center; min-height:100vh; }
-  h1 { font-size:34px; margin:0 0 6px; letter-spacing:-0.02em; }
-  p  { font-size:19px; margin:0 0 26px; color:#333; }
-  img { width:78%; max-width:460px; margin:0 auto; }
-  .code { margin-top:22px; font-size:15px; letter-spacing:0.22em; color:#555; }
+  @page { margin: 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 32px; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Segoe UI', system-ui, sans-serif; color: #0a0a0a; text-align: center;
+    border: 2px solid #0a0a0a;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; }
+  .brand svg { width: 20px; height: 20px; }
+  .brand span { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+  .club { font-size: 15px; font-weight: 500; color: #55565a; margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+  h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 10px; line-height: 1.05; }
+  p.lead { font-size: 18px; color: #333; margin: 0 0 32px; }
+  .qr-frame { padding: 18px; border: 3px solid #ff6363; border-radius: 12px; }
+  .qr-frame img { display: block; width: 340px; max-width: 62vw; }
+  .steps { display: flex; gap: 28px; margin-top: 34px; }
+  .steps div { max-width: 140px; }
+  .steps b { display: block; font-size: 22px; font-weight: 800; color: #ff6363; margin-bottom: 4px; }
+  .steps span { font-size: 13px; color: #333; line-height: 1.35; }
+  .code { margin-top: 30px; font-size: 12px; letter-spacing: 0.22em; color: #888; text-transform: uppercase; }
 </style></head>
 <body>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/></svg>
+    <span>ViralNight</span>
+  </div>
+  <p class="club">${escapeHtml(state.establishmentName)}</p>
   <h1>Gagne tes récompenses</h1>
-  <p>Scanne, publie ta story, récupère tes points.</p>
-  <img src="${dataUrl}" alt="QR code">
+  <p class="lead">Scanne, publie ta story, récupère tes points.</p>
+  <div class="qr-frame"><img src="${dataUrl}" alt="QR code"></div>
+  <div class="steps">
+    <div><b>1</b><span>Scanne le code avec ton téléphone</span></div>
+    <div><b>2</b><span>Publie une story ou un Reel avec le tag du club</span></div>
+    <div><b>3</b><span>Récupère tes points dès validation</span></div>
+  </div>
   <p class="code">${state.publicCode}</p>
 </body></html>`);
 
