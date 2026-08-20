@@ -184,6 +184,14 @@
       .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left { bottom: 92px !important; }
       .maplibregl-ctrl-attrib { font-size: 9.5px !important; background: rgba(15,17,22,.55) !important; }
       .maplibregl-ctrl-attrib a { color: rgba(255,255,255,.7) !important; }
+      /* Le petit rond "i" (attribution repliee) reste present et cliquable
+         -- contractuel sur l'offre gratuite MapTiler, ne jamais le
+         retirer -- mais fond noir plutot que blanc : il se fond dans la
+         carte au lieu de sauter aux yeux (demande de Julien). */
+      .maplibregl-ctrl-attrib-button {
+        background-color: #0b0d11 !important;
+        opacity: .55;
+      }
       .maplibregl-popup { display: none; }
       .maplibregl-ctrl-logo { display: none !important; }
 
@@ -226,10 +234,6 @@
       }
       /* Meme detail que carte-preview.html : "Mode invisible" et
          "Ajouter un ami" n'avaient aucun clic branche. */
-      .rbtn[aria-pressed="true"] { background: #1b1f25; }
-      .rbtn[aria-pressed="true"] svg.ico { color: #fff; stroke: #fff; }
-      #rail-me { transition: opacity .25s ease, transform .25s ease; }
-      #rail-me.cache { opacity: 0; transform: scale(.7); pointer-events: none; }
 
       .friend-rail {
         position: absolute; left: 0; right: 0; bottom: 92px; z-index: 24;
@@ -905,9 +909,6 @@
 
           <div class="carte-rail">
             <button class="rbtn" id="rail-me" aria-label="Ma pinte"><span class="dot"></span></button>
-            <button class="rbtn" id="btn-invisible" aria-label="Mode invisible" aria-pressed="false">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M6 20v-8.5a6 6 0 0 1 12 0V20l-2.2-1.8L14 20l-2-1.8L10 20l-1.8-1.8z"/><circle cx="9.6" cy="11" r=".9" fill="currentColor" stroke="none"/><circle cx="14.4" cy="11" r=".9" fill="currentColor" stroke="none"/></svg>
-            </button>
           </div>
 
           <div class="friend-rail" id="friend-rail">
@@ -1449,6 +1450,8 @@ var map = new maplibregl.Map({
   style: "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=" + MAPTILER_KEY,
   center: BRUXELLES,
   zoom: 16,
+  minZoom: 2.2,
+  maxZoom: 18.5,
   pitch: 40,
   bearing: -12,
   attributionControl: { compact: true }
@@ -1590,7 +1593,6 @@ function snapifie() {
   var cv = document.getElementById("etoiles");
   var ctx = cv.getContext("2d");
   var W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
-  var REDUIT = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function dimensionner() {
     var r = cv.getBoundingClientRect();
@@ -1601,20 +1603,13 @@ function snapifie() {
   dimensionner();
   window.addEventListener("resize", dimensionner);
 
-  var etoiles = [], filantes = [];
+  var etoiles = [];
   (function () {
     var s = 20260817;
     function r() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
     for (var i = 0; i < 140; i++) {
       etoiles.push({ x: r(), y: r(), r: .6 + r() * 1.5, ph: r() * 6.28, sp: .6 + r() * 1.6 });
     }
-    for (var j = 0; j < 3; j++) filantes.push(neuve(j * 2.6));
-    function neuve(delai) {
-      return { a: -.55 + Math.random() * .4, v: 9 + Math.random() * 7, len: 110 + Math.random() * 150,
-        x: Math.random() * .8, y: Math.random() * .5,
-        t: -(delai + Math.random() * 4), vie: 1.1 + Math.random() * .5 };
-    }
-    window.__neuve = neuve;
   })();
 
   /* --- Lune, soleil, fond du mode jour : voir carte-preview.html
@@ -1635,35 +1630,9 @@ function snapifie() {
     });
   }
 
-  function dessinerSoleil() {
-    var sx = CIEL_X * W, sy = CIEL_Y * H, sr = Math.min(W, H) * .1;
-    var corps = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
-    corps.addColorStop(0, "#fffdf2");
-    corps.addColorStop(.55, "#ffe27a");
-    corps.addColorStop(.85, "#ffb238");
-    corps.addColorStop(1, "#e8871f");
-    ctx.fillStyle = corps;
-    ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.29); ctx.fill();
-  }
-
-  function dessinerFondJour() {
-    var cx = W / 2, cy = H / 2, r0 = Math.min(W, H) * .38, r1 = Math.max(W, H) * .8;
-    var g = ctx.createRadialGradient(cx, cy, r0, cx, cy, r1);
-    g.addColorStop(0, "rgba(191,233,251,0)");
-    g.addColorStop(1, "rgba(191,233,251,.9)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    ctx.fillStyle = "rgba(255,255,255,.8)";
-    [[.62, .08, 1], [.15, .32, .7]].forEach(function (c) {
-      var nx = c[0] * W, ny = c[1] * H, s = Math.min(W, H) * .05 * c[2];
-      ctx.beginPath();
-      ctx.ellipse(nx, ny, s * 1.6, s * .62, 0, 0, 6.29);
-      ctx.ellipse(nx - s * .9, ny + s * .12, s, s * .5, 0, 0, 6.29);
-      ctx.ellipse(nx + s * .95, ny + s * .1, s * 1.05, s * .52, 0, 0, 6.29);
-      ctx.fill();
-    });
-  }
+  // dessinerSoleil() et dessinerFondJour() (soleil + nuages du mode jour)
+  // supprimees : le ciel reste etoile en permanence desormais, elles
+  // n'etaient plus appelees nulle part.
 
   var opacite = 1, dernier = 0, raf = null;
 
@@ -1672,38 +1641,19 @@ function snapifie() {
     if (opacite <= 0) return;
     ctx.globalAlpha = opacite;
 
-    if (!estNuit()) {
-      dessinerFondJour();
-      dessinerSoleil();
-      ctx.globalAlpha = 1;
-      return;
-    }
+    // Le mode jour reprend l'habillage de nuit (etoiles), sans la lune ni
+    // les etoiles filantes (demande de Julien). La lune reste reservee a
+    // la nuit, comme avant.
+    if (estNuit()) dessinerLune();
 
-    dessinerLune();
-
+    // Etoiles statiques (demande de Julien) : plus de scintillement anime,
+    // une opacite fixe par etoile.
+    ctx.fillStyle = "#fff";
     etoiles.forEach(function (e) {
-      var a = REDUIT ? .7 : .4 + .6 * Math.abs(Math.sin(temps * e.sp + e.ph));
-      ctx.globalAlpha = opacite * a;
-      ctx.fillStyle = "#fff";
+      ctx.globalAlpha = opacite * .78;
       ctx.beginPath(); ctx.arc(e.x * W, e.y * H, e.r, 0, 6.29); ctx.fill();
     });
 
-    if (!REDUIT) filantes.forEach(function (f, i) {
-      f.t += dt;
-      if (f.t < 0) return;
-      if (f.t > f.vie) { filantes[i] = window.__neuve(1.5 + Math.random() * 5); return; }
-      var d = f.t * f.v * 60;
-      var hx = f.x * W + Math.cos(f.a) * d, hy = f.y * H - Math.sin(f.a) * d;
-      var tx = hx - Math.cos(f.a) * f.len, ty = hy + Math.sin(f.a) * f.len;
-      var fade = Math.min(1, f.t / .18) * Math.min(1, (f.vie - f.t) / .3) * opacite;
-      var lg = ctx.createLinearGradient(tx, ty, hx, hy);
-      lg.addColorStop(0, "rgba(255,255,255,0)");
-      lg.addColorStop(1, "rgba(255,255,255," + (.9 * fade) + ")");
-      ctx.strokeStyle = lg; ctx.lineWidth = 2; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
-      ctx.globalAlpha = fade; ctx.fillStyle = "#fff";
-      ctx.beginPath(); ctx.arc(hx, hy, 2.2, 0, 6.29); ctx.fill();
-    });
     ctx.globalAlpha = 1;
   }
 
@@ -1764,6 +1714,22 @@ function noteRecompenseClub() {
   return cible.cout + " pts pour " + cible.nom.toLowerCase() + ". Tu en as " + nb(ETAT.solde) + ".";
 }
 
+// Les marqueurs MapLibre gardent une taille ecran fixe quel que soit le
+// zoom : vus depuis l'espace (globe entier a l'ecran), les badges de club
+// et les verres de biere devenaient enormes a cote du globe minuscule --
+// repere par Julien via des captures de Snap Map, ou les avatars restent
+// discrets meme tres dezoome. On reduit donc leur taille avec le zoom,
+// comme deja fait pour l'opacite des etoiles (majOpacite).
+var marqueursEchelle = [];
+function majTailleMarqueurs() {
+  var z = map.getZoom();
+  // 1 au niveau rue (zoom 16, la valeur par defaut), reduit progressivement
+  // en dezoomant, jusqu'a un plancher pour rester visible/cliquable meme
+  // au zoom minimal.
+  var s = Math.max(0.32, Math.min(1, 0.32 + (z - map.getMinZoom()) / (16 - map.getMinZoom()) * 0.68));
+  marqueursEchelle.forEach(function (el) { el.style.transform = "scale(" + s.toFixed(3) + ")"; });
+}
+
 map.on("load", function () {
   Object.keys(CLUBS).forEach(function (key) {
     var c = CLUBS[key];
@@ -1776,6 +1742,7 @@ map.on("load", function () {
     new maplibregl.Marker({ element: el, anchor: "center" })
       .setLngLat(c.lngLat)
       .addTo(map);
+    marqueursEchelle.push(el);
   });
 
   AMIS.filter(function (a) { return a.lngLat; }).forEach(function (a) {
@@ -1787,7 +1754,11 @@ map.on("load", function () {
     new maplibregl.Marker({ element: el, anchor: "bottom" })
       .setLngLat(a.lngLat)
       .addTo(map);
+    marqueursEchelle.push(el);
   });
+
+  majTailleMarqueurs();
+  map.on("zoom", majTailleMarqueurs);
 });
 
 $("#rail-me").addEventListener("click", function () {
@@ -1796,37 +1767,26 @@ $("#rail-me").addEventListener("click", function () {
 
 $("#rail-me").insertAdjacentHTML("afterbegin", pint(1));
 
-// Meme trois correctifs que carte-preview.html : "Mode invisible" et
-// "Ajouter un ami" ne faisaient rien au clic, et le rail d'amis ne
-// se glissait qu'au doigt, pas a la souris.
-$("#btn-invisible").addEventListener("click", function () {
-  var actif = this.getAttribute("aria-pressed") === "true";
-  this.setAttribute("aria-pressed", String(!actif));
-  this.setAttribute("aria-label", actif ? "Mode invisible" : "Redevenir visible");
-  $("#rail-me").classList.toggle("cache", !actif);
-});
+// "Mode invisible" retire (demande de Julien : bouton pas comprehensible
+// depuis l'ecran). "Ajouter un ami" ne faisait rien au clic, et le rail
+// d'amis ne se glissait qu'au doigt, pas a la souris : corriges ci-dessous.
 
-$('.fr[aria-label="Ajouter un ami"]').addEventListener("click", function () {
-  var btn = this;
-  var lien = location.origin + "/inscription.html?invite=mirage";
-  var partage = { title: "ViralNight", text: "Rejoins-moi sur ViralNight !", url: lien };
-  if (navigator.share) {
-    navigator.share(partage).catch(function () {});
-    return;
-  }
-  var confirmer = function () {
-    var label = btn.querySelector("b");
-    var avant = label.textContent;
-    label.textContent = "Lien copié";
-    setTimeout(function () { label.textContent = avant; }, 1600);
-  };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(lien).then(confirmer).catch(function () {});
-  }
+// "Partager un lien d'invitation" ne montrait rien a l'ecran : sur
+// desktop sans navigator.share, ca copiait un lien en silence, sans
+// retour visible. Julien voulait pouvoir ajouter un ami et LE VOIR
+// apparaitre dans le rail — c'est ce que fait ce bouton desormais.
+$('.fr[aria-label="Ajouter un ami"]')?.addEventListener("click", function () {
+  var nom = window.prompt("Prénom de ton ami·e ?");
+  if (!nom) return;
+  nom = nom.trim();
+  if (!nom) return;
+  var chip = creerAmiChip({ nom: nom, q: Math.random() });
+  friendRail.insertBefore(chip, this.nextSibling);
 });
 
 (function () {
   var rail = $("#friend-rail");
+  if (!rail) return;
   var bas = false, x0 = 0, scroll0 = 0, bouge = false;
   rail.addEventListener("mousedown", function (e) {
     bas = true; bouge = false; x0 = e.clientX; scroll0 = rail.scrollLeft;
@@ -1847,7 +1807,7 @@ $('.fr[aria-label="Ajouter un ami"]').addEventListener("click", function () {
 })();
 
 var friendRail = $("#friend-rail");
-AMIS.forEach(function (p) {
+function creerAmiChip(p) {
   var b = document.createElement("button");
   b.className = "fr";
   b.setAttribute("aria-label", p.nom);
@@ -1856,7 +1816,11 @@ AMIS.forEach(function (p) {
     activerVue("carte");
     map.flyTo({ center: p.lngLat, zoom: 16, duration: 800 });
   });
-  friendRail.appendChild(b);
+  return b;
+}
+
+AMIS.forEach(function (p) {
+  friendRail.appendChild(creerAmiChip(p));
 });
 
 /* ==========================================================
