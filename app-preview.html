@@ -683,6 +683,7 @@
       }
       .sheet-input::placeholder { color: var(--ink3); }
       .sheet-input:focus { outline: none; box-shadow: inset 0 0 0 1px var(--c, #ff2f45); }
+      .sheet-sep { text-align: center; font-size: 11px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; margin: 18px 0; }
 
       /* Confirmation d'echange : le vrai QR code a scanner, avec le
          code en secours en dessous pour le staff si le lecteur du
@@ -1089,6 +1090,18 @@ var supabaseClubbeur = createClient(URL_SUPABASE_CLUBBEUR, CLE_SUPABASE_CLUBBEUR
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
 
+// Parrainage : ?parrain=<pseudo-du-parrain> dans le lien qu'on partage.
+// Range en localStorage tout de suite, AVANT toute connexion : le
+// retour de Google (redirectTo = origin + pathname, sans query string,
+// voir plus bas) perdrait le parametre sinon. Meme reflexe que le slug
+// de club dans 06-pwa-clubbeurs/src/lib/club.js.
+(function () {
+  var code = new URLSearchParams(window.location.search).get("parrain");
+  if (code && /^[a-z0-9._]{2,30}$/i.test(code)) {
+    try { localStorage.setItem("vn.parrain", code.trim().toLowerCase()); } catch {}
+  }
+})();
+
 // Copie statique dans public/, servie telle quelle par Vite (dev et
 // prod) sans passer par sa chaine de transformation JS — voir la note
 // dans carte-preview.html pour le detail du probleme que ca evite.
@@ -1477,7 +1490,31 @@ function assurerProfil(user) {
   supabaseClubbeur
     .from("users")
     .upsert({ id: user.id, handle: repli, email: user.email || null }, { onConflict: "id", ignoreDuplicates: true })
-    .then(function (res) { if (res.error) console.warn("[amis] profil non cree :", res.error.message); });
+    .then(function (res) {
+      if (res.error) console.warn("[amis] profil non cree :", res.error.message);
+      reclamerParrainage();
+    });
+}
+
+// Credite le parrain si ce compte est arrive via un lien ?parrain=.
+// claim_referral() (migration 0032) refuse toute seule un deuxieme
+// appel pour le meme compte (colonne referred_by deja posee) : on peut
+// donc tenter sans risquer de crediter deux fois, mais on efface quand
+// meme la trace locale pour ne pas rappeler l'API a chaque connexion.
+function reclamerParrainage() {
+  var code;
+  try { code = localStorage.getItem("vn.parrain"); } catch { code = null; }
+  if (!code) return;
+  try { localStorage.removeItem("vn.parrain"); } catch {}
+  supabaseClubbeur.rpc("claim_referral", { p_code: code }).then(function (res) {
+    if (res.error) {
+      // "soi_meme"/"deja_parraine"/"introuvable" : pas d'erreur a
+      // montrer, ce compte n'a juste pas gagne le bonus a quelqu'un.
+      console.info("[parrainage]", res.error.message);
+      return;
+    }
+    console.info("[parrainage] parrain credite :", res.data && res.data[0]);
+  });
 }
 
 /* ==========================================================
@@ -1957,11 +1994,46 @@ function ouvrirAjoutAmi() {
       '<input type="text" class="sheet-input" id="fa-pseudo" placeholder="ex. sarah.mrt" autocomplete="off" autocapitalize="off" />' +
     '</div>' +
     '<button class="sheet-cta" id="fa-envoyer" type="button">Ajouter</button>' +
-    '<p class="sheet-note" id="fa-msg" hidden></p>',
+    '<p class="sheet-note" id="fa-msg" hidden></p>' +
+    '<p class="sheet-sep">ou</p>' +
+    '<p class="desc">Il n\'a pas encore de compte ? Envoie-lui ton lien -- <strong>tu gagnes 100 points</strong> des qu\'il en cree un.</p>' +
+    '<button class="sheet-cta sobre" id="fa-inviter" type="button">Partager mon lien</button>',
     "#fa-pseudo"
   );
 
-  var champ = $("#fa-pseudo"), bouton = $("#fa-envoyer"), msg = $("#fa-msg");
+  var champ = $("#fa-pseudo"), bouton = $("#fa-envoyer"), msg = $("#fa-msg"), boutonInviter = $("#fa-inviter");
+
+  // Le lien porte le pseudo DU COMPTE CONNECTE (pas celui tape dans le
+  // champ au-dessus, qui sert a l'ajout par pseudo -- deux mecaniques
+  // differentes dans la meme feuille). "own profile - select" (0001)
+  // autorise a lire sa propre ligne, jamais celle d'un autre.
+  boutonInviter.addEventListener("click", async function () {
+    boutonInviter.disabled = true;
+    var session = (await supabaseClubbeur.auth.getSession()).data.session;
+    var profil = session && (await supabaseClubbeur.from("users").select("handle").eq("id", session.user.id).single()).data;
+    boutonInviter.disabled = false;
+
+    if (!profil || !profil.handle) {
+      msg.textContent = "Ton profil n'est pas encore prêt, réessaie dans un instant.";
+      msg.hidden = false;
+      return;
+    }
+
+    var lien = window.location.origin + window.location.pathname + "?parrain=" + encodeURIComponent(profil.handle);
+
+    if (navigator.share) {
+      navigator.share({ title: "ViralNight", text: "Rejoins-moi sur ViralNight !", url: lien }).catch(function () {});
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lien);
+      msg.classList.remove("err");
+      msg.textContent = "Lien copié : " + lien;
+      msg.hidden = false;
+    } catch {
+      window.prompt("Copie ton lien :", lien);
+    }
+  });
 
   function direErreur(code) {
     var textes = {
