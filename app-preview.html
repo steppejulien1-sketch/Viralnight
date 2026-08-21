@@ -152,22 +152,8 @@
       .vue-accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
       @media (prefers-reduced-motion: reduce) { .vue-accueil { transition: none; } }
 
-      .ac-mascot { position: relative; width: 100px; margin: 0 0 10px; }
-      .ac-mascot canvas { position: relative; z-index: 1; display: block; width: 100%; height: auto; }
-      /* Les sabots du belier sont quasi noir pur dans la photo, comme le
-         fond : aucun seuil de detourage ne les separe proprement, ca les
-         "coupe" bizarrement pile aux pieds. Plutot que de forcer un
-         cutout parfait impossible, on cache la jonction sous une flaque
-         de lumiere sombre -- coherent avec la boule disco -- qui fond le
-         bord irregulier au lieu de l'exposer sur le blanc. */
-      .ac-mascot::before {
-        content: "";
-        position: absolute; z-index: 0;
-        left: 50%; bottom: 4%; width: 96%; height: 26%;
-        transform: translateX(-50%);
-        background: radial-gradient(closest-side, rgba(18,15,15,.4), rgba(18,15,15,0) 72%);
-        border-radius: 50%;
-      }
+      .ac-mascot { width: 100px; margin: 0 0 10px; }
+      .ac-mascot img { display: block; width: 100%; height: auto; }
 
       .ac-title { margin: 4px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
       .ac-lead { margin: 6px 0 26px; font-size: 13.5px; color: var(--ink2); max-width: 34ch; }
@@ -874,7 +860,7 @@
           <button type="button" class="ac-skip-dev" id="ac-start">Explorer sans compte</button>
 
           <div class="ac-mascot" aria-hidden="true">
-            <canvas id="ac-mascot-canvas"></canvas>
+            <img src="/mascotte-belier-detouree.png" alt="" />
           </div>
 
           <h2 class="ac-title">Bienvenue sur ViralNight</h2>
@@ -1364,70 +1350,6 @@ activerVue(location.hash === "#boutique" ? "boutique" : "carte");
    a donnees figees : se connecter ne branche pas ces donnees sur
    le compte reel.
    ========================================================== */
-// Le fond noir de la photo (public/mascotte-belier.png) doit disparaitre
-// sur l'ecran blanc, mais un simple seuil de luminosite mangerait les
-// lunettes de soleil (elles aussi tres sombres). Solution : un flood-fill
-// depuis les bords du canevas -- seul le noir RELIE au bord devient
-// transparent, ce qui epargne le noir isole a l'interieur du sujet.
-(function () {
-  var canvas = document.getElementById("ac-mascot-canvas");
-  if (!canvas) return;
-  var img = new Image();
-  img.onload = function () {
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    var w = canvas.width, h = canvas.height;
-    var frame = ctx.getImageData(0, 0, w, h);
-    var px = frame.data;
-    var SEUIL = 12;
-    var vu = new Uint8Array(w * h);
-    var pile = [];
-    function luminosite(i) {
-      var r = px[i * 4], g = px[i * 4 + 1], b = px[i * 4 + 2];
-      return r > g ? (r > b ? r : b) : (g > b ? g : b);
-    }
-    function empiler(x, y) {
-      if (x < 0 || y < 0 || x >= w || y >= h) return;
-      var i = y * w + x;
-      if (vu[i]) return;
-      vu[i] = 1;
-      if (luminosite(i) < SEUIL) pile.push(i);
-    }
-    for (var x = 0; x < w; x++) { empiler(x, 0); empiler(x, h - 1); }
-    for (var y = 0; y < h; y++) { empiler(0, y); empiler(w - 1, y); }
-    while (pile.length) {
-      var i = pile.pop();
-      px[i * 4 + 3] = 0;
-      var x = i % w, y = (i / w) | 0;
-      empiler(x - 1, y); empiler(x + 1, y); empiler(x, y - 1); empiler(x, y + 1);
-    }
-    // Le flood-fill donne un alpha 0/255 net -- silhouette en escalier
-    // (visible, "buggee" selon Julien). Un flou 3x3 rien que sur le canal
-    // alpha adoucit le bord sans etaler les couleurs du sujet.
-    var alphaAvant = new Uint8Array(w * h);
-    for (var p = 0; p < w * h; p++) alphaAvant[p] = px[p * 4 + 3];
-    for (var yy = 0; yy < h; yy++) {
-      for (var xx = 0; xx < w; xx++) {
-        var idx = yy * w + xx;
-        if (alphaAvant[idx] === 0) continue;
-        var somme = 0, n = 0;
-        for (var dy = -1; dy <= 1; dy++) {
-          for (var dx = -1; dx <= 1; dx++) {
-            var vx = xx + dx, vy = yy + dy;
-            if (vx < 0 || vy < 0 || vx >= w || vy >= h) continue;
-            somme += alphaAvant[vy * w + vx]; n++;
-          }
-        }
-        px[idx * 4 + 3] = Math.round(somme / n);
-      }
-    }
-    ctx.putImageData(frame, 0, 0);
-  };
-  img.src = "/mascotte-belier.png";
-})();
-
 var VUE_ACCUEIL = $("#vue-accueil");
 var BOUTON_GOOGLE = $("#ac-google");
 var BOUTON_APPLE = $("#ac-apple");
