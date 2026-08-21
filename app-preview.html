@@ -1045,14 +1045,6 @@
 
           <div class="carte-rail">
             <button class="rbtn" id="rail-me" aria-label="Ma pinte"><span class="dot"></span></button>
-            <!-- L'ajout d'ami vivait ici meme, dans un gros bouton rouge
-                 en plein milieu du rail -- demande de Julien de le sortir
-                 de la, la fonctionnalite meritait sa propre page (voir
-                 #vue-amis) plutot qu'un bouton perdu au milieu des amis
-                 deja ajoutes. Meme rond discret que "Ma pinte" a cote. -->
-            <button class="rbtn" id="rail-amis" aria-label="Ajouter des amis">
-              <svg class="ico" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M17.5 7.5v6M20.5 10.5h-6"/></svg>
-            </button>
           </div>
 
           <div class="friend-rail" id="friend-rail">
@@ -1129,7 +1121,7 @@
           <button class="tab" aria-label="Poster ma story">
             <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
           </button>
-          <button class="tab" aria-label="Amis">
+          <button class="tab" id="tab-amis" aria-label="Amis">
             <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
           </button>
           <button class="tab" aria-label="Profil">
@@ -2098,14 +2090,19 @@ $("#rail-me").insertAdjacentHTML("afterbegin", pint(1));
       0032) pour quelqu'un qui n'a pas encore de compte ;
     - la recherche par pseudo pour quelqu'un qui en a deja un
       (add_friend, migration 0031).
-   Accessible a tout moment via le rond dans .carte-rail, pas seulement
-   avant connexion. ⚠️ CA A D'ABORD ETE "corrige" avec un window.prompt()
-   qui ajoutait un chip EN LOCAL SEULEMENT (rien en base) -- voir
-   l'historique git si le meme piege se represente ailleurs.
+   Accessible depuis l'onglet "Amis" de la barre du bas, deja present
+   dans le HTML mais jamais branche jusqu'ici -- pas depuis un bouton
+   plante dans l'ecran carte : demande de Julien, la carte ne sera pas
+   forcement le premier ecran de la vraie appli, une fonctionnalite a
+   part entiere ne doit pas dependre de son voisinage. ⚠️ CA A D'ABORD
+   ETE "corrige" avec un window.prompt() qui ajoutait un chip EN LOCAL
+   SEULEMENT (rien en base) -- voir l'historique git si le meme piege
+   se represente ailleurs.
    ========================================================== */
 var VUE_AMIS = $("#vue-amis");
+var TAB_AMIS = $("#tab-amis");
 
-$("#rail-amis")?.addEventListener("click", async function () {
+TAB_AMIS?.addEventListener("click", async function () {
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) {
     // Pas de compte : la page Amis n'a rien a montrer (ni code, ni
@@ -2114,10 +2111,18 @@ $("#rail-amis")?.addEventListener("click", async function () {
     VUE_ACCUEIL.classList.remove("masque");
     return;
   }
+  TAB_AMIS.classList.add("on");
+  TAB_AMIS.setAttribute("aria-current", "page");
   ouvrirPageAmis(session);
 });
 
-$("#va-close")?.addEventListener("click", function () { VUE_AMIS.hidden = true; });
+$("#va-close")?.addEventListener("click", function () {
+  VUE_AMIS.hidden = true;
+  // Rend la main a l'onglet reellement actif (carte ou boutique) :
+  // sans ca, "Amis" restait allume alors que plus rien n'etait ouvert.
+  TAB_AMIS.classList.remove("on");
+  TAB_AMIS.setAttribute("aria-current", "false");
+});
 
 async function ouvrirPageAmis(session) {
   VUE_AMIS.hidden = false;
