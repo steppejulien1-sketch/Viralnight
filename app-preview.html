@@ -231,6 +231,20 @@
 
       .va-title { margin: 46px 0 22px; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
 
+      .va-kicker {
+        text-align: left; font-size: 11px; font-weight: 700; color: var(--ink3);
+        text-transform: uppercase; letter-spacing: .1em; margin: 0 0 10px;
+      }
+      .va-code + .va-kicker { margin-top: 26px; }
+
+      .va-connecte-toi { padding: 30px 8px 0; }
+      .va-connecte-ico {
+        width: 60px; height: 60px; margin: 0 auto 18px; border-radius: 50%;
+        background: var(--s1); display: grid; place-items: center;
+      }
+      .va-connecte-ico svg { width: 26px; height: 26px; stroke: var(--ink2); stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .va-connecte-txt { margin: 0 0 22px; font-size: 14px; color: var(--ink2); line-height: 1.5; }
+
       .va-code {
         background: var(--s1); border: 1px solid var(--line2); border-radius: 24px;
         padding: 26px 20px 22px; margin: 0 0 22px;
@@ -1006,35 +1020,51 @@
              par la meme librairie que les bons de la boutique), la
              recherche par pseudo en dessous. Recouvre tout comme
              #vue-accueil, mais reste atteignable a tout moment (pas
-             seulement avant connexion) via le rond dans .carte-rail. -->
+             seulement avant connexion) via l'onglet "Amis" de la barre
+             du bas. -->
         <div class="vue-amis" id="vue-amis" hidden>
           <button type="button" class="va-close" id="va-close" aria-label="Fermer">
             <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
-          <h1 class="va-title">Ajouter des amis</h1>
+          <h1 class="va-title">Amis</h1>
 
-          <div class="va-code">
-            <button type="button" class="va-avatar" id="va-avatar" aria-label="Changer ma photo de profil">
-              <span class="va-avatar-init" id="va-avatar-init"></span>
-              <img class="va-avatar-img" id="va-avatar-img" alt="" hidden />
-              <span class="va-avatar-edit" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
-              </span>
-            </button>
-            <input type="file" accept="image/*" id="va-avatar-file" hidden />
-            <p class="va-handle" id="va-handle">@...</p>
-            <div class="va-qr" id="va-qr" aria-hidden="true"></div>
-            <p class="va-hint">Fais-le scanner, ou envoie ton lien. <strong>Tu gagnes 50 points</strong> dès qu'un ami rejoint grâce à toi.</p>
-            <button type="button" class="va-share" id="va-share">Partager mon code</button>
+          <!-- Repli "pas connecte" : avant, ce cas renvoyait EN SILENCE
+               vers l'accueil (VUE_ACCUEIL.classList.remove("masque")) --
+               depuis n'importe quel autre ecran, l'appli semblait juste
+               ignorer le tap. Meme page, contenu different : au moins
+               on VOIT qu'on a bien tape sur "Amis". -->
+          <div class="va-connecte-toi" id="va-connecte-toi" hidden>
+            <p class="va-connecte-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
+            </p>
+            <p class="va-connecte-txt">Connecte-toi pour voir ton code et ajouter des amis.</p>
+            <button type="button" class="va-share" id="va-connecte-btn">Se connecter</button>
           </div>
 
-          <p class="va-sep">ou cherche un pseudo</p>
+          <div class="va-contenu" id="va-contenu" hidden>
+            <p class="va-kicker">Mon code</p>
+            <div class="va-code">
+              <button type="button" class="va-avatar" id="va-avatar" aria-label="Changer ma photo de profil">
+                <span class="va-avatar-init" id="va-avatar-init"></span>
+                <img class="va-avatar-img" id="va-avatar-img" alt="" hidden />
+                <span class="va-avatar-edit" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
+                </span>
+              </button>
+              <input type="file" accept="image/*" id="va-avatar-file" hidden />
+              <p class="va-handle" id="va-handle">@...</p>
+              <div class="va-qr" id="va-qr" aria-hidden="true"></div>
+              <p class="va-hint">Fais-le scanner, ou envoie ton lien. <strong>Tu gagnes 50 points</strong> dès qu'un ami rejoint grâce à toi.</p>
+              <button type="button" class="va-share" id="va-share">Partager mon code</button>
+            </div>
 
-          <div class="va-search">
-            <input type="text" class="va-input" id="va-pseudo" placeholder="ex. sarah.mrt" autocomplete="off" autocapitalize="off" />
-            <button type="button" class="va-add" id="va-envoyer">Ajouter</button>
+            <p class="va-kicker">Rechercher</p>
+            <div class="va-search">
+              <input type="text" class="va-input" id="va-pseudo" placeholder="Pseudo d'un ami" autocomplete="off" autocapitalize="off" />
+              <button type="button" class="va-add" id="va-envoyer">Ajouter</button>
+            </div>
+            <p class="va-msg" id="va-msg" hidden></p>
           </div>
-          <p class="va-msg" id="va-msg" hidden></p>
         </div>
 
         <!-- ================= ECRAN CARTE ================= -->
@@ -2103,17 +2133,29 @@ var VUE_AMIS = $("#vue-amis");
 var TAB_AMIS = $("#tab-amis");
 
 TAB_AMIS?.addEventListener("click", async function () {
+  TAB_AMIS.classList.add("on");
+  TAB_AMIS.setAttribute("aria-current", "page");
+  VUE_AMIS.hidden = false;
+
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) {
     // Pas de compte : la page Amis n'a rien a montrer (ni code, ni
-    // recherche possible). On renvoie directement vers l'accueil
-    // plutot que d'afficher une page a moitie vide.
-    VUE_ACCUEIL.classList.remove("masque");
+    // recherche possible), mais elle s'OUVRE quand meme -- le repli
+    // "pas connecte" vit dedans (#va-connecte-toi). Avant, ce cas
+    // renvoyait en silence vers l'accueil : depuis carte/boutique,
+    // taper sur "Amis" semblait ne rien faire.
+    $("#va-connecte-toi").hidden = false;
+    $("#va-contenu").hidden = true;
     return;
   }
-  TAB_AMIS.classList.add("on");
-  TAB_AMIS.setAttribute("aria-current", "page");
+  $("#va-connecte-toi").hidden = true;
+  $("#va-contenu").hidden = false;
   ouvrirPageAmis(session);
+});
+
+$("#va-connecte-btn")?.addEventListener("click", function () {
+  $("#va-close").click();
+  VUE_ACCUEIL.classList.remove("masque");
 });
 
 $("#va-close")?.addEventListener("click", function () {
