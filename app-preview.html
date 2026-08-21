@@ -1067,11 +1067,12 @@ import { createClient } from "@supabase/supabase-js";
 // figees : se connecter ne branche pas encore ces donnees sur le compte
 // reel. Cle anon, deliberement publique (deja visible dans le bundle
 // livre par viralnight-pwa.vercel.app).
-var supabaseClubbeur = createClient(
-  "https://gcopwgmqjiufemapamek.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdjb3B3Z21xaml1ZmVtYXBhbWVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDIzMDUsImV4cCI6MjEwMTUxODMwNX0.Vni3uEoA1glVVbALyh4JPI2TNZRaHc52py3NKsmEBlU",
-  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
-);
+var URL_SUPABASE_CLUBBEUR = "https://gcopwgmqjiufemapamek.supabase.co";
+var CLE_SUPABASE_CLUBBEUR =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdjb3B3Z21xaml1ZmVtYXBhbWVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDIzMDUsImV4cCI6MjEwMTUxODMwNX0.Vni3uEoA1glVVbALyh4JPI2TNZRaHc52py3NKsmEBlU";
+var supabaseClubbeur = createClient(URL_SUPABASE_CLUBBEUR, CLE_SUPABASE_CLUBBEUR, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+});
 
 // Copie statique dans public/, servie telle quelle par Vite (dev et
 // prod) sans passer par sa chaine de transformation JS — voir la note
@@ -1375,8 +1376,29 @@ function afficherMessageAccueil(texte, estErreur) {
   MESSAGE_ACCUEIL.classList.toggle("err", Boolean(estErreur));
 }
 
+// Le SDK Supabase ne verifie JAMAIS si "google" est active cote tableau
+// de bord avant de rediriger : signInWithOAuth construit l'URL toute
+// seule, sans appeler le serveur. Si le fournisseur n'est pas configure,
+// le clic envoyait donc l'utilisateur sur une vraie page Supabase qui
+// affiche du JSON brut ("Unsupported provider"), sans bouton retour --
+// un cul-de-sac. /auth/v1/settings, lui, est un endpoint public qui
+// repond avec la liste des fournisseurs actives : on le consulte une
+// fois au chargement pour savoir si le bouton doit vraiment rediriger.
+var googleActif = null; // null = pas encore su, true/false une fois la reponse arrivee
+
+fetch(URL_SUPABASE_CLUBBEUR + "/auth/v1/settings", {
+  headers: { apikey: CLE_SUPABASE_CLUBBEUR },
+})
+  .then(function (r) { return r.json(); })
+  .then(function (r) { googleActif = Boolean(r && r.external && r.external.google); })
+  .catch(function () { googleActif = null; }); // reseau indisponible : on retente au clic
+
 if (BOUTON_GOOGLE) {
   BOUTON_GOOGLE.addEventListener("click", function () {
+    if (googleActif === false) {
+      afficherMessageAccueil("Connexion Google bientot disponible. Utilise ton email en attendant.", true);
+      return;
+    }
     supabaseClubbeur.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin + window.location.pathname },
