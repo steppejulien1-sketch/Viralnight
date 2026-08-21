@@ -236,9 +236,23 @@
         padding: 26px 20px 22px; margin: 0 0 22px;
       }
       .va-avatar {
-        width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 50%;
+        position: relative; width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 50%;
         background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
+        border: 0; padding: 0; cursor: pointer; overflow: hidden; display: block;
       }
+      .va-avatar-init {
+        position: absolute; inset: 0; display: grid; place-items: center;
+        font-size: 21px; font-weight: 800; color: #fff;
+      }
+      .va-avatar-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      /* Le crayon reste visible en permanence (pas seulement au survol) :
+         sur mobile il n'y a pas de hover, et sans lui rien n'indique que
+         la photo est modifiable. */
+      .va-avatar-edit {
+        position: absolute; right: -2px; bottom: -2px; width: 22px; height: 22px; border-radius: 50%;
+        background: var(--s1); box-shadow: 0 0 0 2px var(--bg); display: grid; place-items: center;
+      }
+      .va-avatar-edit svg { width: 11px; height: 11px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .va-handle { margin: 0 0 18px; font-size: 15px; font-weight: 700; color: var(--ink); }
       .va-qr {
         width: 148px; height: 148px; margin: 0 auto 16px; padding: 10px;
@@ -1000,10 +1014,17 @@
           <h1 class="va-title">Ajouter des amis</h1>
 
           <div class="va-code">
-            <div class="va-avatar" id="va-avatar" aria-hidden="true"></div>
+            <button type="button" class="va-avatar" id="va-avatar" aria-label="Changer ma photo de profil">
+              <span class="va-avatar-init" id="va-avatar-init"></span>
+              <img class="va-avatar-img" id="va-avatar-img" alt="" hidden />
+              <span class="va-avatar-edit" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
+              </span>
+            </button>
+            <input type="file" accept="image/*" id="va-avatar-file" hidden />
             <p class="va-handle" id="va-handle">@...</p>
             <div class="va-qr" id="va-qr" aria-hidden="true"></div>
-            <p class="va-hint">Fais-le scanner, ou envoie ton lien -- <strong>tu gagnes 50 points</strong> des qu'un ami rejoint avec.</p>
+            <p class="va-hint">Fais-le scanner, ou envoie ton lien. <strong>Tu gagnes 50 points</strong> dès qu'un ami rejoint grâce à toi.</p>
             <button type="button" class="va-share" id="va-share">Partager mon code</button>
           </div>
 
@@ -2102,7 +2123,8 @@ async function ouvrirPageAmis(session) {
   VUE_AMIS.hidden = false;
 
   var champ = $("#va-pseudo"), bouton = $("#va-envoyer"), msg = $("#va-msg"), boutonPartager = $("#va-share");
-  var avatar = $("#va-avatar"), handleEl = $("#va-handle"), qrEl = $("#va-qr");
+  var avatarBtn = $("#va-avatar"), avatarInit = $("#va-avatar-init"), avatarImg = $("#va-avatar-img"), avatarFile = $("#va-avatar-file");
+  var handleEl = $("#va-handle"), qrEl = $("#va-qr");
 
   function montrer(texte, classe) {
     msg.className = "va-msg" + (classe ? " " + classe : "");
@@ -2110,8 +2132,20 @@ async function ouvrirPageAmis(session) {
     msg.hidden = false;
   }
 
-  // --- Mon code : pseudo + QR, generes une fois a l'ouverture -------
-  var profil = (await supabaseClubbeur.from("users").select("handle").eq("id", session.user.id).single()).data;
+  function afficherAvatar(url, handle) {
+    if (url) {
+      avatarImg.src = url;
+      avatarImg.hidden = false;
+      avatarInit.hidden = true;
+    } else {
+      avatarImg.hidden = true;
+      avatarInit.hidden = false;
+      avatarInit.textContent = handle ? handle.charAt(0).toUpperCase() : "";
+    }
+  }
+
+  // --- Mon code : pseudo + photo + QR, generes une fois a l'ouverture -
+  var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).single()).data;
   var monHandle = profil && profil.handle;
   var lien = monHandle
     ? window.location.origin + window.location.pathname + "?parrain=" + encodeURIComponent(monHandle)
@@ -2119,7 +2153,7 @@ async function ouvrirPageAmis(session) {
 
   if (monHandle) {
     handleEl.textContent = "@" + monHandle;
-    avatar.textContent = monHandle.charAt(0).toUpperCase();
+    afficherAvatar(profil.avatar_url, monHandle);
     // Meme librairie que les QR de retrait en boutique (qrBon) : locale,
     // sans limite ni cle a payer.
     qrEl.innerHTML = await QRCode.toString(lien, {
@@ -2130,6 +2164,42 @@ async function ouvrirPageAmis(session) {
     handleEl.textContent = "Profil en cours de création...";
     qrEl.innerHTML = "";
   }
+
+  // --- Changer la photo -------------------------------------------
+  // Nom de fichier FIXE par personne (pas d'extension variable, pas de
+  // timestamp) : un second envoi remplace le meme fichier au lieu d'en
+  // empiler un nouveau -- upsert cote storage, policy "update" dediee
+  // (migration 0033) sans quoi le remplacement echouerait en conflit.
+  avatarBtn.addEventListener("click", function () { avatarFile.click(); });
+
+  avatarFile.addEventListener("change", async function () {
+    var fichier = avatarFile.files && avatarFile.files[0];
+    avatarFile.value = "";
+    if (!fichier) return;
+
+    var chemin = session.user.id + "/profil";
+    var { error: erreurEnvoi } = await supabaseClubbeur.storage
+      .from("avatars")
+      .upload(chemin, fichier, { upsert: true, contentType: fichier.type });
+
+    if (erreurEnvoi) {
+      montrer("Photo non envoyée, réessaie dans un instant.", "err");
+      return;
+    }
+
+    // Cache-buster : meme chemin qu'avant, un navigateur qui a deja vu
+    // cette URL ne redemanderait pas le fichier sans lui.
+    var url = supabaseClubbeur.storage.from("avatars").getPublicUrl(chemin).data.publicUrl + "?t=" + Date.now();
+
+    var { error: erreurProfil } = await supabaseClubbeur.from("users").update({ avatar_url: url }).eq("id", session.user.id);
+    if (erreurProfil) {
+      montrer("Photo envoyée, mais le profil n'a pas pu être mis à jour.", "err");
+      return;
+    }
+
+    afficherAvatar(url, monHandle);
+    montrer("Photo de profil mise à jour.", "ok");
+  });
 
   boutonPartager.onclick = async function () {
     if (!lien) return;
