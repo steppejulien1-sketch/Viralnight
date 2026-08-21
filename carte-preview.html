@@ -453,6 +453,19 @@ map.on("error", function (e) {
   console.error("[carte]", (e && e.error && (e.error.message)) || e);
 });
 
+// MapLibre ouvre TOUT SEUL le controle d'attribution en grand la
+// premiere fois qu'il a du contenu a afficher, et ne le replie qu'au
+// premier glisser de carte -- comportement de la librairie, pas un bug
+// d'ici. Avec notre fond noir sur .maplibregl-ctrl-attrib, ca donnait
+// une grosse bande de texte plaquee en bas au lieu du petit rond "i"
+// attendu. On referme au premier "idle" (tuiles chargees, carte
+// stable), exactement comme le ferait un glisser de carte -- le bouton
+// "i" reste cliquable normalement ensuite.
+map.once("idle", function () {
+  var attrib = document.querySelector(".maplibregl-ctrl-attrib");
+  if (attrib) attrib.classList.remove("maplibregl-compact-show");
+});
+
 map.on("load", function () {
   map.setProjection({ type: "globe" });
   // sans ce recalage explicite, la camera restait parfois figee
