@@ -302,6 +302,22 @@
       .va-msg.err { color: #ff8290; }
       .va-msg.ok { color: #7fe0a3; }
 
+      .va-suggestions { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 2px; }
+      .va-sugg {
+        width: 100%; display: flex; align-items: center; gap: 10px;
+        padding: 9px 8px; border: 0; border-radius: 12px; background: transparent;
+        cursor: pointer; text-align: left; font-family: inherit;
+      }
+      .va-sugg:hover, .va-sugg:focus-visible { background: var(--s2); outline: none; }
+      .va-sugg-av {
+        flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; overflow: hidden;
+        background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
+        display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #fff;
+      }
+      .va-sugg-av img { width: 100%; height: 100%; object-fit: cover; }
+      .va-sugg-handle { font-size: 14px; font-weight: 600; color: var(--ink); }
+      .va-sugg[disabled] { opacity: .5; cursor: default; }
+
       /* ============================================================
          ECRAN 1 — LA CARTE
          ============================================================ */
@@ -1063,6 +1079,11 @@
               <input type="text" class="va-input" id="va-pseudo" placeholder="Pseudo d'un ami" autocomplete="off" autocapitalize="off" />
               <button type="button" class="va-add" id="va-envoyer">Ajouter</button>
             </div>
+            <!-- Suggestions au fil de la frappe (demande de Julien,
+                 "comme sur toutes les applications") : une ligne par
+                 pseudo correspondant, tapoter ajoute direct sans avoir
+                 a finir de taper ni a toucher le bouton "Ajouter". -->
+            <ul class="va-suggestions" id="va-suggestions" hidden></ul>
             <p class="va-msg" id="va-msg" hidden></p>
           </div>
         </div>
@@ -2217,9 +2238,12 @@ async function ouvrirPageAmis(session) {
   // timestamp) : un second envoi remplace le meme fichier au lieu d'en
   // empiler un nouveau -- upsert cote storage, policy "update" dediee
   // (migration 0033) sans quoi le remplacement echouerait en conflit.
-  avatarBtn.addEventListener("click", function () { avatarFile.click(); });
+  // .onclick=/.onchange= (pas addEventListener) : memes noeuds DOM
+  // reutilises a chaque ouverture de l'onglet Amis, voir la note sur
+  // champ.oninput plus bas.
+  avatarBtn.onclick = function () { avatarFile.click(); };
 
-  avatarFile.addEventListener("change", async function () {
+  avatarFile.onchange = async function () {
     var fichier = avatarFile.files && avatarFile.files[0];
     avatarFile.value = "";
     if (!fichier) return;
@@ -2246,7 +2270,7 @@ async function ouvrirPageAmis(session) {
 
     afficherAvatar(url, monHandle);
     montrer("Photo de profil mise à jour.", "ok");
-  });
+  };
 
   boutonPartager.onclick = async function () {
     if (!lien) return;
@@ -2273,10 +2297,14 @@ async function ouvrirPageAmis(session) {
     montrer(textes[code] || "Ça n'a pas marché. Réessaie dans un instant.", "err");
   }
 
-  async function envoyer() {
-    var pseudo = champ.value.trim();
+  // pseudoChoisi : rempli quand on tape sur une SUGGESTION plutot que
+  // le pseudo tape a la main -- sans ca, "Ajouter" resterait a la
+  // merci de la valeur exacte du champ au moment du clic.
+  async function envoyer(pseudoChoisi) {
+    var pseudo = (pseudoChoisi || champ.value).trim();
     if (!pseudo) { direErreur("handle_manquant"); champ.focus(); return; }
 
+    suggestions.hidden = true;
     msg.hidden = true;
     bouton.disabled = true;
     bouton.textContent = "...";
@@ -2303,9 +2331,69 @@ async function ouvrirPageAmis(session) {
     montrer("@" + ami.friend_handle + " ajouté !", "ok");
   }
 
-  bouton.onclick = envoyer;
+  bouton.onclick = function () { envoyer(); };
   champ.onkeydown = function (e) { if (e.key === "Enter") envoyer(); };
+
+  // --- Suggestions au fil de la frappe ----------------------------
+  // "comme sur toutes les applications" (Julien) : chaque pseudo qui
+  // commence par ce qui est tape, tapoter dessus ajoute directement.
+  // search_friends (migration 0034) est a part de add_friend : elle ne
+  // fait QUE chercher, jamais d'ecriture -- taper ne doit ajouter
+  // personne, seul un vrai tap sur une suggestion ou "Ajouter" le fait.
+  var suggestions = $("#va-suggestions");
+  var minuteur = null;
+
+  function rendreAvatar(s) {
+    return s.avatar_url
+      ? '<img src="' + s.avatar_url + '" alt="" />'
+      : (s.handle.charAt(0).toUpperCase());
+  }
+
+  // .oninput= (pas addEventListener) : ouvrirPageAmis tourne a nouveau
+  // a chaque ouverture de l'onglet Amis sur le MEME champ -- un
+  // addEventListener empilerait un ecouteur de plus a chaque fois.
+  champ.oninput = function () {
+    clearTimeout(minuteur);
+    var q = champ.value.trim();
+    if (!q) { suggestions.hidden = true; suggestions.innerHTML = ""; return; }
+
+    minuteur = setTimeout(async function () {
+      var res = await supabaseClubbeur.rpc("search_friends", { p_query: q });
+      // Le champ a pu changer pendant l'aller-retour reseau : on
+      // n'affiche des suggestions perimees pour rien.
+      if (champ.value.trim() !== q) return;
+
+      var lignes = (res.data || []);
+      if (!lignes.length) { suggestions.hidden = true; suggestions.innerHTML = ""; return; }
+
+      suggestions.innerHTML = lignes.map(function (s) {
+        return '<li><button type="button" class="va-sugg" data-handle="' + s.handle + '">' +
+          '<span class="va-sugg-av">' + rendreAvatar(s) + '</span>' +
+          '<span class="va-sugg-handle">@' + s.handle + '</span>' +
+        '</button></li>';
+      }).join("");
+      suggestions.hidden = false;
+
+      suggestions.querySelectorAll(".va-sugg").forEach(function (b) {
+        b.addEventListener("click", function () {
+          champ.value = b.dataset.handle;
+          envoyer(b.dataset.handle);
+        });
+      });
+    }, 250);
+  };
 }
+
+// Un tap ailleurs referme les suggestions -- garde le pseudo tape,
+// juste la liste qui disparait. Enregistre UNE SEULE FOIS (pas dans
+// ouvrirPageAmis, appelee a chaque ouverture de l'onglet Amis : sinon
+// chaque reouverture empilait un ecouteur de plus sur tout le document).
+document.addEventListener("click", function (e) {
+  var suggestions = $("#va-suggestions");
+  if (!VUE_AMIS.hidden && !suggestions.hidden && !e.target.closest(".va-search") && !e.target.closest(".va-suggestions")) {
+    suggestions.hidden = true;
+  }
+});
 
 (function () {
   var rail = $("#friend-rail");
