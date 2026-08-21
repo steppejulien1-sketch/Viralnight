@@ -669,6 +669,21 @@
         font-style: normal; color: var(--ambre); font-weight: 700; font-family: var(--mono);
       }
 
+      /* Formulaire "Ajouter un ami" : meme famille que .ac-input, mais
+         adaptee au fond sombre de la feuille (celle de l'accueil est
+         sur fond blanc, cf. .vue-accueil plus haut). */
+      .sheet-field { margin: 4px 0 16px; }
+      .sheet-field label {
+        display: block; font-size: 12.5px; font-weight: 700; color: var(--ink2); margin-bottom: 7px;
+      }
+      .sheet-input {
+        width: 100%; min-height: 48px; padding: 0 16px; border: 0; border-radius: 14px;
+        background: var(--s2); box-shadow: inset 0 0 0 1px var(--line2);
+        color: var(--ink); font-size: 15px; font-family: inherit;
+      }
+      .sheet-input::placeholder { color: var(--ink3); }
+      .sheet-input:focus { outline: none; box-shadow: inset 0 0 0 1px var(--c, #ff2f45); }
+
       /* Confirmation d'echange : le vrai QR code a scanner, avec le
          code en secours en dessous pour le staff si le lecteur du
          bar est en panne — exactement comme un billet de train ou
@@ -1444,8 +1459,26 @@ if (BOUTON_COMMENCER) {
 }
 
 supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
-  if (session) VUE_ACCUEIL.classList.add("masque");
+  if (session) {
+    VUE_ACCUEIL.classList.add("masque");
+    assurerProfil(session.user);
+  }
 });
+
+// Cree la ligne public.users si elle n'existe pas encore. Necessaire
+// pour "Ajouter un ami" plus bas : add_friend() a besoin que l'appelant
+// ET la cible existent tous les deux dans cette table (contrainte de
+// cle etrangere sur friendships). Cet ecran n'a pas le vrai ecran
+// "choisis ton pseudo" de 06-pwa-clubbeurs/onboarding.js -- on prend un
+// repli lisible a partir de l'email en attendant qu'un vrai profil soit
+// construit ici (pas encore fait : "reste une maquette" plus haut).
+function assurerProfil(user) {
+  var repli = String(user.email || "").split("@")[0].toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 30) || "clubbeur";
+  supabaseClubbeur
+    .from("users")
+    .upsert({ id: user.id, handle: repli, email: user.email || null }, { onConflict: "id", ignoreDuplicates: true })
+    .then(function (res) { if (res.error) console.warn("[amis] profil non cree :", res.error.message); });
+}
 
 /* ==========================================================
    LA CAGNOTTE — ETAT.solde s'affiche en tete de boutique
@@ -1882,15 +1915,97 @@ $("#rail-me").insertAdjacentHTML("afterbegin", pint(1));
 // "Partager un lien d'invitation" ne montrait rien a l'ecran : sur
 // desktop sans navigator.share, ca copiait un lien en silence, sans
 // retour visible. Julien voulait pouvoir ajouter un ami et LE VOIR
-// apparaitre dans le rail — c'est ce que fait ce bouton desormais.
-$('.fr[aria-label="Ajouter un ami"]')?.addEventListener("click", function () {
-  var nom = window.prompt("Prénom de ton ami·e ?");
-  if (!nom) return;
-  nom = nom.trim();
-  if (!nom) return;
-  var chip = creerAmiChip({ nom: nom, q: Math.random() });
-  friendRail.insertBefore(chip, this.nextSibling);
+// apparaitre dans le rail.
+//
+// ⚠️ CA A D'ABORD ETE "corrige" avec un window.prompt() qui ajoutait un
+// chip EN LOCAL SEULEMENT : rien n'ecrivait en base, l'ami disparaissait
+// au rechargement et n'existait que dans le navigateur de la personne
+// qui l'ajoutait -- une fausse impression de fonctionnalite. Le bouton
+// ouvre maintenant la feuille commune (meme ouvrirFeuille() que la
+// fiche club/boutique) avec un vrai formulaire, et add_friend() (RPC
+// Supabase, migration 0031 du depot 06-pwa-clubbeurs) ecrit une vraie
+// relation en base -- les deux personnes se retrouvent chacune dans les
+// amis de l'autre. Necessite d'etre connecte (voir supabaseClubbeur
+// plus haut) : un visiteur en "Explorer sans compte" est invite a se
+// connecter d'abord plutot que de voir une erreur technique.
+$('.fr[aria-label="Ajouter un ami"]')?.addEventListener("click", async function () {
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) {
+    ouvrirFeuille(
+      '<p class="sheet-fam">Amis</p>' +
+      '<h3>Connecte-toi d\'abord</h3>' +
+      '<p class="desc">Il faut un compte pour ajouter des amis -- ils retrouveront le tien avec son pseudo, comme sur Instagram.</p>' +
+      '<button class="sheet-cta" id="sh-friend-login" type="button">Se connecter</button>',
+      "#sh-friend-login"
+    );
+    $("#sh-friend-login").addEventListener("click", function () {
+      fermerFeuille();
+      VUE_ACCUEIL.classList.remove("masque");
+    });
+    return;
+  }
+  ouvrirAjoutAmi();
 });
+
+function ouvrirAjoutAmi() {
+  ouvrirFeuille(
+    '<p class="sheet-fam">Amis</p>' +
+    '<h3>Ajouter un ami</h3>' +
+    '<p class="desc">Entre son pseudo -- le meme que celui qu\'il a choisi a son inscription.</p>' +
+    '<div class="sheet-field">' +
+      '<label for="fa-pseudo">Pseudo</label>' +
+      '<input type="text" class="sheet-input" id="fa-pseudo" placeholder="ex. sarah.mrt" autocomplete="off" autocapitalize="off" />' +
+    '</div>' +
+    '<button class="sheet-cta" id="fa-envoyer" type="button">Ajouter</button>' +
+    '<p class="sheet-note" id="fa-msg" hidden></p>',
+    "#fa-pseudo"
+  );
+
+  var champ = $("#fa-pseudo"), bouton = $("#fa-envoyer"), msg = $("#fa-msg");
+
+  function direErreur(code) {
+    var textes = {
+      handle_manquant: "Entre un pseudo.",
+      introuvable: "Personne n'a ce pseudo. Vérifie l'orthographe.",
+      soi_meme: "C'est ton propre pseudo -- inutile de t'ajouter toi-même.",
+      not_authenticated: "Ta session a expiré, reconnecte-toi.",
+    };
+    msg.textContent = textes[code] || "Ça n'a pas marché. Réessaie dans un instant.";
+    msg.hidden = false;
+  }
+
+  async function envoyer() {
+    var pseudo = champ.value.trim();
+    if (!pseudo) { direErreur("handle_manquant"); champ.focus(); return; }
+
+    msg.hidden = true;
+    bouton.disabled = true;
+    bouton.textContent = "Recherche...";
+
+    var res = await supabaseClubbeur.rpc("add_friend", { p_handle: pseudo });
+
+    bouton.disabled = false;
+    bouton.textContent = "Ajouter";
+
+    if (res.error) {
+      // Le message Postgres est du genre "introuvable" tout court
+      // (RAISE EXCEPTION cote fonction) : on le passe tel quel a
+      // direErreur, qui a une phrase prete pour chaque code connu.
+      direErreur(res.error.message);
+      return;
+    }
+
+    var ami = res.data && res.data[0];
+    if (!ami) { direErreur(""); return; }
+
+    var chip = creerAmiChip({ nom: ami.friend_handle, q: Math.random() });
+    friendRail.insertBefore(chip, friendRail.firstChild.nextSibling);
+    fermerFeuille();
+  }
+
+  bouton.addEventListener("click", envoyer);
+  champ.addEventListener("keydown", function (e) { if (e.key === "Enter") envoyer(); });
+}
 
 (function () {
   var rail = $("#friend-rail");
