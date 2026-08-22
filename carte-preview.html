@@ -685,6 +685,9 @@ function snapifie() {
   // deux se confondaient et tout paraissait bleuâtre. Snap utilise un
   // vert nettement plus sature et un bleu plus soutenu.
   var mentheClair = "#8fbf68", mentheFonce = "#6fa050", eau = "#6fa8d8";
+  // Desert/sable et glace : voir plus bas -- avant, ces deux classes
+  // gardaient leur bleu marine d'origine du fond de carte sombre.
+  var sable = "#e3d6a8", glace = "#f4f7f8";
 
   map.setPaintProperty("Background", "background-color", mentheClair);
 
@@ -708,10 +711,29 @@ function snapifie() {
     map.setLayoutProperty(id, "visibility", "visible");
     map.setLayerZoomRange(id, 0, 24);
   });
-  ["Grass", "Meadow"].forEach(function (id) {
+  // Scrub/Crop (savane, cultures) viennent de "globallandcover" -- les
+  // seules tuiles que MapTiler charge a l'echelle d'un continent entier
+  // (vu depuis l'espace, comme l'Afrique). On ne les recolorait pas :
+  // elles gardaient le bleu marine hsl(198,55%,22%) du style d'origine,
+  // d'ou les grandes taches bleu fonce signalees par Julien sur toute
+  // l'Afrique. Meme vert que Grass/Meadow -- de la vegetation, pas du
+  // desert.
+  ["Grass", "Meadow", "Scrub", "Crop"].forEach(function (id) {
+    if (!map.getLayer(id)) return;
     map.setPaintProperty(id, "fill-color", mentheFonce);
     map.setPaintProperty(id, "fill-opacity", 1);
   });
+  // Sand (Sahara, Arabie, deserts) : beige, jamais vert. Glacier
+  // (calottes polaires, Groenland) : blanc/gris tres clair, comme
+  // sur Snap.
+  if (map.getLayer("Sand")) {
+    map.setPaintProperty("Sand", "fill-color", sable);
+    map.setPaintProperty("Sand", "fill-opacity", 1);
+  }
+  if (map.getLayer("Glacier")) {
+    map.setPaintProperty("Glacier", "fill-color", glace);
+    map.setPaintProperty("Glacier", "fill-opacity", 1);
+  }
 
   map.setPaintProperty("Water", "fill-color", eau);
 
