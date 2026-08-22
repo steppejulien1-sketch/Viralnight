@@ -2110,7 +2110,14 @@ map.on("moveend", function () {
   }
 
   var zoomVoulu = zoomCible + compensation;
-  if (Math.abs(map.getZoom() - zoomVoulu) > .01) map.setZoom(zoomVoulu);
+  // easeTo, jamais setZoom() : un setZoom() instantane au relachement
+  // du geste donnait un saut sec et visible ("ca nous zoome en un
+  // coup"), signale par Julien -- la correction est juste, mais son
+  // application brutale ne l'etait pas. Une courte transition rend le
+  // meme resultat imperceptible.
+  if (Math.abs(map.getZoom() - zoomVoulu) > .01) {
+    map.easeTo({ zoom: zoomVoulu, duration: 250 });
+  }
 });
 
 // Un vrai geste de zoom (molette, pincement, double-clic) : la cible
@@ -2289,8 +2296,14 @@ function snapifie() {
   map.setPaintProperty("Building 3D", "fill-extrusion-height", [
     "min", ["*", ["coalesce", ["get", "render_height"], 8], .55], 45
   ]);
+  // Apparition avancee (13 -> 14 au lieu de 15 -> 15.6) : Julien veut
+  // voir les volumes des batiments en hauteur des qu'on dezoome un peu,
+  // comme sur les captures Snap Map envoyees -- pas seulement au ras
+  // du sol. Le contour plat "Building" charge deja des le zoom 13
+  // (plage native du style), les volumes peuvent donc apparaitre au
+  // meme moment.
   map.setPaintProperty("Building 3D", "fill-extrusion-opacity", [
-    "interpolate", ["linear"], ["zoom"], 15, 0, 15.6, .88
+    "interpolate", ["linear"], ["zoom"], 13, 0, 14, .88
   ]);
 
   if (map.getLayer("Country border")) {

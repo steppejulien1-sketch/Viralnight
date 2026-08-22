@@ -523,7 +523,14 @@ map.on("moveend", function () {
   }
 
   var zoomVoulu = zoomCible + compensation;
-  if (Math.abs(map.getZoom() - zoomVoulu) > .01) map.setZoom(zoomVoulu);
+  // easeTo, jamais setZoom() : un setZoom() instantane au relachement
+  // du geste donnait un saut sec et visible ("ca nous zoome en un
+  // coup"), signale par Julien -- la correction est juste, mais son
+  // application brutale ne l'etait pas. Une courte transition rend le
+  // meme resultat imperceptible.
+  if (Math.abs(map.getZoom() - zoomVoulu) > .01) {
+    map.easeTo({ zoom: zoomVoulu, duration: 250 });
+  }
 });
 
 // Un vrai geste de zoom (molette, pincement, double-clic) : la cible
@@ -828,9 +835,11 @@ function snapifie() {
     "min", ["*", ["coalesce", ["get", "render_height"], 8], .55], 45
   ]);
   // fondu progressif au zoom, comme les arbres : pas de pop brutal
-  // quand le calque devient actif.
+  // quand le calque devient actif. Apparition avancee (13 -> 14 au
+  // lieu de 15 -> 15.6) : Julien veut voir les volumes en hauteur des
+  // qu'on dezoome un peu, comme sur les captures Snap Map envoyees.
   map.setPaintProperty("Building 3D", "fill-extrusion-opacity", [
-    "interpolate", ["linear"], ["zoom"], 15, 0, 15.6, .88
+    "interpolate", ["linear"], ["zoom"], 13, 0, 14, .88
   ]);
 
   // la demarcation des pays : un trait net, avec une bordure sombre
