@@ -2080,26 +2080,27 @@ map.on("error", function (e) {
    vraiment, pas juste en apparence -- signale par Julien, persistant
    apres un premier correctif qui ne neutralisait que NOS effets
    (taille des marqueurs, etoiles) sans toucher au zoom reel.
-   zoomEffectif() retire cette compensation d'un chiffre ; ZOOM_CIBLE
-   fait mieux : il RECALE le zoom reel de la carte pour qu'il ne bouge
-   plus du tout pendant un pivot, et ne laisse un vrai zoom (molette,
-   pincement) passer que lorsque map.isZooming() dit que c'est un vrai
-   geste de zoom. */
+   zoomEffectif() retire cette compensation d'un chiffre pour nos
+   propres effets (taille des marqueurs, etoiles).
+
+   ZOOM_CIBLE va plus loin et recale le zoom REEL de la carte -- mais
+   PAS a chaque "move" : ce evenement se declenche des dizaines de
+   fois par seconde pendant un glisser, et rappeler map.setZoom() a
+   cette frequence force un recalcul complet de la carte a chaque
+   tick, d'ou un rendu saccade signale par Julien juste apres ce
+   correctif ("bug de fou, pas de fluidite") -- notre propre
+   correction etait devenue le probleme. On ne recale donc plus qu'une
+   seule fois, au relachement du geste ("moveend") : le zoom peut
+   deriver legerement PENDANT qu'on tourne, mais revient pile a sa
+   valeur une fois le geste termine, sans jamais gener le rendu en
+   cours de route. */
 function zoomEffectif() {
   return map.getZoom() - Math.log2(Math.cos(map.getCenter().lat * Math.PI / 180));
 }
 
-var zoomCible = null; // null = pas encore etabli (avant le 1er "move")
-var recalageEnCours = false;
+var zoomCible = null; // null = pas encore etabli (avant le 1er "moveend")
 
-function neutraliserZoomLatitude() {
-  if (recalageEnCours) return;
-  // Un vrai geste de zoom (molette, pincement, double-clic) : on laisse
-  // faire sans corriger, et on oubliera la cible pour la reprendre a
-  // zero juste apres -- sinon on annulerait le zoom que l'utilisateur
-  // vient de demander.
-  if (map.isZooming()) { zoomCible = null; return; }
-
+map.on("moveend", function () {
   var lat = map.getCenter().lat;
   var compensation = Math.log2(Math.cos(lat * Math.PI / 180));
 
@@ -2109,13 +2110,15 @@ function neutraliserZoomLatitude() {
   }
 
   var zoomVoulu = zoomCible + compensation;
-  if (Math.abs(map.getZoom() - zoomVoulu) > .002) {
-    recalageEnCours = true;
-    map.setZoom(zoomVoulu);
-    recalageEnCours = false;
-  }
-}
-map.on("move", neutraliserZoomLatitude);
+  if (Math.abs(map.getZoom() - zoomVoulu) > .01) map.setZoom(zoomVoulu);
+});
+
+// Un vrai geste de zoom (molette, pincement, double-clic) : la cible
+// reprend la valeur fraichement demandee, sinon "moveend" la
+// ramenerait juste apres a l'ancien niveau.
+map.on("zoomend", function () {
+  zoomCible = map.getZoom() - Math.log2(Math.cos(map.getCenter().lat * Math.PI / 180));
+});
 
 // MapLibre ouvre TOUT SEUL le controle d'attribution en grand la
 // premiere fois qu'il a du contenu a afficher (des que les tuiles
@@ -2263,11 +2266,16 @@ function snapifie() {
   // (x0.55, plafonnee) et teinte unie (pas de degrade, pas de motif de
   // facade) pour rester minimaliste et ne jamais ecraser les marqueurs
   // des clubs — le degre de detail de Snap Map, pas une carte "realiste".
-  map.setPaintProperty("Building", "fill-color", "#f2ead6");
+  // Gris beton (couleur envoyee par Julien -- estimation visuelle, le
+  // copier-coller direct ne laisse pas de fichier exploitable ici,
+  // a corriger s'il la voit encore a cote) au lieu du beige d'origine :
+  // "les parties betonnees en gris".
+  var beton = "#d6d6d3";
+  map.setPaintProperty("Building", "fill-color", beton);
   map.setPaintProperty("Building", "fill-opacity", .5);
 
   map.setLayoutProperty("Building 3D", "visibility", "visible");
-  map.setPaintProperty("Building 3D", "fill-extrusion-color", "#f2ead6");
+  map.setPaintProperty("Building 3D", "fill-extrusion-color", beton);
   map.setPaintProperty("Building 3D", "fill-extrusion-base", [
     "*", ["coalesce", ["get", "render_min_height"], 0], .55
   ]);
@@ -2320,10 +2328,11 @@ function snapifie() {
   // les affiche des le zoom 1.
   if (map.getLayer("Country labels")) map.setLayerZoomRange("Country labels", 4, 12);
 
+  // Blanc pur demande par Julien (#ffffff), plus l'ecru d'avant.
   var ROUTES_PLEINES = ["Motorway", "Trunk", "Primary", "Secondary", "Tertiary", "Minor", "Service", "Street"];
   ROUTES_PLEINES.forEach(function (id) {
     if (!map.getLayer(id)) return;
-    map.setPaintProperty(id, "line-color", "#fbf6ea");
+    map.setPaintProperty(id, "line-color", "#ffffff");
     map.setPaintProperty(id, "line-opacity", 1);
   });
   var CASINGS = ["Motorway casing", "Trunk casing", "Primary casing", "Secondary casing", "Tertiary casing"];
