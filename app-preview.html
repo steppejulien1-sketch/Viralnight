@@ -2044,6 +2044,21 @@ map.on("error", function (e) {
   console.error("[carte]", (e && e.error && (e.error.message)) || e);
 });
 
+/* En mode globe, MapLibre modifie REELLEMENT map.getZoom() quand on
+   tourne/deplace la sphere vers une autre latitude (vertical_perspective_
+   camera_helper.ts : tr.setZoom(oldZoom + getZoomAdjustment(...)) --
+   c'est voulu de leur cote, ca garde le globe a la meme taille a
+   l'ecran malgre la formule rayon = tailleMonde/cos(latitude). Mais
+   nos propres effets lies au zoom (taille des marqueurs, disparition
+   des etoiles) prenaient ce chiffre brut : tourner le globe (donc
+   changer de latitude) les faisait bouger EN MEME TEMPS, comme un vrai
+   zoom involontaire -- signale par Julien. On retire cette
+   compensation avant de s'en servir, pour ne reagir qu'aux vrais
+   gestes de zoom (molette/pincement), jamais a une simple rotation. */
+function zoomEffectif() {
+  return map.getZoom() - Math.log2(Math.cos(map.getCenter().lat * Math.PI / 180));
+}
+
 // MapLibre ouvre TOUT SEUL le controle d'attribution en grand la
 // premiere fois qu'il a du contenu a afficher (des que les tuiles
 // MapTiler arrivent), et ne le replie qu'au premier glisser de carte --
@@ -2303,7 +2318,7 @@ function snapifie() {
   raf = requestAnimationFrame(boucle);
 
   function majOpacite() {
-    var z = map.getZoom();
+    var z = zoomEffectif();
     opacite = z < 2 ? 1 : z > 4 ? 0 : 1 - (z - 2) / 2;
   }
   majOpacite();
@@ -2369,7 +2384,7 @@ function noteRecompenseClub() {
 // jamais autrement, un enfant interne qu'on est seul a redimensionner.
 var marqueursEchelle = [];
 function majTailleMarqueurs() {
-  var z = map.getZoom();
+  var z = zoomEffectif();
   // 1 au niveau rue (zoom 16, la valeur par defaut), reduit progressivement
   // en dezoomant, jusqu'a un plancher pour rester visible/cliquable meme
   // au zoom minimal.

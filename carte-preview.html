@@ -459,6 +459,21 @@ map.on("error", function (e) {
   console.error("[carte]", (e && e.error && (e.error.message)) || e);
 });
 
+/* En mode globe, MapLibre modifie REELLEMENT map.getZoom() quand on
+   tourne/deplace la sphere vers une autre latitude (vertical_perspective_
+   camera_helper.ts : tr.setZoom(oldZoom + getZoomAdjustment(...)) --
+   c'est voulu de leur cote, ca garde le globe a la meme taille a
+   l'ecran malgre la formule rayon = tailleMonde/cos(latitude). Mais
+   nos propres effets lies au zoom (taille des marqueurs, disparition
+   des etoiles, densite des arbres) prenaient ce chiffre brut : tourner
+   le globe (donc changer de latitude) les faisait bouger EN MEME TEMPS,
+   comme un vrai zoom involontaire -- signale par Julien. On retire
+   cette compensation avant de s'en servir, pour ne reagir qu'aux vrais
+   gestes de zoom (molette/pincement), jamais a une simple rotation. */
+function zoomEffectif() {
+  return map.getZoom() - Math.log2(Math.cos(map.getCenter().lat * Math.PI / 180));
+}
+
 // MapLibre ouvre TOUT SEUL le controle d'attribution en grand la
 // premiere fois qu'il a du contenu a afficher, et ne le replie qu'au
 // premier glisser de carte -- comportement de la librairie, pas un bug
@@ -830,7 +845,7 @@ function genererArbres() {
 
   function dessiner() {
     ctx.clearRect(0, 0, W, H);
-    var z = map.getZoom();
+    var z = zoomEffectif();
     // TAILLE FIXE A L'ECRAN, comme les icones de Snap Map : un arbre
     // fait toujours le meme nombre de pixels, quel que soit le zoom.
     //
@@ -987,7 +1002,7 @@ function genererArbres() {
   // vers un pays — MapLibre garde le zoom continu, donc un fondu
   // plutot qu'un seuil net se sent plus naturel.
   function majOpacite() {
-    var z = map.getZoom();
+    var z = zoomEffectif();
     opacite = z < 2 ? 1 : z > 4 ? 0 : 1 - (z - 2) / 2;
   }
   // sans cet appel immediat, l'opacite initiale (1) restait figee
@@ -1075,7 +1090,7 @@ document.addEventListener("keydown", function (e) {
 // interne qu'on est seul a redimensionner.
 var marqueursEchelle = [];
 function majTailleMarqueurs() {
-  var z = map.getZoom();
+  var z = zoomEffectif();
   var s = Math.max(0.15, Math.min(1, 0.15 + (z - map.getMinZoom()) / (16 - map.getMinZoom()) * 0.85));
   marqueursEchelle.forEach(function (el) { el.style.transform = "scale(" + s.toFixed(3) + ")"; });
 }
