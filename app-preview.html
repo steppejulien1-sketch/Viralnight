@@ -2220,10 +2220,8 @@ function snapifie() {
     map.setPaintProperty(id, "fill-color", mentheFonce);
     map.setPaintProperty(id, "fill-opacity", 1);
   });
-  // Sand (Sahara, Arabie, deserts) : beige, jamais vert -- la ou la
-  // vraie donnee dit "aride", Snap Map le montre distinctement du reste
-  // du continent. Glacier (calottes polaires, Groenland) : blanc/gris
-  // tres clair, comme sur Snap.
+  // Sand (dunes locales, tag OSM natural=sand) : beige. Glacier
+  // (calottes polaires, Groenland) : blanc/gris tres clair.
   if (map.getLayer("Sand")) {
     map.setPaintProperty("Sand", "fill-color", sable);
     map.setPaintProperty("Sand", "fill-opacity", 1);
@@ -2231,6 +2229,29 @@ function snapifie() {
   if (map.getLayer("Glacier")) {
     map.setPaintProperty("Glacier", "fill-color", glace);
     map.setPaintProperty("Glacier", "fill-opacity", 1);
+  }
+
+  // Les grands deserts (Sahara, Arabie, Gobi, Kalahari, Outback
+  // australien...) n'existent PAS dans les donnees MapTiler -- ce
+  // style "streets" est pense pour la voirie, pas pour le climat/relief,
+  // et Scrub/Grass (globallandcover) melent vegetation et aridite dans
+  // la meme case a l'echelle d'un continent. Faute de la bonne donnee
+  // chez MapTiler, on l'apporte nous-memes : Natural Earth (domaine
+  // public, aucune attribution requise) recense precisement les 35
+  // grands deserts du monde nommes -- pas une couleur au hasard,
+  // exactement la meme logique que Google/Snap Map. Ajoutee juste
+  // au-dessus du vert et en dessous de "Water" : un lac ou une riviere
+  // a l'interieur d'un desert reste bleu, pas avale par le beige.
+  if (!map.getSource("deserts")) {
+    map.addSource("deserts", { type: "geojson", data: "/deserts.geojson" });
+  }
+  if (!map.getLayer("Deserts")) {
+    map.addLayer({
+      id: "Deserts", type: "fill", source: "deserts",
+      paint: { "fill-color": sable, "fill-opacity": 1 }
+    }, "Water");
+  } else {
+    map.setPaintProperty("Deserts", "fill-color", sable);
   }
 
   map.setPaintProperty("Water", "fill-color", eau);
