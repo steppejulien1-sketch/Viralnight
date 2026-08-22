@@ -656,7 +656,12 @@ function snapifie() {
   // (heritage de sa version "dark") des qu'on sort d'un batiment
   // ou d'une route — c'est ce fond-la, pas les couleurs des parcs,
   // qui faisait "vraie carte".
-  var mentheClair = "#e3f3d3", mentheFonce = "#cbe8ac", eau = "#a9ddf7";
+  // Palette recalee sur la vraie capture Snap Map envoyee par Julien :
+  // notre vert (#e3f3d3) etait un pastel presque blanc, notre bleu
+  // (#a9ddf7) presque aussi clair -- vus de loin (globe dezoome), les
+  // deux se confondaient et tout paraissait bleuâtre. Snap utilise un
+  // vert nettement plus sature et un bleu plus soutenu.
+  var mentheClair = "#8fbf68", mentheFonce = "#6fa050", eau = "#6fa8d8";
 
   map.setPaintProperty("Background", "background-color", mentheClair);
 
@@ -896,17 +901,28 @@ function genererArbres() {
     W = r.width; H = r.height;
     cv.width = W * DPR; cv.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (typeof CIEL_TAILLE !== "undefined") CIEL_TAILLE = Math.sqrt(W * W + H * H) * 1.08;
   }
   dimensionner();
   window.addEventListener("resize", dimensionner);
+
+  // Rayon du champ d'etoiles : la diagonale de l'ecran (pas juste W/H).
+  // Le ciel tourne avec le globe (plus bas) -- un champ cale sur W×H se
+  // vide donc dans les coins des qu'on pivote, exactement le "les
+  // etoiles disparaissent" signale par Julien. Un carre dont le cote
+  // vaut la diagonale de l'ecran, lui, couvre l'ecran ENTIER quel que
+  // soit l'angle de rotation.
+  var CIEL_TAILLE = Math.sqrt(W * W + H * H) * 1.08;
 
   var etoiles = [];
   (function () {
     var s = 20260817;
     function r() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
+    // Densite gardee identique a l'ancien champ W×H (140 etoiles).
+    var nb = Math.round(140 * (CIEL_TAILLE * CIEL_TAILLE) / (W * H));
     // Plus fines qu'avant (.6-2.1px) : sur Snap Map ce sont des points
     // presque invisibles, pas des flocons -- signale par Julien.
-    for (var i = 0; i < 140; i++) {
+    for (var i = 0; i < nb; i++) {
       etoiles.push({ x: r(), y: r(), r: .3 + r() * .55, ph: r() * 6.28, sp: .6 + r() * 1.6 });
     }
   })();
@@ -960,6 +976,10 @@ function genererArbres() {
     if (opacite <= 0) return;
     ctx.globalAlpha = opacite;
 
+    // La lune reste fixe a l'ecran (pas de rotation/decalage) : seul le
+    // champ d'etoiles doit suivre le globe, demande de Julien.
+    if (estNuit()) dessinerLune();
+
     ctx.save();
     // Rotation inverse du bearing : quand la camera tourne autour du
     // globe, un decor lointain fixe semble tourner dans l'autre sens --
@@ -971,19 +991,16 @@ function genererArbres() {
     var dy = (c.lat - centre0.lat) * H * .01;
     ctx.translate(W / 2 + dx, H / 2 + dy);
     ctx.rotate(-bRad);
-    ctx.translate(-W / 2, -H / 2);
-
-    // Le mode jour reprend l'habillage de nuit (etoiles), sans la lune ni
-    // les etoiles filantes (demande de Julien). La lune reste reservee a
-    // la nuit, comme avant.
-    if (estNuit()) dessinerLune();
 
     // Etoiles statiques (demande de Julien) : plus de scintillement anime,
-    // une opacite fixe par etoile.
+    // une opacite fixe par etoile. Positionnees dans le carre CIEL_TAILLE
+    // centre sur l'origine (deja translatee au centre de l'ecran
+    // ci-dessus) : meme apres rotation, ce carre couvre tout l'ecran.
     ctx.fillStyle = "#fff";
     etoiles.forEach(function (e) {
       ctx.globalAlpha = opacite * .78;
-      ctx.beginPath(); ctx.arc(e.x * W, e.y * H, e.r, 0, 6.29); ctx.fill();
+      var ex = (e.x - .5) * CIEL_TAILLE, ey = (e.y - .5) * CIEL_TAILLE;
+      ctx.beginPath(); ctx.arc(ex, ey, e.r, 0, 6.29); ctx.fill();
     });
 
     ctx.restore();
