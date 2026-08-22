@@ -446,6 +446,58 @@
       .rg-switch.on::after { transform: translateX(20px); }
       @media (prefers-reduced-motion: reduce) { .rg-switch, .rg-switch::after { transition: none; } }
 
+      /* Cartes de reglages -- inspirees d'une capture d'appli montree
+         par Julien (Fady) : une carte par ligne, avec parfois une
+         description sous un filet fin. Reprend juste .pf-liste (fond,
+         bordure, radius) plutot que d'inventer un nouveau style. */
+      .rg-carte {
+        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        padding: 16px; margin: 0 0 12px;
+      }
+      .rg-carte-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .rg-label { font-size: 15px; font-weight: 700; color: var(--ink); }
+      .rg-valeur { font-size: 14px; color: var(--ink2); font-weight: 600; text-align: right; }
+      .rg-carte-desc {
+        margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line);
+        font-size: 13px; color: var(--ink2); line-height: 1.5;
+      }
+      .rg-lien {
+        background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
+        font-size: 13.5px; font-weight: 700; color: var(--accent); text-decoration: underline;
+      }
+      .rg-danger {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; min-height: 48px; margin: 8px 0 4px; border: 0; border-radius: 999px;
+        background: rgba(255,47,69,.14); color: var(--accent); font-family: inherit;
+        font-size: 14.5px; font-weight: 700; cursor: pointer;
+      }
+      .rg-danger svg { width: 17px; height: 17px; stroke: var(--accent); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .rg-danger:active { transform: scale(.98); }
+
+      /* Aide & Support : carte contact (icone + libelle + valeur). */
+      .ai-contact-ligne { display: flex; align-items: flex-start; gap: 13px; }
+      .ai-contact-ligne + .ai-contact-ligne { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+      .ai-contact-ico {
+        flex: 0 0 auto; width: 38px; height: 38px; border-radius: 12px;
+        background: rgba(255,47,69,.14); display: grid; place-items: center;
+      }
+      .ai-contact-ico svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .ai-contact-ligne strong { display: block; font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+      .ai-contact-ligne a { color: var(--accent); font-size: 13.5px; text-decoration: none; }
+      .ai-contact-txt { display: block; font-size: 13.5px; color: var(--ink2); line-height: 1.45; }
+      .rg-faq-p { margin: 0; padding: 12px 17px 16px; font-size: 13.5px; color: var(--ink2); line-height: 1.5; border-top: 1px solid var(--line); }
+
+      /* A propos : liste de fonctionnalites, icone + texte. */
+      .ap-feature { display: flex; align-items: flex-start; gap: 13px; margin: 0 0 16px; }
+      .ap-feature-ico {
+        flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px;
+        background: rgba(255,47,69,.14); display: grid; place-items: center;
+      }
+      .ap-feature-ico svg { width: 19px; height: 19px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .ap-feature strong { display: block; font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+      .ap-feature span { font-size: 13px; color: var(--ink2); line-height: 1.45; }
+      .ap-copyright { text-align: center; font-size: 12px; color: var(--ink3); margin: 20px 0 0; }
+
       /* ============================================================
          ECRAN 1 — LA CARTE
          ============================================================ */
@@ -1375,31 +1427,154 @@
           </button>
           <h1 class="va-title">Réglages</h1>
 
-          <div class="pf-liste" style="margin-top:6px">
-            <p class="rg-section-titre">Notifications</p>
-            <div class="rg-toggle-row">
-              <span>Points gagnés</span>
+          <div class="rg-carte">
+            <div class="rg-carte-ligne">
+              <span class="rg-label">Pseudo</span>
+              <span class="rg-valeur" id="rg-pseudo">...</span>
+            </div>
+          </div>
+
+          <div class="rg-carte">
+            <div class="rg-carte-ligne">
+              <span class="rg-label">Adresse e-mail</span>
+              <button type="button" class="rg-lien" id="rg-email-modifier">Modifier</button>
+            </div>
+            <p class="rg-carte-desc" id="rg-email" style="border-top:0; padding-top:0; margin-top:6px">...</p>
+          </div>
+
+          <div class="rg-carte">
+            <div class="rg-carte-ligne">
+              <span class="rg-label">Membre depuis</span>
+              <span class="rg-valeur" id="rg-membre-depuis">...</span>
+            </div>
+          </div>
+
+          <button type="button" class="rg-danger" id="rg-supprimer-compte">
+            <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.8c0-.44.36-.8.8-.8h4.4c.44 0 .8.36.8.8V7m-9 0 .7 12.1a2 2 0 0 0 2 1.9h5.6a2 2 0 0 0 2-1.9L18 7"/></svg>
+            Supprimer mon compte
+          </button>
+
+          <button type="button" class="pf-deco" id="rg-deconnexion" style="margin-top:6px">Se déconnecter</button>
+        </div>
+
+        <!-- ================= ECRAN NOTIFICATIONS ================= -->
+        <div class="vue-profil" id="vue-notifications" hidden>
+          <button type="button" class="va-close" id="nt-close" aria-label="Fermer">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <h1 class="va-title">Notifications</h1>
+
+          <div class="rg-carte">
+            <div class="rg-carte-ligne">
+              <span class="rg-label">Points gagnés</span>
               <button type="button" class="rg-switch on" id="rg-notif-points" role="switch" aria-checked="true" aria-label="Notifications points gagnés"></button>
             </div>
-            <div class="rg-toggle-row">
-              <span>Amis à proximité</span>
+            <p class="rg-carte-desc">Une notification à chaque story validée et ses points ajoutés à ta cagnotte.</p>
+          </div>
+
+          <div class="rg-carte">
+            <div class="rg-carte-ligne">
+              <span class="rg-label">Amis à proximité</span>
               <button type="button" class="rg-switch on" id="rg-notif-amis" role="switch" aria-checked="true" aria-label="Notifications amis à proximité"></button>
             </div>
-            <div class="rg-toggle-row">
-              <span>Nouveautés du club</span>
+            <p class="rg-carte-desc">Quand un ami est dans un club que tu suis, ce soir.</p>
+          </div>
+
+          <div class="rg-carte">
+            <div class="rg-carte-ligne">
+              <span class="rg-label">Nouveautés du club</span>
               <button type="button" class="rg-switch on" id="rg-notif-club" role="switch" aria-checked="true" aria-label="Notifications nouveautés du club"></button>
             </div>
+            <p class="rg-carte-desc">Nouvelle récompense disponible, soirée à venir dans un club que tu suis.</p>
           </div>
+        </div>
 
-          <div class="pf-liste" style="margin-top:22px">
-            <p class="rg-section-titre">Compte</p>
-            <div class="rg-toggle-row">
-              <span>Email</span>
-              <span class="rg-valeur" id="rg-email">...</span>
+        <!-- ================= ECRAN AIDE & SUPPORT ================= -->
+        <div class="vue-profil" id="vue-aide" hidden>
+          <button type="button" class="va-close" id="ai-close" aria-label="Fermer">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <h1 class="va-title">Aide &amp; Support</h1>
+
+          <p class="rg-section-titre" style="text-align:left">Contactez-nous</p>
+          <div class="rg-carte">
+            <div class="ai-contact-ligne">
+              <span class="ai-contact-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>
+              </span>
+              <span>
+                <strong>Email</strong>
+                <a href="mailto:contact@viralnight.fr">contact@viralnight.fr</a>
+              </span>
+            </div>
+            <div class="ai-contact-ligne">
+              <span class="ai-contact-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+              </span>
+              <span>
+                <strong>Disponibilité</strong>
+                <span class="ai-contact-txt">Réponse sous 48h, du lundi au vendredi.</span>
+              </span>
             </div>
           </div>
+          <a class="sheet-cta" href="mailto:contact@viralnight.fr" style="text-decoration:none; margin-bottom:22px">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Contacter le support
+          </a>
 
-          <button type="button" class="pf-deco" id="rg-deconnexion">Se déconnecter</button>
+          <p class="rg-section-titre" style="text-align:left">Questions fréquentes</p>
+          <div style="display:grid;gap:9px">
+            <details class="bareme">
+              <summary>Comment gagner des points ?<span class="chev"><svg viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></svg></span></summary>
+              <p class="rg-faq-p">Scanne le QR code affiché dans le club, poste ta soirée en story sur Instagram ou TikTok en taguant le club, et tes points arrivent une fois les vues comptabilisées.</p>
+            </details>
+            <details class="bareme">
+              <summary>Comment échanger mes points ?<span class="chev"><svg viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></svg></span></summary>
+              <p class="rg-faq-p">Depuis l'onglet Boutique, choisis une récompense et présente le QR code généré au bar ou à l'entrée du club.</p>
+            </details>
+            <details class="bareme">
+              <summary>Comment supprimer mon compte ?<span class="chev"><svg viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></svg></span></summary>
+              <p class="rg-faq-p">Depuis Profil → Réglages, tout en bas de l'écran, "Supprimer mon compte".</p>
+            </details>
+          </div>
+        </div>
+
+        <!-- ================= ECRAN A PROPOS ================= -->
+        <div class="vue-profil" id="vue-apropos" hidden>
+          <button type="button" class="va-close" id="ap-close" aria-label="Fermer">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <h1 class="va-title">À propos</h1>
+
+          <p class="rg-section-titre" style="text-align:left">À propos de ViralNight</p>
+          <div class="rg-carte">
+            <p class="rg-carte-desc" style="border-top:0;padding-top:0;margin-top:0">
+              ViralNight fait gagner en visibilité les boîtes de nuit via leurs propres clients.
+              Scanne le QR code sur place, poste ta soirée en story, gagne des points selon les
+              vues générées, et échange-les contre de vraies récompenses — boisson, entrée,
+              coupe-file — directement au bar ou à l'entrée.
+            </p>
+          </div>
+
+          <p class="rg-section-titre" style="text-align:left">Fonctionnalités</p>
+          <div class="ap-feature">
+            <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/></svg></span>
+            <span><strong>Poster ma story</strong><br>Scanne le QR code du club et publie en un geste.</span>
+          </div>
+          <div class="ap-feature">
+            <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></span>
+            <span><strong>Gagner des points</strong><br>Selon les vues générées par ta publication.</span>
+          </div>
+          <div class="ap-feature">
+            <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/></svg></span>
+            <span><strong>Échanger des récompenses</strong><br>Boisson, entrée, coupe-file, table VIP.</span>
+          </div>
+          <div class="ap-feature">
+            <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/></svg></span>
+            <span><strong>Retrouver ses amis</strong><br>Voir qui est où, ce soir, sur la carte.</span>
+          </div>
+
+          <p class="ap-copyright">© 2026 ViralNight — Tous droits réservés</p>
         </div>
 
         <!-- ================= ECRAN CARTE ================= -->
@@ -3218,14 +3393,62 @@ $("#rg-deconnexion")?.addEventListener("click", async function () {
   VUE_ACCUEIL.classList.remove("masque");
 });
 
+// "Membre depuis" : mois + annee de creation du compte (created_at de
+// la session), pas une donnee inventee.
+var MOIS_FR = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function moisAnnee(iso) {
+  var d = new Date(iso);
+  return MOIS_FR[d.getMonth()] + " " + d.getFullYear();
+}
+
 $("#pf-reglages")?.addEventListener("click", async function () {
   VUE_REGLAGES.hidden = false;
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
-  $("#rg-email").textContent = session ? session.user.email : "Non connecté";
+  if (!session) {
+    $("#rg-pseudo").textContent = "—";
+    $("#rg-email").textContent = "Non connecté";
+    $("#rg-membre-depuis").textContent = "—";
+    return;
+  }
+  var profil = (await supabaseClubbeur.from("users").select("handle").eq("id", session.user.id).single()).data;
+  $("#rg-pseudo").textContent = profil && profil.handle ? "@" + profil.handle : "—";
+  $("#rg-email").textContent = session.user.email;
+  $("#rg-membre-depuis").textContent = moisAnnee(session.user.created_at);
 });
-$("#pf-notifications")?.addEventListener("click", function () { pasEncore("Notifications bientôt disponibles."); });
-$("#pf-aide")?.addEventListener("click", function () { pasEncore("Aide & support bientôt disponibles."); });
-$("#pf-apropos")?.addEventListener("click", function () { pasEncore("À propos bientôt disponible."); });
+
+$("#rg-email-modifier")?.addEventListener("click", async function () {
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return;
+  var nouveau = window.prompt("Nouvelle adresse email :", session.user.email);
+  if (!nouveau || nouveau === session.user.email) return;
+  var res = await supabaseClubbeur.auth.updateUser({ email: nouveau });
+  if (res.error) {
+    window.alert("Ça n'a pas marché : " + res.error.message);
+    return;
+  }
+  window.alert("Vérifie ta boîte mail : un lien de confirmation a été envoyé à " + nouveau + ".");
+});
+
+// Suppression de compte : pas encore de vraie route API pour ça (voir
+// CLAUDE.md, section API -- supprimer un utilisateur demande la cle
+// service_role, cote serveur uniquement). Honnete plutot que fictif :
+// on confirme l'intention et on renvoie vers le support en attendant.
+$("#rg-supprimer-compte")?.addEventListener("click", function () {
+  if (!window.confirm("Supprimer définitivement ton compte ViralNight ? Cette action ne peut pas encore se faire directement dans l'appli.")) return;
+  window.location.href = "mailto:contact@viralnight.fr?subject=" + encodeURIComponent("Suppression de mon compte ViralNight");
+});
+
+var VUE_NOTIFICATIONS = $("#vue-notifications");
+$("#pf-notifications")?.addEventListener("click", function () { VUE_NOTIFICATIONS.hidden = false; });
+$("#nt-close")?.addEventListener("click", function () { VUE_NOTIFICATIONS.hidden = true; });
+
+var VUE_AIDE = $("#vue-aide");
+$("#pf-aide")?.addEventListener("click", function () { VUE_AIDE.hidden = false; });
+$("#ai-close")?.addEventListener("click", function () { VUE_AIDE.hidden = true; });
+
+var VUE_APROPOS = $("#vue-apropos");
+$("#pf-apropos")?.addEventListener("click", function () { VUE_APROPOS.hidden = false; });
+$("#ap-close")?.addEventListener("click", function () { VUE_APROPOS.hidden = true; });
 
 $("#pf-deconnexion")?.addEventListener("click", async function () {
   await supabaseClubbeur.auth.signOut();
