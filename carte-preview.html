@@ -484,18 +484,51 @@ map.on("error", function (e) {
 
 /* En mode globe, MapLibre modifie REELLEMENT map.getZoom() quand on
    tourne/deplace la sphere vers une autre latitude (vertical_perspective_
-   camera_helper.ts : tr.setZoom(oldZoom + getZoomAdjustment(...)) --
-   c'est voulu de leur cote, ca garde le globe a la meme taille a
-   l'ecran malgre la formule rayon = tailleMonde/cos(latitude). Mais
-   nos propres effets lies au zoom (taille des marqueurs, disparition
-   des etoiles, densite des arbres) prenaient ce chiffre brut : tourner
-   le globe (donc changer de latitude) les faisait bouger EN MEME TEMPS,
-   comme un vrai zoom involontaire -- signale par Julien. On retire
-   cette compensation avant de s'en servir, pour ne reagir qu'aux vrais
-   gestes de zoom (molette/pincement), jamais a une simple rotation. */
+   camera_helper.ts, handleMapControlsRollPitchBearingZoom -- appelee a
+   CHAQUE glisser, meme un pur pivot sans intention de zoomer) :
+   tr.setZoom(oldZoom + getZoomAdjustment(oldLat, nouvelleLat)). Cote
+   MapLibre c'est voulu (ca garde le globe a la meme taille a l'ecran
+   malgre la formule rayon = tailleMonde/cos(latitude)), mais le
+   resultat concret pour l'utilisateur : tourner la planete zoome
+   vraiment, pas juste en apparence -- signale par Julien, persistant
+   apres un premier correctif qui ne neutralisait que NOS effets
+   (taille des marqueurs, etoiles, arbres) sans toucher au zoom reel.
+   zoomEffectif() retire cette compensation d'un chiffre ; ZOOM_CIBLE
+   fait mieux : il RECALE le zoom reel de la carte pour qu'il ne bouge
+   plus du tout pendant un pivot, et ne laisse un vrai zoom (molette,
+   pincement) passer que lorsque map.isZooming() dit que c'est un vrai
+   geste de zoom. */
 function zoomEffectif() {
   return map.getZoom() - Math.log2(Math.cos(map.getCenter().lat * Math.PI / 180));
 }
+
+var zoomCible = null; // null = pas encore etabli (avant le 1er "move")
+var recalageEnCours = false;
+
+function neutraliserZoomLatitude() {
+  if (recalageEnCours) return;
+  // Un vrai geste de zoom (molette, pincement, double-clic) : on laisse
+  // faire sans corriger, et on oubliera la cible pour la reprendre a
+  // zero juste apres -- sinon on annulerait le zoom que l'utilisateur
+  // vient de demander.
+  if (map.isZooming()) { zoomCible = null; return; }
+
+  var lat = map.getCenter().lat;
+  var compensation = Math.log2(Math.cos(lat * Math.PI / 180));
+
+  if (zoomCible === null) {
+    zoomCible = map.getZoom() - compensation;
+    return;
+  }
+
+  var zoomVoulu = zoomCible + compensation;
+  if (Math.abs(map.getZoom() - zoomVoulu) > .002) {
+    recalageEnCours = true;
+    map.setZoom(zoomVoulu);
+    recalageEnCours = false;
+  }
+}
+map.on("move", neutraliserZoomLatitude);
 
 // MapLibre ouvre TOUT SEUL le controle d'attribution en grand la
 // premiere fois qu'il a du contenu a afficher, et ne le replie qu'au
@@ -1194,7 +1227,11 @@ map.on("load", function () {
     el.setAttribute("aria-label", c.nom + " " + c.n + " " + c.u + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     el.addEventListener("click", function () { ouvrir(c, el); });
     porteur.appendChild(el);
-    new maplibregl.Marker({ element: porteur, anchor: "center" })
+    // opacityWhenCovered : MapLibre laisse les marqueurs de la face
+    // cachee du globe a 20% d'opacite par defaut -- ici ca les rendait
+    // visibles EN TRANSPARENCE a travers la planete, signale par
+    // Julien comme "pas propre". A 0, ils disparaissent completement.
+    new maplibregl.Marker({ element: porteur, anchor: "center", opacityWhenCovered: 0 })
       .setLngLat(c.lngLat)
       .addTo(map);
     marqueursEchelle.push(el);
@@ -1211,7 +1248,7 @@ map.on("load", function () {
     el.setAttribute("role", "img");
     el.setAttribute("aria-label", a.nom);
     porteur.appendChild(el);
-    new maplibregl.Marker({ element: porteur, anchor: "bottom" })
+    new maplibregl.Marker({ element: porteur, anchor: "bottom", opacityWhenCovered: 0 })
       .setLngLat(a.lngLat)
       .addTo(map);
     marqueursEchelle.push(el);
