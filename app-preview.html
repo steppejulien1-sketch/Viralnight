@@ -2195,9 +2195,10 @@ function snapifie() {
   // profonde, pour que Forest/Wood se distinguent encore de
   // Background/Grass sans s'ecarter du vert demande.
   var mentheClair = "#c2e6a0", mentheFonce = "#a8d488", eau = "#93d4fe";
-  // Desert/sable et glace : nouveau, voir plus bas -- avant, ces deux
-  // classes gardaient leur bleu marine d'origine du fond de carte sombre.
-  var sable = "#e3d6a8", glace = "#f4f7f8";
+  // Deserts/Sand et Glacier partagent ce meme ton clair (voir plus
+  // bas) -- avant, ces classes gardaient leur bleu marine d'origine
+  // du fond de carte sombre.
+  var glace = "#f4f7f8";
 
   map.setPaintProperty("Background", "background-color", mentheClair);
 
@@ -2223,10 +2224,12 @@ function snapifie() {
     map.setPaintProperty(id, "fill-color", mentheFonce);
     map.setPaintProperty(id, "fill-opacity", 1);
   });
-  // Sand (dunes locales, tag OSM natural=sand) : beige. Glacier
-  // (calottes polaires, Groenland) : blanc/gris tres clair.
+  // Glacier (calottes polaires, Groenland) : blanc/gris tres clair.
+  // Sand (dunes locales, tag OSM natural=sand) : meme ton que les
+  // poles, comme "Deserts" plus bas -- demande de Julien, arides et
+  // calottes dans la meme couleur.
   if (map.getLayer("Sand")) {
-    map.setPaintProperty("Sand", "fill-color", sable);
+    map.setPaintProperty("Sand", "fill-color", glace);
     map.setPaintProperty("Sand", "fill-opacity", 1);
   }
   if (map.getLayer("Glacier")) {
@@ -2245,16 +2248,20 @@ function snapifie() {
   // exactement la meme logique que Google/Snap Map. Ajoutee juste
   // au-dessus du vert et en dessous de "Water" : un lac ou une riviere
   // a l'interieur d'un desert reste bleu, pas avale par le beige.
+  //
+  // Couleur : la meme que les poles (glace), demande de Julien -- zones
+  // arides et calottes polaires dans le meme ton clair plutot que deux
+  // teintes differentes.
   if (!map.getSource("deserts")) {
     map.addSource("deserts", { type: "geojson", data: "/deserts.geojson" });
   }
   if (!map.getLayer("Deserts")) {
     map.addLayer({
       id: "Deserts", type: "fill", source: "deserts",
-      paint: { "fill-color": sable, "fill-opacity": 1 }
+      paint: { "fill-color": glace, "fill-opacity": 1 }
     }, "Water");
   } else {
-    map.setPaintProperty("Deserts", "fill-color", sable);
+    map.setPaintProperty("Deserts", "fill-color", glace);
   }
 
   map.setPaintProperty("Water", "fill-color", eau);
@@ -2356,7 +2363,10 @@ function snapifie() {
     // Recalcule seulement le cote du carre (le nombre d'etoiles, lui,
     // reste fige depuis la generation initiale) : suffisant pour un
     // redimensionnement d'appoint, ce mockup ne tourne pas en usage reel.
-    if (typeof CIEL_TAILLE !== "undefined") CIEL_TAILLE = Math.sqrt(W * W + H * H) * 1.08 + Math.min(W, H) * .36;
+    if (typeof CIEL_TAILLE !== "undefined") {
+      CIEL_TAILLE = Math.sqrt(W * W + H * H) * 1.08 + Math.min(W, H) * .36;
+      regenererChampEtoiles();
+    }
   }
   dimensionner();
   window.addEventListener("resize", dimensionner);
@@ -2390,6 +2400,32 @@ function snapifie() {
     }
   })();
 
+  /* Recherche de fluidite (demande de Julien, "trouve un moyen de
+     regler ce souci") : jusqu'ici, chaque frame redessinait ~500
+     etoiles une par une (beginPath/arc/fill) EN PLUS du rendu 3D du
+     globe -- ca s'additionne, et ca se sent sur un rendu deja lourd.
+     Le champ d'etoiles ne change jamais de FORME, seulement
+     d'orientation/position : on le dessine donc une seule fois sur un
+     canvas separe (hors ecran), et chaque frame se contente d'un seul
+     drawImage() de ce cache, transforme -- un seul appel au lieu de
+     500+, le gros du cout en moins. */
+  var etoilesCv = document.createElement("canvas");
+  var etoilesCtx = etoilesCv.getContext("2d");
+
+  function regenererChampEtoiles() {
+    etoilesCv.width = Math.ceil(CIEL_TAILLE * DPR);
+    etoilesCv.height = Math.ceil(CIEL_TAILLE * DPR);
+    etoilesCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    etoilesCtx.clearRect(0, 0, CIEL_TAILLE, CIEL_TAILLE);
+    etoilesCtx.fillStyle = "#fff";
+    etoiles.forEach(function (e) {
+      etoilesCtx.beginPath();
+      etoilesCtx.arc(e.x * CIEL_TAILLE, e.y * CIEL_TAILLE, e.r, 0, 6.29);
+      etoilesCtx.fill();
+    });
+  }
+  regenererChampEtoiles();
+
   /* Le ciel doit "bouger" quand on tourne/deplace le globe (demande
      de Julien, encore statique face a la camera avant) : on tourne et
      on decale legerement tout le calque etoiles+lune en fonction de
@@ -2421,7 +2457,7 @@ function snapifie() {
   // supprimees : le ciel reste etoile en permanence desormais, elles
   // n'etaient plus appelees nulle part.
 
-  var opacite = 1, dernier = 0, raf = null;
+  var opacite = 1, dernier = 0;
 
   function dessiner(temps, dt) {
     // Espace vraiment noir (pas le gris chaud #1a1d24 du reste de
@@ -2459,31 +2495,34 @@ function snapifie() {
     ctx.rotate(-bRad);
 
     // Etoiles statiques (demande de Julien) : plus de scintillement anime,
-    // une opacite fixe par etoile. Positionnees dans le carre CIEL_TAILLE
-    // centre sur l'origine (deja translatee au centre de l'ecran
-    // ci-dessus) : meme apres rotation, ce carre couvre tout l'ecran.
-    ctx.fillStyle = "#fff";
-    etoiles.forEach(function (e) {
-      ctx.globalAlpha = opacite * .78;
-      var ex = (e.x - .5) * CIEL_TAILLE, ey = (e.y - .5) * CIEL_TAILLE;
-      ctx.beginPath(); ctx.arc(ex, ey, e.r, 0, 6.29); ctx.fill();
-    });
+    // une opacite fixe par etoile. Le champ (cache dans etoilesCv, voir
+    // regenererChampEtoiles) est deja centre sur son origine -- un seul
+    // drawImage, transforme par translate/rotate ci-dessus, au lieu de
+    // 500+ arcs redessines a la main chaque frame.
+    ctx.globalAlpha = opacite * .78;
+    ctx.drawImage(etoilesCv, -CIEL_TAILLE / 2, -CIEL_TAILLE / 2, CIEL_TAILLE, CIEL_TAILLE);
 
     ctx.restore();
     ctx.globalAlpha = 1;
   }
 
-  function boucle(ts) {
-    var t = ts / 1000, dt = dernier ? Math.min(.05, t - dernier) : 0;
+  // Autre gain de fluidite : plus de boucle requestAnimationFrame qui
+  // tournait EN PERMANENCE (meme carte totalement immobile). Rien ici
+  // ne change tant que la camera ne bouge pas ou que le zoom ne fait
+  // pas fondre l'opacite -- on ne redessine donc que sur "move" (glisser/
+  // tourner, aussi frequent qu'un rAF pendant un geste actif) et sur
+  // "zoom" (fondu jour/nuit selon l'altitude).
+  function surMouvement() {
+    var t = performance.now() / 1000;
+    dessiner(t, dernier ? Math.min(.05, t - dernier) : 0);
     dernier = t;
-    dessiner(t, dt);
-    raf = requestAnimationFrame(boucle);
   }
-  raf = requestAnimationFrame(boucle);
+  map.on("move", surMouvement);
 
   function majOpacite() {
     var z = zoomEffectif();
     opacite = z < 2 ? 1 : z > 4 ? 0 : 1 - (z - 2) / 2;
+    surMouvement();
   }
   majOpacite();
   map.on("zoom", majOpacite);
