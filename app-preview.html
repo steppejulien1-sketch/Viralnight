@@ -417,6 +417,36 @@
       .pf-deco { width: 100%; background: transparent; border: 0; padding: 14px; color: #ff8290; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 
       /* ============================================================
+         ECRAN REGLAGES -- meme carcasse que .vue-profil (#vue-reglages
+         reutilise la classe), contenu propre : notifications (bascules)
+         et un apercu du compte.
+         ============================================================ */
+      .rg-section-titre {
+        margin: 0 0 8px 2px; font-size: 11px; font-weight: 700; color: var(--ink3);
+        text-transform: uppercase; letter-spacing: .08em;
+      }
+      .rg-toggle-row {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 2px; border-top: 1px solid var(--line);
+      }
+      .rg-toggle-row:first-of-type { border-top: 0; }
+      .rg-toggle-row span:first-child { font-size: 15px; font-weight: 600; color: var(--ink); }
+      .rg-valeur { font-size: 14px; color: var(--ink3); font-weight: 600; }
+      .rg-switch {
+        position: relative; flex: 0 0 auto; width: 46px; height: 26px; border-radius: 999px;
+        background: var(--s3); border: 0; padding: 0; cursor: pointer;
+        transition: background .15s ease;
+      }
+      .rg-switch::after {
+        content: ""; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px;
+        border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+        transition: transform .15s ease;
+      }
+      .rg-switch.on { background: var(--accent); }
+      .rg-switch.on::after { transform: translateX(20px); }
+      @media (prefers-reduced-motion: reduce) { .rg-switch, .rg-switch::after { transition: none; } }
+
+      /* ============================================================
          ECRAN 1 — LA CARTE
          ============================================================ */
 
@@ -1336,6 +1366,40 @@
             <button type="button" class="pf-deco" id="pf-deconnexion">Se déconnecter</button>
 
           </div>
+        </div>
+
+        <!-- ================= ECRAN REGLAGES ================= -->
+        <div class="vue-profil" id="vue-reglages" hidden>
+          <button type="button" class="va-close" id="rg-close" aria-label="Fermer">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <h1 class="va-title">Réglages</h1>
+
+          <div class="pf-liste" style="margin-top:6px">
+            <p class="rg-section-titre">Notifications</p>
+            <div class="rg-toggle-row">
+              <span>Points gagnés</span>
+              <button type="button" class="rg-switch on" id="rg-notif-points" role="switch" aria-checked="true" aria-label="Notifications points gagnés"></button>
+            </div>
+            <div class="rg-toggle-row">
+              <span>Amis à proximité</span>
+              <button type="button" class="rg-switch on" id="rg-notif-amis" role="switch" aria-checked="true" aria-label="Notifications amis à proximité"></button>
+            </div>
+            <div class="rg-toggle-row">
+              <span>Nouveautés du club</span>
+              <button type="button" class="rg-switch on" id="rg-notif-club" role="switch" aria-checked="true" aria-label="Notifications nouveautés du club"></button>
+            </div>
+          </div>
+
+          <div class="pf-liste" style="margin-top:22px">
+            <p class="rg-section-titre">Compte</p>
+            <div class="rg-toggle-row">
+              <span>Email</span>
+              <span class="rg-valeur" id="rg-email">...</span>
+            </div>
+          </div>
+
+          <button type="button" class="pf-deco" id="rg-deconnexion">Se déconnecter</button>
         </div>
 
         <!-- ================= ECRAN CARTE ================= -->
@@ -3115,7 +3179,50 @@ $("#pf-action-stories")?.addEventListener("click", function () { pasEncore("Hist
 // produit. Le formulaire d'inscription club existe deja (inscription.html),
 // donc ouvrir un nouvel onglet dessus est honnete, pas un placeholder.
 $("#pf-devenir-club")?.addEventListener("click", function () { window.open("/inscription.html", "_blank"); });
-$("#pf-reglages")?.addEventListener("click", function () { pasEncore("Réglages bientôt disponibles."); });
+/* ==========================================================
+   ECRAN REGLAGES -- notifications (bascules persistees en local,
+   honnete : rien ne part encore vers un serveur de notifications
+   push, "Mes bons" plus haut a le meme genre de reserve) et un
+   apercu du compte connecte.
+   ========================================================== */
+var VUE_REGLAGES = $("#vue-reglages");
+
+function fermerReglages() { VUE_REGLAGES.hidden = true; }
+
+$("#rg-close")?.addEventListener("click", fermerReglages);
+
+var BASCULES_NOTIF = [
+  ["rg-notif-points", "vn_notif_points"],
+  ["rg-notif-amis", "vn_notif_amis"],
+  ["rg-notif-club", "vn_notif_club"],
+];
+BASCULES_NOTIF.forEach(function (paire) {
+  var bouton = $("#" + paire[0]);
+  if (!bouton) return;
+  var cle = paire[1];
+  var actif = localStorage.getItem(cle) !== "off"; // actif par defaut
+  bouton.classList.toggle("on", actif);
+  bouton.setAttribute("aria-checked", String(actif));
+  bouton.addEventListener("click", function () {
+    var nouveauEtat = !bouton.classList.contains("on");
+    bouton.classList.toggle("on", nouveauEtat);
+    bouton.setAttribute("aria-checked", String(nouveauEtat));
+    localStorage.setItem(cle, nouveauEtat ? "on" : "off");
+  });
+});
+
+$("#rg-deconnexion")?.addEventListener("click", async function () {
+  await supabaseClubbeur.auth.signOut();
+  fermerReglages();
+  fermerProfil();
+  VUE_ACCUEIL.classList.remove("masque");
+});
+
+$("#pf-reglages")?.addEventListener("click", async function () {
+  VUE_REGLAGES.hidden = false;
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  $("#rg-email").textContent = session ? session.user.email : "Non connecté";
+});
 $("#pf-notifications")?.addEventListener("click", function () { pasEncore("Notifications bientôt disponibles."); });
 $("#pf-aide")?.addEventListener("click", function () { pasEncore("Aide & support bientôt disponibles."); });
 $("#pf-apropos")?.addEventListener("click", function () { pasEncore("À propos bientôt disponible."); });
