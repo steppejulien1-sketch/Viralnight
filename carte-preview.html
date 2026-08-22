@@ -93,14 +93,14 @@
       /* ---------------- Marqueur de club ---------------- */
 
       .club-badge {
-        width: 50px; height: 50px; border-radius: 50%;
+        width: 58px; height: 58px; border-radius: 50%;
         background: var(--c); border: 3px solid #fff;
         box-shadow: 0 3px 10px rgba(0,0,0,.35);
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         color: #fff; position: relative; line-height: 1; cursor: pointer;
       }
-      .club-badge b { font-size: 17px; font-weight: 800; letter-spacing: -.04em; }
-      .club-badge i { font-style: normal; font-size: 8px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 1px; }
+      .club-badge b { font-size: 19px; font-weight: 800; letter-spacing: -.04em; }
+      .club-badge i { font-style: normal; font-size: 9px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 1px; }
       .club-badge.shut { background: #fff; color: #7b828c; border-color: #d9dde3; }
       .club-badge.hot::after {
         content: ""; position: absolute; inset: -3px; border-radius: 50%;
@@ -109,10 +109,21 @@
       @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
 
+      /* Petit badge de type d'etablissement (boule a facettes = boite
+         de nuit, verre a cocktail = bar), demande de Julien -- meme
+         idee que les ciseaux "Devenir Coiffeur" de l'appli de
+         reference. Fond blanc systematique : lisible quel que soit --c. */
+      .club-badge-type {
+        position: absolute; right: -3px; bottom: -3px; width: 20px; height: 20px; border-radius: 50%;
+        background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4);
+        display: grid; place-items: center;
+      }
+      .club-badge-type svg { width: 12px; height: 12px; stroke: #1b1f25; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
       /* Element que MapLibre positionne lui-meme -- ne jamais lui
          donner de transform a nous (voir majTailleMarqueurs). */
       .marker-porteur { display: inline-block; line-height: 0; }
-      .friend-marker { width: 40px; height: 52px; cursor: pointer; }
+      .friend-marker { width: 46px; height: 60px; cursor: pointer; }
       .friend-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
 
       /* ---------------- Colonne de boutons ---------------- */
@@ -407,26 +418,38 @@ function pint(level, cls) {
 var CLUBS = {
   mirage: {
     nom: "Mirage", adr: "Rue de l'Écuyer · 400 m", n: "42", u: "ICI", c: "#ff2f45",
-    lngLat: [4.3554, 50.8479], hot: true,
+    lngLat: [4.3554, 50.8479], hot: true, type: "club",
     chips: [["Ça chauffe", true], ["Ouvert jusqu'à 6h", false]],
     amis: [1, 1, .3], qui: "Sarah et Léa sont là, Théo est parti",
     note: "300 pts = un cocktail offert. Tu en as 0."
   },
   fuse: {
     nom: "Fuse", adr: "Rue Blaes · 1,2 km", n: "11", u: "ICI", c: "#3b4250",
-    lngLat: [4.3405, 50.8375],
+    lngLat: [4.3405, 50.8375], type: "club",
     chips: [["Ouvert jusqu'à 7h", false], ["Ça se remplit", false]],
     amis: [.62], qui: "Nassym y était il y a une heure",
     note: "250 pts = une entrée offerte. Tu en as 0."
   },
   spirito: {
     nom: "Spirito", adr: "Rue Stassart · 2,1 km", n: "1h", u: "OUVRE", c: "#8b929c",
-    lngLat: [4.3651, 50.8367], shut: true,
+    lngLat: [4.3651, 50.8367], shut: true, type: "bar",
     chips: [["Pas encore ouvert", false]],
     amis: [], qui: "Personne de tes amis pour l'instant",
     note: "400 pts = un coupe-file. Tu en as 0."
   }
 };
+
+// Petit badge de type sur chaque marqueur (demande de Julien, meme
+// idee que les ciseaux "Devenir Coiffeur" de l'appli de reference qu'il
+// a montree) : boule a facettes pour une boite de nuit, verre a
+// cocktail pour un bar. Fond blanc pose dans .club-badge-type (CSS),
+// jamais colore par --c -- reste lisible quel que soit l'etablissement.
+function badgeType(type) {
+  var icone = type === "bar"
+    ? '<path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/>'
+    : '<path d="M9 2.5h6"/><path d="M12 2.5v4"/><circle cx="12" cy="13.5" r="7"/><path d="M5 13.5h14M12 6.5v14M7.4 8.9l9.2 9.2M16.6 8.9l-9.2 9.2"/>';
+  return '<span class="club-badge-type" aria-hidden="true"><svg viewBox="0 0 24 24">' + icone + "</svg></span>";
+}
 
 var AMIS = [
   { nom: "Sarah",  q: 1,   lngLat: [4.3561, 50.8486] },
@@ -1043,7 +1066,7 @@ var back = null;
 function ouvrir(c, src) {
   if (!c) return;
   back = src || null;
-  shDisc.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>";
+  shDisc.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>" + badgeType(c.type);
   shDisc.style.setProperty("--c", c.c);
   shDisc.classList.toggle("shut", !!c.shut);
   document.getElementById("sh-name").textContent = c.nom;
@@ -1120,8 +1143,8 @@ map.on("load", function () {
     var el = document.createElement("button");
     el.className = "club-badge" + (c.hot ? " hot" : "") + (c.shut ? " shut" : "");
     el.style.setProperty("--c", c.c);
-    el.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>";
-    el.setAttribute("aria-label", c.nom + " " + c.n + " " + c.u);
+    el.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>" + badgeType(c.type);
+    el.setAttribute("aria-label", c.nom + " " + c.n + " " + c.u + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     el.addEventListener("click", function () { ouvrir(c, el); });
     porteur.appendChild(el);
     new maplibregl.Marker({ element: porteur, anchor: "center" })
