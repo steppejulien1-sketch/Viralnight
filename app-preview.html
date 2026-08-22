@@ -382,7 +382,7 @@
         background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
         border: 0; padding: 0; cursor: pointer; display: grid; place-items: center; overflow: hidden;
       }
-      .pf-avatar-init { font-size: 32px; font-weight: 800; color: #fff; }
+      .pf-avatar-init { font-size: 42px; font-weight: 800; color: #fff; }
       .pf-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
       /* Crayon toujours visible (pas seulement au survol) : sur mobile
          il n'y a pas de hover, sans lui rien n'indique que la photo
@@ -1480,8 +1480,9 @@
           <div class="rg-carte">
             <div class="rg-carte-ligne">
               <span class="rg-label">Pseudo</span>
-              <span class="rg-valeur" id="rg-pseudo">...</span>
+              <button type="button" class="rg-lien" id="rg-pseudo-modifier">Modifier</button>
             </div>
+            <p class="rg-carte-desc" id="rg-pseudo" style="border-top:0; padding-top:0; margin-top:6px">...</p>
           </div>
 
           <div class="rg-carte">
@@ -3348,8 +3349,12 @@ TAB_PROFIL?.addEventListener("click", async function () {
   var handleEl = $("#pf-handle"), avatarInit = $("#pf-avatar-init"), avatarImg = $("#pf-avatar-img");
   var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).single()).data;
   var monHandle = profil && profil.handle;
+  // Tant qu'aucun pseudo n'est choisi : on appelle la personne par la
+  // partie avant le @ de son email (julien.steppe@gmail.com ->
+  // "julien.steppe"), plus lisible que "Profil en cours de creation".
+  var nomRepli = String(session.user.email || "").split("@")[0];
 
-  handleEl.textContent = monHandle ? "@" + monHandle : "Profil en cours de création...";
+  handleEl.textContent = monHandle ? "@" + monHandle : nomRepli;
   if (profil && profil.avatar_url) {
     avatarImg.src = profil.avatar_url;
     avatarImg.hidden = false;
@@ -3357,7 +3362,7 @@ TAB_PROFIL?.addEventListener("click", async function () {
   } else {
     avatarImg.hidden = true;
     avatarInit.hidden = false;
-    avatarInit.textContent = monHandle ? monHandle.charAt(0).toUpperCase() : "?";
+    avatarInit.textContent = (monHandle || nomRepli).charAt(0).toUpperCase();
   }
 
   $("#pf-points").textContent = nb(ETAT.solde) + " pts · historique des récompenses";
@@ -3496,9 +3501,29 @@ $("#pf-reglages")?.addEventListener("click", async function () {
     return;
   }
   var profil = (await supabaseClubbeur.from("users").select("handle").eq("id", session.user.id).single()).data;
-  $("#rg-pseudo").textContent = profil && profil.handle ? "@" + profil.handle : "—";
+  var nomRepliReglages = String(session.user.email || "").split("@")[0];
+  $("#rg-pseudo").textContent = profil && profil.handle ? "@" + profil.handle : nomRepliReglages;
   $("#rg-email").textContent = session.user.email;
   $("#rg-membre-depuis").textContent = moisAnnee(session.user.created_at);
+});
+
+// Meme nettoyage que le repli automatique a la creation du compte
+// (assurerProfil, ecran Amis) : minuscules, chiffres, point et
+// underscore seulement.
+$("#rg-pseudo-modifier")?.addEventListener("click", async function () {
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return;
+  var actuel = (await supabaseClubbeur.from("users").select("handle").eq("id", session.user.id).single()).data;
+  var saisie = window.prompt("Nouveau pseudo :", (actuel && actuel.handle) || "");
+  if (saisie === null) return;
+  var nettoye = saisie.trim().toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 30);
+  if (!nettoye) { window.alert("Pseudo invalide."); return; }
+  var res = await supabaseClubbeur.from("users").update({ handle: nettoye }).eq("id", session.user.id);
+  if (res.error) {
+    window.alert(res.error.message.indexOf("duplicate") !== -1 ? "Ce pseudo est déjà pris." : "Ça n'a pas marché, réessaie.");
+    return;
+  }
+  $("#rg-pseudo").textContent = "@" + nettoye;
 });
 
 $("#rg-email-modifier")?.addEventListener("click", async function () {
