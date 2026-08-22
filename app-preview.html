@@ -365,18 +365,43 @@
       .vue-profil[hidden] { display: block; opacity: 0; visibility: hidden; pointer-events: none; }
       @media (prefers-reduced-motion: reduce) { .vue-profil { transition: none; } }
 
+      /* Cloche notifications : raccourci en haut a droite de l'ecran
+         Profil (demande de Julien, "comme sur la capture") -- ouvre
+         directement l'ecran Notifications, meme destination que la
+         ligne de la liste plus bas. */
+      .pf-cloche {
+        position: absolute; top: 16px; right: 16px; z-index: 2;
+        width: 34px; height: 34px; border-radius: 50%; background: var(--s2); border: 0;
+        cursor: pointer; display: grid; place-items: center;
+      }
+      .pf-cloche svg { width: 16px; height: 16px; stroke: var(--ink2); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
       .pf-head { text-align: center; padding-top: 44px; margin: 0 0 24px; }
       .pf-avatar {
         position: relative; width: 84px; height: 84px; margin: 0 auto 14px; border-radius: 50%;
         background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
-        display: grid; place-items: center; overflow: hidden;
+        border: 0; padding: 0; cursor: pointer; display: grid; place-items: center; overflow: hidden;
       }
       .pf-avatar-init { font-size: 32px; font-weight: 800; color: #fff; }
       .pf-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      /* Crayon toujours visible (pas seulement au survol) : sur mobile
+         il n'y a pas de hover, sans lui rien n'indique que la photo
+         est modifiable -- meme detail que va-avatar-edit sur Amis. */
+      .pf-avatar-edit {
+        position: absolute; right: 0; bottom: 0; width: 26px; height: 26px; border-radius: 50%;
+        background: var(--s1); box-shadow: 0 0 0 2px var(--bg); display: grid; place-items: center;
+      }
+      .pf-avatar-edit svg { width: 13px; height: 13px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .pf-nom { margin: 0 0 3px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
       .pf-sub { margin: 0; font-size: 13px; color: var(--ink3); font-weight: 650; }
 
       .pf-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 20px; }
+      /* 4 raccourcis (Amis/Favoris/Mes stories/Recompenses) : meme
+         carte, juste un peu plus compacte pour tenir sur une ligne. */
+      .pf-actions-4 { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .pf-actions-4 .pf-action { padding: 13px 4px; border-radius: 15px; }
+      .pf-actions-4 .pf-action svg { width: 19px; height: 19px; }
+      .pf-actions-4 .pf-action span { font-size: 10.5px; }
       .pf-action {
         display: flex; flex-direction: column; align-items: center; gap: 8px;
         background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
@@ -413,6 +438,10 @@
       .pf-item:first-child { border-top: 0; }
       .pf-item svg { flex: 0 0 auto; width: 23px; height: 23px; stroke: var(--ink); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
       .pf-item:active { background: var(--s2); }
+      /* Supprimer mon compte / Deconnexion : memes lignes que le reste
+         de la liste, juste en rouge -- plus lisible qu'un bouton texte
+         seul perdu en bas de l'ecran (demande de Julien). */
+      .pf-item-danger, .pf-item-danger svg { color: #ff6b7d; stroke: #ff6b7d; }
 
       .pf-deco { width: 100%; background: transparent; border: 0; padding: 14px; color: #ff8290; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 
@@ -1357,19 +1386,31 @@
 
           <div class="pf-contenu" id="pf-contenu" hidden>
 
+            <button type="button" class="pf-cloche" id="pf-cloche" aria-label="Notifications">
+              <svg viewBox="0 0 24 24"><path d="M18 15.2V11a6 6 0 0 0-4.7-5.86V4a1.3 1.3 0 1 0-2.6 0v1.14A6 6 0 0 0 6 11v4.2L4.2 17v1h15.6v-1z"/><path d="M10.3 19.5a1.7 1.7 0 0 0 3.4 0"/></svg>
+            </button>
+
             <div class="pf-head">
-              <span class="pf-avatar" id="pf-avatar">
+              <button type="button" class="pf-avatar" id="pf-avatar" aria-label="Changer ma photo de profil">
                 <span class="pf-avatar-init" id="pf-avatar-init"></span>
                 <img id="pf-avatar-img" alt="" hidden />
-              </span>
+                <span class="pf-avatar-edit" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
+                </span>
+              </button>
+              <input type="file" accept="image/*" id="pf-avatar-file" hidden />
               <p class="pf-nom" id="pf-handle">@...</p>
               <p class="pf-sub">Clubbeur</p>
             </div>
 
-            <div class="pf-actions">
+            <div class="pf-actions pf-actions-4">
               <button type="button" class="pf-action" id="pf-action-amis">
                 <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
                 <span>Amis</span>
+              </button>
+              <button type="button" class="pf-action" id="pf-action-favoris">
+                <svg viewBox="0 0 24 24"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1z"/></svg>
+                <span>Favoris</span>
               </button>
               <button type="button" class="pf-action" id="pf-action-stories">
                 <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
@@ -1386,8 +1427,8 @@
                 <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
               </span>
               <span class="pf-fidelite-txt">
-                <strong>Mes points</strong>
-                <span id="pf-points">0 pts</span>
+                <strong>Ma fidélité</strong>
+                <span id="pf-points">0 pts · historique des récompenses</span>
               </span>
               <svg class="pf-fidelite-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
             </button>
@@ -1415,7 +1456,16 @@
               </button>
             </div>
 
-            <button type="button" class="pf-deco" id="pf-deconnexion">Se déconnecter</button>
+            <div class="pf-liste">
+              <button type="button" class="pf-item pf-item-danger" id="pf-supprimer-compte">
+                <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.8c0-.44.36-.8.8-.8h4.4c.44 0 .8.36.8.8V7m-9 0 .7 12.1a2 2 0 0 0 2 1.9h5.6a2 2 0 0 0 2-1.9L18 7"/></svg>
+                Supprimer mon compte
+              </button>
+              <button type="button" class="pf-item pf-item-danger" id="pf-deconnexion">
+                <svg viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M16 16l4-4-4-4M20 12H9"/></svg>
+                Déconnexion
+              </button>
+            </div>
 
           </div>
         </div>
@@ -3310,7 +3360,28 @@ TAB_PROFIL?.addEventListener("click", async function () {
     avatarInit.textContent = monHandle ? monHandle.charAt(0).toUpperCase() : "?";
   }
 
-  $("#pf-points").textContent = nb(ETAT.solde) + " pts";
+  $("#pf-points").textContent = nb(ETAT.solde) + " pts · historique des récompenses";
+
+  // Changer la photo depuis l'ecran Profil lui-meme (demande de
+  // Julien) : meme mecanique que va-avatar sur l'ecran Amis (fichier
+  // fixe par personne, upsert cote storage), .onclick=/.onchange= pas
+  // addEventListener puisque ce bloc retourne a chaque ouverture du
+  // profil sur les MEMES noeuds DOM.
+  var avatarBtnPf = $("#pf-avatar"), avatarFilePf = $("#pf-avatar-file");
+  avatarBtnPf.onclick = function () { avatarFilePf.click(); };
+  avatarFilePf.onchange = async function () {
+    var fichier = avatarFilePf.files && avatarFilePf.files[0];
+    avatarFilePf.value = "";
+    if (!fichier) return;
+    var chemin = session.user.id + "/profil";
+    var { error: erreurEnvoi } = await supabaseClubbeur.storage
+      .from("avatars").upload(chemin, fichier, { upsert: true, contentType: fichier.type });
+    if (erreurEnvoi) { window.alert("Photo non envoyée, réessaie dans un instant."); return; }
+    var url = supabaseClubbeur.storage.from("avatars").getPublicUrl(chemin).data.publicUrl + "?t=" + Date.now();
+    var { error: erreurProfil } = await supabaseClubbeur.from("users").update({ avatar_url: url }).eq("id", session.user.id);
+    if (erreurProfil) { window.alert("Photo envoyée, mais le profil n'a pas pu être mis à jour."); return; }
+    avatarImg.src = url; avatarImg.hidden = false; avatarInit.hidden = true;
+  };
 });
 
 $("#pf-connecte-btn")?.addEventListener("click", function () {
@@ -3336,6 +3407,12 @@ $("#pf-fidelite")?.addEventListener("click", function () {
   activerVue("boutique");
 });
 
+// Cloche du profil : meme destination que la ligne "Notifications"
+// de la liste plus bas.
+$("#pf-cloche")?.addEventListener("click", function () {
+  VUE_NOTIFICATIONS.hidden = false;
+});
+
 function pasEncore(texte) {
   $("#pf-msg-bientot") || document.body.insertAdjacentHTML("beforeend",
     '<div id="pf-msg-bientot" style="position:fixed;left:50%;bottom:120px;transform:translateX(-50%);' +
@@ -3349,6 +3426,14 @@ function pasEncore(texte) {
 }
 
 $("#pf-action-stories")?.addEventListener("click", function () { pasEncore("Historique des stories bientôt disponible."); });
+$("#pf-action-favoris")?.addEventListener("click", function () { pasEncore("Favoris bientôt disponibles."); });
+// Meme geste que dans Reglages (rg-supprimer-compte) : pas de vraie
+// route de suppression cote serveur pour l'instant (cle service_role
+// necessaire, jamais cote client), on confirme et on renvoie au support.
+$("#pf-supprimer-compte")?.addEventListener("click", function () {
+  if (!window.confirm("Supprimer définitivement ton compte ViralNight ? Cette action ne peut pas encore se faire directement dans l'appli.")) return;
+  window.location.href = "mailto:contact@viralnight.fr?subject=" + encodeURIComponent("Suppression de mon compte ViralNight");
+});
 // Seule ligne de la liste a avoir une vraie destination : le reste
 // (reglages, notifications, aide, a propos) n'existe pas encore cote
 // produit. Le formulaire d'inscription club existe deja (inscription.html),
