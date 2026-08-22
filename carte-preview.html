@@ -57,11 +57,14 @@
         overflow: hidden; background: #1a1d24; user-select: none;
       }
 
-      #map { position: absolute; inset: 0; width: 100%; height: 100%; }
-      /* Le ciel etoile : au-dessus des tuiles (qui peignent un fond
-         uni la ou le globe ne couvre pas l'ecran), en dessous des
-         marqueurs et du chrome de l'appli. */
-      #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+      /* En mode globe, MapLibre ne peint QUE la sphere -- l'espace
+         autour est transparent, aucune geometrie a y dessiner.
+         #etoiles doit donc rester SOUS #map : la sphere, opaque,
+         cache alors naturellement les etoiles qui tombent dessous.
+         Avant (etoiles au-dessus), elles se voyaient a travers
+         l'ocean et les continents -- signale par Julien. */
+      #map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
+      #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
       /* Les arbres : plus un motif de tuile MapLibre (ca repetait les
          5 memes arbres a l'identique, effet grille tres visible),
          mais un calque dessine a la main par-dessus la carte,
@@ -106,6 +109,9 @@
       @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
 
+      /* Element que MapLibre positionne lui-meme -- ne jamais lui
+         donner de transform a nous (voir majTailleMarqueurs). */
+      .marker-porteur { display: inline-block; line-height: 0; }
       .friend-marker { width: 40px; height: 52px; cursor: pointer; }
       .friend-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
 
@@ -496,6 +502,14 @@ function estNuit() {
        (fog + halo atmospherique), pas dessinees a la main. Change de
        palette selon estNuit() — rappele toutes les 5 minutes (voir
        plus bas) pour traverser minuit/l'aube sans recharger la page. --- */
+// atmosphere-blend a 1 (fond) jusqu'a poser 100% de horizon-color sur
+// TOUTE la sphere visible au zoom minimal -- vu depuis l'espace, la
+// terre entiere se retrouvait noyee dans un voile bleu marine
+// uniforme, plus aucune couleur ne se distinguait ("les pays en
+// bleu", signale par Julien, capture Snap Map a l'appui : la-bas le
+// globe lointain reste net, juste un fin lisere lumineux sur le
+// bord). Plafond largement abaisse : un souffle d'atmosphere au
+// limbe, jamais un lavis sur tout le disque.
 function ambiance() {
   if (estNuit()) {
     map.setSky({
@@ -505,7 +519,7 @@ function ambiance() {
       "horizon-fog-blend": 0.6,
       "fog-color": "#0e1420",
       "fog-ground-blend": 0.7,
-      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, .18, 4, .1, 7, 0]
     });
   } else {
     map.setSky({
@@ -515,7 +529,7 @@ function ambiance() {
       "horizon-fog-blend": 0.5,
       "fog-color": "#e8f5fc",
       "fog-ground-blend": 0.6,
-      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, .18, 4, .1, 7, 0]
     });
   }
 }
@@ -875,10 +889,21 @@ function genererArbres() {
   (function () {
     var s = 20260817;
     function r() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
+    // Plus fines qu'avant (.6-2.1px) : sur Snap Map ce sont des points
+    // presque invisibles, pas des flocons -- signale par Julien.
     for (var i = 0; i < 140; i++) {
-      etoiles.push({ x: r(), y: r(), r: .6 + r() * 1.5, ph: r() * 6.28, sp: .6 + r() * 1.6 });
+      etoiles.push({ x: r(), y: r(), r: .3 + r() * .55, ph: r() * 6.28, sp: .6 + r() * 1.6 });
     }
   })();
+
+  /* Le ciel doit "bouger" quand on tourne/deplace le globe (demande
+     de Julien, encore statique face a la camera avant) : on tourne et
+     on decale legerement tout le calque etoiles+lune selon l'ecart de
+     bearing/centre par rapport au chargement -- jamais 1 pour 1 (ce
+     serait le meme mouvement qu'un fond colle a la sphere), un
+     facteur reduit suffit a donner l'impression d'un decor lointain
+     qui suit la rotation. */
+  var bearing0 = map.getBearing(), centre0 = map.getCenter();
 
   // Meme position pour les deux (jamais affiches en meme temps) : en
   // haut a gauche, la ou vivait l'icone de pinte du bouton profil
@@ -920,6 +945,19 @@ function genererArbres() {
     if (opacite <= 0) return;
     ctx.globalAlpha = opacite;
 
+    ctx.save();
+    // Rotation inverse du bearing : quand la camera tourne autour du
+    // globe, un decor lointain fixe semble tourner dans l'autre sens --
+    // ce contre-mouvement donne l'impression que "le fond bouge" avec
+    // la terre plutot que de rester colle a l'ecran.
+    var bRad = (map.getBearing() - bearing0) * Math.PI / 180;
+    var c = map.getCenter();
+    var dx = (c.lng - centre0.lng) * W * .01;
+    var dy = (c.lat - centre0.lat) * H * .01;
+    ctx.translate(W / 2 + dx, H / 2 + dy);
+    ctx.rotate(-bRad);
+    ctx.translate(-W / 2, -H / 2);
+
     // Le mode jour reprend l'habillage de nuit (etoiles), sans la lune ni
     // les etoiles filantes (demande de Julien). La lune reste reservee a
     // la nuit, comme avant.
@@ -933,6 +971,7 @@ function genererArbres() {
       ctx.beginPath(); ctx.arc(e.x * W, e.y * H, e.r, 0, 6.29); ctx.fill();
     });
 
+    ctx.restore();
     ctx.globalAlpha = 1;
   }
 
@@ -1025,23 +1064,35 @@ document.addEventListener("keydown", function (e) {
 // et les verres de biere devenaient enormes a cote du globe minuscule --
 // repere par Julien via des captures de Snap Map, ou les avatars restent
 // discrets meme tres dezoome.
+// ATTENTION : MapLibre positionne un marqueur en ecrivant SON PROPRE
+// transform (translate) sur l'element qu'on lui passe, a chaque
+// "move"/"moveend". Si on ecrit aussi un transform sur ce meme
+// element (scale(...) plus bas), on efface sa translation -- il
+// retombe alors au point (0,0) du conteneur de la carte, donc
+// visuellement en haut a gauche, des qu'on fait tourner ou glisser le
+// globe (bug repere par Julien). D'ou le double niveau : un "porteur"
+// que MapLibre positionne et ne touche jamais autrement, un enfant
+// interne qu'on est seul a redimensionner.
 var marqueursEchelle = [];
 function majTailleMarqueurs() {
   var z = map.getZoom();
-  var s = Math.max(0.32, Math.min(1, 0.32 + (z - map.getMinZoom()) / (16 - map.getMinZoom()) * 0.68));
+  var s = Math.max(0.15, Math.min(1, 0.15 + (z - map.getMinZoom()) / (16 - map.getMinZoom()) * 0.85));
   marqueursEchelle.forEach(function (el) { el.style.transform = "scale(" + s.toFixed(3) + ")"; });
 }
 
 map.on("load", function () {
   Object.keys(CLUBS).forEach(function (key) {
     var c = CLUBS[key];
+    var porteur = document.createElement("div");
+    porteur.className = "marker-porteur";
     var el = document.createElement("button");
     el.className = "club-badge" + (c.hot ? " hot" : "") + (c.shut ? " shut" : "");
     el.style.setProperty("--c", c.c);
     el.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>";
     el.setAttribute("aria-label", c.nom + " " + c.n + " " + c.u);
     el.addEventListener("click", function () { ouvrir(c, el); });
-    new maplibregl.Marker({ element: el, anchor: "center" })
+    porteur.appendChild(el);
+    new maplibregl.Marker({ element: porteur, anchor: "center" })
       .setLngLat(c.lngLat)
       .addTo(map);
     marqueursEchelle.push(el);
@@ -1050,12 +1101,15 @@ map.on("load", function () {
   /* --- Marqueurs d'amis : leur pinte, posee la ou ils ont poste
          en dernier. --- */
   AMIS.filter(function (a) { return a.lngLat; }).forEach(function (a) {
+    var porteur = document.createElement("div");
+    porteur.className = "marker-porteur";
     var el = document.createElement("div");
     el.className = "friend-marker";
     el.innerHTML = pint(a.q);
     el.setAttribute("role", "img");
     el.setAttribute("aria-label", a.nom);
-    new maplibregl.Marker({ element: el, anchor: "bottom" })
+    porteur.appendChild(el);
+    new maplibregl.Marker({ element: porteur, anchor: "bottom" })
       .setLngLat(a.lngLat)
       .addTo(map);
     marqueursEchelle.push(el);

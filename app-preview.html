@@ -350,11 +350,86 @@
       .va-back svg { width: 15px; height: 15px; stroke: var(--ink2); stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
       /* ============================================================
+         ECRAN PROFIL — meme carcasse que .vue-amis (plein ecran,
+         overlay au-dessus de carte/boutique), contenu different :
+         identite, raccourcis, points, reglages. Reprend .va-close,
+         .va-connecte-toi et .va-share tels quels (memes classes,
+         demande de coherence visuelle plutot que des doublons).
+         ============================================================ */
+      .vue-profil {
+        position: absolute; inset: 0; z-index: 32; overflow-y: auto;
+        background: var(--bg); color: var(--ink);
+        padding: 20px 20px 40px;
+        transition: opacity .3s ease, visibility .3s ease;
+      }
+      .vue-profil[hidden] { display: block; opacity: 0; visibility: hidden; pointer-events: none; }
+      @media (prefers-reduced-motion: reduce) { .vue-profil { transition: none; } }
+
+      .pf-head { text-align: center; padding-top: 44px; margin: 0 0 24px; }
+      .pf-avatar {
+        position: relative; width: 84px; height: 84px; margin: 0 auto 14px; border-radius: 50%;
+        background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
+        display: grid; place-items: center; overflow: hidden;
+      }
+      .pf-avatar-init { font-size: 32px; font-weight: 800; color: #fff; }
+      .pf-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .pf-nom { margin: 0 0 3px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+      .pf-sub { margin: 0; font-size: 13px; color: var(--ink3); font-weight: 650; }
+
+      .pf-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 20px; }
+      .pf-action {
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        padding: 16px 6px; cursor: pointer; font-family: inherit; color: var(--ink);
+      }
+      .pf-action svg { width: 22px; height: 22px; stroke: var(--ink2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-action span { font-size: 12px; font-weight: 700; }
+      .pf-action:active { transform: scale(.97); }
+
+      .pf-fidelite {
+        width: 100%; display: flex; align-items: center; gap: 14px;
+        border: 0; border-radius: 20px; padding: 18px; margin: 0 0 20px; cursor: pointer;
+        text-align: left; font-family: inherit; color: #fff;
+        background: radial-gradient(130% 180% at 12% 0%, var(--accent), #6e0d1c 85%);
+        box-shadow: 0 16px 30px -16px rgba(255,47,69,.5);
+      }
+      .pf-fidelite-ico {
+        flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px;
+        background: rgba(255,255,255,.16); display: grid; place-items: center;
+      }
+      .pf-fidelite-ico svg { width: 20px; height: 20px; fill: #fff; }
+      .pf-fidelite-txt { flex: 1; min-width: 0; }
+      .pf-fidelite-txt strong { display: block; font-size: 15.5px; font-weight: 800; }
+      .pf-fidelite-txt span { display: block; font-size: 12.5px; opacity: .85; margin-top: 2px; font-family: var(--mono); }
+      .pf-fidelite-chev { flex: 0 0 auto; width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+      .pf-liste { margin: 0 0 8px; }
+      .pf-item {
+        width: 100%; display: flex; align-items: center; gap: 16px;
+        padding: 17px 2px; border: 0; border-top: 1px solid var(--line);
+        background: transparent; color: var(--ink); font-family: inherit;
+        font-size: 16.5px; font-weight: 650; cursor: pointer; text-align: left;
+      }
+      .pf-item:first-child { border-top: 0; }
+      .pf-item svg { flex: 0 0 auto; width: 23px; height: 23px; stroke: var(--ink); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-item:active { background: var(--s2); }
+
+      .pf-deco { width: 100%; background: transparent; border: 0; padding: 14px; color: #ff8290; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+      /* ============================================================
          ECRAN 1 — LA CARTE
          ============================================================ */
 
-      #map { position: absolute; inset: 0; width: 100%; height: 100%; }
-      #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+      /* En mode globe, MapLibre ne peint QUE la sphere elle-meme --
+         le reste du canvas (l'espace autour) est transparent, il n'y
+         a tout simplement pas de geometrie a y dessiner. #etoiles doit
+         donc rester SOUS #map (z-index plus bas) : la sphere, opaque,
+         cache alors naturellement les etoiles qui tombent dessous,
+         sans le moindre calcul de rayon/centre a notre charge. Avant
+         (etoiles au-dessus), elles se voyaient a travers l'ocean et
+         les continents -- signale par Julien. */
+      #map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
+      #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
       .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left { bottom: 92px !important; }
       .maplibregl-ctrl-attrib { font-size: 9.5px !important; background: rgba(15,17,22,.55) !important; }
@@ -388,6 +463,13 @@
       @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
 
+      /* Element que MapLibre positionne lui-meme (translate ecrit a
+         chaque deplacement) -- ne jamais lui donner de transform a
+         nous, sous peine d'effacer sa position (voir majTailleMarqueurs).
+         inline-block : se love exactement autour du badge/pinte qu'il
+         contient, sans quoi un <div> prendrait toute la largeur du
+         conteneur de la carte et fausserait le centrage du marqueur. */
+      .marker-porteur { display: inline-block; line-height: 0; }
       .friend-marker { width: 40px; height: 52px; cursor: pointer; }
       .friend-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
 
@@ -717,11 +799,15 @@
         backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
         display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
       }
-      .tab { display: grid; place-items: center; background: none; border: 0; cursor: pointer; position: relative; padding: 0; }
+      .tab {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+        background: none; border: 0; cursor: pointer; position: relative; padding: 0;
+      }
       .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
-      .tab svg { width: 28px; height: 28px; fill: none; stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; stroke: #838a96; }
-      .tab.on svg { stroke: var(--accent); }
-      .tab .badge { position: absolute; top: -4px; right: 50%; margin-right: -21px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+      .tab svg { width: 24px; height: 24px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: #838a96; }
+      .tab .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: -.01em; color: #838a96; }
+      .tab.on svg, .tab.on .lbl { stroke: var(--accent); color: var(--accent); }
+      .tab .badge { position: absolute; top: -2px; right: 50%; margin-right: -17px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
 
       .voile {
         position: absolute; inset: 0; z-index: 30; background: rgba(3,4,6,.7);
@@ -945,7 +1031,8 @@
       .screen.boutique-pro .bareme summary .chev svg { stroke: var(--ink3); }
       .screen.boutique-pro .tabs { background: rgba(255,255,255,.92); border-top-color: var(--line2); }
       .screen.boutique-pro .tab svg { stroke: #b4b7bd; }
-      .screen.boutique-pro .tab.on svg { stroke: var(--bouton); }
+      .screen.boutique-pro .tab .lbl { color: #b4b7bd; }
+      .screen.boutique-pro .tab.on svg, .screen.boutique-pro .tab.on .lbl { stroke: var(--bouton); color: var(--bouton); }
       /* Le QR reste blanc (obligatoire pour scanner) ; sur un fond deja
          clair, un simple cadre gris (--s2) suffit a le distinguer, pas
          besoin d'ombre marquee. */
@@ -1159,6 +1246,85 @@
           </div>
         </div>
 
+        <!-- ================= ECRAN PROFIL ================= -->
+        <div class="vue-profil" id="vue-profil" hidden>
+          <button type="button" class="va-close" id="pf-close" aria-label="Fermer">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+
+          <div class="va-connecte-toi" id="pf-connecte-toi" hidden>
+            <p class="va-connecte-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.4 20.2a7.6 7.6 0 0 1 15.2 0"/></svg>
+            </p>
+            <p class="va-connecte-txt">Connecte-toi pour voir ton profil.</p>
+            <button type="button" class="va-share" id="pf-connecte-btn">Se connecter</button>
+          </div>
+
+          <div class="pf-contenu" id="pf-contenu" hidden>
+
+            <div class="pf-head">
+              <span class="pf-avatar" id="pf-avatar">
+                <span class="pf-avatar-init" id="pf-avatar-init"></span>
+                <img id="pf-avatar-img" alt="" hidden />
+              </span>
+              <p class="pf-nom" id="pf-handle">@...</p>
+              <p class="pf-sub">Clubbeur</p>
+            </div>
+
+            <div class="pf-actions">
+              <button type="button" class="pf-action" id="pf-action-amis">
+                <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
+                <span>Amis</span>
+              </button>
+              <button type="button" class="pf-action" id="pf-action-stories">
+                <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
+                <span>Mes stories</span>
+              </button>
+              <button type="button" class="pf-action" id="pf-action-recompenses">
+                <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
+                <span>Récompenses</span>
+              </button>
+            </div>
+
+            <button type="button" class="pf-fidelite" id="pf-fidelite">
+              <span class="pf-fidelite-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+              </span>
+              <span class="pf-fidelite-txt">
+                <strong>Mes points</strong>
+                <span id="pf-points">0 pts</span>
+              </span>
+              <svg class="pf-fidelite-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+
+            <div class="pf-liste">
+              <button type="button" class="pf-item" id="pf-reglages">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.1 12.9a7.3 7.3 0 0 0 .07-.9 7.3 7.3 0 0 0-.07-.9l1.9-1.5a.46.46 0 0 0 .11-.58l-1.8-3.1a.45.45 0 0 0-.55-.2l-2.24.9a6.8 6.8 0 0 0-1.56-.9l-.34-2.38a.44.44 0 0 0-.44-.38h-3.6a.44.44 0 0 0-.44.38l-.34 2.38a6.8 6.8 0 0 0-1.56.9l-2.24-.9a.45.45 0 0 0-.55.2l-1.8 3.1a.46.46 0 0 0 .11.58l1.9 1.5a7.3 7.3 0 0 0-.07.9 7.3 7.3 0 0 0 .07.9l-1.9 1.5a.46.46 0 0 0-.11.58l1.8 3.1c.12.2.36.28.55.2l2.24-.9c.48.38 1 .68 1.56.9l.34 2.38c.04.22.22.38.44.38h3.6c.22 0 .4-.16.44-.38l.34-2.38c.56-.22 1.08-.52 1.56-.9l2.24.9c.2.08.43 0 .55-.2l1.8-3.1a.46.46 0 0 0-.11-.58z"/></svg>
+                Réglages
+              </button>
+              <button type="button" class="pf-item" id="pf-notifications">
+                <svg viewBox="0 0 24 24"><path d="M18 15.2V11a6 6 0 0 0-4.7-5.86V4a1.3 1.3 0 1 0-2.6 0v1.14A6 6 0 0 0 6 11v4.2L4.2 17v1h15.6v-1z"/><path d="M10.3 19.5a1.7 1.7 0 0 0 3.4 0"/></svg>
+                Notifications
+              </button>
+              <button type="button" class="pf-item" id="pf-devenir-club">
+                <svg viewBox="0 0 24 24"><path d="M9 2.5h6"/><path d="M12 2.5v4"/><circle cx="12" cy="13.5" r="7"/><path d="M5 13.5h14M12 6.5v14M7.4 8.9l9.2 9.2M16.6 8.9l-9.2 9.2"/></svg>
+                Vous gérez un club ?
+              </button>
+              <button type="button" class="pf-item" id="pf-aide">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9.3a3 3 0 0 1 5.8 1c0 2-2.9 2.3-2.9 4.3"/><circle cx="12" cy="17.3" r="1" fill="var(--ink)" stroke="none"/></svg>
+                Aide &amp; Support
+              </button>
+              <button type="button" class="pf-item" id="pf-apropos">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6.3"/><circle cx="12" cy="7.5" r="1" fill="var(--ink)" stroke="none"/></svg>
+                À propos
+              </button>
+            </div>
+
+            <button type="button" class="pf-deco" id="pf-deconnexion">Se déconnecter</button>
+
+          </div>
+        </div>
+
         <!-- ================= ECRAN CARTE ================= -->
         <div class="vue vue-carte" id="vue-carte">
 
@@ -1236,19 +1402,24 @@
         <nav class="tabs">
           <button class="tab on" id="tab-carte" aria-label="Carte" aria-current="page">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>
+            <span class="lbl">Carte</span>
           </button>
           <button class="tab" id="tab-boutique" aria-label="Boutique">
             <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
+            <span class="lbl">Boutique</span>
           </button>
           <button class="tab" aria-label="Poster ma story">
             <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
+            <span class="lbl">Story</span>
           </button>
           <button class="tab" id="tab-amis" aria-label="Amis">
             <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
+            <span class="lbl">Amis</span>
           </button>
-          <button class="tab" aria-label="Profil">
+          <button class="tab" id="tab-profil" aria-label="Profil">
             <span class="badge"></span>
             <svg viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.4 20.2a7.6 7.6 0 0 1 15.2 0"/></svg>
+            <span class="lbl">Profil</span>
           </button>
         </nav>
 
@@ -1906,6 +2077,14 @@ function estNuit() {
   return h >= 19 || h < 7;
 }
 
+// atmosphere-blend a 1 (fond) jusqu'a poser 100% de horizon-color sur
+// TOUTE la sphere visible au zoom minimal -- vu depuis l'espace, la
+// terre entiere (ocean ET continents) se retrouvait donc noyee dans
+// un voile bleu marine uniforme, plus aucune couleur ne se
+// distinguait ("les pays en bleu", signale par Julien, capture Snap
+// Map a l'appui : la-bas le globe lointain reste net, juste un fin
+// lisere lumineux sur le bord). Plafond largement abaisse : un souffle
+// d'atmosphere au limbe, jamais un lavis sur tout le disque.
 function ambiance() {
   if (estNuit()) {
     map.setSky({
@@ -1915,7 +2094,7 @@ function ambiance() {
       "horizon-fog-blend": 0.6,
       "fog-color": "#0e1420",
       "fog-ground-blend": 0.7,
-      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, .18, 4, .1, 7, 0]
     });
   } else {
     map.setSky({
@@ -1925,7 +2104,7 @@ function ambiance() {
       "horizon-fog-blend": 0.5,
       "fog-color": "#e8f5fc",
       "fog-ground-blend": 0.6,
-      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 9, 0]
+      "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, .18, 4, .1, 7, 0]
     });
   }
 }
@@ -2040,10 +2219,21 @@ function snapifie() {
   (function () {
     var s = 20260817;
     function r() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
+    // Plus fines qu'avant (.6-2.1px) : sur Snap Map ce sont des points
+    // presque invisibles, pas des flocons -- signale par Julien.
     for (var i = 0; i < 140; i++) {
-      etoiles.push({ x: r(), y: r(), r: .6 + r() * 1.5, ph: r() * 6.28, sp: .6 + r() * 1.6 });
+      etoiles.push({ x: r(), y: r(), r: .3 + r() * .55, ph: r() * 6.28, sp: .6 + r() * 1.6 });
     }
   })();
+
+  /* Le ciel doit "bouger" quand on tourne/deplace le globe (demande
+     de Julien, encore statique face a la camera avant) : on tourne et
+     on decale legerement tout le calque etoiles+lune en fonction de
+     l'ecart de bearing et de centre par rapport au chargement --
+     jamais 1 pour 1 (ce serait le meme mouvement qu'un fond colle a
+     la sphere, pas un ciel lointain), un facteur reduit suffit a
+     donner l'impression d'un decor qui suit la rotation. */
+  var bearing0 = map.getBearing(), centre0 = map.getCenter();
 
   /* --- Lune, soleil, fond du mode jour : voir carte-preview.html
          pour le detail, code identique. --- */
@@ -2074,6 +2264,19 @@ function snapifie() {
     if (opacite <= 0) return;
     ctx.globalAlpha = opacite;
 
+    ctx.save();
+    // Rotation inverse du bearing : quand la camera tourne autour du
+    // globe, un decor lointain fixe semble tourner dans l'autre sens --
+    // c'est ce contre-mouvement qui donne l'impression que "le fond
+    // bouge" avec la terre plutot que de rester colle a l'ecran.
+    var bRad = (map.getBearing() - bearing0) * Math.PI / 180;
+    var c = map.getCenter();
+    var dx = (c.lng - centre0.lng) * W * .01;
+    var dy = (c.lat - centre0.lat) * H * .01;
+    ctx.translate(W / 2 + dx, H / 2 + dy);
+    ctx.rotate(-bRad);
+    ctx.translate(-W / 2, -H / 2);
+
     // Le mode jour reprend l'habillage de nuit (etoiles), sans la lune ni
     // les etoiles filantes (demande de Julien). La lune reste reservee a
     // la nuit, comme avant.
@@ -2087,6 +2290,7 @@ function snapifie() {
       ctx.beginPath(); ctx.arc(e.x * W, e.y * H, e.r, 0, 6.29); ctx.fill();
     });
 
+    ctx.restore();
     ctx.globalAlpha = 1;
   }
 
@@ -2153,38 +2357,54 @@ function noteRecompenseClub() {
 // repere par Julien via des captures de Snap Map, ou les avatars restent
 // discrets meme tres dezoome. On reduit donc leur taille avec le zoom,
 // comme deja fait pour l'opacite des etoiles (majOpacite).
+//
+// ATTENTION : MapLibre positionne un marqueur en ecrivant SON PROPRE
+// transform (translate) sur l'element qu'on lui passe, a chaque
+// "move"/"moveend" (marker.ts, _update). Si on ecrit aussi un
+// transform sur ce meme element (scale(...) plus bas), on efface sa
+// translation -- l'element retombe alors au point (0,0) du conteneur
+// de la carte, donc visuellement en haut a gauche, des qu'on fait
+// tourner ou glisser le globe (bug repere par Julien). D'ou le
+// double niveau : un "porteur" que MapLibre positionne et ne touche
+// jamais autrement, un enfant interne qu'on est seul a redimensionner.
 var marqueursEchelle = [];
 function majTailleMarqueurs() {
   var z = map.getZoom();
   // 1 au niveau rue (zoom 16, la valeur par defaut), reduit progressivement
   // en dezoomant, jusqu'a un plancher pour rester visible/cliquable meme
   // au zoom minimal.
-  var s = Math.max(0.32, Math.min(1, 0.32 + (z - map.getMinZoom()) / (16 - map.getMinZoom()) * 0.68));
+  var s = Math.max(0.15, Math.min(1, 0.15 + (z - map.getMinZoom()) / (16 - map.getMinZoom()) * 0.85));
   marqueursEchelle.forEach(function (el) { el.style.transform = "scale(" + s.toFixed(3) + ")"; });
 }
 
 map.on("load", function () {
   Object.keys(CLUBS).forEach(function (key) {
     var c = CLUBS[key];
+    var porteur = document.createElement("div");
+    porteur.className = "marker-porteur";
     var el = document.createElement("button");
     el.className = "club-badge" + (c.hot ? " hot" : "") + (c.shut ? " shut" : "");
     el.style.setProperty("--c", c.c);
     el.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>";
     el.setAttribute("aria-label", c.nom + " " + c.n + " " + c.u);
     el.addEventListener("click", function () { ouvrirClub(c, el); });
-    new maplibregl.Marker({ element: el, anchor: "center" })
+    porteur.appendChild(el);
+    new maplibregl.Marker({ element: porteur, anchor: "center" })
       .setLngLat(c.lngLat)
       .addTo(map);
     marqueursEchelle.push(el);
   });
 
   AMIS.filter(function (a) { return a.lngLat; }).forEach(function (a) {
+    var porteur = document.createElement("div");
+    porteur.className = "marker-porteur";
     var el = document.createElement("div");
     el.className = "friend-marker";
     el.innerHTML = pint(a.q);
     el.setAttribute("role", "img");
     el.setAttribute("aria-label", a.nom);
-    new maplibregl.Marker({ element: el, anchor: "bottom" })
+    porteur.appendChild(el);
+    new maplibregl.Marker({ element: porteur, anchor: "bottom" })
       .setLngLat(a.lngLat)
       .addTo(map);
     marqueursEchelle.push(el);
@@ -2562,6 +2782,107 @@ function creerAmiChip(p) {
 
 AMIS.forEach(function (p) {
   friendRail.appendChild(creerAmiChip(p));
+});
+
+/* ==========================================================
+   ECRAN PROFIL — meme squelette que l'ecran Amis (page a part,
+   ouverte/fermee par la barre du bas, pas un vue-carte/vue-boutique
+   de plus). "Mes stories" et les 4 lignes de reglages n'ont rien a
+   ouvrir pour de vrai dans cette maquette : message honnete plutot
+   que bouton mort, meme reflexe que le bouton Apple de l'ecran
+   d'accueil plus haut.
+   ========================================================== */
+var VUE_PROFIL = $("#vue-profil");
+var TAB_PROFIL = $("#tab-profil");
+
+function fermerProfil() {
+  VUE_PROFIL.hidden = true;
+  TAB_PROFIL.classList.remove("on");
+  TAB_PROFIL.setAttribute("aria-current", "false");
+}
+
+TAB_PROFIL?.addEventListener("click", async function () {
+  TAB_PROFIL.classList.add("on");
+  TAB_PROFIL.setAttribute("aria-current", "page");
+  VUE_PROFIL.hidden = false;
+
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) {
+    $("#pf-connecte-toi").hidden = false;
+    $("#pf-contenu").hidden = true;
+    return;
+  }
+  $("#pf-connecte-toi").hidden = true;
+  $("#pf-contenu").hidden = false;
+
+  var handleEl = $("#pf-handle"), avatarInit = $("#pf-avatar-init"), avatarImg = $("#pf-avatar-img");
+  var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).single()).data;
+  var monHandle = profil && profil.handle;
+
+  handleEl.textContent = monHandle ? "@" + monHandle : "Profil en cours de création...";
+  if (profil && profil.avatar_url) {
+    avatarImg.src = profil.avatar_url;
+    avatarImg.hidden = false;
+    avatarInit.hidden = true;
+  } else {
+    avatarImg.hidden = true;
+    avatarInit.hidden = false;
+    avatarInit.textContent = monHandle ? monHandle.charAt(0).toUpperCase() : "?";
+  }
+
+  $("#pf-points").textContent = nb(ETAT.solde) + " pts";
+});
+
+$("#pf-connecte-btn")?.addEventListener("click", function () {
+  fermerProfil();
+  VUE_ACCUEIL.classList.remove("masque");
+});
+
+$("#pf-close")?.addEventListener("click", fermerProfil);
+
+// "Amis" et "Récompenses" renvoient vers les vrais ecrans deja
+// construits (onglet Amis, onglet Boutique) plutot que de dupliquer
+// leur contenu ici.
+$("#pf-action-amis")?.addEventListener("click", function () {
+  fermerProfil();
+  TAB_AMIS.click();
+});
+$("#pf-action-recompenses")?.addEventListener("click", function () {
+  fermerProfil();
+  activerVue("boutique");
+});
+$("#pf-fidelite")?.addEventListener("click", function () {
+  fermerProfil();
+  activerVue("boutique");
+});
+
+function pasEncore(texte) {
+  $("#pf-msg-bientot") || document.body.insertAdjacentHTML("beforeend",
+    '<div id="pf-msg-bientot" style="position:fixed;left:50%;bottom:120px;transform:translateX(-50%);' +
+    'background:#101217;color:#edeff4;font-size:13px;font-weight:650;padding:10px 16px;border-radius:999px;' +
+    'box-shadow:0 8px 20px rgba(0,0,0,.4);z-index:80;opacity:0;transition:opacity .2s ease;"></div>');
+  var el = $("#pf-msg-bientot");
+  el.textContent = texte;
+  el.style.opacity = "1";
+  clearTimeout(pasEncore._t);
+  pasEncore._t = setTimeout(function () { el.style.opacity = "0"; }, 1800);
+}
+
+$("#pf-action-stories")?.addEventListener("click", function () { pasEncore("Historique des stories bientôt disponible."); });
+// Seule ligne de la liste a avoir une vraie destination : le reste
+// (reglages, notifications, aide, a propos) n'existe pas encore cote
+// produit. Le formulaire d'inscription club existe deja (inscription.html),
+// donc ouvrir un nouvel onglet dessus est honnete, pas un placeholder.
+$("#pf-devenir-club")?.addEventListener("click", function () { window.open("/inscription.html", "_blank"); });
+$("#pf-reglages")?.addEventListener("click", function () { pasEncore("Réglages bientôt disponibles."); });
+$("#pf-notifications")?.addEventListener("click", function () { pasEncore("Notifications bientôt disponibles."); });
+$("#pf-aide")?.addEventListener("click", function () { pasEncore("Aide & support bientôt disponibles."); });
+$("#pf-apropos")?.addEventListener("click", function () { pasEncore("À propos bientôt disponible."); });
+
+$("#pf-deconnexion")?.addEventListener("click", async function () {
+  await supabaseClubbeur.auth.signOut();
+  fermerProfil();
+  VUE_ACCUEIL.classList.remove("masque");
 });
 
 /* ==========================================================
