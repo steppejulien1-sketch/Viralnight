@@ -447,14 +447,14 @@
 
 
       .club-badge {
-        width: 58px; height: 58px; border-radius: 50%;
+        width: 66px; height: 66px; border-radius: 50%;
         background: var(--c); border: 3px solid #fff;
         box-shadow: 0 3px 10px rgba(0,0,0,.35);
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         color: #fff; position: relative; line-height: 1; cursor: pointer;
       }
-      .club-badge b { font-size: 19px; font-weight: 800; letter-spacing: -.04em; }
-      .club-badge i { font-style: normal; font-size: 9px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 1px; }
+      .club-badge b { font-size: 21px; font-weight: 800; letter-spacing: -.04em; }
+      .club-badge i { font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 1px; }
       .club-badge.shut { background: #fff; color: #7b828c; border-color: #d9dde3; }
       .club-badge.hot::after {
         content: ""; position: absolute; inset: -3px; border-radius: 50%;
@@ -470,11 +470,11 @@
          Fond blanc systematique (pas la couleur du badge) : ca reste
          lisible quel que soit --c, comme un badge verifie. */
       .club-badge-type {
-        position: absolute; right: -3px; bottom: -3px; width: 20px; height: 20px; border-radius: 50%;
+        position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%;
         background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4);
         display: grid; place-items: center;
       }
-      .club-badge-type svg { width: 12px; height: 12px; stroke: #1b1f25; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .club-badge-type svg { width: 13px; height: 13px; stroke: #1b1f25; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
          chaque deplacement) -- ne jamais lui donner de transform a
@@ -483,7 +483,7 @@
          contient, sans quoi un <div> prendrait toute la largeur du
          conteneur de la carte et fausserait le centrage du marqueur. */
       .marker-porteur { display: inline-block; line-height: 0; }
-      .friend-marker { width: 46px; height: 60px; cursor: pointer; }
+      .friend-marker { width: 52px; height: 68px; cursor: pointer; }
       .friend-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
 
       .carte-rail {
@@ -2251,10 +2251,20 @@ function snapifie() {
     "Highway shield interstate top (US)", "Highway shield interstate (US)",
     "Housenumber", "Oneway", "Gondola", "Ferry",
     "River labels", "Ocean labels", "Lake labels",
-    "Airport gate", "Airport", "Place labels"
+    "Airport gate", "Airport", "Place labels",
+    // "AFRICA", "EUROPE"... en majuscules qui traversent tout un
+    // continent, ca n'a aucun sens sur une carte de boite de nuit --
+    // signale par Julien. Jamais affiche, meme dezoome au maximum.
+    "Continent labels"
   ].forEach(function (id) {
     if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
   });
+
+  // Les noms de pays, eux, ont leur place -- mais seulement une fois
+  // suffisamment zoome, pas des l'echelle d'un continent entier
+  // (demande de Julien : "seulement en zoomant"). Le style d'origine
+  // les affiche des le zoom 1.
+  if (map.getLayer("Country labels")) map.setLayerZoomRange("Country labels", 4, 12);
 
   var ROUTES_PLEINES = ["Motorway", "Trunk", "Primary", "Secondary", "Tertiary", "Minor", "Service", "Street"];
   ROUTES_PLEINES.forEach(function (id) {
@@ -2283,7 +2293,7 @@ function snapifie() {
     // Recalcule seulement le cote du carre (le nombre d'etoiles, lui,
     // reste fige depuis la generation initiale) : suffisant pour un
     // redimensionnement d'appoint, ce mockup ne tourne pas en usage reel.
-    if (typeof CIEL_TAILLE !== "undefined") CIEL_TAILLE = Math.sqrt(W * W + H * H) * 1.08;
+    if (typeof CIEL_TAILLE !== "undefined") CIEL_TAILLE = Math.sqrt(W * W + H * H) * 1.08 + Math.min(W, H) * .36;
   }
   dimensionner();
   window.addEventListener("resize", dimensionner);
@@ -2295,7 +2305,12 @@ function snapifie() {
   // vaut la diagonale de l'ecran, lui, couvre l'ecran ENTIER quel que
   // soit l'angle de rotation -- meme technique qu'un fond tourne sans
   // jamais laisser de trou.
-  var CIEL_TAILLE = Math.sqrt(W * W + H * H) * 1.08;
+  // Marge large (pas juste 8%) : le champ doit encore couvrir tout
+  // l'ecran apres rotation ET apres le decalage de parallaxe (borne
+  // plus bas a 18% de min(W,H) de chaque cote) -- sans cette marge,
+  // combiner rotation et decalage pouvait quand meme laisser un coin
+  // sans etoiles.
+  var CIEL_TAILLE = Math.sqrt(W * W + H * H) * 1.08 + Math.min(W, H) * .36;
 
   var etoiles = [];
   (function () {
@@ -2346,7 +2361,14 @@ function snapifie() {
   var opacite = 1, dernier = 0, raf = null;
 
   function dessiner(temps, dt) {
+    // Espace vraiment noir (pas le gris chaud #1a1d24 du reste de
+    // l'appli, partage avec la boutique) : rempli ici, pas dans le CSS
+    // partage, pour ne changer que ce qui est derriere le globe.
+    // Toujours rempli, meme si opacite tombe a 0 -- sinon la carte,
+    // tres zoomee, laisserait revoir le gris chaud dans ses angles morts.
     ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, W, H);
     if (opacite <= 0) return;
     ctx.globalAlpha = opacite;
 
@@ -2361,8 +2383,15 @@ function snapifie() {
     // bouge" avec la terre plutot que de rester colle a l'ecran.
     var bRad = (map.getBearing() - bearing0) * Math.PI / 180;
     var c = map.getCenter();
-    var dx = (c.lng - centre0.lng) * W * .01;
-    var dy = (c.lat - centre0.lat) * H * .01;
+    // Bornes larges (pas juste un facteur reduit) : sans ca, un vol
+    // lointain (flyTo, ou juste beaucoup glisser a un zoom tres large)
+    // pouvait pousser le champ d'etoiles bien au-dela de la marge de
+    // CIEL_TAILLE -- exactement le "parfois plus d'etoiles en tournant"
+    // signale par Julien. Le decalage reste borne, la rotation seule
+    // (toujours cyclique) n'a jamais besoin d'etre bornee.
+    var LIMITE = Math.min(W, H) * .18;
+    var dx = Math.max(-LIMITE, Math.min(LIMITE, (c.lng - centre0.lng) * W * .01));
+    var dy = Math.max(-LIMITE, Math.min(LIMITE, (c.lat - centre0.lat) * H * .01));
     ctx.translate(W / 2 + dx, H / 2 + dy);
     ctx.rotate(-bRad);
 
