@@ -1495,6 +1495,30 @@
 
           <div class="rg-carte">
             <div class="rg-carte-ligne">
+              <span class="rg-label">Numéro de téléphone</span>
+              <button type="button" class="rg-lien" id="rg-telephone-modifier">Ajouter</button>
+            </div>
+            <p class="rg-carte-desc" id="rg-telephone" style="border-top:0; padding-top:0; margin-top:6px">Information non fournie</p>
+          </div>
+
+          <div class="rg-carte">
+            <div class="rg-carte-ligne">
+              <span class="rg-label">Adresse</span>
+              <button type="button" class="rg-lien" id="rg-adresse-modifier">Ajouter</button>
+            </div>
+            <p class="rg-carte-desc" id="rg-adresse" style="border-top:0; padding-top:0; margin-top:6px">Information non fournie</p>
+          </div>
+
+          <div class="rg-carte">
+            <div class="rg-carte-ligne">
+              <span class="rg-label">Langue</span>
+              <button type="button" class="rg-lien" id="rg-langue-modifier">Modifier</button>
+            </div>
+            <p class="rg-carte-desc" id="rg-langue" style="border-top:0; padding-top:0; margin-top:6px">Français</p>
+          </div>
+
+          <div class="rg-carte">
+            <div class="rg-carte-ligne">
               <span class="rg-label">Membre depuis</span>
               <span class="rg-valeur" id="rg-membre-depuis">...</span>
             </div>
@@ -3491,6 +3515,10 @@ function moisAnnee(iso) {
   return MOIS_FR[d.getMonth()] + " " + d.getFullYear();
 }
 
+// telephone/adresse/langue : voir la note plus bas (avant
+// rg-telephone-modifier) sur les colonnes a creer cote base --
+// select("*") plutot que lister les colonnes une par une, pour ne
+// pas faire echouer TOUTE la requete tant qu'elles n'existent pas.
 $("#pf-reglages")?.addEventListener("click", async function () {
   VUE_REGLAGES.hidden = false;
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
@@ -3500,10 +3528,15 @@ $("#pf-reglages")?.addEventListener("click", async function () {
     $("#rg-membre-depuis").textContent = "—";
     return;
   }
-  var profil = (await supabaseClubbeur.from("users").select("handle").eq("id", session.user.id).single()).data;
+  var profil = (await supabaseClubbeur.from("users").select("*").eq("id", session.user.id).single()).data;
   var nomRepliReglages = String(session.user.email || "").split("@")[0];
   $("#rg-pseudo").textContent = profil && profil.handle ? "@" + profil.handle : nomRepliReglages;
   $("#rg-email").textContent = session.user.email;
+  $("#rg-telephone").textContent = (profil && profil.telephone) || "Information non fournie";
+  $("#rg-adresse").textContent = (profil && profil.adresse) || "Information non fournie";
+  $("#rg-langue").textContent = (profil && profil.langue) || "Français";
+  $("#rg-telephone-modifier").textContent = profil && profil.telephone ? "Modifier" : "Ajouter";
+  $("#rg-adresse-modifier").textContent = profil && profil.adresse ? "Modifier" : "Ajouter";
   $("#rg-membre-depuis").textContent = moisAnnee(session.user.created_at);
 });
 
@@ -3524,6 +3557,55 @@ $("#rg-pseudo-modifier")?.addEventListener("click", async function () {
     return;
   }
   $("#rg-pseudo").textContent = "@" + nettoye;
+});
+
+// telephone, adresse, langue : les colonnes n'existent pas encore
+// dans la table "users" de la base clubbeur (verifie -- ce projet
+// Supabase, gcopwgmqjiufemapamek, n'est pas celui dont ce depot suit
+// les migrations, je n'ai donc pas la main dessus pour executer la
+// requete moi-meme). A faire une fois, dans son SQL Editor :
+//
+//   alter table public.users
+//     add column if not exists telephone text,
+//     add column if not exists adresse text,
+//     add column if not exists langue text default 'Français';
+//
+// Le code ci-dessous marche des que ces colonnes existent -- avant
+// ca, l'erreur Postgres remonte telle quelle (honnete plutot que de
+// faire semblant que c'est enregistre).
+function champTexteLibre(id, colonne, libelle) {
+  $("#" + id)?.addEventListener("click", async function () {
+    var session = (await supabaseClubbeur.auth.getSession()).data.session;
+    if (!session) return;
+    var actuel = (await supabaseClubbeur.from("users").select(colonne).eq("id", session.user.id).single()).data;
+    var saisie = window.prompt(libelle + " :", (actuel && actuel[colonne]) || "");
+    if (saisie === null) return;
+    var propre = saisie.trim();
+    var patch = {}; patch[colonne] = propre || null;
+    var res = await supabaseClubbeur.from("users").update(patch).eq("id", session.user.id);
+    if (res.error) {
+      window.alert("Ça n'a pas marché : " + res.error.message);
+      return;
+    }
+    $("#rg-" + colonne).textContent = propre || "Information non fournie";
+    $("#" + id).textContent = propre ? "Modifier" : "Ajouter";
+  });
+}
+champTexteLibre("rg-telephone-modifier", "telephone", "Numéro de téléphone");
+champTexteLibre("rg-adresse-modifier", "adresse", "Adresse postale");
+$("#rg-langue-modifier")?.addEventListener("click", async function () {
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return;
+  var actuel = (await supabaseClubbeur.from("users").select("langue").eq("id", session.user.id).single()).data;
+  var saisie = window.prompt("Langue :", (actuel && actuel.langue) || "Français");
+  if (!saisie) return;
+  var propre = saisie.trim();
+  var res = await supabaseClubbeur.from("users").update({ langue: propre }).eq("id", session.user.id);
+  if (res.error) {
+    window.alert("Ça n'a pas marché : " + res.error.message);
+    return;
+  }
+  $("#rg-langue").textContent = propre;
 });
 
 $("#rg-email-modifier")?.addEventListener("click", async function () {
