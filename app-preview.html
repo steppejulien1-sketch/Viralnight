@@ -276,8 +276,13 @@
       .va-hint { margin: 0 0 18px; font-size: 12.5px; color: var(--ink2); line-height: 1.5; }
       .va-hint strong { color: var(--ambre); font-family: var(--mono, inherit); }
       .va-share {
+        /* Couleurs fixes, pas les variables de theme : ce bouton doit
+           rester une pilule blanche/texte sombre partout, meme quand la
+           feuille Amis s'ouvre par-dessus l'onglet Boutique (qui redefinit
+           --ink en sombre pour son propre theme clair -- sans ca le fond
+           ET le texte devenaient sombres, illisibles). */
         width: 100%; min-height: 46px; border: 0; border-radius: 999px;
-        background: var(--ink); color: #120d0d; font-family: inherit; font-size: 14.5px; font-weight: 700;
+        background: #ffffff; color: #120d0d; font-family: inherit; font-size: 14.5px; font-weight: 700;
         cursor: pointer;
       }
       .va-share:active { transform: scale(.98); }
@@ -3128,11 +3133,46 @@ async function ouvrirPageAmis(session) {
     listeVideEl.hidden = amis.length > 0;
 
     listeAmisEl.innerHTML = amis.map(function (a) {
-      return '<li><span class="va-sugg" style="cursor:default">' +
+      return '<li><button type="button" class="va-sugg" data-handle="' + a.friend_handle + '">' +
         '<span class="va-sugg-av">' + rendreAvatar({ avatar_url: a.friend_avatar_url, handle: a.friend_handle }) + '</span>' +
         '<span class="va-sugg-handle">@' + a.friend_handle + '</span>' +
-      '</span></li>';
+        '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--ink3);fill:none;stroke-width:2;stroke-linecap:round;flex:0 0 auto"><path d="M9 6l6 6-6 6"/></svg>' +
+      '</button></li>';
     }).join("");
+
+    listeAmisEl.querySelectorAll(".va-sugg").forEach(function (b) {
+      var a = amis.find(function (x) { return x.friend_handle === b.dataset.handle; });
+      b.onclick = function () { ouvrirFicheAmi(a, b); };
+    });
+  }
+
+  // Fiche d'un ami : juste sa photo/pseudo et un bouton pour le
+  // retirer -- pas plus, tant qu'il n'y a rien d'autre (pas de mur, pas
+  // de stats) a montrer sur quelqu'un d'autre que soi.
+  function ouvrirFicheAmi(a, src) {
+    rendeur = src || null;
+    var html =
+      '<div class="sheet-ok">' +
+        '<span class="va-sugg-av" style="width:64px;height:64px;font-size:24px;margin:0 auto 14px">' +
+          rendreAvatar({ avatar_url: a.friend_avatar_url, handle: a.friend_handle }) +
+        "</span>" +
+        '<h3 id="sh-titre">@' + a.friend_handle + "</h3>" +
+        '<button type="button" class="rg-danger" id="va-retirer-ami" style="margin-top:18px">' +
+          '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>' +
+          "Retirer cet ami" +
+        "</button>" +
+        '<button type="button" class="sheet-cta sobre" id="va-fermer-fiche" style="margin-top:10px">Fermer</button>' +
+      "</div>";
+    ouvrirFeuille(html, "#va-fermer-fiche");
+    $("#va-fermer-fiche").addEventListener("click", fermerFeuille);
+    $("#va-retirer-ami").addEventListener("click", async function () {
+      if (!window.confirm("Retirer @" + a.friend_handle + " de tes amis ?")) return;
+      var res = await supabaseClubbeur.rpc("remove_friend", { p_handle: a.friend_handle });
+      if (res.error) { direErreur(res.error.message); return; }
+      fermerFeuille();
+      chargerAmis();
+      chargerSuggestions();
+    });
   }
 
   // --- Suggestions ("amis d'amis") --------------------------------
@@ -3522,6 +3562,14 @@ $("#pf-devenir-club")?.addEventListener("click", function () { ouvrirDevenirClub
 // onglet, sans un mot d'explication -- Julien a demande un vrai
 // message d'accueil pour un gerant qui tombe sur ce bouton par
 // curiosite dans l'appli cliente.
+// Avant, ce bouton ouvrait /inscription.html direct dans un nouvel
+// onglet -- Julien a demande un vrai formulaire ici (nom du club,
+// telephone, email) plutot qu'un renvoi vers le site. On poste
+// directement sur /api/demo-request, la MEME route que le formulaire
+// de demande de demo de la landing (voir landing.js) : meme table
+// demo_requests, meme email de notification a l'equipe ViralNight.
+var EMAIL_RE_CLUB = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function ouvrirDevenirClub(src) {
   rendeur = src || null;
   var html =
@@ -3530,13 +3578,50 @@ function ouvrirDevenirClub(src) {
         '<svg viewBox="0 0 24 24" style="stroke:var(--ink)"><path d="M9 2.5h6"/><path d="M12 2.5v4"/><circle cx="12" cy="13.5" r="7"/><path d="M5 13.5h14M12 6.5v14M7.4 8.9l9.2 9.2M16.6 8.9l-9.2 9.2"/></svg>' +
       "</div>" +
       '<h3 id="sh-titre">Vous gérez un club ?</h3>' +
-      '<p class="desc">Vos clients scannent un QR code sur place, postent une story avec votre tag, gagnent des points — et vous, vous voyez la salle se remplir. Créez la fiche de votre établissement en quelques minutes, c’est gratuit pour commencer.</p>' +
-      '<button class="sheet-cta" id="sh-club-cta" type="button">Créer la fiche de mon club</button>' +
+      '<p class="desc">Laissez-nous vos coordonnées, on vous recontacte pour créer la fiche de votre établissement.</p>' +
+      '<form id="dc-form" style="text-align:left;display:grid;gap:10px;margin-top:2px">' +
+        '<input class="va-input" id="dc-club" placeholder="Nom du club" autocomplete="organization" required />' +
+        '<input class="va-input" id="dc-phone" type="tel" placeholder="Numéro de téléphone" autocomplete="tel" required />' +
+        '<input class="va-input" id="dc-email" type="email" placeholder="Adresse email" autocomplete="email" required />' +
+        '<p class="desc" id="dc-msg" style="display:none;margin:0"></p>' +
+        '<button type="submit" class="sheet-cta" id="dc-envoyer">Envoyer ma demande</button>' +
+      "</form>" +
     "</div>";
-  ouvrirFeuille(html, "#sh-club-cta");
-  $("#sh-club-cta").addEventListener("click", function () {
-    fermerFeuille();
-    window.open("/inscription.html", "_blank");
+  ouvrirFeuille(html, "#dc-club");
+
+  var form = $("#dc-form"), bouton = $("#dc-envoyer"), msg = $("#dc-msg");
+  function dire(texte, erreur) {
+    msg.style.display = "block";
+    msg.style.color = erreur ? "var(--accent)" : "#57d98a";
+    msg.textContent = texte;
+  }
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var club = $("#dc-club").value.trim();
+    var phone = $("#dc-phone").value.trim();
+    var email = $("#dc-email").value.trim().toLowerCase();
+
+    if (!club) return dire("Indique le nom de ton club.", true);
+    if (!phone) return dire("Indique un numéro pour te recontacter.", true);
+    if (!EMAIL_RE_CLUB.test(email)) return dire("Cette adresse email n'est pas valide.", true);
+
+    bouton.disabled = true;
+    bouton.textContent = "Envoi...";
+    try {
+      var res = await fetch("/api/demo-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ club: club, phone: phone, email: email }),
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(data.message || "Impossible d'enregistrer la demande.");
+      form.innerHTML = "";
+      dire("Merci ! On te recontacte très vite pour la suite.", false);
+    } catch (err) {
+      bouton.disabled = false;
+      bouton.textContent = "Envoyer ma demande";
+      dire(err.message || "Ça n'a pas marché. Réessaie dans un instant.", true);
+    }
   });
 }
 /* ==========================================================
