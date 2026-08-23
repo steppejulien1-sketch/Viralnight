@@ -3527,7 +3527,29 @@ $("#pf-supprimer-compte")?.addEventListener("click", function () {
 // (reglages, notifications, aide, a propos) n'existe pas encore cote
 // produit. Le formulaire d'inscription club existe deja (inscription.html),
 // donc ouvrir un nouvel onglet dessus est honnete, pas un placeholder.
-$("#pf-devenir-club")?.addEventListener("click", function () { window.open("/inscription.html", "_blank"); });
+$("#pf-devenir-club")?.addEventListener("click", function () { ouvrirDevenirClub(this); });
+
+// Avant, ce bouton ouvrait /inscription.html direct dans un nouvel
+// onglet, sans un mot d'explication -- Julien a demande un vrai
+// message d'accueil pour un gerant qui tombe sur ce bouton par
+// curiosite dans l'appli cliente.
+function ouvrirDevenirClub(src) {
+  rendeur = src || null;
+  var html =
+    '<div class="sheet-ok">' +
+      '<div class="rond" style="background:var(--s2);border-color:var(--line2)">' +
+        '<svg viewBox="0 0 24 24" style="stroke:var(--ink)"><path d="M9 2.5h6"/><path d="M12 2.5v4"/><circle cx="12" cy="13.5" r="7"/><path d="M5 13.5h14M12 6.5v14M7.4 8.9l9.2 9.2M16.6 8.9l-9.2 9.2"/></svg>' +
+      "</div>" +
+      '<h3 id="sh-titre">Vous gérez un club ?</h3>' +
+      '<p class="desc">Vos clients scannent un QR code sur place, postent une story avec votre tag, gagnent des points — et vous, vous voyez la salle se remplir. Créez la fiche de votre établissement en quelques minutes, c’est gratuit pour commencer.</p>' +
+      '<button class="sheet-cta" id="sh-club-cta" type="button">Créer la fiche de mon club</button>' +
+    "</div>";
+  ouvrirFeuille(html, "#sh-club-cta");
+  $("#sh-club-cta").addEventListener("click", function () {
+    fermerFeuille();
+    window.open("/inscription.html", "_blank");
+  });
+}
 /* ==========================================================
    ECRAN REGLAGES -- notifications (bascules persistees en local,
    honnete : rien ne part encore vers un serveur de notifications
