@@ -311,8 +311,8 @@
       }
       .va-add:disabled { color: var(--ink3); cursor: not-allowed; }
       .va-msg { margin: 14px 0 0; font-size: 12.5px; color: var(--ink2); }
-      .va-msg.err { color: #ff8290; }
-      .va-msg.ok { color: #7fe0a3; }
+      .va-msg.err { color: var(--erreur-texte, #ff8290); }
+      .va-msg.ok { color: var(--succes-texte, #7fe0a3); }
 
       .va-suggestions { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 2px; }
       .va-sugg {
@@ -376,6 +376,90 @@
       }
       .vue-profil[hidden] { display: block; opacity: 0; visibility: hidden; pointer-events: none; }
       @media (prefers-reduced-motion: reduce) { .vue-profil { transition: none; } }
+
+      /* Profil/Reglages/Amis en clair par defaut, sombre seulement si le
+         telephone du clubbeur est deja en mode sombre (prefers-color-
+         scheme) -- Julien : "je trouve que c'est mieux en blanc, que ca
+         suive juste le telephone du mec". La carte et la boutique gardent
+         leur propre theme (nuit / clair "Pad'up"), non concernes ici :
+         seuls .vue-profil et .vue-amis redefinissent ces variables,
+         exactement comme .vue-accueil le fait deja plus haut. */
+      .vue-profil, .vue-amis {
+        --ink: #16181d;
+        --ink2: #6b6f76;
+        --ink3: #9aa1ac;
+        --bg: #f4f3f1;
+        --s1: #ffffff;
+        --s2: #eeece9;
+        --s3: #e4e1dc;
+        --line: rgba(20,20,20,.08);
+        --line2: rgba(20,20,20,.14);
+        --ambre: #d98a12;
+        /* Rouge/vert "de texte" (messages, points gagnes) : les
+           teintes pastel choisies pour le fond sombre d'origine
+           passent quasi invisibles sur fond blanc -- versions plus
+           saturees ici, redevenant les teintes d'origine en sombre. */
+        --erreur-texte: #d92e42;
+        --succes-texte: #1f9d5c;
+      }
+      @media (prefers-color-scheme: dark) {
+        .vue-profil, .vue-amis {
+          --ink: #ffffff;
+          --ink2: #b6a99e;
+          --ink3: #8a7a6e;
+          --bg: #120d0d;
+          --s1: #1c1512;
+          --s2: #261c17;
+          --s3: #30231c;
+          --line: rgba(255,235,220,.08);
+          --line2: rgba(255,235,220,.14);
+          --ambre: #ffb020;
+          --erreur-texte: #ff8290;
+          --succes-texte: #7fe0a3;
+        }
+      }
+
+      /* Feuille du bas : suit le meme theme clair QUAND elle s'ouvre
+         depuis Profil/Amis (classe posee par ouvrirFeuille()) -- reste
+         sombre le reste du temps (fiche club, boutique, sur la carte). */
+      .sheet.clair {
+        --ink: #16181d;
+        --ink2: #6b6f76;
+        --ink3: #9aa1ac;
+        --bg: #f4f3f1;
+        --s1: #ffffff;
+        --s2: #eeece9;
+        --s3: #e4e1dc;
+        --line: rgba(20,20,20,.08);
+        --line2: rgba(20,20,20,.14);
+        --ambre: #d98a12;
+        --erreur-texte: #d92e42;
+        --succes-texte: #1f9d5c;
+        background: #ffffff;
+      }
+      /* Meme piege que .va-share plus haut : ces deux elements ont un
+         fond/texte fixes en dur (pas des variables), invisibles ou
+         illisibles une fois le fond de la feuille passe en blanc --
+         corrige comme deja fait pour .screen.boutique-pro. */
+      .sheet.clair .grab { background: rgba(0,0,0,.13); }
+      .sheet.clair .sheet-cta.sobre { background: var(--s2); color: var(--ink); }
+      @media (prefers-color-scheme: dark) {
+        .sheet.clair {
+          --ink: #ffffff;
+          --ink2: #b6a99e;
+          --ink3: #8a7a6e;
+          --bg: #120d0d;
+          --s1: #1c1512;
+          --s2: #261c17;
+          --s3: #30231c;
+          --line: rgba(255,235,220,.08);
+          --line2: rgba(255,235,220,.14);
+          --ambre: #ffb020;
+          --erreur-texte: #ff8290;
+          --succes-texte: #7fe0a3;
+          background: #1c1512;
+        }
+      }
 
       /* Cloche notifications : raccourci en haut a droite de l'ecran
          Profil (demande de Julien, "comme sur la capture") -- ouvre
@@ -453,7 +537,7 @@
       /* Supprimer mon compte / Deconnexion : memes lignes que le reste
          de la liste, juste en rouge -- plus lisible qu'un bouton texte
          seul perdu en bas de l'ecran (demande de Julien). */
-      .pf-item-danger, .pf-item-danger svg { color: #ff6b7d; stroke: #ff6b7d; }
+      .pf-item-danger, .pf-item-danger svg { color: var(--erreur-texte, #ff6b7d); stroke: var(--erreur-texte, #ff6b7d); }
 
       .pf-deco { width: 100%; background: transparent; border: 0; padding: 14px; color: #ff8290; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 
@@ -521,7 +605,7 @@
       .hist-txt strong { font-size: 14px; font-weight: 700; color: var(--ink); }
       .hist-txt span { font-size: 12px; color: var(--ink3); }
       .hist-pts { flex: 0 0 auto; font-size: 14px; font-weight: 800; color: var(--accent); }
-      .hist-pts.gain { color: #57d98a; }
+      .hist-pts.gain { color: var(--succes-texte, #57d98a); }
 
       /* Chat Aide & Support : bulles alignees comme n'importe quelle
          appli de messagerie -- mes messages a droite, ceux de l'autre
@@ -2118,6 +2202,13 @@ var sheet = $("#sheet"), voile = $("#voile"), corps = $("#sh-corps");
 var rendeur = null;
 
 function ouvrirFeuille(html, focusSel) {
+  // La feuille est un element PARTAGE (club, boutique, mais aussi
+  // langue/ami/devenir-club depuis Profil) : si elle s'ouvre par-dessus
+  // un ecran Profil/Amis (theme clair, voir .vue-profil/.vue-amis plus
+  // haut), elle doit suivre le meme theme clair, sinon elle reste
+  // sombre au milieu d'un ecran blanc.
+  var contexteClair = !!document.querySelector(".vue-profil:not([hidden]), .vue-amis:not([hidden])");
+  sheet.classList.toggle("clair", contexteClair);
   corps.innerHTML = html;
   sheet.classList.add("up");
   sheet.setAttribute("aria-hidden", "false");
@@ -2479,6 +2570,15 @@ function zoomEffectif() {
 
 var zoomCible = null; // null = pas encore etabli (avant le 1er "moveend")
 
+// Un dezoom rapide (plusieurs crans de molette/pincements qui
+// s'enchainent) declenche plusieurs "moveend" tres rapproches -- sans
+// garde-fou, chacun relancait sa propre correction easeTo, qui
+// interrompait alors la precedente encore en cours : plusieurs
+// animations de zoom qui se coupent la parole, d'ou le "ca bug"
+// signale par Julien en dezoomant vite. On laisse un court instant
+// aux gestes de se calmer avant d'appliquer LA correction finale.
+var minuteurCorrectionZoom = null;
+
 map.on("moveend", function () {
   var lat = map.getCenter().lat;
   var compensation = Math.log2(Math.cos(lat * Math.PI / 180));
@@ -2488,15 +2588,20 @@ map.on("moveend", function () {
     return;
   }
 
-  var zoomVoulu = zoomCible + compensation;
-  // easeTo, jamais setZoom() : un setZoom() instantane au relachement
-  // du geste donnait un saut sec et visible ("ca nous zoome en un
-  // coup"), signale par Julien -- la correction est juste, mais son
-  // application brutale ne l'etait pas. Une courte transition rend le
-  // meme resultat imperceptible.
-  if (Math.abs(map.getZoom() - zoomVoulu) > .01) {
-    map.easeTo({ zoom: zoomVoulu, duration: 250 });
-  }
+  clearTimeout(minuteurCorrectionZoom);
+  minuteurCorrectionZoom = setTimeout(function () {
+    var latActuelle = map.getCenter().lat;
+    var compensationActuelle = Math.log2(Math.cos(latActuelle * Math.PI / 180));
+    var zoomVoulu = zoomCible + compensationActuelle;
+    // easeTo, jamais setZoom() : un setZoom() instantane au relachement
+    // du geste donnait un saut sec et visible ("ca nous zoome en un
+    // coup"), signale par Julien -- la correction est juste, mais son
+    // application brutale ne l'etait pas. Une courte transition rend le
+    // meme resultat imperceptible.
+    if (Math.abs(map.getZoom() - zoomVoulu) > .01) {
+      map.easeTo({ zoom: zoomVoulu, duration: 250 });
+    }
+  }, 80);
 });
 
 // "zoomend" se declenche aussi pour la compensation INTERNE de
@@ -2595,7 +2700,10 @@ function snapifie() {
   // fonce. mentheFonce garde la meme teinte, juste un peu plus
   // profonde, pour que Forest/Wood se distinguent encore de
   // Background/Grass sans s'ecarter du vert demande.
-  var mentheClair = "#c2e6a0", mentheFonce = "#a8d488", eau = "#93d4fe";
+  // Vert plus sobre/desature (type Apple Plans) plutot que le mint
+  // bonbon d'avant -- Julien : "je trouve un autre vert qui peut etre
+  // bien mieux, bien plus pro".
+  var mentheClair = "#d9e6cc", mentheFonce = "#a3bd8c", eau = "#93d4fe";
   // Glacier (calottes polaires) : voir plus bas -- avant, gardait son
   // bleu marine d'origine du fond de carte sombre.
   var glace = "#f4f7f8";
@@ -3724,7 +3832,7 @@ function ouvrirDevenirClub(src) {
   var form = $("#dc-form"), bouton = $("#dc-envoyer"), msg = $("#dc-msg");
   function dire(texte, erreur) {
     msg.style.display = "block";
-    msg.style.color = erreur ? "var(--accent)" : "#57d98a";
+    msg.style.color = erreur ? "var(--erreur-texte, var(--accent))" : "var(--succes-texte, #57d98a)";
     msg.textContent = texte;
   }
   form.addEventListener("submit", async function (e) {
@@ -3971,7 +4079,7 @@ $("#ai-form")?.addEventListener("submit", async function (e) {
 
   function dire(texte, erreur) {
     msg.style.display = "block";
-    msg.style.color = erreur ? "var(--accent)" : "#57d98a";
+    msg.style.color = erreur ? "var(--erreur-texte, var(--accent))" : "var(--succes-texte, #57d98a)";
     msg.textContent = texte;
   }
 
