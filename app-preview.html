@@ -499,6 +499,22 @@
         background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
         font-size: 13.5px; font-weight: 700; color: var(--accent); text-decoration: underline;
       }
+
+      /* Historique des points (Ma fidelite) : une ligne par mouvement,
+         gagne ou depense -- point_grants et redemptions cote base
+         clubbeur, pas de donnee inventee. */
+      .hist-ligne { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+      .hist-ligne:last-child { border-bottom: 0; }
+      .hist-ico {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; background: var(--s2);
+        display: grid; place-items: center;
+      }
+      .hist-ico svg { width: 16px; height: 16px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .hist-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+      .hist-txt strong { font-size: 14px; font-weight: 700; color: var(--ink); }
+      .hist-txt span { font-size: 12px; color: var(--ink3); }
+      .hist-pts { flex: 0 0 auto; font-size: 14px; font-weight: 800; color: var(--accent); }
+      .hist-pts.gain { color: #57d98a; }
       .rg-danger {
         display: flex; align-items: center; justify-content: center; gap: 8px;
         width: 100%; min-height: 48px; margin: 8px 0 4px; border: 0; border-radius: 999px;
@@ -1552,6 +1568,29 @@
           </div>
         </div>
 
+        <!-- ================= ECRAN HISTORIQUE (Ma fidelite) =================
+             Vrai ledger de points : point_grants (gagnes) + redemptions
+             (depenses), cote base clubbeur -- pas les memes donnees que
+             la Boutique (qui ne montre que le catalogue et les bons
+             encore valables). -->
+        <div class="vue-profil" id="vue-historique" hidden>
+          <button type="button" class="va-close" id="hs-close" aria-label="Fermer">
+            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <h1 class="va-title">Ma fidélité</h1>
+          <div class="solde-ligne" style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+            <span class="pf-fidelite-ico" style="width:40px;height:40px;border-radius:50%;background:var(--s2);display:grid;place-items:center" aria-hidden="true">
+              <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+            </span>
+            <strong id="hs-solde" style="font-size:22px;font-weight:800">0 pts</strong>
+          </div>
+          <p class="rg-section-titre" style="text-align:left">Historique</p>
+          <div id="hs-liste"></div>
+          <p class="rg-carte-desc" id="hs-vide" style="text-align:center;margin-top:16px;border:0;padding:0">
+            Aucun mouvement de points pour l'instant.
+          </p>
+        </div>
+
         <!-- ================= ECRAN FAVORIS =================
              Liste stockee en local sur le telephone (localStorage, cle
              FAVORIS_CLE) : le coeur sur la fiche club (cablerFavoriClub,
@@ -1631,10 +1670,9 @@
           <p class="rg-section-titre" style="text-align:left">À propos de ViralNight</p>
           <div class="rg-carte">
             <p class="rg-carte-desc" style="border-top:0;padding-top:0;margin-top:0">
-              ViralNight fait gagner en visibilité les boîtes de nuit via leurs propres clients.
-              Scanne le QR code sur place, poste ta soirée en story, gagne des points selon les
-              vues générées, et échange-les contre de vraies récompenses — boisson, entrée,
-              coupe-file — directement au bar ou à l'entrée.
+              ViralNight, c'est ta soirée qui te rapporte. Scanne le QR code sur place, poste
+              ta story, gagne des points selon les vues générées, et échange-les contre de
+              vraies récompenses — boisson, entrée, coupe-file — directement au bar ou à l'entrée.
             </p>
           </div>
 
@@ -3491,7 +3529,9 @@ $("#pf-close")?.addEventListener("click", fermerProfil);
 
 // "Amis" et "Récompenses" renvoient vers les vrais ecrans deja
 // construits (onglet Amis, onglet Boutique) plutot que de dupliquer
-// leur contenu ici.
+// leur contenu ici. "Ma fidélité" est different : la Boutique ne
+// montre que le catalogue et les bons encore valables, pas l'historique
+// des points gagnes/depenses -- d'ou son propre ecran (vue-historique).
 $("#pf-action-amis")?.addEventListener("click", function () {
   fermerProfil();
   TAB_AMIS.click();
@@ -3500,10 +3540,76 @@ $("#pf-action-recompenses")?.addEventListener("click", function () {
   fermerProfil();
   activerVue("boutique");
 });
+
+var VUE_HISTORIQUE = $("#vue-historique");
 $("#pf-fidelite")?.addEventListener("click", function () {
-  fermerProfil();
-  activerVue("boutique");
+  VUE_HISTORIQUE.hidden = false;
+  chargerHistoriquePoints();
 });
+$("#hs-close")?.addEventListener("click", function () { VUE_HISTORIQUE.hidden = true; });
+
+async function chargerHistoriquePoints() {
+  var zone = $("#hs-liste"), vide = $("#hs-vide"), soldeEl = $("#hs-solde");
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) { zone.innerHTML = ""; return; }
+
+  soldeEl.textContent = nb(ETAT.solde) + " pts";
+
+  var [gagnes, depenses] = await Promise.all([
+    supabaseClubbeur
+      .from("point_grants")
+      .select("amount, created_at, clubs(name)")
+      .eq("user_id", session.user.id),
+    supabaseClubbeur
+      .from("redemptions")
+      .select("redeemed_at, rewards(title, cost_points)")
+      .eq("user_id", session.user.id),
+  ]);
+
+  var mouvements = [];
+  (gagnes.data || []).forEach(function (g) {
+    mouvements.push({
+      quand: g.created_at,
+      titre: "+" + nb(g.amount) + " pts",
+      detail: (g.clubs && g.clubs.name ? g.clubs.name + " · " : "") + dateCourte(g.created_at),
+      pts: g.amount,
+      gain: true,
+    });
+  });
+  (depenses.data || []).forEach(function (r) {
+    var titre = r.rewards ? r.rewards.title : "Récompense";
+    var cout = r.rewards ? r.rewards.cost_points : 0;
+    mouvements.push({
+      quand: r.redeemed_at,
+      titre: titre,
+      detail: dateCourte(r.redeemed_at),
+      pts: -cout,
+      gain: false,
+    });
+  });
+  mouvements.sort(function (a, b) { return new Date(b.quand) - new Date(a.quand); });
+
+  vide.hidden = mouvements.length > 0;
+  zone.innerHTML = mouvements.map(function (m) {
+    var icone = m.gain
+      ? '<path d="M12 19V5M5 12l7-7 7 7"/>'
+      : '<path d="M12 5v14M5 12l7 7 7-7"/>';
+    return '<div class="hist-ligne">' +
+      '<span class="hist-ico"><svg viewBox="0 0 24 24">' + icone + "</svg></span>" +
+      '<span class="hist-txt"><strong>' + m.titre + "</strong><span>" + m.detail + "</span></span>" +
+      '<span class="hist-pts' + (m.gain ? " gain" : "") + '">' + (m.gain ? "+" : "") + nb(m.pts) + "</span>" +
+    "</div>";
+  }).join("");
+}
+
+// Date courte pour l'historique (pas besoin de l'heure -- "12 août 2026").
+function dateCourte(iso) {
+  try {
+    return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  } catch (e) {
+    return "";
+  }
+}
 
 // Cloche du profil : meme destination que la ligne "Notifications"
 // de la liste plus bas.
