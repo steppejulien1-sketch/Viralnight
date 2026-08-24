@@ -2215,11 +2215,13 @@ function visuel(item, taille) {
    ========================================================== */
 
 // Duree de vie d'un bon : 3h a partir de l'echange, pas une heure de
-// fermeture fixe ("avant 6h") — demande de Julien, plus proche de
-// l'usage reel ("je l'ai eu a 1h, je veux pas qu'il traine jusqu'au
-// lendemain"). expireA est un timestamp ; le texte et la suppression
-// se calculent au moment du rendu, voir compteARebours()/rendreBons().
-var DUREE_BON_MS = 3 * 60 * 60 * 1000;
+// Un bon n'est valable QUE le soir meme : 6h max depuis l'echange,
+// demande de Julien ("si tu ne dis pas le soir meme, c'est fini").
+// expireA est un timestamp ; le texte et la suppression se calculent
+// au moment du rendu, voir compteARebours()/rendreBons() plus bas
+// (chargerBonsReels filtre reellement sur redeemed_at, pas juste ce
+// timestamp cote client).
+var DUREE_BON_MS = 6 * 60 * 60 * 1000;
 
 var ETAT = {
   // 0 par defaut : plus un solde de demo fige (etait 185), la vraie
@@ -2227,9 +2229,10 @@ var ETAT = {
   // par chargerSoldeReel() une fois la session connue. Un compte tout
   // neuf, sans aucun point_grants, reste donc a 0 -- comme demande.
   solde: 0,
-  bons: [
-    { code: "VN-7XQ2", titre: "Vestiaire offert", expireA: Date.now() + DUREE_BON_MS }
-  ]
+  // Vide par defaut : plus un bon de demo invente, chargerBonsReels()
+  // (plus bas) remplit ce tableau avec les vraies redemptions des que
+  // la session est connue.
+  bons: []
 };
 
 // Vrai solde : la somme des points recus (point_grants, uniquement
@@ -2258,7 +2261,7 @@ function compteARebours(expireA) {
   if (ms <= 0) return "Expiré";
   var h = Math.floor(ms / 3600000);
   var m = Math.floor((ms % 3600000) / 60000);
-  return "Mirage · expire dans " + (h > 0 ? h + " h " + String(m).padStart(2, "0") : m + " min");
+  return "Expire dans " + (h > 0 ? h + " h " + String(m).padStart(2, "0") : m + " min");
 }
 
 /* ==========================================================
@@ -4825,14 +4828,21 @@ function qrBon(code) {
 async function chargerBonsReels() {
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) { ETAT.bons = []; return; }
+  var seuil = new Date(Date.now() - DUREE_BON_MS).toISOString();
   var res = await supabaseClubbeur
     .from("redemptions")
     .select("qr_code, redeemed_at, rewards(title)")
     .eq("user_id", session.user.id)
     .eq("used", false)
+    .gt("redeemed_at", seuil)
     .order("redeemed_at", { ascending: false });
   ETAT.bons = (res.data || []).map(function (r) {
-    return { code: r.qr_code, titre: r.rewards ? r.rewards.title : "Récompense", redeemedAt: r.redeemed_at };
+    return {
+      code: r.qr_code,
+      titre: r.rewards ? r.rewards.title : "Récompense",
+      redeemedAt: r.redeemed_at,
+      expireA: new Date(r.redeemed_at).getTime() + DUREE_BON_MS,
+    };
   });
 }
 
@@ -4850,7 +4860,7 @@ async function rendreBons(neufCode) {
     e.setAttribute("aria-label", "Voir le QR de " + bon.titre);
     e.innerHTML =
       '<span class="bon-qr">' + svgQr + "</span>" +
-      '<span class="txt"><strong>' + bon.titre + "</strong><span>Échangé le " + dateCourte(bon.redeemedAt) + "</span></span>" +
+      '<span class="txt"><strong>' + bon.titre + "</strong><span>" + compteARebours(bon.expireA) + "</span></span>" +
       '<span class="bon-code">' + bon.code + "</span>";
     e.addEventListener("click", function (b, src) { return function () { ouvrirBon(b, src); }; }(bon, e));
     z.appendChild(e);
@@ -4871,7 +4881,7 @@ async function ouvrirBon(bon, src) {
   var html =
     '<div class="sheet-ok">' +
       '<h3 id="sh-titre">' + bon.titre + "</h3>" +
-      '<p class="desc">Échangé le ' + dateCourte(bon.redeemedAt) + "</p>" +
+      '<p class="desc">' + compteARebours(bon.expireA) + "</p>" +
       '<div class="qr-frame"><div class="qr-carte">' + svgQr + "</div></div>" +
       '<p class="qr-code-txt">' + bon.code + "</p>" +
       '<button class="sheet-cta sobre" id="sh-ok" type="button">Fermer</button>' +
