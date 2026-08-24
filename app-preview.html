@@ -2981,8 +2981,11 @@ map.on("load", function () {
     var el = document.createElement("button");
     el.className = "club-badge" + (c.hot ? " hot" : "") + (c.shut ? " shut" : "");
     el.style.setProperty("--c", c.c);
-    el.innerHTML = "<b>" + c.n + "</b><i>" + c.u + "</i>" + badgeType(c.type);
-    el.setAttribute("aria-label", c.nom + " " + c.n + " " + c.u + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
+    // Pas encore ouvert : le badge "1h / OUVRE" faisait plus confus que
+    // clair (demande de Julien) -- l'icone de type suffit, l'heure
+    // d'ouverture reste dispo dans la fiche (sheet-chips).
+    el.innerHTML = c.shut ? badgeType(c.type) : ("<b>" + c.n + "</b><i>" + c.u + "</i>" + badgeType(c.type));
+    el.setAttribute("aria-label", c.nom + (c.shut ? " pas encore ouvert" : " " + c.n + " " + c.u) + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     el.addEventListener("click", function () { ouvrirClub(c, el, key); });
     porteur.appendChild(el);
     // opacityWhenCovered : MapLibre laisse les marqueurs de la face
