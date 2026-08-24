@@ -4802,11 +4802,26 @@ function qrBon(code) {
   });
 }
 
+// Vrais bons : lus depuis redemptions (used = false -- un bon
+// consomme au bar disparait de la liste tout seul, plus besoin d'une
+// fausse expiration a 3h cote client comme avant). Rien n'est invente
+// ici si la session n'est pas encore connue : la liste reste vide.
+async function chargerBonsReels() {
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) { ETAT.bons = []; return; }
+  var res = await supabaseClubbeur
+    .from("redemptions")
+    .select("qr_code, redeemed_at, rewards(title)")
+    .eq("user_id", session.user.id)
+    .eq("used", false)
+    .order("redeemed_at", { ascending: false });
+  ETAT.bons = (res.data || []).map(function (r) {
+    return { code: r.qr_code, titre: r.rewards ? r.rewards.title : "Récompense", redeemedAt: r.redeemed_at };
+  });
+}
+
 async function rendreBons(neufCode) {
-  // Un bon perime (plus de 3h depuis l'echange) disparait de la
-  // liste tout seul — pas juste une mention "expire", il n'est plus
-  // utilisable donc il n'a plus rien a faire dans "Mes bons".
-  ETAT.bons = ETAT.bons.filter(function (b) { return b.expireA > Date.now(); });
+  await chargerBonsReels();
 
   var z = $("#bons");
   z.innerHTML = "";
@@ -4819,17 +4834,16 @@ async function rendreBons(neufCode) {
     e.setAttribute("aria-label", "Voir le QR de " + bon.titre);
     e.innerHTML =
       '<span class="bon-qr">' + svgQr + "</span>" +
-      '<span class="txt"><strong>' + bon.titre + "</strong><span>" + compteARebours(bon.expireA) + "</span></span>" +
+      '<span class="txt"><strong>' + bon.titre + "</strong><span>Échangé le " + dateCourte(bon.redeemedAt) + "</span></span>" +
       '<span class="bon-code">' + bon.code + "</span>";
     e.addEventListener("click", function (b, src) { return function () { ouvrirBon(b, src); }; }(bon, e));
     z.appendChild(e);
   }
 }
 
-// Le compte a rebours doit avancer sans que le clubbeur touche a
-// rien — une minute lui suffit largement (l'affichage est en minutes,
-// pas en secondes), et ca purge au passage les bons perimes pendant
-// qu'il regarde autre chose dans l'appli.
+// Un bon utilise au bar (redeem_validate, cote staff) doit disparaitre
+// d'ici sans que le clubbeur ait besoin de rafraichir la page a la
+// main.
 setInterval(function () { rendreBons(); }, 60000);
 
 /* Reprend exactement l'affichage de la confirmation d'echange, pour
@@ -4841,7 +4855,7 @@ async function ouvrirBon(bon, src) {
   var html =
     '<div class="sheet-ok">' +
       '<h3 id="sh-titre">' + bon.titre + "</h3>" +
-      '<p class="desc">' + compteARebours(bon.expireA) + "</p>" +
+      '<p class="desc">Échangé le ' + dateCourte(bon.redeemedAt) + "</p>" +
       '<div class="qr-frame"><div class="qr-carte">' + svgQr + "</div></div>" +
       '<p class="qr-code-txt">' + bon.code + "</p>" +
       '<button class="sheet-cta sobre" id="sh-ok" type="button">Fermer</button>' +
@@ -4952,7 +4966,8 @@ async function echanger(item) {
   var ligne = res.data && res.data[0];
   var code = ligne.qr_code;
   item.stock -= 1;
-  ETAT.bons.unshift({ code: code, titre: item.nom, expireA: Date.now() + DUREE_BON_MS });
+  // Plus besoin d'ajouter le bon a la main ici : rendreBons(code) plus
+  // bas relit directement les vraies redemptions depuis la base.
   await chargerSoldeReel((await supabaseClubbeur.auth.getSession()).data.session.user.id);
 
   var svgQr = await qrBon(code);
