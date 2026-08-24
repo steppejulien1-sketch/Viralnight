@@ -1595,15 +1595,6 @@
           <div class="rg-carte">
             <div class="ai-contact-ligne">
               <span class="ai-contact-ico" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>
-              </span>
-              <span>
-                <strong>Email</strong>
-                <a href="mailto:contact@viralnight.fr">contact@viralnight.fr</a>
-              </span>
-            </div>
-            <div class="ai-contact-ligne">
-              <span class="ai-contact-ico" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
               </span>
               <span>
@@ -1612,10 +1603,22 @@
               </span>
             </div>
           </div>
-          <a class="sheet-cta" href="mailto:contact@viralnight.fr" style="text-decoration:none; margin-bottom:22px">
-            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Contacter le support
-          </a>
+
+          <!-- Messagerie integree : plus de mailto, le message part
+               direct dans support_messages (base clubbeur). Julien
+               repond en editant la colonne "reponse" de la ligne
+               depuis Supabase Studio -- pas besoin d'une boite de
+               reception dediee pour un premier vrai aller-retour. -->
+          <form id="ai-form" style="display:grid;gap:10px;margin:14px 0 4px">
+            <textarea class="va-input" id="ai-message" rows="4" placeholder="Décris ton problème ou ta question..." style="resize:vertical;padding:12px 15px;min-height:96px" required></textarea>
+            <p class="desc" id="ai-form-msg" style="display:none;margin:0"></p>
+            <button type="submit" class="sheet-cta" id="ai-envoyer">
+              <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Envoyer au support
+            </button>
+          </form>
+
+          <div id="ai-historique" style="display:grid;gap:9px;margin-bottom:22px"></div>
 
           <p class="rg-section-titre" style="text-align:left">Questions fréquentes</p>
           <div style="display:grid;gap:9px">
@@ -3791,8 +3794,62 @@ $("#pf-notifications")?.addEventListener("click", function () { VUE_NOTIFICATION
 $("#nt-close")?.addEventListener("click", function () { VUE_NOTIFICATIONS.hidden = true; });
 
 var VUE_AIDE = $("#vue-aide");
-$("#pf-aide")?.addEventListener("click", function () { VUE_AIDE.hidden = false; });
+$("#pf-aide")?.addEventListener("click", function () { VUE_AIDE.hidden = false; chargerHistoriqueSupport(); });
 $("#ai-close")?.addEventListener("click", function () { VUE_AIDE.hidden = true; });
+
+// Historique des messages envoyes au support, avec la reponse si
+// Julien l'a deja saisie (colonne "reponse" de support_messages,
+// remplie a la main depuis Supabase Studio pour l'instant -- pas
+// besoin d'une boite de reception dediee pour un premier vrai
+// aller-retour).
+async function chargerHistoriqueSupport() {
+  var zone = $("#ai-historique");
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) { zone.innerHTML = ""; return; }
+  var res = await supabaseClubbeur
+    .from("support_messages")
+    .select("message, reponse, created_at")
+    .eq("user_id", session.user.id)
+    .order("created_at", { ascending: false });
+  var messages = res.data || [];
+  zone.innerHTML = messages.map(function (m) {
+    return '<div class="rg-carte" style="text-align:left">' +
+      '<p class="desc" style="margin:0 0 6px;border:0;padding:0">' + m.message + "</p>" +
+      (m.reponse
+        ? '<p class="desc" style="margin:0;border-top:1px solid var(--line2);padding-top:8px"><strong style="color:var(--accent)">Réponse ViralNight ·</strong> ' + m.reponse + "</p>"
+        : '<p class="desc" style="margin:0;color:var(--ink3);font-style:italic">En attente de réponse.</p>') +
+    "</div>";
+  }).join("");
+}
+
+$("#ai-form")?.addEventListener("submit", async function (e) {
+  e.preventDefault();
+  var champ = $("#ai-message"), bouton = $("#ai-envoyer"), msg = $("#ai-form-msg");
+  var labelOriginal = bouton.innerHTML;
+
+  function dire(texte, erreur) {
+    msg.style.display = "block";
+    msg.style.color = erreur ? "var(--accent)" : "#57d98a";
+    msg.textContent = texte;
+  }
+
+  var texte = champ.value.trim();
+  if (!texte) return dire("Écris ton message avant d'envoyer.", true);
+
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return dire("Ta session a expiré, reconnecte-toi.", true);
+
+  bouton.disabled = true;
+  bouton.textContent = "Envoi...";
+  var res = await supabaseClubbeur.from("support_messages").insert({ user_id: session.user.id, message: texte });
+  bouton.disabled = false;
+  bouton.innerHTML = labelOriginal;
+
+  if (res.error) return dire("Ça n'a pas marché : " + res.error.message, true);
+  champ.value = "";
+  dire("Message envoyé, on te répond ici sous 48h.", false);
+  chargerHistoriqueSupport();
+});
 
 var VUE_APROPOS = $("#vue-apropos");
 $("#pf-apropos")?.addEventListener("click", function () { VUE_APROPOS.hidden = false; });
