@@ -3190,7 +3190,6 @@ function ouvrirChoixReseau(nomClub) {
   // Depuis l'onglet Story (pas de club dans le contexte, contrairement
   // a un tap sur une fiche club) : liste des vrais clubs de la base,
   // pour ne jamais soumettre a l'aveugle un nom invente.
-  var clubViaScan = null;
   if (!nomClub) {
     supabaseClubbeur.from("clubs").select("name").order("name").then(function (res) {
       var select = $("#story-club");
@@ -3261,14 +3260,15 @@ function ouvrirChoixReseau(nomClub) {
         msg.textContent = "QR non reconnu, choisis ton club dans la liste.";
         return;
       }
-      clubViaScan = res.data.name;
-      var select = $("#story-club");
-      var option = document.createElement("option");
-      option.value = res.data.name;
-      option.textContent = res.data.name + " (scanné)";
-      select.appendChild(option);
-      select.value = res.data.name;
-      zone.hidden = true;
+      // Scanner le QR n'est pas juste une facon de remplir le champ
+      // "Club" : ca t'emmene direct dans la boutique de CE club, comme
+      // un vrai check-in (demande de Julien -- pas de redirection vers
+      // une page generique, direct dans l'appli). La boutique elle-meme
+      // reste pour l'instant la meme pour tous les clubs (maquette a
+      // donnees figees) -- un vrai catalogue par club est un chantier a
+      // part.
+      fermerFeuille();
+      activerVue("boutique");
     }
 
     function arreterScan() {
@@ -3302,7 +3302,7 @@ function ouvrirChoixReseau(nomClub) {
       msg.textContent = texte;
     }
     var url = champ.value.trim();
-    var club = nomClub || clubViaScan || (champClub && champClub.value);
+    var club = nomClub || (champClub && champClub.value);
     if (!url) return dire("Colle le lien de ta story ou vidéo.", true);
     if (!club) return dire("Choisis d'abord un club.", true);
 
