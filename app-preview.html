@@ -2711,7 +2711,16 @@ function snapifie() {
   // Julien -- teinte separee des poles (#ffffff pur juge trop clinique).
   var blancCasse = "#fbf8f3";
 
-  map.setPaintProperty("Background", "background-color", mentheClair);
+  // "Background" est un remplissage plein ecran, toujours affiche
+  // AVANT que les vraies tuiles (ocean, terrain) aient fini de charger
+  // -- en vert plein comme le reste du terrain, un dezoom rapide (donc
+  // beaucoup de nouvelles tuiles a charger d'un coup) le faisait
+  // apparaitre par-dessus ce qui devrait etre de l'ocean, d'ou le
+  // "vert bizarre" signale par Julien. Une teinte neutre (deja utilisee
+  // pour les zones arides) attire beaucoup moins l'oeil pendant ce
+  // court instant de chargement, meme si le fond de carte reste vert
+  // une fois les tuiles chargees (Residential/Grass/etc. plus bas).
+  map.setPaintProperty("Background", "background-color", blancCasse);
 
   ["Residential", "Industrial", "School", "Cemetery", "Hospital", "Pedestrian"].forEach(function (id) {
     if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", mentheClair);
