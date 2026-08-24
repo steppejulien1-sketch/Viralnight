@@ -1155,6 +1155,22 @@
       .sheet-fav svg { width: 20px; height: 20px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .sheet-fav.actif { background: rgba(255,47,69,.14); border-color: rgba(255,47,69,.35); }
       .sheet-fav.actif svg { stroke: #ff2f45; fill: #ff2f45; }
+
+      /* Choix Instagram/TikTok pour "Poster ma story" : deux gros
+         boutons avec icone, plutot que du texte simple -- demande de
+         Julien ("un truc grand, un truc beau"). */
+      .reseaux-grille { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 18px 0 0; }
+      .reseau-bouton {
+        display: flex; flex-direction: column; align-items: center; gap: 9px;
+        background: var(--s2); border: 2px solid transparent; border-radius: 18px;
+        padding: 16px 8px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+      }
+      .reseau-bouton.actif { border-color: var(--accent); }
+      .reseau-ico { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: #fff; }
+      .reseau-ico svg { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .reseau-ico.ig { background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7); }
+      .reseau-ico.tk { background: #010101; }
+      .reseau-ico.tk svg { fill: currentColor; stroke: none; }
       .sheet-chips { display: flex; gap: 7px; margin: 14px 0 16px; flex-wrap: wrap; }
       .chip {
         font-size: 11.5px; font-weight: 700; color: var(--ink2); background: var(--s2);
@@ -3133,21 +3149,69 @@ function ouvrirClub(c, src, id) {
 // pouvoir ecrire en base.
 function ouvrirChoixReseau(nomClub) {
   var mention = nomClub
-    ? "Tague " + nomClub + " dans ta story ou ta vidéo. "
-    : "Tague le club dans ta story ou ta vidéo. ";
+    ? "Tague " + nomClub + " dans ta story ou ta vidéo."
+    : "Tague le club dans ta story ou ta vidéo.";
   var html =
     '<div class="sheet-ok">' +
       '<h3 id="sh-titre">Poste ta story</h3>' +
-      '<p class="desc">' + mention + "Tes points arrivent une fois les vues vérifiées.</p>" +
-      '<button class="sheet-cta" id="sh-story-ig" type="button">Ouvrir Instagram</button>' +
-      '<button class="sheet-cta sobre" id="sh-story-tk" type="button" style="margin-top:10px">Ouvrir TikTok</button>' +
+      '<p class="desc">' + mention + " Tes points arrivent une fois les vues vérifiées.</p>" +
+      '<div class="reseaux-grille">' +
+        '<button type="button" class="reseau-bouton actif" id="sh-story-ig" data-kind="story" data-schema="instagram://story-camera" data-secours="https://www.instagram.com/">' +
+          '<span class="reseau-ico ig"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>' +
+          "<span>Instagram</span>" +
+        "</button>" +
+        '<button type="button" class="reseau-bouton" id="sh-story-tk" data-kind="tiktok" data-schema="tiktok://" data-secours="https://www.tiktok.com/upload">' +
+          '<span class="reseau-ico tk"><svg viewBox="0 0 24 24"><path d="M15 3v10.5a3.3 3.3 0 1 1-3.3-3.3c.3 0 .6.03.9.09V7.2a6 6 0 1 0 5.4 5.97V9.6a7.6 7.6 0 0 0 4 1.15V7.5A4.2 4.2 0 0 1 17.6 6 4.2 4.2 0 0 1 15 3z"/></svg></span>' +
+          "<span>TikTok</span>" +
+        "</button>" +
+      "</div>" +
+      '<form id="story-form" style="display:grid;gap:10px;margin-top:18px;text-align:left">' +
+        '<label class="rg-label" style="font-size:13px" for="story-url">Lien de ta story ou vidéo</label>' +
+        '<input class="va-input" id="story-url" type="url" placeholder="https://instagram.com/…" required />' +
+        '<p class="desc" id="story-msg" style="display:none;margin:0"></p>' +
+        '<button type="submit" class="sheet-cta" id="story-envoyer">Envoyer</button>' +
+      "</form>" +
     "</div>";
   ouvrirFeuille(html, "#sh-story-ig");
-  $("#sh-story-ig").addEventListener("click", function () {
-    ouvrirAppOuWeb("instagram://story-camera", "https://www.instagram.com/");
+
+  var kindChoisi = "story";
+  var boutonsReseau = $("#sh-corps").querySelectorAll(".reseau-bouton");
+  boutonsReseau.forEach(function (b) {
+    b.addEventListener("click", function () {
+      boutonsReseau.forEach(function (x) { x.classList.toggle("actif", x === b); });
+      kindChoisi = b.dataset.kind;
+      ouvrirAppOuWeb(b.dataset.schema, b.dataset.secours);
+    });
   });
-  $("#sh-story-tk").addEventListener("click", function () {
-    ouvrirAppOuWeb("tiktok://", "https://www.tiktok.com/upload");
+
+  $("#story-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var champ = $("#story-url"), bouton = $("#story-envoyer"), msg = $("#story-msg");
+    function dire(texte, erreur) {
+      msg.style.display = "block";
+      msg.style.color = erreur ? "var(--erreur-texte, var(--accent))" : "var(--succes-texte, #57d98a)";
+      msg.textContent = texte;
+    }
+    var url = champ.value.trim();
+    if (!url) return dire("Colle le lien de ta story ou vidéo.", true);
+    if (!nomClub) return dire("Ouvre cet écran depuis la fiche d'un club sur la carte.", true);
+
+    bouton.disabled = true;
+    bouton.textContent = "Envoi...";
+    var res = await supabaseClubbeur.rpc("story_submit", { p_club_nom: nomClub, p_kind: kindChoisi, p_url: url });
+    bouton.disabled = false;
+    bouton.textContent = "Envoyer";
+
+    if (res.error) {
+      var messages = {
+        club_introuvable: "Ce club n'est pas encore répertorié, réessaie plus tard.",
+        lien_vide: "Colle le lien de ta story ou vidéo.",
+        not_authenticated: "Ta session a expiré, reconnecte-toi.",
+      };
+      return dire(messages[res.error.message] || "Ça n'a pas marché. Réessaie dans un instant.", true);
+    }
+    champ.value = "";
+    dire("Envoyé ! On vérifie les vues et tes points arrivent ici.", false);
   });
 }
 
