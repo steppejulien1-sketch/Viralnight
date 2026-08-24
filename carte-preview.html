@@ -533,10 +533,22 @@ map.on("moveend", function () {
   }
 });
 
-// Un vrai geste de zoom (molette, pincement, double-clic) : la cible
-// reprend la valeur fraichement demandee, sinon "moveend" la
-// ramenerait juste apres a l'ancien niveau.
+// "zoomend" se declenche aussi pour la compensation INTERNE de
+// MapLibre pendant une simple rotation, pas seulement pour un vrai
+// geste de zoom -- chaque rotation validait sinon silencieusement son
+// propre zoom parasite comme nouvelle reference (zoomCible derivait).
+// On ne met a jour zoomCible que si un vrai geste de zoom (molette,
+// double-clic, pincement a deux doigts) a precede ce "zoomend".
+var gesteDeZoomReel = false;
+map.on("wheel", function () { gesteDeZoomReel = true; });
+map.on("dblclick", function () { gesteDeZoomReel = true; });
+map.on("touchstart", function (e) {
+  if (e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length > 1) gesteDeZoomReel = true;
+});
+
 map.on("zoomend", function () {
+  if (!gesteDeZoomReel) return;
+  gesteDeZoomReel = false;
   zoomCible = map.getZoom() - Math.log2(Math.cos(map.getCenter().lat * Math.PI / 180));
 });
 

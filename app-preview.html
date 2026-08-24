@@ -214,9 +214,15 @@
          ce fichier, et "Ajouter" reste un contour, jamais un aplat.
          ============================================================ */
       .vue-amis {
-        position: absolute; inset: 0; z-index: 32; overflow-y: auto;
+        /* z-index sous .tabs (26) et non plus au-dessus (etait 32) :
+           Julien voulait garder la barre d'onglets accessible en
+           permanence sur "Amis", au lieu d'un ecran plein qui la
+           recouvre et n'a qu'une croix en haut pour en sortir. On
+           quitte "Amis" en tapant Carte/Boutique, comme les deux
+           autres onglets -- voir activerVue(). */
+        position: absolute; inset: 0; z-index: 20; overflow-y: auto;
         background: var(--bg); color: var(--ink);
-        padding: 20px 24px 40px; text-align: center;
+        padding: 20px 24px 112px; text-align: center;
         transition: opacity .3s ease, visibility .3s ease;
       }
       .vue-amis[hidden] { display: flex; opacity: 0; visibility: hidden; pointer-events: none; }
@@ -230,6 +236,7 @@
       .va-close svg { width: 15px; height: 15px; stroke: var(--ink2); stroke-width: 2.2; fill: none; stroke-linecap: round; }
 
       .va-title { margin: 46px 0 22px; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+      #vue-amis .va-title { margin-top: 4px; }
 
       .va-kicker {
         text-align: left; font-size: 11px; font-weight: 700; color: var(--ink3);
@@ -1334,9 +1341,6 @@
              seulement avant connexion) via l'onglet "Amis" de la barre
              du bas. -->
         <div class="vue-amis" id="vue-amis" hidden>
-          <button type="button" class="va-close" id="va-close" aria-label="Fermer">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
           <h1 class="va-title">Amis</h1>
 
           <!-- Repli "pas connecte" : avant, ce cas renvoyait EN SILENCE
@@ -1557,7 +1561,6 @@
           <div class="rg-carte">
             <div class="rg-carte-ligne">
               <span class="rg-label">Langue</span>
-              <button type="button" class="rg-lien" id="rg-langue-modifier">Modifier</button>
             </div>
             <p class="rg-carte-desc" id="rg-langue" style="border-top:0; padding-top:0; margin-top:6px">Français</p>
           </div>
@@ -2169,8 +2172,8 @@ function activerVue(nom) {
   history.replaceState(null, "", "#" + nom);
 }
 
-TAB_CARTE.addEventListener("click", function () { activerVue("carte"); });
-TAB_BOUTIQUE.addEventListener("click", function () { activerVue("boutique"); });
+TAB_CARTE.addEventListener("click", function () { fermerAmis(); activerVue("carte"); });
+TAB_BOUTIQUE.addEventListener("click", function () { fermerAmis(); activerVue("boutique"); });
 
 activerVue(location.hash === "#boutique" ? "boutique" : "carte");
 
@@ -2496,10 +2499,25 @@ map.on("moveend", function () {
   }
 });
 
-// Un vrai geste de zoom (molette, pincement, double-clic) : la cible
-// reprend la valeur fraichement demandee, sinon "moveend" la
-// ramenerait juste apres a l'ancien niveau.
+// "zoomend" se declenche aussi pour la compensation INTERNE de
+// MapLibre pendant une simple rotation (le meme mecanisme que celui
+// qu'on corrige plus haut) -- pas seulement pour un vrai geste de
+// zoom. Sans ce garde-fou, chaque rotation "validait" silencieusement
+// son propre zoom parasite comme nouvelle reference (zoomCible),
+// d'ou le bug qui revenait sans arret malgre le correctif au-dessus :
+// la reference elle-meme derivait. On ne met donc a jour zoomCible que
+// si un vrai geste de zoom (molette, double-clic, pincement a deux
+// doigts) a precede ce "zoomend".
+var gesteDeZoomReel = false;
+map.on("wheel", function () { gesteDeZoomReel = true; });
+map.on("dblclick", function () { gesteDeZoomReel = true; });
+map.on("touchstart", function (e) {
+  if (e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length > 1) gesteDeZoomReel = true;
+});
+
 map.on("zoomend", function () {
+  if (!gesteDeZoomReel) return;
+  gesteDeZoomReel = false;
   zoomCible = map.getZoom() - Math.log2(Math.cos(map.getCenter().lat * Math.PI / 180));
 });
 
@@ -3113,17 +3131,18 @@ TAB_AMIS?.addEventListener("click", async function () {
 });
 
 $("#va-connecte-btn")?.addEventListener("click", function () {
-  $("#va-close").click();
+  fermerAmis();
   VUE_ACCUEIL.classList.remove("masque");
 });
 
-$("#va-close")?.addEventListener("click", function () {
+// Plus de croix dediee : on quitte "Amis" en tapant un autre onglet
+// (Carte/Boutique), la barre du bas restant visible et cliquable
+// pendant qu'on est sur "Amis" (voir .vue-amis, z-index sous .tabs).
+function fermerAmis() {
   VUE_AMIS.hidden = true;
-  // Rend la main a l'onglet reellement actif (carte ou boutique) :
-  // sans ca, "Amis" restait allume alors que plus rien n'etait ouvert.
   TAB_AMIS.classList.remove("on");
   TAB_AMIS.setAttribute("aria-current", "false");
-});
+}
 
 async function ouvrirPageAmis(session) {
   VUE_AMIS.hidden = false;
@@ -3860,42 +3879,10 @@ function champTexteLibre(id, colonne, libelle) {
 }
 champTexteLibre("rg-telephone-modifier", "telephone", "Numéro de téléphone");
 champTexteLibre("rg-adresse-modifier", "adresse", "Adresse postale");
-// Choix ferme (pas un prompt en texte libre) : "modifier" la langue ne
-// traduit encore rien dans l'appli (chantier a part, remis a plus tard
-// par Julien), donc autant limiter aux 4 langues prevues plutot que de
-// laisser taper n'importe quoi qui n'aurait aucun effet visible.
-var LANGUES_DISPO = [
-  ["Français", "🇫🇷"], ["English", "🇬🇧"], ["Español", "🇪🇸"], ["Nederlands", "🇳🇱"],
-];
-
-$("#rg-langue-modifier")?.addEventListener("click", async function () {
-  var session = (await supabaseClubbeur.auth.getSession()).data.session;
-  if (!session) return;
-
-  var html =
-    '<div class="sheet-ok">' +
-      '<h3 id="sh-titre">Langue</h3>' +
-      '<p class="desc">Choisis la langue de tes échanges avec nous. L\'appli reste en français pour l\'instant, la traduction complète arrive plus tard.</p>' +
-      '<div style="display:grid;gap:8px;text-align:left">' +
-        LANGUES_DISPO.map(function (l) {
-          return '<button type="button" class="pf-item" data-langue="' + l[0] + '" style="border-top:1px solid var(--line2)">' +
-            '<span style="font-size:18px">' + l[1] + "</span>" + l[0] +
-          "</button>";
-        }).join("") +
-      "</div>" +
-    "</div>";
-  ouvrirFeuille(html, ".pf-item");
-
-  $("#sh-corps").querySelectorAll("[data-langue]").forEach(function (b) {
-    b.addEventListener("click", async function () {
-      var propre = b.dataset.langue;
-      var res = await supabaseClubbeur.from("users").update({ langue: propre }).eq("id", session.user.id);
-      if (res.error) { window.alert("Ça n'a pas marché : " + res.error.message); return; }
-      $("#rg-langue").textContent = propre;
-      fermerFeuille();
-    });
-  });
-});
+// Plus de bouton "Modifier" sur Langue : tant que l'appli ne traduit
+// pas reellement (chantier remis a plus tard par Julien), un bouton
+// qui ne fait qu'enregistrer une preference sans effet visible n'a
+// pas sa place ici.
 
 $("#rg-email-modifier")?.addEventListener("click", async function () {
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
