@@ -2723,16 +2723,11 @@ function snapifie() {
   // Julien -- teinte separee des poles (#ffffff pur juge trop clinique).
   var blancCasse = "#fbf8f3";
 
-  // "Background" est un remplissage plein ecran, toujours affiche
-  // AVANT que les vraies tuiles (ocean, terrain) aient fini de charger
-  // -- en vert plein comme le reste du terrain, un dezoom rapide (donc
-  // beaucoup de nouvelles tuiles a charger d'un coup) le faisait
-  // apparaitre par-dessus ce qui devrait etre de l'ocean, d'ou le
-  // "vert bizarre" signale par Julien. Une teinte neutre (deja utilisee
-  // pour les zones arides) attire beaucoup moins l'oeil pendant ce
-  // court instant de chargement, meme si le fond de carte reste vert
-  // une fois les tuiles chargees (Residential/Grass/etc. plus bas).
-  map.setPaintProperty("Background", "background-color", blancCasse);
+  // Remis au vert (Julien a trouve la teinte neutre precedente pire
+  // que le probleme qu'elle corrigeait) -- le "vert bizarre" au
+  // dezoom rapide reste un chantier a part, pas regle par la couleur
+  // de ce remplissage.
+  map.setPaintProperty("Background", "background-color", mentheClair);
 
   ["Residential", "Industrial", "School", "Cemetery", "Hospital", "Pedestrian"].forEach(function (id) {
     if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", mentheClair);
@@ -3603,9 +3598,11 @@ function creerAmiChip(p) {
   b.className = "fr";
   b.setAttribute("aria-label", p.nom);
   b.innerHTML = '<span class="bub">' + pint(p.q) + '</span><b>' + p.nom + '</b>';
+  // Avant, tapoter un ami zoomait direct dessus (flyTo) -- Julien ne
+  // veut plus de ce saut de camera automatique, juste revenir sur la
+  // carte telle qu'elle etait.
   if (p.lngLat) b.addEventListener("click", function () {
     activerVue("carte");
-    map.flyTo({ center: p.lngLat, zoom: 16, duration: 800 });
   });
   return b;
 }

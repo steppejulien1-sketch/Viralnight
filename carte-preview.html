@@ -762,13 +762,9 @@ function snapifie() {
   // Julien -- teinte separee des poles (#ffffff pur juge trop clinique).
   var blancCasse = "#fbf8f3";
 
-  // "Background" est un remplissage plein ecran, toujours affiche
-  // AVANT que les vraies tuiles (ocean, terrain) aient fini de charger
-  // -- en vert plein, un dezoom rapide le faisait apparaitre par-dessus
-  // ce qui devrait etre de l'ocean, d'ou le "vert bizarre" signale par
-  // Julien. Une teinte neutre attire moins l'oeil pendant ce court
-  // instant de chargement.
-  map.setPaintProperty("Background", "background-color", blancCasse);
+  // Remis au vert (Julien a trouve la teinte neutre precedente pire
+  // que le probleme qu'elle corrigeait).
+  map.setPaintProperty("Background", "background-color", mentheClair);
 
   // tout ce qui n'est ni batiment, ni route, ni eau, ni parc —
   // zones residentielles, industrielles, scolaires... — reprend
@@ -1442,9 +1438,8 @@ function creerAmiChip(p) {
   b.className = "fr";
   b.setAttribute("aria-label", p.nom);
   b.innerHTML = '<span class="bub">' + pint(p.q) + '</span><b>' + p.nom + '</b>';
-  if (p.lngLat) b.addEventListener("click", function () {
-    map.flyTo({ center: p.lngLat, zoom: 16, duration: 800 });
-  });
+  // Avant, tapoter un ami zoomait direct dessus (flyTo) -- Julien ne
+  // veut plus de ce saut de camera automatique.
   return b;
 }
 AMIS.forEach(function (p) {
