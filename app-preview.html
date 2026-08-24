@@ -1146,10 +1146,29 @@
 
       /* Fiche club (carte) : le badge rond du club, repris tel quel
          de son marqueur sur la carte. */
-      .sheet-club-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
-      .sheet-club-top .club-badge { width: 50px; height: 50px; box-shadow: none; cursor: default; }
+      /* Fiche club : un vrai bandeau d'entete (comme le visuel des
+         recompenses), pas juste une ligne plate icone+texte -- la
+         teinte du club (--c) infuse doucement le fond, pour que
+         chaque club ait une identite visuelle des l'ouverture de sa
+         fiche, sans etre criard. */
+      .club-hero {
+        position: relative; text-align: center; padding: 30px 20px 20px;
+        margin: -6px -6px 18px; border-radius: 22px;
+        background:
+          radial-gradient(120% 100% at 50% -10%, color-mix(in srgb, var(--c) 26%, transparent), transparent 72%),
+          var(--s1);
+        border: 1px solid var(--line2);
+      }
+      .club-hero-badge {
+        display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 14px;
+        border-radius: 50%; background: var(--c); color: #fff;
+        box-shadow: 0 10px 22px -10px var(--c);
+      }
+      .club-hero-nom { margin: 0 0 5px; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); }
+      .club-hero-adr { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink2); }
       .sheet-fav {
-        flex: 0 0 auto; margin-left: auto; width: 42px; height: 42px; border-radius: 50%;
+        position: absolute; top: 14px; right: 14px; z-index: 2;
+        width: 40px; height: 40px; border-radius: 50%;
         background: var(--s2); border: 1px solid var(--line2); display: grid; place-items: center; cursor: pointer;
       }
       .sheet-fav svg { width: 20px; height: 20px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -3146,13 +3165,13 @@ function ouvrirClub(c, src, id) {
   var stack = c.amis.map(function (q) { return "<span>" + pint(q) + "</span>"; }).join("");
 
   var html =
-    '<div class="sheet-club-top">' +
-      '<span class="club-badge" style="--c:' + c.c + '">' + badgeType(c.type) + "</span>" +
-      '<span class="sheet-fam" style="margin:0"><strong style="display:block;color:var(--ink);font-size:19px;font-weight:800;letter-spacing:-.03em;text-transform:none">' +
-        c.nom + "</strong>" + c.adr + "</span>" +
+    '<div class="club-hero" style="--c:' + c.c + '">' +
       '<button class="sheet-fav" id="sh-fav" type="button">' +
         '<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9A4.9 4.9 0 0 1 12 5.7a4.9 4.9 0 0 1 8.5 3.2C20.5 15 12 20.5 12 20.5z"/></svg>' +
       "</button>" +
+      '<span class="club-hero-badge">' + badgeType(c.type) + "</span>" +
+      '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
+      '<p class="club-hero-adr">' + c.adr + "</p>" +
     "</div>" +
     '<div class="sheet-chips">' + c.chips.map(function (ch) {
       return '<span class="chip' + (ch[1] ? " warm" : "") + '">' + ch[0] + "</span>";
@@ -3167,13 +3186,10 @@ function ouvrirClub(c, src, id) {
 }
 
 // "Poster ma story" (fiche club) et l'onglet Story du bas ouvrent la
-// meme feuille : un choix Instagram/TikTok qui ouvre directement
-// l'appli native pour poster. Pas de soumission manuelle de lien ici
-// -- story_events (cote base) n'a qu'une policy de LECTURE pour le
-// client, l'ecriture est reservee au detecteur automatique de
-// mentions Instagram (lib/instagram/ cote serveur) : un formulaire
-// "colle ton lien" ici court-circuiterait ce systeme sans meme
-// pouvoir ecrire en base.
+// meme feuille : Instagram/TikTok pour poster, puis un lien colle ici
+// qui part vers la vraie fonction submit_story() -- en attente de
+// verification par le club, pas de points immediats (voir la fonction
+// plus bas, appel a supabaseClubbeur.rpc("submit_story", ...)).
 function ouvrirChoixReseau(nomClub) {
   var mention = nomClub
     ? "Tague " + nomClub + " dans ta story ou ta vidéo."
