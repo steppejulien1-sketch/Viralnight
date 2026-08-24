@@ -515,6 +515,31 @@
       .hist-txt span { font-size: 12px; color: var(--ink3); }
       .hist-pts { flex: 0 0 auto; font-size: 14px; font-weight: 800; color: var(--accent); }
       .hist-pts.gain { color: #57d98a; }
+
+      /* Chat Aide & Support : bulles alignees comme n'importe quelle
+         appli de messagerie -- mes messages a droite, ceux de l'autre
+         a gauche, cote client comme cote admin (le "moi" change juste
+         de sens selon qui regarde). */
+      .chat-bulle { max-width: 82%; padding: 10px 14px; border-radius: 16px; font-size: 13.5px; line-height: 1.45; }
+      .chat-bulle.autre { align-self: flex-start; background: var(--s2); color: var(--ink); border-bottom-left-radius: 4px; }
+      .chat-bulle.moi { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+      .chat-bulle time { display: block; margin-top: 4px; font-size: 10.5px; opacity: .65; }
+      #ai-chat, #ai-admin-chat { display: flex !important; flex-direction: column; }
+
+      .ai-admin-conv {
+        display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 16px;
+        padding: 12px 14px; margin: 0 0 9px; cursor: pointer;
+      }
+      .ai-admin-conv-av {
+        flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; overflow: hidden;
+        background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
+        display: grid; place-items: center; font-size: 15px; font-weight: 800; color: #fff;
+      }
+      .ai-admin-conv-av img { width: 100%; height: 100%; object-fit: cover; }
+      .ai-admin-conv-txt { flex: 1 1 auto; min-width: 0; }
+      .ai-admin-conv-txt strong { display: block; font-size: 14px; font-weight: 700; color: var(--ink); }
+      .ai-admin-conv-txt span { display: block; font-size: 12.5px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .rg-danger {
         display: flex; align-items: center; justify-content: center; gap: 8px;
         width: 100%; min-height: 48px; margin: 8px 0 4px; border: 0; border-radius: 999px;
@@ -1607,30 +1632,47 @@
           </p>
         </div>
 
-        <!-- ================= ECRAN AIDE & SUPPORT ================= -->
+        <!-- ================= ECRAN AIDE & SUPPORT =================
+             Deux vues dans le meme ecran : #ai-client (tout le monde,
+             une conversation avec le support) et #ai-admin (visible
+             seulement si l'email connecte est ADMIN_EMAIL_CLUBBEUR --
+             liste de toutes les conversations + reponse en direct,
+             sans passer par Supabase Studio). -->
         <div class="vue-profil" id="vue-aide" hidden>
           <button type="button" class="va-close" id="ai-close" aria-label="Fermer">
             <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
           <h1 class="va-title">Aide &amp; Support</h1>
 
-          <p class="rg-section-titre" style="text-align:left">Contactez-nous</p>
+          <div id="ai-client">
+            <p class="rg-section-titre" style="text-align:left">Contactez-nous</p>
+            <div id="ai-chat" style="display:grid;gap:8px;margin-bottom:14px"></div>
+            <form id="ai-form" style="display:grid;gap:10px;margin:0 0 4px">
+              <textarea class="va-input" id="ai-message" rows="3" placeholder="Écris ton message..." style="resize:vertical;padding:12px 15px;min-height:72px" required></textarea>
+              <p class="desc" id="ai-form-msg" style="display:none;margin:0"></p>
+              <button type="submit" class="sheet-cta" id="ai-envoyer">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Envoyer
+              </button>
+            </form>
+          </div>
 
-          <!-- Messagerie integree : plus de mailto, le message part
-               direct dans support_messages (base clubbeur). Julien
-               repond en editant la colonne "reponse" de la ligne
-               depuis Supabase Studio -- pas besoin d'une boite de
-               reception dediee pour un premier vrai aller-retour. -->
-          <form id="ai-form" style="display:grid;gap:10px;margin:14px 0 4px">
-            <textarea class="va-input" id="ai-message" rows="4" placeholder="Décris ton problème ou ta question..." style="resize:vertical;padding:12px 15px;min-height:96px" required></textarea>
-            <p class="desc" id="ai-form-msg" style="display:none;margin:0"></p>
-            <button type="submit" class="sheet-cta" id="ai-envoyer">
-              <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Envoyer au support
-            </button>
-          </form>
-
-          <div id="ai-historique" style="display:grid;gap:9px;margin-bottom:22px"></div>
+          <div id="ai-admin" hidden>
+            <div id="ai-admin-liste">
+              <p class="rg-section-titre" style="text-align:left">Conversations</p>
+              <div id="ai-admin-liste-items"></div>
+              <p class="desc" id="ai-admin-vide" style="display:none;text-align:center">Aucune demande pour l'instant.</p>
+            </div>
+            <div id="ai-admin-thread" hidden>
+              <button type="button" class="rg-lien" id="ai-admin-retour" style="margin-bottom:12px">← Toutes les conversations</button>
+              <p class="rg-section-titre" style="text-align:left" id="ai-admin-thread-titre"></p>
+              <div id="ai-admin-chat" style="display:grid;gap:8px;margin-bottom:14px"></div>
+              <form id="ai-admin-form" style="display:grid;gap:10px">
+                <textarea class="va-input" id="ai-admin-message" rows="3" placeholder="Ta réponse..." style="resize:vertical;padding:12px 15px;min-height:72px" required></textarea>
+                <button type="submit" class="sheet-cta" id="ai-admin-envoyer">Répondre</button>
+              </form>
+            </div>
+          </div>
         </div>
 
         <!-- ================= ECRAN A PROPOS ================= -->
@@ -3859,33 +3901,58 @@ var VUE_NOTIFICATIONS = $("#vue-notifications");
 $("#pf-notifications")?.addEventListener("click", function () { VUE_NOTIFICATIONS.hidden = false; });
 $("#nt-close")?.addEventListener("click", function () { VUE_NOTIFICATIONS.hidden = true; });
 
+// Compte admin cote base clubbeur : meme adresse que ADMIN_EMAIL
+// dans auth.js/admin.js, mais un compte SEPARE a creer/utiliser dans
+// CETTE base (gcopwgmqjiufemapamek) -- Auth Supabase est isole par
+// projet, se connecter sur mrukkexghpcqtwvwwcbe ne suffit pas ici.
+var ADMIN_EMAIL_CLUBBEUR = "viralnight001@gmail.com";
+
 var VUE_AIDE = $("#vue-aide");
-$("#pf-aide")?.addEventListener("click", function () { VUE_AIDE.hidden = false; chargerHistoriqueSupport(); });
+var AI_CLIENT = $("#ai-client"), AI_ADMIN = $("#ai-admin");
+var AI_ADMIN_LISTE = $("#ai-admin-liste"), AI_ADMIN_THREAD = $("#ai-admin-thread");
+
+$("#pf-aide")?.addEventListener("click", async function () {
+  VUE_AIDE.hidden = false;
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  var estAdmin = !!session && session.user.email === ADMIN_EMAIL_CLUBBEUR;
+  AI_CLIENT.hidden = estAdmin;
+  AI_ADMIN.hidden = !estAdmin;
+  if (estAdmin) {
+    AI_ADMIN_THREAD.hidden = true;
+    AI_ADMIN_LISTE.hidden = false;
+    chargerConversationsAdmin();
+  } else {
+    chargerChatClient();
+  }
+});
 $("#ai-close")?.addEventListener("click", function () { VUE_AIDE.hidden = true; });
 
-// Historique des messages envoyes au support, avec la reponse si
-// Julien l'a deja saisie (colonne "reponse" de support_messages,
-// remplie a la main depuis Supabase Studio pour l'instant -- pas
-// besoin d'une boite de reception dediee pour un premier vrai
-// aller-retour).
-async function chargerHistoriqueSupport() {
-  var zone = $("#ai-historique");
+function bulleChat(auteur, moi, message, quand) {
+  return '<div class="chat-bulle ' + (auteur === moi ? "moi" : "autre") + '">' +
+    escapeHtmlSupport(message) +
+    '<time>' + dateCourte(quand) + "</time>" +
+  "</div>";
+}
+// Les messages viennent de la base, mais restent du texte libre tape
+// par un utilisateur -- jamais injecte tel quel dans le DOM.
+function escapeHtmlSupport(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ---- Cote client : sa propre conversation ---- */
+async function chargerChatClient() {
+  var zone = $("#ai-chat");
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) { zone.innerHTML = ""; return; }
   var res = await supabaseClubbeur
     .from("support_messages")
-    .select("message, reponse, created_at")
+    .select("auteur, message, created_at")
     .eq("user_id", session.user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
   var messages = res.data || [];
-  zone.innerHTML = messages.map(function (m) {
-    return '<div class="rg-carte" style="text-align:left">' +
-      '<p class="desc" style="margin:0 0 6px;border:0;padding:0">' + m.message + "</p>" +
-      (m.reponse
-        ? '<p class="desc" style="margin:0;border-top:1px solid var(--line2);padding-top:8px"><strong style="color:var(--accent)">Réponse ViralNight ·</strong> ' + m.reponse + "</p>"
-        : '<p class="desc" style="margin:0;color:var(--ink3);font-style:italic">En attente de réponse.</p>') +
-    "</div>";
-  }).join("");
+  zone.innerHTML = messages.length
+    ? messages.map(function (m) { return bulleChat(m.auteur, "client", m.message, m.created_at); }).join("")
+    : '<p class="desc" style="text-align:center">Une question, un souci ? Écris-nous ci-dessous.</p>';
 }
 
 $("#ai-form")?.addEventListener("submit", async function (e) {
@@ -3907,14 +3974,68 @@ $("#ai-form")?.addEventListener("submit", async function (e) {
 
   bouton.disabled = true;
   bouton.textContent = "Envoi...";
-  var res = await supabaseClubbeur.from("support_messages").insert({ user_id: session.user.id, message: texte });
+  var res = await supabaseClubbeur.from("support_messages").insert({ user_id: session.user.id, message: texte, auteur: "client" });
   bouton.disabled = false;
   bouton.innerHTML = labelOriginal;
 
   if (res.error) return dire("Ça n'a pas marché : " + res.error.message, true);
   champ.value = "";
-  dire("Message envoyé, on te répond ici sous 48h.", false);
-  chargerHistoriqueSupport();
+  msg.style.display = "none";
+  chargerChatClient();
+});
+
+/* ---- Cote admin : toutes les conversations ---- */
+async function chargerConversationsAdmin() {
+  var zone = $("#ai-admin-liste-items"), vide = $("#ai-admin-vide");
+  var res = await supabaseClubbeur.rpc("support_admin_conversations");
+  var conversations = res.data || [];
+  vide.style.display = conversations.length ? "none" : "block";
+  zone.innerHTML = conversations.map(function (c) {
+    return '<button type="button" class="ai-admin-conv" data-user="' + c.user_id + '" data-handle="' + (c.handle || "") + '">' +
+      '<span class="ai-admin-conv-av">' + (c.avatar_url ? '<img src="' + c.avatar_url + '" alt="" />' : (c.handle ? c.handle.charAt(0).toUpperCase() : "?")) + "</span>" +
+      '<span class="ai-admin-conv-txt"><strong>@' + (c.handle || "inconnu") + '</strong><span>' + escapeHtmlSupport(c.dernier_message) + "</span></span>" +
+    "</button>";
+  }).join("");
+  zone.querySelectorAll(".ai-admin-conv").forEach(function (b) {
+    b.addEventListener("click", function () { ouvrirConversationAdmin(b.dataset.user, b.dataset.handle); });
+  });
+}
+
+async function ouvrirConversationAdmin(userId, handle) {
+  AI_ADMIN_LISTE.hidden = true;
+  AI_ADMIN_THREAD.hidden = false;
+  $("#ai-admin-thread-titre").textContent = "@" + handle;
+  $("#ai-admin-form").dataset.user = userId;
+  await chargerThreadAdmin(userId);
+}
+
+async function chargerThreadAdmin(userId) {
+  var zone = $("#ai-admin-chat");
+  var res = await supabaseClubbeur.rpc("support_admin_thread", { p_user_id: userId });
+  var messages = res.data || [];
+  zone.innerHTML = messages.map(function (m) { return bulleChat(m.auteur, "admin", m.message, m.created_at); }).join("");
+}
+
+$("#ai-admin-retour")?.addEventListener("click", function () {
+  AI_ADMIN_THREAD.hidden = true;
+  AI_ADMIN_LISTE.hidden = false;
+  chargerConversationsAdmin();
+});
+
+$("#ai-admin-form")?.addEventListener("submit", async function (e) {
+  e.preventDefault();
+  var form = e.currentTarget;
+  var userId = form.dataset.user;
+  var champ = $("#ai-admin-message"), bouton = $("#ai-admin-envoyer");
+  var texte = champ.value.trim();
+  if (!texte || !userId) return;
+
+  bouton.disabled = true;
+  var res = await supabaseClubbeur.rpc("support_admin_reply", { p_user_id: userId, p_message: texte });
+  bouton.disabled = false;
+  if (res.error) { window.alert("Ça n'a pas marché : " + res.error.message); return; }
+  champ.value = "";
+  chargerThreadAdmin(userId);
 });
 
 var VUE_APROPOS = $("#vue-apropos");
