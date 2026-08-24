@@ -2203,11 +2203,34 @@ function visuel(item, taille) {
 var DUREE_BON_MS = 3 * 60 * 60 * 1000;
 
 var ETAT = {
-  solde: 185,
+  // 0 par defaut : plus un solde de demo fige (etait 185), la vraie
+  // valeur (point_grants recus - redemptions depensees) est chargee
+  // par chargerSoldeReel() une fois la session connue. Un compte tout
+  // neuf, sans aucun point_grants, reste donc a 0 -- comme demande.
+  solde: 0,
   bons: [
     { code: "VN-7XQ2", titre: "Vestiaire offert", expireA: Date.now() + DUREE_BON_MS }
   ]
 };
+
+// Vrai solde : la somme des points recus (point_grants, uniquement
+// ceux deja "released" -- les bonus de scan le sont immediatement,
+// les points de story restent en attente de verification) moins ce
+// qui a deja ete depense (redemptions, via le cout de la recompense
+// liee). Pas de colonne "points_balance" tenue a jour automatiquement
+// cote base (aucun trigger dessus, verifie) -- on recalcule donc a la
+// demande plutot que de lire une valeur qui pourrait etre perimee.
+async function chargerSoldeReel(userId) {
+  var [gagnes, depenses] = await Promise.all([
+    supabaseClubbeur.from("point_grants").select("amount").eq("user_id", userId).eq("released", true),
+    supabaseClubbeur.from("redemptions").select("rewards(cost_points)").eq("user_id", userId),
+  ]);
+  var total = (gagnes.data || []).reduce(function (s, g) { return s + g.amount; }, 0)
+    - (depenses.data || []).reduce(function (s, r) { return s + (r.rewards ? r.rewards.cost_points : 0); }, 0);
+  ETAT.solde = Math.max(0, total);
+  majCagnotte(false);
+  if (typeof rendreListe === "function") rendreListe();
+}
 
 function compteARebours(expireA) {
   var ms = expireA - Date.now();
@@ -2397,6 +2420,7 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
   if (session) {
     VUE_ACCUEIL.classList.add("masque");
     assurerProfil(session.user);
+    chargerSoldeReel(session.user.id);
   }
 });
 
