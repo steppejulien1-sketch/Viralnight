@@ -3166,6 +3166,10 @@ function ouvrirChoixReseau(nomClub) {
         "</button>" +
       "</div>" +
       '<form id="story-form" style="display:grid;gap:10px;margin-top:18px;text-align:left">' +
+        (nomClub
+          ? ""
+          : '<label class="rg-label" style="font-size:13px" for="story-club">Club</label>' +
+            '<select class="va-input" id="story-club" required><option value="">Choisis un club…</option></select>') +
         '<label class="rg-label" style="font-size:13px" for="story-url">Lien de ta story ou vidéo</label>' +
         '<input class="va-input" id="story-url" type="url" placeholder="https://instagram.com/…" required />' +
         '<p class="desc" id="story-msg" style="display:none;margin:0"></p>' +
@@ -3173,6 +3177,22 @@ function ouvrirChoixReseau(nomClub) {
       "</form>" +
     "</div>";
   ouvrirFeuille(html, "#sh-story-ig");
+
+  // Depuis l'onglet Story (pas de club dans le contexte, contrairement
+  // a un tap sur une fiche club) : liste des vrais clubs de la base,
+  // pour ne jamais soumettre a l'aveugle un nom invente.
+  if (!nomClub) {
+    supabaseClubbeur.from("clubs").select("name").order("name").then(function (res) {
+      var select = $("#story-club");
+      if (!select || !res.data) return;
+      res.data.forEach(function (c) {
+        var option = document.createElement("option");
+        option.value = c.name;
+        option.textContent = c.name;
+        select.appendChild(option);
+      });
+    });
+  }
 
   var kindChoisi = "story";
   var boutonsReseau = $("#sh-corps").querySelectorAll(".reseau-bouton");
@@ -3187,18 +3207,20 @@ function ouvrirChoixReseau(nomClub) {
   $("#story-form").addEventListener("submit", async function (e) {
     e.preventDefault();
     var champ = $("#story-url"), bouton = $("#story-envoyer"), msg = $("#story-msg");
+    var champClub = $("#story-club");
     function dire(texte, erreur) {
       msg.style.display = "block";
       msg.style.color = erreur ? "var(--erreur-texte, var(--accent))" : "var(--succes-texte, #57d98a)";
       msg.textContent = texte;
     }
     var url = champ.value.trim();
+    var club = nomClub || (champClub && champClub.value);
     if (!url) return dire("Colle le lien de ta story ou vidéo.", true);
-    if (!nomClub) return dire("Ouvre cet écran depuis la fiche d'un club sur la carte.", true);
+    if (!club) return dire("Choisis d'abord un club.", true);
 
     bouton.disabled = true;
     bouton.textContent = "Envoi...";
-    var res = await supabaseClubbeur.rpc("story_submit", { p_club_nom: nomClub, p_kind: kindChoisi, p_url: url });
+    var res = await supabaseClubbeur.rpc("story_submit", { p_club_nom: club, p_kind: kindChoisi, p_url: url });
     bouton.disabled = false;
     bouton.textContent = "Envoyer";
 
