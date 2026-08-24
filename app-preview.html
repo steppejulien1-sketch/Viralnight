@@ -3860,19 +3860,41 @@ function champTexteLibre(id, colonne, libelle) {
 }
 champTexteLibre("rg-telephone-modifier", "telephone", "Numéro de téléphone");
 champTexteLibre("rg-adresse-modifier", "adresse", "Adresse postale");
+// Choix ferme (pas un prompt en texte libre) : "modifier" la langue ne
+// traduit encore rien dans l'appli (chantier a part, remis a plus tard
+// par Julien), donc autant limiter aux 4 langues prevues plutot que de
+// laisser taper n'importe quoi qui n'aurait aucun effet visible.
+var LANGUES_DISPO = [
+  ["Français", "🇫🇷"], ["English", "🇬🇧"], ["Español", "🇪🇸"], ["Nederlands", "🇳🇱"],
+];
+
 $("#rg-langue-modifier")?.addEventListener("click", async function () {
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) return;
-  var actuel = (await supabaseClubbeur.from("users").select("langue").eq("id", session.user.id).single()).data;
-  var saisie = window.prompt("Langue :", (actuel && actuel.langue) || "Français");
-  if (!saisie) return;
-  var propre = saisie.trim();
-  var res = await supabaseClubbeur.from("users").update({ langue: propre }).eq("id", session.user.id);
-  if (res.error) {
-    window.alert("Ça n'a pas marché : " + res.error.message);
-    return;
-  }
-  $("#rg-langue").textContent = propre;
+
+  var html =
+    '<div class="sheet-ok">' +
+      '<h3 id="sh-titre">Langue</h3>' +
+      '<p class="desc">Choisis la langue de tes échanges avec nous. L\'appli reste en français pour l\'instant, la traduction complète arrive plus tard.</p>' +
+      '<div style="display:grid;gap:8px;text-align:left">' +
+        LANGUES_DISPO.map(function (l) {
+          return '<button type="button" class="pf-item" data-langue="' + l[0] + '" style="border-top:1px solid var(--line2)">' +
+            '<span style="font-size:18px">' + l[1] + "</span>" + l[0] +
+          "</button>";
+        }).join("") +
+      "</div>" +
+    "</div>";
+  ouvrirFeuille(html, ".pf-item");
+
+  $("#sh-corps").querySelectorAll("[data-langue]").forEach(function (b) {
+    b.addEventListener("click", async function () {
+      var propre = b.dataset.langue;
+      var res = await supabaseClubbeur.from("users").update({ langue: propre }).eq("id", session.user.id);
+      if (res.error) { window.alert("Ça n'a pas marché : " + res.error.message); return; }
+      $("#rg-langue").textContent = propre;
+      fermerFeuille();
+    });
+  });
 });
 
 $("#rg-email-modifier")?.addEventListener("click", async function () {
