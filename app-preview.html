@@ -235,8 +235,32 @@
       }
       .va-close svg { width: 15px; height: 15px; stroke: var(--ink2); stroke-width: 2.2; fill: none; stroke-linecap: round; }
 
-      .va-title { margin: 46px 0 22px; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
-      #vue-amis .va-title { margin-top: 4px; }
+      /* Poignee de glisser-pour-fermer : remplace la petite croix sur
+         Reglages/Notifications/Historique/Favoris/Aide/A propos --
+         Julien voulait pouvoir revenir vers Profil d'un geste vers le
+         bas plutot que taper un bouton. Zone de prise large (44px)
+         malgre le trait fin, pour rester facile a attraper au pouce ;
+         etirée en marge negative pour couvrir toute la largeur en haut
+         de l'ecran, au-dessus meme du padding de .vue-profil. */
+      .va-poignee {
+        /* Sticky : reste attrapable en haut meme apres avoir scrolle
+           le contenu vers le bas (sinon il faudrait d'abord tout
+           remonter avant de pouvoir fermer d'un geste). Marge
+           horizontale negative seulement : la largeur s'etire d'un
+           bord a l'autre sans jouer avec le calage vertical du sticky. */
+        position: sticky; top: 0; z-index: 2; background: var(--bg);
+        margin: 0 -20px 14px; padding: 10px 0 4px;
+        height: 24px; display: flex; align-items: flex-start; justify-content: center;
+        cursor: grab; touch-action: none;
+      }
+      .va-poignee::before {
+        content: ""; width: 36px; height: 4px; border-radius: 99px; background: var(--line2);
+      }
+
+      /* 46px degageait l'ancien bouton croix, absolu par-dessus le
+         contenu -- la poignee (.va-poignee) prend maintenant sa propre
+         place dans le flux normal, plus besoin de cette grande marge. */
+      .va-title { margin: 4px 0 22px; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
 
       .va-kicker {
         text-align: left; font-size: 11px; font-weight: 700; color: var(--ink3);
@@ -1605,9 +1629,7 @@
 
         <!-- ================= ECRAN REGLAGES ================= -->
         <div class="vue-profil" id="vue-reglages" hidden>
-          <button type="button" class="va-close" id="rg-close" aria-label="Fermer">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
+          <div class="va-poignee" id="rg-poignee" aria-hidden="true"></div>
           <h1 class="va-title">Réglages</h1>
 
           <div class="rg-carte">
@@ -1666,9 +1688,7 @@
 
         <!-- ================= ECRAN NOTIFICATIONS ================= -->
         <div class="vue-profil" id="vue-notifications" hidden>
-          <button type="button" class="va-close" id="nt-close" aria-label="Fermer">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
+          <div class="va-poignee" id="nt-poignee" aria-hidden="true"></div>
           <h1 class="va-title">Notifications</h1>
 
           <div class="rg-carte">
@@ -1686,9 +1706,7 @@
              la Boutique (qui ne montre que le catalogue et les bons
              encore valables). -->
         <div class="vue-profil" id="vue-historique" hidden>
-          <button type="button" class="va-close" id="hs-close" aria-label="Fermer">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
+          <div class="va-poignee" id="hs-poignee" aria-hidden="true"></div>
           <h1 class="va-title">Ma fidélité</h1>
           <div class="solde-ligne" style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
             <span class="pf-fidelite-ico" style="width:40px;height:40px;border-radius:50%;background:var(--s2);display:grid;place-items:center" aria-hidden="true">
@@ -1708,9 +1726,7 @@
              FAVORIS_CLE) : le coeur sur la fiche club (cablerFavoriClub,
              fonction ouvrirClub) ajoute/retire de cette meme liste. -->
         <div class="vue-profil" id="vue-favoris" hidden>
-          <button type="button" class="va-close" id="fv-close" aria-label="Fermer">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
+          <div class="va-poignee" id="fv-poignee" aria-hidden="true"></div>
           <h1 class="va-title">Favoris</h1>
           <div id="fv-liste"></div>
           <p class="rg-carte-desc" id="fv-vide" style="text-align:center;margin-top:24px">
@@ -1726,9 +1742,7 @@
              liste de toutes les conversations + reponse en direct,
              sans passer par Supabase Studio). -->
         <div class="vue-profil" id="vue-aide" hidden>
-          <button type="button" class="va-close" id="ai-close" aria-label="Fermer">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
+          <div class="va-poignee" id="ai-poignee" aria-hidden="true"></div>
           <h1 class="va-title">Aide &amp; Support</h1>
 
           <div id="ai-client">
@@ -1764,9 +1778,7 @@
 
         <!-- ================= ECRAN A PROPOS ================= -->
         <div class="vue-profil" id="vue-apropos" hidden>
-          <button type="button" class="va-close" id="ap-close" aria-label="Fermer">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
+          <div class="va-poignee" id="ap-poignee" aria-hidden="true"></div>
           <h1 class="va-title">À propos</h1>
 
           <p class="rg-section-titre" style="text-align:left">À propos de ViralNight</p>
@@ -3702,7 +3714,7 @@ $("#pf-fidelite")?.addEventListener("click", function () {
   VUE_HISTORIQUE.hidden = false;
   chargerHistoriquePoints();
 });
-$("#hs-close")?.addEventListener("click", function () { VUE_HISTORIQUE.hidden = true; });
+activerGlisserPourFermer(VUE_HISTORIQUE, $("#hs-poignee"), function () { VUE_HISTORIQUE.hidden = true; });
 
 async function chargerHistoriquePoints() {
   var zone = $("#hs-liste"), vide = $("#hs-vide"), soldeEl = $("#hs-solde");
@@ -3800,7 +3812,7 @@ $("#pf-action-favoris")?.addEventListener("click", function () {
   chargerFavoris();
   VUE_FAVORIS.hidden = false;
 });
-$("#fv-close")?.addEventListener("click", function () { VUE_FAVORIS.hidden = true; });
+activerGlisserPourFermer(VUE_FAVORIS, $("#fv-poignee"), function () { VUE_FAVORIS.hidden = true; });
 // Seule ligne de la liste a avoir une vraie destination : le reste
 // (reglages, notifications, aide, a propos) n'existe pas encore cote
 // produit. Le formulaire d'inscription club existe deja (inscription.html),
@@ -3873,6 +3885,45 @@ function ouvrirDevenirClub(src) {
     }
   });
 }
+/* Glisser vers le bas pour fermer un ecran Profil (Reglages,
+   Notifications, Historique, Favoris, Aide, A propos) : la poignee
+   suit le doigt en temps reel (translateY), et l'ecran se ferme s'il a
+   ete tire assez loin -- sinon il revient a sa place. Demande de
+   Julien, a la place de la petite croix d'avant. Uniquement sur la
+   poignee (pas tout l'ecran) : le corps en dessous reste scrollable
+   normalement, sans conflit entre "je scrolle" et "je ferme". */
+function activerGlisserPourFermer(ecran, poignee, fermer) {
+  if (!ecran || !poignee) return;
+  var y0 = 0, dy = 0, actif = false;
+
+  poignee.addEventListener("pointerdown", function (e) {
+    y0 = e.clientY;
+    dy = 0;
+    actif = true;
+    ecran.style.transition = "none";
+    poignee.setPointerCapture(e.pointerId);
+  });
+  poignee.addEventListener("pointermove", function (e) {
+    if (!actif) return;
+    dy = Math.max(0, e.clientY - y0);
+    ecran.style.transform = "translateY(" + dy + "px)";
+  });
+  function relacher() {
+    if (!actif) return;
+    actif = false;
+    if (dy > 120) {
+      fermer();
+      ecran.style.transform = "";
+    } else {
+      ecran.style.transition = "transform .2s ease";
+      ecran.style.transform = "";
+      setTimeout(function () { ecran.style.transition = ""; }, 220);
+    }
+  }
+  poignee.addEventListener("pointerup", relacher);
+  poignee.addEventListener("pointercancel", relacher);
+}
+
 /* ==========================================================
    ECRAN REGLAGES -- notifications (bascules persistees en local,
    honnete : rien ne part encore vers un serveur de notifications
@@ -3883,7 +3934,7 @@ var VUE_REGLAGES = $("#vue-reglages");
 
 function fermerReglages() { VUE_REGLAGES.hidden = true; }
 
-$("#rg-close")?.addEventListener("click", fermerReglages);
+activerGlisserPourFermer(VUE_REGLAGES, $("#rg-poignee"), fermerReglages);
 
 var BASCULES_NOTIF = [
   ["rg-notif-actif", "vn_notif_actif"],
@@ -4025,7 +4076,7 @@ $("#rg-supprimer-compte")?.addEventListener("click", function () {
 
 var VUE_NOTIFICATIONS = $("#vue-notifications");
 $("#pf-notifications")?.addEventListener("click", function () { VUE_NOTIFICATIONS.hidden = false; });
-$("#nt-close")?.addEventListener("click", function () { VUE_NOTIFICATIONS.hidden = true; });
+activerGlisserPourFermer(VUE_NOTIFICATIONS, $("#nt-poignee"), function () { VUE_NOTIFICATIONS.hidden = true; });
 
 // Compte admin cote base clubbeur : meme adresse que ADMIN_EMAIL
 // dans auth.js/admin.js, mais un compte SEPARE a creer/utiliser dans
@@ -4051,7 +4102,7 @@ $("#pf-aide")?.addEventListener("click", async function () {
     chargerChatClient();
   }
 });
-$("#ai-close")?.addEventListener("click", function () { VUE_AIDE.hidden = true; });
+activerGlisserPourFermer(VUE_AIDE, $("#ai-poignee"), function () { VUE_AIDE.hidden = true; });
 
 function bulleChat(auteur, moi, message, quand) {
   return '<div class="chat-bulle ' + (auteur === moi ? "moi" : "autre") + '">' +
@@ -4166,7 +4217,7 @@ $("#ai-admin-form")?.addEventListener("submit", async function (e) {
 
 var VUE_APROPOS = $("#vue-apropos");
 $("#pf-apropos")?.addEventListener("click", function () { VUE_APROPOS.hidden = false; });
-$("#ap-close")?.addEventListener("click", function () { VUE_APROPOS.hidden = true; });
+activerGlisserPourFermer(VUE_APROPOS, $("#ap-poignee"), function () { VUE_APROPOS.hidden = true; });
 
 $("#pf-deconnexion")?.addEventListener("click", async function () {
   if (!window.confirm("Es-tu vraiment sûr de vouloir te déconnecter ?")) return;
