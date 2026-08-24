@@ -2221,13 +2221,15 @@ var ETAT = {
 // cote base (aucun trigger dessus, verifie) -- on recalcule donc a la
 // demande plutot que de lire une valeur qui pourrait etre perimee.
 async function chargerSoldeReel(userId) {
-  var [gagnes, depenses] = await Promise.all([
-    supabaseClubbeur.from("point_grants").select("amount").eq("user_id", userId).eq("released", true),
-    supabaseClubbeur.from("redemptions").select("rewards(cost_points)").eq("user_id", userId),
-  ]);
-  var total = (gagnes.data || []).reduce(function (s, g) { return s + g.amount; }, 0)
-    - (depenses.data || []).reduce(function (s, r) { return s + (r.rewards ? r.rewards.cost_points : 0); }, 0);
-  ETAT.solde = Math.max(0, total);
+  // release_due_points() est la VRAIE fonction deja construite en
+  // base : elle bascule les point_grants dont l'echeance (unlocks_at)
+  // est passee vers users.points_balance (deja decremente par
+  // redeem_reward a chaque echange). On lit ensuite cette colonne
+  // directement plutot que de recalculer nous-memes une somme --
+  // c'est elle, la source de verite du systeme deja en place.
+  await supabaseClubbeur.rpc("release_due_points");
+  var res = await supabaseClubbeur.from("users").select("points_balance").eq("id", userId).single();
+  ETAT.solde = Math.max(0, (res.data && res.data.points_balance) || 0);
   majCagnotte(false);
   if (typeof rendreListe === "function") rendreListe();
 }
@@ -3297,6 +3299,8 @@ function ouvrirChoixReseau(nomClub) {
       // part.
       fermerFeuille();
       activerVue("boutique");
+      var session = (await supabaseClubbeur.auth.getSession()).data.session;
+      if (session) chargerSoldeReel(session.user.id);
       pasEncore(ligne.deja_recupere
         ? "Bienvenue à " + ligne.club_nom + " ! Bonus déjà récupéré ce soir."
         : "+" + ligne.points + " pts pour ton arrivée à " + ligne.club_nom + " !");
@@ -3339,20 +3343,36 @@ function ouvrirChoixReseau(nomClub) {
 
     bouton.disabled = true;
     bouton.textContent = "Envoi...";
-    var res = await supabaseClubbeur.rpc("story_submit", { p_club_nom: club, p_kind: kindChoisi, p_url: url });
+
+    // submit_story est la VRAIE fonction deja construite en base (pas
+    // notre story_submit maison, redondante) : elle cree la ligne en
+    // attente de verification par le club, meme bareme que le reste du
+    // systeme (review_story_core, credit_story). Elle veut l'id du
+    // club, pas son nom -- petite resolution avant l'appel.
+    var clubRow = await supabaseClubbeur.from("clubs").select("id").eq("name", club).maybeSingle();
+    if (!clubRow.data) {
+      bouton.disabled = false;
+      bouton.textContent = "Envoyer";
+      return dire("Ce club n'est pas encore répertorié.", true);
+    }
+
+    var res = await supabaseClubbeur.rpc("submit_story", {
+      p_club: clubRow.data.id, p_kind: kindChoisi, p_views: 0, p_proof: null, p_url: url,
+    });
     bouton.disabled = false;
     bouton.textContent = "Envoyer";
 
     if (res.error) {
       var messages = {
-        club_introuvable: "Ce club n'est pas encore répertorié, réessaie plus tard.",
-        lien_vide: "Colle le lien de ta story ou vidéo.",
+        invalid_kind: "Ça n'a pas marché. Réessaie dans un instant.",
+        url_required: "Colle le lien de ta story ou vidéo.",
+        already_pending: "Tu as déjà une story en attente pour ce club, patiente un peu.",
         not_authenticated: "Ta session a expiré, reconnecte-toi.",
       };
       return dire(messages[res.error.message] || "Ça n'a pas marché. Réessaie dans un instant.", true);
     }
     champ.value = "";
-    dire("Envoyé ! On vérifie les vues et tes points arrivent ici.", false);
+    dire("Envoyé ! Le club vérifie ta publication, tes points arrivent ensuite.", false);
   });
 }
 
@@ -4516,11 +4536,16 @@ $("#pf-deconnexion")?.addEventListener("click", async function () {
 
 var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
 
-/* Le code public du club. Dans la vraie PWA, il viendrait du QR scanne
-   (meme parametre `c` que scan.html) ou de la session client ; ici,
-   pour cette maquette, celui de Mirage — le seul vrai club existant
-   aujourd'hui. */
-var CODE_CLUB = "6VAUMQB5";
+/* L'id du club (base clubbeur, gcopwgmqjiufemapamek) dont la boutique
+   affiche le catalogue. Dans la vraie appli, il viendrait du scan QR
+   ou du club selectionne ; ici, pour cette maquette, celui de Mirage —
+   le seul vrai club existant aujourd'hui.
+   ATTENTION : ne pas confondre avec un "code public d'etablissement"
+   (CODE_CLUB="6VAUMQB5" avant cette modif) -- celui-la appartenait a
+   /api/rewards-public, qui lit la base des GERANTS
+   (mrukkexghpcqtwvwwcbe, table rewards avec establishment_id) : un
+   catalogue totalement different et sans rapport avec celui-ci. */
+var CLUB_ID_BOUTIQUE = "ff1abccb-adeb-496a-a8db-16706a9d467b";
 
 /* Photos libres de droits (licence Unsplash — usage commercial libre,
    sans attribution requise), une par objet identifiable. Verifiees a
@@ -4611,30 +4636,34 @@ function prefixeClub(nom) {
 }
 
 function completerRecompense(r, index, prefixe) {
-  var visuel = choisirArt(r.titre, r.categorie);
+  var visuel = choisirArt(r.title, r.category);
   return {
-    id: r.id, nom: r.titre, cout: r.cout, fam: r.categorie, stock: r.stock,
+    id: r.id, nom: r.title, cout: r.cost_points, fam: r.category,
+    stock: r.stock_limit === null ? 999 : r.stock_remaining,
     art: visuel.art, glow: visuel.glow, foto: visuel.foto,
     code: prefixe + "·" + String(index + 1).padStart(3, "0"),
-    desc: "Échange tes points contre « " + r.titre + " », proposé par le club.",
+    desc: r.description || ("Échange tes points contre « " + r.title + " », proposé par le club."),
     regles: ["Valable ce soir", "Montre ce bon au bar ou à l'entrée"]
   };
 }
 
 var RECOMPENSES = [];
 
-/* Catalogue reel du club, lu via la route publique (service_role cote
-   serveur, jamais la table `rewards` directement depuis le navigateur
-   — meme principe que le reste de la collecte publique). Si l'appel
-   echoue (reseau, club introuvable), la liste reste simplement vide :
-   pas de faux catalogue invente pour combler le vide. */
+/* Catalogue reel du club, lu directement dans la base clubbeur (RLS
+   "rewards read active" deja en place, pas besoin d'une route API a
+   part). Si l'appel echoue, la liste reste simplement vide : pas de
+   faux catalogue invente pour combler le vide. */
 async function chargerRecompenses() {
   try {
-    var reponse = await fetch("/api/rewards-public?c=" + CODE_CLUB);
-    var corps = await reponse.json();
-    if (!reponse.ok) throw new Error(corps.error || "HTTP " + reponse.status);
-    var prefixe = prefixeClub(corps.club);
-    RECOMPENSES = (corps.recompenses || []).map(function (r, i) { return completerRecompense(r, i, prefixe); });
+    var res = await supabaseClubbeur
+      .from("rewards")
+      .select("id, title, description, cost_points, category, stock_limit, stock_remaining")
+      .eq("club_id", CLUB_ID_BOUTIQUE)
+      .eq("active", true)
+      .order("cost_points", { ascending: true });
+    if (res.error) throw new Error(res.error.message);
+    var prefixe = "VN";
+    RECOMPENSES = (res.data || []).map(function (r, i) { return completerRecompense(r, i, prefixe); });
   } catch (erreur) {
     console.error("[boutique] catalogue indisponible:", erreur.message);
     RECOMPENSES = [];
@@ -4903,11 +4932,28 @@ function confettis() {
   return '<span class="confettis">' + s + "</span>";
 }
 
+// redeem_reward est la VRAIE fonction deja construite en base :
+// verifie le solde ET le stock cote serveur (jamais confiance au
+// client), genere un code imprevisible, decrémente le stock de facon
+// atomique. Avant, ce code (nouveauCode()) n'ecrivait jamais rien en
+// base -- un "bon" qui n'existait que dans le navigateur.
 async function echanger(item) {
-  var code = nouveauCode();
-  ETAT.solde -= item.cout;
+  var res = await supabaseClubbeur.rpc("redeem_reward", { p_reward_id: item.id });
+  if (res.error) {
+    var messages = {
+      not_authenticated: "Ta session a expiré, reconnecte-toi.",
+      recompense_introuvable: "Cette récompense n'est plus disponible.",
+      stock_epuise: "Épuisé, quelqu'un vient de prendre le dernier.",
+      solde_insuffisant: "Tu n'as pas encore assez de points.",
+    };
+    pasEncore(messages[res.error.message] || "Ça n'a pas marché. Réessaie dans un instant.");
+    return;
+  }
+  var ligne = res.data && res.data[0];
+  var code = ligne.qr_code;
   item.stock -= 1;
   ETAT.bons.unshift({ code: code, titre: item.nom, expireA: Date.now() + DUREE_BON_MS });
+  await chargerSoldeReel((await supabaseClubbeur.auth.getSession()).data.session.user.id);
 
   var svgQr = await qrBon(code);
 
