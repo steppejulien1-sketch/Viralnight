@@ -725,8 +725,6 @@
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         color: #fff; position: relative; line-height: 1; cursor: pointer;
       }
-      .club-badge b { font-size: 21px; font-weight: 800; letter-spacing: -.04em; }
-      .club-badge i { font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .06em; opacity: .85; margin-top: 1px; }
       .club-badge.shut { background: #fff; color: #7b828c; border-color: #d9dde3; }
       .club-badge.hot::after {
         content: ""; position: absolute; inset: -3px; border-radius: 50%;
@@ -735,18 +733,13 @@
       @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
 
-      /* Petit badge de type d'etablissement (boule a facettes = boite
-         de nuit, verre a cocktail = bar), demande de Julien -- meme
-         idee que les ciseaux "Devenir Coiffeur" de l'appli de
-         reference, mais sur le marqueur lui-meme, pas dans un menu.
-         Fond blanc systematique (pas la couleur du badge) : ca reste
-         lisible quel que soit --c, comme un badge verifie. */
-      .club-badge-type {
-        position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%;
-        background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4);
-        display: grid; place-items: center;
-      }
-      .club-badge-type svg { width: 13px; height: 13px; stroke: #1b1f25; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      /* Icone de type d'etablissement (pinte = bar, cocktail = boite de
+         nuit), demande de Julien -- meme idee que les ciseaux "Devenir
+         Coiffeur" de l'appli de reference. Seul contenu du badge
+         maintenant (plus de nombre/etiquette au-dessus) : stroke en
+         currentColor pour suivre automatiquement le blanc du badge
+         colore ou le gris de .club-badge.shut. */
+      .club-badge-icone { width: 30px; height: 30px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
          chaque deplacement) -- ne jamais lui donner de transform a
@@ -2510,16 +2503,15 @@ var CLUBS = {
   }
 };
 
-// Petit badge de type sur chaque marqueur (demande de Julien, meme
-// idee que les ciseaux "Devenir Coiffeur" de l'appli de reference qu'il
-// a montree) : meme verre a cocktail pour un bar ET une boite de nuit
-// -- Julien a essaye une pinte de biere separee pour le club, jugee
-// bizarre, et prefere un seul et meme verre pour les deux types. Fond
-// blanc pose dans .club-badge-type (CSS), jamais colore par --c --
-// reste lisible quel que soit l'etablissement.
+// Icone de type, maintenant le SEUL contenu du marqueur (demande de
+// Julien : retirer le nombre/etiquette du dessus, qui ressemblait a
+// une heure genre "21:14" -- juste le verre suffit). Pinte pour un
+// bar, cocktail pour une boite de nuit.
 function badgeType(type) {
-  var icone = '<path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/>';
-  return '<span class="club-badge-type" aria-hidden="true"><svg viewBox="0 0 24 24">' + icone + "</svg></span>";
+  var icone = type === "bar"
+    ? '<path d="M7 3.5h10l-1.3 15.2a1.3 1.3 0 0 1-1.3 1.2H9.6a1.3 1.3 0 0 1-1.3-1.2L7 3.5z"/><path d="M7.6 8.5h8.8"/>'
+    : '<path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/>';
+  return '<svg viewBox="0 0 24 24" class="club-badge-icone" aria-hidden="true">' + icone + "</svg>";
 }
 
 var AMIS = [
@@ -2590,6 +2582,16 @@ var zoomCible = null; // null = pas encore etabli (avant le 1er "moveend")
 var minuteurCorrectionZoom = null;
 
 map.on("moveend", function () {
+  // Si un vrai geste de zoom est en cours/vient de se produire
+  // (molette, pincement, double-clic -- voir gesteDeZoomReel plus
+  // bas), ne pas corriger du tout ici : selon l'ordre d'arrivee de
+  // "moveend" et "zoomend" (variable d'un geste a l'autre), corriger
+  // AVANT que zoomCible ait ete mis a jour avec le nouveau zoom
+  // pouvait annuler le zoom qu'on venait de faire ("je zoome et ca
+  // dezoome tout seul", signale par Julien) -- zoomend s'en charge
+  // proprement une fois le vrai geste identifie.
+  if (gesteDeZoomReel) return;
+
   var lat = map.getCenter().lat;
   var compensation = Math.log2(Math.cos(lat * Math.PI / 180));
 
@@ -2716,9 +2718,11 @@ function snapifie() {
   // Glacier (calottes polaires) : voir plus bas -- avant, gardait son
   // bleu marine d'origine du fond de carte sombre.
   var glace = "#f4f7f8";
-  // Deserts/Sand (zones arides) : blanc casse, code exact envoye par
-  // Julien -- teinte separee des poles (#ffffff pur juge trop clinique).
-  var blancCasse = "#fbf8f3";
+  // Deserts/Sand (zones arides) : Julien trouvait le blanc casse
+  // d'avant trop proche du blanc des poles (Glacier, #f4f7f8) --
+  // un vrai beige grisaille, nettement plus fonce/mat, pour qu'on ne
+  // confonde plus les deux au premier coup d'oeil.
+  var blancCasse = "#d6c8a3";
 
   // Remis au vert (Julien a trouve la teinte neutre precedente pire
   // que le probleme qu'elle corrigeait) -- le "vert bizarre" au
@@ -2868,16 +2872,32 @@ function snapifie() {
   if (map.getLayer("Country labels")) map.setLayerZoomRange("Country labels", 4, 12);
 
   // Blanc pur demande par Julien (#ffffff), plus l'ecru d'avant.
-  var ROUTES_PLEINES = ["Motorway", "Trunk", "Primary", "Secondary", "Tertiary", "Minor", "Service", "Street"];
+  //
+  // ATTENTION : ce style MapTiler (streets-v2-dark) n'a que 3 niveaux
+  // de route -- "Highway", "Major road", "Minor road" -- et PAS du
+  // tout "Motorway"/"Trunk"/"Primary"/"Secondary"/"Tertiary"/"Service"/
+  // "Street" comme l'ancienne liste le supposait. Verifie via le JSON
+  // brut du style (pas une simple lecture rapide) : ces id n'existaient
+  // JAMAIS, donc `if (!map.getLayer(id)) return;` sortait a chaque fois
+  // sans rien faire -- aucune route n'a donc jamais ete recoloree, et
+  // les tuiles gardaient le gris/bleu tres sombre par defaut de
+  // MapTiler ("plein de routes noires bizarres", signale par Julien).
+  var ROUTES_PLEINES = ["Highway", "Major road", "Minor road"];
   ROUTES_PLEINES.forEach(function (id) {
     if (!map.getLayer(id)) return;
     map.setPaintProperty(id, "line-color", "#ffffff");
     map.setPaintProperty(id, "line-opacity", 1);
   });
-  var CASINGS = ["Motorway casing", "Trunk casing", "Primary casing", "Secondary casing", "Tertiary casing"];
+  var CASINGS = ["Highway outline", "Major road outline", "Minor road outline"];
   CASINGS.forEach(function (id) {
     if (!map.getLayer(id)) return;
     map.setPaintProperty(id, "line-color", "#d8cdb2");
+  });
+  // Chemins pietons (Path/Path minor) : hors-sujet pour une carte de
+  // sortie nocturne, et leur contour par defaut est quasi noir --
+  // masques plutot que recolores, pour ne pas encombrer la carte.
+  ["Path", "Path minor", "Path outline"].forEach(function (id) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
   });
 }
 
@@ -3077,7 +3097,7 @@ function ouvrirClub(c, src, id) {
 
   var html =
     '<div class="sheet-club-top">' +
-      '<span class="club-badge" style="--c:' + c.c + '"><b>' + c.n + "</b><i>" + c.u + "</i>" + badgeType(c.type) + "</span>" +
+      '<span class="club-badge" style="--c:' + c.c + '">' + badgeType(c.type) + "</span>" +
       '<span class="sheet-fam" style="margin:0"><strong style="display:block;color:var(--ink);font-size:19px;font-weight:800;letter-spacing:-.03em;text-transform:none">' +
         c.nom + "</strong>" + c.adr + "</span>" +
       '<button class="sheet-fav" id="sh-fav" type="button">' +
@@ -3162,11 +3182,12 @@ map.on("load", function () {
     var el = document.createElement("button");
     el.className = "club-badge" + (c.hot ? " hot" : "") + (c.shut ? " shut" : "");
     el.style.setProperty("--c", c.c);
-    // Pas encore ouvert : le badge "1h / OUVRE" faisait plus confus que
-    // clair (demande de Julien) -- l'icone de type suffit, l'heure
-    // d'ouverture reste dispo dans la fiche (sheet-chips).
-    el.innerHTML = c.shut ? badgeType(c.type) : ("<b>" + c.n + "</b><i>" + c.u + "</i>" + badgeType(c.type));
-    el.setAttribute("aria-label", c.nom + (c.shut ? " pas encore ouvert" : " " + c.n + " " + c.u) + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
+    // Le nombre/etiquette ("42 ICI", "1h OUVRE"...) faisait plus
+    // confus que clair, un peu comme une heure affichee au hasard
+    // (demande de Julien) -- l'icone de type seule suffit, le detail
+    // (qui est la, si c'est ouvert...) reste dispo dans la fiche.
+    el.innerHTML = badgeType(c.type);
+    el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     el.addEventListener("click", function () { ouvrirClub(c, el, key); });
     porteur.appendChild(el);
     // opacityWhenCovered : MapLibre laisse les marqueurs de la face
