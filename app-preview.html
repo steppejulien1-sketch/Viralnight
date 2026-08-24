@@ -1987,6 +1987,7 @@
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import QRCode from "qrcode";
+import jsQR from "jsqr";
 import { createClient } from "@supabase/supabase-js";
 
 // Connexion reelle sur la BONNE base : celle des clients de club
@@ -3168,7 +3169,15 @@ function ouvrirChoixReseau(nomClub) {
       '<form id="story-form" style="display:grid;gap:10px;margin-top:18px;text-align:left">' +
         (nomClub
           ? ""
-          : '<label class="rg-label" style="font-size:13px" for="story-club">Club</label>' +
+          : '<button type="button" class="sheet-cta sobre" id="story-scan-btn" style="margin-bottom:4px">' +
+              '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>' +
+              "Scanner le QR du club" +
+            "</button>" +
+            '<div id="story-scan-zone" hidden style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1">' +
+              '<video id="story-scan-video" playsinline muted style="width:100%;height:100%;object-fit:cover;display:block"></video>' +
+              '<p class="desc" id="story-scan-msg" style="position:absolute;left:0;right:0;bottom:0;margin:0;padding:8px;background:rgba(0,0,0,.65);color:#fff;text-align:center;font-size:12px">Vise le QR affiché dans le club…</p>' +
+            "</div>" +
+            '<label class="rg-label" style="font-size:13px" for="story-club">Club</label>' +
             '<select class="va-input" id="story-club" required><option value="">Choisis un club…</option></select>') +
         '<label class="rg-label" style="font-size:13px" for="story-url">Lien de ta story ou vidéo</label>' +
         '<input class="va-input" id="story-url" type="url" placeholder="https://instagram.com/…" required />' +
@@ -3181,6 +3190,7 @@ function ouvrirChoixReseau(nomClub) {
   // Depuis l'onglet Story (pas de club dans le contexte, contrairement
   // a un tap sur une fiche club) : liste des vrais clubs de la base,
   // pour ne jamais soumettre a l'aveugle un nom invente.
+  var clubViaScan = null;
   if (!nomClub) {
     supabaseClubbeur.from("clubs").select("name").order("name").then(function (res) {
       var select = $("#story-club");
@@ -3192,6 +3202,84 @@ function ouvrirChoixReseau(nomClub) {
         select.appendChild(option);
       });
     });
+
+    activerScanClub();
+  }
+
+  // Scan de QR reel via la camera (jsQR), pas de simulation : le QR
+  // affiche dans le club encode son "slug" (ex: mirage-brussels, voir
+  // clubs.slug) -- une fois lu, on retrouve le vrai nom du club en
+  // base et on saute directement a l'etape suivante.
+  function activerScanClub() {
+    var btn = $("#story-scan-btn"), zone = $("#story-scan-zone"),
+        video = $("#story-scan-video"), msgScan = $("#story-scan-msg");
+    var flux = null, animation = null;
+    var canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
+
+    btn?.addEventListener("click", async function () {
+      zone.hidden = false;
+      btn.hidden = true;
+      try {
+        flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      } catch (err) {
+        msgScan.textContent = "Impossible d'accéder à la caméra.";
+        return;
+      }
+      video.srcObject = flux;
+      await video.play();
+      requestAnimationFrame(boucleScan);
+    });
+
+    function boucleScan() {
+      if (!flux) return;
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        var image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var code = jsQR(image.data, image.width, image.height);
+        if (code) { traiterCode(code.data); return; }
+      }
+      animation = requestAnimationFrame(boucleScan);
+    }
+
+    async function traiterCode(texte) {
+      var slug = texte;
+      try {
+        var u = new URL(texte);
+        slug = u.searchParams.get("club") || u.pathname.split("/").filter(Boolean).pop() || texte;
+      } catch (e) {}
+      msgScan.textContent = "Vérification...";
+      var res = await supabaseClubbeur.from("clubs").select("name").eq("slug", slug.trim().toLowerCase()).maybeSingle();
+      arreterScan();
+      if (!res.data) {
+        zone.hidden = true;
+        btn.hidden = false;
+        var msg = $("#story-msg");
+        msg.style.display = "block";
+        msg.style.color = "var(--erreur-texte, var(--accent))";
+        msg.textContent = "QR non reconnu, choisis ton club dans la liste.";
+        return;
+      }
+      clubViaScan = res.data.name;
+      var select = $("#story-club");
+      var option = document.createElement("option");
+      option.value = res.data.name;
+      option.textContent = res.data.name + " (scanné)";
+      select.appendChild(option);
+      select.value = res.data.name;
+      zone.hidden = true;
+    }
+
+    function arreterScan() {
+      cancelAnimationFrame(animation);
+      if (flux) { flux.getTracks().forEach(function (t) { t.stop(); }); flux = null; }
+    }
+    // Si on ferme la feuille en plein scan (croix ou tap a cote), la
+    // camera doit s'eteindre tout de suite -- jamais la laisser tourner
+    // en arriere-plan.
+    $("#sh-close")?.addEventListener("click", arreterScan);
+    voile?.addEventListener("click", arreterScan);
   }
 
   var kindChoisi = "story";
@@ -3214,7 +3302,7 @@ function ouvrirChoixReseau(nomClub) {
       msg.textContent = texte;
     }
     var url = champ.value.trim();
-    var club = nomClub || (champClub && champClub.value);
+    var club = nomClub || clubViaScan || (champClub && champClub.value);
     if (!url) return dire("Colle le lien de ta story ou vidéo.", true);
     if (!club) return dire("Choisis d'abord un club.", true);
 
