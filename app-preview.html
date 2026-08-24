@@ -3249,9 +3249,13 @@ function ouvrirChoixReseau(nomClub) {
         slug = u.searchParams.get("club") || u.pathname.split("/").filter(Boolean).pop() || texte;
       } catch (e) {}
       msgScan.textContent = "Vérification...";
-      var res = await supabaseClubbeur.from("clubs").select("name").eq("slug", slug.trim().toLowerCase()).maybeSingle();
+      // checkin_scan resout le club ET credite le bonus de scan (15
+      // pts, une fois par club toutes les 12h -- anti-abus cote
+      // fonction) en un seul aller-retour.
+      var res = await supabaseClubbeur.rpc("checkin_scan", { p_club_slug: slug.trim().toLowerCase() });
       arreterScan();
-      if (!res.data) {
+      var ligne = res.data && res.data[0];
+      if (res.error || !ligne) {
         zone.hidden = true;
         btn.hidden = false;
         var msg = $("#story-msg");
@@ -3269,6 +3273,9 @@ function ouvrirChoixReseau(nomClub) {
       // part.
       fermerFeuille();
       activerVue("boutique");
+      pasEncore(ligne.deja_recupere
+        ? "Bienvenue à " + ligne.club_nom + " ! Bonus déjà récupéré ce soir."
+        : "+" + ligne.points + " pts pour ton arrivée à " + ligne.club_nom + " !");
     }
 
     function arreterScan() {
