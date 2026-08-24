@@ -1894,7 +1894,7 @@
             <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
             <span class="lbl">Boutique</span>
           </button>
-          <button class="tab" aria-label="Poster ma story">
+          <button class="tab" id="tab-story" aria-label="Poster ma story">
             <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
             <span class="lbl">Story</span>
           </button>
@@ -3115,12 +3115,56 @@ function ouvrirClub(c, src, id) {
       return '<span class="chip' + (ch[1] ? " warm" : "") + '">' + ch[0] + "</span>";
     }).join("") + "</div>" +
     (c.amis.length ? '<div class="who"><span class="stack">' + stack + '</span><p>' + c.qui + "</p></div>" : '<p class="desc">' + c.qui + "</p>") +
-    '<button class="sheet-cta" type="button">Poster ma story</button>' +
+    '<button class="sheet-cta" id="sh-poster-story" type="button">Poster ma story</button>' +
     '<p class="sheet-note">' + noteRecompenseClub() + "</p>";
 
   ouvrirFeuille(html, ".sheet-cta");
   cablerFavoriClub(id, c.nom);
+  $("#sh-poster-story")?.addEventListener("click", function () { ouvrirChoixReseau(c.nom); });
 }
+
+// "Poster ma story" (fiche club) et l'onglet Story du bas ouvrent la
+// meme feuille : un choix Instagram/TikTok qui ouvre directement
+// l'appli native pour poster. Pas de soumission manuelle de lien ici
+// -- story_events (cote base) n'a qu'une policy de LECTURE pour le
+// client, l'ecriture est reservee au detecteur automatique de
+// mentions Instagram (lib/instagram/ cote serveur) : un formulaire
+// "colle ton lien" ici court-circuiterait ce systeme sans meme
+// pouvoir ecrire en base.
+function ouvrirChoixReseau(nomClub) {
+  var mention = nomClub
+    ? "Tague " + nomClub + " dans ta story ou ta vidéo. "
+    : "Tague le club dans ta story ou ta vidéo. ";
+  var html =
+    '<div class="sheet-ok">' +
+      '<h3 id="sh-titre">Poste ta story</h3>' +
+      '<p class="desc">' + mention + "Tes points arrivent une fois les vues vérifiées.</p>" +
+      '<button class="sheet-cta" id="sh-story-ig" type="button">Ouvrir Instagram</button>' +
+      '<button class="sheet-cta sobre" id="sh-story-tk" type="button" style="margin-top:10px">Ouvrir TikTok</button>' +
+    "</div>";
+  ouvrirFeuille(html, "#sh-story-ig");
+  $("#sh-story-ig").addEventListener("click", function () {
+    ouvrirAppOuWeb("instagram://story-camera", "https://www.instagram.com/");
+  });
+  $("#sh-story-tk").addEventListener("click", function () {
+    ouvrirAppOuWeb("tiktok://", "https://www.tiktok.com/upload");
+  });
+}
+
+// Tente le schema natif de l'appli ; si rien ne se passe (appli pas
+// installee), bascule sur le site web apres un court delai -- il
+// n'existe pas de moyen fiable de detecter directement l'echec d'un
+// schema custom, ce delai est l'approche standard du web mobile.
+function ouvrirAppOuWeb(schema, secours) {
+  var bascule = setTimeout(function () { window.location.href = secours; }, 1200);
+  window.addEventListener("blur", function annuler() {
+    clearTimeout(bascule);
+    window.removeEventListener("blur", annuler);
+  });
+  window.location.href = schema;
+}
+
+$("#tab-story")?.addEventListener("click", function () { ouvrirChoixReseau(null); });
 
 // Coeur de la fiche club : bascule le club dans la meme liste
 // localStorage (FAVORIS_CLE) que lit l'ecran Favoris du profil.
