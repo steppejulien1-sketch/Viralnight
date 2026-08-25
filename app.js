@@ -900,6 +900,9 @@ function renderRewardEditor(data) {
               ).join("")}
             </select>
           </label>
+          <button type="button" class="reward-remove-button" data-reward-remove="${index}" data-reward-id="${escapeHtml(reward.id)}" data-reward-added="${reward.added ? "true" : "false"}" aria-label="Retirer cette récompense de la boutique">
+            Retirer
+          </button>
         </div>
       `,
     )
@@ -990,6 +993,48 @@ function attachRewardHandlers() {
   document.querySelectorAll("[data-reward-category]").forEach((select) => {
     select.addEventListener("change", () => persistReward(select));
   });
+  document.querySelectorAll("[data-reward-remove]").forEach((button) => {
+    button.addEventListener("click", () => retirerRecompense(button));
+  });
+}
+
+// Il n'existait aucun moyen de retirer une recompense de la boutique une
+// fois ajoutee -- seulement en ajouter ou en modifier les champs. Signale
+// par Julien ("modifier leur boutique de recompense"). Desactivation
+// (active=false), jamais une vraie suppression : une recompense deja
+// echangee garde son historique (reward_redemptions la reference encore),
+// et rewards.active est deja le champ que getActiveRewards() filtre a la
+// lecture -- aucune nouvelle colonne necessaire.
+async function retirerRecompense(button) {
+  const rewardId = button.dataset.rewardId;
+  const estLocale = button.dataset.rewardAdded === "true" || isLocalRewardId(rewardId);
+
+  if (estLocale) {
+    // Jamais enregistree en base (juste ajoutee a l'ecran, pas encore
+    // sauvegardee) : rien a faire cote serveur, on l'enleve simplement
+    // de la liste locale.
+    localAddedRewards = localAddedRewards.filter((reward) => reward.id !== rewardId);
+    renderRewardEditor(dashboardState);
+    return;
+  }
+
+  if (!rewardId || dashboardState.source !== "supabase" || !supabase) return;
+  if (!window.confirm("Retirer cette récompense de la boutique ? Les clubbeurs ne pourront plus l'échanger.")) return;
+
+  const { error } = await supabase.from("rewards").update({ active: false }).eq("id", rewardId);
+  if (error) {
+    setDataStatus(`Erreur retrait récompense : ${error.message}`, "error");
+    return;
+  }
+
+  dashboardState = {
+    ...dashboardState,
+    rewards: (dashboardState.rewards || []).map((reward) =>
+      reward.id === rewardId ? { ...reward, active: false } : reward,
+    ),
+  };
+  setDataStatus("Récompense retirée de la boutique.", "connected");
+  renderRewardEditor(dashboardState);
 }
 
 async function persistReward(input) {
