@@ -2797,11 +2797,36 @@ function snapifie() {
   // confonde plus les deux au premier coup d'oeil.
   var blancCasse = "#d6c8a3";
 
-  // Remis au vert (Julien a trouve la teinte neutre precedente pire
-  // que le probleme qu'elle corrigeait) -- le "vert bizarre" au
-  // dezoom rapide reste un chantier a part, pas regle par la couleur
-  // de ce remplissage.
+  // Le "vert bizarre" et les "zones oranges" signales par Julien a la vue
+  // planete entiere ne sont pas un probleme de teinte a corriger encore
+  // une fois a l'aveugle (deja tente plusieurs fois, voir historique de ce
+  // fichier) : c'est le principe meme d'un aplat de couleur unique qui ne
+  // ressemble jamais a une vraie terre vue de l'espace. En dessous du
+  // zoom 4, on montre donc la vraie photo satellite (meme fournisseur
+  // MapTiler, deja paye) au lieu de la peindre a la main -- au-dela,
+  // le plan vectoriel colore repredend le dessus normalement, pour la
+  // recherche de club (l'usage reel de la carte), inchangee.
+  if (!map.getSource("satellite")) {
+    map.addSource("satellite", {
+      type: "raster",
+      url: "https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=" + MAPTILER_KEY,
+      tileSize: 256
+    });
+  }
+  if (!map.getLayer("Terre reelle")) {
+    map.addLayer({
+      id: "Terre reelle", type: "raster", source: "satellite",
+      paint: { "raster-opacity": ["interpolate", ["linear"], ["zoom"], 2, 1, 4, 0] }
+    }, "Background");
+  }
+  // Meme plage de fondu (zoom 2 -> 4) que le champ d'etoiles (majOpacite,
+  // plus bas) et les frontieres : au moment ou la photo satellite est
+  // pleinement visible, les aplats vectoriels doivent etre transparents,
+  // sinon ils la recouvrent completement.
+  var fondu = ["interpolate", ["linear"], ["zoom"], 2, 0, 4, 1];
+
   map.setPaintProperty("Background", "background-color", mentheClair);
+  map.setPaintProperty("Background", "background-opacity", fondu);
 
   ["Residential", "Industrial", "School", "Cemetery", "Hospital", "Pedestrian"].forEach(function (id) {
     if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", mentheClair);
@@ -2809,7 +2834,7 @@ function snapifie() {
 
   ["Forest", "Wood"].forEach(function (id) {
     map.setPaintProperty(id, "fill-color", mentheFonce);
-    map.setPaintProperty(id, "fill-opacity", 1);
+    map.setPaintProperty(id, "fill-opacity", fondu);
     map.setLayoutProperty(id, "visibility", "visible");
     map.setLayerZoomRange(id, 0, 24);
   });
@@ -2823,7 +2848,7 @@ function snapifie() {
   ["Grass", "Meadow", "Scrub", "Crop"].forEach(function (id) {
     if (!map.getLayer(id)) return;
     map.setPaintProperty(id, "fill-color", mentheFonce);
-    map.setPaintProperty(id, "fill-opacity", 1);
+    map.setPaintProperty(id, "fill-opacity", fondu);
   });
   // Glacier (calottes polaires, Groenland) : blanc/gris tres clair.
   // Sand (dunes locales, tag OSM natural=sand) : blanc casse, comme
@@ -2831,11 +2856,11 @@ function snapifie() {
   // de Julien.
   if (map.getLayer("Sand")) {
     map.setPaintProperty("Sand", "fill-color", blancCasse);
-    map.setPaintProperty("Sand", "fill-opacity", 1);
+    map.setPaintProperty("Sand", "fill-opacity", fondu);
   }
   if (map.getLayer("Glacier")) {
     map.setPaintProperty("Glacier", "fill-color", glace);
-    map.setPaintProperty("Glacier", "fill-opacity", 1);
+    map.setPaintProperty("Glacier", "fill-opacity", fondu);
   }
 
   // Les grands deserts (Sahara, Arabie, Gobi, Kalahari, Outback
@@ -2866,8 +2891,17 @@ function snapifie() {
   } else {
     map.setPaintProperty("Deserts", "fill-color", blancCasse);
   }
+  // A l'echelle de la planete entiere, les contours (peu precis, source
+  // Natural Earth basse resolution) de ce calque se voient comme des
+  // decoupes anguleuses posees sur le Sahara/Moyen-Orient -- signale par
+  // Julien ("c'est quoi ces bazars"). Le calque n'a de sens qu'a partir
+  // du moment ou on distingue un pays, pas la planete entiere -- meme
+  // seuil (4) que les autres aplats plus bas, une fois la vraie photo
+  // satellite entierement fondue.
+  map.setLayerZoomRange("Deserts", 4, 24);
 
   map.setPaintProperty("Water", "fill-color", eau);
+  map.setPaintProperty("Water", "fill-opacity", fondu);
 
   // Empreinte au sol en aplat clair (zoom 13-15, plage native du style),
   // puis vrais volumes 3D (fill-extrusion native "Building 3D", deja
@@ -2914,9 +2948,21 @@ function snapifie() {
       });
     }
     map.setPaintProperty("Country border", "line-color", "#ffffff");
-    map.setPaintProperty("Country border", "line-opacity", 1);
+    // A l'echelle de la planete entiere, des traits blancs purs sur chaque
+    // pays donnent un effet "carte scolaire/jeu video", pas une terre vue
+    // depuis l'espace (aucune vraie carte -- Google Earth, Snap Map -- ne
+    // montre de frontieres a cette distance). Meme logique que "Country
+    // labels" juste au-dessus ("seulement en zoomant"), et meme plage de
+    // zoom (2 -> 4) que le champ d'etoiles plus bas (majOpacite) : les
+    // traits n'apparaissent qu'en sortant de la vue spatiale, en fondu.
+    map.setPaintProperty("Country border", "line-opacity", [
+      "interpolate", ["linear"], ["zoom"], 2, 0, 4, 1
+    ]);
     map.setPaintProperty("Country border", "line-width", [
       "interpolate", ["linear"], ["zoom"], 1, 1.3, 5, 2.6, 10, 3.6, 24, 5
+    ]);
+    map.setPaintProperty("Contour pays halo", "line-opacity", [
+      "interpolate", ["linear"], ["zoom"], 2, 0, 4, .55
     ]);
     map.moveLayer("Contour pays halo");
     map.moveLayer("Country border");
