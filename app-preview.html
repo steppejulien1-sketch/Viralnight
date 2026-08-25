@@ -678,16 +678,42 @@
         font-size: 13.5px; font-weight: 700; color: var(--accent); text-decoration: underline;
       }
 
+      /* Favoris : chaque ligne ouvre la fiche du club, avec un bouton
+         dedie pour le retirer sans repasser par sa fiche. */
+      .fv-item { display: flex; align-items: center; gap: 10px; padding: 4px; }
+      .fv-nom {
+        flex: 1 1 auto; min-width: 0; text-align: left; background: none; border: 0; padding: 0;
+        cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--ink);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .fv-retirer {
+        flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; background: var(--s2);
+        border: 0; cursor: pointer; display: grid; place-items: center;
+      }
+      .fv-retirer svg { width: 14px; height: 14px; stroke: var(--ink2); stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
       /* Historique des points (Ma fidelite) : une ligne par mouvement,
          gagne ou depense -- point_grants et redemptions cote base
          clubbeur, pas de donnee inventee. */
-      .hist-ligne { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+      /* Regroupees dans une carte (meme habillage que .rg-carte, juste
+         moins de padding vertical -- chaque ligne a deja le sien) plutot
+         que des lignes nues sur le fond de la page : Julien trouvait
+         l'historique "pas tres esthetique". */
+      .hist-carte { background: var(--s1); border: 1px solid var(--line); border-radius: 18px; padding: 4px 16px; }
+      .hist-ligne { display: flex; align-items: center; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--line); }
       .hist-ligne:last-child { border-bottom: 0; }
       .hist-ico {
         flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; background: var(--s2);
         display: grid; place-items: center;
       }
       .hist-ico svg { width: 16px; height: 16px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      /* Icone coloree selon le sens du mouvement -- avant, gagne et
+         depense avaient exactement le meme rond gris, seul le signe du
+         montant a droite (petit, en bout de ligne) les distinguait. */
+      .hist-ico.gain { background: rgba(87,217,138,.15); }
+      .hist-ico.gain svg { stroke: var(--succes-texte, #57d98a); }
+      .hist-ico.perte { background: rgba(255,47,69,.12); }
+      .hist-ico.perte svg { stroke: var(--accent); }
       .hist-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
       .hist-txt strong { font-size: 14px; font-weight: 700; color: var(--ink); }
       .hist-txt span { font-size: 12px; color: var(--ink3); }
@@ -1876,7 +1902,7 @@
             <strong id="hs-solde" style="font-size:22px;font-weight:800">0 pts</strong>
           </div>
           <p class="rg-section-titre" style="text-align:left">Historique</p>
-          <div id="hs-liste"></div>
+          <div id="hs-liste" class="hist-carte"></div>
           <p class="rg-carte-desc" id="hs-vide" style="text-align:center;margin-top:16px;border:0;padding:0">
             Aucun mouvement de points pour l'instant.
           </p>
@@ -4562,7 +4588,7 @@ async function chargerHistoriquePoints() {
       ? '<path d="M12 19V5M5 12l7-7 7 7"/>'
       : '<path d="M12 5v14M5 12l7 7 7-7"/>';
     return '<div class="hist-ligne">' +
-      '<span class="hist-ico"><svg viewBox="0 0 24 24">' + icone + "</svg></span>" +
+      '<span class="hist-ico ' + (m.gain ? "gain" : "perte") + '"><svg viewBox="0 0 24 24">' + icone + "</svg></span>" +
       '<span class="hist-txt"><strong>' + m.titre + "</strong><span>" + m.detail + "</span></span>" +
       '<span class="hist-pts' + (m.gain ? " gain" : "") + '">' + (m.gain ? "+" : "") + nb(m.pts) + "</span>" +
     "</div>";
@@ -4602,10 +4628,39 @@ function chargerFavoris() {
   var favoris = [];
   try { favoris = JSON.parse(localStorage.getItem(FAVORIS_CLE) || "[]"); } catch (e) {}
   $("#fv-vide").hidden = favoris.length > 0;
+  // Avant : juste le nom du club, sans aucune action -- taper dessus ne
+  // faisait rien, et il fallait retourner sur sa fiche (carte) pour le
+  // retirer. Signale par Julien ("pas vraiment fonctionnel"). Chaque
+  // ligne ouvre maintenant la fiche du club, et un bouton dedie le
+  // retire directement depuis cet ecran.
   $("#fv-liste").innerHTML = favoris.map(function (f) {
-    return '<div class="rg-carte"><div class="rg-carte-ligne"><span class="rg-label">' + f.nom + '</span></div></div>';
+    return '<div class="rg-carte fv-item">' +
+      '<button type="button" class="fv-nom" data-id="' + escapeHtmlSupport(f.id) + '">' + escapeHtmlSupport(f.nom) + "</button>" +
+      '<button type="button" class="fv-retirer" data-id="' + escapeHtmlSupport(f.id) + '" aria-label="Retirer ' + escapeHtmlSupport(f.nom) + ' des favoris">' +
+        '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+      "</button>" +
+    "</div>";
   }).join("");
 }
+// Delegue une seule fois sur #fv-liste (jamais recree, seul son contenu
+// change a chaque ouverture) : pas de re-cablage a chaque chargerFavoris().
+$("#fv-liste")?.addEventListener("click", function (e) {
+  var retirer = e.target.closest(".fv-retirer");
+  if (retirer) {
+    var favoris = [];
+    try { favoris = JSON.parse(localStorage.getItem(FAVORIS_CLE) || "[]"); } catch (err) {}
+    favoris = favoris.filter(function (f) { return f.id !== retirer.dataset.id; });
+    localStorage.setItem(FAVORIS_CLE, JSON.stringify(favoris));
+    chargerFavoris();
+    return;
+  }
+  var nom = e.target.closest(".fv-nom");
+  if (nom && CLUBS[nom.dataset.id]) {
+    VUE_FAVORIS.hidden = true;
+    activerVue("carte");
+    ouvrirClub(CLUBS[nom.dataset.id], null, nom.dataset.id);
+  }
+});
 $("#pf-action-favoris")?.addEventListener("click", function () {
   fermerProfil();
   chargerFavoris();
