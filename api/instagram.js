@@ -24,6 +24,7 @@ import {
   prolongerJeton,
   trouverCompteInstagram,
   inscrireWebhookMentions,
+  recupererAbonnes,
   MissingConfigError,
   InstagramApiError,
 } from "../lib/instagram/oauth.js";
@@ -216,6 +217,25 @@ async function actionStatus(request, response) {
 
   if (erreurCompteur) console.error("[instagram:status] comptage mentions:", erreurCompteur.message);
 
+  // Abonnes gagnes depuis la connexion : premier et dernier releve du cron
+  // quotidien (establishment_follower_history) -- demande de Julien.
+  // Absent tant que le cron n'a pas encore tourne une fois pour ce club
+  // (ex: connexion faite il y a moins d'une journee).
+  const { data: releves, error: erreurReleves } = await auth.supabase
+    .from("establishment_follower_history")
+    .select("follower_count, recorded_at")
+    .eq("establishment_id", auth.establishmentId)
+    .order("recorded_at", { ascending: true });
+
+  if (erreurReleves) console.error("[instagram:status] historique abonnes:", erreurReleves.message);
+
+  let abonnesGagnes = null;
+  let abonnesActuels = null;
+  if (releves && releves.length > 0) {
+    abonnesActuels = releves[releves.length - 1].follower_count;
+    abonnesGagnes = abonnesActuels - releves[0].follower_count;
+  }
+
   return json(response, {
     connecte: true,
     username: compte.ig_username,
@@ -223,6 +243,8 @@ async function actionStatus(request, response) {
     connecteDepuis: compte.connected_at,
     jetonExpireLe: compte.token_expires_at,
     mentions: count ?? 0,
+    abonnesActuels,
+    abonnesGagnes,
   });
 }
 
@@ -284,6 +306,77 @@ async function actionWebhook(request, response) {
   return texte(response, "EVENT_RECEIVED");
 }
 
+// ---------------- action=collecter-abonnes (GET, appele par le cron Vercel) ----------------
+//
+// Un releve par jour, pour tous les clubs connectes -- alimente
+// establishment_follower_history (migration 202608250002), pour repondre a
+// "combien d'abonnes un club a gagne depuis qu'il est avec moi" (Julien).
+// Programme dans vercel.json (crons), pas appelable par un club ni un
+// clubbeur : proteges par CRON_SECRET, le mecanisme documente par Vercel
+// pour authentifier ses propres appels cron (jamais une session utilisateur).
+
+function estAppelCron(request) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return false;
+  return request.headers.authorization === `Bearer ${secret}`;
+}
+
+async function actionCollecterAbonnes(request, response) {
+  if (request.method !== "GET") return json(response, { error: "Methode non supportee." }, 405);
+  if (!estAppelCron(request)) return json(response, { error: "Non autorise." }, 401);
+
+  let supabase;
+  try {
+    supabase = getSupabaseAdmin();
+  } catch (error) {
+    console.error("[instagram:collecter-abonnes] Supabase admin indisponible", error);
+    return json(response, { error: "Configuration serveur incomplete." }, 500);
+  }
+
+  const { data: comptes, error: erreurLecture } = await supabase
+    .from("establishment_instagram_accounts")
+    .select("establishment_id, ig_user_id, page_access_token");
+
+  if (erreurLecture) {
+    console.error("[instagram:collecter-abonnes] lecture comptes:", erreurLecture.message);
+    return json(response, { error: "Lecture des comptes Instagram impossible." }, 500);
+  }
+
+  let releves = 0;
+  let echecs = 0;
+
+  for (const compte of comptes || []) {
+    try {
+      const abonnes = await recupererAbonnes(compte.ig_user_id, compte.page_access_token);
+      if (abonnes === null) { echecs++; continue; }
+
+      // upsert (pas insert) : le cron peut se redeclencher le meme jour
+      // (retry Vercel, execution manuelle) sans dupliquer -- l'index unique
+      // (establishment_id, recorded_date) sert exactement a ca.
+      const { error: erreurEcriture } = await supabase
+        .from("establishment_follower_history")
+        .upsert(
+          { establishment_id: compte.establishment_id, follower_count: abonnes },
+          { onConflict: "establishment_id,recorded_date" },
+        );
+
+      if (erreurEcriture) {
+        console.error("[instagram:collecter-abonnes] ecriture:", compte.establishment_id, erreurEcriture.message);
+        echecs++;
+      } else {
+        releves++;
+      }
+    } catch (error) {
+      // Un jeton expire ou une API Meta indisponible pour UN club ne doit
+      // jamais interrompre le releve des autres.
+      console.error("[instagram:collecter-abonnes] Graph API:", compte.establishment_id, error.message);
+      echecs++;
+    }
+  }
+
+  return json(response, { releves, echecs, total: (comptes || []).length });
+}
+
 // ---------------- dispatch ----------------
 
 const ACTIONS = {
@@ -292,6 +385,7 @@ const ACTIONS = {
   disconnect: actionDisconnect,
   status: actionStatus,
   webhook: actionWebhook,
+  "collecter-abonnes": actionCollecterAbonnes,
 };
 
 export default async function handler(request, response) {

@@ -1237,9 +1237,23 @@ function renderInstagramConnecte(statut, session) {
     : null;
   const mentions = Number(statut.mentions || 0);
 
+  // Abonnes gagnes depuis la connexion (releve quotidien, voir
+  // api/instagram.js action=collecter-abonnes) -- absent (null) tant que
+  // le cron n'a pas encore tourne une fois pour ce club, jamais affiche
+  // comme "0" dans ce cas pour ne pas laisser croire a une stagnation.
+  const gainAbonnes =
+    statut.abonnesGagnes === null || statut.abonnesGagnes === undefined
+      ? ""
+      : `<p class="instagram-stat"><strong>${statut.abonnesGagnes >= 0 ? "+" : ""}${numberFormatter.format(statut.abonnesGagnes)}</strong> abonné${Math.abs(statut.abonnesGagnes) > 1 ? "s" : ""} Instagram depuis que ce club est sur ViralNight${
+          statut.abonnesActuels !== null && statut.abonnesActuels !== undefined
+            ? ` (${numberFormatter.format(statut.abonnesActuels)} aujourd'hui)`
+            : ""
+        }.</p>`;
+
   instagramSubtitle.textContent = `Connecté à @${statut.username}`;
   instagramBody.innerHTML = `
     <p class="instagram-stat"><strong>${numberFormatter.format(mentions)}</strong> mention${mentions > 1 ? "s" : ""} reçue${mentions > 1 ? "s" : ""} en story depuis la connexion.</p>
+    ${gainAbonnes}
     ${
       statut.webhookActif
         ? ""
