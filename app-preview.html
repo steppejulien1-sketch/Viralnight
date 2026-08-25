@@ -3620,8 +3620,8 @@ async function ouvrirPageAmis(session) {
   // recherche plus bas : meme rond (photo ou initiale) partout.
   function rendreAvatar(s) {
     return s.avatar_url
-      ? '<img src="' + s.avatar_url + '" alt="" />'
-      : (s.handle.charAt(0).toUpperCase());
+      ? '<img src="' + escapeHtmlSupport(s.avatar_url) + '" alt="" />'
+      : escapeHtmlSupport(s.handle.charAt(0).toUpperCase());
   }
 
   // --- Mes amis --------------------------------------------------
@@ -3635,9 +3635,9 @@ async function ouvrirPageAmis(session) {
     listeVideEl.hidden = amis.length > 0;
 
     listeAmisEl.innerHTML = amis.map(function (a) {
-      return '<li><button type="button" class="va-sugg" data-handle="' + a.friend_handle + '">' +
+      return '<li><button type="button" class="va-sugg" data-handle="' + escapeHtmlSupport(a.friend_handle) + '">' +
         '<span class="va-sugg-av">' + rendreAvatar({ avatar_url: a.friend_avatar_url, handle: a.friend_handle }) + '</span>' +
-        '<span class="va-sugg-handle">@' + a.friend_handle + '</span>' +
+        '<span class="va-sugg-handle">@' + escapeHtmlSupport(a.friend_handle) + '</span>' +
         '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--ink3);fill:none;stroke-width:2;stroke-linecap:round;flex:0 0 auto"><path d="M9 6l6 6-6 6"/></svg>' +
       '</button></li>';
     }).join("");
@@ -3658,7 +3658,7 @@ async function ouvrirPageAmis(session) {
         '<span class="va-sugg-av" style="width:64px;height:64px;font-size:24px;margin:0 auto 14px">' +
           rendreAvatar({ avatar_url: a.friend_avatar_url, handle: a.friend_handle }) +
         "</span>" +
-        '<h3 id="sh-titre">@' + a.friend_handle + "</h3>" +
+        '<h3 id="sh-titre">@' + escapeHtmlSupport(a.friend_handle) + "</h3>" +
         '<button type="button" class="rg-danger" id="va-retirer-ami" style="margin-top:18px">' +
           '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>' +
           "Retirer cet ami" +
@@ -3686,9 +3686,9 @@ async function ouvrirPageAmis(session) {
     sectionSuggEl.hidden = gens.length === 0;
 
     listeSuggEl.innerHTML = gens.map(function (s) {
-      return '<li><button type="button" class="va-sugg" data-handle="' + s.handle + '">' +
+      return '<li><button type="button" class="va-sugg" data-handle="' + escapeHtmlSupport(s.handle) + '">' +
         '<span class="va-sugg-av">' + rendreAvatar(s) + '</span>' +
-        '<span class="va-sugg-handle">@' + s.handle + '</span>' +
+        '<span class="va-sugg-handle">@' + escapeHtmlSupport(s.handle) + '</span>' +
         '<span class="va-row-add">Ajouter</span>' +
       '</button></li>';
     }).join("");
@@ -3856,9 +3856,9 @@ async function ouvrirPageAmis(session) {
       if (!lignes.length) { suggestions.hidden = true; suggestions.innerHTML = ""; return; }
 
       suggestions.innerHTML = lignes.map(function (s) {
-        return '<li><button type="button" class="va-sugg" data-handle="' + s.handle + '">' +
+        return '<li><button type="button" class="va-sugg" data-handle="' + escapeHtmlSupport(s.handle) + '">' +
           '<span class="va-sugg-av">' + rendreAvatar(s) + '</span>' +
-          '<span class="va-sugg-handle">@' + s.handle + '</span>' +
+          '<span class="va-sugg-handle">@' + escapeHtmlSupport(s.handle) + '</span>' +
         '</button></li>';
       }).join("");
       suggestions.hidden = false;
@@ -3911,7 +3911,7 @@ function creerAmiChip(p) {
   var b = document.createElement("button");
   b.className = "fr";
   b.setAttribute("aria-label", p.nom);
-  b.innerHTML = '<span class="bub">' + pint(p.q) + '</span><b>' + p.nom + '</b>';
+  b.innerHTML = '<span class="bub">' + pint(p.q) + '</span><b>' + escapeHtmlSupport(p.nom) + '</b>';
   // Avant, tapoter un ami zoomait direct dessus (flyTo) -- Julien ne
   // veut plus de ce saut de camera automatique, juste revenir sur la
   // carte telle qu'elle etait.
@@ -4423,10 +4423,17 @@ function bulleChat(auteur, moi, message, quand) {
     '<time>' + dateCourte(quand) + "</time>" +
   "</div>";
 }
-// Les messages viennent de la base, mais restent du texte libre tape
-// par un utilisateur -- jamais injecte tel quel dans le DOM.
+// Les messages, pseudos et avatars viennent de la base, mais restent du
+// texte libre choisi par un utilisateur -- jamais injecte tel quel dans
+// le DOM. Echappe aussi les guillemets : ce texte finit parfois dans un
+// attribut (src="...", data-handle="...") et pas seulement entre balises.
 function escapeHtmlSupport(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /* ---- Cote client : sa propre conversation ---- */
@@ -4481,9 +4488,9 @@ async function chargerConversationsAdmin() {
   var conversations = res.data || [];
   vide.style.display = conversations.length ? "none" : "block";
   zone.innerHTML = conversations.map(function (c) {
-    return '<button type="button" class="ai-admin-conv" data-user="' + c.user_id + '" data-handle="' + (c.handle || "") + '">' +
-      '<span class="ai-admin-conv-av">' + (c.avatar_url ? '<img src="' + c.avatar_url + '" alt="" />' : (c.handle ? c.handle.charAt(0).toUpperCase() : "?")) + "</span>" +
-      '<span class="ai-admin-conv-txt"><strong>@' + (c.handle || "inconnu") + '</strong><span>' + escapeHtmlSupport(c.dernier_message) + "</span></span>" +
+    return '<button type="button" class="ai-admin-conv" data-user="' + c.user_id + '" data-handle="' + escapeHtmlSupport(c.handle || "") + '">' +
+      '<span class="ai-admin-conv-av">' + (c.avatar_url ? '<img src="' + escapeHtmlSupport(c.avatar_url) + '" alt="" />' : (c.handle ? escapeHtmlSupport(c.handle.charAt(0).toUpperCase()) : "?")) + "</span>" +
+      '<span class="ai-admin-conv-txt"><strong>@' + escapeHtmlSupport(c.handle || "inconnu") + '</strong><span>' + escapeHtmlSupport(c.dernier_message) + "</span></span>" +
     "</button>";
   }).join("");
   zone.querySelectorAll(".ai-admin-conv").forEach(function (b) {
