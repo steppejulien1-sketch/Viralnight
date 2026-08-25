@@ -22,22 +22,26 @@
 -- leur propre etablissement) restent inchangees, l'admin recoit juste un
 -- acces en plus, jamais en retrait.
 
+drop policy if exists "submissions_select_admin" on public.submissions;
 create policy "submissions_select_admin"
   on public.submissions
   for select
   using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
 
+drop policy if exists "submissions_update_admin" on public.submissions;
 create policy "submissions_update_admin"
   on public.submissions
   for update
   using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com')
   with check (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
 
+drop policy if exists "establishments_select_admin" on public.establishments;
 create policy "establishments_select_admin"
   on public.establishments
   for select
   using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
 
+drop policy if exists "establishment_owners_select_admin" on public.establishment_owners;
 create policy "establishment_owners_select_admin"
   on public.establishment_owners
   for select

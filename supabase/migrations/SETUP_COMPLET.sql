@@ -896,22 +896,31 @@ create index if not exists submissions_establishment_source_idx
 -- policies existantes, qui restent inchangees pour les clubs.
 -- ============================================================
 
+-- drop/create (pas juste create) : ces 4 policies avaient ete ajoutees a ce
+-- fichier sans le garde-fou applique partout ailleurs ici, cassant la
+-- promesse du fichier ("peut etre relance sans risque, toutes les creations
+-- sont conditionnelles") -- npm run db:apply echouait avec "policy ...
+-- already exists" des qu'on relancait l'installation. Signale par Julien.
+drop policy if exists "submissions_select_admin" on public.submissions;
 create policy "submissions_select_admin"
   on public.submissions
   for select
   using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
 
+drop policy if exists "submissions_update_admin" on public.submissions;
 create policy "submissions_update_admin"
   on public.submissions
   for update
   using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com')
   with check (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
 
+drop policy if exists "establishments_select_admin" on public.establishments;
 create policy "establishments_select_admin"
   on public.establishments
   for select
   using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
 
+drop policy if exists "establishment_owners_select_admin" on public.establishment_owners;
 create policy "establishment_owners_select_admin"
   on public.establishment_owners
   for select
