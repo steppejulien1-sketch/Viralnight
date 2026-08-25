@@ -2686,7 +2686,16 @@ map.on("moveend", function () {
     if (Math.abs(map.getZoom() - zoomVoulu) > .01) {
       map.easeTo({ zoom: zoomVoulu, duration: 250 });
     }
-  }, 80);
+    // 80ms -> 180ms : Julien signale qu'un dezoom rapide (plusieurs crans
+    // de molette rapproches) reste saccade/"ca fait des couleurs". Un
+    // debounce trop court laissait la fenetre encore ouverte pendant une
+    // rafale de gestes : cette correction (pensee pour la derive de
+    // rotation, pas pour un vrai zoom -- voir le "return" plus haut sur
+    // gesteDeZoomReel) pouvait alors se declencher entre deux crans de
+    // molette d'une meme rafale et s'ajouter au rendu deja charge du
+    // changement de zoom. Plus de marge pour laisser la rafale se
+    // terminer avant de corriger quoi que ce soit.
+  }, 180);
 });
 
 // "zoomend" se declenche aussi pour la compensation INTERNE de
@@ -3526,10 +3535,17 @@ function noteRecompenseClub() {
 var marqueursEchelle = [];
 function majTailleMarqueurs() {
   var z = zoomEffectif();
-  // 1 au niveau rue (zoom 16, la valeur par defaut), reduit progressivement
-  // en dezoomant, jusqu'a un plancher pour rester visible/cliquable meme
-  // au zoom minimal.
-  var s = Math.max(0.15, Math.min(1, 0.15 + (z - map.getMinZoom()) / (16 - map.getMinZoom()) * 0.85));
+  // 1 au niveau rue (zoom 16), reduit en dezoomant, jusqu'a un plancher
+  // pour rester visible/cliquable meme au zoom minimal.
+  //
+  // Courbe rendue plus agressive (exposant 1.6 au lieu d'une simple
+  // interpolation lineaire) -- Julien : plusieurs badges proches
+  // (clubs ou amis) restaient encore trop gros a un dezoom moyen, un
+  // seul cachant les autres au meme endroit. Avec l'exposant, ils
+  // retrecissent plus vite des qu'on commence a dezoomer, pas
+  // seulement tout pres du zoom minimal.
+  var t = Math.max(0, Math.min(1, (z - map.getMinZoom()) / (16 - map.getMinZoom())));
+  var s = Math.max(0.12, Math.pow(t, 1.6));
   marqueursEchelle.forEach(function (el) { el.style.transform = "scale(" + s.toFixed(3) + ")"; });
 }
 
