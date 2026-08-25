@@ -2809,8 +2809,11 @@ function snapifie() {
   if (!map.getSource("satellite")) {
     map.addSource("satellite", {
       type: "raster",
-      url: "https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=" + MAPTILER_KEY,
-      tileSize: 256
+      // Pas de tileSize impose : ces tuiles (satellite-v2) sont en 512px,
+      // pas les 256 par defaut. Forcer 256 faisait charger la resolution
+      // du zoom du dessous puis l'etirer x2 -- d'ou le flou signale par
+      // Julien. Laisser MapLibre lire tileSize depuis le tiles.json.
+      url: "https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=" + MAPTILER_KEY
     });
   }
   if (!map.getLayer("Terre reelle")) {
@@ -2824,6 +2827,12 @@ function snapifie() {
   // pleinement visible, les aplats vectoriels doivent etre transparents,
   // sinon ils la recouvrent completement.
   var fondu = ["interpolate", ["linear"], ["zoom"], 2, 0, 4, 1];
+  // L'ocean en photo satellite brute rend tres sombre (quasi noir) sans
+  // aucun traitement colorimetrique -- signale par Julien ("l'eau est un
+  // peu trop noire"). Contrairement aux terres, l'eau garde donc toujours
+  // un peu de son bleu clair pardessus la photo, meme a la vue planete
+  // entiere, pour rester lisible comme de l'eau plutot que du vide.
+  var fonduEau = ["interpolate", ["linear"], ["zoom"], 0, .4, 2, .3, 4, 1];
 
   map.setPaintProperty("Background", "background-color", mentheClair);
   map.setPaintProperty("Background", "background-opacity", fondu);
@@ -2901,7 +2910,7 @@ function snapifie() {
   map.setLayerZoomRange("Deserts", 4, 24);
 
   map.setPaintProperty("Water", "fill-color", eau);
-  map.setPaintProperty("Water", "fill-opacity", fondu);
+  map.setPaintProperty("Water", "fill-opacity", fonduEau);
 
   // Empreinte au sol en aplat clair (zoom 13-15, plage native du style),
   // puis vrais volumes 3D (fill-extrusion native "Building 3D", deja
