@@ -213,20 +213,25 @@
          sobre (pilule claire, texte fonce) deja utilise ailleurs dans
          ce fichier, et "Ajouter" reste un contour, jamais un aplat.
          ============================================================ */
-      .vue-amis {
+      .vue-amis, .vue-story {
         /* z-index sous .tabs (26) et non plus au-dessus (etait 32) :
            Julien voulait garder la barre d'onglets accessible en
            permanence sur "Amis", au lieu d'un ecran plein qui la
            recouvre et n'a qu'une croix en haut pour en sortir. On
            quitte "Amis" en tapant Carte/Boutique, comme les deux
-           autres onglets -- voir activerVue(). */
+           autres onglets -- voir activerVue(). Meme carcasse pour
+           "Story" (.vue-story) : avant, l'onglet Story ouvrait la
+           feuille du bas comme une fiche club -- Julien : "ce n'est
+           meme pas une page entiere [...] fais-moi une page entiere
+           pour story qu'on arrive sur cette page", comme les autres
+           onglets de la barre. */
         position: absolute; inset: 0; z-index: 20; overflow-y: auto;
         background: var(--bg); color: var(--ink);
         padding: 20px 24px 112px; text-align: center;
         transition: opacity .3s ease, visibility .3s ease;
       }
-      .vue-amis[hidden] { display: flex; opacity: 0; visibility: hidden; pointer-events: none; }
-      @media (prefers-reduced-motion: reduce) { .vue-amis { transition: none; } }
+      .vue-amis[hidden], .vue-story[hidden] { display: flex; opacity: 0; visibility: hidden; pointer-events: none; }
+      @media (prefers-reduced-motion: reduce) { .vue-amis, .vue-story { transition: none; } }
 
       .va-close {
         position: absolute; top: 16px; left: 16px; z-index: 2;
@@ -1495,6 +1500,21 @@
              #vue-accueil, mais reste atteignable a tout moment (pas
              seulement avant connexion) via l'onglet "Amis" de la barre
              du bas. -->
+        <!-- ECRAN STORY -- vraie page atteignable via l'onglet "Story"
+             de la barre du bas (avant : une feuille du bas, comme une
+             fiche club, signalee "bizarre" par Julien -- pas une page
+             entiere, pas ce qu'on attend d'un onglet). Meme carcasse
+             que #vue-amis (plein ecran sous la barre d'onglets,
+             atteignable a tout moment). Contenu construit par
+             ouvrirChoixReseau() dans #story-page-corps -- meme fonction
+             que "Poster ma story" depuis une fiche club, qui bascule
+             maintenant elle aussi sur cette page plutot que sur la
+             feuille du bas. -->
+        <div class="vue-story" id="vue-story" hidden>
+          <h1 class="va-title">Poster ma story</h1>
+          <div id="story-page-corps"></div>
+        </div>
+
         <div class="vue-amis" id="vue-amis" hidden>
           <h1 class="va-title">Amis</h1>
 
@@ -2326,7 +2346,24 @@ document.addEventListener("keydown", function (e) {
 
 var VUES = { carte: $("#vue-carte"), boutique: $("#vue-boutique") };
 var TAB_CARTE = $("#tab-carte"), TAB_BOUTIQUE = $("#tab-boutique");
+var VUE_STORY = $("#vue-story"), TAB_STORY = $("#tab-story");
 var SCREEN = $(".screen");
+
+// Meme convention que fermerAmis()/fermerProfil() plus bas : "Story"
+// est une page plein ecran atteignable en permanence via la barre du
+// bas (pas une feuille qu'on ferme d'une croix), on la quitte en
+// tapant un autre onglet.
+//
+// arreterScanActif : si un scan QR est en cours (camera allumee, voir
+// activerScanClub() plus bas) au moment ou on quitte la page, elle doit
+// s'eteindre tout de suite -- jamais la laisser tourner en arriere-plan.
+var arreterScanActif = null;
+function fermerStory() {
+  VUE_STORY.hidden = true;
+  TAB_STORY.classList.remove("on");
+  TAB_STORY.setAttribute("aria-current", "false");
+  if (arreterScanActif) { arreterScanActif(); arreterScanActif = null; }
+}
 
 function activerVue(nom) {
   Object.keys(VUES).forEach(function (k) {
@@ -2347,8 +2384,8 @@ function activerVue(nom) {
   history.replaceState(null, "", "#" + nom);
 }
 
-TAB_CARTE.addEventListener("click", function () { fermerAmis(); activerVue("carte"); });
-TAB_BOUTIQUE.addEventListener("click", function () { fermerAmis(); activerVue("boutique"); });
+TAB_CARTE.addEventListener("click", function () { fermerAmis(); fermerStory(); activerVue("carte"); });
+TAB_BOUTIQUE.addEventListener("click", function () { fermerAmis(); fermerStory(); activerVue("boutique"); });
 
 activerVue(location.hash === "#boutique" ? "boutique" : "carte");
 
@@ -3284,17 +3321,21 @@ function ouvrirClub(c, src, id) {
 }
 
 // "Poster ma story" (fiche club) et l'onglet Story du bas ouvrent la
-// meme feuille : Instagram/TikTok pour poster, puis un lien colle ici
-// qui part vers la vraie fonction submit_story() -- en attente de
+// meme page : Instagram/TikTok pour poster, puis un lien colle ici qui
+// part vers la vraie fonction submit_story() -- en attente de
 // verification par le club, pas de points immediats (voir la fonction
 // plus bas, appel a supabaseClubbeur.rpc("submit_story", ...)).
+//
+// Vraie page plein ecran (#vue-story, atteignable via l'onglet du bas),
+// pas la feuille du bas comme avant -- Julien : l'ancienne feuille (le
+// meme systeme qu'une fiche club) "n'est meme pas une page entiere",
+// il attend d'atterrir sur "Story" comme sur les autres onglets.
 function ouvrirChoixReseau(nomClub) {
   var mention = nomClub
     ? "Tague " + nomClub + " dans ta story ou ta vidéo."
     : "Tague le club dans ta story ou ta vidéo.";
   var html =
     '<div class="sheet-ok">' +
-      '<h3 id="sh-titre">Poste ta story</h3>' +
       '<p class="desc">' + mention + " Tes points arrivent une fois les vues vérifiées.</p>" +
       '<div class="reseaux-grille">' +
         '<button type="button" class="reseau-bouton actif" id="sh-story-ig" data-kind="story" data-schema="instagram://story-camera" data-secours="https://www.instagram.com/">' +
@@ -3325,7 +3366,19 @@ function ouvrirChoixReseau(nomClub) {
         '<button type="submit" class="sheet-cta" id="story-envoyer">Envoyer</button>' +
       "</form>" +
     "</div>";
-  ouvrirFeuille(html, "#sh-story-ig");
+  // Ouvre la vraie page Story plutot que la feuille du bas -- si on
+  // arrive ici depuis le bouton "Poster ma story" d'une fiche club, la
+  // feuille (fiche club) etait deja ouverte : on la ferme d'abord pour
+  // ne pas laisser les deux superposees.
+  fermerFeuille();
+  fermerAmis();
+  fermerProfil();
+  $("#story-page-corps").innerHTML = html;
+  TAB_STORY.classList.add("on");
+  TAB_STORY.setAttribute("aria-current", "page");
+  VUE_STORY.hidden = false;
+  history.replaceState(null, "", "#story");
+  $("#sh-story-ig").focus();
 
   // Depuis l'onglet Story (pas de club dans le contexte, contrairement
   // a un tap sur une fiche club) : liste des vrais clubs de la base,
@@ -3424,15 +3477,15 @@ function ouvrirChoixReseau(nomClub) {
       cancelAnimationFrame(animation);
       if (flux) { flux.getTracks().forEach(function (t) { t.stop(); }); flux = null; }
     }
-    // Si on ferme la feuille en plein scan (croix ou tap a cote), la
+    // Si on quitte la page Story en plein scan (autre onglet), la
     // camera doit s'eteindre tout de suite -- jamais la laisser tourner
-    // en arriere-plan.
-    $("#sh-close")?.addEventListener("click", arreterScan);
-    voile?.addEventListener("click", arreterScan);
+    // en arriere-plan. fermerStory() appelle arreterScanActif() si elle
+    // est definie (voir plus haut).
+    arreterScanActif = arreterScan;
   }
 
   var kindChoisi = "story";
-  var boutonsReseau = $("#sh-corps").querySelectorAll(".reseau-bouton");
+  var boutonsReseau = $("#story-page-corps").querySelectorAll(".reseau-bouton");
   boutonsReseau.forEach(function (b) {
     b.addEventListener("click", function () {
       boutonsReseau.forEach(function (x) { x.classList.toggle("actif", x === b); });
@@ -3672,6 +3725,7 @@ var VUE_AMIS = $("#vue-amis");
 var TAB_AMIS = $("#tab-amis");
 
 TAB_AMIS?.addEventListener("click", async function () {
+  fermerStory();
   TAB_AMIS.classList.add("on");
   TAB_AMIS.setAttribute("aria-current", "page");
   VUE_AMIS.hidden = false;
@@ -4067,6 +4121,7 @@ function fermerProfil() {
 }
 
 TAB_PROFIL?.addEventListener("click", async function () {
+  fermerStory();
   TAB_PROFIL.classList.add("on");
   TAB_PROFIL.setAttribute("aria-current", "page");
   VUE_PROFIL.hidden = false;
