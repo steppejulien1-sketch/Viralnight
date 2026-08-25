@@ -1203,6 +1203,7 @@
          ("un truc grand, un truc beau"). */
       .reseaux-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
       .reseau-bouton {
+        position: relative;
         display: flex; flex-direction: column; align-items: center; gap: 9px;
         background: var(--s2); border: 2px solid transparent; border-radius: 18px;
         padding: 14px 6px; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--ink);
@@ -1213,19 +1214,17 @@
       .reseau-ico.ig { background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7); }
       .reseau-ico.tk { background: #010101; }
       .reseau-ico.tk svg { fill: currentColor; stroke: none; }
-
-      /* Gain annonce avant de poster, et marche a suivre numerotee --
-         Julien, apres avoir vu la vraie PWA clubbeur : "il y avait plus
-         d'elements [...] c'etait plus propre, plus clean", cette page-ci
-         se limitait au strict formulaire. Contenu et raisonnement repris
-         de 06-pwa-clubbeurs/src/pages/post-story.js. */
-      .ps-gain {
-        display: flex; align-items: baseline; gap: 12px; margin: 18px 0 0;
-        background: var(--s2); border-radius: 14px; padding: 13px 15px;
+      /* Gain directement sur le bouton (badge coin haut-droit), plutot
+         qu'un bloc a part en dessous a correler soi-meme avec le bon
+         format -- demande de Julien ("ameliore le design", moins
+         d'elements empiles a lire). */
+      .reseau-pts {
+        position: absolute; top: -7px; right: -6px;
+        background: var(--succes-texte, #57d98a); color: #0a1f13;
+        font-size: 10.5px; font-weight: 800; font-family: var(--mono, inherit);
+        padding: 2px 6px; border-radius: 99px; border: 2px solid var(--s2);
       }
-      .ps-gain-pts { flex: 0 0 auto; font-size: 19px; font-weight: 800; color: var(--succes-texte, #57d98a); }
-      .ps-gain-txt { font-size: 12.5px; color: var(--ink2); line-height: 1.45; }
-      .ps-steps { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 13px; text-align: left; }
+      .ps-steps { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 13px; text-align: left; }
       .ps-step { display: flex; gap: 11px; align-items: flex-start; }
       .ps-step-n {
         flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; margin-top: 1px;
@@ -3504,16 +3503,6 @@ function ouvrirChoixReseau(nomClub) {
     "</button>";
   }
 
-  function blocGain(kindId) {
-    var b = BAREME_STORY[kindId] || BAREME_STORY.story;
-    return (
-      '<div class="ps-gain">' +
-        '<span class="ps-gain-pts">' + b.pts + " pts</span>" +
-        '<span class="ps-gain-txt">' + b.texte + "</span>" +
-      "</div>"
-    );
-  }
-
   function blocEtapes(kindId, handle) {
     var k = KINDS_STORY.filter(function (x) { return x.id === kindId; })[0] || KINDS_STORY[0];
     var cible = handle ? "@" + handle : nomClub || "le compte du club";
@@ -3550,7 +3539,11 @@ function ouvrirChoixReseau(nomClub) {
     return '<label class="rg-label" style="font-size:13px" for="story-url">Lien de ta publication</label>' +
       '<input class="va-input" id="story-url" type="url" placeholder="' +
       (kindId === "tiktok" ? "https://tiktok.com/@toi/video/…" : "https://instagram.com/reel/…") +
-      '" required />';
+      '" required />' +
+      // Le badge du bouton TikTok montre le forfait fixe (+60) mais pas
+      // le bonus aux vues, variable -- sans cette ligne, on sous-vend le
+      // format le plus genereux de la liste.
+      (kindId === "tiktok" ? '<p class="desc ps-hint">+ 7 pts par 100 vues, comptées par TikTok, en plus du forfait.</p>' : "");
   }
 
   var html =
@@ -3575,14 +3568,18 @@ function ouvrirChoixReseau(nomClub) {
         '<div id="story-handle-chip">' + blocHandleCopiable(null) + "</div>" +
         '<div class="reseaux-grille">' +
         KINDS_STORY.map(function (k, i) {
+          // Le gain vit directement sur le bouton (badge) plutot que dans
+          // un bloc separe en dessous -- plus compact, et l'info est
+          // exactement ou on la cherche : sur le choix lui-meme, pas a
+          // correler avec un texte a part.
           return '<button type="button" class="reseau-bouton' + (i === 0 ? " actif" : "") + '" id="sh-story-' + k.id + '" ' +
             'data-kind="' + k.id + '" data-schema="' + k.schema + '" data-secours="' + k.secours + '">' +
             '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
             "<span>" + k.label + "</span>" +
+            '<span class="reseau-pts">' + BAREME_STORY[k.id].pts + "</span>" +
           "</button>";
         }).join("") +
         "</div>" +
-        '<div id="story-gain">' + blocGain("story") + "</div>" +
         '<div id="story-etapes">' + blocEtapes("story", null) + "</div>" +
         '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
         '<p class="desc" id="story-msg" style="display:none;margin:0"></p>' +
@@ -3742,10 +3739,9 @@ function ouvrirChoixReseau(nomClub) {
     b.addEventListener("click", function () {
       boutonsReseau.forEach(function (x) { x.classList.toggle("actif", x === b); });
       kindChoisi = b.dataset.kind;
-      // Gain, marche a suivre et champ lien dependent tous du format
-      // choisi (montant different, et seule une story n'a pas d'URL
-      // publique -- voir blocChamp()).
-      $("#story-gain").innerHTML = blocGain(kindChoisi);
+      // Marche a suivre et champ lien dependent du format choisi (seule
+      // une story n'a pas d'URL publique -- voir blocChamp()). Le gain,
+      // lui, est fixe sur chaque bouton (badge), rien a mettre a jour.
       $("#story-etapes").innerHTML = blocEtapes(kindChoisi, handleActuel);
       $("#story-champ-url").innerHTML = blocChamp(kindChoisi);
       ouvrirAppOuWeb(b.dataset.schema, b.dataset.secours);
