@@ -1252,6 +1252,25 @@
       }
       .club-hero-nom { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); }
 
+      /* Galerie photos -- voir photosClub() : ce sont des cartes
+         degradees en attendant de vraies photos, PAS une texture a
+         garder telle quelle. Bande qui defile horizontalement (scrollbar
+         masquee, meme geste que Google Maps/Instagram) plutot qu'une
+         grille qui pousserait tout le reste de la fiche plus bas. */
+      .club-photos {
+        display: flex; gap: 8px; overflow-x: auto; margin: 14px -6px 0; padding: 0 6px 2px;
+        scrollbar-width: none;
+      }
+      .club-photos::-webkit-scrollbar { display: none; }
+      .club-photo {
+        flex: 0 0 auto; width: 128px; height: 92px; border-radius: 14px;
+        background:
+          linear-gradient(160deg, color-mix(in srgb, var(--c) 60%, transparent), transparent 65%),
+          var(--s2);
+        display: grid; place-items: center;
+      }
+      .club-photo svg { width: 24px; height: 24px; stroke: color-mix(in srgb, var(--c) 55%, #fff); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+
       /* Adresse + itineraire : la seule vraie info "lieu" de la fiche
          avant n'etait qu'une ligne de texte grise dans le hero, sans
          action -- "une fiche Google Maps, mais specialement pour nous"
@@ -3487,6 +3506,29 @@ map.on("style.load", function () {
        la meme feuille pour les deux ecrans. Le solde affiche vient
        du meme ETAT que la boutique. --- */
 
+// Galerie de photos -- Julien : "une fiche Google Maps, mais
+// specialement pour nous", avec des photos. Galerie fixe cote club
+// (l'admin en ajoute quelques-unes une fois), PAS un upload cote
+// clubbeur -- decision de Julien, pas de moderation a construire pour
+// l'instant.
+//
+// ⚠️ PAS DE VRAIES PHOTOS AUJOURD'HUI : ni ce fichier ni la base n'ont
+// de stockage/URLs de photos de club. Ce sont des cartes degradees
+// (teinte du club, c.c) qui tiennent la place et montrent la mise en
+// page voulue -- a remplacer par c.photos = [url1, url2, ...] et
+// <img> des que les vraies photos existent (upload cote club, meme
+// principe que clubs.ig_handle dans les Parametres de owner.html).
+function photosClub(c) {
+  var n = 4;
+  var cartes = "";
+  for (var i = 0; i < n; i++) {
+    cartes += '<span class="club-photo" style="--c:' + c.c + '">' +
+      '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="m21 15-5-5-9 9"/></svg>' +
+    "</span>";
+  }
+  return '<div class="club-photos">' + cartes + "</div>";
+}
+
 function ouvrirClub(c, src, id) {
   rendeur = src || null;
 
@@ -3510,6 +3552,7 @@ function ouvrirClub(c, src, id) {
       '<span class="club-hero-badge">' + badgeType(c.type) + "</span>" +
       '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
     "</div>" +
+    photosClub(c) +
     '<div class="club-adresse">' +
       '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
