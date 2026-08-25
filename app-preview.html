@@ -427,6 +427,43 @@
         box-shadow: 0 -14px 40px rgba(0,0,0,.4);
       }
 
+      /* Aide & Support : vraie page plein ecran, pas un panneau du bas
+         -- seul ecran de ce groupe a en avoir besoin (une conversation,
+         pas une liste de reglages). En-tete fixe, messages qui defilent
+         seuls au milieu, saisie ancree en bas comme sur une vraie appli
+         de messagerie -- au lieu de tout faire defiler ensemble (le
+         champ pouvait remonter hors champ derriere le clavier). */
+      .vue-aide-page {
+        display: flex; flex-direction: column; padding: 0;
+      }
+      .ai-header {
+        flex: 0 0 auto; display: flex; align-items: center; gap: 12px;
+        padding: 16px 18px 14px; border-bottom: 1px solid var(--line);
+      }
+      .ai-header .va-title { margin: 0; }
+      .ai-retour {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+        background: var(--s2); border: 0; cursor: pointer; display: grid; place-items: center;
+      }
+      .ai-retour svg { width: 17px; height: 17px; stroke: var(--ink2); stroke-width: 2.3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      #ai-scroll { flex: 1 1 auto; overflow-y: auto; padding: 16px 18px; }
+      #ai-chat, #ai-admin-chat { gap: 8px; }
+      .ai-footer {
+        flex: 0 0 auto; display: flex; align-items: flex-end; gap: 10px;
+        padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid var(--line); background: var(--bg);
+      }
+      .ai-footer textarea {
+        flex: 1 1 auto; resize: none; max-height: 110px;
+        padding: 11px 15px; line-height: 1.4;
+      }
+      .ai-footer button[type="submit"] {
+        flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; margin-bottom: 1px;
+        background: var(--accent); border: 0; cursor: pointer; display: grid; place-items: center;
+      }
+      .ai-footer button[type="submit"] svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .ai-footer button[type="submit"][disabled] { opacity: .55; cursor: default; }
+
       /* Profil/Reglages/Amis en clair par defaut, sombre seulement si le
          telephone du clubbeur est deja en mode sombre (prefers-color-
          scheme) -- Julien : "je trouve que c'est mieux en blanc, que ca
@@ -1864,40 +1901,54 @@
              une conversation avec le support) et #ai-admin (visible
              seulement si l'email connecte est ADMIN_EMAIL_CLUBBEUR --
              liste de toutes les conversations + reponse en direct,
-             sans passer par Supabase Studio). -->
-        <div class="vue-profil vue-profil-feuille" id="vue-aide" hidden>
-          <div class="va-poignee" id="ai-poignee" aria-hidden="true"></div>
-          <h1 class="va-title">Aide &amp; Support</h1>
+             sans passer par Supabase Studio).
 
-          <div id="ai-client">
-            <p class="rg-section-titre" style="text-align:left">Contactez-nous</p>
-            <div id="ai-chat" style="display:grid;gap:8px;margin-bottom:14px"></div>
-            <form id="ai-form" style="display:grid;gap:10px;margin:0 0 4px">
-              <textarea class="va-input" id="ai-message" rows="3" placeholder="Écris ton message..." style="resize:vertical;padding:12px 15px;min-height:72px" required></textarea>
-              <p class="desc" id="ai-form-msg" style="display:none;margin:0"></p>
-              <button type="submit" class="sheet-cta" id="ai-envoyer">
-                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Envoyer
-              </button>
-            </form>
+             Vraie page plein ecran avec barre de saisie fixee en bas,
+             comme une vraie appli de messagerie -- Julien : l'ancien
+             panneau du bas (comme Reglages/Favoris) n'avait pas la place
+             ni le comportement d'un vrai fil de discussion, la saisie
+             remontait avec le reste au lieu de rester ancree en bas. -->
+        <div class="vue-profil vue-aide-page" id="vue-aide" hidden>
+          <div class="ai-header">
+            <button type="button" class="ai-retour" id="ai-retour" aria-label="Retour au profil">
+              <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <h1 class="va-title">Aide &amp; Support</h1>
           </div>
 
-          <div id="ai-admin" hidden>
-            <div id="ai-admin-liste">
-              <p class="rg-section-titre" style="text-align:left">Conversations</p>
-              <div id="ai-admin-liste-items"></div>
-              <p class="desc" id="ai-admin-vide" style="display:none;text-align:center">Aucune demande pour l'instant.</p>
+          <div id="ai-scroll">
+            <div id="ai-client">
+              <div id="ai-chat"></div>
             </div>
-            <div id="ai-admin-thread" hidden>
-              <button type="button" class="rg-lien" id="ai-admin-retour" style="margin-bottom:12px">← Toutes les conversations</button>
-              <p class="rg-section-titre" style="text-align:left" id="ai-admin-thread-titre"></p>
-              <div id="ai-admin-chat" style="display:grid;gap:8px;margin-bottom:14px"></div>
-              <form id="ai-admin-form" style="display:grid;gap:10px">
-                <textarea class="va-input" id="ai-admin-message" rows="3" placeholder="Ta réponse..." style="resize:vertical;padding:12px 15px;min-height:72px" required></textarea>
-                <button type="submit" class="sheet-cta" id="ai-admin-envoyer">Répondre</button>
-              </form>
+
+            <div id="ai-admin" hidden>
+              <div id="ai-admin-liste">
+                <p class="rg-section-titre" style="text-align:left">Conversations</p>
+                <div id="ai-admin-liste-items"></div>
+                <p class="desc" id="ai-admin-vide" style="display:none;text-align:center">Aucune demande pour l'instant.</p>
+              </div>
+              <div id="ai-admin-thread" hidden>
+                <button type="button" class="rg-lien" id="ai-admin-retour" style="margin-bottom:12px">← Toutes les conversations</button>
+                <p class="rg-section-titre" style="text-align:left" id="ai-admin-thread-titre"></p>
+                <div id="ai-admin-chat"></div>
+              </div>
             </div>
           </div>
+
+          <form id="ai-form" class="ai-footer">
+            <textarea class="va-input" id="ai-message" rows="1" placeholder="Écris ton message..." required></textarea>
+            <button type="submit" id="ai-envoyer" aria-label="Envoyer">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
+          </form>
+          <p class="desc" id="ai-form-msg" style="display:none;margin:0 16px 10px"></p>
+
+          <form id="ai-admin-form" class="ai-footer" hidden>
+            <textarea class="va-input" id="ai-admin-message" rows="1" placeholder="Ta réponse..." required></textarea>
+            <button type="submit" id="ai-admin-envoyer" aria-label="Répondre">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
+          </form>
         </div>
 
         <!-- ================= ECRAN A PROPOS ================= -->
@@ -4837,6 +4888,7 @@ var ADMIN_EMAIL_CLUBBEUR = "julien.steppe123@gmail.com";
 var VUE_AIDE = $("#vue-aide");
 var AI_CLIENT = $("#ai-client"), AI_ADMIN = $("#ai-admin");
 var AI_ADMIN_LISTE = $("#ai-admin-liste"), AI_ADMIN_THREAD = $("#ai-admin-thread");
+var AI_FORM = $("#ai-form"), AI_ADMIN_FORM = $("#ai-admin-form");
 
 $("#pf-aide")?.addEventListener("click", async function () {
   VUE_AIDE.hidden = false;
@@ -4844,6 +4896,11 @@ $("#pf-aide")?.addEventListener("click", async function () {
   var estAdmin = !!session && session.user.email === ADMIN_EMAIL_CLUBBEUR;
   AI_CLIENT.hidden = estAdmin;
   AI_ADMIN.hidden = !estAdmin;
+  // Saisie du bas : celle du client, ou celle de l'admin, jamais les
+  // deux -- et cote admin, seulement une fois un fil ouvert (pas de
+  // saisie utile pendant qu'on parcourt la liste des conversations).
+  AI_FORM.hidden = estAdmin;
+  AI_ADMIN_FORM.hidden = true;
   if (estAdmin) {
     AI_ADMIN_THREAD.hidden = true;
     AI_ADMIN_LISTE.hidden = false;
@@ -4852,7 +4909,9 @@ $("#pf-aide")?.addEventListener("click", async function () {
     chargerChatClient();
   }
 });
-activerGlisserPourFermer(VUE_AIDE, $("#ai-poignee"), function () { VUE_AIDE.hidden = true; });
+// Vraie page (pas une feuille) : on la quitte par un bouton retour,
+// pas un glisser -- meme esprit que fermerAmis()/fermerProfil().
+$("#ai-retour")?.addEventListener("click", function () { VUE_AIDE.hidden = true; });
 
 function bulleChat(auteur, moi, message, quand) {
   return '<div class="chat-bulle ' + (auteur === moi ? "moi" : "autre") + '">' +
@@ -4938,8 +4997,9 @@ async function chargerConversationsAdmin() {
 async function ouvrirConversationAdmin(userId, handle) {
   AI_ADMIN_LISTE.hidden = true;
   AI_ADMIN_THREAD.hidden = false;
+  AI_ADMIN_FORM.hidden = false;
   $("#ai-admin-thread-titre").textContent = "@" + handle;
-  $("#ai-admin-form").dataset.user = userId;
+  AI_ADMIN_FORM.dataset.user = userId;
   await chargerThreadAdmin(userId);
 }
 
@@ -4953,6 +5013,7 @@ async function chargerThreadAdmin(userId) {
 $("#ai-admin-retour")?.addEventListener("click", function () {
   AI_ADMIN_THREAD.hidden = true;
   AI_ADMIN_LISTE.hidden = false;
+  AI_ADMIN_FORM.hidden = true;
   chargerConversationsAdmin();
 });
 
