@@ -2830,9 +2830,15 @@ function snapifie() {
   // L'ocean en photo satellite brute rend tres sombre (quasi noir) sans
   // aucun traitement colorimetrique -- signale par Julien ("l'eau est un
   // peu trop noire"). Contrairement aux terres, l'eau garde donc toujours
-  // un peu de son bleu clair pardessus la photo, meme a la vue planete
-  // entiere, pour rester lisible comme de l'eau plutot que du vide.
-  var fonduEau = ["interpolate", ["linear"], ["zoom"], 0, .4, 2, .3, 4, 1];
+  // un peu de couleur pardessus la photo, meme a la vue planete entiere,
+  // pour rester lisible comme de l'eau plutot que du vide.
+  var fonduEau = ["interpolate", ["linear"], ["zoom"], 0, .6, 2, .45, 4, 1];
+  // Bleu profond type Google Earth pour l'ocean vu depuis l'espace --
+  // demande explicite de Julien apres le premier essai (bleu clair de la
+  // carte de rue, #93d4fe, trop pale/delave a cette distance). Uniquement
+  // a la vue planete : au zoom 4, l'eau redevient #93d4fe, la teinte de
+  // la carte de recherche de club, inchangee.
+  var eauEspace = "#0f3d5c";
 
   map.setPaintProperty("Background", "background-color", mentheClair);
   map.setPaintProperty("Background", "background-opacity", fondu);
@@ -2909,7 +2915,9 @@ function snapifie() {
   // satellite entierement fondue.
   map.setLayerZoomRange("Deserts", 4, 24);
 
-  map.setPaintProperty("Water", "fill-color", eau);
+  map.setPaintProperty("Water", "fill-color", [
+    "interpolate", ["linear"], ["zoom"], 0, eauEspace, 4, eau
+  ]);
   map.setPaintProperty("Water", "fill-opacity", fonduEau);
 
   // Empreinte au sol en aplat clair (zoom 13-15, plage native du style),
