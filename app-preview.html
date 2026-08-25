@@ -2654,16 +2654,43 @@ var zoomCible = null; // null = pas encore etabli (avant le 1er "moveend")
 // aux gestes de se calmer avant d'appliquer LA correction finale.
 var minuteurCorrectionZoom = null;
 
+// A l'origine (voir versions precedentes de ce fichier), on distinguait
+// "vrai geste de zoom" de "derive de rotation a corriger" avec un simple
+// booleen (gesteDeZoomReel), remis a false PILE au moment ou "zoomend" se
+// declenchait. Le probleme : "zoomend" et "moveend" sont deux evenements
+// distincts pour la MEME transition de camera, et leur ordre d'arrivee
+// n'est pas garanti par MapLibre -- surtout en projection globe, ou la
+// camera continue d'ajuster legerement APRES que le zoom lui-meme soit
+// considere termine. Un booleen instantane laissait donc une fenetre ou
+// notre PROPRE correction (pensee pour la rotation) pouvait se
+// declencher juste apres un vrai dezoom volontaire et l'annuler
+// immediatement -- exactement le "je dezoome et ca rezoome tout seul"
+// signale par Julien, que l'allongement du debounce (tentative
+// precedente) ne resolvait pas : le probleme n'etait pas la duree du
+// debounce, mais le moment ou le geste est considere "termine".
+//
+// Remplace par une fenetre de temps plutot qu'un instant precis : tant
+// qu'un vrai geste de zoom a eu lieu il y a moins de FENETRE_GESTE ms
+// (peu importe l'ordre/nombre de "zoomend"/"moveend" recus entre temps),
+// on ne corrige rien du tout. Insensible a l'ordre des evenements.
+var FENETRE_GESTE = 500;
+var dernierGesteZoom = 0;
+
+function gesteZoomRecent() {
+  return Date.now() - dernierGesteZoom < FENETRE_GESTE;
+}
+
+map.on("wheel", function () { dernierGesteZoom = Date.now(); });
+map.on("dblclick", function () { dernierGesteZoom = Date.now(); });
+map.on("touchstart", function (e) {
+  if (e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length > 1) dernierGesteZoom = Date.now();
+});
+
 map.on("moveend", function () {
-  // Si un vrai geste de zoom est en cours/vient de se produire
-  // (molette, pincement, double-clic -- voir gesteDeZoomReel plus
-  // bas), ne pas corriger du tout ici : selon l'ordre d'arrivee de
-  // "moveend" et "zoomend" (variable d'un geste a l'autre), corriger
-  // AVANT que zoomCible ait ete mis a jour avec le nouveau zoom
-  // pouvait annuler le zoom qu'on venait de faire ("je zoome et ca
-  // dezoome tout seul", signale par Julien) -- zoomend s'en charge
-  // proprement une fois le vrai geste identifie.
-  if (gesteDeZoomReel) return;
+  // Un vrai geste de zoom vient d'avoir lieu (meme s'il est deja
+  // "termine" au sens de zoomend) : on laisse la fenetre passer sans
+  // rien corriger, zoomend s'occupe de la reference plus bas.
+  if (gesteZoomRecent()) return;
 
   var lat = map.getCenter().lat;
   var compensation = Math.log2(Math.cos(lat * Math.PI / 180));
@@ -2675,6 +2702,10 @@ map.on("moveend", function () {
 
   clearTimeout(minuteurCorrectionZoom);
   minuteurCorrectionZoom = setTimeout(function () {
+    // Un geste de zoom a pu demarrer PENDANT l'attente : revalider avant
+    // de corriger quoi que ce soit, plutot que de se fier a l'etat au
+    // moment ou le minuteur a ete lance.
+    if (gesteZoomRecent()) return;
     var latActuelle = map.getCenter().lat;
     var compensationActuelle = Math.log2(Math.cos(latActuelle * Math.PI / 180));
     var zoomVoulu = zoomCible + compensationActuelle;
@@ -2686,15 +2717,6 @@ map.on("moveend", function () {
     if (Math.abs(map.getZoom() - zoomVoulu) > .01) {
       map.easeTo({ zoom: zoomVoulu, duration: 250 });
     }
-    // 80ms -> 180ms : Julien signale qu'un dezoom rapide (plusieurs crans
-    // de molette rapproches) reste saccade/"ca fait des couleurs". Un
-    // debounce trop court laissait la fenetre encore ouverte pendant une
-    // rafale de gestes : cette correction (pensee pour la derive de
-    // rotation, pas pour un vrai zoom -- voir le "return" plus haut sur
-    // gesteDeZoomReel) pouvait alors se declencher entre deux crans de
-    // molette d'une meme rafale et s'ajouter au rendu deja charge du
-    // changement de zoom. Plus de marge pour laisser la rafale se
-    // terminer avant de corriger quoi que ce soit.
   }, 180);
 });
 
@@ -2706,17 +2728,9 @@ map.on("moveend", function () {
 // d'ou le bug qui revenait sans arret malgre le correctif au-dessus :
 // la reference elle-meme derivait. On ne met donc a jour zoomCible que
 // si un vrai geste de zoom (molette, double-clic, pincement a deux
-// doigts) a precede ce "zoomend".
-var gesteDeZoomReel = false;
-map.on("wheel", function () { gesteDeZoomReel = true; });
-map.on("dblclick", function () { gesteDeZoomReel = true; });
-map.on("touchstart", function (e) {
-  if (e.originalEvent && e.originalEvent.touches && e.originalEvent.touches.length > 1) gesteDeZoomReel = true;
-});
-
+// doigts) a eu lieu recemment.
 map.on("zoomend", function () {
-  if (!gesteDeZoomReel) return;
-  gesteDeZoomReel = false;
+  if (!gesteZoomRecent()) return;
   zoomCible = map.getZoom() - Math.log2(Math.cos(map.getCenter().lat * Math.PI / 180));
 });
 
