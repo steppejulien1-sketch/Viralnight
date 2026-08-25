@@ -1250,8 +1250,23 @@
         border-radius: 50%; background: var(--c); color: #fff;
         box-shadow: 0 10px 22px -10px var(--c);
       }
-      .club-hero-nom { margin: 0 0 5px; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); }
-      .club-hero-adr { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink2); }
+      .club-hero-nom { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); }
+
+      /* Adresse + itineraire : la seule vraie info "lieu" de la fiche
+         avant n'etait qu'une ligne de texte grise dans le hero, sans
+         action -- "une fiche Google Maps, mais specialement pour nous"
+         (Julien). Rangee dediee, avec un vrai lien vers Maps. */
+      .club-adresse {
+        display: flex; align-items: center; gap: 10px; margin: 14px 0 0;
+        padding: 12px 14px; background: var(--s1); border: 1px solid var(--line); border-radius: 14px;
+      }
+      .club-adresse-ico { flex: 0 0 auto; display: grid; place-items: center; }
+      .club-adresse-ico svg { width: 17px; height: 17px; stroke: var(--ink3); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .club-adresse-txt { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 600; color: var(--ink2); }
+      .club-adresse-lien {
+        flex: 0 0 auto; font-size: 12.5px; font-weight: 700; color: var(--accent);
+        text-decoration: none; padding: 6px 12px; border-radius: 99px; background: rgba(255,47,69,.12);
+      }
       .sheet-fav {
         position: absolute; top: 14px; right: 14px; z-index: 2;
         width: 40px; height: 40px; border-radius: 50%;
@@ -3477,6 +3492,16 @@ function ouvrirClub(c, src, id) {
 
   var stack = c.amis.map(function (q) { return "<span>" + pint(q) + "</span>"; }).join("");
 
+  // Adresse + itineraire : la fiche ne disait jusqu'ici que "Poster ma
+  // story", sans aucune info reelle sur le lieu -- Julien voulait "un
+  // peu une fiche Google Maps, mais specialement pour nous" (ses mots).
+  // Le lien pointe vers les vraies coordonnees du club (Google Maps,
+  // itineraire), le reste (amis presents, note recompense, poster une
+  // story) reste ce qui nous differencie d'une fiche Maps generique.
+  var lienItineraire = c.lngLat
+    ? "https://www.google.com/maps/dir/?api=1&destination=" + c.lngLat[1] + "," + c.lngLat[0]
+    : null;
+
   var html =
     '<div class="club-hero" style="--c:' + c.c + '">' +
       '<button class="sheet-fav" id="sh-fav" type="button">' +
@@ -3484,7 +3509,11 @@ function ouvrirClub(c, src, id) {
       "</button>" +
       '<span class="club-hero-badge">' + badgeType(c.type) + "</span>" +
       '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
-      '<p class="club-hero-adr">' + c.adr + "</p>" +
+    "</div>" +
+    '<div class="club-adresse">' +
+      '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
+      '<span class="club-adresse-txt">' + c.adr + "</span>" +
+      (lienItineraire ? '<a class="club-adresse-lien" href="' + lienItineraire + '" target="_blank" rel="noopener noreferrer">Itinéraire</a>' : "") +
     "</div>" +
     '<div class="sheet-chips">' + c.chips.map(function (ch) {
       return '<span class="chip' + (ch[1] ? " warm" : "") + '">' + ch[0] + "</span>";
