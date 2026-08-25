@@ -216,11 +216,28 @@
       <div class="stage">
         <div class="phone">
           <div class="screen">
-            <!-- Porte de connexion : reutilise l'auth reelle (connexion.html),
-                 pas de login refait ici. -->
+            <!-- Porte de connexion : formulaire integre, pas un lien vers
+                 connexion.html -- Julien : "je n'ai pas envie que ce soit
+                 sur le meme site qu'avant", et connexion.html redirige de
+                 toute facon en dur vers app.html (auth.js), pas moyen de
+                 revenir ici automatiquement. Meme compte Supabase que
+                 partout ailleurs (aucun nouveau systeme de comptes), juste
+                 le formulaire vit dans cette page. -->
             <div class="porte" id="porte" hidden>
-              <p id="porte-message">Connecte-toi avec ton compte club pour voir tes vraies données. La connexion te ramène sur le tableau de bord classique : reviens ensuite sur cette page.</p>
-              <a class="bouton" href="./connexion.html">Se connecter</a>
+              <h1 class="ecran-titre" style="margin-bottom:14px">ViralNight club</h1>
+              <p id="porte-message">Connecte-toi avec ton compte club.</p>
+              <form id="porte-form" style="display:grid;gap:10px;width:100%;max-width:260px;text-align:left">
+                <div class="fiche-champ" style="margin-bottom:0">
+                  <label for="porte-email">Email</label>
+                  <input type="email" id="porte-email" autocomplete="username" required />
+                </div>
+                <div class="fiche-champ" style="margin-bottom:0">
+                  <label for="porte-password">Mot de passe</label>
+                  <input type="password" id="porte-password" autocomplete="current-password" required />
+                </div>
+                <p class="fiche-msg" id="porte-form-msg"></p>
+                <button type="submit" class="bouton pleine" id="porte-submit">Se connecter</button>
+              </form>
             </div>
 
             <!-- ================= TABLEAU DE BORD ================= -->
@@ -410,8 +427,52 @@
 
       function afficherPorte(message) {
         if (message) $("#porte-message").textContent = message;
+        // Une session existe deja mais les donnees ne chargent pas (aucun
+        // club rattache, erreur de lecture...) : re-proposer un formulaire
+        // de connexion n'aiderait pas, on affiche juste le message.
+        $("#porte-form").hidden = !!ETAT.session;
         PORTE.hidden = false;
       }
+
+      // Traduction des erreurs Supabase les plus courantes -- meme logique
+      // qu'auth.js (connexion.html), mais ce fichier n'exporte rien : copie
+      // minimale plutot qu'un refactor pour rester autonome.
+      function traduireErreurConnexion(error) {
+        var brut = String((error && error.message) || "").toLowerCase();
+        if (brut.includes("invalid login credentials")) return "Email ou mot de passe incorrect.";
+        if (brut.includes("email not confirmed")) return "Confirme ton email avant de te connecter.";
+        if (brut.includes("failed to fetch")) return "Connexion impossible. Vérifie ton accès internet.";
+        return (error && error.message) || "Une erreur est survenue.";
+      }
+
+      $("#porte-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var bouton = $("#porte-submit");
+        var msg = $("#porte-form-msg");
+        var email = $("#porte-email").value.trim();
+        var password = $("#porte-password").value;
+
+        bouton.disabled = true;
+        bouton.textContent = "Connexion…";
+        msg.style.display = "none";
+
+        var { error } = await supabase.auth.signInWithPassword({ email: email, password: password });
+
+        bouton.disabled = false;
+        bouton.textContent = "Se connecter";
+
+        if (error) {
+          msg.style.display = "block";
+          msg.style.color = "var(--accent)";
+          msg.textContent = traduireErreurConnexion(error);
+          return;
+        }
+
+        // Connecte : on reste sur CETTE page (jamais de redirection vers
+        // connexion.html/app.html) -- on recharge juste les vraies donnees.
+        PORTE.hidden = true;
+        await demarrer();
+      });
 
       /* ================= TABLEAU DE BORD ================= */
 
