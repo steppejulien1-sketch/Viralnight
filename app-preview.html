@@ -1226,7 +1226,24 @@
       .ps-step-txt b { display: block; font-weight: 700; }
       .ps-step-txt span { display: block; color: var(--ink2); font-size: 12.5px; margin-top: 1px; }
       .ps-hint { font-size: 12.5px; margin: 0 0 4px; }
-      .ps-club { color: var(--accent); }
+      .ps-club { color: var(--accent); font-weight: 700; }
+
+      /* Avertissement tout en haut de la page, avant meme le choix du
+         format -- Julien : certains ne taguent pas le club, ne recoivent
+         donc aucun point, et s'en etonnent alors que c'est la regle.
+         Doit se voir immediatement, pas seulement dans l'etape 2 plus
+         bas (facile a rater/oublier une fois lancé dans le formulaire). */
+      .ps-warn {
+        display: flex; gap: 10px; align-items: flex-start; text-align: left;
+        background: color-mix(in srgb, var(--ambre) 16%, var(--s2));
+        border: 1px solid color-mix(in srgb, var(--ambre) 45%, transparent);
+        border-radius: 14px; padding: 12px 14px; margin: 0;
+        font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4;
+      }
+      .ps-warn svg {
+        flex: 0 0 auto; width: 19px; height: 19px; margin-top: 1px;
+        stroke: var(--ambre); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      }
       .sheet-chips { display: flex; gap: 7px; margin: 14px 0 16px; flex-wrap: wrap; }
       .chip {
         font-size: 11.5px; font-weight: 700; color: var(--ink2); background: var(--s2);
@@ -3405,12 +3422,13 @@ function ouvrirChoixReseau(nomClub) {
   // (fiche club, selection dans la liste, ou clubs.ig_handle resolu).
   var handleActuel = null;
 
+  // Avertissement bien visible, tout en haut -- Julien : certains ne
+  // taguent pas le club, ne recoivent donc aucun point, et s'en
+  // etonnent/enervent alors que c'est la regle. Doit se voir avant
+  // meme de choisir un format, pas seulement dans l'etape 2 en bas.
   function texteMention(handle) {
-    return handle
-      ? "Tague " + '<span class="ps-club">@' + handle + "</span> et gagne tes points"
-      : nomClub
-        ? "Tague " + nomClub + " et gagne tes points"
-        : "Tague ton club et gagne tes points";
+    var cible = handle ? '<span class="ps-club">@' + handle + "</span>" : nomClub ? '<span class="ps-club">' + nomClub + "</span>" : "le club";
+    return "Sans mention de " + cible + " dans ta publication, tu ne reçois aucun point.";
   }
 
   function blocGain(kindId) {
@@ -3464,7 +3482,7 @@ function ouvrirChoixReseau(nomClub) {
 
   var html =
     '<div class="sheet-ok">' +
-      '<p class="desc" id="story-mention">' + texteMention(null) + "</p>" +
+      '<p class="ps-warn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 16.5h.01M10.6 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.4 3.7a2 2 0 0 0-3.4 0z"/></svg><span id="story-mention">' + texteMention(null) + "</span></p>" +
       '<div class="reseaux-grille">' +
       KINDS_STORY.map(function (k, i) {
         return '<button type="button" class="reseau-bouton' + (i === 0 ? " actif" : "") + '" id="sh-story-' + k.id + '" ' +
