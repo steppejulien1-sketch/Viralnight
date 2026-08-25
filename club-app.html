@@ -369,7 +369,7 @@
 
     <script type="module">
       import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
-      import { fetchDashboardData } from "./dashboardData.js";
+      import { fetchDashboardData, fallbackDashboardData } from "./dashboardData.js";
       import { getDashboardStats, getActiveRewards } from "./lib/dashboardStats.js";
 
       var $ = function (s) { return document.querySelector(s); };
@@ -395,29 +395,20 @@
 
       var ETAT = { data: null, session: null };
 
+      // Porte de connexion desactivee temporairement (Julien : "retire-moi
+      // la page de connexion pour le moment", pas de mot de passe sous la
+      // main) -- on affiche directement les donnees reelles si une session
+      // existe, sinon la demo (meme jeu de donnees que la home/simulateur).
       async function demarrer() {
-        if (!isSupabaseConfigured || !supabase) {
-          afficherPorte("La connexion à la base n'est pas configurée sur cet environnement.");
-          return;
+        var data = isSupabaseConfigured && supabase
+          ? await fetchDashboardData(supabase, isSupabaseConfigured)
+          : { ...fallbackDashboardData, session: null };
+
+        if (!data.establishment) {
+          data = { ...fallbackDashboardData, session: data.session || null };
         }
 
-        var { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          afficherPorte();
-          return;
-        }
-        ETAT.session = session;
-
-        var data = await fetchDashboardData(supabase, isSupabaseConfigured);
-        if (data.reason === "no_establishment") {
-          afficherPorte("Ce compte n'est rattaché à aucun club. Contacte ViralNight si c'est une erreur.");
-          return;
-        }
-        if (data.source !== "supabase" || !data.establishment) {
-          afficherPorte("Impossible de charger les données de ton club pour le moment.");
-          return;
-        }
-
+        ETAT.session = data.session || null;
         ETAT.data = data;
         rendreDashboard();
         rendreRecompenses();
@@ -660,9 +651,13 @@
       /* ================= REGLAGES ================= */
 
       async function rendreReglages() {
-        $("#reglages-compte").textContent = ETAT.session.user.email || "—";
+        $("#reglages-compte").textContent = ETAT.session ? (ETAT.session.user.email || "—") : "Mode démo — pas connecté";
 
         var zone = $("#reglages-instagram");
+        if (!ETAT.session) {
+          zone.innerHTML = '<p class="vide" style="padding:14px 0">Connecte-toi pour gérer Instagram.</p>';
+          return;
+        }
         try {
           var reponse = await fetch("/api/instagram?action=status", {
             headers: { Authorization: "Bearer " + ETAT.session.access_token },
@@ -703,6 +698,7 @@
       }
 
       $("#reglages-deconnexion").addEventListener("click", async function () {
+        if (!ETAT.session) return;
         await supabase.auth.signOut();
         window.location.href = "./connexion.html";
       });
