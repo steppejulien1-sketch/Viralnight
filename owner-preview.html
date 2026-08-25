@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#120d0d" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex" />
+    <title>ViralNight — appli club (maquette)</title>
+    <style>
+      /* ============================================================
+         APPLI CLUB — meme carcasse (mockup telephone, onglets du bas,
+         feuilles) qu'app-preview.html (appli clubbeur), pour le meme
+         confort visuel cote gerant. Julien : "je veux comme l'application
+         qu'on a fait au-dessus [...] mais pour les clubs [...] tu me
+         fais une vraie application parce que le truc que tu m'as fait
+         [app.html], c'est un site, ce n'est pas fou."
+
+         Donnees REELLES des le premier jour (pas une maquette a donnees
+         figees) : reutilise fetchDashboardData()/dashboardData.js et
+         lib/dashboardStats.js, exactement ce que lit deja app.html,
+         connecte a la meme base (establishments, mrukkexghpcqtwvwwcbe).
+         Pas de compte ? Redirige vers connexion.html -- l'authentification
+         reelle existe deja, inutile de la reconstruire ici.
+         ============================================================ */
+
+      :root {
+        --page:      #0b0d11;
+        --page-2:    #14171d;
+        --page-line: rgba(255,255,255,.09);
+        --page-ink:  #edeff4;
+        --page-ink2: #99a1b0;
+        --page-ink3: #6a7280;
+        --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: var(--page); color: var(--page-ink);
+        font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 1000px; margin: 0 auto; padding: 54px 22px 110px; }
+      .kicker {
+        display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
+        text-transform: uppercase; color: var(--page-ink3); margin-bottom: 15px;
+      }
+      h1 { margin: 0 0 14px; font-size: clamp(32px, 5.4vw, 54px); font-weight: 800; letter-spacing: -.042em; line-height: 1; text-wrap: balance; }
+      .lede { margin: 0; font-size: 17px; color: var(--page-ink2); max-width: 62ch; }
+      .stage { display: flex; justify-content: center; padding: 40px 0 48px; }
+
+      .phone {
+        width: 360px; height: 760px; border-radius: 48px; background: #000;
+        padding: 5px; flex: 0 0 auto;
+        box-shadow: 0 44px 100px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
+      }
+      .screen {
+        position: relative; width: 100%; height: 100%; border-radius: 43px;
+        overflow: hidden; background: #1a1d24; user-select: none;
+        --ink:   #ffffff;
+        --ink2:  #b6a99e;
+        --ink3:  #8a7a6e;
+        --bg:    #120d0d;
+        --s1:    #1c1512;
+        --s2:    #261c17;
+        --s3:    #30231c;
+        --line:  rgba(255,235,220,.08);
+        --line2: rgba(255,235,220,.14);
+        --accent: #ff2f45;
+        --ambre: #ffb020;
+        --succes: #57d98a;
+        background: var(--bg); color: var(--ink);
+      }
+
+      .vue {
+        position: absolute; inset: 0; padding: 22px 20px 100px; overflow-y: auto;
+        opacity: 0; visibility: hidden; transition: opacity .18s ease;
+      }
+      .vue.actif { opacity: 1; visibility: visible; }
+      @media (prefers-reduced-motion: reduce) { .vue { transition: none; } }
+
+      .ecran-titre { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -.03em; }
+      .ecran-sous { margin: 0 0 20px; font-size: 13px; color: var(--ink2); }
+
+      /* ---- Connexion requise ---- */
+      .porte {
+        position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 16px; padding: 30px;
+        text-align: center; background: var(--bg);
+      }
+      .porte p { margin: 0; color: var(--ink2); font-size: 13.5px; line-height: 1.5; }
+      .porte a.bouton, .bouton {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-height: 46px; padding: 0 22px; border-radius: 99px; border: 0;
+        background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+        text-decoration: none; cursor: pointer; font-family: inherit;
+      }
+      .bouton.sobre { background: var(--s2); color: var(--ink); }
+      .bouton.pleine { width: 100%; }
+      .bouton[disabled] { opacity: .55; cursor: default; }
+
+      /* ---- KPI (tableau de bord) ---- */
+      .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 20px; }
+      .kpi {
+        background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 14px 15px;
+      }
+      .kpi-label { font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); }
+      .kpi-valeur { display: block; margin-top: 8px; font-size: 24px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+      .kpi-note { display: block; margin-top: 2px; font-size: 11px; color: var(--ink2); }
+
+      .section-titre {
+        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+        color: var(--ink3); margin: 22px 0 10px;
+      }
+      .carte {
+        background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 14px 15px; margin: 0 0 10px;
+      }
+      .vide { text-align: center; padding: 30px 10px; color: var(--ink3); font-size: 13px; }
+
+      /* ---- Activite recente ---- */
+      .activite-ligne { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+      .activite-ligne:last-child { border-bottom: 0; }
+      .act-ico {
+        flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; background: var(--s2);
+        display: grid; place-items: center; font-size: 10px; font-weight: 800; color: var(--ink2);
+      }
+      .act-ico.gain { background: rgba(87,217,138,.15); color: var(--succes); }
+      .act-txt { flex: 1 1 auto; min-width: 0; }
+      .act-txt strong { display: block; font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .act-txt span { display: block; font-size: 11px; color: var(--ink3); }
+      .act-pts { flex: 0 0 auto; font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--succes); }
+      .act-pts.neutre { color: var(--ink3); }
+
+      /* ---- Recompenses ---- */
+      .recompense-carte { display: grid; gap: 9px; }
+      .recompense-carte .champ { display: grid; gap: 5px; }
+      .recompense-carte label { font-size: 10.5px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; }
+      .recompense-carte input, .recompense-carte select {
+        width: 100%; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line2);
+        background: var(--s2); color: var(--ink); font-family: inherit; font-size: 13.5px;
+      }
+      .recompense-lignes { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .recompense-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
+      .recompense-etat { font-size: 11px; color: var(--ink3); }
+      .retirer {
+        background: rgba(255,47,69,.12); color: var(--accent); border: 1px solid rgba(255,47,69,.3);
+        border-radius: 8px; padding: 6px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+      }
+      .ajouter-recompense {
+        width: 100%; min-height: 46px; border-radius: 14px; border: 1.5px dashed var(--line2);
+        background: none; color: var(--ink2); font-weight: 700; font-size: 13.5px; cursor: pointer; font-family: inherit;
+        margin-top: 4px;
+      }
+
+      /* ---- Ma fiche ---- */
+      .fiche-champ { display: grid; gap: 6px; margin-bottom: 14px; }
+      .fiche-champ label { font-size: 11.5px; font-weight: 700; color: var(--ink2); }
+      .fiche-champ input, .fiche-champ select {
+        min-height: 44px; padding: 0 13px; border-radius: 12px; border: 1px solid var(--line2);
+        background: var(--s2); color: var(--ink); font-family: inherit; font-size: 14px;
+      }
+      .fiche-champ input[type="color"] { padding: 4px; height: 44px; cursor: pointer; }
+      .fiche-msg { font-size: 12.5px; margin: 4px 0 0; display: none; }
+      .apercu-fiche {
+        display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px;
+        background: var(--s1); border: 1px solid var(--line); margin-bottom: 18px;
+      }
+      .apercu-badge {
+        flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; background: var(--c, var(--accent));
+        display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 17px;
+      }
+      .apercu-nom { font-size: 15px; font-weight: 800; }
+      .apercu-sous { font-size: 11.5px; color: var(--ink3); margin-top: 2px; }
+
+      /* ---- Reglages ---- */
+      .reglage-ligne {
+        display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line);
+      }
+      .reglage-ico {
+        flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px; background: var(--s2);
+        display: grid; place-items: center;
+      }
+      .reglage-ico svg { width: 18px; height: 18px; stroke: var(--ink2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .reglage-txt { flex: 1 1 auto; min-width: 0; }
+      .reglage-txt strong { display: block; font-size: 13.5px; font-weight: 700; }
+      .reglage-txt span { display: block; font-size: 11.5px; color: var(--ink3); margin-top: 1px; }
+      .point-vert { width: 8px; height: 8px; border-radius: 50%; background: var(--succes); flex: 0 0 auto; }
+
+      /* ---- Barre d'onglets (4, meme habillage qu'app-preview.html) ---- */
+      .tabs {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
+        background: rgba(17,12,11,.86); border-top: 1px solid rgba(255,235,220,.1);
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; padding-bottom: 18px;
+      }
+      .tab {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+        background: none; border: 0; cursor: pointer; padding: 0; font-family: inherit;
+      }
+      .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
+      .tab svg { width: 23px; height: 23px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: #838a96; }
+      .tab .lbl { font-size: 10px; font-weight: 700; letter-spacing: -.01em; color: #838a96; }
+      .tab.on svg, .tab.on .lbl { stroke: var(--accent); color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <span class="kicker">Maquette interactive · appli club · 25 août 2026</span>
+      <h1>ViralNight, côté club.</h1>
+      <p class="lede">
+        Même esprit que l'appli clubbeur juste au-dessus (mockup téléphone, onglets du
+        bas) — mais pour le gérant : voir ce que génère son club, régler sa boutique de
+        récompenses, tenir sa fiche à jour, gérer Instagram. Données réelles dès
+        l'ouverture : connecte-toi avec ton compte club habituel.
+      </p>
+
+      <div class="stage">
+        <div class="phone">
+          <div class="screen">
+            <!-- Porte de connexion : reutilise l'auth reelle (connexion.html),
+                 pas de login refait ici. -->
+            <div class="porte" id="porte" hidden>
+              <p id="porte-message">Connecte-toi avec ton compte club pour voir tes vraies données. La connexion te ramène sur le tableau de bord classique : reviens ensuite sur cette page.</p>
+              <a class="bouton" href="./connexion.html">Se connecter</a>
+            </div>
+
+            <!-- ================= TABLEAU DE BORD ================= -->
+            <div class="vue actif" id="vue-dashboard">
+              <h1 class="ecran-titre">Tableau de bord</h1>
+              <p class="ecran-sous" id="dash-etablissement">—</p>
+
+              <div class="kpis">
+                <div class="kpi">
+                  <span class="kpi-label">Vues générées</span>
+                  <span class="kpi-valeur" id="kpi-vues">—</span>
+                  <span class="kpi-note" id="kpi-vues-note"></span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Points distribués</span>
+                  <span class="kpi-valeur" id="kpi-points">—</span>
+                  <span class="kpi-note">Selon votre barème</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Scans QR</span>
+                  <span class="kpi-valeur" id="kpi-scans">—</span>
+                  <span class="kpi-note" id="kpi-scans-note"></span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Récompenses prises</span>
+                  <span class="kpi-valeur" id="kpi-recompenses">—</span>
+                  <span class="kpi-note" id="kpi-recompenses-note"></span>
+                </div>
+              </div>
+
+              <p class="section-titre">Activité récente</p>
+              <div id="dash-activite"></div>
+            </div>
+
+            <!-- ================= RECOMPENSES ================= -->
+            <div class="vue" id="vue-recompenses">
+              <h1 class="ecran-titre">Boutique de récompenses</h1>
+              <p class="ecran-sous">Ce que vos clients peuvent échanger contre leurs points.</p>
+              <div id="recompenses-liste"></div>
+              <button type="button" class="ajouter-recompense" id="recompense-ajouter">+ Ajouter une récompense</button>
+              <p class="fiche-msg" id="recompense-msg"></p>
+            </div>
+
+            <!-- ================= MA FICHE ================= -->
+            <div class="vue" id="vue-fiche">
+              <h1 class="ecran-titre">Ma fiche</h1>
+              <p class="ecran-sous">Ce que voient vos clients sur la carte de l'appli.</p>
+
+              <div class="apercu-fiche" id="fiche-apercu">
+                <span class="apercu-badge" id="fiche-apercu-badge">—</span>
+                <div>
+                  <div class="apercu-nom" id="fiche-apercu-nom">—</div>
+                  <div class="apercu-sous" id="fiche-apercu-sous">—</div>
+                </div>
+              </div>
+
+              <form id="fiche-form">
+                <div class="fiche-champ">
+                  <label for="fiche-nom">Nom du club</label>
+                  <input type="text" id="fiche-nom" maxlength="80" required />
+                </div>
+                <div class="fiche-champ">
+                  <label for="fiche-ville">Ville</label>
+                  <input type="text" id="fiche-ville" maxlength="60" />
+                </div>
+                <div class="fiche-champ">
+                  <label for="fiche-telephone">Téléphone</label>
+                  <input type="tel" id="fiche-telephone" maxlength="30" />
+                </div>
+                <div class="fiche-champ">
+                  <label for="fiche-categorie">Type d'établissement</label>
+                  <select id="fiche-categorie">
+                    <option value="club">Boîte de nuit</option>
+                    <option value="bar">Bar</option>
+                    <option value="restaurant">Restaurant</option>
+                    <option value="event_venue">Salle événementielle</option>
+                    <option value="other">Autre</option>
+                  </select>
+                </div>
+                <div class="fiche-champ">
+                  <label for="fiche-instagram">Compte Instagram (sans @)</label>
+                  <input type="text" id="fiche-instagram" maxlength="60" placeholder="mirage.brussels" />
+                </div>
+                <div class="fiche-champ">
+                  <label for="fiche-couleur">Couleur de la fiche</label>
+                  <input type="color" id="fiche-couleur" />
+                </div>
+                <p class="fiche-msg" id="fiche-msg"></p>
+                <button type="submit" class="bouton pleine" id="fiche-enregistrer">Enregistrer</button>
+              </form>
+            </div>
+
+            <!-- ================= REGLAGES ================= -->
+            <div class="vue" id="vue-reglages">
+              <h1 class="ecran-titre">Réglages</h1>
+              <p class="ecran-sous" id="reglages-compte">—</p>
+
+              <p class="section-titre">Instagram</p>
+              <div class="carte" id="reglages-instagram">
+                <p class="vide" style="padding:14px 0">Vérification…</p>
+              </div>
+
+              <p class="section-titre">Compte</p>
+              <button type="button" class="bouton sobre pleine" id="reglages-deconnexion">Déconnexion</button>
+            </div>
+
+            <nav class="tabs">
+              <button class="tab on" type="button" data-tab="dashboard" aria-current="page">
+                <svg viewBox="0 0 24 24"><path d="M3 13h4v7H3zM10 8h4v12h-4zM17 3h4v17h-4z"/></svg>
+                <span class="lbl">Dashboard</span>
+              </button>
+              <button class="tab" type="button" data-tab="recompenses">
+                <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
+                <span class="lbl">Récompenses</span>
+              </button>
+              <button class="tab" type="button" data-tab="fiche">
+                <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+                <span class="lbl">Ma fiche</span>
+              </button>
+              <button class="tab" type="button" data-tab="reglages">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l1.8-1.5-2-3.4-2.2.7a7.6 7.6 0 0 0-2.6-1.5L14 2.6h-4l-.4 2.2a7.6 7.6 0 0 0-2.6 1.5l-2.2-.7-2 3.4L4.6 10.5a7.6 7.6 0 0 0 0 3L2.8 15l2 3.4 2.2-.7c.76.65 1.64 1.16 2.6 1.5l.4 2.2h4l.4-2.2a7.6 7.6 0 0 0 2.6-1.5l2.2.7 2-3.4z"/></svg>
+                <span class="lbl">Réglages</span>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
+      import { fetchDashboardData } from "./dashboardData.js";
+      import { getDashboardStats, getActiveRewards } from "./lib/dashboardStats.js";
+
+      var $ = function (s) { return document.querySelector(s); };
+      var nb = new Intl.NumberFormat("fr-FR");
+
+      function escapeHtml(v) {
+        return String(v ?? "")
+          .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+      }
+
+      var PORTE = $("#porte");
+      var TABS = document.querySelectorAll(".tab");
+      var VUES = document.querySelectorAll(".vue");
+
+      TABS.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          var cible = tab.dataset.tab;
+          TABS.forEach(function (t) { t.classList.toggle("on", t === tab); t.setAttribute("aria-current", t === tab ? "page" : "false"); });
+          VUES.forEach(function (v) { v.classList.toggle("actif", v.id === "vue-" + cible); });
+        });
+      });
+
+      var ETAT = { data: null, session: null };
+
+      async function demarrer() {
+        if (!isSupabaseConfigured || !supabase) {
+          afficherPorte("La connexion à la base n'est pas configurée sur cet environnement.");
+          return;
+        }
+
+        var { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          afficherPorte();
+          return;
+        }
+        ETAT.session = session;
+
+        var data = await fetchDashboardData(supabase, isSupabaseConfigured);
+        if (data.reason === "no_establishment") {
+          afficherPorte("Ce compte n'est rattaché à aucun club. Contacte ViralNight si c'est une erreur.");
+          return;
+        }
+        if (data.source !== "supabase" || !data.establishment) {
+          afficherPorte("Impossible de charger les données de ton club pour le moment.");
+          return;
+        }
+
+        ETAT.data = data;
+        rendreDashboard();
+        rendreRecompenses();
+        rendreFiche();
+        rendreReglages();
+      }
+
+      function afficherPorte(message) {
+        if (message) $("#porte-message").textContent = message;
+        PORTE.hidden = false;
+      }
+
+      /* ================= TABLEAU DE BORD ================= */
+
+      function rendreDashboard() {
+        var stats = getDashboardStats(ETAT.data);
+        $("#dash-etablissement").textContent = ETAT.data.establishment.name || "—";
+
+        $("#kpi-vues").textContent = nb.format(stats.reach);
+        $("#kpi-vues-note").textContent = nb.format(stats.validatedCount) + " contenu" + (stats.validatedCount > 1 ? "s" : "") + " validé" + (stats.validatedCount > 1 ? "s" : "");
+        $("#kpi-points").textContent = nb.format(stats.points);
+        $("#kpi-scans").textContent = nb.format(stats.scanCount);
+        $("#kpi-scans-note").textContent = stats.scanCount ? nb.format(stats.uniqueScanners) + " personnes différentes" : "Aucun scan encore";
+        $("#kpi-recompenses").textContent = nb.format(stats.redemptions.length);
+        $("#kpi-recompenses-note").textContent = nb.format(stats.activeRewards.length) + " active" + (stats.activeRewards.length > 1 ? "s" : "") + " dans la boutique";
+
+        var recentes = [...stats.submissions]
+          .sort(function (a, b) { return new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0); })
+          .slice(0, 8);
+
+        var zone = $("#dash-activite");
+        if (!recentes.length) {
+          zone.innerHTML = '<p class="vide">Aucun contenu déposé pour l\'instant.</p>';
+          return;
+        }
+
+        var LABEL_STATUT = { validated: "Validé", pending: "En attente", rejected: "Rejeté" };
+        var LABEL_PLATEFORME = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube" };
+
+        zone.innerHTML = recentes.map(function (s) {
+          var gain = s.status === "validated";
+          var date = s.submitted_at ? new Date(s.submitted_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }) : "—";
+          return (
+            '<div class="activite-ligne">' +
+              '<span class="act-ico' + (gain ? " gain" : "") + '">' + escapeHtml((LABEL_STATUT[s.status] || "?").charAt(0)) + "</span>" +
+              '<span class="act-txt"><strong>' + escapeHtml(LABEL_PLATEFORME[s.platform] || s.platform || "—") + "</strong>" +
+              "<span>" + escapeHtml(LABEL_STATUT[s.status] || s.status || "—") + " · " + escapeHtml(date) + "</span></span>" +
+              '<span class="act-pts' + (gain ? "" : " neutre") + '">' + (gain ? "+" + nb.format(s.points_awarded || 0) : "—") + "</span>" +
+            "</div>"
+          );
+        }).join("");
+      }
+
+      /* ================= RECOMPENSES ================= */
+
+      function rendreRecompenses() {
+        var rewards = getActiveRewards(ETAT.data.rewards || []);
+        var zone = $("#recompenses-liste");
+
+        if (!rewards.length) {
+          zone.innerHTML = '<p class="vide">Aucune récompense pour l\'instant.</p>';
+          return;
+        }
+
+        zone.innerHTML = rewards.map(function (r) {
+          return (
+            '<div class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
+              '<div class="champ"><label>Nom</label><input type="text" data-champ="title" value="' + escapeHtml(r.title) + '" /></div>' +
+              '<div class="recompense-lignes">' +
+                '<div class="champ"><label>Seuil (pts)</label><input type="number" min="0" step="10" data-champ="points_required" value="' + Number(r.points_required || 0) + '" /></div>' +
+                '<div class="champ"><label>Stock max</label><input type="number" min="0" step="1" placeholder="Illimité" data-champ="max_redemptions" value="' + (r.max_redemptions ?? "") + '" /></div>' +
+              "</div>" +
+              '<div class="champ"><label>Famille</label><select data-champ="category">' +
+                ["bar", "acces", "vip"].map(function (c) {
+                  return '<option value="' + c + '"' + (r.category === c ? " selected" : "") + ">" + ({ bar: "Bar", acces: "Accès", vip: "VIP" })[c] + "</option>";
+                }).join("") +
+              "</select></div>" +
+              '<div class="recompense-actions">' +
+                '<span class="recompense-etat" data-etat></span>' +
+                '<button type="button" class="retirer" data-retirer>Retirer</button>' +
+              "</div>" +
+            "</div>"
+          );
+        }).join("");
+
+        zone.querySelectorAll("[data-champ]").forEach(function (input) {
+          input.addEventListener("change", function () { enregistrerRecompense(input.closest("[data-reward-id]")); });
+        });
+        zone.querySelectorAll("[data-retirer]").forEach(function (bouton) {
+          bouton.addEventListener("click", function () { retirerRecompense(bouton.closest("[data-reward-id]")); });
+        });
+      }
+
+      async function enregistrerRecompense(carte) {
+        var rewardId = carte.dataset.rewardId;
+        var etat = carte.querySelector("[data-etat]");
+        var payload = {
+          title: carte.querySelector('[data-champ="title"]').value || "Récompense",
+          points_required: Number(carte.querySelector('[data-champ="points_required"]').value || 0),
+          max_redemptions: carte.querySelector('[data-champ="max_redemptions"]').value === "" ? null : Math.max(0, Math.round(Number(carte.querySelector('[data-champ="max_redemptions"]').value))),
+          category: carte.querySelector('[data-champ="category"]').value,
+        };
+        etat.textContent = "Enregistrement…";
+        var { error } = await supabase.from("rewards").update(payload).eq("id", rewardId);
+        etat.textContent = error ? "Erreur : " + error.message : "Enregistré ✓";
+        if (!error) setTimeout(function () { etat.textContent = ""; }, 1800);
+      }
+
+      // Desactivation (active=false), jamais une suppression -- une
+      // recompense deja echangee garde son historique (reward_redemptions
+      // la reference encore). Meme raisonnement que app.js.
+      async function retirerRecompense(carte) {
+        if (!window.confirm("Retirer cette récompense de la boutique ?")) return;
+        var rewardId = carte.dataset.rewardId;
+        var { error } = await supabase.from("rewards").update({ active: false }).eq("id", rewardId);
+        if (error) { $("#recompense-msg").textContent = "Erreur : " + error.message; $("#recompense-msg").style.display = "block"; return; }
+        ETAT.data.rewards = (ETAT.data.rewards || []).map(function (r) { return r.id === rewardId ? { ...r, active: false } : r; });
+        rendreRecompenses();
+      }
+
+      $("#recompense-ajouter").addEventListener("click", async function () {
+        var { data, error } = await supabase.from("rewards").insert({
+          establishment_id: ETAT.data.establishment.id,
+          title: "Nouvelle récompense",
+          points_required: 100,
+          max_redemptions: null,
+          category: "bar",
+          active: true,
+        }).select().single();
+        if (error) { $("#recompense-msg").textContent = "Erreur : " + error.message; $("#recompense-msg").style.display = "block"; return; }
+        ETAT.data.rewards = [...(ETAT.data.rewards || []), data];
+        rendreRecompenses();
+      });
+
+      /* ================= MA FICHE ================= */
+
+      function rendreFiche() {
+        var e = ETAT.data.establishment;
+        $("#fiche-nom").value = e.name || "";
+        $("#fiche-ville").value = e.city || "";
+        $("#fiche-telephone").value = e.phone || "";
+        $("#fiche-categorie").value = e.category || "club";
+        $("#fiche-instagram").value = (e.ig_handle || "").replace(/^@/, "");
+        $("#fiche-couleur").value = e.primary_color || "#ff6363";
+        majApercuFiche();
+      }
+
+      function majApercuFiche() {
+        var couleur = $("#fiche-couleur").value || "#ff6363";
+        $("#fiche-apercu").style.setProperty("--c", couleur);
+        $("#fiche-apercu-badge").style.background = couleur;
+        var nom = $("#fiche-nom").value.trim() || "Votre club";
+        $("#fiche-apercu-badge").textContent = nom.charAt(0).toUpperCase();
+        $("#fiche-apercu-nom").textContent = nom;
+        var handle = $("#fiche-instagram").value.trim();
+        $("#fiche-apercu-sous").textContent = handle ? "@" + handle : "Aucun compte Instagram lié";
+      }
+
+      ["fiche-nom", "fiche-couleur", "fiche-instagram"].forEach(function (id) {
+        $("#" + id).addEventListener("input", majApercuFiche);
+      });
+
+      $("#fiche-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var bouton = $("#fiche-enregistrer");
+        var msg = $("#fiche-msg");
+        bouton.disabled = true;
+        bouton.textContent = "Enregistrement…";
+
+        var handle = $("#fiche-instagram").value.trim().replace(/^@/, "");
+        var payload = {
+          name: $("#fiche-nom").value.trim(),
+          city: $("#fiche-ville").value.trim() || null,
+          phone: $("#fiche-telephone").value.trim() || null,
+          category: $("#fiche-categorie").value,
+          ig_handle: handle || null,
+          primary_color: $("#fiche-couleur").value,
+        };
+
+        var { error } = await supabase.from("establishments").update(payload).eq("id", ETAT.data.establishment.id);
+
+        bouton.disabled = false;
+        bouton.textContent = "Enregistrer";
+        msg.style.display = "block";
+        if (error) {
+          msg.style.color = "var(--accent)";
+          msg.textContent = "Erreur : " + error.message;
+          return;
+        }
+        msg.style.color = "var(--succes)";
+        msg.textContent = "Fiche enregistrée ✓";
+        ETAT.data.establishment = { ...ETAT.data.establishment, ...payload };
+        $("#dash-etablissement").textContent = payload.name || "—";
+      });
+
+      /* ================= REGLAGES ================= */
+
+      async function rendreReglages() {
+        $("#reglages-compte").textContent = ETAT.session.user.email || "—";
+
+        var zone = $("#reglages-instagram");
+        try {
+          var reponse = await fetch("/api/instagram?action=status", {
+            headers: { Authorization: "Bearer " + ETAT.session.access_token },
+          });
+          var statut = await reponse.json();
+
+          if (!statut.connecte) {
+            zone.innerHTML =
+              '<div class="reglage-ligne" style="border-bottom:0">' +
+                '<span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>' +
+                '<span class="reglage-txt"><strong>Pas encore connecté</strong><span>Voir les mentions et les abonnés gagnés</span></span>' +
+              "</div>" +
+              '<button type="button" class="bouton pleine" id="instagram-connecter">Connecter Instagram</button>';
+            $("#instagram-connecter").addEventListener("click", async function (ev) {
+              ev.currentTarget.disabled = true;
+              ev.currentTarget.textContent = "Redirection…";
+              var r = await fetch("/api/instagram?action=connect", { headers: { Authorization: "Bearer " + ETAT.session.access_token } });
+              var corps = await r.json().catch(function () { return null; });
+              if (corps && corps.url) window.location.href = corps.url;
+            });
+            return;
+          }
+
+          var gain = statut.abonnesGagnes;
+          zone.innerHTML =
+            '<div class="reglage-ligne">' +
+              '<span class="point-vert"></span>' +
+              '<span class="reglage-txt"><strong>Connecté à @' + escapeHtml(statut.username) + "</strong>" +
+              "<span>" + nb.format(statut.mentions || 0) + " mention" + (statut.mentions > 1 ? "s" : "") + " reçue" + (statut.mentions > 1 ? "s" : "") + "</span></span>" +
+            "</div>" +
+            (gain !== null && gain !== undefined
+              ? '<div class="reglage-ligne"><span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 20V4M5 11l7-7 7 7"/></svg></span>' +
+                '<span class="reglage-txt"><strong>' + (gain >= 0 ? "+" : "") + nb.format(gain) + ' abonnés</strong><span>Depuis que ce club est sur ViralNight</span></span></div>'
+              : "");
+        } catch (err) {
+          zone.innerHTML = '<p class="vide" style="padding:14px 0">Statut Instagram indisponible pour le moment.</p>';
+        }
+      }
+
+      $("#reglages-deconnexion").addEventListener("click", async function () {
+        await supabase.auth.signOut();
+        window.location.href = "./connexion.html";
+      });
+
+      demarrer();
+    </script>
+  </body>
+</html>

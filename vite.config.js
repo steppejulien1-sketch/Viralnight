@@ -33,6 +33,7 @@ export default defineConfig({
         cookies: resolve(__dirname, "cookies.html"),
         cartePreview: resolve(__dirname, "carte-preview.html"),
         appPreview: resolve(__dirname, "app-preview.html"),
+        ownerPreview: resolve(__dirname, "owner-preview.html"),
       },
     },
   },
