@@ -599,6 +599,83 @@ function renderActivityFeed(stats) {
     .join("");
 }
 
+// Onglet "Contenu" : l'historique COMPLET (pas les 6 derniers comme
+// "Activité récente") -- Julien voulait voir tout ce qu'un club a genere
+// depuis son inscription. Meme rendu de ligne (feed-item) que l'activite
+// recente, filtrable par statut. Le filtre se retient d'un rendu a
+// l'autre (contenuFiltreActif) pour ne pas revenir a "Tout" a chaque
+// rafraichissement des donnees.
+let contenuFiltreActif = "all";
+
+function renderContenu(stats) {
+  const container = document.querySelector("[data-contenu-liste]");
+  const totalLabel = document.querySelector("[data-contenu-total]");
+  if (!container) return;
+
+  const submissions = [...stats.submissions].sort(
+    (a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0),
+  );
+
+  if (totalLabel) {
+    totalLabel.textContent = submissions.length
+      ? `${formatNumber(submissions.length)} contenu${submissions.length > 1 ? "s" : ""} déposé${submissions.length > 1 ? "s" : ""} au total.`
+      : "Aucun contenu déposé pour l'instant.";
+  }
+
+  const visibles =
+    contenuFiltreActif === "all" ? submissions : submissions.filter((s) => s.status === contenuFiltreActif);
+
+  if (!visibles.length) {
+    container.innerHTML = '<p class="chart-empty">Aucun contenu pour ce filtre.</p>';
+    return;
+  }
+
+  const STATUT_TAG = {
+    validated: { texte: "VALIDÉ", warm: false },
+    pending: { texte: "EN ATTENTE", warm: false },
+    review: { texte: "À REVOIR", warm: true },
+    rejected: { texte: "REJETÉ", warm: true },
+  };
+
+  container.innerHTML = visibles
+    .map((submission) => {
+      const label = shortCustomerLabel(submission.customer_id);
+      const [a, b] = avatarPairFor(submission.customer_id || submission.id);
+      const tag = STATUT_TAG[submission.status] || { texte: submission.status || "—", warm: false };
+      const date = submission.submitted_at
+        ? new Date(submission.submitted_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+        : "—";
+      const points = submission.status === "validated" ? `+${formatNumber(submission.points_awarded || 0)}` : "—";
+
+      return `
+        <div class="feed-item">
+          <div class="fi-ava" style="--a:${a};--b:${b}">${escapeHtml(avatarInitials(label))}</div>
+          <div class="fi-main">
+            <div class="fi-top">
+              <span class="fi-handle">${escapeHtml(label)}</span>
+              <span class="fi-tag${tag.warm ? " warm" : ""}">${escapeHtml(tag.texte)}</span>
+            </div>
+            <div class="fi-sub">${escapeHtml(labelPlateforme(submission.platform))} · ${escapeHtml(formatNumber(submission.views_count || 0))} vues</div>
+          </div>
+          <div class="fi-right">
+            <span class="fi-pts${submission.status !== "validated" ? " neg" : ""}">${escapeHtml(points)}</span>
+            <span class="fi-time">${escapeHtml(date)}</span>
+          </div>
+        </div>`;
+    })
+    .join("");
+}
+
+document.querySelectorAll("[data-contenu-filtre]").forEach((bouton) => {
+  bouton.addEventListener("click", () => {
+    contenuFiltreActif = bouton.dataset.contenuFiltre;
+    document
+      .querySelectorAll("[data-contenu-filtre]")
+      .forEach((b) => b.classList.toggle("is-active", b === bouton));
+    renderContenu(getDashboardStats(dashboardState));
+  });
+});
+
 function renderFormatSplit(stats) {
   const container = document.querySelector("[data-format-split]");
   if (!container) return;
@@ -699,6 +776,7 @@ function renderOverview(data) {
   renderActivityFeed(stats);
   renderFormatSplit(stats);
   renderTopAmbassadors(stats);
+  renderContenu(stats);
 }
 
 /**
