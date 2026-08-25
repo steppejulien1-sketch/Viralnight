@@ -1188,21 +1188,45 @@
       .sheet-fav.actif { background: rgba(255,47,69,.14); border-color: rgba(255,47,69,.35); }
       .sheet-fav.actif svg { stroke: #ff2f45; fill: #ff2f45; }
 
-      /* Choix Instagram/TikTok pour "Poster ma story" : deux gros
-         boutons avec icone, plutot que du texte simple -- demande de
-         Julien ("un truc grand, un truc beau"). */
-      .reseaux-grille { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 18px 0 0; }
+      /* Choix Story/Reel/TikTok pour "Poster ma story" : gros boutons
+         avec icone, plutot que du texte simple -- demande de Julien
+         ("un truc grand, un truc beau"). */
+      .reseaux-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
       .reseau-bouton {
         display: flex; flex-direction: column; align-items: center; gap: 9px;
         background: var(--s2); border: 2px solid transparent; border-radius: 18px;
-        padding: 16px 8px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+        padding: 14px 6px; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--ink);
       }
       .reseau-bouton.actif { border-color: var(--accent); }
-      .reseau-ico { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: #fff; }
-      .reseau-ico svg { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .reseau-ico { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #fff; }
+      .reseau-ico svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       .reseau-ico.ig { background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7); }
       .reseau-ico.tk { background: #010101; }
       .reseau-ico.tk svg { fill: currentColor; stroke: none; }
+
+      /* Gain annonce avant de poster, et marche a suivre numerotee --
+         Julien, apres avoir vu la vraie PWA clubbeur : "il y avait plus
+         d'elements [...] c'etait plus propre, plus clean", cette page-ci
+         se limitait au strict formulaire. Contenu et raisonnement repris
+         de 06-pwa-clubbeurs/src/pages/post-story.js. */
+      .ps-gain {
+        display: flex; align-items: baseline; gap: 12px; margin: 18px 0 0;
+        background: var(--s2); border-radius: 14px; padding: 13px 15px;
+      }
+      .ps-gain-pts { flex: 0 0 auto; font-size: 19px; font-weight: 800; color: var(--succes-texte, #57d98a); }
+      .ps-gain-txt { font-size: 12.5px; color: var(--ink2); line-height: 1.45; }
+      .ps-steps { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 13px; text-align: left; }
+      .ps-step { display: flex; gap: 11px; align-items: flex-start; }
+      .ps-step-n {
+        flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; margin-top: 1px;
+        background: var(--s2); color: var(--ink2); font-size: 11.5px; font-weight: 800;
+        display: grid; place-items: center;
+      }
+      .ps-step-txt { font-size: 13.5px; color: var(--ink); line-height: 1.4; }
+      .ps-step-txt b { display: block; font-weight: 700; }
+      .ps-step-txt span { display: block; color: var(--ink2); font-size: 12.5px; margin-top: 1px; }
+      .ps-hint { font-size: 12.5px; margin: 0 0 4px; }
+      .ps-club { color: var(--accent); }
       .sheet-chips { display: flex; gap: 7px; margin: 14px 0 16px; flex-wrap: wrap; }
       .chip {
         font-size: 11.5px; font-weight: 700; color: var(--ink2); background: var(--s2);
@@ -3320,34 +3344,136 @@ function ouvrirClub(c, src, id) {
   $("#sh-poster-story")?.addEventListener("click", function () { ouvrirChoixReseau(c.nom); });
 }
 
+// Bareme reel du backend (fonction SQL story_points(), meme base que la
+// PWA clubbeur officielle -- voir 06-pwa-clubbeurs/src/lib/bareme.js,
+// dont ces valeurs sont recopiees). Affichage seulement : le montant
+// reel est calcule et verifie cote serveur, jamais ici. Julien voulait
+// une page plus etoffee, avec le gain annonce avant de poster ("c'etait
+// plus propre, plus clean" sur la PWA) -- a garder synchronise si le
+// bareme change en base.
+var BAREME_STORY = {
+  story: { pts: "+100", texte: "Le meilleur montant : une story touche ton cercle proche, c'est ce qui remplit vraiment la salle." },
+  reel: { pts: "+60", texte: "Une portée plus large, mais moins ciblée que la story." },
+  tiktok: { pts: "+60", texte: "60 pts d'office, + 7 pts par 100 vues comptées par TikTok." },
+};
+
+// Story et Reel s'ouvrent tous deux dans Instagram (meme icone dégradée),
+// seul le geste differe une fois l'appli ouverte -- TikTok reste a part.
+var KINDS_STORY = [
+  {
+    id: "story", label: "Story", classe: "ig",
+    schema: "instagram://story-camera", secours: "https://www.instagram.com/",
+    etape2: "Ajoute le sticker mention", verbe: "une story",
+    icone: '<rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>',
+  },
+  {
+    id: "reel", label: "Reel", classe: "ig",
+    schema: "instagram://", secours: "https://www.instagram.com/",
+    etape2: "Mentionne", verbe: "un Reel", url: true,
+    icone: '<rect x="3" y="3" width="18" height="18" rx="6"/><path d="M10 8.7v6.6l5.6-3.3z" fill="currentColor" stroke="none"/>',
+  },
+  {
+    id: "tiktok", label: "TikTok", classe: "tk",
+    schema: "tiktok://", secours: "https://www.tiktok.com/upload",
+    etape2: "Mentionne", verbe: "un TikTok", url: true,
+    icone: '<path d="M15 3v10.5a3.3 3.3 0 1 1-3.3-3.3c.3 0 .6.03.9.09V7.2a6 6 0 1 0 5.4 5.97V9.6a7.6 7.6 0 0 0 4 1.15V7.5A4.2 4.2 0 0 1 17.6 6 4.2 4.2 0 0 1 15 3z"/>',
+  },
+];
+
 // "Poster ma story" (fiche club) et l'onglet Story du bas ouvrent la
-// meme page : Instagram/TikTok pour poster, puis un lien colle ici qui
-// part vers la vraie fonction submit_story() -- en attente de
-// verification par le club, pas de points immediats (voir la fonction
-// plus bas, appel a supabaseClubbeur.rpc("submit_story", ...)).
+// meme page : choix du format (Story/Reel/TikTok), gain annonce,
+// marche a suivre numerotee, puis un lien colle ici qui part vers la
+// vraie fonction submit_story() -- en attente de verification par le
+// club, pas de points immediats (voir la fonction plus bas, appel a
+// supabaseClubbeur.rpc("submit_story", ...)).
 //
 // Vraie page plein ecran (#vue-story, atteignable via l'onglet du bas),
 // pas la feuille du bas comme avant -- Julien : l'ancienne feuille (le
 // meme systeme qu'une fiche club) "n'est meme pas une page entiere",
 // il attend d'atterrir sur "Story" comme sur les autres onglets.
+//
+// Contenu inspire de l'ecran equivalent, plus etoffe, deja construit
+// sur la vraie PWA clubbeur (06-pwa-clubbeurs/src/pages/post-story.js)
+// -- meme raisonnement affiche, meme marche a suivre numerotee,
+// adaptes au HTML/JS de ce fichier (pas de composants a importer).
 function ouvrirChoixReseau(nomClub) {
-  var mention = nomClub
-    ? "Tague " + nomClub + " dans ta story ou ta vidéo."
-    : "Tague le club dans ta story ou ta vidéo.";
+  // Handle Instagram a taguer, quand on le connait -- affine par
+  // majMention()/majEtapes() plus bas des qu'un club est identifie
+  // (fiche club, selection dans la liste, ou clubs.ig_handle resolu).
+  var handleActuel = null;
+
+  function texteMention(handle) {
+    return handle
+      ? "Tague " + '<span class="ps-club">@' + handle + "</span> et gagne tes points"
+      : nomClub
+        ? "Tague " + nomClub + " et gagne tes points"
+        : "Tague ton club et gagne tes points";
+  }
+
+  function blocGain(kindId) {
+    var b = BAREME_STORY[kindId] || BAREME_STORY.story;
+    return (
+      '<div class="ps-gain">' +
+        '<span class="ps-gain-pts">' + b.pts + " pts</span>" +
+        '<span class="ps-gain-txt">' + b.texte + "</span>" +
+      "</div>"
+    );
+  }
+
+  function blocEtapes(kindId, handle) {
+    var k = KINDS_STORY.filter(function (x) { return x.id === kindId; })[0] || KINDS_STORY[0];
+    var cible = handle ? "@" + handle : nomClub || "le compte du club";
+    var etapes = [
+      { n: "1", t: "Ouvre " + (kindId === "tiktok" ? "TikTok" : "Instagram"), d: "On t'y emmène en un tap." },
+      { n: "2", t: "Poste " + k.verbe, d: k.etape2 + " " + cible + "." },
+      {
+        n: "3", t: "Reviens nous le dire",
+        d: kindId === "story"
+          ? "Le club voit ta mention arriver sur son compte, puis tes points tombent."
+          : "Le club ouvre ton lien et vérifie la mention, puis tes points tombent.",
+      },
+    ];
+    return (
+      '<ol class="ps-steps">' +
+      etapes.map(function (e) {
+        return '<li class="ps-step"><span class="ps-step-n">' + e.n + "</span>" +
+          '<span class="ps-step-txt"><b>' + e.t + "</b><span>" + e.d + "</span></span></li>";
+      }).join("") +
+      "</ol>"
+    );
+  }
+
+  function blocChamp(kindId) {
+    // Une story Instagram n'a pas d'URL publique (contrairement a un Reel
+    // ou un TikTok) : la lui demander bloquait bêtement quiconque postait
+    // une vraie story, pour un lien qui n'existe pas. Meme logique que la
+    // vraie PWA clubbeur -- voir post-story.js, "on ne demande le lien
+    // que pour les Reels et TikToks".
+    if (kindId === "story") {
+      return '<p class="desc ps-hint">Une story n\'a pas de lien public : on la détecte via ta mention.</p>' +
+        '<input class="va-input" id="story-url" type="url" hidden />';
+    }
+    return '<label class="rg-label" style="font-size:13px" for="story-url">Lien de ta publication</label>' +
+      '<input class="va-input" id="story-url" type="url" placeholder="' +
+      (kindId === "tiktok" ? "https://tiktok.com/@toi/video/…" : "https://instagram.com/reel/…") +
+      '" required />';
+  }
+
   var html =
     '<div class="sheet-ok">' +
-      '<p class="desc">' + mention + " Tes points arrivent une fois les vues vérifiées.</p>" +
+      '<p class="desc" id="story-mention">' + texteMention(null) + "</p>" +
       '<div class="reseaux-grille">' +
-        '<button type="button" class="reseau-bouton actif" id="sh-story-ig" data-kind="story" data-schema="instagram://story-camera" data-secours="https://www.instagram.com/">' +
-          '<span class="reseau-ico ig"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>' +
-          "<span>Instagram</span>" +
-        "</button>" +
-        '<button type="button" class="reseau-bouton" id="sh-story-tk" data-kind="tiktok" data-schema="tiktok://" data-secours="https://www.tiktok.com/upload">' +
-          '<span class="reseau-ico tk"><svg viewBox="0 0 24 24"><path d="M15 3v10.5a3.3 3.3 0 1 1-3.3-3.3c.3 0 .6.03.9.09V7.2a6 6 0 1 0 5.4 5.97V9.6a7.6 7.6 0 0 0 4 1.15V7.5A4.2 4.2 0 0 1 17.6 6 4.2 4.2 0 0 1 15 3z"/></svg></span>' +
-          "<span>TikTok</span>" +
-        "</button>" +
+      KINDS_STORY.map(function (k, i) {
+        return '<button type="button" class="reseau-bouton' + (i === 0 ? " actif" : "") + '" id="sh-story-' + k.id + '" ' +
+          'data-kind="' + k.id + '" data-schema="' + k.schema + '" data-secours="' + k.secours + '">' +
+          '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
+          "<span>" + k.label + "</span>" +
+        "</button>";
+      }).join("") +
       "</div>" +
-      '<form id="story-form" style="display:grid;gap:10px;margin-top:18px;text-align:left">' +
+      '<div id="story-gain">' + blocGain("story") + "</div>" +
+      '<div id="story-etapes">' + blocEtapes("story", null) + "</div>" +
+      '<form id="story-form" style="display:grid;gap:10px;margin-top:20px;text-align:left">' +
         (nomClub
           ? ""
           : '<button type="button" class="sheet-cta sobre" id="story-scan-btn" style="margin-bottom:4px">' +
@@ -3360,8 +3486,7 @@ function ouvrirChoixReseau(nomClub) {
             "</div>" +
             '<label class="rg-label" style="font-size:13px" for="story-club">Club</label>' +
             '<select class="va-input" id="story-club" required><option value="">Choisis un club…</option></select>') +
-        '<label class="rg-label" style="font-size:13px" for="story-url">Lien de ta story ou vidéo</label>' +
-        '<input class="va-input" id="story-url" type="url" placeholder="https://instagram.com/…" required />' +
+        '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
         '<p class="desc" id="story-msg" style="display:none;margin:0"></p>' +
         '<button type="submit" class="sheet-cta" id="story-envoyer">Envoyer</button>' +
       "</form>" +
@@ -3378,20 +3503,46 @@ function ouvrirChoixReseau(nomClub) {
   TAB_STORY.setAttribute("aria-current", "page");
   VUE_STORY.hidden = false;
   history.replaceState(null, "", "#story");
-  $("#sh-story-ig").focus();
+  $("#sh-story-story").focus();
+
+  // Met a jour la mention ("Tague @lehandle") et l'etape 2 des qu'on
+  // connait le vrai compte Instagram du club (clubs.ig_handle) -- avant,
+  // le nom du club suffisait a l'accueil, mais pas a dire QUOI taguer.
+  function majHandle(handle) {
+    handleActuel = handle || null;
+    var mentionEl = $("#story-mention");
+    if (mentionEl) mentionEl.innerHTML = texteMention(handleActuel);
+    var etapesEl = $("#story-etapes");
+    if (etapesEl) etapesEl.innerHTML = blocEtapes(kindChoisi, handleActuel);
+  }
+
+  // Depuis une fiche club (nomClub connu) : on tente de retrouver son
+  // vrai compte Instagram pour dire QUOI taguer, pas juste "le club".
+  // Best-effort -- le nom affiche sur la carte (maquette) ne correspond
+  // pas toujours a une ligne reelle de la table clubs.
+  if (nomClub) {
+    supabaseClubbeur.from("clubs").select("ig_handle").eq("name", nomClub).maybeSingle()
+      .then(function (res) { if (res.data && res.data.ig_handle) majHandle(res.data.ig_handle); })
+      .catch(function () {});
+  }
 
   // Depuis l'onglet Story (pas de club dans le contexte, contrairement
   // a un tap sur une fiche club) : liste des vrais clubs de la base,
   // pour ne jamais soumettre a l'aveugle un nom invente.
   if (!nomClub) {
-    supabaseClubbeur.from("clubs").select("name").order("name").then(function (res) {
+    supabaseClubbeur.from("clubs").select("name, ig_handle").order("name").then(function (res) {
       var select = $("#story-club");
       if (!select || !res.data) return;
+      var handleParNom = {};
       res.data.forEach(function (c) {
+        handleParNom[c.name] = c.ig_handle;
         var option = document.createElement("option");
         option.value = c.name;
         option.textContent = c.name;
         select.appendChild(option);
+      });
+      select.addEventListener("change", function () {
+        majHandle(handleParNom[select.value]);
       });
     });
 
@@ -3490,6 +3641,12 @@ function ouvrirChoixReseau(nomClub) {
     b.addEventListener("click", function () {
       boutonsReseau.forEach(function (x) { x.classList.toggle("actif", x === b); });
       kindChoisi = b.dataset.kind;
+      // Gain, marche a suivre et champ lien dependent tous du format
+      // choisi (montant different, et seule une story n'a pas d'URL
+      // publique -- voir blocChamp()).
+      $("#story-gain").innerHTML = blocGain(kindChoisi);
+      $("#story-etapes").innerHTML = blocEtapes(kindChoisi, handleActuel);
+      $("#story-champ-url").innerHTML = blocChamp(kindChoisi);
       ouvrirAppOuWeb(b.dataset.schema, b.dataset.secours);
     });
   });
@@ -3503,9 +3660,11 @@ function ouvrirChoixReseau(nomClub) {
       msg.style.color = erreur ? "var(--erreur-texte, var(--accent))" : "var(--succes-texte, #57d98a)";
       msg.textContent = texte;
     }
+    // Une story n'a pas de lien public (voir blocChamp()) : ne pas
+    // exiger ce que le format ne permet pas de fournir.
     var url = champ.value.trim();
     var club = nomClub || (champClub && champClub.value);
-    if (!url) return dire("Colle le lien de ta story ou vidéo.", true);
+    if (kindChoisi !== "story" && !url) return dire("Colle le lien de ta publication.", true);
     if (!club) return dire("Choisis d'abord un club.", true);
 
     bouton.disabled = true;
