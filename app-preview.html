@@ -759,7 +759,15 @@
          contient, sans quoi un <div> prendrait toute la largeur du
          conteneur de la carte et fausserait le centrage du marqueur. */
       .marker-porteur { display: inline-block; line-height: 0; }
-      .friend-marker { width: 52px; height: 68px; cursor: pointer; }
+      /* transform-origin: bottom -- ce marqueur est ancre par sa BASE
+         (new maplibregl.Marker({ anchor: "bottom" }), la pointe du verre
+         doit rester exactement sur les coordonnees reelles), mais
+         majTailleMarqueurs() le retrecit avec un scale() qui, par
+         defaut, se fait autour du CENTRE de la boite. Plus le zoom
+         diminuait, plus la base visuelle du verre remontait au-dessus
+         de sa vraie position -- d'ou le marqueur qui semblait "partir
+         dans la mer" en dezoomant, signale par Julien. */
+      .friend-marker { width: 52px; height: 68px; cursor: pointer; transform-origin: bottom center; }
       .friend-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
 
       .carte-rail {
@@ -3547,6 +3555,18 @@ function noteRecompenseClub() {
 // double niveau : un "porteur" que MapLibre positionne et ne touche
 // jamais autrement, un enfant interne qu'on est seul a redimensionner.
 var marqueursEchelle = [];
+// Ecart (en pixels ecran, avant mise a l'echelle) applique a chaque
+// marqueur en dezoomant -- demande de Julien avec capture d'appli de
+// reference a l'appui (pins Airbnb) : plusieurs badges proches doivent
+// se chevaucher en "tas" legerement decale, pas s'empiler exactement au
+// meme pixel avec un seul visible par-dessus les autres. Chaque
+// marqueur recoit un decalage fixe (etabli une fois a sa creation) dans
+// une direction differente ; majTailleMarqueurs en applique une part
+// croissante en dezoomant.
+function ecartAleatoire() {
+  var angle = Math.random() * Math.PI * 2, rayon = 6 + Math.random() * 10;
+  return { x: Math.cos(angle) * rayon, y: Math.sin(angle) * rayon };
+}
 function majTailleMarqueurs() {
   var z = zoomEffectif();
   // 1 au niveau rue (zoom 16), reduit en dezoomant, jusqu'a un plancher
@@ -3560,7 +3580,16 @@ function majTailleMarqueurs() {
   // seulement tout pres du zoom minimal.
   var t = Math.max(0, Math.min(1, (z - map.getMinZoom()) / (16 - map.getMinZoom())));
   var s = Math.max(0.12, Math.pow(t, 1.6));
-  marqueursEchelle.forEach(function (el) { el.style.transform = "scale(" + s.toFixed(3) + ")"; });
+  // L'ecart ne doit JAMAIS deplacer un badge a l'echelle rue (chercher
+  // un club precis exige une position exacte) : il ne s'applique qu'en
+  // dessous d'un zoom moyen (t < .4), et disparait completement au-dela
+  // -- translate() n'est pas affecte par le scale() qui suit, l'ecart
+  // reste donc en vrais pixels ecran quelle que soit la taille du badge.
+  var portionEcart = Math.max(0, 1 - t / 0.4);
+  marqueursEchelle.forEach(function (m) {
+    var dx = (m.dx * portionEcart).toFixed(1), dy = (m.dy * portionEcart).toFixed(1);
+    m.el.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + s.toFixed(3) + ")";
+  });
 }
 
 map.on("load", function () {
@@ -3588,7 +3617,8 @@ map.on("load", function () {
     new maplibregl.Marker({ element: porteur, anchor: "center", opacityWhenCovered: 0 })
       .setLngLat(c.lngLat)
       .addTo(map);
-    marqueursEchelle.push(el);
+    var ecart = ecartAleatoire();
+    marqueursEchelle.push({ el: el, dx: ecart.x, dy: ecart.y });
   });
 
   AMIS.filter(function (a) { return a.lngLat; }).forEach(function (a) {
@@ -3603,7 +3633,8 @@ map.on("load", function () {
     new maplibregl.Marker({ element: porteur, anchor: "bottom", opacityWhenCovered: 0 })
       .setLngLat(a.lngLat)
       .addTo(map);
-    marqueursEchelle.push(el);
+    var ecart = ecartAleatoire();
+    marqueursEchelle.push({ el: el, dx: ecart.x, dy: ecart.y });
   });
 
   majTailleMarqueurs();
