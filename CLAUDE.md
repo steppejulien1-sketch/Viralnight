@@ -49,7 +49,7 @@ Vite multi-pages, JavaScript natif en modules ES. **Aucun framework front, aucun
 TypeScript, aucun bundler exotique.** Ne pas introduire React, Tailwind ou un
 gestionnaire d'etat : le projet est volontairement en HTML/CSS/JS lisibles.
 
-- **Front** : 13 pages HTML declarees dans `vite.config.js`. Chacune a son `.css` et son `.js`.
+- **Front** : 21 pages HTML declarees dans `vite.config.js`. Chacune a son `.css` et son `.js`.
 - **Backend** : `api/*.js`, fonctions serverless Vercel. En local, `vite-plugin-api.js` les sert sous `npm run dev`.
 - **Base** : Supabase (Postgres + Auth + RLS).
 - **Logique metier** : `lib/`, pur JS sans dependance au DOM ni au reseau, donc testable en Node.
@@ -70,6 +70,11 @@ gestionnaire d'etat : le projet est volontairement en HTML/CSS/JS lisibles.
 | `setup.html` | Configuration initiale d'un club. |
 | `chat.html` | Assistant. |
 | `viral-intelligence.html` / `demo.html` | Analyse des soirees. |
+| `app-preview.html` | Maquette autoportante de l'app mobile "clubbeur" (cote client final : scan QR, points, boutique, carte des clubs). Un seul gros fichier, branche sur les vraies fonctions RPC Supabase (`submit_story`, `redeem_reward`, `checkin_scan`...). |
+| `admin-prospection.html` | Back-office de prospection commerciale (qualification de clubs). |
+| `carte-preview.html` | Maquette autoportante de la carte des clubs (maplibre-gl). |
+| `bienvenue.html` | Ecran d'accueil post-inscription. |
+| `mentions-legales.html` / `confidentialite.html` / `cgu.html` / `cookies.html` | Pages legales statiques. |
 
 ### Fichiers transverses
 
@@ -78,9 +83,6 @@ gestionnaire d'etat : le projet est volontairement en HTML/CSS/JS lisibles.
 - `theme.js` — runtime du design system : apparitions au scroll, spotlight des cartes.
 - `supabaseClient.js` — client Supabase cote navigateur (cle anon).
 - `dashboardData.js` — bareme de points par defaut. La landing ET le dashboard lisent d'ici. Changer une valeur la-bas la change partout.
-
-`styles.css` et `script.js` sont les restes de l'ANCIENNE landing. Plus rien ne les
-charge. A supprimer un jour.
 
 ### `lib/` — la logique qui compte
 
