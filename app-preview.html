@@ -1354,6 +1354,41 @@
       .ps-hint { font-size: 12.5px; margin: 0 0 4px; }
       .ps-club { color: var(--accent); font-weight: 700; }
 
+      /* Identite Instagram (pseudo + capture de profil) -- demandee UNE
+         SEULE FOIS, a la premiere story postee (Julien : "il ne doit
+         plus jamais la remettre"). Reprend le systeme deja construit
+         dans l'ancienne PWA clubbeur (06-pwa-clubbeurs/onboarding.js,
+         migration 0027) : le club ne peut reconnaitre qui se cache
+         derriere `@pseudo` que grace a ca, une story n'apportant plus
+         de capture depuis la 0026. */
+      .ps-identite {
+        display: grid; gap: 10px; text-align: left;
+        background: var(--s2); border: 1px solid var(--line2);
+        border-radius: 16px; padding: 14px;
+      }
+      .ps-identite-titre { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+      .ps-identite-sub { margin: -4px 0 2px; font-size: 12px; font-weight: 550; color: var(--ink2); line-height: 1.4; }
+      .ps-pseudo-champ { display: flex; align-items: center; gap: 8px; background: var(--s1); border: 1px solid var(--line2); border-radius: 12px; padding: 0 4px 0 13px; }
+      .ps-pseudo-champ span { font-family: var(--mono, inherit); font-weight: 700; color: var(--ink3); }
+      .ps-pseudo-champ input {
+        flex: 1; min-width: 0; border: 0; background: none; padding: 11px 9px 11px 0;
+        font-family: var(--mono, inherit); font-size: 14.5px; font-weight: 700; color: var(--ink); outline: 0;
+      }
+      .ps-capture {
+        display: flex; align-items: center; gap: 10px; padding: 11px 13px;
+        border: 1.5px dashed var(--line2); border-radius: 12px; cursor: pointer;
+      }
+      .ps-capture.rempli { border-style: solid; border-color: var(--succes-texte, #57d98a); }
+      .ps-capture-ico {
+        flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px; background: var(--s1);
+        display: grid; place-items: center;
+      }
+      .ps-capture-ico svg { width: 15px; height: 15px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .ps-capture-txt { font-size: 13px; font-weight: 650; color: var(--ink2); }
+      .ps-capture.rempli .ps-capture-txt { color: var(--ink); }
+      .ps-capture-preview { display: flex; justify-content: center; }
+      .ps-capture-preview img { max-height: 130px; border-radius: 12px; border: 1px solid var(--line2); }
+
       /* Avertissement tout en haut de la page, avant meme le choix du
          format -- Julien : certains ne taguent pas le club, ne recoivent
          donc aucun point, et s'en etonnent alors que c'est la regle.
@@ -3695,6 +3730,26 @@ function ouvrirChoixReseau(nomClub) {
     "</button>";
   }
 
+  // Meme regle que l'ancien onboarding (06-pwa-clubbeurs) : lettres,
+  // chiffres, point, underscore -- un vrai pseudo Instagram.
+  var PSEUDO_IG_RE = /^[a-zA-Z0-9._]{2,30}$/;
+
+  function blocIdentite() {
+    return (
+      '<div class="ps-identite">' +
+        '<p class="ps-identite-titre">Ton profil Instagram</p>' +
+        '<p class="ps-identite-sub">A faire une seule fois : le club doit pouvoir te reconnaitre derriere ta mention.</p>' +
+        '<div class="ps-pseudo-champ"><span>@</span><input type="text" id="story-pseudo-ig" placeholder="ton.pseudo" autocapitalize="off" autocomplete="off" /></div>' +
+        '<label class="ps-capture" id="story-capture-label" for="story-capture-file">' +
+          '<input type="file" accept="image/*" id="story-capture-file" hidden />' +
+          '<span class="ps-capture-ico"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2.5h6L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg></span>' +
+          '<span class="ps-capture-txt" id="story-capture-txt">Capture d\'écran de ton profil</span>' +
+        "</label>" +
+        '<div class="ps-capture-preview" id="story-capture-preview" hidden><img id="story-capture-img" alt="" /></div>' +
+      "</div>"
+    );
+  }
+
   function blocEtapes(kindId, handle) {
     var k = KINDS_STORY.filter(function (x) { return x.id === kindId; })[0] || KINDS_STORY[0];
     var cible = handle ? "@" + handle : nomClub || "le compte du club";
@@ -3774,6 +3829,10 @@ function ouvrirChoixReseau(nomClub) {
             "</div>" +
             '<label class="rg-label" style="font-size:13px" for="story-club">Club</label>' +
             '<select class="va-input" id="story-club" required><option value="">Choisis un club…</option></select>') +
+        // Rempli par verifierIdentite() plus bas, seulement si ce
+        // clubbeur n'a pas encore de capture de profil enregistree --
+        // vide sinon, jamais redemande.
+        '<div id="story-identite"></div>' +
         '<div class="ps-warn">' +
           '<span class="ps-warn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 16.5h.01M10.6 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.4 3.7a2 2 0 0 0-3.4 0z"/></svg></span>' +
           '<span class="ps-warn-txt"><strong>Mentionne le club</strong><span id="story-mention">' + texteMention(null) + "</span></span>" +
@@ -3820,6 +3879,33 @@ function ouvrirChoixReseau(nomClub) {
   VUE_STORY.hidden = false;
   history.replaceState(null, "", "#story");
   $("#sh-story-story").focus();
+
+  // identiteRequise : vrai seulement si ce clubbeur n'a encore JAMAIS
+  // enregistre de capture de profil -- verifie a chaque ouverture de la
+  // page, jamais mis en cache, pour ne pas redemander a quelqu'un qui
+  // vient de le faire sur un autre appareil.
+  var identiteRequise = false;
+  (async function verifierIdentite() {
+    var session = (await supabaseClubbeur.auth.getSession()).data.session;
+    if (!session) return;
+    var profil = (await supabaseClubbeur.from("users").select("profile_proof_path").eq("id", session.user.id).maybeSingle()).data;
+    if (profil && profil.profile_proof_path) return;
+
+    identiteRequise = true;
+    var conteneur = $("#story-identite");
+    if (!conteneur) return;
+    conteneur.innerHTML = blocIdentite();
+
+    var champFichier = $("#story-capture-file");
+    champFichier.addEventListener("change", function () {
+      var fichier = champFichier.files && champFichier.files[0];
+      if (!fichier) return;
+      $("#story-capture-label").classList.add("rempli");
+      $("#story-capture-txt").textContent = fichier.name;
+      $("#story-capture-preview").hidden = false;
+      $("#story-capture-img").src = URL.createObjectURL(fichier);
+    });
+  })();
 
   // Met a jour la mention ("Tague @lehandle") et l'etape 2 des qu'on
   // connait le vrai compte Instagram du club (clubs.ig_handle) -- avant,
@@ -3992,6 +4078,21 @@ function ouvrirChoixReseau(nomClub) {
     if (kindChoisi !== "story" && !url) return dire("Colle le lien de ta publication.", true);
     if (!club) return dire("Choisis d'abord un club.", true);
 
+    // Identite Instagram (pseudo + capture), UNE SEULE FOIS -- voir
+    // verifierIdentite() plus haut. Validee AVANT de desactiver le
+    // bouton : un pseudo ou une capture manquants ne doivent pas
+    // laisser l'ecran bloque sur "Envoi...".
+    var pseudoIg = null;
+    if (identiteRequise) {
+      var champPseudo = $("#story-pseudo-ig");
+      pseudoIg = champPseudo.value.trim().replace(/^@/, "");
+      if (!PSEUDO_IG_RE.test(pseudoIg)) {
+        return dire("Pseudo Instagram invalide : lettres, chiffres, point et underscore.", true);
+      }
+      var fichierCapture = $("#story-capture-file").files && $("#story-capture-file").files[0];
+      if (!fichierCapture) return dire("Ajoute une capture d'écran de ton profil Instagram.", true);
+    }
+
     bouton.disabled = true;
     bouton.textContent = "Envoi...";
 
@@ -4005,6 +4106,44 @@ function ouvrirChoixReseau(nomClub) {
       bouton.disabled = false;
       bouton.textContent = "Envoyer";
       return dire("Ce club n'est pas encore répertorié.", true);
+    }
+
+    if (identiteRequise) {
+      var sessionIdentite = (await supabaseClubbeur.auth.getSession()).data.session;
+      if (!sessionIdentite) {
+        bouton.disabled = false;
+        bouton.textContent = "Envoyer";
+        return dire("Ta session a expiré, reconnecte-toi.", true);
+      }
+      var uid = sessionIdentite.user.id;
+      var fichierCapture2 = $("#story-capture-file").files[0];
+      var ext = (fichierCapture2.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
+      var chemin = clubRow.data.id + "/" + uid + "/profil-" + Date.now() + "." + ext;
+
+      // handle AVANT la capture : set_profile_proof (0027) revalide que
+      // le chemin appartient a l'appelant, mais n'a pas besoin du
+      // pseudo -- les deux ecritures sont independantes, l'ordre importe
+      // seulement pour arreter tot si le pseudo est refuse (deja pris).
+      var erreurHandle = (await supabaseClubbeur.from("users").update({ handle: pseudoIg }).eq("id", uid)).error;
+      if (erreurHandle) {
+        bouton.disabled = false;
+        bouton.textContent = "Envoyer";
+        return dire(/duplicate|unique/i.test(erreurHandle.message) ? "Ce pseudo est déjà pris." : "Pseudo non enregistré, réessaie.", true);
+      }
+
+      var erreurEnvoi = (await supabaseClubbeur.storage.from("story-proofs").upload(chemin, fichierCapture2, { contentType: fichierCapture2.type || "image/jpeg" })).error;
+      if (erreurEnvoi) {
+        bouton.disabled = false;
+        bouton.textContent = "Envoyer";
+        return dire("La capture n'a pas pu être envoyée, réessaie.", true);
+      }
+
+      var erreurProfil = (await supabaseClubbeur.rpc("set_profile_proof", { p_path: chemin })).error;
+      if (erreurProfil) {
+        bouton.disabled = false;
+        bouton.textContent = "Envoyer";
+        return dire("La capture n'a pas pu être enregistrée, réessaie.", true);
+      }
     }
 
     var res = await supabaseClubbeur.rpc("submit_story", {
