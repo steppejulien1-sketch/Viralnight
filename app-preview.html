@@ -1186,17 +1186,8 @@
         position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
         background: rgba(17,12,11,.86); border-top: 1px solid rgba(255,235,220,.1);
         backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-        display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; padding-bottom: 18px;
+        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
       }
-      /* Amis retire de la barre pour le lancement (Julien, premier club :
-         "pas vraiment utile" tant qu'il n'y a personne a ajouter -- effet
-         reseau). Le code et l'ecran restent intacts (voir #tab-amis plus
-         bas) : #tab-amis reste dans le DOM, juste cache et retire de la
-         grille a 4 colonnes ci-dessus, pour pouvoir le remettre d'un
-         trait quand il y aura plus de monde. Toujours atteignable
-         entre-temps via Profil > Amis (garde le lien de parrainage a 50
-         points, un vrai levier d'acquisition, pas juste du social). */
-      #tab-amis { display: none; }
       .tab {
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
         background: none; border: 0; cursor: pointer; position: relative; padding: 0;
@@ -4432,11 +4423,17 @@ async function ouvrirPageAmis(session) {
   VUE_AMIS.hidden = false;
 
   // --- Bascule liste <-> invitation ---------------------------------
-  // Julien : ne plus atterrir directement sur le QR/lien -- la page
-  // s'ouvre sur la liste, le QR/lien passe derriere ce bouton.
+  // Julien (2026-08-26) : pour un premier club, la liste d'amis/
+  // recherche/suggestions n'est pas utile (effet reseau -- personne a
+  // trouver). L'onglet Amis reste dans la barre, mais atterrit
+  // directement sur l'invitation (le lien de parrainage a 50 points,
+  // un vrai levier d'acquisition) plutot que sur la liste. Le code de
+  // la liste reste intact et fonctionnel (voir #va-back plus bas) pour
+  // la remettre en avant sans rien reecrire, une fois qu'il y aura du
+  // monde a ajouter.
   var vueListe = $("#va-liste"), vueInvite = $("#va-invite");
-  vueListe.hidden = false;
-  vueInvite.hidden = true;
+  vueListe.hidden = true;
+  vueInvite.hidden = false;
   $("#va-ouvrir-invite").onclick = function () { vueListe.hidden = true; vueInvite.hidden = false; };
   $("#va-back").onclick = function () { vueInvite.hidden = true; vueListe.hidden = false; };
 
