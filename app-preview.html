@@ -1313,14 +1313,17 @@
          avec icone, plutot que du texte simple -- demande de Julien
          ("un truc grand, un truc beau"). */
       .reseaux-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
+      /* s3 (pas s2) : ce bouton vit maintenant dans la carte .ps-groupe,
+         elle-meme en s2 -- meme couleur que s2 le rendrait invisible
+         contre son propre fond. */
       .reseau-bouton {
         position: relative;
         display: flex; flex-direction: column; align-items: center; gap: 9px;
-        background: var(--s2); border: 2px solid transparent; border-radius: 18px;
+        background: var(--s3); border: 2px solid transparent; border-radius: 18px;
         padding: 14px 6px; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--ink);
         transition: border-color .15s ease, background .15s ease, transform .15s ease;
       }
-      .reseau-bouton.actif { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--s2)); transform: translateY(-1px); }
+      .reseau-bouton.actif { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--s3)); transform: translateY(-1px); }
       /* Le badge garde les vraies couleurs de marque (degrade Instagram,
          noir TikTok) -- Julien : le logo doit rester reconnaissable, pas
          devenir un pictogramme neutre. Le rouge ViralNight, lui, est
@@ -1353,6 +1356,23 @@
       .ps-step-txt span { display: block; color: var(--ink2); font-size: 12.5px; margin-top: 1px; }
       .ps-hint { font-size: 12.5px; margin: 0 0 4px; }
       .ps-club { color: var(--accent); font-weight: 700; }
+
+      /* Regroupement visuel du formulaire "Poster ma story" en 3 zones
+         (Club / Format / Publier) au lieu d'une pile de 7-8 elements au
+         meme niveau -- Julien : "trop d'elements super rapidement",
+         "qu'on s'y perde moins". Rien n'est cache ni sequence (il a
+         rejete les etapes juste avant) : les 3 cartes sont TOUJOURS
+         visibles ensemble, seul le regroupement change -- meme
+         contenu, juste range. */
+      .ps-groupe {
+        display: grid; gap: 12px;
+        background: var(--s2); border: 1px solid var(--line2);
+        border-radius: 18px; padding: 14px;
+      }
+      .ps-groupe-titre {
+        display: block; font-size: 11px; font-weight: 800; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--ink3); margin: 0 0 -2px;
+      }
 
       /* Identite Instagram (pseudo + capture de profil) -- demandee UNE
          SEULE FOIS, a la premiere story postee (Julien : "il ne doit
@@ -1389,15 +1409,13 @@
       .ps-capture-preview { display: flex; justify-content: center; }
       .ps-capture-preview img { max-height: 130px; border-radius: 12px; border: 1px solid var(--line2); }
 
-      /* Avertissement tout en haut de la page, avant meme le choix du
-         format -- Julien : certains ne taguent pas le club, ne recoivent
-         donc aucun point, et s'en etonnent alors que c'est la regle.
-         Doit se voir immediatement, pas seulement dans l'etape 2 plus
-         bas (facile a rater/oublier une fois lancé dans le formulaire). */
+      /* Avertissement, maintenant range dans la carte "Format" (.ps-groupe)
+         plutot que sa propre boite ambre isolee -- une boite de moins a
+         lire d'un coup (voir .ps-groupe plus haut, "trop d'elements
+         super rapidement"). Toujours visible en premier dans cette
+         carte, juste sans son propre fond/bordure. */
       .ps-warn {
-        display: flex; gap: 12px; align-items: center; text-align: left;
-        background: var(--s2); border: 1px solid color-mix(in srgb, var(--ambre) 35%, transparent);
-        border-radius: 16px; padding: 12px 14px; margin: 0;
+        display: flex; gap: 12px; align-items: center; text-align: left; margin: 0;
       }
       .ps-warn-ico {
         flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
@@ -3813,56 +3831,72 @@ function ouvrirChoixReseau(nomClub) {
   // mais sans rien a deplier ni a debloquer au fil de la saisie.
   var html =
     '<div class="sheet-ok">' +
-      '<form id="story-form" style="display:grid;gap:10px;text-align:left">' +
-        // Choisir le club EN PREMIER (quand il n'est pas deja connu depuis
-        // une fiche) -- savoir QUI on va taguer avant l'avertissement a ce
-        // sujet, plus logique que l'inverse.
+      '<form id="story-form" style="display:grid;gap:14px;text-align:left">' +
+        // GROUPE 1 -- Club (seulement si pas deja connu depuis une fiche).
+        // Savoir QUI on va taguer avant l'avertissement a ce sujet.
         (nomClub
           ? ""
-          : '<button type="button" class="sheet-cta" id="story-scan-btn" style="margin-bottom:4px">' +
-              '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>' +
-              "Scanner le QR du club" +
-            "</button>" +
-            '<div id="story-scan-zone" hidden style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1">' +
-              '<video id="story-scan-video" playsinline muted style="width:100%;height:100%;object-fit:cover;display:block"></video>' +
-              '<p class="desc" id="story-scan-msg" style="position:absolute;left:0;right:0;bottom:0;margin:0;padding:8px;background:rgba(0,0,0,.65);color:#fff;text-align:center;font-size:12px">Vise le QR affiché dans le club…</p>' +
-            "</div>" +
-            '<label class="rg-label" style="font-size:13px" for="story-club">Club</label>' +
-            '<select class="va-input" id="story-club" required><option value="">Choisis un club…</option></select>') +
+          : '<div class="ps-groupe">' +
+              '<span class="ps-groupe-titre">Club</span>' +
+              '<button type="button" class="sheet-cta" id="story-scan-btn">' +
+                '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>' +
+                "Scanner le QR du club" +
+              "</button>" +
+              '<div id="story-scan-zone" hidden style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1">' +
+                '<video id="story-scan-video" playsinline muted style="width:100%;height:100%;object-fit:cover;display:block"></video>' +
+                '<p class="desc" id="story-scan-msg" style="position:absolute;left:0;right:0;bottom:0;margin:0;padding:8px;background:rgba(0,0,0,.65);color:#fff;text-align:center;font-size:12px">Vise le QR affiché dans le club…</p>' +
+              "</div>" +
+              '<label class="rg-label" style="font-size:13px" for="story-club">Ou choisis-le dans la liste</label>' +
+              '<select class="va-input" id="story-club" required><option value="">Choisis un club…</option></select>' +
+            "</div>") +
         // Rempli par verifierIdentite() plus bas, seulement si ce
         // clubbeur n'a pas encore de capture de profil enregistree --
-        // vide sinon, jamais redemande.
+        // vide sinon, jamais redemande. Deja sa propre carte (.ps-identite),
+        // pas besoin d'un .ps-groupe de plus autour.
         '<div id="story-identite"></div>' +
-        '<div class="ps-warn">' +
-          '<span class="ps-warn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 16.5h.01M10.6 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.4 3.7a2 2 0 0 0-3.4 0z"/></svg></span>' +
-          '<span class="ps-warn-txt"><strong>Mentionne le club</strong><span id="story-mention">' + texteMention(null) + "</span></span>" +
+        // GROUPE 2 -- Format : l'avertissement, le pseudo copiable et les
+        // 3 boutons Story/Reel/TikTok forment une seule decision ("quoi
+        // poster, a qui le dire"), rangee dans une seule carte au lieu de
+        // 3 blocs empiles separement.
+        '<div class="ps-groupe">' +
+          '<span class="ps-groupe-titre">Format</span>' +
+          '<div class="ps-warn">' +
+            '<span class="ps-warn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 16.5h.01M10.6 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.4 3.7a2 2 0 0 0-3.4 0z"/></svg></span>' +
+            '<span class="ps-warn-txt"><strong>Mentionne le club</strong><span id="story-mention">' + texteMention(null) + "</span></span>" +
+          "</div>" +
+          '<div id="story-handle-chip">' + blocHandleCopiable(null) + "</div>" +
+          '<div class="reseaux-grille">' +
+          KINDS_STORY.map(function (k, i) {
+            // Le gain vit directement sur le bouton (badge) plutot que dans
+            // un bloc separe en dessous -- plus compact, et l'info est
+            // exactement ou on la cherche : sur le choix lui-meme, pas a
+            // correler avec un texte a part.
+            return '<button type="button" class="reseau-bouton' + (i === 0 ? " actif" : "") + '" id="sh-story-' + k.id + '" ' +
+              'data-kind="' + k.id + '" data-schema="' + k.schema + '" data-secours="' + k.secours + '">' +
+              '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
+              "<span>" + k.label + "</span>" +
+              '<span class="reseau-pts">' + BAREME_STORY[k.id].pts + "</span>" +
+            "</button>";
+          }).join("") +
+          "</div>" +
         "</div>" +
-        '<div id="story-handle-chip">' + blocHandleCopiable(null) + "</div>" +
-        '<div class="reseaux-grille">' +
-        KINDS_STORY.map(function (k, i) {
-          // Le gain vit directement sur le bouton (badge) plutot que dans
-          // un bloc separe en dessous -- plus compact, et l'info est
-          // exactement ou on la cherche : sur le choix lui-meme, pas a
-          // correler avec un texte a part.
-          return '<button type="button" class="reseau-bouton' + (i === 0 ? " actif" : "") + '" id="sh-story-' + k.id + '" ' +
-            'data-kind="' + k.id + '" data-schema="' + k.schema + '" data-secours="' + k.secours + '">' +
-            '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
-            "<span>" + k.label + "</span>" +
-            '<span class="reseau-pts">' + BAREME_STORY[k.id].pts + "</span>" +
-          "</button>";
-        }).join("") +
+        // GROUPE 3 -- Publier : ouvrir l'appli, la marche a suivre, le lien
+        // et le bouton d'envoi, rangee dans une seule carte plutot que 4
+        // blocs separes. "Ouvrir Instagram/TikTok" reste une action a
+        // part, separee du choix du format -- avant, chaque tap sur
+        // Story/Reel/TikTok relancait direct l'appli, meme en comparant
+        // les options, signale par Julien ("ca m'envoie sur Instagram,
+        // c'est chiant"). Choisir un format ne fait plus que le
+        // selectionner ; ce bouton est la seule action qui bascule
+        // reellement vers l'appli.
+        '<div class="ps-groupe">' +
+          '<span class="ps-groupe-titre">Publier</span>' +
+          '<div id="story-ouvrir">' + blocOuvrir("story") + "</div>" +
+          '<div id="story-etapes">' + blocEtapes("story", null) + "</div>" +
+          '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
+          '<p class="desc" id="story-msg" style="display:none;margin:0"></p>' +
+          '<button type="submit" class="sheet-cta" id="story-envoyer">Envoyer</button>' +
         "</div>" +
-        // "Ouvrir Instagram/TikTok" reste une action a part, separee du
-        // choix du format -- avant, chaque tap sur Story/Reel/TikTok
-        // relancait direct l'appli, meme en comparant les options, signale
-        // par Julien ("ca m'envoie sur Instagram, c'est chiant"). Choisir
-        // un format ne fait plus que le selectionner ; ce bouton est la
-        // seule action qui bascule reellement vers l'appli.
-        '<div id="story-ouvrir">' + blocOuvrir("story") + "</div>" +
-        '<div id="story-etapes">' + blocEtapes("story", null) + "</div>" +
-        '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
-        '<p class="desc" id="story-msg" style="display:none;margin:0"></p>' +
-        '<button type="submit" class="sheet-cta" id="story-envoyer">Envoyer</button>' +
       "</form>" +
     "</div>";
   // Ouvre la vraie page Story plutot que la feuille du bas -- si on
