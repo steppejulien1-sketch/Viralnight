@@ -413,6 +413,13 @@
         padding: 20px 20px 40px;
         transition: opacity .3s ease, visibility .3s ease;
       }
+      /* #vue-profil (l'onglet du bas) seulement -- pas les feuilles
+         Reglages/Notifications/etc, qui restent au-dessus de tout comme
+         avant. Meme correctif que .vue-amis/.vue-story plus haut : sous
+         .tabs (26) au lieu de par-dessus, barre d'onglets toujours
+         accessible, on quitte Profil en tapant un autre onglet -- Julien :
+         "je ne veux pas qu'on doive appuyer sur une croix en haut". */
+      #vue-profil { z-index: 20; padding-bottom: 112px; }
       .vue-profil[hidden] { display: block; opacity: 0; visibility: hidden; pointer-events: none; }
       @media (prefers-reduced-motion: reduce) { .vue-profil { transition: none; } }
 
@@ -563,15 +570,22 @@
       .pf-avatar {
         position: relative; width: 84px; height: 84px; margin: 0 auto 14px; border-radius: 50%;
         background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
-        border: 0; padding: 0; cursor: pointer; display: grid; place-items: center; overflow: hidden;
+        border: 0; padding: 0; cursor: pointer; display: grid; place-items: center;
       }
       .pf-avatar-init { font-size: 42px; font-weight: 800; color: #fff; }
-      .pf-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      /* overflow:hidden vit sur la photo elle-meme, pas sur le bouton
+         .pf-avatar -- avant, le bouton entier etait en overflow:hidden,
+         et comme il est rond (border-radius 50%), ca rognait le badge
+         crayon pose dans son coin en bas a droite (bug signale par
+         Julien, "le crayon est bugge"). Le degrade de fond du bouton
+         reste rond sans overflow:hidden (border-radius s'applique deja
+         au fond), donc rien d'autre ne change. */
+      .pf-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; overflow: hidden; }
       /* Crayon toujours visible (pas seulement au survol) : sur mobile
          il n'y a pas de hover, sans lui rien n'indique que la photo
          est modifiable -- meme detail que va-avatar-edit sur Amis. */
       .pf-avatar-edit {
-        position: absolute; right: 0; bottom: 0; width: 26px; height: 26px; border-radius: 50%;
+        position: absolute; right: -2px; bottom: -2px; width: 26px; height: 26px; border-radius: 50%;
         background: var(--s1); box-shadow: 0 0 0 2px var(--bg); display: grid; place-items: center;
       }
       .pf-avatar-edit svg { width: 13px; height: 13px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
@@ -1772,11 +1786,11 @@
           </div>
         </div>
 
-        <!-- ================= ECRAN PROFIL ================= -->
+        <!-- ================= ECRAN PROFIL =================
+             Plus de croix pour en sortir (voir #vue-profil plus haut) :
+             on quitte Profil en tapant un autre onglet, exactement comme
+             Story et Amis. -->
         <div class="vue-profil" id="vue-profil" hidden>
-          <button type="button" class="va-close" id="pf-close" aria-label="Fermer">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
 
           <div class="va-connecte-toi" id="pf-connecte-toi" hidden>
             <p class="va-connecte-ico" aria-hidden="true">
@@ -2133,17 +2147,17 @@
         </div>
 
         <nav class="tabs">
-          <button class="tab on" id="tab-carte" aria-label="Carte" aria-current="page">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>
-            <span class="lbl">Carte</span>
+          <button class="tab" id="tab-story" aria-label="Poster ma story">
+            <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
+            <span class="lbl">Story</span>
           </button>
           <button class="tab" id="tab-boutique" aria-label="Boutique">
             <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
             <span class="lbl">Boutique</span>
           </button>
-          <button class="tab" id="tab-story" aria-label="Poster ma story">
-            <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
-            <span class="lbl">Story</span>
+          <button class="tab on" id="tab-carte" aria-label="Carte" aria-current="page">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>
+            <span class="lbl">Carte</span>
           </button>
           <button class="tab" id="tab-amis" aria-label="Amis">
             <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
@@ -2621,8 +2635,8 @@ function activerVue(nom) {
   history.replaceState(null, "", "#" + nom);
 }
 
-TAB_CARTE.addEventListener("click", function () { fermerAmis(); fermerStory(); activerVue("carte"); });
-TAB_BOUTIQUE.addEventListener("click", function () { fermerAmis(); fermerStory(); activerVue("boutique"); });
+TAB_CARTE.addEventListener("click", function () { fermerAmis(); fermerStory(); fermerProfil(); activerVue("carte"); });
+TAB_BOUTIQUE.addEventListener("click", function () { fermerAmis(); fermerStory(); fermerProfil(); activerVue("boutique"); });
 
 activerVue(location.hash === "#boutique" ? "boutique" : "carte");
 
@@ -3624,13 +3638,17 @@ var KINDS_STORY = [
     id: "reel", label: "Reel", classe: "ig",
     schema: "instagram://", secours: "https://www.instagram.com/",
     etape2: "Mentionne", verbe: "un Reel", url: true,
-    icone: '<rect x="3" y="3" width="18" height="18" rx="6"/><path d="M10 8.7v6.6l5.6-3.3z" fill="currentColor" stroke="none"/>',
+    // Meme icone que "story" (demande de Julien : Story et Reel sont
+    // tous deux Instagram, un seul logo, pas deux traces differents).
+    icone: '<rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>',
   },
   {
     id: "tiktok", label: "TikTok", classe: "tk",
     schema: "tiktok://", secours: "https://www.tiktok.com/upload",
     etape2: "Mentionne", verbe: "un TikTok", url: true,
-    icone: '<path d="M15 3v10.5a3.3 3.3 0 1 1-3.3-3.3c.3 0 .6.03.9.09V7.2a6 6 0 1 0 5.4 5.97V9.6a7.6 7.6 0 0 0 4 1.15V7.5A4.2 4.2 0 0 1 17.6 6 4.2 4.2 0 0 1 15 3z"/>',
+    // Vrai logo TikTok (le trace "note" officiel), pas une approximation
+    // maison -- signale par Julien ("ce n'est pas le bon logo").
+    icone: '<path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6c0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64c0 3.33 2.76 5.7 5.69 5.7c3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/>',
   },
 ];
 
@@ -4192,6 +4210,7 @@ var TAB_AMIS = $("#tab-amis");
 
 TAB_AMIS?.addEventListener("click", async function () {
   fermerStory();
+  fermerProfil();
   masquerCarteEtBoutique();
   TAB_AMIS.classList.add("on");
   TAB_AMIS.setAttribute("aria-current", "page");
@@ -4589,6 +4608,7 @@ function fermerProfil() {
 
 TAB_PROFIL?.addEventListener("click", async function () {
   fermerStory();
+  fermerAmis();
   masquerCarteEtBoutique();
   TAB_PROFIL.classList.add("on");
   TAB_PROFIL.setAttribute("aria-current", "page");
