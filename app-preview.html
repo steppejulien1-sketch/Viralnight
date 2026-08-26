@@ -1304,12 +1304,20 @@
         display: flex; flex-direction: column; align-items: center; gap: 9px;
         background: var(--s2); border: 2px solid transparent; border-radius: 18px;
         padding: 14px 6px; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--ink);
+        transition: border-color .15s ease, background .15s ease, transform .15s ease;
       }
-      .reseau-bouton.actif { border-color: var(--accent); }
-      .reseau-ico { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #fff; }
+      .reseau-bouton.actif { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--s2)); transform: translateY(-1px); }
+      /* Badges blancs (demande de Julien, "je prefere le blanc") plutot
+         que le degrade Instagram / le noir plein d'avant -- le vrai
+         logo (voir KINDS_STORY.icone, deja le vrai trace IG/TikTok)
+         se lit mieux en encre sombre sur blanc, et ca reste coherent
+         avec les cartes blanches du reste de l'appli. */
+      /* Couleur fixe (pas var(--ink), blanc sur cet ecran sombre -- rendrait
+         l'icone invisible sur le badge blanc) : ce badge reste blanc quel
+         que soit le theme autour, l'encre doit donc rester sombre elle
+         aussi, toujours. */
+      .reseau-ico { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #15171c; background: #fff; border: 1px solid var(--line2); }
       .reseau-ico svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-      .reseau-ico.ig { background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7); }
-      .reseau-ico.tk { background: #010101; }
       .reseau-ico.tk svg { fill: currentColor; stroke: none; }
       /* Gain directement sur le bouton (badge coin haut-droit), plutot
          qu'un bloc a part en dessous a correler soi-meme avec le bon
@@ -1340,16 +1348,22 @@
          Doit se voir immediatement, pas seulement dans l'etape 2 plus
          bas (facile a rater/oublier une fois lancé dans le formulaire). */
       .ps-warn {
-        display: flex; gap: 10px; align-items: flex-start; text-align: left;
-        background: color-mix(in srgb, var(--ambre) 16%, var(--s2));
-        border: 1px solid color-mix(in srgb, var(--ambre) 45%, transparent);
-        border-radius: 14px; padding: 12px 14px; margin: 0;
-        font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4;
+        display: flex; gap: 12px; align-items: center; text-align: left;
+        background: var(--s2); border: 1px solid color-mix(in srgb, var(--ambre) 35%, transparent);
+        border-radius: 16px; padding: 12px 14px; margin: 0;
       }
-      .ps-warn svg {
-        flex: 0 0 auto; width: 19px; height: 19px; margin-top: 1px;
+      .ps-warn-ico {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+        background: color-mix(in srgb, var(--ambre) 20%, var(--s2));
+        display: grid; place-items: center;
+      }
+      .ps-warn-ico svg {
+        width: 18px; height: 18px;
         stroke: var(--ambre); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
       }
+      .ps-warn-txt { flex: 1; min-width: 0; }
+      .ps-warn-txt strong { display: block; font-size: 13.5px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+      .ps-warn-txt span { display: block; font-size: 12px; font-weight: 550; color: var(--ink2); margin-top: 1px; line-height: 1.35; }
       /* Pseudo du club, copiable en un tap -- Julien : eviter les fautes
          de frappe quand on le retape a la main dans Instagram/TikTok. */
       .ps-handle-copy {
@@ -2537,6 +2551,19 @@ var TAB_CARTE = $("#tab-carte"), TAB_BOUTIQUE = $("#tab-boutique");
 var VUE_STORY = $("#vue-story"), TAB_STORY = $("#tab-story");
 var SCREEN = $(".screen");
 
+// Ouvre Instagram/TikTok (bouton #story-ouvrir-app, etape 3 -- voir
+// blocOuvrir() dans ouvrirChoixReseau()). Avant, choisir un format
+// ouvrait direct l'appli, meme en survolant Story/Reel/TikTok juste
+// pour comparer -- signale par Julien ("ca m'envoie sur Instagram,
+// c'est chiant, il n'y a pas de logique"). Choisir un format ne fait
+// plus que le selectionner ; ouvrir l'appli est maintenant une action
+// separee et explicite, a l'etape 3 seulement.
+$("#story-page-corps")?.addEventListener("click", function (e) {
+  var bouton = e.target.closest("#story-ouvrir-app");
+  if (!bouton) return;
+  ouvrirAppOuWeb(bouton.dataset.schema, bouton.dataset.secours);
+});
+
 // Copie le pseudo Instagram du club (bouton .ps-handle-copy, voir
 // blocHandleCopiable() plus bas) -- demande de Julien, pour eviter les
 // fautes de frappe quand on retape le pseudo a la main. Delegue sur
@@ -3636,8 +3663,8 @@ function ouvrirChoixReseau(nomClub) {
   // etonnent/enervent alors que c'est la regle. Doit se voir avant
   // meme de choisir un format, pas seulement dans l'etape 2 en bas.
   function texteMention(handle) {
-    var cible = handle ? '<span class="ps-club">@' + handle + "</span>" : nomClub ? '<span class="ps-club">' + nomClub + "</span>" : "le club";
-    return "Sans mention de " + cible + " dans ta publication, tu ne reçois aucun point.";
+    var cible = handle ? '<span class="ps-club">@' + handle + "</span>" : nomClub ? '<span class="ps-club">' + nomClub + "</span>" : "du club";
+    return "Sans mention " + (handle || nomClub ? "de " + cible : cible) + ", tu ne reçois aucun point.";
   }
 
   // Bouton "copier le pseudo" -- Julien : afficher le hashtag exact du
@@ -3675,6 +3702,20 @@ function ouvrirChoixReseau(nomClub) {
     );
   }
 
+  // Bouton "Ouvrir l'appli" -- etape 3 seulement (voir le message de
+  // Julien plus haut). Separe du choix de format : taper Story/Reel/
+  // TikTok ne fait plus que selectionner, ce bouton est la seule action
+  // qui bascule reellement vers Instagram/TikTok.
+  function blocOuvrir(kindId) {
+    var k = KINDS_STORY.filter(function (x) { return x.id === kindId; })[0] || KINDS_STORY[0];
+    return '<button type="button" class="sheet-cta sobre" id="story-ouvrir-app" ' +
+      'data-schema="' + k.schema + '" data-secours="' + k.secours + '" ' +
+      'style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:16px">' +
+      '<span class="reseau-ico ' + k.classe + '" style="width:24px;height:24px;border-radius:8px"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
+      "Ouvrir " + (kindId === "tiktok" ? "TikTok" : "Instagram") +
+    "</button>";
+  }
+
   function blocChamp(kindId) {
     // Une story Instagram n'a pas d'URL publique (contrairement a un Reel
     // ou un TikTok) : la lui demander bloquait bêtement quiconque postait
@@ -3695,12 +3736,16 @@ function ouvrirChoixReseau(nomClub) {
       (kindId === "tiktok" ? '<p class="desc ps-hint">+ 7 pts par 100 vues, comptées par TikTok, en plus du forfait.</p>' : "");
   }
 
+  // Tout sur une seule page, rien de cache derriere une etape -- Julien
+  // a rejete la version en etapes ("ca c'est pour les handicapes, ca ne
+  // marche pas") : il veut retrouver le formulaire d'avant, ameliore,
+  // mais sans rien a deplier ni a debloquer au fil de la saisie.
   var html =
     '<div class="sheet-ok">' +
       '<form id="story-form" style="display:grid;gap:10px;text-align:left">' +
         // Choisir le club EN PREMIER (quand il n'est pas deja connu depuis
-        // une fiche) -- demande de Julien : savoir QUI on va taguer avant
-        // de lire l'avertissement a ce sujet, plus logique que l'inverse.
+        // une fiche) -- savoir QUI on va taguer avant l'avertissement a ce
+        // sujet, plus logique que l'inverse.
         (nomClub
           ? ""
           : '<button type="button" class="sheet-cta sobre" id="story-scan-btn" style="margin-bottom:4px">' +
@@ -3713,7 +3758,10 @@ function ouvrirChoixReseau(nomClub) {
             "</div>" +
             '<label class="rg-label" style="font-size:13px" for="story-club">Club</label>' +
             '<select class="va-input" id="story-club" required><option value="">Choisis un club…</option></select>') +
-        '<p class="ps-warn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 16.5h.01M10.6 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.4 3.7a2 2 0 0 0-3.4 0z"/></svg><span id="story-mention">' + texteMention(null) + "</span></p>" +
+        '<div class="ps-warn">' +
+          '<span class="ps-warn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 16.5h.01M10.6 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.4 3.7a2 2 0 0 0-3.4 0z"/></svg></span>' +
+          '<span class="ps-warn-txt"><strong>Mentionne le club</strong><span id="story-mention">' + texteMention(null) + "</span></span>" +
+        "</div>" +
         '<div id="story-handle-chip">' + blocHandleCopiable(null) + "</div>" +
         '<div class="reseaux-grille">' +
         KINDS_STORY.map(function (k, i) {
@@ -3729,6 +3777,13 @@ function ouvrirChoixReseau(nomClub) {
           "</button>";
         }).join("") +
         "</div>" +
+        // "Ouvrir Instagram/TikTok" reste une action a part, separee du
+        // choix du format -- avant, chaque tap sur Story/Reel/TikTok
+        // relancait direct l'appli, meme en comparant les options, signale
+        // par Julien ("ca m'envoie sur Instagram, c'est chiant"). Choisir
+        // un format ne fait plus que le selectionner ; ce bouton est la
+        // seule action qui bascule reellement vers l'appli.
+        '<div id="story-ouvrir">' + blocOuvrir("story") + "</div>" +
         '<div id="story-etapes">' + blocEtapes("story", null) + "</div>" +
         '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
         '<p class="desc" id="story-msg" style="display:none;margin:0"></p>' +
@@ -3882,18 +3937,25 @@ function ouvrirChoixReseau(nomClub) {
     arreterScanActif = arreterScan;
   }
 
+  // Aucun format pre-choisi (voir template) : le clubbeur doit taper sur
+  // Story/Reel/TikTok pour avancer, ce qui revele l'etape 3 dans la
+  // foulee -- avant, "Story" etait deja marque actif au chargement, donc
+  // l'etape 3 aurait ete visible sans aucune action explicite.
   var kindChoisi = "story";
   var boutonsReseau = $("#story-page-corps").querySelectorAll(".reseau-bouton");
   boutonsReseau.forEach(function (b) {
     b.addEventListener("click", function () {
       boutonsReseau.forEach(function (x) { x.classList.toggle("actif", x === b); });
       kindChoisi = b.dataset.kind;
-      // Marche a suivre et champ lien dependent du format choisi (seule
-      // une story n'a pas d'URL publique -- voir blocChamp()). Le gain,
-      // lui, est fixe sur chaque bouton (badge), rien a mettre a jour.
+      // Marche a suivre, bouton "Ouvrir l'appli" et champ lien dependent
+      // du format choisi (seule une story n'a pas d'URL publique -- voir
+      // blocChamp()). Le gain, lui, est fixe sur chaque bouton (badge),
+      // rien a mettre a jour. Choisir un format ne fait QUE selectionner
+      // -- ouvrir Instagram/TikTok est une action separee, voir le
+      // listener sur #story-ouvrir-app plus haut.
+      $("#story-ouvrir").innerHTML = blocOuvrir(kindChoisi);
       $("#story-etapes").innerHTML = blocEtapes(kindChoisi, handleActuel);
       $("#story-champ-url").innerHTML = blocChamp(kindChoisi);
-      ouvrirAppOuWeb(b.dataset.schema, b.dataset.secours);
     });
   });
 
@@ -3906,6 +3968,7 @@ function ouvrirChoixReseau(nomClub) {
       msg.style.color = erreur ? "var(--erreur-texte, var(--accent))" : "var(--succes-texte, #57d98a)";
       msg.textContent = texte;
     }
+    if (!kindChoisi) return dire("Choisis d'abord Story, Reel ou TikTok.", true);
     // Une story n'a pas de lien public (voir blocChamp()) : ne pas
     // exiger ce que le format ne permet pas de fournir.
     var url = champ.value.trim();
