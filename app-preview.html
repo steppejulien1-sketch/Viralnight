@@ -1307,17 +1307,15 @@
         transition: border-color .15s ease, background .15s ease, transform .15s ease;
       }
       .reseau-bouton.actif { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--s2)); transform: translateY(-1px); }
-      /* Badges blancs (demande de Julien, "je prefere le blanc") plutot
-         que le degrade Instagram / le noir plein d'avant -- le vrai
-         logo (voir KINDS_STORY.icone, deja le vrai trace IG/TikTok)
-         se lit mieux en encre sombre sur blanc, et ca reste coherent
-         avec les cartes blanches du reste de l'appli. */
-      /* Couleur fixe (pas var(--ink), blanc sur cet ecran sombre -- rendrait
-         l'icone invisible sur le badge blanc) : ce badge reste blanc quel
-         que soit le theme autour, l'encre doit donc rester sombre elle
-         aussi, toujours. */
-      .reseau-ico { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #15171c; background: #fff; border: 1px solid var(--line2); }
+      /* Le badge garde les vraies couleurs de marque (degrade Instagram,
+         noir TikTok) -- Julien : le logo doit rester reconnaissable, pas
+         devenir un pictogramme neutre. Le rouge ViralNight, lui, est
+         reserve aux boutons cliquables (choix actif, "Ouvrir l'appli",
+         "Envoyer"), jamais aux badges de marque. */
+      .reseau-ico { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #fff; }
       .reseau-ico svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .reseau-ico.ig { background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7); }
+      .reseau-ico.tk { background: #010101; }
       .reseau-ico.tk svg { fill: currentColor; stroke: none; }
       /* Gain directement sur le bouton (badge coin haut-droit), plutot
          qu'un bloc a part en dessous a correler soi-meme avec le bon
@@ -3708,7 +3706,7 @@ function ouvrirChoixReseau(nomClub) {
   // qui bascule reellement vers Instagram/TikTok.
   function blocOuvrir(kindId) {
     var k = KINDS_STORY.filter(function (x) { return x.id === kindId; })[0] || KINDS_STORY[0];
-    return '<button type="button" class="sheet-cta sobre" id="story-ouvrir-app" ' +
+    return '<button type="button" class="sheet-cta" id="story-ouvrir-app" ' +
       'data-schema="' + k.schema + '" data-secours="' + k.secours + '" ' +
       'style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:16px">' +
       '<span class="reseau-ico ' + k.classe + '" style="width:24px;height:24px;border-radius:8px"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
@@ -3748,7 +3746,7 @@ function ouvrirChoixReseau(nomClub) {
         // sujet, plus logique que l'inverse.
         (nomClub
           ? ""
-          : '<button type="button" class="sheet-cta sobre" id="story-scan-btn" style="margin-bottom:4px">' +
+          : '<button type="button" class="sheet-cta" id="story-scan-btn" style="margin-bottom:4px">' +
               '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>' +
               "Scanner le QR du club" +
             "</button>" +
