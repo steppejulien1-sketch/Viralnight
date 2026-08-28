@@ -146,9 +146,26 @@
         0%, 100% { transform: scale(.88); opacity: .55; }
         50% { transform: scale(1.05); opacity: 1; }
       }
+      /* Petite barre de progression sous le logo -- fausse (on ne sait
+         pas vraiment combien de temps Supabase va prendre), mais remplie
+         par une animation CSS calee sur la duree minimale d'affichage du
+         splash (voir le JS, MIN_AFFICHAGE_MS) : elle donne un vrai
+         retour "ca charge" plutot que le seul logo qui pulse sur place.
+         Le JS la complete a 100% juste avant de faire disparaitre tout
+         l'ecran (voir cacherSplash()). */
+      .splash-piste {
+        position: absolute; left: 40px; right: 40px; bottom: 54px;
+        height: 3px; border-radius: 99px; background: rgba(255,255,255,.14); overflow: hidden;
+      }
+      .splash-barre {
+        display: block; height: 100%; width: 6%; border-radius: 99px; background: #ff6363;
+        animation: splash-charge 1.1s cubic-bezier(.3,.6,.4,1) forwards;
+      }
+      @keyframes splash-charge { from { width: 6%; } to { width: 88%; } }
       @media (prefers-reduced-motion: reduce) {
         .splash { transition: none; }
         .splash-mark { animation: none; }
+        .splash-barre { animation: none; width: 88%; }
       }
 
       /* ============================================================
@@ -866,12 +883,23 @@
       .maplibregl-ctrl-logo { display: none !important; }
 
 
+      /* Badge de club v2 -- Julien : la premiere version (meme icone de
+         verre recoloree pour tous) "n'etait pas encore ca", trop
+         generique d'un club a l'autre. L'initiale du club (typo, pas
+         pictogramme) porte mieux l'identite de chacun ; dégradé + ombre
+         au sol (::before) donnent un peu de relief plutot qu'un aplat
+         plat. */
       .club-badge {
-        width: 66px; height: 66px; border-radius: 50%;
-        background: var(--c); border: 3px solid #fff;
-        box-shadow: 0 3px 10px rgba(0,0,0,.35);
+        width: 60px; height: 60px; border-radius: 50%;
+        background: linear-gradient(155deg, color-mix(in srgb, var(--c) 82%, #fff), var(--c) 72%);
+        border: 3px solid #fff;
+        box-shadow: 0 3px 10px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35);
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         color: #fff; position: relative; line-height: 1; cursor: pointer;
+      }
+      .club-badge::before {
+        content: ""; position: absolute; left: 50%; bottom: -7px; translate: -50% 0;
+        width: 16px; height: 6px; border-radius: 50%; background: rgba(10,8,8,.4); filter: blur(1.5px);
       }
       .club-badge.shut { background: #fff; color: #7b828c; border-color: #d9dde3; }
       .club-badge.hot::after {
@@ -881,12 +909,28 @@
       @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
 
-      /* Icone de type d'etablissement (pinte = bar, cocktail = boite de
-         nuit), demande de Julien -- meme idee que les ciseaux "Devenir
-         Coiffeur" de l'appli de reference. Seul contenu du badge
-         maintenant (plus de nombre/etiquette au-dessus) : stroke en
-         currentColor pour suivre automatiquement le blanc du badge
-         colore ou le gris de .club-badge.shut. */
+      /* Initiale du club -- police du systeme (herite de .screen), pas
+         de police maison a charger juste pour ce badge. */
+      .club-badge-lettre { font-size: 25px; font-weight: 800; letter-spacing: -.02em; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+      .club-badge.shut .club-badge-lettre { text-shadow: none; }
+
+      /* Point "moi" -- rond simple (pas un pin, une position exacte),
+         convention universelle des cartes (Google/Apple Maps) : bleu,
+         jamais la couleur d'un club ni le corail de marque, pour ne
+         jamais se confondre avec eux. Seul point fixe sur la carte
+         (pas de vrai suivi GPS dans cette maquette), juste pour garder
+         un repere "je suis ici" pendant qu'on se deplace sur la carte. */
+      .moi-marker { width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4); position: relative; }
+      .moi-marker::after {
+        content: ""; position: absolute; inset: -11px; border-radius: 50%; background: rgba(59,130,246,.28);
+        animation: moi-pouls 2.4s ease-out infinite;
+      }
+      @keyframes moi-pouls { 0% { transform: scale(.55); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { .moi-marker::after { animation: none; opacity: .3; } }
+
+      /* Icone de type d'etablissement -- ne sert plus que dans la
+         rangee "clubs" sous la carte (creerClubChip), le badge sur la
+         carte elle-meme utilise desormais l'initiale (voir plus haut). */
       .club-badge-icone { width: 30px; height: 30px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
@@ -1310,10 +1354,6 @@
       .club-statut { margin: 0 0 14px; font-size: 13px; font-weight: 600; color: var(--ink2); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
       .club-statut .ouvert { color: var(--succes-texte, #57d98a); font-weight: 700; }
       .club-statut .ferme { color: var(--ink3); font-weight: 700; }
-      .club-chaud {
-        font-size: 11.5px; font-weight: 700; color: #ff8290; background: rgba(255,47,69,.14);
-        border: 1px solid rgba(255,47,69,.35); border-radius: 999px; padding: 3px 10px;
-      }
 
       /* Rangee d'actions rondes (Itineraire/Enregistrer/Partager) --
          copiee du geste Google Maps (icone dans un cercle, libelle en
@@ -1703,6 +1743,7 @@
           <svg class="splash-mark" viewBox="0 0 24 24">
             <path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/>
           </svg>
+          <div class="splash-piste"><span class="splash-barre" id="splash-barre"></span></div>
         </div>
 
         <!-- ================= ECRAN D'ACCUEIL =================
@@ -2351,16 +2392,34 @@ var supabaseClubbeur = createClient(URL_SUPABASE_CLUBBEUR, CLE_SUPABASE_CLUBBEUR
 // hesitation (connexion qui flashe puis disparait), l'ecran de
 // chargement (#splash, voir .splash plus haut) reste devant jusqu'a la
 // reponse -- avec un filet de securite si Supabase tarde a repondre.
+//
+// MIN_AFFICHAGE_MS : sans ca, getSession() repond en general en
+// quelques millisecondes (rien a interroger sur le reseau la plupart
+// du temps) et l'ecran de chargement n'etait qu'un flash trop bref
+// pour etre vu -- Julien n'arrivait pas a le voir passer. On force
+// donc un minimum visible, calee sur la duree de l'animation de la
+// barre de progression (.splash-charge, 1.1s).
 (function () {
   var splash = document.getElementById("splash");
+  var barre = document.getElementById("splash-barre");
   var cachee = false;
+  var MIN_AFFICHAGE_MS = 1100;
+  function attendre(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function cacherSplash() {
     if (cachee || !splash) return;
     cachee = true;
-    splash.classList.add("masque");
+    if (barre) {
+      barre.style.animation = "none";
+      barre.style.transition = "width .25s ease";
+      barre.style.width = "100%";
+    }
+    setTimeout(function () { splash.classList.add("masque"); }, 220);
   }
-  setTimeout(cacherSplash, 2500);
-  supabaseClubbeur.auth.getSession().then(cacherSplash).catch(cacherSplash);
+  Promise.all([
+    attendre(MIN_AFFICHAGE_MS),
+    supabaseClubbeur.auth.getSession().catch(function () {}),
+  ]).then(cacherSplash);
+  setTimeout(cacherSplash, 4000); // filet de securite si Supabase ne repond jamais
 })();
 
 // Parrainage : ?parrain=<pseudo-du-parrain> dans le lien qu'on partage.
@@ -3002,7 +3061,19 @@ function badgeType(type) {
   return '<svg viewBox="0 0 24 24" class="club-badge-icone" aria-hidden="true">' + icone + "</svg>";
 }
 
+// Initiale du club (M pour Mirage, F pour Fuse...) -- porte mieux
+// l'identite de chaque club sur la carte qu'une icone generique
+// repetee partout (voir .club-badge plus haut).
+function badgeInitiale(nom) {
+  var lettre = (nom || "?").trim().charAt(0).toUpperCase();
+  return '<span class="club-badge-lettre">' + escapeHtmlSupport(lettre) + "</span>";
+}
+
 var BRUXELLES = [4.3517, 50.8503];
+
+// Position fixe du point "moi" sur la carte -- voir le marqueur cree
+// dans map.on("load") plus bas.
+var MOI = [4.3540, 50.8492];
 
 var MAPTILER_KEY = "HRqda4Ggxp9Mx9bKwvTh";
 
@@ -3707,7 +3778,6 @@ function ouvrirClub(c, src, id) {
     "</p>" +
     '<p class="club-statut">' +
       '<span class="' + (c.shut ? "ferme" : "ouvert") + '">' + c.statut + "</span> · " + c.horaire +
-      (c.hot ? '<span class="club-chaud">🔥 Ça chauffe ce soir</span>' : "") +
     "</p>" +
     '<div class="club-actions">' +
       (lienItineraire
@@ -4394,9 +4464,9 @@ map.on("load", function () {
     el.style.setProperty("--c", c.c);
     // Le nombre/etiquette ("42 ICI", "1h OUVRE"...) faisait plus
     // confus que clair, un peu comme une heure affichee au hasard
-    // (demande de Julien) -- l'icone de type seule suffit, le detail
+    // (demande de Julien) -- l'initiale du club suffit, le detail
     // (qui est la, si c'est ouvert...) reste dispo dans la fiche.
-    el.innerHTML = badgeType(c.type);
+    el.innerHTML = badgeInitiale(c.nom);
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     el.addEventListener("click", function () { ouvrirClub(c, el, key); });
     porteur.appendChild(el);
@@ -4412,6 +4482,24 @@ map.on("load", function () {
     var ecart = ecartAleatoire();
     marqueursEchelle.push({ el: el, dx: ecart.x, dy: ecart.y });
   });
+
+  // Point "moi" -- position fixe pour cette maquette (pas de vraie
+  // geolocalisation branchee), juste pour garder un repere visuel de
+  // "je suis ici" pendant qu'on se deplace sur la carte -- demande de
+  // Julien apres le retrait des amis de la carte ("juste un verre qui
+  // est nous"). Rond bleu distinct des badges de club, jamais confondu
+  // avec eux (voir .moi-marker plus haut).
+  var porteurMoi = document.createElement("div");
+  porteurMoi.className = "marker-porteur";
+  var elMoi = document.createElement("div");
+  elMoi.className = "moi-marker";
+  elMoi.setAttribute("role", "img");
+  elMoi.setAttribute("aria-label", "Ma position");
+  porteurMoi.appendChild(elMoi);
+  new maplibregl.Marker({ element: porteurMoi, anchor: "center", opacityWhenCovered: 0 })
+    .setLngLat(MOI)
+    .addTo(map);
+  marqueursEchelle.push({ el: elMoi, dx: 0, dy: 0 });
 
   majTailleMarqueurs();
   map.on("zoom", majTailleMarqueurs);
