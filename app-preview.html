@@ -1279,70 +1279,65 @@
       }
       .sheet-visuel svg { width: 58%; height: 58%; display: block; }
 
-      /* Fiche club (carte) : le badge rond du club, repris tel quel
-         de son marqueur sur la carte. */
-      /* Fiche club : un vrai bandeau d'entete (comme le visuel des
-         recompenses), pas juste une ligne plate icone+texte -- la
-         teinte du club (--c) infuse doucement le fond, pour que
-         chaque club ait une identite visuelle des l'ouverture de sa
-         fiche, sans etre criard. */
-      .club-hero {
-        position: relative; text-align: center; padding: 30px 20px 20px;
-        margin: -6px -6px 18px; border-radius: 22px;
-        background:
-          radial-gradient(120% 100% at 50% -10%, color-mix(in srgb, var(--c) 26%, transparent), transparent 72%),
-          var(--s1);
-        border: 1px solid var(--line2);
-      }
-      .club-hero-badge {
-        display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 14px;
-        border-radius: 50%; background: var(--c); color: #fff;
-        box-shadow: 0 10px 22px -10px var(--c);
-      }
-      .club-hero-nom { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); }
-
-      /* Galerie photos -- voir photosClub() : ce sont des cartes
-         degradees en attendant de vraies photos, PAS une texture a
-         garder telle quelle. Bande qui defile horizontalement (scrollbar
-         masquee, meme geste que Google Maps/Instagram) plutot qu'une
-         grille qui pousserait tout le reste de la fiche plus bas. */
+      /* Fiche club (carte) -- refaite pour ressembler a une vraie fiche
+         Google Maps (Julien : la version precedente, cartes degradees
+         sans vraie photo + badge rond, "faisait IA"). Photos d'abord,
+         edge-to-edge, comme un carrousel Maps ; le nom et les infos
+         suivent en texte plat, pas dans un bandeau colore. */
       .club-photos {
-        display: flex; gap: 8px; overflow-x: auto; margin: 14px -6px 0; padding: 0 6px 2px;
-        scrollbar-width: none;
+        display: flex; gap: 4px; margin: -6px -6px 14px; overflow-x: auto; scrollbar-width: none;
       }
       .club-photos::-webkit-scrollbar { display: none; }
       .club-photo {
-        flex: 0 0 auto; width: 128px; height: 92px; border-radius: 14px;
-        background:
-          linear-gradient(160deg, color-mix(in srgb, var(--c) 60%, transparent), transparent 65%),
-          var(--s2);
-        display: grid; place-items: center;
+        flex: 0 0 auto; width: 96px; height: 96px; overflow: hidden;
+        border-radius: 0 0 14px 0;
       }
-      .club-photo svg { width: 24px; height: 24px; stroke: color-mix(in srgb, var(--c) 55%, #fff); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+      .club-photo.grande { width: 172px; border-radius: 14px 0 14px 0; }
+      .club-photo:last-child { border-radius: 0 0 14px 14px; }
+      .club-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-      /* Adresse + itineraire : la seule vraie info "lieu" de la fiche
-         avant n'etait qu'une ligne de texte grise dans le hero, sans
-         action -- "une fiche Google Maps, mais specialement pour nous"
-         (Julien). Rangee dediee, avec un vrai lien vers Maps. */
+      .club-hero-nom { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); }
+
+      /* Ligne note/avis/categorie -- le signal le plus "fiche Google"
+         de tous : etoile pleine + note + nombre d'avis + categorie +
+         gamme de prix, exactement l'ordre d'une vraie fiche Maps. */
+      .club-meta {
+        display: flex; align-items: center; gap: 5px; margin: 0 0 3px;
+        font-size: 13.5px; font-weight: 600; color: var(--ink2);
+      }
+      .club-etoile { width: 15px; height: 15px; fill: var(--ambre); flex: 0 0 auto; }
+      .club-meta strong { color: var(--ink); font-weight: 800; }
+      .club-statut { margin: 0 0 14px; font-size: 13px; font-weight: 600; color: var(--ink2); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+      .club-statut .ouvert { color: var(--succes-texte, #57d98a); font-weight: 700; }
+      .club-statut .ferme { color: var(--ink3); font-weight: 700; }
+      .club-chaud {
+        font-size: 11.5px; font-weight: 700; color: #ff8290; background: rgba(255,47,69,.14);
+        border: 1px solid rgba(255,47,69,.35); border-radius: 999px; padding: 3px 10px;
+      }
+
+      /* Rangee d'actions rondes (Itineraire/Enregistrer/Partager) --
+         copiee du geste Google Maps (icone dans un cercle, libelle en
+         dessous), plus reconnaissable qu'un bouton texte plein. */
+      .club-actions { display: flex; gap: 8px; margin: 0 0 16px; }
+      .club-action {
+        flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 14px; padding: 10px 4px;
+        font-family: inherit; font-size: 11px; font-weight: 700; color: var(--ink2);
+        text-decoration: none; cursor: pointer;
+      }
+      .club-action svg { width: 18px; height: 18px; stroke: var(--ink2); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .club-action.actif { color: #ff8290; }
+      .club-action.actif svg { stroke: #ff2f45; fill: #ff2f45; }
+
+      /* Adresse : la seule ligne "lieu" restante depuis que l'itineraire
+         a rejoint la rangee d'actions au-dessus -- simple rappel textuel. */
       .club-adresse {
-        display: flex; align-items: center; gap: 10px; margin: 14px 0 0;
+        display: flex; align-items: center; gap: 10px; margin: 0 0 18px;
         padding: 12px 14px; background: var(--s1); border: 1px solid var(--line); border-radius: 14px;
       }
       .club-adresse-ico { flex: 0 0 auto; display: grid; place-items: center; }
       .club-adresse-ico svg { width: 17px; height: 17px; stroke: var(--ink3); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
       .club-adresse-txt { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 600; color: var(--ink2); }
-      .club-adresse-lien {
-        flex: 0 0 auto; font-size: 12.5px; font-weight: 700; color: var(--accent);
-        text-decoration: none; padding: 6px 12px; border-radius: 99px; background: rgba(255,47,69,.12);
-      }
-      .sheet-fav {
-        position: absolute; top: 14px; right: 14px; z-index: 2;
-        width: 40px; height: 40px; border-radius: 50%;
-        background: var(--s2); border: 1px solid var(--line2); display: grid; place-items: center; cursor: pointer;
-      }
-      .sheet-fav svg { width: 20px; height: 20px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-      .sheet-fav.actif { background: rgba(255,47,69,.14); border-color: rgba(255,47,69,.35); }
-      .sheet-fav.actif svg { stroke: #ff2f45; fill: #ff2f45; }
 
       /* Choix Story/Reel/TikTok pour "Poster ma story" : gros boutons
          avec icone, plutot que du texte simple -- demande de Julien
@@ -1475,22 +1470,6 @@
       .ps-handle-copy svg { width: 14px; height: 14px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .ps-handle-copy.copie { border-style: solid; border-color: var(--succes-texte, #57d98a); color: var(--succes-texte, #57d98a); }
       .ps-handle-copy.copie svg { stroke: var(--succes-texte, #57d98a); }
-      .sheet-chips { display: flex; gap: 7px; margin: 14px 0 16px; flex-wrap: wrap; }
-      .chip {
-        font-size: 11.5px; font-weight: 700; color: var(--ink2); background: var(--s2);
-        border: 1px solid var(--line2); border-radius: 999px; padding: 5px 11px;
-      }
-      .chip.warm { background: rgba(255,47,69,.14); color: #ff8290; border-color: rgba(255,47,69,.35); }
-      .who { display: flex; align-items: center; gap: 9px; margin-bottom: 18px; }
-      .who .stack { display: flex; }
-      .who .stack span {
-        width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 2px solid #1c1512;
-        margin-left: -9px; background: var(--s2); display: grid; place-items: center;
-      }
-      .who .stack span:first-child { margin-left: 0; }
-      .who .stack svg { width: 14px; height: 18px; }
-      .who p { margin: 0; font-size: 12px; font-weight: 650; color: var(--ink2); }
-
       .sheet-fam {
         display: block; font-size: 11px; font-weight: 700; letter-spacing: .13em;
         text-transform: uppercase; color: var(--ink3); margin-bottom: 9px;
@@ -2263,15 +2242,15 @@
         </div>
 
         <nav class="tabs">
+          <button class="tab on" id="tab-boutique" aria-label="Boutique" aria-current="page">
+            <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
+            <span class="lbl">Boutique</span>
+          </button>
           <button class="tab" id="tab-story" aria-label="Poster ma story">
             <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
             <span class="lbl">Story</span>
           </button>
-          <button class="tab" id="tab-boutique" aria-label="Boutique">
-            <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
-            <span class="lbl">Boutique</span>
-          </button>
-          <button class="tab on" id="tab-carte" aria-label="Carte" aria-current="page">
+          <button class="tab" id="tab-carte" aria-label="Carte">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>
             <span class="lbl">Carte</span>
           </button>
@@ -2772,7 +2751,7 @@ function activerVue(nom) {
 TAB_CARTE.addEventListener("click", function () { fermerAmis(); fermerStory(); fermerProfil(); activerVue("carte"); });
 TAB_BOUTIQUE.addEventListener("click", function () { fermerAmis(); fermerStory(); fermerProfil(); activerVue("boutique"); });
 
-activerVue(location.hash === "#boutique" ? "boutique" : "carte");
+activerVue(location.hash === "#carte" ? "carte" : "boutique");
 
 /* ==========================================================
    ECRAN D'ACCUEIL — connexion reelle sur supabaseClubbeur
@@ -2986,24 +2965,30 @@ function pint(level, cls) {
 
 var CLUBS = {
   mirage: {
-    nom: "Mirage", adr: "Rue de l'Écuyer · 400 m", n: "42", u: "ICI", c: "#ff2f45",
+    nom: "Mirage", adr: "Rue de l'Écuyer · 400 m", c: "#ff2f45",
     lngLat: [4.3554, 50.8479], hot: true, type: "club",
-    chips: [["Ça chauffe", true], ["Ouvert jusqu'à 6h", false]],
-    amis: [1, 1, .3], qui: "Sarah et Léa sont là, Théo est parti"
+    note: 4.6, avis: "1,2 k", prix: "€€",
+    statut: "Ouvert", horaire: "Ferme à 6h"
   },
   fuse: {
-    nom: "Fuse", adr: "Rue Blaes · 1,2 km", n: "11", u: "ICI", c: "#3b4250",
+    nom: "Fuse", adr: "Rue Blaes · 1,2 km", c: "#3b4250",
     lngLat: [4.3405, 50.8375], type: "club",
-    chips: [["Ouvert jusqu'à 7h", false], ["Ça se remplit", false]],
-    amis: [.62], qui: "Nassym y était il y a une heure"
+    note: 4.3, avis: 640, prix: "€€",
+    statut: "Ouvert", horaire: "Ferme à 7h"
   },
   spirito: {
-    nom: "Spirito", adr: "Rue Stassart · 2,1 km", n: "1h", u: "OUVRE", c: "#8b929c",
+    nom: "Spirito", adr: "Rue Stassart · 2,1 km", c: "#8b929c",
     lngLat: [4.3651, 50.8367], shut: true, type: "bar",
-    chips: [["Pas encore ouvert", false]],
-    amis: [], qui: "Personne de tes amis pour l'instant"
+    note: 4.1, avis: 89, prix: "€",
+    statut: "Fermé", horaire: "Ouvre à 22h"
   }
 };
+
+// "club" -> "Boîte de nuit", "bar" -> "Bar" : meme distinction que
+// badgeType(), juste en texte lisible pour la ligne meta de la fiche.
+function libelleType(type) {
+  return type === "bar" ? "Bar" : "Boîte de nuit";
+}
 
 // Icone de type, maintenant le SEUL contenu du marqueur (demande de
 // Julien : retirer le nombre/etiquette du dessus, qui ressemblait a
@@ -3677,61 +3662,85 @@ map.on("style.load", function () {
 // clubbeur -- decision de Julien, pas de moderation a construire pour
 // l'instant.
 //
-// ⚠️ PAS DE VRAIES PHOTOS AUJOURD'HUI : ni ce fichier ni la base n'ont
-// de stockage/URLs de photos de club. Ce sont des cartes degradees
-// (teinte du club, c.c) qui tiennent la place et montrent la mise en
-// page voulue -- a remplacer par c.photos = [url1, url2, ...] et
-// <img> des que les vraies photos existent (upload cote club, meme
-// principe que clubs.ig_handle dans les Parametres de owner.html).
-function photosClub(c) {
-  var n = 4;
-  var cartes = "";
+// Vraies photos d'ambiance (banque Pexels, deja utilisees pour le hero
+// de connexion/inscription) en attendant que chaque club puisse
+// uploader les siennes -- a remplacer par c.photos = [url1, url2, ...]
+// des que ce stockage existe (meme principe que clubs.ig_handle dans
+// les Parametres de owner.html). Ordre decale par club (via depart)
+// pour que les 3 fiches de la maquette n'affichent pas exactement la
+// meme premiere photo.
+var PHOTOS_AMBIANCE = ["./assets/hero-nightclub.webp", "./assets/hero-auth.jpg"];
+function photosClub(c, depart) {
+  var n = 3;
+  var vignettes = "";
   for (var i = 0; i < n; i++) {
-    cartes += '<span class="club-photo" style="--c:' + c.c + '">' +
-      '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="m21 15-5-5-9 9"/></svg>' +
+    var src = PHOTOS_AMBIANCE[(depart + i) % PHOTOS_AMBIANCE.length];
+    vignettes += '<span class="club-photo' + (i === 0 ? " grande" : "") + '">' +
+      '<img src="' + src + '" alt="" loading="lazy" />' +
     "</span>";
   }
-  return '<div class="club-photos">' + cartes + "</div>";
+  return '<div class="club-photos">' + vignettes + "</div>";
 }
 
 function ouvrirClub(c, src, id) {
   rendeur = src || null;
 
-  var stack = c.amis.map(function (q) { return "<span>" + pint(q) + "</span>"; }).join("");
-
   // Adresse + itineraire : la fiche ne disait jusqu'ici que "Poster ma
   // story", sans aucune info reelle sur le lieu -- Julien voulait "un
-  // peu une fiche Google Maps, mais specialement pour nous" (ses mots).
-  // Le lien pointe vers les vraies coordonnees du club (Google Maps,
-  // itineraire), le reste (amis presents, note recompense, poster une
-  // story) reste ce qui nous differencie d'une fiche Maps generique.
+  // peu une fiche Google Maps, mais specialement pour nous" (ses mots),
+  // puis directement "fais juste comme une fiche Google" en repoussant
+  // la premiere version (rendue plate par des photos degradees sans
+  // vraie image). Photos, note/avis/prix et rangee d'actions rondes
+  // reprennent maintenant la structure d'une vraie fiche Maps ; le
+  // reste (statut "Ça chauffe", note recompense, poster une story)
+  // reste ce qui nous differencie d'une fiche Maps generique.
   var lienItineraire = c.lngLat
     ? "https://www.google.com/maps/dir/?api=1&destination=" + c.lngLat[1] + "," + c.lngLat[0]
     : null;
 
   var html =
-    '<div class="club-hero" style="--c:' + c.c + '">' +
-      '<button class="sheet-fav" id="sh-fav" type="button">' +
+    photosClub(c, c.nom.length) +
+    '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
+    '<p class="club-meta">' +
+      '<svg class="club-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>' +
+      '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong> (" + c.avis + ") · " + libelleType(c.type) + " · " + c.prix +
+    "</p>" +
+    '<p class="club-statut">' +
+      '<span class="' + (c.shut ? "ferme" : "ouvert") + '">' + c.statut + "</span> · " + c.horaire +
+      (c.hot ? '<span class="club-chaud">🔥 Ça chauffe ce soir</span>' : "") +
+    "</p>" +
+    '<div class="club-actions">' +
+      (lienItineraire
+        ? '<a class="club-action" href="' + lienItineraire + '" target="_blank" rel="noopener noreferrer">' +
+            '<svg viewBox="0 0 24 24"><path d="M3 11 20 3l-8 17-2.5-6.5z"/><path d="M11.5 12.5 3 11"/></svg>' +
+            "<span>Itinéraire</span>" +
+          "</a>"
+        : "") +
+      '<button class="club-action" id="sh-fav" type="button">' +
         '<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9A4.9 4.9 0 0 1 12 5.7a4.9 4.9 0 0 1 8.5 3.2C20.5 15 12 20.5 12 20.5z"/></svg>' +
+        "<span>Enregistrer</span>" +
       "</button>" +
-      '<span class="club-hero-badge">' + badgeType(c.type) + "</span>" +
-      '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
+      '<button class="club-action" id="sh-partager" type="button">' +
+        '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.2 10.8 15.8 6.4M8.2 13.2l7.6 4.4"/></svg>' +
+        "<span>Partager</span>" +
+      "</button>" +
     "</div>" +
-    photosClub(c) +
     '<div class="club-adresse">' +
       '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
-      (lienItineraire ? '<a class="club-adresse-lien" href="' + lienItineraire + '" target="_blank" rel="noopener noreferrer">Itinéraire</a>' : "") +
     "</div>" +
-    '<div class="sheet-chips">' + c.chips.map(function (ch) {
-      return '<span class="chip' + (ch[1] ? " warm" : "") + '">' + ch[0] + "</span>";
-    }).join("") + "</div>" +
-    (c.amis.length ? '<div class="who"><span class="stack">' + stack + '</span><p>' + c.qui + "</p></div>" : '<p class="desc">' + c.qui + "</p>") +
     '<button class="sheet-cta" id="sh-poster-story" type="button">Poster ma story</button>' +
     '<p class="sheet-note">' + noteRecompenseClub() + "</p>";
 
   ouvrirFeuille(html, ".sheet-cta");
   cablerFavoriClub(id, c.nom);
+  $("#sh-partager")?.addEventListener("click", function () {
+    if (navigator.share) {
+      navigator.share({ title: c.nom, text: "Ce soir au " + c.nom + " sur Noctify.", url: lienItineraire || location.href }).catch(function () {});
+    } else if (lienItineraire) {
+      window.open(lienItineraire, "_blank", "noopener,noreferrer");
+    }
+  });
   $("#sh-poster-story")?.addEventListener("click", function () { ouvrirChoixReseau(c.nom); });
 }
 
