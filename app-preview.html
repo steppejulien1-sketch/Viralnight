@@ -1363,28 +1363,16 @@
       .club-statut .ouvert { color: var(--succes-texte, #57d98a); font-weight: 700; }
       .club-statut .ferme { color: var(--ink3); font-weight: 700; }
 
-      /* Rangee d'actions v2 -- Julien a garde "Itineraire" mais juge
-         Enregistrer/Partager "moche"/"vide" (contours fins, peu de
-         poids visuel). Enregistrer redevient une icone flottante sur
-         la photo (.club-fav plus bas, comme Google Maps le fait
-         vraiment) plutot qu'un bouton de la rangee ; Partager disparait ;
-         Itineraire est rejoint par le nombre de recompenses du
-         catalogue, un vrai raccourci vers la Boutique. Fond rouge
-         plein plutot qu'un simple contour -- plus "designe", moins
-         "vide" (meme reflexe que la correction des boutons noirs
-         plus bas : le rouge porte l'action, pas un gris neutre). */
-      .club-actions { display: flex; gap: 8px; margin: 0 0 16px; }
-      .club-action {
-        flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
-        background: rgba(255,47,69,.1); border: 1px solid rgba(255,47,69,.22); border-radius: 14px; padding: 11px 4px;
-        font-family: inherit; font-size: 11.5px; font-weight: 700; color: #ff8290;
-        text-decoration: none; cursor: pointer;
-      }
-      .club-action svg { width: 19px; height: 19px; stroke: #ff2f45; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-
-      /* Coeur flottant sur la photo -- reprend l'ancien emplacement
-         (avant la refonte "fiche Google") plutot que de vivre dans la
-         rangee d'actions. */
+      /* Rangee d'actions v3 -- v2 remplissait Itineraire/Recompenses de
+         rouge plein : ca enfreignait la regle deja etablie du projet
+         (corail = points/prix, jamais un bouton, voir PRODUCT.md) et
+         empilait encore une paire de cases identiques a cote de
+         l'adresse (deja sa propre case) et du statut -- la fiche
+         entiere n'etait plus qu'une pile de boites. Le rouge plein
+         reste reserve au SEUL vrai bouton d'action de la fiche
+         ("Poster ma story") ; tout le reste redescend en texte/lien
+         plat, plus proche d'une vraie fiche Maps que d'un dashboard de
+         widgets. Coeur flottant sur la photo, inchange. */
       .club-fav {
         position: absolute; top: 12px; right: 12px; z-index: 2;
         width: 36px; height: 36px; border-radius: 50%;
@@ -1393,15 +1381,24 @@
       .club-fav svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .club-fav.actif svg { stroke: #ff2f45; fill: #ff2f45; }
 
-      /* Adresse : la seule ligne "lieu" restante depuis que l'itineraire
-         a rejoint la rangee d'actions au-dessus -- simple rappel textuel. */
+      /* Adresse + itineraire : une seule ligne plate (icone, texte,
+         lien), pas une case de plus a cote des autres. */
       .club-adresse {
-        display: flex; align-items: center; gap: 10px; margin: 0 0 18px;
-        padding: 12px 14px; background: var(--s1); border: 1px solid var(--line); border-radius: 14px;
+        display: flex; align-items: center; gap: 10px; margin: 0 0 8px;
       }
       .club-adresse-ico { flex: 0 0 auto; display: grid; place-items: center; }
       .club-adresse-ico svg { width: 17px; height: 17px; stroke: var(--ink3); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-      .club-adresse-txt { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 600; color: var(--ink2); }
+      .club-adresse-txt { flex: 1 1 auto; min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--ink2); }
+      .club-adresse-lien { flex: 0 0 auto; font-size: 13px; font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+
+      /* Recompenses disponibles : rappel discret, pas un bouton --
+         vit juste au-dessus de la note deja presente, meme registre de
+         texte que le reste de la fiche. */
+      .club-recompenses-lien {
+        display: block; margin: 0 0 18px 27px; font-size: 13px; font-weight: 600; color: var(--ink2);
+        text-decoration: none; cursor: pointer;
+      }
+      .club-recompenses-lien:hover, .club-recompenses-lien:focus-visible { color: var(--ink); }
 
       /* Choix Story/Reel/TikTok pour "Poster ma story" : gros boutons
          avec icone, plutot que du texte simple -- demande de Julien
@@ -3795,15 +3792,15 @@ function miniaturesClub(c) {
 function ouvrirClub(c, src, id) {
   rendeur = src || null;
 
-  // Adresse + itineraire : la fiche ne disait jusqu'ici que "Poster ma
-  // story", sans aucune info reelle sur le lieu -- Julien voulait "un
-  // peu une fiche Google Maps, mais specialement pour nous" (ses mots),
-  // puis directement "fais juste comme une fiche Google" en repoussant
-  // la premiere version (rendue plate par des photos degradees sans
-  // vraie image). Photos, note/avis/prix et rangee d'actions rondes
-  // reprennent maintenant la structure d'une vraie fiche Maps ; le
-  // reste (statut, note recompense, poster une story) reste ce qui
-  // nous differencie d'une fiche Maps generique.
+  // Adresse + itineraire : une ligne plate (icone/texte/lien), pas une
+  // case de plus -- Julien voulait "une fiche Google Maps, mais
+  // specialement pour nous", pas un dashboard de cases identiques
+  // (Itineraire/Enregistrer/Partager en boutons pleins, tente puis
+  // rejete deux fois : "vide", puis "de la merde" une fois remplis de
+  // rouge -- le corail ne doit jamais habiller un bouton d'action ici,
+  // voir PRODUCT.md). Le seul vrai bouton de la fiche reste "Poster ma
+  // story" ; le reste (statut, itineraire, recompenses) redescend en
+  // texte/lien.
   var lienItineraire = c.lngLat
     ? "https://www.google.com/maps/dir/?api=1&destination=" + c.lngLat[1] + "," + c.lngLat[0]
     : null;
@@ -3814,28 +3811,21 @@ function ouvrirClub(c, src, id) {
     '<p class="club-statut">' +
       '<span class="' + (c.shut ? "ferme" : "ouvert") + '">' + c.statut + "</span> · " + c.horaire +
     "</p>" +
-    '<div class="club-actions">' +
-      (lienItineraire
-        ? '<a class="club-action" href="' + lienItineraire + '" target="_blank" rel="noopener noreferrer">' +
-            '<svg viewBox="0 0 24 24"><path d="M3 11 20 3l-8 17-2.5-6.5z"/><path d="M11.5 12.5 3 11"/></svg>' +
-            "<span>Itinéraire</span>" +
-          "</a>"
-        : "") +
-      '<button class="club-action" id="sh-voir-recompenses" type="button">' +
-        '<svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>' +
-        "<span>" + (RECOMPENSES.length || 4) + " récompenses</span>" +
-      "</button>" +
-    "</div>" +
     '<div class="club-adresse">' +
       '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
+      (lienItineraire ? '<a class="club-adresse-lien" href="' + lienItineraire + '" target="_blank" rel="noopener noreferrer">Itinéraire</a>' : "") +
     "</div>" +
+    '<a class="club-recompenses-lien" id="sh-voir-recompenses" href="#boutique">' +
+      (RECOMPENSES.length || 4) + " récompenses à échanger ici →" +
+    "</a>" +
     '<button class="sheet-cta" id="sh-poster-story" type="button">Poster ma story</button>' +
     '<p class="sheet-note">' + noteRecompenseClub() + "</p>";
 
   ouvrirFeuille(html, ".sheet-cta");
   cablerFavoriClub(id, c.nom);
-  $("#sh-voir-recompenses")?.addEventListener("click", function () {
+  $("#sh-voir-recompenses")?.addEventListener("click", function (e) {
+    e.preventDefault();
     fermerFeuille();
     activerVue("boutique");
   });
