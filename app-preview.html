@@ -374,7 +374,7 @@
         position: absolute; right: -2px; bottom: -2px; width: 22px; height: 22px; border-radius: 50%;
         background: var(--s1); box-shadow: 0 0 0 2px var(--bg); display: grid; place-items: center;
       }
-      .va-avatar-edit svg { width: 11px; height: 11px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .va-avatar-edit svg { width: 11px; height: 11px; stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .va-handle { margin: 0 0 18px; font-size: 15px; font-weight: 700; color: var(--ink); }
       .va-qr {
         width: 148px; height: 148px; margin: 0 auto 16px; padding: 10px;
@@ -650,7 +650,7 @@
         position: absolute; right: -2px; bottom: -2px; width: 26px; height: 26px; border-radius: 50%;
         background: var(--s1); box-shadow: 0 0 0 2px var(--bg); display: grid; place-items: center;
       }
-      .pf-avatar-edit svg { width: 13px; height: 13px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-avatar-edit svg { width: 13px; height: 13px; stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .pf-nom { margin: 0 0 3px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
       .pf-sub { margin: 0; font-size: 13px; color: var(--ink3); font-weight: 650; }
 
@@ -916,19 +916,14 @@
       @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
 
-      /* Point "moi" -- rond simple (pas un pin, une position exacte),
-         convention universelle des cartes (Google/Apple Maps) : bleu,
-         jamais la couleur d'un club ni le corail de marque, pour ne
-         jamais se confondre avec eux. Seul point fixe sur la carte
-         (pas de vrai suivi GPS dans cette maquette), juste pour garder
-         un repere "je suis ici" pendant qu'on se deplace sur la carte. */
-      .moi-marker { width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4); position: relative; }
-      .moi-marker::after {
-        content: ""; position: absolute; inset: -11px; border-radius: 50%; background: rgba(59,130,246,.28);
-        animation: moi-pouls 2.4s ease-out infinite;
-      }
-      @keyframes moi-pouls { 0% { transform: scale(.55); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
-      @media (prefers-reduced-motion: reduce) { .moi-marker::after { animation: none; opacity: .3; } }
+      /* Marqueur "moi" -- Julien : un point bleu generique "c'est de la
+         merde", un verre est plus logique sur cette carte (coherent
+         avec "Ma pinte" dans .carte-rail et le vocabulaire du reste de
+         l'appli). Reprend le meme verre (pint(), plein) et le meme
+         gabarit que l'ancien marqueur d'ami retire plus tot -- ancre en
+         bas comme lui (transform-origin: bottom, voir majTailleMarqueurs). */
+      .moi-marker { width: 46px; height: 60px; transform-origin: bottom center; }
+      .moi-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
          chaque deplacement) -- ne jamais lui donner de transform a
@@ -4519,17 +4514,17 @@ map.on("load", function () {
   // Point "moi" -- position fixe pour cette maquette (pas de vraie
   // geolocalisation branchee), juste pour garder un repere visuel de
   // "je suis ici" pendant qu'on se deplace sur la carte -- demande de
-  // Julien apres le retrait des amis de la carte ("juste un verre qui
-  // est nous"). Rond bleu distinct des badges de club, jamais confondu
-  // avec eux (voir .moi-marker plus haut).
+  // Julien apres le retrait des amis de la carte ("un verre qui est
+  // nous", pas un point generique -- voir .moi-marker plus haut).
   var porteurMoi = document.createElement("div");
   porteurMoi.className = "marker-porteur";
   var elMoi = document.createElement("div");
   elMoi.className = "moi-marker";
+  elMoi.innerHTML = pint(1);
   elMoi.setAttribute("role", "img");
   elMoi.setAttribute("aria-label", "Ma position");
   porteurMoi.appendChild(elMoi);
-  new maplibregl.Marker({ element: porteurMoi, anchor: "center", opacityWhenCovered: 0 })
+  new maplibregl.Marker({ element: porteurMoi, anchor: "bottom", opacityWhenCovered: 0 })
     .setLngLat(MOI)
     .addTo(map);
   marqueursEchelle.push({ el: elMoi, dx: 0, dy: 0 });
