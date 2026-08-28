@@ -883,36 +883,38 @@
       .maplibregl-ctrl-logo { display: none !important; }
 
 
-      /* Badge de club v2 -- Julien : la premiere version (meme icone de
-         verre recoloree pour tous) "n'etait pas encore ca", trop
-         generique d'un club a l'autre. L'initiale du club (typo, pas
-         pictogramme) porte mieux l'identite de chacun ; dégradé + ombre
-         au sol (::before) donnent un peu de relief plutot qu'un aplat
-         plat. */
+      /* Badge de club v3 -- deux versions precedentes jugees "pas
+         encore ca" (meme icone de verre repetee, puis une initiale sur
+         fond de couleur) : la vraie photo du lieu, en avatar rond
+         cercle dans la couleur du club, porte davantage d'identite que
+         n'importe quel pictogramme ou lettre -- et recoupe la fiche
+         (meme photo, voir fotoClub()), donc le badge sur la carte
+         annonce deja ce qu'on va voir en tapant dessus. Point de
+         statut ouvert/ferme en overlay, ombre au sol (::before) pour
+         le detacher un peu du fond de carte. */
       .club-badge {
-        width: 60px; height: 60px; border-radius: 50%;
-        background: linear-gradient(155deg, color-mix(in srgb, var(--c) 82%, #fff), var(--c) 72%);
-        border: 3px solid #fff;
-        box-shadow: 0 3px 10px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35);
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        color: #fff; position: relative; line-height: 1; cursor: pointer;
+        width: 58px; height: 58px; border-radius: 50%; overflow: hidden;
+        background: var(--s2); border: 3px solid var(--c);
+        box-shadow: 0 4px 12px -2px rgba(0,0,0,.5);
+        position: relative; cursor: pointer;
       }
+      .club-badge img { width: 100%; height: 100%; object-fit: cover; display: block; }
       .club-badge::before {
-        content: ""; position: absolute; left: 50%; bottom: -7px; translate: -50% 0;
+        content: ""; position: absolute; left: 50%; bottom: -8px; translate: -50% 0;
         width: 16px; height: 6px; border-radius: 50%; background: rgba(10,8,8,.4); filter: blur(1.5px);
       }
-      .club-badge.shut { background: #fff; color: #7b828c; border-color: #d9dde3; }
+      .club-badge.shut { border-color: #b6bcc6; filter: grayscale(.45) brightness(.82); }
+      .club-badge-dot {
+        position: absolute; right: -2px; bottom: -2px; width: 15px; height: 15px;
+        border-radius: 50%; border: 2.5px solid #fff; background: var(--succes-texte, #57d98a);
+      }
+      .club-badge.shut .club-badge-dot { background: #9aa1ab; }
       .club-badge.hot::after {
         content: ""; position: absolute; inset: -3px; border-radius: 50%;
         border: 2.5px solid var(--c); animation: ping 2.6s cubic-bezier(.2,.6,.35,1) infinite;
       }
       @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
-
-      /* Initiale du club -- police du systeme (herite de .screen), pas
-         de police maison a charger juste pour ce badge. */
-      .club-badge-lettre { font-size: 25px; font-weight: 800; letter-spacing: -.02em; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
-      .club-badge.shut .club-badge-lettre { text-shadow: none; }
 
       /* Point "moi" -- rond simple (pas un pin, une position exacte),
          convention universelle des cartes (Google/Apple Maps) : bleu,
@@ -927,11 +929,6 @@
       }
       @keyframes moi-pouls { 0% { transform: scale(.55); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .moi-marker::after { animation: none; opacity: .3; } }
-
-      /* Icone de type d'etablissement -- ne sert plus que dans la
-         rangee "clubs" sous la carte (creerClubChip), le badge sur la
-         carte elle-meme utilise desormais l'initiale (voir plus haut). */
-      .club-badge-icone { width: 30px; height: 30px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
          chaque deplacement) -- ne jamais lui donner de transform a
@@ -976,6 +973,14 @@
       }
       .fr .bub svg.pint { width: 27px; height: 35px; }
       .fr .bub svg.plus { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      /* Meme traitement "photo + anneau couleur + point de statut" que
+         le badge sur la carte (voir .club-badge) -- la bulle sous la
+         carte et le badge dessus doivent se reconnaitre comme le meme
+         club au premier coup d'oeil. */
+      .fr .bub-club { position: relative; border: 2.5px solid var(--c); }
+      .fr .bub-club img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .fr .bub-club.shut { border-color: #b6bcc6; filter: grayscale(.45) brightness(.82); }
+      .fr .bub-club .club-badge-dot { width: 13px; height: 13px; border-width: 2px; }
       .fr b {
         font-size: 10.5px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6);
         max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -1323,34 +1328,42 @@
       }
       .sheet-visuel svg { width: 58%; height: 58%; display: block; }
 
-      /* Fiche club (carte) -- refaite pour ressembler a une vraie fiche
-         Google Maps (Julien : la version precedente, cartes degradees
-         sans vraie photo + badge rond, "faisait IA"). Photos d'abord,
-         edge-to-edge, comme un carrousel Maps ; le nom et les infos
-         suivent en texte plat, pas dans un bandeau colore. */
-      .club-photos {
-        display: flex; gap: 4px; margin: -6px -6px 14px; overflow-x: auto; scrollbar-width: none;
+      /* Fiche club (carte) v2 -- Julien voulait pousser plus loin qu'un
+         simple copier-coller de la structure Maps : la grande photo
+         d'entete porte maintenant le nom et la note EN INCRUSTATION
+         (scrim degrade), comme une vraie fiche Google/Apple Maps sur
+         mobile, plutot qu'en texte plat en dessous -- plus immersif,
+         plus "fiche", moins "liste de champs". */
+      .club-hero-photo {
+        position: relative; margin: -6px -6px 8px; border-radius: 20px; overflow: hidden;
+        height: 190px; background: var(--s2);
       }
-      .club-photos::-webkit-scrollbar { display: none; }
-      .club-photo {
-        flex: 0 0 auto; width: 96px; height: 96px; overflow: hidden;
-        border-radius: 0 0 14px 0;
+      .club-hero-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .club-hero-scrim {
+        position: absolute; inset: auto 0 0 0; padding: 34px 18px 16px;
+        background: linear-gradient(to top, rgba(8,6,5,.92), rgba(8,6,5,.5) 55%, transparent);
       }
-      .club-photo.grande { width: 172px; border-radius: 14px 0 14px 0; }
-      .club-photo:last-child { border-radius: 0 0 14px 14px; }
-      .club-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-      .club-hero-nom { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); }
+      .club-hero-nom { margin: 0 0 4px; font-size: 23px; font-weight: 800; letter-spacing: -.03em; color: #fff; }
 
       /* Ligne note/avis/categorie -- le signal le plus "fiche Google"
          de tous : etoile pleine + note + nombre d'avis + categorie +
-         gamme de prix, exactement l'ordre d'une vraie fiche Maps. */
+         gamme de prix, exactement l'ordre d'une vraie fiche Maps.
+         Vit maintenant dans le scrim (voir plus haut), donc en clair
+         fixe plutot que var(--ink2) (qui suit le theme sombre/clair du
+         reste de la fiche, ici toujours sur fond photo sombre). */
       .club-meta {
-        display: flex; align-items: center; gap: 5px; margin: 0 0 3px;
-        font-size: 13.5px; font-weight: 600; color: var(--ink2);
+        display: flex; align-items: center; gap: 5px; margin: 0;
+        font-size: 13.5px; font-weight: 600; color: rgba(255,255,255,.85);
       }
       .club-etoile { width: 15px; height: 15px; fill: var(--ambre); flex: 0 0 auto; }
-      .club-meta strong { color: var(--ink); font-weight: 800; }
+      .club-meta strong { color: #fff; font-weight: 800; }
+
+      /* Deux vignettes de rappel sous la grande photo -- meme esprit
+         que le carrousel secondaire d'une fiche Maps, en plus discret. */
+      .club-photos { display: flex; gap: 6px; margin: 0 0 14px; }
+      .club-photo { flex: 1 1 0; height: 64px; border-radius: 12px; overflow: hidden; }
+      .club-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
       .club-statut { margin: 0 0 14px; font-size: 13px; font-weight: 600; color: var(--ink2); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
       .club-statut .ouvert { color: var(--succes-texte, #57d98a); font-weight: 700; }
       .club-statut .ferme { color: var(--ink3); font-weight: 700; }
@@ -3043,30 +3056,10 @@ var CLUBS = {
   }
 };
 
-// "club" -> "Boîte de nuit", "bar" -> "Bar" : meme distinction que
-// badgeType(), juste en texte lisible pour la ligne meta de la fiche.
+// "club" -> "Boîte de nuit", "bar" -> "Bar" : juste en texte lisible
+// pour la ligne meta de la fiche.
 function libelleType(type) {
   return type === "bar" ? "Bar" : "Boîte de nuit";
-}
-
-// Icone de type, maintenant le SEUL contenu du marqueur (demande de
-// Julien : retirer le nombre/etiquette du dessus, qui ressemblait a
-// une heure genre "21:14" -- juste le verre suffit). Pinte pour un
-// bar, cocktail pour une boite de nuit.
-// Un seul verre pour tout le monde, bar ou boite de nuit confondus --
-// Julien a tranche apres avoir hesite entre pinte/cocktail plusieurs
-// fois : plus de distinction par type, un seul cocktail partout.
-function badgeType(type) {
-  var icone = '<path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/>';
-  return '<svg viewBox="0 0 24 24" class="club-badge-icone" aria-hidden="true">' + icone + "</svg>";
-}
-
-// Initiale du club (M pour Mirage, F pour Fuse...) -- porte mieux
-// l'identite de chaque club sur la carte qu'une icone generique
-// repetee partout (voir .club-badge plus haut).
-function badgeInitiale(nom) {
-  var lettre = (nom || "?").trim().charAt(0).toUpperCase();
-  return '<span class="club-badge-lettre">' + escapeHtmlSupport(lettre) + "</span>";
 }
 
 var BRUXELLES = [4.3517, 50.8503];
@@ -3737,18 +3730,42 @@ map.on("style.load", function () {
 // de connexion/inscription) en attendant que chaque club puisse
 // uploader les siennes -- a remplacer par c.photos = [url1, url2, ...]
 // des que ce stockage existe (meme principe que clubs.ig_handle dans
-// les Parametres de owner.html). Ordre decale par club (via depart)
-// pour que les 3 fiches de la maquette n'affichent pas exactement la
-// meme premiere photo.
+// les Parametres de owner.html). fotoClub() fixe une photo par club
+// (deterministe sur la longueur du nom) : le meme club montre toujours
+// la meme image, que ce soit son badge sur la carte, sa bulle sous la
+// carte ou sa fiche.
 var PHOTOS_AMBIANCE = ["./assets/hero-nightclub.webp", "./assets/hero-auth.jpg"];
-function photosClub(c, depart) {
-  var n = 3;
+function fotoClub(c) {
+  return PHOTOS_AMBIANCE[c.nom.length % PHOTOS_AMBIANCE.length];
+}
+
+// Grande photo d'entete avec nom + note incrustes dessus (scrim degrade),
+// comme une vraie fiche Google/Apple Maps -- avant, le nom et la note
+// vivaient dans du texte plat sous des photos plus petites, ce qui
+// faisait plus "liste" que "fiche".
+function heroClub(c) {
+  return (
+    '<div class="club-hero-photo">' +
+      '<img src="' + fotoClub(c) + '" alt="" />' +
+      '<div class="club-hero-scrim">' +
+        '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
+        '<p class="club-meta">' +
+          '<svg class="club-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>' +
+          '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong> (" + c.avis + ") · " + libelleType(c.type) + " · " + c.prix +
+        "</p>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
+// Deux vignettes supplementaires (photo suivante dans le cycle), en
+// rappel sous la grande photo d'entete -- meme esprit que le carrousel
+// secondaire d'une fiche Maps.
+function miniaturesClub(c) {
   var vignettes = "";
-  for (var i = 0; i < n; i++) {
-    var src = PHOTOS_AMBIANCE[(depart + i) % PHOTOS_AMBIANCE.length];
-    vignettes += '<span class="club-photo' + (i === 0 ? " grande" : "") + '">' +
-      '<img src="' + src + '" alt="" loading="lazy" />' +
-    "</span>";
+  for (var i = 1; i <= 2; i++) {
+    var src = PHOTOS_AMBIANCE[(c.nom.length + i) % PHOTOS_AMBIANCE.length];
+    vignettes += '<span class="club-photo"><img src="' + src + '" alt="" loading="lazy" /></span>';
   }
   return '<div class="club-photos">' + vignettes + "</div>";
 }
@@ -3763,19 +3780,15 @@ function ouvrirClub(c, src, id) {
   // la premiere version (rendue plate par des photos degradees sans
   // vraie image). Photos, note/avis/prix et rangee d'actions rondes
   // reprennent maintenant la structure d'une vraie fiche Maps ; le
-  // reste (statut "Ça chauffe", note recompense, poster une story)
-  // reste ce qui nous differencie d'une fiche Maps generique.
+  // reste (statut, note recompense, poster une story) reste ce qui
+  // nous differencie d'une fiche Maps generique.
   var lienItineraire = c.lngLat
     ? "https://www.google.com/maps/dir/?api=1&destination=" + c.lngLat[1] + "," + c.lngLat[0]
     : null;
 
   var html =
-    photosClub(c, c.nom.length) +
-    '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
-    '<p class="club-meta">' +
-      '<svg class="club-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>' +
-      '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong> (" + c.avis + ") · " + libelleType(c.type) + " · " + c.prix +
-    "</p>" +
+    heroClub(c) +
+    miniaturesClub(c) +
     '<p class="club-statut">' +
       '<span class="' + (c.shut ? "ferme" : "ouvert") + '">' + c.statut + "</span> · " + c.horaire +
     "</p>" +
@@ -4464,9 +4477,9 @@ map.on("load", function () {
     el.style.setProperty("--c", c.c);
     // Le nombre/etiquette ("42 ICI", "1h OUVRE"...) faisait plus
     // confus que clair, un peu comme une heure affichee au hasard
-    // (demande de Julien) -- l'initiale du club suffit, le detail
-    // (qui est la, si c'est ouvert...) reste dispo dans la fiche.
-    el.innerHTML = badgeInitiale(c.nom);
+    // (demande de Julien) -- la photo + le point de statut suffisent,
+    // le detail (horaires precis, avis...) reste dans la fiche.
+    el.innerHTML = '<img src="' + fotoClub(c) + '" alt="" /><span class="club-badge-dot"></span>';
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     el.addEventListener("click", function () { ouvrirClub(c, el, key); });
     porteur.appendChild(el);
@@ -4906,7 +4919,11 @@ function creerClubChip(c, key) {
   var b = document.createElement("button");
   b.className = "fr";
   b.setAttribute("aria-label", c.nom);
-  b.innerHTML = '<span class="bub" style="background:' + c.c + ';color:#fff">' + badgeType(c.type) + '</span><b>' + escapeHtmlSupport(c.nom) + '</b>';
+  b.innerHTML =
+    '<span class="bub bub-club' + (c.shut ? " shut" : "") + '" style="--c:' + c.c + '">' +
+      '<img src="' + fotoClub(c) + '" alt="" />' +
+      '<span class="club-badge-dot"></span>' +
+    "</span><b>" + escapeHtmlSupport(c.nom) + "</b>";
   b.addEventListener("click", function () {
     activerVue("carte");
     ouvrirClub(c, null, key);
