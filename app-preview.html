@@ -128,6 +128,30 @@
       @media (prefers-reduced-motion: reduce) { .vue { transition: none; } }
 
       /* ============================================================
+         ECRAN DE CHARGEMENT — le temps de savoir si un compte existe
+         deja (getSession() est asynchrone : sans ca, un client deja
+         connecte revoyait une bascule brute de l'ecran de connexion
+         vers la carte, une fois la session confirmee). Au-dessus de
+         tout (z-index 40, .vue-accueil est a 30), disparait des que la
+         session est connue -- ou apres COUPE_CHARGEMENT_MS en secours
+         si Supabase tarde a repondre. */
+      .splash {
+        position: absolute; inset: -3px; z-index: 40; background: var(--bg);
+        display: flex; align-items: center; justify-content: center;
+        transition: opacity .35s ease;
+      }
+      .splash.masque { opacity: 0; pointer-events: none; }
+      .splash-mark { width: 56px; height: 56px; animation: splash-pouls 1.6s ease-in-out infinite; }
+      @keyframes splash-pouls {
+        0%, 100% { transform: scale(.88); opacity: .55; }
+        50% { transform: scale(1.05); opacity: 1; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .splash { transition: none; }
+        .splash-mark { animation: none; }
+      }
+
+      /* ============================================================
          ECRAN D'ACCUEIL — mascotte + connexion
          Recouvre .vue-carte/.vue-boutique au chargement (z-index au
          dessus, hors du systeme d'onglets) ; disparait au clic sur un
@@ -1702,6 +1726,12 @@
     <div class="phone">
       <div class="screen">
 
+        <div class="splash" id="splash" aria-hidden="true">
+          <svg class="splash-mark" viewBox="0 0 24 24">
+            <path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/>
+          </svg>
+        </div>
+
         <!-- ================= ECRAN D'ACCUEIL =================
              Reference envoyee par Julien : ecran d'onboarding mobile type
              "Welcome to X", mascotte au-dessus + Continuer avec
@@ -2346,6 +2376,24 @@ var CLE_SUPABASE_CLUBBEUR =
 var supabaseClubbeur = createClient(URL_SUPABASE_CLUBBEUR, CLE_SUPABASE_CLUBBEUR, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
+
+// getSession() est asynchrone : le temps qu'il reponde, on ne sait pas
+// encore si on doit montrer l'ecran de connexion ou entrer direct dans
+// l'appli (compte deja connecte). Plutot que de laisser voir cette
+// hesitation (connexion qui flashe puis disparait), l'ecran de
+// chargement (#splash, voir .splash plus haut) reste devant jusqu'a la
+// reponse -- avec un filet de securite si Supabase tarde a repondre.
+(function () {
+  var splash = document.getElementById("splash");
+  var cachee = false;
+  function cacherSplash() {
+    if (cachee || !splash) return;
+    cachee = true;
+    splash.classList.add("masque");
+  }
+  setTimeout(cacherSplash, 2500);
+  supabaseClubbeur.auth.getSession().then(cacherSplash).catch(cacherSplash);
+})();
 
 // Parrainage : ?parrain=<pseudo-du-parrain> dans le lien qu'on partage.
 // Range en localStorage tout de suite, AVANT toute connexion : le
