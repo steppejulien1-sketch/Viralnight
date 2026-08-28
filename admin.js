@@ -159,7 +159,7 @@ function setModeNotice() {
   modeNotice.textContent =
     state.source === "supabase"
       ? "Mode réel : données chargées depuis Supabase."
-      : "Mode démonstration : connecte-toi avec le compte admin ViralNight pour charger la vraie file.";
+      : "Mode démonstration : connecte-toi avec le compte admin Noctify pour charger la vraie file.";
 }
 
 function loadProspects() {
@@ -323,7 +323,7 @@ function renderTable() {
       <span>Plateforme</span>
       <span>Vues</span>
       <span>Statut</span>
-      <span>Action ViralNight</span>
+      <span>Action Noctify</span>
     </div>
   `;
 

@@ -3,7 +3,7 @@
 //   un clubbeur depose (PWA)
 //     -> le pont aller le fait remonter (push-submission -> track-post)
 //        AVEC l'identifiant de sa story
-//     -> ViralNight valide depuis le back-office B2B (/api/credit-clubbeur)
+//     -> Noctify valide depuis le back-office B2B (/api/credit-clubbeur)
 //     -> le pont retour credite le clubbeur (credit-story)
 //     -> ses points existent dans la base de la PWA
 //
@@ -56,7 +56,7 @@ const trace = [];
 const dire = (ok, t) => { trace.push([ok, t]); console.log((ok ? "  OK  | " : " FAIL | ") + t); };
 
 function anonPwa() {
-  const p = "C:/Users/stepp/Downloads/ViralNight-ClaudeCode-FULL/06-pwa-clubbeurs/.env.local";
+  const p = "C:/Users/stepp/Downloads/Noctify-ClaudeCode-FULL/06-pwa-clubbeurs/.env.local";
   for (const l of fs.readFileSync(p, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/)) {
     if (l.trim().startsWith("VITE_SUPABASE_ANON_KEY=")) return l.split("=").slice(1).join("=").trim();
   }
@@ -147,7 +147,7 @@ async function jetonAdminB2B() {
     dire(soumission?.external_story_id === storyId,
       "⚠️ elle porte l'identifiant de la story — sans lui, personne a crediter");
 
-    // --- 3. ViralNight valide depuis le back-office --------------------
+    // --- 3. Noctify valide depuis le back-office --------------------
     const jeton = await jetonAdminB2B();
     const rep = postB2B("/api/credit-clubbeur",
       { submissionId: soumission.id, approve: true, points: 180, views: 5200 }, jeton);

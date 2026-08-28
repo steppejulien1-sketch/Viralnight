@@ -148,7 +148,7 @@ function normalizePointRules(row) {
   };
 }
 
-function isViralNightAdmin(session) {
+function isNoctifyAdmin(session) {
   return String(session?.user?.email || "").toLowerCase() === ADMIN_EMAIL;
 }
 
@@ -176,7 +176,7 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured, options
     };
   }
 
-  if (isViralNightAdmin(session) && !ownerEmail) {
+  if (isNoctifyAdmin(session) && !ownerEmail) {
     return {
       ...fallbackDashboardData,
       reason: "admin_select_client",
@@ -184,7 +184,7 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured, options
     };
   }
 
-  if (ownerEmail && !isViralNightAdmin(session)) {
+  if (ownerEmail && !isNoctifyAdmin(session)) {
     return {
       ...fallbackDashboardData,
       reason: "admin_required",

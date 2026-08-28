@@ -161,7 +161,7 @@ function getLockedCopy(data) {
   if (status === "suspendu") {
     return {
       title: "Accès suspendu.",
-      message: "Ce dashboard est désactivé. Contacte ViralNight pour réactiver l'établissement.",
+      message: "Ce dashboard est désactivé. Contacte Noctify pour réactiver l'établissement.",
     };
   }
 
@@ -308,7 +308,7 @@ function renderEstablishment(data) {
   const reel = data.source === "supabase";
   const establishment = data.establishment || (reel ? null : data.session ? null : fallbackDashboardData.establishment);
 
-  setText("[data-establishment-name]", establishment?.name || (data.session ? "Votre club" : "Établissement ViralNight"));
+  setText("[data-establishment-name]", establishment?.name || (data.session ? "Votre club" : "Établissement Noctify"));
 
   // La phrase « Rien n'est estime » est une promesse : elle ne doit
   // s'afficher que si les chiffres viennent bien de la base.
@@ -1330,7 +1330,7 @@ function renderInstagramConnecte(statut, session) {
   const gainAbonnes =
     statut.abonnesGagnes === null || statut.abonnesGagnes === undefined
       ? ""
-      : `<p class="instagram-stat"><strong>${statut.abonnesGagnes >= 0 ? "+" : ""}${numberFormatter.format(statut.abonnesGagnes)}</strong> abonné${Math.abs(statut.abonnesGagnes) > 1 ? "s" : ""} Instagram depuis que ce club est sur ViralNight${
+      : `<p class="instagram-stat"><strong>${statut.abonnesGagnes >= 0 ? "+" : ""}${numberFormatter.format(statut.abonnesGagnes)}</strong> abonné${Math.abs(statut.abonnesGagnes) > 1 ? "s" : ""} Instagram depuis que ce club est sur Noctify${
           statut.abonnesActuels !== null && statut.abonnesActuels !== undefined
             ? ` (${numberFormatter.format(statut.abonnesActuels)} aujourd'hui)`
             : ""

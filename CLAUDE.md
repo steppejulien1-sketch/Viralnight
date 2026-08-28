@@ -1,4 +1,4 @@
-# ViralNight
+# Noctify
 
 SaaS B2B pour boites de nuit. Le client du club scanne un QR code sur place, publie
 une story / Reel / TikTok avec le tag du club, gagne des points, debloque une
@@ -13,7 +13,7 @@ analytique.
 
 ## 1. Ou travailler
 
-Le depot parent `ViralNight-ClaudeCode-FULL/` contient 5 dossiers. **Un seul est vivant :
+Le depot parent `Noctify-ClaudeCode-FULL/` contient 5 dossiers. **Un seul est vivant :
 celui-ci** (`01-base-fonctionnelle-vite-supabase-api/`). C'est lui qui est deploye.
 
 | Dossier | Statut |
@@ -63,7 +63,7 @@ gestionnaire d'etat : le projet est volontairement en HTML/CSS/JS lisibles.
 | `index.html` | Landing publique. Scroll classique, nav flottante. |
 | `connexion.html` / `inscription.html` | Auth. Partagent `auth.js` et `auth.css`. |
 | `app.html` | Dashboard client (le gerant du club). |
-| `admin.html` | Back-office interne ViralNight. Validation des contenus, creation de clients. |
+| `admin.html` | Back-office interne Noctify. Validation des contenus, creation de clients. |
 | `simulateur.html` | Demo commerciale autoportante. Donnees simulees, sert a vendre. |
 | `scan.html` / `qr.html` | Parcours QR cote client final. |
 | `live.html` | Suivi de soiree en direct. |

@@ -90,7 +90,7 @@ async function insertDemoRequest(payload) {
 async function sendNotificationEmail(payload) {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.NOTIFICATION_EMAIL;
-  const from = process.env.NOTIFICATION_FROM || "ViralNight <onboarding@resend.dev>";
+  const from = process.env.NOTIFICATION_FROM || "Noctify <onboarding@resend.dev>";
 
   if (!apiKey || !to) {
     return false;
@@ -109,15 +109,15 @@ async function sendNotificationEmail(payload) {
     body: JSON.stringify({
       from,
       to: [to],
-      subject: `Nouvelle demande ViralNight - ${payload.club}`,
+      subject: `Nouvelle demande Noctify - ${payload.club}`,
       html: `
-        <h2>Nouvelle demande de démo ViralNight</h2>
+        <h2>Nouvelle demande de démo Noctify</h2>
         <p><strong>Club :</strong> ${safeClub}</p>
         <p><strong>Email :</strong> ${safeEmail}</p>
         <p><strong>Téléphone :</strong> ${safePhone}</p>
       `,
       text: [
-        "Nouvelle demande de démo ViralNight",
+        "Nouvelle demande de démo Noctify",
         `Club : ${payload.club}`,
         `Email : ${payload.email}`,
         `Téléphone : ${payload.phone}`,

@@ -1,4 +1,4 @@
-# Supabase setup ViralNight
+# Supabase setup Noctify
 
 ## Installation rapide (recommandee)
 
@@ -64,7 +64,7 @@ Le fichier crée :
 
 ## 3. Créer un premier owner
 
-Depuis l'admin ViralNight, le plus simple est d'utiliser le formulaire `Créer un client`.
+Depuis l'admin Noctify, le plus simple est d'utiliser le formulaire `Créer un client`.
 Il crée automatiquement l'établissement, le compte Auth, le lien `establishment_owners`,
 le barème par défaut, les premières récompenses et l'email de création du mot de passe.
 

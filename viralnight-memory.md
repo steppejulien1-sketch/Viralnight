@@ -1,8 +1,8 @@
-# Memoire projet ViralNight
+# Memoire projet Noctify
 
 ## Idee centrale
 
-ViralNight est un SaaS pour boites de nuit et clubs.
+Noctify est un SaaS pour boites de nuit et clubs.
 
 Objectif : aider les clubs a multiplier leur visibilite, fideliser leurs clients et remplir leurs soirees grace aux contenus publies par leurs propres clients.
 

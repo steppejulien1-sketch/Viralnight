@@ -24,7 +24,7 @@ Deux publics distincts, deux surfaces distinctes :
 
 ## Product Purpose
 
-ViralNight fait gagner en visibilité les boîtes de nuit via leurs propres
+Noctify fait gagner en visibilité les boîtes de nuit via leurs propres
 clients : le clubbeur scanne un QR code sur place, publie une story/Reel/
 TikTok taguant le club, gagne des points selon les vues générées, et
 échange ces points contre de vraies récompenses (boisson, entrée,
@@ -68,12 +68,12 @@ dans un tiroir.
   `rewards` (nom + seuil + stock + famille), via une route publique
   dédiée. Le gérant ne rédige ni description ni règles détaillées — la
   boutique les complète elle-même de façon honnête et générique.
-- Le corail (`#ff6363`) est la couleur de marque ViralNight — jamais un
+- Le corail (`#ff6363`) est la couleur de marque Noctify — jamais un
   bouton d'action, contrainte déjà en vigueur côté dashboard B2B.
 
 ## Brand Commitments
 
-- Nom : ViralNight.
+- Nom : Noctify.
 - Le dashboard B2B (gérant) vise délibérément Stripe/Linear/Vercel :
   sombre, premium, crédible en B2B, sans néon ni "boîte de nuit cheap".
   Cette règle est documentée et ferme pour cette surface-là.

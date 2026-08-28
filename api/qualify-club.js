@@ -66,7 +66,7 @@ async function fetchHtml(url, maxLength = 900000) {
       redirect: "follow",
       signal: controller.signal,
       headers: {
-        "User-Agent": "Mozilla/5.0 ViralNightQualification/1.0",
+        "User-Agent": "Mozilla/5.0 NoctifyQualification/1.0",
         Accept: "text/html,application/xhtml+xml",
       },
     });
@@ -337,14 +337,14 @@ function prospectStatus(score) {
 
 function prospectMessage(prospect) {
   if (prospect.score >= 75) {
-    return `${prospect.club} semble déjà actif en ligne : ViralNight peut transformer cette visibilité en retours clients mesurables.`;
+    return `${prospect.club} semble déjà actif en ligne : Noctify peut transformer cette visibilité en retours clients mesurables.`;
   }
 
   if (prospect.socials?.instagram?.url || prospect.socials?.tiktok?.url) {
     return `${prospect.club} a déjà une base sociale exploitable : proposez une activation stories/Reels avec récompenses.`;
   }
 
-  return `${prospect.club} mérite un premier contact simple : présenter ViralNight comme un moyen d'obtenir plus de contenu client sans charge opérationnelle.`;
+  return `${prospect.club} mérite un premier contact simple : présenter Noctify comme un moyen d'obtenir plus de contenu client sans charge opérationnelle.`;
 }
 
 export default async function handler(request, response) {

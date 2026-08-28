@@ -335,7 +335,7 @@ function setupManifesto() {
   const words = el.textContent.trim().split(/\s+/);
   el.innerHTML = words
     .map((w) => {
-      // Les mots du "avant ViralNight" restent plus sombres.
+      // Les mots du "avant Noctify" restent plus sombres.
       const dim = /perd|Aujourd/.test(w) ? " dim" : "";
       const safe = w.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       return `<span class="w${dim}">${safe}</span>`;

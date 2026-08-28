@@ -74,7 +74,7 @@ async function printPoster() {
   // la seule touche de couleur (regle du design system) — un simple filet
   // autour du QR, pas un aplat qui mange l'encre a l'impression.
   win.document.write(`<!doctype html>
-<html lang="fr"><head><meta charset="UTF-8"><title>QR ViralNight — ${escapeHtml(state.establishmentName)}</title>
+<html lang="fr"><head><meta charset="UTF-8"><title>QR Noctify — ${escapeHtml(state.establishmentName)}</title>
 <style>
   @page { margin: 12mm; }
   * { box-sizing: border-box; }
@@ -101,7 +101,7 @@ async function printPoster() {
 <body>
   <div class="brand">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/></svg>
-    <span>ViralNight</span>
+    <span>Noctify</span>
   </div>
   <p class="club">${escapeHtml(state.establishmentName)}</p>
   <h1>Gagne tes récompenses</h1>
