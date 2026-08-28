@@ -341,7 +341,7 @@
       }
       .va-qr svg { width: 100%; height: 100%; display: block; }
       .va-hint { margin: 0 0 18px; font-size: 12.5px; color: var(--ink2); line-height: 1.5; }
-      .va-hint strong { color: var(--ambre); font-family: var(--mono, inherit); }
+      .va-hint strong { color: var(--red); font-family: var(--mono, inherit); }
       .va-share {
         /* Couleurs fixes, pas les variables de theme : ce bouton doit
            rester une pilule blanche/texte sombre partout, meme quand la
@@ -872,16 +872,6 @@
          contient, sans quoi un <div> prendrait toute la largeur du
          conteneur de la carte et fausserait le centrage du marqueur. */
       .marker-porteur { display: inline-block; line-height: 0; }
-      /* transform-origin: bottom -- ce marqueur est ancre par sa BASE
-         (new maplibregl.Marker({ anchor: "bottom" }), la pointe du verre
-         doit rester exactement sur les coordonnees reelles), mais
-         majTailleMarqueurs() le retrecit avec un scale() qui, par
-         defaut, se fait autour du CENTRE de la boite. Plus le zoom
-         diminuait, plus la base visuelle du verre remontait au-dessus
-         de sa vraie position -- d'ou le marqueur qui semblait "partir
-         dans la mer" en dezoomant, signale par Julien. */
-      .friend-marker { width: 52px; height: 68px; cursor: pointer; transform-origin: bottom center; }
-      .friend-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
 
       .carte-rail {
         position: absolute; right: 13px; top: 51%; transform: translateY(-44%);
@@ -902,11 +892,11 @@
       /* Meme detail que carte-preview.html : "Mode invisible" et
          "Ajouter un ami" n'avaient aucun clic branche. */
 
-      .friend-rail {
+      .club-rail {
         position: absolute; left: 0; right: 0; bottom: 92px; z-index: 24;
         display: flex; gap: 9px; padding: 0 12px; overflow-x: auto; scrollbar-width: none;
       }
-      .friend-rail::-webkit-scrollbar { display: none; }
+      .club-rail::-webkit-scrollbar { display: none; }
       .fr {
         flex: 0 0 auto; background: none; border: 0; padding: 0; cursor: pointer;
         display: flex; flex-direction: column; align-items: center; gap: 3px; width: 54px;
@@ -1854,7 +1844,7 @@
                 <input type="file" accept="image/*" id="va-avatar-file" hidden />
                 <p class="va-handle" id="va-handle">@...</p>
                 <div class="va-qr" id="va-qr" aria-hidden="true"></div>
-                <p class="va-hint">Fais-le scanner, ou envoie ton lien. <strong>Tu gagnes 50 points</strong> dès qu'un ami rejoint grâce à toi.</p>
+                <p class="va-hint">Fais-le scanner, ou envoie ton lien. <strong>Tu gagnes 150 points</strong> dès qu'un ami rejoint grâce à toi.</p>
                 <button type="button" class="va-share" id="va-share">Partager mon code</button>
               </div>
             </div>
@@ -2158,7 +2148,7 @@
             <button class="rbtn" id="rail-me" aria-label="Ma pinte"><span class="dot"></span></button>
           </div>
 
-          <div class="friend-rail" id="friend-rail">
+          <div class="club-rail" id="club-rail">
           </div>
 
         </div>
@@ -2958,14 +2948,6 @@ function badgeType(type) {
   var icone = '<path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/>';
   return '<svg viewBox="0 0 24 24" class="club-badge-icone" aria-hidden="true">' + icone + "</svg>";
 }
-
-var AMIS = [
-  { nom: "Sarah",  q: 1,   lngLat: [4.3561, 50.8486] },
-  { nom: "Nassym", q: .62, lngLat: [4.3415, 50.8380] },
-  { nom: "Yanis",  q: .62 }, { nom: "Léa",    q: 1 },
-  { nom: "Théo",   q: .3 },  { nom: "Inès",   q: .3 },
-  { nom: "Malik",  q: 0 },   { nom: "Chloé",  q: 1 }
-];
 
 var BRUXELLES = [4.3517, 50.8503];
 
@@ -4354,22 +4336,6 @@ map.on("load", function () {
     marqueursEchelle.push({ el: el, dx: ecart.x, dy: ecart.y });
   });
 
-  AMIS.filter(function (a) { return a.lngLat; }).forEach(function (a) {
-    var porteur = document.createElement("div");
-    porteur.className = "marker-porteur";
-    var el = document.createElement("div");
-    el.className = "friend-marker";
-    el.innerHTML = pint(a.q);
-    el.setAttribute("role", "img");
-    el.setAttribute("aria-label", a.nom);
-    porteur.appendChild(el);
-    new maplibregl.Marker({ element: porteur, anchor: "bottom", opacityWhenCovered: 0 })
-      .setLngLat(a.lngLat)
-      .addTo(map);
-    var ecart = ecartAleatoire();
-    marqueursEchelle.push({ el: el, dx: ecart.x, dy: ecart.y });
-  });
-
   majTailleMarqueurs();
   map.on("zoom", majTailleMarqueurs);
 });
@@ -4449,7 +4415,7 @@ async function ouvrirPageAmis(session) {
   // Julien (2026-08-26) : pour un premier club, la liste d'amis/
   // recherche/suggestions n'est pas utile (effet reseau -- personne a
   // trouver). L'onglet Amis reste dans la barre, mais atterrit
-  // directement sur l'invitation (le lien de parrainage a 50 points,
+  // directement sur l'invitation (le lien de parrainage a 150 points,
   // un vrai levier d'acquisition) plutot que sur la liste. Le code de
   // la liste reste intact et fonctionnel (voir #va-back plus bas) pour
   // la remettre en avant sans rien reecrire, une fois qu'il y aura du
@@ -4680,8 +4646,6 @@ async function ouvrirPageAmis(session) {
     var ami = res.data && res.data[0];
     if (!ami) { direErreur(""); return; }
 
-    var chip = creerAmiChip({ nom: ami.friend_handle, q: Math.random() });
-    friendRail.insertBefore(chip, friendRail.firstChild);
     champ.value = "";
     montrer("@" + ami.friend_handle + " ajouté !", "ok");
 
@@ -4751,7 +4715,7 @@ document.addEventListener("click", function (e) {
 });
 
 (function () {
-  var rail = $("#friend-rail");
+  var rail = $("#club-rail");
   if (!rail) return;
   var bas = false, x0 = 0, scroll0 = 0, bouge = false;
   rail.addEventListener("mousedown", function (e) {
@@ -4772,23 +4736,21 @@ document.addEventListener("click", function (e) {
   });
 })();
 
-var friendRail = $("#friend-rail");
-function creerAmiChip(p) {
+var clubRail = $("#club-rail");
+function creerClubChip(c, key) {
   var b = document.createElement("button");
   b.className = "fr";
-  b.setAttribute("aria-label", p.nom);
-  b.innerHTML = '<span class="bub">' + pint(p.q) + '</span><b>' + escapeHtmlSupport(p.nom) + '</b>';
-  // Avant, tapoter un ami zoomait direct dessus (flyTo) -- Julien ne
-  // veut plus de ce saut de camera automatique, juste revenir sur la
-  // carte telle qu'elle etait.
-  if (p.lngLat) b.addEventListener("click", function () {
+  b.setAttribute("aria-label", c.nom);
+  b.innerHTML = '<span class="bub" style="background:' + c.c + ';color:#fff">' + badgeType(c.type) + '</span><b>' + escapeHtmlSupport(c.nom) + '</b>';
+  b.addEventListener("click", function () {
     activerVue("carte");
+    ouvrirClub(c, null, key);
   });
   return b;
 }
 
-AMIS.forEach(function (p) {
-  friendRail.appendChild(creerAmiChip(p));
+Object.keys(CLUBS).forEach(function (key) {
+  clubRail.appendChild(creerClubChip(CLUBS[key], key));
 });
 
 /* ==========================================================
