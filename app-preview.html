@@ -1278,9 +1278,17 @@
          BARRE D'ONGLETS ET FEUILLE — communes aux deux ecrans
          ============================================================ */
 
+      /* Barre d'onglets toujours blanche, meme sur la Carte (theme
+         nocturne derriere) -- demande de Julien : elle passait au noir
+         en quittant Boutique/Story (seuls ecrans a poser
+         .screen.boutique-pro sur .screen, dont la barre heritait le
+         theme clair), rouvrir Carte la repassait au fond sombre par
+         defaut ci-dessous. Plus de condition : ces valeurs etaient
+         avant dupliquees dans .screen.boutique-pro .tabs/.tab, retire
+         plus bas (redondant une fois la barre fixee en clair). */
       .tabs {
         position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
-        background: rgba(17,12,11,.86); border-top: 1px solid rgba(255,235,220,.1);
+        background: rgba(255,255,255,.92); border-top: 1px solid var(--line2, #dedee2);
         backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
         display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
       }
@@ -1289,9 +1297,13 @@
         background: none; border: 0; cursor: pointer; position: relative; padding: 0;
       }
       .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
-      .tab svg { width: 24px; height: 24px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: #838a96; }
-      .tab .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: -.01em; color: #838a96; }
-      .tab.on svg, .tab.on .lbl { stroke: var(--accent); color: var(--accent); }
+      /* Les 5 onglets restent allumes en rouge en permanence, pas
+         seulement celui actif -- Julien aimait l'effet (bug au depart :
+         passer de Boutique a Story n'eteignait pas Boutique, faute de
+         reset partage entre les deux flux) et a demande de l'etendre a
+         toute la ligne plutot que de le corriger. */
+      .tab svg { width: 24px; height: 24px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: var(--bouton); }
+      .tab .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: -.01em; color: var(--bouton); }
       .tab .badge { position: absolute; top: -2px; right: 50%; margin-right: -17px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
 
       .voile {
@@ -1711,10 +1723,11 @@
       .screen.boutique-pro .sheet-close svg { stroke: var(--ink2); }
       .screen.boutique-pro .sheet-cta.sobre { background: var(--s2); color: var(--ink); }
       .screen.boutique-pro .bareme summary .chev svg { stroke: var(--ink3); }
-      .screen.boutique-pro .tabs { background: rgba(255,255,255,.92); border-top-color: var(--line2); }
-      .screen.boutique-pro .tab svg { stroke: #b4b7bd; }
-      .screen.boutique-pro .tab .lbl { color: #b4b7bd; }
-      .screen.boutique-pro .tab.on svg, .screen.boutique-pro .tab.on .lbl { stroke: var(--bouton); color: var(--bouton); }
+      /* .tabs/.tab n'ont plus besoin d'etre repris ici : la barre est
+         maintenant blanche et les 5 onglets rouges en permanence, sur
+         .screen tout court (voir plus haut) -- ce bloc dupliquait avant
+         les memes valeurs (plus un etat "eteint" gris pour les onglets
+         inactifs, retire a la demande de Julien). */
       /* Le QR reste blanc (obligatoire pour scanner) ; sur un fond deja
          clair, un simple cadre gris (--s2) suffit a le distinguer, pas
          besoin d'ombre marquee. */
