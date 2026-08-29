@@ -3895,12 +3895,19 @@ function ouvrirClub(c, src, id) {
 // sort vers l'appli Maps) insuffisant : il veut la vraie fiche Google
 // consultable depuis notre app. c.googleQuery (nom + adresse exacte,
 // pour eviter de tomber sur un homonyme) prime sur c.nom + c.adr si
-// fourni. Pas de cle API Google necessaire : l'URL d'embed classique
-// (?output=embed) est publique, contrairement a l'API JS Maps qui en
-// exige une.
+// fourni.
+//
+// L'ancien format "google.com/maps?q=...&output=embed" (premiere
+// version de cette fonction) repond 404 aujourd'hui -- Google l'a
+// coupe, d'ou la fiche "eclatee" signalee par Julien. Le format qui
+// marche encore, verifie par curl (200, vraie fiche avec avis/horaires,
+// aucun header X-Frame-Options qui bloquerait l'iframe) est celui que
+// maps.google.com/maps?...&output=embed redirige vers en coulisses :
+// google.com/maps/embed?pb=!1m3!2m1!1s<recherche>!6i15. Toujours sans
+// cle API -- seule l'API JS Maps (differente) en exige une.
 function ouvrirFicheGoogle(c) {
   var requete = c.googleQuery || (c.nom + " " + (c.adr || ""));
-  VG_IFRAME.src = "https://www.google.com/maps?q=" + encodeURIComponent(requete) + "&output=embed";
+  VG_IFRAME.src = "https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1s" + encodeURIComponent(requete) + "!6i15";
   VUE_GOOGLE.hidden = false;
 }
 function fermerFicheGoogle() {
