@@ -175,10 +175,11 @@
          session est connue -- ou apres COUPE_CHARGEMENT_MS en secours
          si Supabase tarde a repondre. */
       .splash {
-        /* Fond de marque en dur, pas var(--bg) : sur #boutique le theme
-           clair .boutique-pro est deja pose sur .screen au chargement,
-           ce qui donnait un splash blanc avec un logo delave. */
-        position: absolute; inset: -3px; z-index: 40; background: var(--marque-nuit);
+        /* Valeurs en dur, jamais var(--bg) : ce calque est pose sur
+           .screen, qui porte deja parfois le theme clair .boutique-pro
+           quand on arrive directement sur #boutique -- le splash doit
+           garder son apparence quel que soit l'onglet vise. */
+        position: absolute; inset: -3px; z-index: 40; background: #ffffff;
         display: flex; align-items: center; justify-content: center;
         transition: opacity .35s ease;
       }
@@ -191,21 +192,24 @@
       }
       .splash-mark {
         width: 76px; height: 76px; display: block;
-        filter: drop-shadow(0 0 28px rgba(255,47,69,.45));
+        filter: drop-shadow(0 6px 14px rgba(255,47,69,.28));
         animation: splash-pouls 2.2s ease-in-out infinite;
       }
       .splash-mark path { stroke: var(--marque); }
       .splash-mot {
         font-family: var(--sans); font-size: 13px; font-weight: 700;
-        letter-spacing: .42em; text-indent: .42em; color: #ffffff;
+        letter-spacing: .42em; text-indent: .42em; color: #15181d;
         opacity: .92;
       }
       /* Respiration lente du halo plutot qu'un clignotement : le logo
          garde sa taille (pas de scale, qui faisait "sauter" le mot
          dessous), seule l'intensite du rouge bouge. */
+      /* Respiration du halo plutot qu'un clignotement : le logo garde sa
+         taille (pas de scale, qui faisait "sauter" le mot dessous),
+         seule l'intensite du rouge bouge. */
       @keyframes splash-pouls {
-        0%, 100% { filter: drop-shadow(0 0 18px rgba(255,47,69,.35)); }
-        50%      { filter: drop-shadow(var(--halo-fort)); }
+        0%, 100% { filter: drop-shadow(0 6px 12px rgba(255,47,69,.22)); }
+        50%      { filter: drop-shadow(0 6px 18px rgba(255,47,69,.45)); }
       }
       /* Petite barre de progression sous le logo -- fausse (on ne sait
          pas vraiment combien de temps Supabase va prendre), mais remplie
@@ -216,7 +220,7 @@
          l'ecran (voir cacherSplash()). */
       .splash-piste {
         position: absolute; left: 40px; right: 40px; bottom: 54px;
-        height: 3px; border-radius: var(--r-pill); background: rgba(255,255,255,.14); overflow: hidden;
+        height: 3px; border-radius: var(--r-pill); background: rgba(15,17,20,.12); overflow: hidden;
       }
       .splash-barre {
         display: block; height: 100%; width: 6%; border-radius: var(--r-pill);
@@ -227,8 +231,24 @@
       @keyframes splash-charge { from { width: 6%; } to { width: 88%; } }
       @media (prefers-reduced-motion: reduce) {
         .splash { transition: none; }
-        .splash-mark { animation: none; filter: drop-shadow(0 0 28px rgba(255,47,69,.45)); }
+        .splash-mark { animation: none; filter: drop-shadow(0 6px 14px rgba(255,47,69,.28)); }
         .splash-barre { animation: none; width: 88%; }
+      }
+
+      /* Bascule automatique : si le telephone est en mode sombre, le
+         splash reprend le noir de marque. Demande de Julien -- "mets
+         tout en blanc, et si les gens ont un telephone en mode sombre
+         ca va etre en noir". Seules les couleurs changent, aucune
+         structure n'est dupliquee. */
+      @media (prefers-color-scheme: dark) {
+        .splash { background: var(--marque-nuit); }
+        .splash-mot { color: #ffffff; }
+        .splash-piste { background: rgba(255,255,255,.14); }
+        .splash-mark { filter: drop-shadow(0 0 28px rgba(255,47,69,.45)); }
+        @keyframes splash-pouls {
+          0%, 100% { filter: drop-shadow(0 0 18px rgba(255,47,69,.35)); }
+          50%      { filter: drop-shadow(var(--halo-fort)); }
+        }
       }
 
       /* ============================================================
