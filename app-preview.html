@@ -1297,13 +1297,17 @@
         background: none; border: 0; cursor: pointer; position: relative; padding: 0;
       }
       .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
-      /* Les 5 onglets restent allumes en rouge en permanence, pas
-         seulement celui actif -- Julien aimait l'effet (bug au depart :
-         passer de Boutique a Story n'eteignait pas Boutique, faute de
-         reset partage entre les deux flux) et a demande de l'etendre a
-         toute la ligne plutot que de le corriger. */
-      .tab svg { width: 24px; height: 24px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: var(--bouton); }
-      .tab .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: -.01em; color: var(--bouton); }
+      /* Retour au comportement standard apres coup : Julien avait aime
+         "les 5 en rouge en permanence" en pensant a un vrai choix, mais
+         voulait en fait le comportement classique -- gris au repos,
+         seul l'onglet actif en rouge, et un SEUL actif a la fois en
+         changeant d'onglet (voir la fonction activerOnglet plus bas,
+         qui corrige le vrai bug : plusieurs "on" pouvaient rester
+         allumes ensemble faute de reset partage entre les 5 flux de
+         navigation). */
+      .tab svg { width: 24px; height: 24px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: #9a9ea5; }
+      .tab .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: -.01em; color: #9a9ea5; }
+      .tab.on svg, .tab.on .lbl { stroke: var(--bouton); color: var(--bouton); }
       .tab .badge { position: absolute; top: -2px; right: 50%; margin-right: -17px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
 
       .voile {
@@ -4183,6 +4187,16 @@ function ouvrirChoixReseau(nomClub) {
   fermerAmis();
   fermerProfil();
   masquerCarteEtBoutique();
+  // masquerCarteEtBoutique() eteint les VUES carte/boutique mais pas
+  // leurs onglets (TAB_CARTE/TAB_BOUTIQUE) -- sans ce reset, un des
+  // deux restait allume en rouge en plus de Story, signale par Julien
+  // ("les deux restent illumines"). fermerAmis()/fermerProfil()
+  // s'occupent deja de leurs propres onglets, il ne manquait que
+  // celui-ci.
+  TAB_CARTE.classList.remove("on");
+  TAB_CARTE.setAttribute("aria-current", "false");
+  TAB_BOUTIQUE.classList.remove("on");
+  TAB_BOUTIQUE.setAttribute("aria-current", "false");
   // Story en blanc, comme la Boutique (demande de Julien) : on reutilise
   // le theme clair .screen.boutique-pro plutot que d'en creer un
   // troisieme. masquerCarteEtBoutique() vient de le retirer -- on le
@@ -4687,6 +4701,12 @@ TAB_AMIS?.addEventListener("click", async function () {
   fermerStory();
   fermerProfil();
   masquerCarteEtBoutique();
+  // Meme trou que sur Story (voir plus haut) : sans ca, Carte ou
+  // Boutique pouvait rester allume en rouge en plus d'Amis.
+  TAB_CARTE.classList.remove("on");
+  TAB_CARTE.setAttribute("aria-current", "false");
+  TAB_BOUTIQUE.classList.remove("on");
+  TAB_BOUTIQUE.setAttribute("aria-current", "false");
   TAB_AMIS.classList.add("on");
   TAB_AMIS.setAttribute("aria-current", "page");
   VUE_AMIS.hidden = false;
@@ -5091,6 +5111,11 @@ TAB_PROFIL?.addEventListener("click", async function () {
   fermerStory();
   fermerAmis();
   masquerCarteEtBoutique();
+  // Meme trou que sur Story/Amis (voir plus haut).
+  TAB_CARTE.classList.remove("on");
+  TAB_CARTE.setAttribute("aria-current", "false");
+  TAB_BOUTIQUE.classList.remove("on");
+  TAB_BOUTIQUE.setAttribute("aria-current", "false");
   TAB_PROFIL.classList.add("on");
   TAB_PROFIL.setAttribute("aria-current", "page");
   VUE_PROFIL.hidden = false;
