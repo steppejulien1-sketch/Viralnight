@@ -602,11 +602,19 @@
 
       .va-suggestions { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 2px; }
       .va-sugg {
-        width: 100%; display: flex; align-items: center; gap: 10px;
-        padding: 9px 8px; border: 0; border-radius: 12px; background: transparent;
+        width: 100%; display: flex; align-items: center; gap: 11px;
+        /* 11px de padding vertical : la ligne passe a 54px de haut,
+           au-dessus des 44px minimum d'une cible tactile. Elle etait a
+           50px, tout juste, avec un avatar de 32px au milieu. */
+        padding: 11px 9px; border: 0; border-radius: var(--r2); background: transparent;
         cursor: pointer; text-align: left; font-family: inherit;
+        transition: background var(--tr-court), transform var(--tr-court);
       }
       .va-sugg:hover, .va-sugg:focus-visible { background: var(--s2); outline: none; }
+      /* Sur mobile le :hover n'existe pas : sans etat presse, rien ne
+         confirme le tap sur une ligne d'ami. */
+      .va-sugg:active { background: var(--s3); transform: scale(.985); }
+      .va-row-add:active { transform: scale(.95); }
       .va-sugg-av {
         flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; overflow: hidden;
         background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
@@ -1227,6 +1235,59 @@
       .fr b {
         font-size: 10.5px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6);
         max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
+      /* ---- Etats des badges de club sous la carte ----
+         Ils ne portaient qu'un point de statut de 13px, identique d'un
+         club a l'autre. Deux familles de signaux, volontairement
+         distinctes pour ne pas se confondre :
+           - PERMANENT (le club est partenaire) : liseré rouge de marque
+             et petit ecusson, il ne bouge jamais ;
+           - TEMPOREL (offre en cours ce soir) : pastille orange qui
+             pulse, la meme couleur d'urgence que la boutique.
+         Sans cette separation, tout se valait et rien ne ressortait. */
+      .fr .bub-club.partenaire {
+        box-shadow: 0 3px 10px rgba(0,0,0,.22), 0 0 0 2px rgba(255,47,69,.55);
+      }
+      .fr-ecusson {
+        position: absolute; left: -2px; bottom: -2px; z-index: 2;
+        width: 17px; height: 17px; border-radius: 50%;
+        background: var(--marque); border: 2px solid #fff;
+        display: grid; place-items: center;
+      }
+      .fr-ecusson svg {
+        width: 9px; height: 9px; fill: none; stroke: #fff;
+        stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
+      }
+      /* Signal temporel : il doit attirer l'oeil, donc il pulse -- mais
+         un seul badge par club, jamais plusieurs animations empilees. */
+      .fr-urgence {
+        position: absolute; top: -4px; right: -6px; z-index: 3;
+        padding: 2px 6px; border-radius: var(--r-pill);
+        background: var(--grad-urgence); color: #fff;
+        font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em;
+        white-space: nowrap; border: 1.5px solid rgba(255,255,255,.9);
+        animation: fr-pouls 1.9s ease-in-out infinite;
+      }
+      @keyframes fr-pouls {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,149,0,.55); }
+        50%      { transform: scale(1.06); box-shadow: 0 0 0 5px rgba(255,149,0,0); }
+      }
+
+      /* ---- Arrivee en cascade ----
+         Les badges apparaissaient tous d'un bloc. Un decalage de 60 ms
+         suffit a donner l'impression que la carte se peuple. Le retard
+         est pose en style inline par le JS (--i), pas en nth-child :
+         le nombre de clubs n'est pas connu a l'avance. */
+      @keyframes fr-entre {
+        from { opacity: 0; transform: translateY(10px) scale(.9); }
+        to   { opacity: 1; transform: none; }
+      }
+      .fr { animation: fr-entre .42s cubic-bezier(.2,.7,.3,1) both; animation-delay: calc(var(--i, 0) * 60ms); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .fr { animation: none; }
+        .fr-urgence { animation: none; }
       }
 
       /* ============================================================
@@ -2009,7 +2070,21 @@
         padding: 2px 6px; border-radius: 99px; border: 2px solid var(--s2);
       }
       .ps-steps { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 13px; text-align: left; }
-      .ps-step { display: flex; gap: 11px; align-items: flex-start; }
+      /* Les trois etapes arrivent l'une apres l'autre : on lit "1 puis 2
+         puis 3" au lieu de recevoir le bloc entier d'un coup. Court
+         (moins de 300 ms au total) et sans jamais bloquer le tap. */
+      @keyframes ps-etape {
+        from { opacity: 0; transform: translateX(-8px); }
+        to   { opacity: 1; transform: none; }
+      }
+      .ps-step {
+        display: flex; gap: 11px; align-items: flex-start;
+        animation: ps-etape .34s cubic-bezier(.2,.7,.3,1) both;
+      }
+      .ps-step:nth-child(2) { animation-delay: .07s; }
+      .ps-step:nth-child(3) { animation-delay: .14s; }
+      .ps-step:nth-child(4) { animation-delay: .21s; }
+      @media (prefers-reduced-motion: reduce) { .ps-step { animation: none; } }
       .ps-step-n {
         flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; margin-top: 1px;
         background: var(--s2); color: var(--ink2); font-size: 11.5px; font-weight: 800;
@@ -2061,6 +2136,8 @@
         display: flex; align-items: center; gap: 10px; padding: 11px 13px;
         border: 1.5px dashed var(--line2); border-radius: 12px; cursor: pointer;
       }
+      .ps-capture { transition: border-color var(--tr-court), background var(--tr-court), transform var(--tr-court); }
+      .ps-capture:active { transform: scale(.99); background: var(--s2); }
       .ps-capture.rempli { border-style: solid; border-color: var(--succes-texte, #57d98a); }
       .ps-capture-ico {
         flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px; background: var(--s1);
@@ -2100,6 +2177,8 @@
         padding: 7px 14px; cursor: pointer; font-family: var(--mono, inherit);
         font-size: 13.5px; font-weight: 700; color: var(--ink);
       }
+      .ps-handle-copy { transition: transform var(--tr-court), border-color var(--tr-court); }
+      .ps-handle-copy:active { transform: scale(.96); }
       .ps-handle-copy svg { width: 14px; height: 14px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .ps-handle-copy.copie { border-style: solid; border-color: var(--succes-texte, #57d98a); color: var(--succes-texte, #57d98a); }
       .ps-handle-copy.copie svg { stroke: var(--succes-texte, #57d98a); }
@@ -5837,14 +5916,33 @@ document.addEventListener("click", function (e) {
 })();
 
 var clubRail = $("#club-rail");
-function creerClubChip(c, key) {
+function creerClubChip(c, key, index) {
   var b = document.createElement("button");
   b.className = "fr";
-  b.setAttribute("aria-label", c.nom);
+  // Retard de la cascade, lu par le CSS (var(--i)).
+  b.style.setProperty("--i", index || 0);
+
+  // Une offre en cours ce soir dans CE club : signal temporel, il prime
+  // visuellement sur le statut permanent de partenaire. OFFRE porte le
+  // club concerne (voir la section "Ce soir au ..." de la boutique).
+  var offreIci = !c.shut && typeof OFFRE !== "undefined" && OFFRE &&
+    OFFRE.stock > 0 && (OFFRE.club ? OFFRE.club === key : false);
+
+  // L'etiquette accessible dit ce que les pastilles montrent : sans ca,
+  // un lecteur d'ecran n'entend que le nom du club.
+  var libelle = c.nom + (c.partenaire ? ", club partenaire" : "") +
+    (c.shut ? ", fermé" : ", ouvert") + (offreIci ? ", offre en cours ce soir" : "");
+  b.setAttribute("aria-label", libelle);
+
   b.innerHTML =
-    '<span class="bub bub-club' + (c.shut ? " shut" : "") + '" style="--c:' + c.c + '">' +
+    '<span class="bub bub-club' + (c.shut ? " shut" : "") +
+      (c.partenaire ? " partenaire" : "") + '" style="--c:' + c.c + '">' +
       '<img src="' + fotoClub(c) + '" alt="" />' +
       '<span class="club-badge-dot"></span>' +
+      (c.partenaire
+        ? '<span class="fr-ecusson" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>'
+        : "") +
+      (offreIci ? '<span class="fr-urgence" aria-hidden="true">ce soir</span>' : "") +
     "</span><b>" + escapeHtmlSupport(c.nom) + "</b>";
   b.addEventListener("click", function () {
     activerVue("carte");
@@ -5853,9 +5951,9 @@ function creerClubChip(c, key) {
   return b;
 }
 
-Object.keys(CLUBS).forEach(function (key) {
-  clubRail.appendChild(creerClubChip(CLUBS[key], key));
-});
+// Le remplissage du rail vit plus bas, apres la declaration de OFFRE
+// (voir peuplerRailClubs) : sinon la pastille "ce soir" ne peut pas
+// savoir s'il y a une offre en cours, OFFRE valant encore undefined ici.
 
 /* ==========================================================
    ECRAN PROFIL — meme squelette que l'ecran Amis (page a part,
@@ -6700,6 +6798,9 @@ async function chargerRecompenses() {
 var OFFRE = {
   id: "o-shot", nom: "Shot offert", court: "Dès ta première story de la soirée",
   fam: "bar",
+  // Cle du club concerne dans CLUBS : c'est ce qui allume la pastille
+  // "ce soir" sur le bon badge, sous la carte.
+  club: "cactus",
   // Meme dessin/photo que la recompense "Shot maison" : c'est le meme
   // produit, juste en plus grand pour la banniere (FOTO_OFFRE_HERO).
   art: artShot, glow: "rgba(243,187,78,.24)", foto: FOTO_OFFRE_HERO,
@@ -6710,6 +6811,16 @@ var OFFRE = {
     "Bonus : tout ce que tu postes compte double en points jusqu'à 1 h",
   ]
 };
+
+// Remplissage du rail des clubs sous la carte. Appele ICI et pas a la
+// declaration de creerClubChip : la pastille "ce soir" a besoin de
+// OFFRE, declaree juste au-dessus.
+(function peuplerRailClubs() {
+  if (!clubRail) return;
+  Object.keys(CLUBS).forEach(function (key, i) {
+    clubRail.appendChild(creerClubChip(CLUBS[key], key, i));
+  });
+})();
 
 var GAINS = [
   { t: "Scanner le QR au club",   s: "À l'entrée, une fois par soirée", v: 15 },
