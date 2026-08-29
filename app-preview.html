@@ -4105,6 +4105,15 @@ function snapifie() {
       paint: { "raster-opacity": ["interpolate", ["linear"], ["zoom"], 2, 1, 4, 0] }
     }, "Background");
   }
+  // Reprise du role que tenait l'aplat bleu : la photo satellite brute
+  // rend l'ocean quasi noir. On sature et on releve le niveau de noir
+  // du raster lui-meme a la vue planete, ce qui rend l'eau bleue sans
+  // poser aucune forme par-dessus. Retour a zero des le zoom 3, ou la
+  // carte vectorielle reprend la main.
+  map.setPaintProperty("Terre reelle", "raster-saturation",
+    ["interpolate", ["linear"], ["zoom"], 0, .38, 3, 0]);
+  map.setPaintProperty("Terre reelle", "raster-brightness-min",
+    ["interpolate", ["linear"], ["zoom"], 0, .06, 3, 0]);
   // Meme plage de fondu (zoom 2 -> 4) que le champ d'etoiles (majOpacite,
   // plus bas) et les frontieres : au moment ou la photo satellite est
   // pleinement visible, les aplats vectoriels doivent etre transparents,
@@ -4115,7 +4124,10 @@ function snapifie() {
   // peu trop noire"). Contrairement aux terres, l'eau garde donc toujours
   // un peu de couleur pardessus la photo, meme a la vue planete entiere,
   // pour rester lisible comme de l'eau plutot que du vide.
-  var fonduEau = ["interpolate", ["linear"], ["zoom"], 0, .6, 2, .45, 4, 1];
+  // L'aplat ne commence qu'a partir du zoom 2, la ou la photo satellite
+  // s'efface deja : au-dessus (vue planete), on laisse la vraie photo,
+  // corrigee autrement (voir raster-saturation plus bas).
+  var fonduEau = ["interpolate", ["linear"], ["zoom"], 2, 0, 3, .5, 4, 1];
   // Bleu profond type Google Earth pour l'ocean vu depuis l'espace --
   // demande explicite de Julien apres le premier essai (bleu clair de la
   // carte de rue, #93d4fe, trop pale/delave a cette distance). Uniquement
