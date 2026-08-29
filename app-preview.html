@@ -1404,15 +1404,18 @@
         display: flex; align-items: center; gap: 10px; margin: 0 0 8px;
       }
       .club-adresse-ico { flex: 0 0 auto; display: grid; place-items: center; }
-      .club-adresse-ico svg { width: 17px; height: 17px; stroke: var(--ink3); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-      .club-adresse-txt { flex: 1 1 auto; min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--ink2); }
-      .club-adresse-lien { flex: 0 0 auto; font-size: 13px; font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+      .club-adresse-ico svg { width: 20px; height: 20px; stroke: var(--ink3); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      /* Agrandi (13.5px -> 15.5px) : trop petit pour se lire a distance
+         en demo, ecran tenu en face d'un prospect plutot que lu de pres
+         -- signale par Julien. */
+      .club-adresse-txt { flex: 1 1 auto; min-width: 0; font-size: 15.5px; font-weight: 600; color: var(--ink2); }
+      .club-adresse-lien { flex: 0 0 auto; font-size: 14.5px; font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
 
       /* Recompenses disponibles : rappel discret, pas un bouton --
          vit juste au-dessus de la note deja presente, meme registre de
          texte que le reste de la fiche. */
       .club-recompenses-lien {
-        display: block; margin: 0 0 18px 27px; font-size: 13px; font-weight: 600; color: var(--ink2);
+        display: block; margin: 0 0 18px 27px; font-size: 14.5px; font-weight: 600; color: var(--ink2);
         text-decoration: none; cursor: pointer;
         /* Reset des styles par defaut du navigateur : la classe habille
            aussi bien un <a> (recompenses) qu'un <button> (fiche Google)
@@ -3797,7 +3800,14 @@ map.on("style.load", function () {
 // (deterministe sur la longueur du nom) : le meme club montre toujours
 // la meme image, que ce soit son badge sur la carte, sa bulle sous la
 // carte ou sa fiche.
-var PHOTOS_AMBIANCE = ["./assets/hero-nightclub.webp", "./assets/hero-auth.jpg"];
+// "./assets/..." pointait vers le dossier source assets/, traite par
+// Vite au build (fichiers renommes avec un hash, ex.
+// hero-nightclub-hGaJXrGY.webp) -- le chemin litteral ne suivait pas ce
+// renommage, d'ou des photos cassees en prod (marche en dev, ou Vite
+// sert assets/ tel quel). Deplace dans public/ambiance/, servi sans
+// transformation ni hash en dev comme en prod, meme convention que
+// public/recompenses/ pour les photos de recompenses.
+var PHOTOS_AMBIANCE = ["/ambiance/hero-nightclub.webp", "/ambiance/hero-auth.jpg"];
 function fotoClub(c) {
   return PHOTOS_AMBIANCE[c.nom.length % PHOTOS_AMBIANCE.length];
 }
@@ -4548,7 +4558,15 @@ function majTailleMarqueurs() {
   // retrecissent plus vite des qu'on commence a dezoomer, pas
   // seulement tout pres du zoom minimal.
   var t = Math.max(0, Math.min(1, (z - map.getMinZoom()) / (16 - map.getMinZoom())));
-  var s = Math.max(0.12, Math.pow(t, 1.6));
+  // Plancher remonte (0.12 -> 0.55) : pense a l'origine pour plusieurs
+  // clubs proches qui doivent se distinguer en dezoomant (voir plus
+  // haut), mais avec seulement 2 vrais clubs a ~65 km l'un de l'autre,
+  // la vue de depart (fitBounds) est DEJA dezoomee au chargement --
+  // resultat, les badges partaient minuscules des l'ouverture de la
+  // carte ("trop petit, on ne voit rien", signale par Julien). Rien a
+  // faire chevaucher a cette echelle, donc pas de raison de les
+  // retrecir autant.
+  var s = Math.max(0.55, Math.pow(t, 1.6));
   // L'ecart ne doit JAMAIS deplacer un badge a l'echelle rue (chercher
   // un club precis exige une position exacte) : il ne s'applique qu'en
   // dessous d'un zoom moyen (t < .4), et disparait completement au-dela
