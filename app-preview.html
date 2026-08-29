@@ -4627,7 +4627,10 @@ map.on("load", function () {
     // le detail (horaires precis, avis...) reste dans la fiche.
     el.innerHTML = '<img src="' + fotoClub(c) + '" alt="" /><span class="club-badge-dot"></span>';
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
-    el.addEventListener("click", function () { ouvrirClub(c, el, key); });
+    // Tape directement sur la fiche Google, plus de fiche Noctify
+    // intermediaire a traverser -- demande de Julien : "je tombe
+    // directement dessus", pas un lien de plus a cliquer.
+    el.addEventListener("click", function () { ouvrirFicheGoogle(c); });
     porteur.appendChild(el);
     // opacityWhenCovered : MapLibre laisse les marqueurs de la face
     // cachee du globe a 20% d'opacite par defaut (pour les cartes ou
@@ -5088,7 +5091,7 @@ function creerClubChip(c, key) {
     "</span><b>" + escapeHtmlSupport(c.nom) + "</b>";
   b.addEventListener("click", function () {
     activerVue("carte");
-    ouvrirClub(c, null, key);
+    ouvrirFicheGoogle(c);
   });
   return b;
 }
@@ -5324,7 +5327,7 @@ $("#fv-liste")?.addEventListener("click", function (e) {
   if (nom && CLUBS[nom.dataset.id]) {
     VUE_FAVORIS.hidden = true;
     activerVue("carte");
-    ouvrirClub(CLUBS[nom.dataset.id], null, nom.dataset.id);
+    ouvrirFicheGoogle(CLUBS[nom.dataset.id]);
   }
 });
 $("#pf-action-favoris")?.addEventListener("click", function () {
