@@ -4428,6 +4428,78 @@ function snapifie() {
   // supprimees : le ciel reste etoile en permanence desormais, elles
   // n'etaient plus appelees nulle part.
 
+  /* --- Etoiles filantes (demande de Julien : "normalement il y a des
+         etoiles filantes") ---
+     Le ciel n'a pas de boucle d'animation permanente : il n'est
+     redessine que sur "move" et "zoom" (voir surMouvement plus bas),
+     precisement pour ne rien consommer quand la carte est immobile. On
+     ne casse pas ce choix : le requestAnimationFrame ne tourne QUE
+     pendant le vol d'une filante (moins d'une seconde), puis s'arrete
+     jusqu'a la suivante. Entre deux, cout nul. */
+  var filante = null, filanteRaf = 0, filanteDernier = 0;
+
+  function programmerFilante() {
+    // Silence entre deux passages : assez long pour que ca reste un
+    // evenement, pas une pluie de meteores.
+    setTimeout(function () {
+      // Rien tant qu'on est en plein jour, ou trop zoome pour voir le
+      // ciel (opacite tombee a 0 par majOpacite).
+      if (!estNuit() || opacite <= 0) { programmerFilante(); return; }
+      lancerFilante();
+    }, 5000 + Math.random() * 9000);
+  }
+
+  function lancerFilante() {
+    filante = {
+      // Depart dans la moitie haute, jamais dans le coin de la lune.
+      x: W * (0.05 + Math.random() * 0.55),
+      y: H * (0.04 + Math.random() * 0.34),
+      // Descente vers la droite, entre 23 et 45 degres.
+      angle: Math.PI * (0.13 + Math.random() * 0.12),
+      trainee: Math.min(W, H) * (0.16 + Math.random() * 0.12),
+      t: 0,
+      duree: 700 + Math.random() * 400
+    };
+    filanteDernier = performance.now();
+    filanteRaf = requestAnimationFrame(animerFilante);
+  }
+
+  function animerFilante(maintenant) {
+    if (!filante) return;
+    filante.t += maintenant - filanteDernier;
+    filanteDernier = maintenant;
+    if (filante.t >= filante.duree) {
+      filante = null;
+      surMouvement();       // une derniere frame pour l'effacer
+      programmerFilante();
+      return;
+    }
+    surMouvement();
+    filanteRaf = requestAnimationFrame(animerFilante);
+  }
+
+  function dessinerFilante() {
+    if (!filante) return;
+    var p = filante.t / filante.duree;
+    // Sinus : elle s'allume et s'eteint en douceur, sans apparition
+    // ni coupure brutale.
+    var alpha = Math.sin(Math.PI * p);
+    var parcours = Math.min(W, H) * 0.85 * p;
+    var tx = filante.x + Math.cos(filante.angle) * parcours;
+    var ty = filante.y + Math.sin(filante.angle) * parcours;
+    var qx = tx - Math.cos(filante.angle) * filante.trainee;
+    var qy = ty - Math.sin(filante.angle) * filante.trainee;
+    var g = ctx.createLinearGradient(tx, ty, qx, qy);
+    g.addColorStop(0, "rgba(255,255,255," + (0.95 * alpha).toFixed(3) + ")");
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.save();
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 1.7;
+    ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(qx, qy); ctx.stroke();
+    ctx.restore();
+  }
+
   var opacite = 1, dernier = 0;
 
   function dessiner(temps, dt) {
@@ -4443,8 +4515,10 @@ function snapifie() {
     ctx.globalAlpha = opacite;
 
     // La lune reste fixe a l'ecran (pas de rotation/decalage) : seul le
-    // champ d'etoiles doit suivre le globe, demande de Julien.
-    if (estNuit()) dessinerLune();
+    // champ d'etoiles doit suivre le globe, demande de Julien. La
+    // filante suit la meme regle -- elle traverse le ciel vu par le
+    // spectateur, pas la sphere.
+    if (estNuit()) { dessinerLune(); dessinerFilante(); }
 
     ctx.save();
     // Rotation inverse du bearing : quand la camera tourne autour du
@@ -4497,6 +4571,12 @@ function snapifie() {
   }
   majOpacite();
   map.on("zoom", majOpacite);
+
+  // Pas de filantes si le systeme demande des animations reduites :
+  // c'est un element purement decoratif, il n'a rien d'indispensable.
+  if (!window.matchMedia || !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    programmerFilante();
+  }
 })();
 map.on("style.load", function () {
   try { ambiance(); snapifie(); }
@@ -5393,9 +5473,21 @@ function majTailleMarqueurs() {
   // -- translate() n'est pas affecte par le scale() qui suit, l'ecart
   // reste donc en vrais pixels ecran quelle que soit la taille du badge.
   var portionEcart = Math.max(0, 1 - t / 0.4);
+  // Fondu des badges de club entre le zoom 2.2 et 3.4 : au-dela on est
+  // assez pres pour que les deux clubs se separent a l'ecran, en deca
+  // on est a l'echelle du globe et ils ne font qu'une tache.
+  var fonduClubs = Math.max(0, Math.min(1, (z - 2.2) / 1.2));
   marqueursEchelle.forEach(function (m) {
     var dx = (m.dx * portionEcart).toFixed(1), dy = (m.dy * portionEcart).toFixed(1);
     m.el.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + s.toFixed(3) + ")";
+    // Le marqueur "moi" n'est pas concerne : il est seul, il ne se
+    // superpose a rien, et c'est le seul repere utile vu de loin.
+    if (m.el.classList.contains("club-badge")) {
+      m.el.style.opacity = fonduClubs.toFixed(2);
+      // Invisible ne doit pas rester cliquable : sinon on ouvre une
+      // fiche club en tapant le vide au milieu de l'ocean.
+      m.el.style.pointerEvents = fonduClubs < 0.15 ? "none" : "auto";
+    }
   });
 }
 
