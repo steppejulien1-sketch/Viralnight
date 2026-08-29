@@ -2296,7 +2296,7 @@
 
             <section class="sec">
               <div class="sec-head">
-                <h2>Ce soir au Mirage</h2>
+                <h2>Ce soir au Cactus Club</h2>
                 <span class="sub" id="o-fin"></span>
               </div>
               <div id="liste-soir"></div>
@@ -3088,24 +3088,28 @@ function pint(level, cls) {
   '</svg>';
 }
 
+// Les deux vrais clubs pris en R1 (demande de Julien : retirer les
+// clubs de demo Mirage/Fuse/Spirito, ne garder que ceux-ci). Adresses
+// et coordonnees verifiees (OpenStreetMap) -- note/avis/statut restent
+// des valeurs d'appoint pour la maquette, a remplacer par les vraies
+// donnees Google/Supabase une fois le club branche.
 var CLUBS = {
-  mirage: {
-    nom: "Mirage", adr: "Rue de l'Écuyer · 400 m", c: "#ff2f45",
-    lngLat: [4.3554, 50.8479], hot: true, type: "club",
-    note: 4.6, avis: "1,2 k", prix: "€€",
+  trebuchet: {
+    nom: "Le Trébuchet", adr: "N4 · Jannée, Pessoux", c: "#ff2f45",
+    // googleQuery : adresse complete plutot que nom+adr abrege, pour
+    // que la fiche Google (ouvrirFicheGoogle) tombe sur le bon
+    // etablissement et pas un homonyme.
+    googleQuery: "Le Trébuchet DanceClub, N4, 5590 Pessoux, Belgique",
+    lngLat: [5.2127, 50.2797], hot: true, type: "club",
+    note: 4.2, avis: 420, prix: "€€",
     statut: "Ouvert", horaire: "Ferme à 6h"
   },
-  fuse: {
-    nom: "Fuse", adr: "Rue Blaes · 1,2 km", c: "#3b4250",
-    lngLat: [4.3405, 50.8375], type: "club",
-    note: 4.3, avis: 640, prix: "€€",
+  cactus: {
+    nom: "Cactus Club", adr: "Boulevard du Souverain · Auderghem", c: "#3b4250",
+    googleQuery: "Cactus Club, Boulevard du Souverain 147, 1160 Auderghem, Belgique",
+    lngLat: [4.4266, 50.8157], type: "club",
+    note: 4.1, avis: 890, prix: "€€",
     statut: "Ouvert", horaire: "Ferme à 7h"
-  },
-  spirito: {
-    nom: "Spirito", adr: "Rue Stassart · 2,1 km", c: "#8b929c",
-    lngLat: [4.3651, 50.8367], shut: true, type: "bar",
-    note: 4.1, avis: 89, prix: "€",
-    statut: "Fermé", horaire: "Ouvre à 22h"
   }
 };
 
@@ -3126,8 +3130,14 @@ var MAPTILER_KEY = "HRqda4Ggxp9Mx9bKwvTh";
 var map = new maplibregl.Map({
   container: "map",
   style: "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=" + MAPTILER_KEY,
+  // Le Trebuchet (Pessoux, pres de Ciney) et Cactus Club (Auderghem,
+  // Bruxelles) sont a ~65 km l'un de l'autre -- centrer sur Bruxelles
+  // avec le zoom d'origine (16, pense pour des clubs a 400 m les uns
+  // des autres) laissait Le Trebuchet hors champ. La vue de depart est
+  // recalculee juste apres, dans map.on("load"), avec fitBounds() une
+  // fois les deux marqueurs poses.
   center: BRUXELLES,
-  zoom: 16,
+  zoom: 8,
   minZoom: 0.6,
   maxZoom: 18.5,
   pitch: 40,
@@ -4573,6 +4583,16 @@ map.on("load", function () {
     marqueursEchelle.push({ el: el, dx: ecart.x, dy: ecart.y });
   });
 
+  // Cadre les deux clubs des le chargement (voir le commentaire sur
+  // "zoom: 8" plus haut) -- sans animation, c'est la position de
+  // depart, pas un deplacement a montrer. pitch/bearing remis a plat
+  // le temps du cadrage : fitBounds calcule ses marges en vue du
+  // dessus, un pitch incline aurait laisse un des deux clubs hors
+  // cadre malgre des bounds corrects.
+  var lngLats = Object.keys(CLUBS).map(function (k) { return CLUBS[k].lngLat; });
+  var bounds = lngLats.reduce(function (b, ll) { return b.extend(ll); }, new maplibregl.LngLatBounds(lngLats[0], lngLats[0]));
+  map.fitBounds(bounds, { padding: 64, pitch: 0, bearing: 0, maxZoom: 15, duration: 0 });
+
   // Point "moi" -- position fixe pour cette maquette (pas de vraie
   // geolocalisation branchee), juste pour garder un repere visuel de
   // "je suis ici" pendant qu'on se deplace sur la carte -- demande de
@@ -5835,7 +5855,7 @@ var OFFRE = {
   // produit, juste en plus grand pour la banniere (FOTO_OFFRE_HERO).
   art: artShot, glow: "rgba(243,187,78,.24)", foto: FOTO_OFFRE_HERO,
   cout: 0, avant: 70, stock: 20,
-  desc: "Poste ta première story de la soirée avec le tag du Mirage, et le shot est offert.",
+  desc: "Poste ta première story de la soirée avec le tag du Cactus Club, et le shot est offert.",
   regles: [
     "Story validée par le club", "Une seule fois par soirée", "Le bar peut demander ta carte d'identité",
     "Bonus : tout ce que tu postes compte double en points jusqu'à 1 h",
