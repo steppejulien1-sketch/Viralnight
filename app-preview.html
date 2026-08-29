@@ -1146,22 +1146,61 @@
          sans fond, sans bordure, sans ombre. Meme traitement ici :
          une ligne, pas une carte. Le corail reste le seul a porter
          la couleur (regle du projet), mais en beaucoup plus discret. */
-      .solde-ligne {
-        display: flex; align-items: center; gap: 10px;
-        padding: 2px 2px 0;
+      /* ---- Bloc de solde ----
+         Avant : une pastille ronde avec un eclair et un nombre a 22px,
+         perdue en haut de l'ecran. Julien : "je n'aime pas trop le truc
+         avec l'eclair". C'est pourtant l'information qui commande tout
+         l'ecran -- combien j'ai, et ce que ca me permet d'atteindre.
+         Reference Starbucks Rewards : le solde se lit d'un coup d'oeil,
+         la progression vers le palier suivant est juste dessous. */
+      .solde-carte {
+        position: relative; overflow: hidden;
+        padding: 18px 18px 16px; border-radius: var(--r4);
+        border: 1px solid rgba(255,47,69,.22);
+        background:
+          radial-gradient(120% 140% at 100% 0%, rgba(255,47,69,.16), transparent 60%),
+          linear-gradient(160deg, rgba(255,47,69,.09), rgba(255,47,69,.02));
       }
-      .solde-badge {
-        width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%;
-        background: var(--accent); display: grid; place-items: center;
+      .solde-label {
+        margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .09em;
+        text-transform: uppercase; color: var(--ink3);
       }
-      .solde-badge svg { width: 17px; height: 17px; fill: #fff; }
+      .solde-chiffre { margin: 4px 0 0; display: flex; align-items: baseline; gap: 7px; }
+      /* Le nombre porte tout le poids de l'ecran : 42px, chiffres a
+         chasse fixe pour qu'il ne saute pas quand le solde change. */
       .carte-solde-num {
-        font-family: var(--mono); font-size: 22px; font-weight: 800;
-        letter-spacing: -.02em; color: var(--accent); font-variant-numeric: tabular-nums;
+        font-family: var(--mono); font-size: 42px; font-weight: 800;
+        letter-spacing: -.035em; line-height: 1; color: var(--ink);
+        font-variant-numeric: tabular-nums;
       }
-      .carte-solde-num::after { content: " pts"; font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--ink3); margin-left: 3px; }
+      .solde-chiffre span {
+        font-family: var(--sans); font-size: 15px; font-weight: 750;
+        color: var(--ink3); letter-spacing: -.01em;
+      }
+      /* ---- Progression vers la prochaine recompense atteignable ---- */
+      .solde-prog { margin-top: 14px; }
+      .solde-prog-piste {
+        display: block; height: 7px; border-radius: var(--r-pill);
+        background: rgba(128,128,140,.22); overflow: hidden;
+      }
+      .solde-prog-barre {
+        display: block; height: 100%; width: 0; border-radius: var(--r-pill);
+        background: linear-gradient(90deg, var(--marque-2), var(--marque));
+        box-shadow: 0 0 12px rgba(255,47,69,.5);
+        transition: width .6s cubic-bezier(.2,.7,.3,1);
+      }
+      .solde-prog-txt {
+        margin: 9px 0 0; font-size: 12.5px; font-weight: 600;
+        color: var(--ink2); line-height: 1.35;
+      }
+      .solde-prog-txt strong { color: var(--ink); font-weight: 800; }
+      /* Etat "tu peux echanger maintenant" : barre pleine, et le
+         message change de registre au lieu de disparaitre. */
+      .solde-prog.pleine .solde-prog-barre { background: linear-gradient(90deg, #35d07f, #21a86a); box-shadow: 0 0 12px rgba(53,208,127,.5); }
+      .solde-prog.pleine .solde-prog-txt strong { color: #1c9a5f; }
+      @media (prefers-reduced-motion: reduce) { .solde-prog-barre { transition: none; } }
       @keyframes majSolde { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
-      .carte-solde-num.maj { display: inline-block; animation: majSolde .38s cubic-bezier(.2,.8,.3,1); transform-origin: left center; }
+      .carte-solde-num.maj { display: inline-block; animation: majSolde .45s cubic-bezier(.2,.8,.3,1); transform-origin: left bottom; }
 
       .jeton { display: block; }
 
@@ -2147,6 +2186,8 @@
         .screen.boutique-pro .bon-pret {
           background: rgba(48,190,120,.18); color: #4fd493;
         }
+        .screen.boutique-pro .solde-prog.pleine .solde-prog-txt strong { color: #4fd493; }
+        .screen.boutique-pro .solde-prog-piste { background: rgba(255,255,255,.14); }
       }
 
       @media (max-width: 430px) {
@@ -2726,11 +2767,15 @@
           <div class="app" id="app">
 
             <section class="sec sec-premiere">
-              <div class="solde-ligne">
-                <span class="solde-badge" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
-                </span>
-                <strong class="carte-solde-num" id="solde-num">0</strong>
+              <div class="solde-carte">
+                <p class="solde-label">Mes points</p>
+                <p class="solde-chiffre">
+                  <strong class="carte-solde-num" id="solde-num">0</strong><span>pts</span>
+                </p>
+                <div class="solde-prog" id="solde-prog">
+                  <span class="solde-prog-piste"><span class="solde-prog-barre" id="solde-prog-barre"></span></span>
+                  <p class="solde-prog-txt" id="solde-prog-txt"></p>
+                </div>
               </div>
             </section>
 
@@ -3492,6 +3537,35 @@ function majCagnotte(animer) {
     void el.offsetWidth;
     el.classList.add("maj");
   }
+  majProgressionSolde();
+}
+
+// Barre de progression du bloc de solde : elle vise la prochaine
+// recompense ENCORE hors de portee (prochaine(), deja utilisee
+// ailleurs). Quand il n'y en a plus, tout est atteignable : la barre
+// se remplit et le message change de registre plutot que de
+// disparaitre, sinon le bloc aurait l'air casse.
+function majProgressionSolde() {
+  var bloc = $("#solde-prog");
+  var barre = $("#solde-prog-barre");
+  var txt = $("#solde-prog-txt");
+  if (!bloc || !barre || !txt) return;
+
+  var cible = prochaine();
+  if (!cible) {
+    bloc.classList.add("pleine");
+    barre.style.width = "100%";
+    var dispo = RECOMPENSES.filter(function (r) { return r.cout <= ETAT.solde && r.stock > 0; }).length;
+    txt.innerHTML = dispo
+      ? "<strong>" + dispo + (dispo > 1 ? " récompenses" : " récompense") + "</strong> à échanger maintenant"
+      : "Aucune récompense disponible pour le moment";
+    return;
+  }
+
+  bloc.classList.remove("pleine");
+  var pct = cible.cout > 0 ? Math.min(100, Math.round((ETAT.solde / cible.cout) * 100)) : 0;
+  barre.style.width = pct + "%";
+  txt.innerHTML = "Plus que <strong>" + nb(cible.cout - ETAT.solde) + " pts</strong> pour <strong>" + cible.nom + "</strong>";
 }
 
 /* ==========================================================
