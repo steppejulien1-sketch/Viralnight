@@ -1151,8 +1151,8 @@
 
       /* Marqueur "moi" -- Julien : un point bleu generique "c'est de la
          merde", un verre est plus logique sur cette carte (coherent
-         avec "Ma pinte" dans .carte-rail et le vocabulaire du reste de
-         l'appli). Reprend le meme verre (pint(), plein) et le meme
+         avec le vocabulaire du reste de l'appli). Reprend le meme
+         verre (pint(), plein) et le meme
          gabarit que l'ancien marqueur d'ami retire plus tot -- ancre en
          bas comme lui (transform-origin: bottom, voir majTailleMarqueurs). */
       .moi-marker { width: 46px; height: 60px; transform-origin: bottom center; }
@@ -1166,24 +1166,6 @@
          conteneur de la carte et fausserait le centrage du marqueur. */
       .marker-porteur { display: inline-block; line-height: 0; }
 
-      .carte-rail {
-        position: absolute; right: 13px; top: 51%; transform: translateY(-44%);
-        z-index: 24; display: flex; flex-direction: column; gap: 11px; align-items: center;
-      }
-      .rbtn {
-        width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 0;
-        padding: 0; cursor: pointer; display: grid; place-items: center; position: relative;
-        box-shadow: 0 3px 11px rgba(0,0,0,.24);
-      }
-      .rbtn:focus-visible { outline: 3px solid #1d7fd6; outline-offset: 3px; }
-      .rbtn svg.ico { width: 24px; height: 24px; color: #1b1f25; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-      .rbtn svg.pint { width: 30px; height: 39px; }
-      .rbtn .dot {
-        position: absolute; right: 0; bottom: 1px; width: 13px; height: 13px;
-        border-radius: 50%; background: var(--red); border: 2.5px solid #fff;
-      }
-      /* Meme detail que carte-preview.html : "Mode invisible" et
-         "Ajouter un ami" n'avaient aucun clic branche. */
 
       .club-rail {
         position: absolute; left: 0; right: 0; bottom: 92px; z-index: 24;
@@ -2959,10 +2941,6 @@
           <div id="map"></div>
           <canvas id="etoiles" aria-hidden="true"></canvas>
 
-          <div class="carte-rail">
-            <button class="rbtn" id="rail-me" aria-label="Ma pinte"><span class="dot"></span></button>
-          </div>
-
           <div class="club-rail" id="club-rail">
           </div>
 
@@ -4044,7 +4022,9 @@ function estNuit() {
   if (force === "jour") return false;
   if (force === "nuit") return true;
   var h = new Date().getHours();
-  return h >= 19 || h < 7;
+  // 20 h et non 19 h : a 19 h en ete il fait encore grand jour, et le
+  // ciel etoile tombait a cote de la realite (corrige par Julien).
+  return h >= 20 || h < 7;
 }
 
 // atmosphere-blend a 1 (fond) jusqu'a poser 100% de horizon-color sur
@@ -5489,11 +5469,10 @@ map.on("load", function () {
   map.on("zoom", majTailleMarqueurs);
 });
 
-$("#rail-me").addEventListener("click", function () {
-  map.flyTo({ center: BRUXELLES, zoom: 14.2, bearing: -12, pitch: 50, duration: 900 });
-});
-
-$("#rail-me").insertAdjacentHTML("afterbegin", pint(1));
+// Le bouton flottant "Ma pinte" (rond blanc a droite de la carte) est
+// retire : il recentrait sur Bruxelles, mais sa silhouette etait celle
+// d'un badge de club, ce qui laissait croire a un lieu. Le rail des
+// clubs en bas de carte reste la vraie facon d'atteindre un endroit.
 
 // "Mode invisible" retire (demande de Julien : bouton pas comprehensible
 // depuis l'ecran). Le rail d'amis ne se glissait qu'au doigt, pas a la
