@@ -142,6 +142,13 @@
            rester distinct du corail de marque pour garder son poids. */
         --urgence: #ff9500;
         --grad-urgence: linear-gradient(135deg, #ff9500, #ff4d2e);
+        /* Version sobre de l'urgence : un fond tres peu opaque et un
+           texte ambre plutot qu'un aplat orange. Le degre de saturation
+           etait le probleme, pas la teinte. */
+        --urgence-fond: rgba(255,149,0,.14);
+        --urgence-texte: #b06d00;
+        --urgence-fond-nuit: rgba(255,176,32,.16);
+        --urgence-texte-nuit: #ffbe4d;
         /* Duree/courbe communes aux micro-animations. */
         --tr-court: .16s cubic-bezier(.2,.7,.3,1);
         --tr-moyen: .26s cubic-bezier(.2,.7,.3,1);
@@ -1225,7 +1232,7 @@
       .fr-urgence {
         position: absolute; top: -4px; right: -6px; z-index: 3;
         padding: 2px 6px; border-radius: var(--r-pill);
-        background: var(--grad-urgence); color: #fff;
+        background: #12100c; color: #ffbe4d;
         font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em;
         white-space: nowrap; border: 1.5px solid rgba(255,255,255,.9);
         animation: fr-pouls 1.9s ease-in-out infinite;
@@ -1343,10 +1350,10 @@
         transition: width .6s cubic-bezier(.2,.7,.3,1);
       }
       .solde-prog-txt {
-        margin: 9px 0 0; font-size: 12.5px; font-weight: 600;
-        color: var(--ink2); line-height: 1.35;
+        margin: 9px 0 0; font-size: 12.5px; font-weight: 550;
+        color: var(--ink3); line-height: 1.35;
       }
-      .solde-prog-txt strong { color: var(--ink); font-weight: 800; }
+      .solde-prog-txt strong { color: var(--ink2); font-weight: 750; }
       /* Etat "tu peux echanger maintenant" : barre pleine, et le
          message change de registre au lieu de disparaitre. */
       .solde-prog.pleine .solde-prog-barre { background: linear-gradient(90deg, #35d07f, #21a86a); box-shadow: 0 0 12px rgba(53,208,127,.5); }
@@ -1459,13 +1466,13 @@
       .carte-reco .badge-rarete {
         display: inline-flex; align-items: center; gap: 4px;
         padding: 3px 8px; border-radius: var(--r-pill);
-        background: var(--grad-urgence); color: #fff;
+        background: var(--urgence-fond); color: var(--urgence-texte);
         font-size: 10px; font-weight: 800; letter-spacing: .01em;
         text-transform: uppercase; white-space: nowrap;
       }
       .carte-reco .badge-rarete::before {
         content: ""; width: 4px; height: 4px; border-radius: 50%;
-        background: #fff; animation: rarete-pouls 1.8s ease-out infinite;
+        background: currentColor; animation: rarete-pouls 1.8s ease-out infinite;
       }
       @keyframes rarete-pouls {
         0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.7); }
@@ -1570,12 +1577,13 @@
       .sec-soir .sub {
         margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
         padding: 5px 11px; border-radius: var(--r-pill);
-        background: var(--grad-urgence); color: #fff;
+        background: var(--urgence-fond); color: var(--urgence-texte);
         font-size: 11.5px; font-weight: 800; letter-spacing: .01em;
-        white-space: nowrap; box-shadow: 0 2px 10px rgba(255,120,20,.32);
+        white-space: nowrap;
       }
       .sec-soir .sub::before {
-        content: ""; width: 5px; height: 5px; border-radius: 50%; background: #fff;
+        content: ""; width: 5px; height: 5px; border-radius: 50%;
+        background: currentColor;
         animation: rarete-pouls 1.8s ease-out infinite;
       }
       /* Rebours vide (hors creneau) : pas de pastille orange pour rien. */
@@ -1585,9 +1593,9 @@
         position: absolute; top: 12px; right: 12px; z-index: 1;
         display: inline-flex; align-items: center; gap: 5px;
         padding: 6px 11px; border-radius: var(--r-pill);
-        background: var(--grad-urgence); color: #fff;
+        background: rgba(18,14,10,.72); color: #ffbe4d;
         font-size: 11px; font-weight: 800; text-transform: uppercase;
-        white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+        white-space: nowrap; backdrop-filter: blur(6px);
       }
       .offre-hero .badge-rarete::before {
         content: ""; width: 5px; height: 5px; border-radius: 50%; background: #fff;
@@ -2342,6 +2350,12 @@
         }
         .screen.boutique-pro .solde-prog.pleine .solde-prog-txt strong { color: #4fd493; }
         .screen.boutique-pro .solde-prog-piste { background: rgba(255,255,255,.14); }
+        /* L'ambre fonce est illisible sur du sombre : on remonte en
+           clarte plutot que de garder la meme valeur. */
+        .screen.boutique-pro .sec-soir .sub,
+        .screen.boutique-pro .carte-reco .badge-rarete {
+          background: var(--urgence-fond-nuit); color: var(--urgence-texte-nuit);
+        }
       }
 
       @media (max-width: 430px) {
@@ -3730,7 +3744,15 @@ function majProgressionSolde() {
   bloc.classList.remove("pleine");
   var pct = cible.cout > 0 ? Math.min(100, Math.round((ETAT.solde / cible.cout) * 100)) : 0;
   barre.style.width = pct + "%";
-  txt.innerHTML = "Plus que <strong>" + nb(cible.cout - ETAT.solde) + " pts</strong> pour <strong>" + cible.nom + "</strong>";
+
+  // Compte neuf : annoncer "plus que 300 pts" a quelqu'un qui n'a rien
+  // encore, c'est lui presenter une dette. On lui dit par quoi commencer.
+  if (ETAT.solde <= 0) {
+    txt.innerHTML = "Poste ta première story pour commencer à cumuler";
+    return;
+  }
+
+  txt.innerHTML = "<strong>" + nb(cible.cout - ETAT.solde) + " pts</strong> avant <strong>" + cible.nom + "</strong>";
 }
 
 /* ==========================================================
@@ -5970,7 +5992,9 @@ TAB_PROFIL?.addEventListener("click", async function () {
     if (cibleFid) {
       var pctFid = cibleFid.cout > 0 ? Math.min(100, Math.round((ETAT.solde / cibleFid.cout) * 100)) : 0;
       barreFid.style.width = pctFid + "%";
-      txtFid.textContent = "Encore " + nb(cibleFid.cout - ETAT.solde) + " pts pour " + cibleFid.nom;
+      txtFid.textContent = ETAT.solde <= 0
+        ? "Poste ta première story pour commencer à cumuler"
+        : nb(cibleFid.cout - ETAT.solde) + " pts avant " + cibleFid.nom;
     } else {
       barreFid.style.width = "100%";
       txtFid.textContent = "Tu peux échanger une récompense dès maintenant";
@@ -6784,7 +6808,10 @@ function fenetreSoir() {
   if (h >= OUVERTURE) fin.setDate(fin.getDate() + 1);
   var m = Math.max(0, Math.round((fin - n) / 60000));
   var hh = Math.floor(m / 60);
-  return { ouvert: true, texte: hh > 0 ? hh + " h " + String(m % 60).padStart(2, "0") : m + " min" };
+  // Arrondi a l'heure au-dela d'une heure : "encore 5 h 12" donne une
+  // precision que personne n'utilise, et le chiffre changeait sous les
+  // yeux. En dessous d'une heure, la minute redevient utile.
+  return { ouvert: true, texte: hh > 0 ? hh + " h" : m + " min" };
 }
 
 function majRebours() {
@@ -6815,7 +6842,6 @@ function rendreOffre() {
     '<span class="corps">' +
       "<strong>" + OFFRE.nom + "</strong>" +
       "<p>" + OFFRE.court + "</p>" +
-      "<del>au lieu de " + OFFRE.avant + " pts</del>" +
       '<span class="cta-visuelle">' + (epuise ? "Épuisé pour ce soir" : "Récupérer") + "</span>" +
     "</span>";
 
