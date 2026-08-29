@@ -493,13 +493,81 @@
       }
       .va-avatar-edit svg { width: 11px; height: 11px; stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .va-handle { margin: 0 0 18px; font-size: 15px; font-weight: 700; color: var(--ink); }
+      /* ---- Le QR traite comme un objet de marque ----
+         Avant : un carre blanc pose sur le fond, sans mise en scene.
+         Reference Snapchat : le code est l'objet central de l'ecran,
+         encadre, avec un halo et une animation de scan en boucle qui
+         dit "montre-moi a quelqu'un". */
+      .va-qr-cadre {
+        position: relative; width: 176px; margin: 0 auto 18px; padding: 14px;
+        border-radius: var(--r4);
+        background: linear-gradient(160deg, rgba(255,47,69,.22), rgba(255,47,69,.06));
+        box-shadow: 0 0 34px rgba(255,47,69,.28), inset 0 0 0 1px rgba(255,47,69,.3);
+      }
       .va-qr {
-        width: 148px; height: 148px; margin: 0 auto 16px; padding: 10px;
-        background: #fff; border-radius: 16px;
+        position: relative; width: 148px; height: 148px; margin: 0 auto; padding: 10px;
+        background: #fff; border-radius: var(--r2);
       }
       .va-qr svg { width: 100%; height: 100%; display: block; }
-      .va-hint { margin: 0 0 18px; font-size: 12.5px; color: var(--ink2); line-height: 1.5; }
-      .va-hint strong { color: var(--red); font-family: var(--mono, inherit); }
+      /* Les 4 equerres de visee, dessinees en bordures partielles sur
+         deux pseudo-elements plutot qu'en 4 noeuds ajoutes au DOM. */
+      .va-qr-cadre::before, .va-qr-cadre::after {
+        content: ""; position: absolute; width: 22px; height: 22px;
+        border: 2.5px solid var(--marque); pointer-events: none;
+      }
+      .va-qr-cadre::before {
+        top: 5px; left: 5px; border-right: 0; border-bottom: 0;
+        border-top-left-radius: 9px;
+      }
+      .va-qr-cadre::after {
+        bottom: 5px; right: 5px; border-left: 0; border-top: 0;
+        border-bottom-right-radius: 9px;
+      }
+      /* Ligne de scan : balayage lent, purement decoratif. Elle reste
+         DANS le cadre blanc du QR pour ne pas gener la lecture. */
+      .va-qr-scan {
+        position: absolute; left: 10px; right: 10px; top: 10px; height: 2px;
+        border-radius: var(--r-pill); pointer-events: none;
+        background: linear-gradient(90deg, transparent, var(--marque), transparent);
+        box-shadow: 0 0 10px rgba(255,47,69,.8);
+        animation: va-scan 2.8s cubic-bezier(.5,0,.5,1) infinite;
+      }
+      @keyframes va-scan {
+        0%, 100% { transform: translateY(0); opacity: 0; }
+        12%      { opacity: 1; }
+        50%      { transform: translateY(126px); opacity: 1; }
+        62%      { opacity: 0; }
+      }
+
+      /* ---- Le gain, en typographie forte ----
+         "Tu gagnes 150 points" etait noye dans un paragraphe gris de
+         12,5px. C'est l'argument de l'ecran : il se lit maintenant
+         avant le reste. */
+      .va-gain {
+        display: flex; align-items: baseline; justify-content: center; gap: 7px;
+        margin: 0 0 6px;
+      }
+      .va-gain strong {
+        font-family: var(--mono); font-size: 32px; font-weight: 800;
+        letter-spacing: -.03em; line-height: 1; color: var(--marque-2);
+      }
+      .va-gain span {
+        font-size: 13.5px; font-weight: 700; color: var(--ink); letter-spacing: -.01em;
+      }
+      .va-hint { margin: 0 0 16px; font-size: 12.5px; color: var(--ink3); line-height: 1.5; }
+
+      /* Action secondaire sous "Partager mon code". */
+      .va-copier {
+        width: 100%; min-height: 44px; margin-top: 9px; border: 0;
+        border-radius: var(--r-pill); background: transparent;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.22);
+        color: #ffffff; font-family: inherit; font-size: 13.5px; font-weight: 650;
+        cursor: pointer; transition: background var(--tr-court), transform var(--tr-court);
+      }
+      .va-copier:hover { background: rgba(255,255,255,.08); }
+      .va-copier:active { transform: scale(.98); }
+
+      @media (prefers-reduced-motion: reduce) { .va-qr-scan { animation: none; opacity: .5; } }
       .va-share {
         /* Couleurs fixes, pas les variables de theme : ce bouton doit
            rester une pilule blanche/texte sombre partout, meme quand la
@@ -745,12 +813,30 @@
       }
       .pf-cloche svg { width: 16px; height: 16px; stroke: var(--ink2); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-      .pf-head { text-align: center; padding-top: 44px; margin: 0 0 24px; }
+      /* Couverture de marque derriere l'entete : l'avatar seul sur le
+         fond de l'appli faisait "formulaire", pas "profil". Le halo
+         rouge est le meme que celui du logo, en beaucoup plus diffus. */
+      .pf-head {
+        position: relative; text-align: center; padding-top: 44px; margin: 0 0 24px;
+      }
+      .pf-head::before {
+        content: ""; position: absolute; left: -20px; right: -20px; top: -60px; height: 210px;
+        z-index: 0; pointer-events: none;
+        background:
+          radial-gradient(70% 100% at 50% 0%, rgba(255,47,69,.30), transparent 68%),
+          radial-gradient(90% 70% at 50% 18%, rgba(255,96,112,.12), transparent 72%);
+      }
+      .pf-head > * { position: relative; z-index: 1; }
+      /* Anneau de statut autour de la photo : deux liserés concentriques
+         obtenus avec un seul box-shadow, pas d'element ajoute. */
       .pf-avatar {
         position: relative; width: 84px; height: 84px; margin: 0 auto 14px; border-radius: 50%;
         background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
         border: 0; padding: 0; cursor: pointer; display: grid; place-items: center;
+        box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px rgba(255,47,69,.55), 0 10px 26px -10px rgba(255,47,69,.7);
+        transition: transform var(--tr-court);
       }
+      .pf-avatar:active { transform: scale(.97); }
       .pf-avatar-init { font-size: 42px; font-weight: 800; color: #fff; }
       /* overflow:hidden vit sur la photo elle-meme, pas sur le bouton
          .pf-avatar -- avant, le bouton entier etait en overflow:hidden,
@@ -771,7 +857,11 @@
       .pf-nom { margin: 0 0 3px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
       .pf-sub { margin: 0; font-size: 13px; color: var(--ink3); font-weight: 650; }
 
-      .pf-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 20px; }
+      .pf-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 22px; }
+      /* Etat presse : sur mobile le :hover n'existe pas, sans ca rien
+         ne confirme le tap. */
+      .pf-action:active { transform: scale(.96); background: var(--s2); }
+      .pf-action:hover { border-color: var(--line2); }
       /* 4 raccourcis (Amis/Favoris/Mes stories/Recompenses) : meme
          carte, juste un peu plus compacte pour tenir sur une ligne. */
       .pf-actions-4 { grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -779,21 +869,62 @@
       .pf-actions-4 .pf-action svg { width: 19px; height: 19px; }
       .pf-actions-4 .pf-action span { font-size: 10.5px; }
       .pf-action {
-        display: flex; flex-direction: column; align-items: center; gap: 8px;
-        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
-        padding: 16px 6px; cursor: pointer; font-family: inherit; color: var(--ink);
+        display: flex; flex-direction: column; align-items: center; gap: 9px;
+        background: var(--s1); border: 1px solid var(--line); border-radius: var(--r3);
+        /* Plus d'air qu'avant (16px -> 19px) : les 3 tuiles etaient
+           serrees au point de ressembler a une barre d'icones. */
+        padding: 19px 6px; cursor: pointer; font-family: inherit; color: var(--ink);
+        transition: transform var(--tr-court), border-color var(--tr-court), background var(--tr-court);
       }
       .pf-action svg { width: 22px; height: 22px; stroke: var(--ink2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       .pf-action span { font-size: 12px; font-weight: 700; }
       .pf-action:active { transform: scale(.97); }
 
+      /* La carte de fidelite est la piece maitresse du profil : elle
+         portait juste un libelle et un nombre, ce qui la rendait moins
+         interessante que les tuiles au-dessus. Elle affiche desormais
+         le solde en grand et la progression vers le palier suivant --
+         c'est ce qui donne envie d'y revenir. */
       .pf-fidelite {
-        width: 100%; display: flex; align-items: center; gap: 14px;
-        border: 0; border-radius: 20px; padding: 18px; margin: 0 0 20px; cursor: pointer;
+        position: relative; overflow: hidden;
+        width: 100%; display: block;
+        border: 0; border-radius: var(--r4); padding: 18px; margin: 0 0 22px; cursor: pointer;
         text-align: left; font-family: inherit; color: #fff;
         background: radial-gradient(130% 180% at 12% 0%, var(--accent), #6e0d1c 85%);
         box-shadow: 0 16px 30px -16px rgba(255,47,69,.5);
+        transition: transform var(--tr-court), box-shadow var(--tr-court);
       }
+      .pf-fidelite:active { transform: scale(.985); }
+      /* Texture : un voile diagonal tres discret, pour que la carte ne
+         soit pas un aplat de couleur pur. */
+      .pf-fidelite::after {
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 2px, transparent 2px 9px);
+      }
+      .pf-fidelite-ligne { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
+      .pf-fidelite-solde {
+        display: flex; align-items: baseline; gap: 6px; margin: 14px 0 0;
+        position: relative; z-index: 1;
+      }
+      .pf-fidelite-solde strong {
+        font-family: var(--mono); font-size: 30px; font-weight: 800;
+        letter-spacing: -.03em; line-height: 1; color: #fff;
+      }
+      .pf-fidelite-solde span { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.8); }
+      .pf-fid-piste {
+        display: block; height: 6px; margin: 12px 0 0; border-radius: var(--r-pill);
+        background: rgba(255,255,255,.22); overflow: hidden; position: relative; z-index: 1;
+      }
+      .pf-fid-barre {
+        display: block; height: 100%; width: 0; border-radius: var(--r-pill);
+        background: #fff; box-shadow: 0 0 10px rgba(255,255,255,.6);
+        transition: width .6s cubic-bezier(.2,.7,.3,1);
+      }
+      .pf-fid-txt {
+        margin: 9px 0 0; font-size: 12px; font-weight: 600;
+        color: rgba(255,255,255,.9); position: relative; z-index: 1;
+      }
+      @media (prefers-reduced-motion: reduce) { .pf-fid-barre { transition: none; } }
       .pf-fidelite-ico {
         flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px;
         background: rgba(255,255,255,.16); display: grid; place-items: center;
@@ -2432,9 +2563,14 @@
                 </button>
                 <input type="file" accept="image/*" id="va-avatar-file" hidden />
                 <p class="va-handle" id="va-handle">@...</p>
-                <div class="va-qr" id="va-qr" aria-hidden="true"></div>
-                <p class="va-hint">Fais-le scanner, ou envoie ton lien. <strong>Tu gagnes 150 points</strong> dès qu'un ami rejoint grâce à toi.</p>
+                <div class="va-qr-cadre">
+                  <div class="va-qr" id="va-qr" aria-hidden="true"></div>
+                  <span class="va-qr-scan" aria-hidden="true"></span>
+                </div>
+                <p class="va-gain"><strong>150</strong><span>points par ami qui rejoint</span></p>
+                <p class="va-hint">Fais scanner ton code, ou envoie ton lien.</p>
                 <button type="button" class="va-share" id="va-share">Partager mon code</button>
+                <button type="button" class="va-copier" id="va-copier">Copier le lien</button>
               </div>
             </div>
 
@@ -2490,14 +2626,21 @@
             </div>
 
             <button type="button" class="pf-fidelite" id="pf-fidelite">
-              <span class="pf-fidelite-ico" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+              <span class="pf-fidelite-ligne">
+                <span class="pf-fidelite-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+                </span>
+                <span class="pf-fidelite-txt">
+                  <strong>Ma fidélité</strong>
+                  <span id="pf-points">historique des récompenses</span>
+                </span>
+                <svg class="pf-fidelite-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
               </span>
-              <span class="pf-fidelite-txt">
-                <strong>Ma fidélité</strong>
-                <span id="pf-points">0 pts · historique des récompenses</span>
+              <span class="pf-fidelite-solde">
+                <strong id="pf-fid-solde">0</strong><span>points</span>
               </span>
-              <svg class="pf-fidelite-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+              <span class="pf-fid-piste"><span class="pf-fid-barre" id="pf-fid-barre"></span></span>
+              <p class="pf-fid-txt" id="pf-fid-txt"></p>
             </button>
 
             <div class="pf-liste">
@@ -5534,6 +5677,22 @@ async function ouvrirPageAmis(session) {
     montrer("Photo de profil mise à jour.", "ok");
   };
 
+  // Action secondaire : copier sans passer par la feuille de partage
+  // native, utile sur ordinateur ou quand on veut coller le lien
+  // quelque part de precis.
+  var boutonCopier = $("#va-copier");
+  if (boutonCopier) {
+    boutonCopier.onclick = async function () {
+      if (!lien) return;
+      try {
+        await navigator.clipboard.writeText(lien);
+        montrer("Lien copié.", "ok");
+      } catch {
+        window.prompt("Copie ton lien :", lien);
+      }
+    };
+  }
+
   boutonPartager.onclick = async function () {
     if (!lien) return;
     if (navigator.share) {
@@ -5756,7 +5915,26 @@ TAB_PROFIL?.addEventListener("click", async function () {
     avatarInit.textContent = (monHandle || nomRepli).charAt(0).toUpperCase();
   }
 
-  $("#pf-points").textContent = nb(ETAT.solde) + " pts · historique des récompenses";
+  // Le solde quitte la sous-ligne pour le grand chiffre de la carte ;
+  // la sous-ligne redevient ce qu'elle decrit vraiment (ou mene le tap).
+  $("#pf-points").textContent = "historique des récompenses";
+  $("#pf-fid-solde").textContent = nb(ETAT.solde);
+
+  // Meme logique que la barre de la boutique : on vise la prochaine
+  // recompense encore hors de portee. Sans cible, tout est atteignable.
+  var cibleFid = prochaine();
+  var barreFid = $("#pf-fid-barre");
+  var txtFid = $("#pf-fid-txt");
+  if (barreFid && txtFid) {
+    if (cibleFid) {
+      var pctFid = cibleFid.cout > 0 ? Math.min(100, Math.round((ETAT.solde / cibleFid.cout) * 100)) : 0;
+      barreFid.style.width = pctFid + "%";
+      txtFid.textContent = "Encore " + nb(cibleFid.cout - ETAT.solde) + " pts pour " + cibleFid.nom;
+    } else {
+      barreFid.style.width = "100%";
+      txtFid.textContent = "Tu peux échanger une récompense dès maintenant";
+    }
+  }
 
   // Changer la photo depuis l'ecran Profil lui-meme (demande de
   // Julien) : meme mecanique que va-avatar sur l'ecran Amis (fichier
