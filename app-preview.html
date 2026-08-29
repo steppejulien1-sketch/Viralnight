@@ -3120,23 +3120,31 @@ function pint(level, cls) {
 // et coordonnees verifiees (OpenStreetMap) -- note/avis/statut restent
 // des valeurs d'appoint pour la maquette, a remplacer par les vraies
 // donnees Google/Supabase une fois le club branche.
+// Notes, avis, prix, horaires et telephone : vraies valeurs, pas
+// inventees -- Le Trebuchet recopie a la main depuis la capture
+// d'ecran envoyee par Julien (app Google Maps, 29/08/2026) ; Cactus
+// Club recupere depuis la meme fiche Google (embed public, verifie
+// par curl) et heures.be. A rafraichir si Julien renvoie une capture
+// plus recente -- ce ne sont pas des valeurs live.
 var CLUBS = {
   trebuchet: {
-    nom: "Le Trébuchet", adr: "N4 · Jannée, Pessoux", c: "#ff2f45",
+    nom: "Le Trébuchet", adr: "Rue RN 4, 5590 Ciney", c: "#ff2f45",
     // googleQuery : adresse complete plutot que nom+adr abrege, pour
     // que la fiche Google (ouvrirFicheGoogle) tombe sur le bon
     // etablissement et pas un homonyme.
     googleQuery: "Le Trébuchet DanceClub, N4, 5590 Pessoux, Belgique",
     lngLat: [5.2127, 50.2797], hot: true, type: "club",
-    note: 4.2, avis: 420, prix: "€€",
-    statut: "Ouvert", horaire: "Ferme à 6h"
+    note: 3.7, avis: 130, prix: "20-70 € par personne",
+    tel: "0475 77 75 05",
+    statut: "Fermé", horaire: "Ouvre à 22h30", shut: true
   },
   cactus: {
-    nom: "Cactus Club", adr: "Boulevard du Souverain · Auderghem", c: "#3b4250",
+    nom: "Cactus Club", adr: "Bd du Souverain 147, 1160 Auderghem", c: "#3b4250",
     googleQuery: "Cactus Club, Boulevard du Souverain 147, 1160 Auderghem, Belgique",
     lngLat: [4.4266, 50.8157], type: "club",
-    note: 4.1, avis: 890, prix: "€€",
-    statut: "Ouvert", horaire: "Ferme à 7h"
+    note: 3.7, avis: 715, prix: null,
+    tel: "02 672 67 01",
+    statut: "Fermé", horaire: "Ouvre ven/sam à 22h30", shut: true
   }
 };
 
@@ -3851,7 +3859,8 @@ function heroClub(c) {
         '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
         '<p class="club-meta">' +
           '<svg class="club-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>' +
-          '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong> (" + c.avis + ") · " + libelleType(c.type) + " · " + c.prix +
+          '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong> (" + c.avis + ") · " + libelleType(c.type) +
+          (c.prix ? " · " + c.prix : "") +
         "</p>" +
       "</div>" +
     "</div>"
@@ -3897,6 +3906,11 @@ function ouvrirClub(c, src, id) {
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
       (lienItineraire ? '<a class="club-adresse-lien" href="' + lienItineraire + '" target="_blank" rel="noopener noreferrer">Itinéraire</a>' : "") +
     "</div>" +
+    (c.tel ?
+      '<div class="club-adresse">' +
+        '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.6 21 3 12.4 3 2c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"/></svg></span>' +
+        '<a class="club-adresse-txt club-adresse-lien" href="tel:' + c.tel.replace(/\s+/g, "") + '" style="text-decoration:none">' + c.tel + "</a>" +
+      "</div>" : "") +
     // Fiche Google du club, ouverte SANS quitter l'appli (demande de
     // Julien) -- voir ouvrirFicheGoogle() : iframe plein ecran par
     // dessus la fiche, pas un lien qui sort vers le navigateur.
@@ -4627,10 +4641,16 @@ map.on("load", function () {
     // le detail (horaires precis, avis...) reste dans la fiche.
     el.innerHTML = '<img src="' + fotoClub(c) + '" alt="" /><span class="club-badge-dot"></span>';
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
-    // Tape directement sur la fiche Google, plus de fiche Noctify
-    // intermediaire a traverser -- demande de Julien : "je tombe
-    // directement dessus", pas un lien de plus a cliquer.
-    el.addEventListener("click", function () { ouvrirFicheGoogle(c); });
+    // Retour a notre propre fiche (pas l'iframe Google directement) :
+    // Julien voulait "tomber direct sur la fiche" mais pas sur "Google
+    // Maps" -- l'iframe embed EST Google Maps (juste sans cle API), ca
+    // ne pouvait pas satisfaire les deux a la fois. Notre fiche affiche
+    // maintenant les vraies donnees (note/avis/horaires/telephone,
+    // recopiees a la main depuis les captures Google Maps de Julien,
+    // voir CLUBS plus haut) sans jamais quitter l'appli ni montrer
+    // "Google Maps" ; le bouton "Voir la fiche Google" a l'interieur
+    // reste l'option pour qui veut vraiment la carte.
+    el.addEventListener("click", function () { ouvrirClub(c, el, key); });
     porteur.appendChild(el);
     // opacityWhenCovered : MapLibre laisse les marqueurs de la face
     // cachee du globe a 20% d'opacite par defaut (pour les cartes ou
@@ -5091,7 +5111,7 @@ function creerClubChip(c, key) {
     "</span><b>" + escapeHtmlSupport(c.nom) + "</b>";
   b.addEventListener("click", function () {
     activerVue("carte");
-    ouvrirFicheGoogle(c);
+    ouvrirClub(c, b, key);
   });
   return b;
 }
@@ -5327,7 +5347,7 @@ $("#fv-liste")?.addEventListener("click", function (e) {
   if (nom && CLUBS[nom.dataset.id]) {
     VUE_FAVORIS.hidden = true;
     activerVue("carte");
-    ouvrirFicheGoogle(CLUBS[nom.dataset.id]);
+    ouvrirClub(CLUBS[nom.dataset.id], null, nom.dataset.id);
   }
 });
 $("#pf-action-favoris")?.addEventListener("click", function () {
