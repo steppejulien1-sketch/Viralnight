@@ -565,27 +565,32 @@
       .va-hint { margin: 0 0 16px; font-size: 12.5px; color: var(--ink3); line-height: 1.5; }
 
       /* Action secondaire sous "Partager mon code". */
+      /* Action secondaire : suit le theme au lieu d'un blanc fige, qui
+         devenait invisible une fois l'ecran passe en clair. */
       .va-copier {
         width: 100%; min-height: 44px; margin-top: 9px; border: 0;
         border-radius: var(--r-pill); background: transparent;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,.22);
-        color: #ffffff; font-family: inherit; font-size: 13.5px; font-weight: 650;
-        cursor: pointer; transition: background var(--tr-court), transform var(--tr-court);
+        box-shadow: inset 0 0 0 1px var(--line2);
+        color: var(--ink2); font-family: inherit; font-size: 13.5px; font-weight: 650;
+        cursor: pointer; transition: background var(--tr-court), transform var(--tr-court), color var(--tr-court);
       }
-      .va-copier:hover { background: rgba(255,255,255,.08); }
+      .va-copier:hover { background: var(--s2); color: var(--ink); }
       .va-copier:active { transform: scale(.98); }
 
 
       .va-share {
-        /* Couleurs fixes, pas les variables de theme : ce bouton doit
-           rester une pilule blanche/texte sombre partout, meme quand la
-           feuille Amis s'ouvre par-dessus l'onglet Boutique (qui redefinit
-           --ink en sombre pour son propre theme clair -- sans ca le fond
-           ET le texte devenaient sombres, illisibles). */
-        width: 100%; min-height: 46px; border: 0; border-radius: 999px;
-        background: #ffffff; color: #120d0d; font-family: inherit; font-size: 14.5px; font-weight: 700;
-        cursor: pointer;
+        /* Rouge de marque plutot qu'une pilule blanche : c'est l'action
+           principale de l'ecran, et sur le theme clair une pilule
+           blanche sur fond blanc disparaissait. --marque est le seul
+           token qu'aucun theme ne surcharge, donc ce bouton reste
+           lisible partout -- c'est ce que les couleurs figees en dur
+           cherchaient a garantir, en moins fragile. */
+        width: 100%; min-height: 46px; border: 0; border-radius: var(--r-pill);
+        background: var(--marque); color: #ffffff;
+        font-family: inherit; font-size: 14.5px; font-weight: 700;
+        cursor: pointer; transition: filter var(--tr-court), transform var(--tr-court);
       }
+      .va-share:hover { filter: brightness(1.07); }
       .va-share:active { transform: scale(.98); }
 
       .va-sep { font-size: 11px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 14px; }
@@ -815,6 +820,49 @@
           --erreur-texte: #ff8290;
           --succes-texte: #7fe0a3;
           background: #1c1512;
+        }
+      }
+
+      /* ============================================================
+         MEME MECANIQUE, ETENDUE AUX TROIS DERNIERS ECRANS
+         Julien : "la meme mecanique partout, sauf pour la carte."
+         Clair par defaut, sombre si le telephone l'est. Comme pour la
+         boutique et la feuille du bas, SEULES les variables changent :
+         aucun composant n'est duplique, tout ce qui sera ajoute ensuite
+         suit les deux themes sans travail supplementaire.
+
+         La carte est volontairement absente de cette liste : c'est un
+         globe de nuit (ciel etoile, lune, etoiles filantes). Un fond
+         clair ferait disparaitre tout ce qui s'y trouve.
+         ============================================================ */
+      .vue-profil, .vue-amis, .vue-story {
+        --ink: #16181d;
+        --ink2: #6b6f76;
+        --ink3: #9aa1ac;
+        --bg: #f7f6f4;
+        --s1: #ffffff;
+        --s2: #eeece9;
+        --s3: #e4e1dc;
+        --line: rgba(20,20,20,.08);
+        --line2: rgba(20,20,20,.14);
+        --ambre: #d98a12;
+        --erreur-texte: #d92e42;
+        --succes-texte: #1f9d5c;
+      }
+      @media (prefers-color-scheme: dark) {
+        .vue-profil, .vue-amis, .vue-story {
+          --ink: #ffffff;
+          --ink2: #b6a99e;
+          --ink3: #8a7a6e;
+          --bg: #120d0d;
+          --s1: #1c1512;
+          --s2: #261c17;
+          --s3: #30231c;
+          --line: rgba(255,235,220,.08);
+          --line2: rgba(255,235,220,.14);
+          --ambre: #ffb020;
+          --erreur-texte: #ff8290;
+          --succes-texte: #7fe0a3;
         }
       }
 
