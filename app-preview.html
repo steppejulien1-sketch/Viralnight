@@ -256,29 +256,37 @@
         --ink2: #5c6370;
         --ink3: #9aa1ac;
         --line2: rgba(15,17,20,.14);
-        background: #ffffff;
+        background: #f7e9df;
         color: var(--ink);
         transition: opacity .35s ease, visibility .35s ease;
       }
       .vue-accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
 
-      /* ---- Mascotte : le logo au paresseux envoye par Julien.
-         Reference "Welcome to Amy" qu'il a envoyee : le visuel est
-         centre et respire au-dessus du bloc de texte, qui lui est
-         cale a gauche. Le fichier est dans public/, donc servi a la
-         racine -- l'ancien chemin /mascotte-belier-detouree.png qui
-         "ne resolvait pas" venait d'un fichier absent, pas du code. */
-      /* Agrandi a la demande de Julien ("agrandis-le un peu, fais-lui
-         prendre un peu plus de place"). Plafonne en % de la largeur de
-         l'ecran plutot qu'a une valeur fixe : sur un petit telephone,
-         230px fixes mangeraient les marges laterales. */
-      /* Marges verticales en auto : le paresseux se centre tout seul
-         dans l'espace libre entre le titre (en haut) et le bloc
-         texte + boutons (en bas), quelle que soit la hauteur du
-         telephone. Plafonne en % plutot qu'a une valeur fixe : sur un
-         petit ecran, 260px en dur mangeraient les marges laterales. */
-      .ac-mascot { width: min(224px, 72%); margin: 26px auto 0; align-self: center; }
-      .ac-mascot img { display: block; width: 100%; height: auto; }
+      /* ---- Logo Noctify (le verre), envoye par Julien le 30/08/2026.
+         Il remplace le paresseux, que Julien a lui-meme juge sans
+         rapport avec le produit. Reference "Welcome to Amy" : le visuel
+         est centre et respire au-dessus du bloc de texte, qui lui reste
+         cale a gauche.
+
+         Recadrage : dans le PNG (1254x1254), l'illustration n'occupe que
+         la bande verticale 22%-72%, le reste est du fond vide. Le
+         conteneur ne montre que cette bande -- sinon le logo prenait
+         deux fois la hauteur necessaire pour rien. Fait en CSS plutot
+         qu'en retouchant le fichier : le PNG d'origine reste intact si
+         Julien veut le remplacer.
+
+         Le pourcentage d'un margin-top se calcule sur la LARGEUR du
+         conteneur ; l'image etant carree et en width:100%, -21% de la
+         largeur vaut bien -21% de sa propre hauteur.
+
+         Le fond creme du PNG est repris a l'identique par .vue-accueil
+         (#f7e9df) : sans ca, l'image se verrait comme un rectangle
+         beige pose sur du blanc. */
+      .ac-mascot {
+        width: min(292px, 100%); aspect-ratio: 1 / .53;
+        margin: auto auto 0; align-self: center; overflow: hidden;
+      }
+      .ac-mascot img { display: block; width: 100%; height: auto; margin-top: -21%; }
 
       /* ---- Bloc de texte, cale a gauche comme la reference ---- */
       .ac-hero { margin: auto 0 20px; }
@@ -288,18 +296,6 @@
       .ac-title {
         margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.03em;
         line-height: 1.2; color: var(--ink); text-align: center;
-      }
-      /* Emoji fixe. L'animation de coucou essayee avant est retiree
-         (Julien : "un truc de mauvaise qualite qui bouge") -- une
-         rotation CSS sur un glyphe le fait crenter et baver sur les
-         ecrans a forte densite. Le letter-spacing repasse a zero : le
-         titre est a -.03em, ce qui collait la main au "y" de Noctify.
-         La pile de polices force l'emoji couleur du systeme plutot que
-         le rendu monochrome de secours de la police du titre. */
-      .ac-salut {
-        display: inline-block; letter-spacing: 0; margin-left: 4px;
-        font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-        font-size: .92em; line-height: 1;
       }
       .ac-lead {
         margin: 8px 0 0; font-size: 14.5px; font-weight: 500;
@@ -360,17 +356,17 @@
       .ac-skip-dev:hover { color: var(--ink2); }
       .ac-input {
         width: 100%; min-height: 48px; padding: 0 18px; border: 0; border-radius: var(--r-pill);
-        background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px var(--line2);
+        background: rgba(0,0,0,.04); box-shadow: inset 0 0 0 1px var(--line2);
         color: var(--ink); font-size: 14px; font-family: var(--sans);
         transition: box-shadow var(--tr-court), background var(--tr-court);
       }
       .ac-input::placeholder { color: var(--ink3); }
       .ac-input:focus {
-        outline: none; background: rgba(255,255,255,.09);
+        outline: none; background: rgba(0,0,0,.02);
         box-shadow: inset 0 0 0 1px #ff2f45, 0 0 0 3px rgba(255,47,69,.18);
       }
       .ac-msg { margin: 0; font-size: 11.5px; color: var(--ink2); text-align: center; }
-      .ac-msg.err { color: #ff7b8a; }
+      .ac-msg.err { color: #c8102e; }
 
       /* ============================================================
          ECRAN AMIS — inspire de "Ajouter des amis" sur Snapchat : le
@@ -2447,14 +2443,16 @@
                retirer une fois l'appli finalisee (lui-meme l'a dit). -->
           <button type="button" class="ac-skip-dev" id="ac-start">Explorer sans compte</button>
 
-          <h2 class="ac-title">Bienvenue sur Noctify <span class="ac-salut" role="img" aria-label="salut">👋</span></h2>
+          <h2 class="ac-title">Bienvenue sur Noctify !</h2>
 
-          <!-- Logo au paresseux, envoye par Julien le 2026-08-29 et
-               choisi par lui pour CET ecran ("met le logo que je t'ai
-               envoye, le logo avec le petit paresseux"). Le N de marque
-               reste sur l'ecran de chargement, pas ici. -->
+          <!-- Logo Noctify, envoye par Julien le 2026-08-30. Il remplace
+               le paresseux, qu'il a lui-meme juge sans rapport avec le
+               produit ("le paresseux, ca requiert quel rapport en
+               fait"). Le N de marque reste sur l'ecran de chargement.
+               Le fond creme du PNG est repris par .vue-accueil, sinon
+               l'image se verrait comme un rectangle beige. -->
           <p class="ac-mascot">
-            <img src="/noctify-paresseux.jpg" alt="Noctify" width="150" height="150">
+            <img src="/noctify-logo-verre.png" alt="Noctify" width="1254" height="1254">
           </p>
 
           <div class="ac-hero">
@@ -3595,7 +3593,7 @@ fetch(URL_SUPABASE_CLUBBEUR + "/auth/v1/settings", {
 if (BOUTON_GOOGLE) {
   BOUTON_GOOGLE.addEventListener("click", function () {
     if (googleActif === false) {
-      afficherMessageAccueil("Connexion Google bientot disponible. Utilise ton email en attendant.", true);
+      afficherMessageAccueil("Connexion Google bientôt disponible. Utilise ton email en attendant.", true);
       return;
     }
     supabaseClubbeur.auth.signInWithOAuth({
@@ -3607,7 +3605,7 @@ if (BOUTON_GOOGLE) {
 
 if (BOUTON_APPLE) {
   BOUTON_APPLE.addEventListener("click", function () {
-    afficherMessageAccueil("Connexion Apple bientot disponible (ca demande un compte Apple Developer payant). Utilise Google ou ton email en attendant.", true);
+    afficherMessageAccueil("Connexion Apple bientôt disponible (ça demande un compte Apple Developer payant). Utilise Google ou ton email en attendant.", true);
   });
 }
 
@@ -3628,9 +3626,9 @@ if (BOUTON_EMAIL) {
       .then(function (res) {
         BOUTON_EMAIL.disabled = false;
         if (res.error) {
-          afficherMessageAccueil("Adresse invalide, reessaie.", true);
+          afficherMessageAccueil("Adresse invalide, réessaie.", true);
         } else {
-          afficherMessageAccueil("Lien envoye a " + adresse + ", regarde tes mails.", false);
+          afficherMessageAccueil("Lien envoyé à " + adresse + ", regarde tes mails.", false);
         }
       });
   });
