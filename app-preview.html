@@ -378,15 +378,6 @@
 
       @media (prefers-reduced-motion: reduce) { .vue-accueil { transition: none; } }
 
-      /* Raccourci perso de Julien, pas un bouton produit (voir le
-         commentaire pres du bouton dans le HTML). */
-      .ac-skip-dev {
-        position: absolute; top: 14px; right: 16px; z-index: 2;
-        background: none; border: 0; color: var(--ink3); cursor: pointer;
-        font-family: var(--sans); font-size: 11px; text-decoration: underline;
-        text-underline-offset: 2px; padding: 4px;
-      }
-      .ac-skip-dev:hover { color: var(--ink2); }
       .ac-input {
         width: 100%; min-height: 48px; padding: 0 18px; border: 0; border-radius: var(--r-pill);
         background: rgba(0,0,0,.04); box-shadow: inset 0 0 0 1px var(--line2);
@@ -2517,11 +2508,6 @@
              tap sur "Commencer" -- pas integre au switcher carte/boutique
              (activerVue), qui gere la navigation APRES l'accueil. -->
         <div class="vue-accueil" id="vue-accueil">
-          <!-- Raccourci perso de Julien pour tester sans repasser par
-               Google/email a chaque fois -- PAS un bouton produit. A
-               retirer une fois l'appli finalisee (lui-meme l'a dit). -->
-          <button type="button" class="ac-skip-dev" id="ac-start">Explorer sans compte</button>
-
           <h2 class="ac-title">Bienvenue sur Noctify !</h2>
 
           <!-- Logo Noctify, envoye par Julien le 2026-08-30. Il remplace
@@ -3635,7 +3621,9 @@ var BOUTON_APPLE = $("#ac-apple");
 var CHAMP_EMAIL = $("#ac-email");
 var BOUTON_EMAIL = $("#ac-email-submit");
 var MESSAGE_ACCUEIL = $("#ac-msg");
-var BOUTON_COMMENCER = $("#ac-start");
+// Le raccourci "Explorer sans compte" est retire (Julien, avant ses
+// rendez-vous clients) : c'etait son moyen de tester sans repasser par
+// Google/email, pas un bouton produit.
 // Pas de "Tu as deja un compte ? Se connecter" ici (retire par Julien,
 // 2026-08-29 : "c'est inutile"). Et il a raison : la connexion se fait
 // par lien magique, donc s'inscrire et se reconnecter sont exactement
@@ -3671,12 +3659,53 @@ if (BOUTON_GOOGLE) {
       afficherMessageAccueil("Connexion Google bientôt disponible. Utilise ton email en attendant.", true);
       return;
     }
-    supabaseClubbeur.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin + window.location.pathname },
-    });
+    supabaseClubbeur.auth
+      .signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin + window.location.pathname },
+      })
+      .then(function (res) {
+        // Sans ca, un echec ne produisait STRICTEMENT rien a l'ecran :
+        // le bouton semblait mort, sans aucune piste pour comprendre.
+        if (res && res.error) {
+          afficherMessageAccueil("La connexion Google n'a pas pu démarrer. Réessaie, ou utilise ton email.", true);
+        }
+      })
+      .catch(function () {
+        afficherMessageAccueil("La connexion Google n'a pas pu démarrer. Réessaie, ou utilise ton email.", true);
+      });
   });
 }
+
+/* Au retour de Google, Supabase peut renvoyer une erreur dans l'URL --
+   en query (?error=) ou dans le fragment (#error=) selon l'etape qui a
+   echoue. Personne ne la lisait : l'utilisateur revenait sur l'ecran
+   d'accueil sans explication, exactement comme si le bouton n'avait
+   servi a rien.
+
+   Le cas le plus frequent est une URL de retour absente de la liste
+   "Redirect URLs" du projet Supabase : l'utilisateur est alors renvoye
+   sur le "Site URL" du projet, qui doit imperativement pointer sur le
+   domaine ou l'appli est vraiment deployee. */
+(function signalerErreurRetourOAuth() {
+  var params = new URLSearchParams(location.search);
+  var fragment = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+  var code = params.get("error_code") || fragment.get("error_code");
+  var erreur = params.get("error") || fragment.get("error");
+  if (!erreur && !code) return;
+
+  var messages = {
+    access_denied: "Connexion annulée. Tu peux réessayer quand tu veux.",
+    bad_oauth_state: "La connexion a expiré en route. Réessaie.",
+    otp_expired: "Ce lien a expiré. Demande-en un nouveau.",
+  };
+  afficherMessageAccueil(
+    messages[code] || "La connexion n'a pas abouti. Réessaie, ou utilise ton email.",
+    true
+  );
+  // On nettoie l'URL : sinon le message revient a chaque rechargement.
+  history.replaceState(null, "", location.pathname);
+})();
 
 if (BOUTON_APPLE) {
   BOUTON_APPLE.addEventListener("click", function () {
@@ -3706,12 +3735,6 @@ if (BOUTON_EMAIL) {
           afficherMessageAccueil("Lien envoyé à " + adresse + ", regarde tes mails.", false);
         }
       });
-  });
-}
-
-if (BOUTON_COMMENCER) {
-  BOUTON_COMMENCER.addEventListener("click", function () {
-    VUE_ACCUEIL.classList.add("masque");
   });
 }
 
