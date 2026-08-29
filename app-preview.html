@@ -256,7 +256,7 @@
         --ink2: #5c6370;
         --ink3: #9aa1ac;
         --line2: rgba(15,17,20,.14);
-        background: #f7e9df;
+        background: #ffffff;
         color: var(--ink);
         transition: opacity .35s ease, visibility .35s ease;
       }
@@ -279,14 +279,27 @@
          conteneur ; l'image etant carree et en width:100%, -21% de la
          largeur vaut bien -21% de sa propre hauteur.
 
-         Le fond creme du PNG est repris a l'identique par .vue-accueil
-         (#f7e9df) : sans ca, l'image se verrait comme un rectangle
-         beige pose sur du blanc. */
+         Le PNG a un fond creme OPAQUE (#f7e9df) incruste : pose tel
+         quel sur l'ecran blanc voulu par Julien, il se verrait comme un
+         rectangle beige. Le filtre #logo-blanc (defini en SVG juste
+         avant l'ecran d'accueil) remonte chaque canal RVB par un gain
+         calcule pour amener exactement ce creme a 255 :
+           247 x 1.0324 = 255   233 x 1.0944 = 255   223 x 1.1435 = 255
+         Un gain multiplicatif ne deplace presque pas les couleurs
+         sombres et saturees (le noir du trait reste noir, le rouge reste
+         rouge) : il n'agit vraiment que sur les tons tres clairs, donc
+         sur le fond. L'ombre sous le verre s'eclaircit aussi, mais reste
+         une ombre.
+         Ce n'est qu'un rattrapage : un PNG a fond TRANSPARENT serait
+         plus propre et marcherait sur n'importe quelle couleur. */
       .ac-mascot {
         width: min(292px, 100%); aspect-ratio: 1 / .53;
         margin: auto auto 0; align-self: center; overflow: hidden;
       }
-      .ac-mascot img { display: block; width: 100%; height: auto; margin-top: -21%; }
+      .ac-mascot img {
+        display: block; width: 100%; height: auto; margin-top: -21%;
+        filter: url(#logo-blanc);
+      }
 
       /* ---- Bloc de texte, cale a gauche comme la reference ---- */
       .ac-hero { margin: auto 0 20px; }
@@ -2430,6 +2443,22 @@
           </div>
           <div class="splash-piste"><span class="splash-barre" id="splash-barre"></span></div>
         </div>
+
+        <!-- Filtre qui blanchit le fond creme du logo (voir .ac-mascot
+             img). Hors flux, invisible : il ne sert qu'a etre reference
+             par le CSS. color-interpolation-filters="sRGB" est
+             indispensable -- par defaut les filtres SVG travaillent en
+             lineaire, ce qui donnerait des gains faux. -->
+        <svg width="0" height="0" aria-hidden="true" focusable="false"
+             style="position:absolute;pointer-events:none">
+          <filter id="logo-blanc" color-interpolation-filters="sRGB">
+            <feComponentTransfer>
+              <feFuncR type="linear" slope="1.0324"/>
+              <feFuncG type="linear" slope="1.0944"/>
+              <feFuncB type="linear" slope="1.1435"/>
+            </feComponentTransfer>
+          </filter>
+        </svg>
 
         <!-- ================= ECRAN D'ACCUEIL =================
              Reference envoyee par Julien : ecran d'onboarding mobile type
