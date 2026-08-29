@@ -282,22 +282,18 @@
         margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.03em;
         line-height: 1.2; color: var(--ink); text-align: center;
       }
-      /* L'emoji reprend un letter-spacing neutre (le titre est a -.03em,
-         ce qui le collait au "y" de Noctify) et s'agite doucement. */
+      /* Emoji fixe. L'animation de coucou essayee avant est retiree
+         (Julien : "un truc de mauvaise qualite qui bouge") -- une
+         rotation CSS sur un glyphe le fait crenter et baver sur les
+         ecrans a forte densite. Le letter-spacing repasse a zero : le
+         titre est a -.03em, ce qui collait la main au "y" de Noctify.
+         La pile de polices force l'emoji couleur du systeme plutot que
+         le rendu monochrome de secours de la police du titre. */
       .ac-salut {
-        display: inline-block; letter-spacing: 0; margin-left: 2px;
-        transform-origin: 70% 80%;
-        animation: ac-coucou 2.6s ease-in-out infinite;
+        display: inline-block; letter-spacing: 0; margin-left: 4px;
+        font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+        font-size: .92em; line-height: 1;
       }
-      @keyframes ac-coucou {
-        0%, 62%, 100% { transform: rotate(0deg); }
-        68%  { transform: rotate(14deg); }
-        74%  { transform: rotate(-8deg); }
-        80%  { transform: rotate(12deg); }
-        86%  { transform: rotate(-4deg); }
-        92%  { transform: rotate(8deg); }
-      }
-      @media (prefers-reduced-motion: reduce) { .ac-salut { animation: none; } }
       .ac-lead {
         margin: 8px 0 0; font-size: 14.5px; font-weight: 500;
         letter-spacing: -.01em; line-height: 1.45; color: var(--ink2);
@@ -1411,139 +1407,117 @@
          que la pilule note "5.0 (2)" de la reference), bouton
          d'echange en pilule pleine largeur sous le texte. Remplace
          l'ancienne carte a pastille d'icone dans le coin. */
-      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
 
-      /* ---- Carte de recompense : la photo EST la carte ----
-         Portrait 3/4 : une image verticale tient mieux dans une grille
-         a deux colonnes sur telephone, et laisse la place au texte en
-         bas sans ecraser le produit. */
+      /* ---- Carte de recompense ----
+         Photo en haut, puis le texte SOUS la photo. Aucun texte, aucun
+         badge, aucun degrade sur l'image : elle se voit en entier. */
       .carte-reco {
-        position: relative; display: block; text-align: left;
-        aspect-ratio: 3 / 4; width: 100%;
-        background: var(--s2); border: 0; border-radius: var(--r4);
-        overflow: hidden; padding: 0; cursor: pointer; font-family: inherit; color: #fff;
-        box-shadow: var(--ombre-2);
-        transition: transform var(--tr-court), box-shadow var(--tr-court);
+        position: relative; display: flex; flex-direction: column; text-align: left;
+        width: 100%; background: var(--s1); border: 1px solid var(--line);
+        border-radius: var(--r4); overflow: hidden; padding: 0; cursor: pointer;
+        font-family: inherit; color: var(--ink);
+        box-shadow: var(--ombre-1);
+        transition: transform var(--tr-court), box-shadow var(--tr-court), border-color var(--tr-court);
       }
-      .carte-reco:hover { transform: translateY(-3px); box-shadow: var(--ombre-3); }
+      .carte-reco:hover { transform: translateY(-3px); box-shadow: var(--ombre-2); border-color: var(--line2); }
       .carte-reco:active { transform: translateY(0) scale(.98); }
       .carte-reco:focus-visible { outline: 3px solid var(--bouton); outline-offset: 3px; }
 
+      /* Carre : a largeur de grille egale, l'image gagne ~35% de hauteur
+         par rapport au 4/3 d'origine. C'est le "images trop petites". */
       .carte-reco .photo {
-        position: absolute; inset: 0; width: 100%; height: 100%;
-        background: var(--tinte, #f0f0f2);
+        position: relative; width: 100%; aspect-ratio: 1 / 1;
+        background: var(--tinte, #f0f0f2); overflow: hidden;
       }
       .carte-reco .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        filter: saturate(1.25) contrast(1.1);
+        filter: saturate(1.2) contrast(1.08);
         transition: transform .5s cubic-bezier(.2,.7,.3,1);
       }
-      .carte-reco:hover .photo img { transform: scale(1.05); }
-      /* Recadrage specifique du verre, qui n'est pas centre dans le
-         fichier source (repere par Julien). */
+      .carte-reco:hover .photo img { transform: scale(1.04); }
+      /* Recadrage du verre, pas centre dans le fichier source. */
       .carte-reco .photo img[src*="shot-carte"] { object-position: 42% 52%; }
-      /* Quand il n'y a pas de photo mais un dessin, il faut le recentrer
-         et lui laisser de l'air : sans ca il remplissait tout le cadre. */
       .carte-reco .photo svg {
-        position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
-        width: 52%; height: 52%;
-      }
-      /* Scrim de lisibilite : obligatoire, le texte est pose sur une
-         photo dont on ne maitrise ni la luminosite ni le contraste. */
-      .carte-reco .photo::after {
-        content: ""; position: absolute; inset: 0; pointer-events: none;
-        background: linear-gradient(to top,
-          rgba(8,8,10,.92) 0%, rgba(8,8,10,.72) 26%, rgba(8,8,10,.18) 55%, rgba(8,8,10,.05) 100%);
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        width: 54%; height: 54%;
       }
 
-      /* ---- Le prix, en haut a gauche, sur la photo ---- */
-      .carte-reco .prix-pastille {
-        position: absolute; left: 11px; top: 11px; z-index: 2;
-        display: flex; align-items: baseline; gap: 3px;
-        background: rgba(255,255,255,.94); border-radius: var(--r-pill); padding: 6px 11px;
-        font-family: var(--mono); font-size: 14px; font-weight: 800; color: #16171c;
-        box-shadow: 0 2px 10px rgba(0,0,0,.35);
-      }
-      .carte-reco .prix-pastille span {
-        font-family: var(--sans); font-size: 9.5px; font-weight: 800;
-        text-transform: uppercase; color: #6b6f76;
-      }
-
-      /* ---- Bloc de texte, ancre en bas de la photo ---- */
+      /* ---- Tout le texte vit ici, sous la photo ---- */
       .carte-reco .corps {
-        position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-        display: flex; flex-direction: column; padding: 0 12px 13px;
+        display: flex; flex-direction: column; flex: 1;
+        padding: 12px 13px 14px;
       }
       .carte-reco strong {
-        display: block; font-size: 15.5px; font-weight: 800; letter-spacing: -.02em;
-        line-height: 1.2; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.5);
+        display: block; font-size: 14.5px; font-weight: 750; letter-spacing: -.02em;
+        line-height: 1.25; color: var(--ink);
       }
-      /* Le code produit descend en metadonnee discrete : il ne sert
-         qu'au bar, jamais au clubbeur qui choisit. */
-      .carte-reco .code {
-        display: block; font-family: var(--mono); font-size: 10px;
-        color: rgba(255,255,255,.62); margin-top: 3px; letter-spacing: .04em;
+      /* Le prix devient la deuxieme information la plus lisible de la
+         carte, juste sous le nom -- il etait sur la photo avant. */
+      .carte-reco .prix {
+        display: block; margin-top: 5px;
+        font-family: var(--mono); font-size: 15px; font-weight: 800;
+        letter-spacing: -.02em; color: var(--accent);
+      }
+      .carte-reco .prix span {
+        font-family: var(--sans); font-size: 10.5px; font-weight: 700;
+        color: var(--ink3); margin-left: 3px;
       }
 
-      /* ---- Progression, tout en bas de la carte ---- */
+      /* ---- Etat, en bas de carte ---- */
       .carte-reco .jauge {
-        display: block; height: 4px; margin: 10px 0 0;
-        border-radius: var(--r-pill); background: rgba(255,255,255,.26); overflow: hidden;
+        display: block; height: 4px; margin: 11px 0 0;
+        border-radius: var(--r-pill); background: var(--s3); overflow: hidden;
       }
       .carte-reco .jauge-barre {
         display: block; height: 100%; border-radius: var(--r-pill);
         background: linear-gradient(90deg, var(--marque-2), var(--marque));
-        box-shadow: 0 0 10px rgba(255,47,69,.65);
         transition: width .5s cubic-bezier(.2,.7,.3,1);
       }
       .carte-reco .jauge-txt {
-        display: block; margin-top: 6px; font-size: 10.5px; font-weight: 700;
-        color: rgba(255,255,255,.85); letter-spacing: -.01em;
+        display: block; margin-top: 6px; font-size: 11px; font-weight: 650;
+        color: var(--ink3); letter-spacing: -.01em;
       }
-      /* Recompense atteignable : plus de barre, un vrai libelle d'action
-         en vert -- l'etat "je peux l'avoir maintenant" doit se voir de
-         loin, sans lire. */
       .carte-reco .dispo-txt {
         display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
-        margin-top: 9px; padding: 5px 10px; border-radius: var(--r-pill);
-        background: rgba(53,208,127,.92); color: #06301c;
+        margin-top: 10px; padding: 5px 10px; border-radius: var(--r-pill);
+        background: rgba(53,208,127,.16); color: #1c9a5f;
         font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em;
       }
-      .carte-reco.dispo { box-shadow: var(--ombre-2), 0 0 0 1.5px rgba(53,208,127,.7); }
+      .carte-reco.dispo { border-color: rgba(53,208,127,.5); }
 
-      /* ---- Rarete et epuisement ---- */
+      /* ---- Rarete : SOUS la photo elle aussi ----
+         Elle etait posee sur l'image ; c'est encore du texte sur une
+         photo. Elle vit maintenant dans le corps, a cote du prix, et
+         garde sa couleur d'urgence pour rester reperable. */
+      .carte-reco .ligne-etat { display: flex; align-items: center; gap: 7px; margin-top: 5px; flex-wrap: wrap; }
       .carte-reco .badge-rarete {
-        position: absolute; top: 11px; right: 11px; z-index: 2;
         display: inline-flex; align-items: center; gap: 4px;
-        padding: 5px 9px; border-radius: var(--r-pill);
+        padding: 3px 8px; border-radius: var(--r-pill);
         background: var(--grad-urgence); color: #fff;
         font-size: 10px; font-weight: 800; letter-spacing: .01em;
         text-transform: uppercase; white-space: nowrap;
-        box-shadow: 0 2px 10px rgba(0,0,0,.4);
       }
       .carte-reco .badge-rarete::before {
-        content: ""; width: 5px; height: 5px; border-radius: 50%;
+        content: ""; width: 4px; height: 4px; border-radius: 50%;
         background: #fff; animation: rarete-pouls 1.8s ease-out infinite;
       }
       @keyframes rarete-pouls {
         0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.7); }
-        70%  { box-shadow: 0 0 0 6px rgba(255,255,255,0); }
+        70%  { box-shadow: 0 0 0 5px rgba(255,255,255,0); }
         100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
       }
       .carte-reco .badge-epuise {
-        position: absolute; top: 11px; right: 11px; z-index: 2;
-        padding: 5px 9px; border-radius: var(--r-pill);
-        background: rgba(10,10,12,.85); color: #fff;
+        display: inline-flex; padding: 3px 8px; border-radius: var(--r-pill);
+        background: var(--s3); color: var(--ink3);
         font-size: 10px; font-weight: 800; text-transform: uppercase;
       }
-      .carte-reco.epuise { pointer-events: none; }
-      .carte-reco.epuise .photo img { filter: saturate(.1) contrast(.95) brightness(.7); }
-      .carte-reco.epuise strong { color: rgba(255,255,255,.62); }
+      .carte-reco.epuise { pointer-events: none; opacity: .62; }
+      .carte-reco.epuise .photo img { filter: saturate(.15) contrast(.98); }
 
-      /* Arrivee en cascade de la grille : le retard est pose en inline
-         par le JS (--i), le nombre de recompenses n'etant pas fixe. */
+      /* Arrivee en cascade, retard pose en inline par le JS (--i). */
       @keyframes reco-entre {
-        from { opacity: 0; transform: translateY(14px); }
+        from { opacity: 0; transform: translateY(12px); }
         to   { opacity: 1; transform: none; }
       }
       .carte-reco { animation: reco-entre .4s cubic-bezier(.2,.7,.3,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
@@ -6930,16 +6904,21 @@ function rendreListe() {
     // maintenant dans la jauge (loin) ou dans la pastille verte (dispo).
 
     b.style.setProperty("--i", index);
+    // Rien n'est pose sur la photo : ni prix, ni badge, ni degrade.
+    // Tout ce qui est du texte vit dans .corps, sous l'image.
     b.innerHTML =
       '<span class="photo" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' +
         visuelInterieur +
       "</span>" +
-      '<span class="prix-pastille">' + nb(r.cout) + "<span>pts</span></span>" +
-      (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
-      (rare ? '<span class="badge-rarete">plus que ' + r.stock + "</span>" : "") +
       '<span class="corps">' +
         "<strong>" + r.nom + "</strong>" +
-        '<span class="code">' + r.code + "</span>" +
+        '<span class="prix">' + nb(r.cout) + "<span>pts</span></span>" +
+        (epuise || rare
+          ? '<span class="ligne-etat">' +
+              (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
+              (rare ? '<span class="badge-rarete">plus que ' + r.stock + "</span>" : "") +
+            "</span>"
+          : "") +
         (epuise
           ? ""
           : loin
