@@ -505,35 +505,11 @@
         background: #fff; border-radius: var(--r2);
       }
       .va-qr svg { width: 100%; height: 100%; display: block; }
-      /* Les 4 equerres de visee, dessinees en bordures partielles sur
-         deux pseudo-elements plutot qu'en 4 noeuds ajoutes au DOM. */
-      .va-qr-cadre::before, .va-qr-cadre::after {
-        content: ""; position: absolute; width: 22px; height: 22px;
-        border: 2.5px solid var(--marque); pointer-events: none;
-      }
-      .va-qr-cadre::before {
-        top: 5px; left: 5px; border-right: 0; border-bottom: 0;
-        border-top-left-radius: 9px;
-      }
-      .va-qr-cadre::after {
-        bottom: 5px; right: 5px; border-left: 0; border-top: 0;
-        border-bottom-right-radius: 9px;
-      }
-      /* Ligne de scan : balayage lent, purement decoratif. Elle reste
-         DANS le cadre blanc du QR pour ne pas gener la lecture. */
-      .va-qr-scan {
-        position: absolute; left: 10px; right: 10px; top: 10px; height: 2px;
-        border-radius: var(--r-pill); pointer-events: none;
-        background: linear-gradient(90deg, transparent, var(--marque), transparent);
-        box-shadow: 0 0 10px rgba(255,47,69,.8);
-        animation: va-scan 2.8s cubic-bezier(.5,0,.5,1) infinite;
-      }
-      @keyframes va-scan {
-        0%, 100% { transform: translateY(0); opacity: 0; }
-        12%      { opacity: 1; }
-        50%      { transform: translateY(126px); opacity: 1; }
-        62%      { opacity: 0; }
-      }
+      /* La ligne de scan qui balayait le QR et ses equerres de visee
+         sont retirees (Julien : "retire le truc bizarre"). Un element
+         qui passe en boucle au-dessus d'un code a scanner fait gadget
+         et gene sa lecture. Le cadre et son halo restent : eux ne
+         bougent pas et posent le code comme un objet de marque. */
 
       /* ---- Le gain, en typographie forte ----
          "Tu gagnes 150 points" etait noye dans un paragraphe gris de
@@ -563,7 +539,7 @@
       .va-copier:hover { background: rgba(255,255,255,.08); }
       .va-copier:active { transform: scale(.98); }
 
-      @media (prefers-reduced-motion: reduce) { .va-qr-scan { animation: none; opacity: .5; } }
+
       .va-share {
         /* Couleurs fixes, pas les variables de theme : ce bouton doit
            rester une pilule blanche/texte sombre partout, meme quand la
@@ -817,27 +793,16 @@
       }
       .pf-cloche svg { width: 16px; height: 16px; stroke: var(--ink2); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-      /* Couverture de marque derriere l'entete : l'avatar seul sur le
-         fond de l'appli faisait "formulaire", pas "profil". Le halo
-         rouge est le meme que celui du logo, en beaucoup plus diffus. */
-      .pf-head {
-        position: relative; text-align: center; padding-top: 44px; margin: 0 0 24px;
-      }
-      .pf-head::before {
-        content: ""; position: absolute; left: -20px; right: -20px; top: -60px; height: 210px;
-        z-index: 0; pointer-events: none;
-        background:
-          radial-gradient(70% 100% at 50% 0%, rgba(255,47,69,.30), transparent 68%),
-          radial-gradient(90% 70% at 50% 18%, rgba(255,96,112,.12), transparent 72%);
-      }
-      .pf-head > * { position: relative; z-index: 1; }
-      /* Anneau de statut autour de la photo : deux liserés concentriques
-         obtenus avec un seul box-shadow, pas d'element ajoute. */
+      /* Entete sobre. Le halo de marque rouge derriere l'entete et
+         l'anneau rouge autour de la photo, essayes pendant la refonte,
+         sont retires a la demande de Julien ("retire le rouge du
+         profil") -- ne pas les remettre sans qu'il le redemande.
+         L'etat presse sur la photo, lui, reste : il confirme le tap. */
+      .pf-head { text-align: center; padding-top: 44px; margin: 0 0 24px; }
       .pf-avatar {
         position: relative; width: 84px; height: 84px; margin: 0 auto 14px; border-radius: 50%;
         background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
         border: 0; padding: 0; cursor: pointer; display: grid; place-items: center;
-        box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px rgba(255,47,69,.55), 0 10px 26px -10px rgba(255,47,69,.7);
         transition: transform var(--tr-court);
       }
       .pf-avatar:active { transform: scale(.97); }
@@ -2623,7 +2588,6 @@
                 <p class="va-handle" id="va-handle">@...</p>
                 <div class="va-qr-cadre">
                   <div class="va-qr" id="va-qr" aria-hidden="true"></div>
-                  <span class="va-qr-scan" aria-hidden="true"></span>
                 </div>
                 <p class="va-gain"><strong>150</strong><span>points par ami qui rejoint</span></p>
                 <p class="va-hint">Fais scanner ton code, ou envoie ton lien.</p>
