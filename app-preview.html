@@ -49,6 +49,12 @@
         --page-ink2: #99a1b0;
         --page-ink3: #6a7280;
         --red:       #ff2f45;
+        /* Marque figee : ne JAMAIS la redefinir dans un theme d'ecran.
+           --accent, lui, se fait surcharger (voir .screen.boutique-pro)
+           et ne peut donc pas porter le logo. */
+        --marque:     #ff2f45;
+        --marque-2:   #ff6070;
+        --marque-nuit:#0a0a0c;
         --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
       }
@@ -113,6 +119,32 @@
            partage avec l'ambre des chiffres. */
         --ambre: #ffb020;
         --papier: #f2e9d8;
+
+        /* Echelle d'espacement / rayons / ombres. Ajoutee a la refonte :
+           tout etait ecrit en dur ecran par ecran, ce qui expliquait les
+           marges et les ratios qui ne tombaient jamais juste d'une carte
+           a l'autre. Toute nouvelle valeur passe par ici. */
+        --e1: 4px;  --e2: 8px;  --e3: 12px;
+        --e4: 16px; --e5: 24px; --e6: 32px;
+        --r1: 10px; --r2: 14px; --r3: 20px; --r4: 28px; --r-pill: 999px;
+        --ombre-1: 0 1px 2px rgba(0,0,0,.35);
+        --ombre-2: 0 6px 20px rgba(0,0,0,.45);
+        --ombre-3: 0 18px 48px rgba(0,0,0,.55);
+        /* Le halo rouge du kit de marque (le N sur fond noir). Reserve
+           a la marque et aux moments forts, jamais en decoration.
+           NE PAS renommer en --glow : ce nom est deja pris, injecte en
+           inline par carte comme COULEUR de degrade (voir le rendu des
+           recompenses, style="--glow:..."). */
+        --halo:      0 0 28px rgba(255,47,69,.45);
+        --halo-fort: 0 0 46px rgba(255,47,69,.72);
+        --grad-marque: linear-gradient(135deg, #ff2f45, #ff6070);
+        /* Signal d'urgence/rarete (stock faible, offre du soir) : doit
+           rester distinct du corail de marque pour garder son poids. */
+        --urgence: #ff9500;
+        --grad-urgence: linear-gradient(135deg, #ff9500, #ff4d2e);
+        /* Duree/courbe communes aux micro-animations. */
+        --tr-court: .16s cubic-bezier(.2,.7,.3,1);
+        --tr-moyen: .26s cubic-bezier(.2,.7,.3,1);
       }
 
       /* Les deux ecrans sont superposes en permanence. On bascule
@@ -136,15 +168,37 @@
          session est connue -- ou apres COUPE_CHARGEMENT_MS en secours
          si Supabase tarde a repondre. */
       .splash {
-        position: absolute; inset: -3px; z-index: 40; background: var(--bg);
+        /* Fond de marque en dur, pas var(--bg) : sur #boutique le theme
+           clair .boutique-pro est deja pose sur .screen au chargement,
+           ce qui donnait un splash blanc avec un logo delave. */
+        position: absolute; inset: -3px; z-index: 40; background: var(--marque-nuit);
         display: flex; align-items: center; justify-content: center;
         transition: opacity .35s ease;
       }
       .splash.masque { opacity: 0; pointer-events: none; }
-      .splash-mark { width: 56px; height: 56px; animation: splash-pouls 1.6s ease-in-out infinite; }
+      /* Le bloc de marque du splash : le N arrondi + NOCTIFY en
+         lettrage espace, exactement le verrouillage du kit de marque
+         envoye par Julien. L'ancienne etoile generique est retiree. */
+      .splash-brand {
+        display: flex; flex-direction: column; align-items: center; gap: var(--e3);
+      }
+      .splash-mark {
+        width: 76px; height: 76px; display: block;
+        filter: drop-shadow(0 0 28px rgba(255,47,69,.45));
+        animation: splash-pouls 2.2s ease-in-out infinite;
+      }
+      .splash-mark path { stroke: var(--marque); }
+      .splash-mot {
+        font-family: var(--sans); font-size: 13px; font-weight: 700;
+        letter-spacing: .42em; text-indent: .42em; color: #ffffff;
+        opacity: .92;
+      }
+      /* Respiration lente du halo plutot qu'un clignotement : le logo
+         garde sa taille (pas de scale, qui faisait "sauter" le mot
+         dessous), seule l'intensite du rouge bouge. */
       @keyframes splash-pouls {
-        0%, 100% { transform: scale(.88); opacity: .55; }
-        50% { transform: scale(1.05); opacity: 1; }
+        0%, 100% { filter: drop-shadow(0 0 18px rgba(255,47,69,.35)); }
+        50%      { filter: drop-shadow(var(--halo-fort)); }
       }
       /* Petite barre de progression sous le logo -- fausse (on ne sait
          pas vraiment combien de temps Supabase va prendre), mais remplie
@@ -155,16 +209,18 @@
          l'ecran (voir cacherSplash()). */
       .splash-piste {
         position: absolute; left: 40px; right: 40px; bottom: 54px;
-        height: 3px; border-radius: 99px; background: rgba(255,255,255,.14); overflow: hidden;
+        height: 3px; border-radius: var(--r-pill); background: rgba(255,255,255,.14); overflow: hidden;
       }
       .splash-barre {
-        display: block; height: 100%; width: 6%; border-radius: 99px; background: #ff6363;
+        display: block; height: 100%; width: 6%; border-radius: var(--r-pill);
+        background: linear-gradient(135deg, var(--marque), var(--marque-2));
+        box-shadow: 0 0 28px rgba(255,47,69,.45);
         animation: splash-charge 1.1s cubic-bezier(.3,.6,.4,1) forwards;
       }
       @keyframes splash-charge { from { width: 6%; } to { width: 88%; } }
       @media (prefers-reduced-motion: reduce) {
         .splash { transition: none; }
-        .splash-mark { animation: none; }
+        .splash-mark { animation: none; filter: drop-shadow(0 0 28px rgba(255,47,69,.45)); }
         .splash-barre { animation: none; width: 88%; }
       }
 
@@ -176,22 +232,19 @@
          cette maquette : aucun des boutons n'authentifie reellement.
          ============================================================ */
       .vue-accueil {
-        /* Le rayon sur CE calque (meme "inherit") pouvait laisser un
-           filet sombre aux 4 coins : deux clips arrondis superposes
-           (celui-ci + celui de .screen) ne se recalculent pas toujours
-           au pixel pres. Un seul responsable du rayon suffit : celui de
-           .screen (overflow: hidden). Ce calque reste un rectangle plat
-           mais deborde de -3px de chaque cote, donc rien ne depasse du
-           coin arrondi du parent -- aucun bord courbe ici, tout est blanc
-           jusqu'au bord reellement visible. */
+        /* Un seul calque responsable du rayon : celui de .screen
+           (overflow: hidden). Celui-ci reste un rectangle plat qui
+           deborde de -3px, donc rien ne depasse du coin arrondi. */
         position: absolute; inset: -3px; border-radius: 0; z-index: 30;
-        display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-        gap: 4px; padding: 24px 26px 46px; text-align: center;
-        /* Ecran en blanc, sur demande de Julien -- seul cet ecran :
-           le reste de l'appli (carte, boutique) reste sombre. On
-           redefinit --ink/--ink2/--ink3/--line2 localement plutot que
-           globalement sur .screen : la cascade CSS ne les change alors
-           que pour les descendants de .vue-accueil. */
+        display: flex; flex-direction: column; align-items: stretch;
+        justify-content: flex-start;
+        padding: 38px 26px 32px; text-align: left;
+        /* Ecran BLANC, confirme par Julien apres un essai en sombre
+           ("met en blanc l'accueil"). Seul cet ecran est clair : la
+           carte et le reste de l'appli restent sombres. On redefinit
+           les encres localement pour ne toucher a rien d'autre.
+           Valeurs en dur : ce calque est pose sur .screen, qui porte
+           deja parfois le theme .boutique-pro. */
         --ink: #15181d;
         --ink2: #5c6370;
         --ink3: #9aa1ac;
@@ -201,62 +254,98 @@
         transition: opacity .35s ease, visibility .35s ease;
       }
       .vue-accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
-      @media (prefers-reduced-motion: reduce) { .vue-accueil { transition: none; } }
 
-      .ac-title { margin: 4px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
-      /* "Bienvenue sur Noctify" tout en haut de l'ecran, separe du
-         bloc texte/boutons qui reste ancre en bas -- demande de Julien.
-         Position absolue plutot qu'un reordonnancement du flex : le
-         reste du groupe garde son empilement (justify-content:
-         flex-end) inchange. */
-      .ac-title-haut {
-        position: absolute; top: 52px; left: 26px; right: 26px; z-index: 1;
-        margin: 0; text-align: center;
-      }
-      /* La mascotte est REVENUE : Julien l'a jugee absente/"fake" en
-         regardant un export statique que j'avais envoye, ou le chemin
-         d'image /mascotte-belier-detouree.png ne resolvait pas (fichier
-         hors serveur) -- elle etait en fait tres bien dans la vraie
-         appli. L'eclair rouge propose a la place est retire ("dégueulasse").
-         Retour a l'original, garde petite. */
-      .ac-mascot { width: 92px; margin: 0 auto 10px; }
+      /* ---- Mascotte : le logo au paresseux envoye par Julien.
+         Reference "Welcome to Amy" qu'il a envoyee : le visuel est
+         centre et respire au-dessus du bloc de texte, qui lui est
+         cale a gauche. Le fichier est dans public/, donc servi a la
+         racine -- l'ancien chemin /mascotte-belier-detouree.png qui
+         "ne resolvait pas" venait d'un fichier absent, pas du code. */
+      /* Agrandi a la demande de Julien ("agrandis-le un peu, fais-lui
+         prendre un peu plus de place"). Plafonne en % de la largeur de
+         l'ecran plutot qu'a une valeur fixe : sur un petit telephone,
+         230px fixes mangeraient les marges laterales. */
+      /* Marges verticales en auto : le paresseux se centre tout seul
+         dans l'espace libre entre le titre (en haut) et le bloc
+         texte + boutons (en bas), quelle que soit la hauteur du
+         telephone. Plafonne en % plutot qu'a une valeur fixe : sur un
+         petit ecran, 260px en dur mangeraient les marges laterales. */
+      .ac-mascot { width: min(224px, 72%); margin: 26px auto 0; align-self: center; }
       .ac-mascot img { display: block; width: 100%; height: auto; }
-      /* Allege encore (Julien : "c'est pire qu'avant", toujours trop
-         gras a 700) -- retour proche du poids d'origine, 600 au lieu de
-         500. Copie refaite : la mecanique (scan/tag) n'interesse plus
-         Julien ici ("ca on s'en fout"), reste la promesse -- gagner des
-         recompenses dans les clubs qu'on aime. La liste de reassurances
-         essayee entre-temps ("on ne poste jamais a ta place"...) a ete
-         rejetee par Julien ("inutile") -- ne pas la remettre sans qu'il
-         le redemande explicitement. */
-      .ac-lead { margin: 6px 0 30px; font-size: 15px; font-weight: 600; letter-spacing: -.01em; line-height: 1.4; color: var(--ink); max-width: 27ch; }
 
-      .ac-actions { width: 100%; max-width: 280px; display: grid; gap: 10px; }
+      /* ---- Bloc de texte, cale a gauche comme la reference ---- */
+      .ac-hero { margin: auto 0 20px; }
+      /* Titre d'accueil : centre et tout en haut, il sert d'en-tete a
+         l'ecran. Le bloc texte plus bas reste cale a gauche, comme la
+         reference envoyee par Julien. */
+      .ac-title {
+        margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.03em;
+        line-height: 1.2; color: var(--ink); text-align: center;
+      }
+      /* L'emoji reprend un letter-spacing neutre (le titre est a -.03em,
+         ce qui le collait au "y" de Noctify) et s'agite doucement. */
+      .ac-salut {
+        display: inline-block; letter-spacing: 0; margin-left: 2px;
+        transform-origin: 70% 80%;
+        animation: ac-coucou 2.6s ease-in-out infinite;
+      }
+      @keyframes ac-coucou {
+        0%, 62%, 100% { transform: rotate(0deg); }
+        68%  { transform: rotate(14deg); }
+        74%  { transform: rotate(-8deg); }
+        80%  { transform: rotate(12deg); }
+        86%  { transform: rotate(-4deg); }
+        92%  { transform: rotate(8deg); }
+      }
+      @media (prefers-reduced-motion: reduce) { .ac-salut { animation: none; } }
+      .ac-lead {
+        margin: 8px 0 0; font-size: 14.5px; font-weight: 500;
+        letter-spacing: -.01em; line-height: 1.45; color: var(--ink2);
+      }
+
+      .ac-actions { width: 100%; display: grid; gap: 10px; }
       .ac-btn {
         display: flex; align-items: center; justify-content: center; gap: 10px;
-        width: 100%; min-height: 46px; padding: 0 16px; border: 0; border-radius: 999px;
-        font-family: var(--sans); font-size: 13.5px; font-weight: 700; cursor: pointer;
-        transition: transform .15s ease, filter .15s ease;
+        width: 100%; min-height: 50px; padding: 0 18px; border: 0;
+        border-radius: var(--r-pill);
+        font-family: var(--sans); font-size: 14.5px; font-weight: 700;
+        letter-spacing: -.01em; cursor: pointer;
+        transition: transform var(--tr-court), filter var(--tr-court), background var(--tr-court);
       }
-      .ac-btn:active { transform: scale(.97); }
-      .ac-btn svg { width: 17px; height: 17px; flex: none; }
-      .ac-btn-google { background: #fff; color: #1a1a1a; box-shadow: inset 0 0 0 1px rgba(0,0,0,.14); }
-      .ac-btn-apple { background: #000; color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
-      .ac-btn-google:hover, .ac-btn-apple:hover { filter: brightness(1.06); }
+      /* Etat presse visible : sur mobile le :hover ne sert a rien. */
+      .ac-btn:active { transform: scale(.965); }
+      .ac-btn svg { width: 18px; height: 18px; flex: none; }
+      /* Meme repartition que la reference : Apple en noir plein,
+         Google en blanc borde, puis l'email en couleur de marque. */
+      .ac-btn-apple  { background: #000000; color: #ffffff; }
+      .ac-btn-google { background: #ffffff; color: #1a1a1a; box-shadow: inset 0 0 0 1px rgba(0,0,0,.16); }
+      .ac-btn-apple:hover  { filter: brightness(1.25); }
+      .ac-btn-google:hover { background: #f6f6f7; }
       /* Separateur ligne-texte-ligne (Julien : "prends ca plus propre")
          plutot qu'un simple texte centre flottant entre les boutons. */
       .ac-sep {
-        display: flex; align-items: center; gap: 10px; margin: 4px 0;
-        font-size: 11px; font-weight: 600; color: var(--ink3);
+        display: flex; align-items: center; gap: 10px; margin: 12px 0 4px;
+        font-size: 11.5px; font-weight: 600; color: var(--ink3);
       }
       .ac-sep::before, .ac-sep::after {
         content: ""; flex: 1 1 auto; height: 1px; background: var(--line2);
       }
+      /* Le bouton email porte le rouge de marque, comme le bouton
+         violet de la reference porte la marque de l'appli. */
+      .ac-btn-marque {
+        background: var(--marque); color: #ffffff;
+        box-shadow: 0 8px 18px -8px rgba(255,47,69,.6);
+      }
+      .ac-btn-marque:hover { filter: brightness(1.06); }
+      /* Ancien style fantome, conserve : d'autres ecrans s'en servent. */
       .ac-btn-ghost {
         background: transparent; color: var(--ink2);
         box-shadow: inset 0 0 0 1px var(--line2);
       }
       .ac-btn-ghost:hover { color: var(--ink); box-shadow: inset 0 0 0 1px rgba(0,0,0,.28); }
+
+      @media (prefers-reduced-motion: reduce) { .vue-accueil { transition: none; } }
+
       /* Raccourci perso de Julien, pas un bouton produit (voir le
          commentaire pres du bouton dans le HTML). */
       .ac-skip-dev {
@@ -267,14 +356,18 @@
       }
       .ac-skip-dev:hover { color: var(--ink2); }
       .ac-input {
-        width: 100%; min-height: 42px; padding: 0 14px; border: 0; border-radius: 999px;
-        background: rgba(0,0,0,.035); box-shadow: inset 0 0 0 1px var(--line2);
-        color: var(--ink); font-size: 13.5px; font-family: var(--sans);
+        width: 100%; min-height: 48px; padding: 0 18px; border: 0; border-radius: var(--r-pill);
+        background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px var(--line2);
+        color: var(--ink); font-size: 14px; font-family: var(--sans);
+        transition: box-shadow var(--tr-court), background var(--tr-court);
       }
       .ac-input::placeholder { color: var(--ink3); }
-      .ac-input:focus { outline: none; box-shadow: inset 0 0 0 1px #ff2f45; }
+      .ac-input:focus {
+        outline: none; background: rgba(255,255,255,.09);
+        box-shadow: inset 0 0 0 1px #ff2f45, 0 0 0 3px rgba(255,47,69,.18);
+      }
       .ac-msg { margin: 0; font-size: 11.5px; color: var(--ink2); text-align: center; }
-      .ac-msg.err { color: #e0223a; }
+      .ac-msg.err { color: #ff7b8a; }
 
       /* ============================================================
          ECRAN AMIS — inspire de "Ajouter des amis" sur Snapchat : le
@@ -1149,9 +1242,80 @@
         letter-spacing: -.01em; padding: 11px 10px;
         box-shadow: 0 8px 16px -8px rgba(20,20,25,.4);
       }
-      .carte-reco.loin .cta-visuelle { background: var(--s3); color: var(--ink3); }
-      .carte-reco.epuise { opacity: .55; pointer-events: none; }
-      .carte-reco.epuise .cta-visuelle { background: var(--s3); color: var(--ink3); }
+      /* margin-top:auto : sans ca, le CTA se calait juste sous le texte,
+         donc deux cartes cote a cote dont les noms tiennent sur un ou
+         deux lignes avaient leurs boutons a des hauteurs differentes.
+         C'est ce qui donnait l'impression de "ratio incoherent" alors
+         que les photos, elles, sont deja toutes en 4/3. */
+      .carte-reco .cta-visuelle { margin-top: auto; }
+
+      /* ---- Jauge de progression par carte ----
+         Remplace le seul texte "Encore 250", identique sur toutes les
+         cartes : on voit d'un coup d'oeil laquelle est presque
+         atteinte et laquelle est hors de portee. */
+      .carte-reco .jauge {
+        display: block; height: 4px; margin: 10px 0 0;
+        border-radius: var(--r-pill); background: var(--s3); overflow: hidden;
+      }
+      .carte-reco .jauge-barre {
+        display: block; height: 100%; border-radius: var(--r-pill);
+        background: linear-gradient(90deg, var(--accent), var(--bouton));
+        transition: width .45s cubic-bezier(.2,.7,.3,1);
+      }
+      .carte-reco .jauge-txt {
+        display: block; margin-top: 6px; font-size: 11px; font-weight: 650;
+        color: var(--ink3); letter-spacing: -.01em;
+      }
+      /* Recompense atteignable : elle doit se distinguer immediatement
+         d'un objectif lointain, sans texte supplementaire. */
+      .carte-reco.dispo {
+        border-color: rgba(255,47,69,.45);
+        box-shadow: 0 14px 28px -20px rgba(20,20,25,.28), 0 0 0 1px rgba(255,47,69,.14);
+      }
+      .carte-reco.dispo .jauge-barre { box-shadow: 0 0 10px rgba(255,47,69,.55); }
+      .carte-reco.loin .cta-visuelle { background: var(--s3); color: var(--ink3); box-shadow: none; }
+      /* Hors de portee : legere desaturation de la photo seule (pas de
+         la carte entiere, qui deviendrait illisible). */
+      .carte-reco.loin .photo img { filter: saturate(.75) contrast(1.05); }
+
+      /* ---- Badge de rarete ----
+         "plus que 3" etait noye dans la ligne grise du code produit.
+         C'est un signal d'urgence : il passe sur la photo, en couleur
+         d'urgence (--grad-urgence), distincte du rouge de marque pour
+         garder son poids. */
+      .carte-reco .badge-rarete {
+        position: absolute; top: 9px; right: 9px; z-index: 1;
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 5px 9px; border-radius: var(--r-pill);
+        background: var(--grad-urgence); color: #fff;
+        font-size: 10.5px; font-weight: 800; letter-spacing: .01em;
+        text-transform: uppercase; white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(0,0,0,.3);
+      }
+      .carte-reco .badge-rarete::before {
+        content: ""; width: 5px; height: 5px; border-radius: 50%;
+        background: #fff; box-shadow: 0 0 0 0 rgba(255,255,255,.7);
+        animation: rarete-pouls 1.8s ease-out infinite;
+      }
+      @keyframes rarete-pouls {
+        0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.7); }
+        70%  { box-shadow: 0 0 0 6px rgba(255,255,255,0); }
+        100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+      }
+      .carte-reco .badge-epuise {
+        position: absolute; top: 9px; right: 9px; z-index: 1;
+        padding: 5px 9px; border-radius: var(--r-pill);
+        background: rgba(10,10,12,.8); color: #fff;
+        font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+      }
+      .carte-reco.epuise { opacity: .5; pointer-events: none; }
+      .carte-reco.epuise .cta-visuelle { background: var(--s3); color: var(--ink3); box-shadow: none; }
+      .carte-reco.epuise .photo img { filter: saturate(.15) contrast(1); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .carte-reco .badge-rarete::before { animation: none; }
+        .carte-reco .jauge-barre { transition: none; }
+      }
 
       /* ---------------- Offre du soir : banniere photo pleine largeur ---------------- */
 
@@ -1212,6 +1376,50 @@
       .offre-hero.epuise .badge-offert { background: var(--s3); color: var(--ink3); }
       .offre-hero.epuise .cta-visuelle { background: var(--s3); color: var(--ink3); }
 
+      /* ---- "Ce soir au ..." traite comme LE moment fort de l'ecran ----
+         C'etait une section comme les autres, avec son compte a rebours
+         en petit texte gris aligne a droite. C'est pourtant l'element le
+         plus actionnable et le seul qui expire : il est maintenant pose
+         sur son propre panneau, avec un rebours en badge d'urgence. */
+      .sec-soir {
+        background: var(--s1); border: 1px solid var(--line);
+        border-radius: var(--r4); padding: var(--e4) var(--e4) var(--e5);
+        box-shadow: var(--ombre-1);
+      }
+      .sec-soir .sec-head { margin-bottom: var(--e3); align-items: center; }
+      .sec-soir .sec-head h2 { line-height: 1.15; }
+      /* Le rebours quitte le gris des metadonnees pour la couleur
+         d'urgence : c'est une information qui expire, pas une note de
+         bas de page. Distinct du rouge de marque, sinon il n'aurait
+         plus aucun poids a cote des CTA. */
+      .sec-soir .sub {
+        margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 11px; border-radius: var(--r-pill);
+        background: var(--grad-urgence); color: #fff;
+        font-size: 11.5px; font-weight: 800; letter-spacing: .01em;
+        white-space: nowrap; box-shadow: 0 2px 10px rgba(255,120,20,.32);
+      }
+      .sec-soir .sub::before {
+        content: ""; width: 5px; height: 5px; border-radius: 50%; background: #fff;
+        animation: rarete-pouls 1.8s ease-out infinite;
+      }
+      /* Rebours vide (hors creneau) : pas de pastille orange pour rien. */
+      .sec-soir .sub:empty { display: none; }
+      /* Rarete de l'offre du soir, meme langage que les cartes. */
+      .offre-hero .badge-rarete {
+        position: absolute; top: 12px; right: 12px; z-index: 1;
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 11px; border-radius: var(--r-pill);
+        background: var(--grad-urgence); color: #fff;
+        font-size: 11px; font-weight: 800; text-transform: uppercase;
+        white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+      }
+      .offre-hero .badge-rarete::before {
+        content: ""; width: 5px; height: 5px; border-radius: 50%; background: #fff;
+        animation: rarete-pouls 1.8s ease-out infinite;
+      }
+      .offre-hero:active { transform: translateY(-1px) scale(.99); }
+
       /* ---------------- Recompenses : visuel circulaire (fiche detail) ----------------
          La taille/le fond de base de .sheet-visuel vivent plus bas,
          section "Fiche recompense" — ici seulement la variante photo. */
@@ -1235,24 +1443,59 @@
 
       /* ---------------- Mes bons ---------------- */
 
-      .bons { display: grid; gap: 10px; }
+      /* Traite comme un TICKET, pas comme une carte de catalogue :
+         "Mes bons" contient ce qui est deja gagne et utilisable au bar,
+         alors que la grille au-dessus contient des objectifs a
+         atteindre. Les deux se ressemblaient trop. D'ou les encoches
+         laterales et le pointille de souche, qui disent "coupon" avant
+         meme qu'on lise le titre. */
+      .bons { display: grid; gap: var(--e3); }
       .bon {
+        position: relative; overflow: hidden;
         display: flex; align-items: center; gap: 13px; width: 100%; padding: 13px 15px;
-        border: 1px solid var(--line2); border-radius: 18px; background: var(--s1);
+        border: 1px solid var(--line2); border-radius: var(--r3); background: var(--s1);
         font-family: inherit; color: inherit; text-align: left; cursor: pointer;
         box-shadow: 0 10px 20px -16px rgba(20,20,25,.25);
-        transition: box-shadow .16s ease, transform .16s ease;
+        transition: box-shadow var(--tr-court), transform var(--tr-court);
       }
+      /* Les deux encoches, alignees sur le pointille : padding 15 + QR 46
+         + gap 13 = 74px, moins la moitie de l'encoche. Remplies avec la
+         couleur de FOND de l'ecran (--bg), donc elles suivent d'elles-
+         memes la bascule clair/sombre. */
+      .bon::before, .bon::after {
+        content: ""; position: absolute; left: 67px; width: 14px; height: 14px;
+        border-radius: 50%; background: var(--bg); pointer-events: none;
+      }
+      .bon::before { top: -7px; }
+      .bon::after  { bottom: -7px; }
       .bon:hover { box-shadow: 0 12px 24px -12px rgba(20,20,25,.18); transform: translateY(-2px); }
+      .bon:active { transform: translateY(0) scale(.99); }
       .bon:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .bon-qr {
         width: 46px; height: 46px; border-radius: 10px; background: #fff; padding: 3px;
         flex: 0 0 auto; overflow: hidden;
       }
       .bon-qr svg { display: block; width: 100%; height: 100%; }
-      .bon .txt { flex: 1; min-width: 0; }
+      /* La souche : pointille vertical entre le QR et le texte. */
+      .bon .txt {
+        flex: 1; min-width: 0; padding-left: 13px;
+        border-left: 1px dashed var(--line2);
+      }
       .bon .txt strong { display: block; font-size: 15px; font-weight: 700; letter-spacing: -.025em; }
       .bon .txt span { display: block; font-size: 12px; font-weight: 550; color: var(--ink3); margin-top: 2px; }
+      .bon-droite { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+      /* "Pret" : un bon est deja paye en points, il ne reste qu'a le
+         montrer au bar. C'est l'info qui manquait pour le distinguer
+         d'une recompense a debloquer. Vert plutot que rouge/orange :
+         ni marque, ni urgence — un etat acquis. */
+      .bon-pret {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 9px; border-radius: var(--r-pill);
+        background: rgba(48,190,120,.14); color: #21a86a;
+        font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em;
+        white-space: nowrap;
+      }
+      .bon-pret::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
       .bon-code {
         font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .07em;
         color: var(--ink3); flex: 0 0 auto;
@@ -1453,6 +1696,83 @@
 
       /* Attribut ("Permet de danser") : meme registre que Google, une
          icone + un fait, pas une pastille de couleur. */
+      /* ---- Badge "Partenaire" sur la photo d'entete ----
+         C'est le seul signal qui distingue un club ou l'appli sert a
+         quelque chose d'un club simplement present sur la carte. Il
+         doit se voir avant le nom. */
+      .club-partenaire-badge {
+        position: absolute; top: 14px; left: 14px; z-index: 2;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 7px 12px; border-radius: var(--r-pill);
+        background: var(--marque); color: #fff;
+        font-size: 11.5px; font-weight: 800; letter-spacing: .02em;
+        text-transform: uppercase;
+        box-shadow: 0 4px 14px rgba(255,47,69,.45);
+      }
+      .club-partenaire-badge svg {
+        width: 13px; height: 13px; fill: none; stroke: currentColor;
+        stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+      }
+      /* ---- Statut ouvert/ferme, remonte sur la photo ----
+         C'est la premiere question d'un clubbeur ("c'est ouvert ?").
+         Elle etait noyee dans une ligne de liste au milieu de la fiche. */
+      .club-statut-chip {
+        display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+        padding: 6px 11px; border-radius: var(--r-pill);
+        background: rgba(255,255,255,.16); color: #fff;
+        font-size: 12px; font-weight: 700; backdrop-filter: blur(6px);
+      }
+      .club-statut-chip::before {
+        content: ""; width: 6px; height: 6px; border-radius: 50%; background: #35d07f;
+      }
+      .club-statut-chip.ferme::before { background: #ff8577; }
+
+      /* ---- Tags d'ambiance ----
+         "Permet de danser" etait une ligne isolee avec une icone. Les
+         attributs d'un lieu se lisent mieux en pastilles alignees. */
+      .club-tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 16px; }
+      .club-tag {
+        display: inline-flex; align-items: center; padding: 6px 11px;
+        border-radius: var(--r-pill); background: var(--s2);
+        border: 1px solid var(--line);
+        font-size: 12.5px; font-weight: 650; color: var(--ink2);
+      }
+      /* Apparition en cascade quand la fiche s'ouvre. */
+      @keyframes tag-monte { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      .club-tag { animation: tag-monte .3s cubic-bezier(.2,.7,.3,1) both; }
+      .club-tag:nth-child(2) { animation-delay: .05s; }
+      .club-tag:nth-child(3) { animation-delay: .1s; }
+      .club-tag:nth-child(4) { animation-delay: .15s; }
+
+      /* ---- Bloc partenaire : le point de conversion de la fiche ----
+         Les recompenses et "Poster ma story" etaient deux lignes parmi
+         d'autres, tout en bas. C'est pourtant la seule raison d'ouvrir
+         cette fiche depuis Noctify plutot que depuis Maps. */
+      .club-partenaire-bloc {
+        margin: 0 0 18px; padding: 15px 16px 16px;
+        border-radius: var(--r3);
+        border: 1px solid rgba(255,47,69,.28);
+        background: linear-gradient(160deg, rgba(255,47,69,.10), rgba(255,47,69,.03));
+      }
+      .club-partenaire-bloc h4 {
+        margin: 0 0 3px; font-size: 15.5px; font-weight: 800;
+        letter-spacing: -.02em; color: var(--ink);
+      }
+      .club-partenaire-bloc p { margin: 0 0 13px; font-size: 13px; font-weight: 550; color: var(--ink2); line-height: 1.4; }
+
+      /* ---- Attribution Google, reduite a sa fonction ----
+         C'etait un bouton en pleine largeur, au meme rang que les
+         actions de l'appli. La note et les avis viennent bien de
+         Google, donc le lien reste -- mais en pied de fiche, en petit,
+         comme une source citee. */
+      .club-source {
+        display: block; width: 100%; margin: 4px 0 0; padding: 10px 0 0;
+        border: 0; border-top: 1px solid var(--line); background: none;
+        font-family: inherit; font-size: 11.5px; font-weight: 550;
+        color: var(--ink3); text-align: center; cursor: pointer;
+      }
+      .club-source:hover { color: var(--ink2); text-decoration: underline; }
+
       .club-attribut { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; color: var(--ink2); }
       .club-attribut svg { width: 20px; height: 20px; stroke: var(--ink3); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
       .club-attribut span { font-size: 14.5px; font-weight: 600; }
@@ -1780,6 +2100,55 @@
          besoin d'ombre marquee. */
       .screen.boutique-pro .qr-carte { box-shadow: 0 4px 14px rgba(20,20,25,.1); }
 
+      /* ============================================================
+         BOUTIQUE — VARIANTE SOMBRE AUTOMATIQUE
+         Demande de Julien : "laisse tout en clair c'est plus propre,
+         juste que ca s'adapte si le telephone du gars est en mode
+         sombre". Le clair reste donc le theme de base (rien n'est
+         change au-dessus) ; ce bloc ne s'applique que si l'OS du
+         visiteur est en mode sombre.
+
+         On ne redefinit QUE des variables et les quelques regles qui
+         codaient un #ffffff en dur : aucun composant n'est duplique,
+         donc toute carte/jauge/badge ajoutee ensuite suit les deux
+         themes sans travail supplementaire. C'est la raison d'etre de
+         l'echelle de tokens posee en haut du fichier.
+
+         L'ecran carte, lui, est nocturne en permanence et n'a rien a
+         voir avec ce bloc. ============================================================ */
+      @media (prefers-color-scheme: dark) {
+        .screen.boutique-pro {
+          --ink: #f3f4f7; --ink2: #9ca2ad; --ink3: #6c7280;
+          --bg: #0d0e11; --s1: #16181d; --s2: #1e2128; --s3: #272b33;
+          --line: rgba(255,255,255,.09); --line2: rgba(255,255,255,.15);
+          /* Meme repartition des roles qu'en clair : --accent porte les
+             points et les prix, --bouton le rouge de marque des CTA.
+             Le corail est juste eclairci pour tenir sur du sombre. */
+          --accent: #ff8577; --ambre: #ff8577; --bouton: #ff2f45;
+        }
+        .screen.boutique-pro .wallet { background: var(--s1); }
+        .screen.boutique-pro .sheet {
+          background: var(--s1); border-top-color: var(--line2);
+          box-shadow: 0 -14px 34px rgba(0,0,0,.5);
+        }
+        .screen.boutique-pro .grab { background: rgba(255,255,255,.22); }
+        .screen.boutique-pro .sheet-visuel {
+          box-shadow: 0 0 0 1px var(--line2), inset 0 0 0 11px var(--s1),
+                      inset 0 0 0 12px rgba(255,255,255,.04), var(--ombre-2);
+        }
+        /* Le QR doit rester blanc pour rester scannable : on garde son
+           fond clair et on remplace juste l'ombre, invisible sur noir,
+           par un liseré. */
+        .screen.boutique-pro .qr-carte {
+          box-shadow: 0 0 0 1px rgba(255,255,255,.18), var(--ombre-2);
+        }
+        /* Le vert de "Pret" vire au terne sur fond sombre : on le
+           remonte en clarte plutot que de le laisser tel quel. */
+        .screen.boutique-pro .bon-pret {
+          background: rgba(48,190,120,.18); color: #4fd493;
+        }
+      }
+
       @media (max-width: 430px) {
         .wrap { padding: 38px 12px 70px; }
         .phone { width: 100%; max-width: 360px; }
@@ -1847,9 +2216,13 @@
       <div class="screen">
 
         <div class="splash" id="splash" aria-hidden="true">
-          <svg class="splash-mark" viewBox="0 0 24 24">
-            <path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/>
-          </svg>
+          <div class="splash-brand">
+            <svg class="splash-mark" viewBox="0 0 100 100" aria-hidden="true">
+              <path d="M22 78V31L78 78V31" fill="none" stroke-width="21"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="splash-mot">NOCTIFY</span>
+          </div>
           <div class="splash-piste"><span class="splash-barre" id="splash-barre"></span></div>
         </div>
 
@@ -1865,17 +2238,25 @@
                retirer une fois l'appli finalisee (lui-meme l'a dit). -->
           <button type="button" class="ac-skip-dev" id="ac-start">Explorer sans compte</button>
 
-          <h2 class="ac-title ac-title-haut">Bienvenue sur Noctify</h2>
+          <h2 class="ac-title">Bienvenue sur Noctify <span class="ac-salut" role="img" aria-label="salut">👋</span></h2>
 
-          <!-- Mascotte retiree (Julien, 2026-08-26) : il compte se choisir
-               un nom d'appli puis faire dessiner un vrai logo/personnage
-               dedie, pas celui-ci. Ne pas remplir cet espace avec une
-               autre icone en attendant -- Julien remettra son propre
-               visuel ici quand il l'aura. -->
+          <!-- Logo au paresseux, envoye par Julien le 2026-08-29 et
+               choisi par lui pour CET ecran ("met le logo que je t'ai
+               envoye, le logo avec le petit paresseux"). Le N de marque
+               reste sur l'ecran de chargement, pas ici. -->
+          <p class="ac-mascot">
+            <img src="/noctify-paresseux.jpg" alt="Noctify" width="150" height="150">
+          </p>
 
-          <p class="ac-lead">Transforme tes soirées en récompenses : poste, cumule des points, échange-les dans tes clubs préférés.</p>
+          <div class="ac-hero">
+            <p class="ac-lead">Transforme tes soirées en récompenses : poste, cumule des points, échange-les dans tes clubs préférés.</p>
+          </div>
 
           <div class="ac-actions">
+            <button type="button" class="ac-btn ac-btn-apple" id="ac-apple">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.462 2.15-1.213 2.94-.822.86-2.17 1.53-3.29 1.44-.14-1.09.45-2.24 1.19-2.99.83-.86 2.28-1.5 3.31-1.39zm4.29 16.6c-.4.93-.6 1.34-1.12 2.16-.72 1.15-1.74 2.58-3 2.59-1.12.01-1.41-.73-2.93-.72-1.52.01-1.84.73-2.96.72-1.26-.01-2.23-1.31-2.95-2.46-2.02-3.2-2.23-6.95-.99-8.95.88-1.42 2.27-2.25 3.58-2.25 1.33 0 2.17.73 3.27.73 1.07 0 1.72-.73 3.27-.73 1.17 0 2.4.64 3.28 1.74-2.88 1.58-2.41 5.7.55 6.97-.32.9-.72 1.5-.99 2.2z"/></svg>
+              Continuer avec Apple
+            </button>
             <button type="button" class="ac-btn ac-btn-google" id="ac-google">
               <svg viewBox="0 0 48 48" aria-hidden="true">
                 <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -1885,14 +2266,10 @@
               </svg>
               Continuer avec Google
             </button>
-            <button type="button" class="ac-btn ac-btn-apple" id="ac-apple">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.462 2.15-1.213 2.94-.822.86-2.17 1.53-3.29 1.44-.14-1.09.45-2.24 1.19-2.99.83-.86 2.28-1.5 3.31-1.39zm4.29 16.6c-.4.93-.6 1.34-1.12 2.16-.72 1.15-1.74 2.58-3 2.59-1.12.01-1.41-.73-2.93-.72-1.52.01-1.84.73-2.96.72-1.26-.01-2.23-1.31-2.95-2.46-2.02-3.2-2.23-6.95-.99-8.95.88-1.42 2.27-2.25 3.58-2.25 1.33 0 2.17.73 3.27.73 1.07 0 1.72-.73 3.27-.73 1.17 0 2.4.64 3.28 1.74-2.88 1.58-2.41 5.7.55 6.97-.32.9-.72 1.5-.99 2.2z"/></svg>
-              Continuer avec Apple
-            </button>
 
             <p class="ac-sep">ou par email</p>
             <input type="email" class="ac-input" id="ac-email" placeholder="ton@email.com" autocomplete="email" />
-            <button type="button" class="ac-btn ac-btn-ghost" id="ac-email-submit">Recevoir mon lien</button>
+            <button type="button" class="ac-btn ac-btn-marque" id="ac-email-submit">Continuer avec l'email</button>
             <p class="ac-msg" id="ac-msg" hidden></p>
           </div>
         </div>
@@ -2357,7 +2734,7 @@
               </div>
             </section>
 
-            <section class="sec">
+            <section class="sec sec-soir">
               <div class="sec-head">
                 <h2>Ce soir au Cactus Club</h2>
                 <span class="sub" id="o-fin"></span>
@@ -2962,6 +3339,10 @@ var CHAMP_EMAIL = $("#ac-email");
 var BOUTON_EMAIL = $("#ac-email-submit");
 var MESSAGE_ACCUEIL = $("#ac-msg");
 var BOUTON_COMMENCER = $("#ac-start");
+// Pas de "Tu as deja un compte ? Se connecter" ici (retire par Julien,
+// 2026-08-29 : "c'est inutile"). Et il a raison : la connexion se fait
+// par lien magique, donc s'inscrire et se reconnecter sont exactement
+// le meme geste. Un second parcours n'aurait rien eu a faire de plus.
 
 function afficherMessageAccueil(texte, estErreur) {
   if (!MESSAGE_ACCUEIL) return;
@@ -3172,7 +3553,11 @@ var CLUBS = {
     lngLat: [5.2127, 50.2797], hot: true, type: "club",
     note: 3.7, avis: 130, prix: "20-70 € par personne", prixSignale: 31,
     tel: "0475 77 75 05", site: "trebuchet.be",
-    statut: "Fermé", horaire: "Ouvre à 22h30", shut: true
+    statut: "Fermé", horaire: "Ouvre à 22h30", shut: true,
+    // Partenaire Noctify : ouvre le bloc de conversion (points/story)
+    // en haut de la fiche. Un club non partenaire ne l'aurait pas.
+    partenaire: true,
+    ambiance: ["Permet de danser", "Cocktails", "Grande piste"]
   },
   cactus: {
     nom: "Cactus Club", adr: "Bd du Souverain 147, 1160 Auderghem", c: "#3b4250",
@@ -3180,7 +3565,9 @@ var CLUBS = {
     lngLat: [4.4266, 50.8157], type: "club",
     note: 3.7, avis: 715, prix: null,
     tel: "02 672 67 01", site: "cactus-club.be",
-    statut: "Fermé", horaire: "Ouvre ven/sam à 22h30", shut: true
+    statut: "Fermé", horaire: "Ouvre ven/sam à 22h30", shut: true,
+    partenaire: true,
+    ambiance: ["Permet de danser", "Terrasse", "Ambiance club"]
   }
 };
 
@@ -3891,6 +4278,12 @@ function heroClub(c) {
       '<button class="club-fav" id="sh-fav" type="button">' +
         '<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9A4.9 4.9 0 0 1 12 5.7a4.9 4.9 0 0 1 8.5 3.2C20.5 15 12 20.5 12 20.5z"/></svg>' +
       "</button>" +
+      // Le badge partenaire passe avant le nom : c'est lui qui dit si
+      // l'appli sert a quelque chose dans ce club.
+      (c.partenaire
+        ? '<span class="club-partenaire-badge">' +
+            '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Partenaire</span>'
+        : "") +
       '<div class="club-hero-scrim">' +
         '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
         '<p class="club-meta">' +
@@ -3898,6 +4291,11 @@ function heroClub(c) {
           '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong> (" + c.avis + ") · " + libelleType(c.type) +
           (c.prix ? " · " + c.prix : "") +
         "</p>" +
+        // "C'est ouvert ?" est la premiere question : la reponse monte
+        // sur la photo au lieu d'attendre une ligne de liste plus bas.
+        '<span class="club-statut-chip' + (c.shut ? " ferme" : "") + '">' +
+          c.statut + " · " + c.horaire +
+        "</span>" +
       "</div>" +
     "</div>"
   );
@@ -3980,25 +4378,42 @@ function ouvrirClub(c, src, id) {
       '<a class="club-info-txt club-info-principal" href="tel:' + c.tel.replace(/\s+/g, "") + '" style="text-decoration:none">' + c.tel + "</a>" +
     "</div>" : "";
 
+  // Attributs du lieu en pastilles alignees plutot qu'une ligne isolee.
+  var tags = (c.ambiance || ["Permet de danser"])
+    .map(function (t) { return '<span class="club-tag">' + t + "</span>"; })
+    .join("");
+
+  // Le bloc partenaire remonte AVANT les infos pratiques : c'est le
+  // seul contenu qu'on ne trouve pas sur Maps, donc la raison d'ouvrir
+  // cette fiche ici. Il portait avant deux liens perdus tout en bas.
+  var blocPartenaire = c.partenaire
+    ? '<div class="club-partenaire-bloc">' +
+        "<h4>Tu gagnes des points ici</h4>" +
+        "<p>Poste ta story avec le tag du club, cumule des points, échange-les sur place.</p>" +
+        '<button class="sheet-cta" id="sh-poster-story" type="button">Poster ma story</button>' +
+        '<a class="club-recompenses-lien" id="sh-voir-recompenses" href="#boutique" style="margin:12px 0 0">' +
+          (RECOMPENSES.length || 4) + " récompenses à échanger ici →" +
+        "</a>" +
+      "</div>"
+    : "";
+
   var html =
     heroClub(c) +
+    blocPartenaire +
     miniaturesClub(c) +
     '<div class="club-actions-row">' + actions + "</div>" +
-    '<div class="club-attribut"><svg viewBox="0 0 24 24"><path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/></svg><span>Permet de danser</span></div>' +
+    '<div class="club-tags">' + tags + "</div>" +
     '<div class="club-adresse">' +
       '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
     "</div>" +
     ligneHoraires + lignePrix + ligneTel +
-    // Fiche Google du club, ouverte SANS quitter l'appli (demande de
-    // Julien) -- voir ouvrirFicheGoogle() : iframe plein ecran par
-    // dessus la fiche, pas un lien qui sort vers le navigateur.
-    '<button type="button" class="club-recompenses-lien" id="sh-voir-google" style="margin-top:16px">Voir la fiche Google →</button>' +
-    '<a class="club-recompenses-lien" id="sh-voir-recompenses" href="#boutique">' +
-      (RECOMPENSES.length || 4) + " récompenses à échanger ici →" +
-    "</a>" +
-    '<button class="sheet-cta" id="sh-poster-story" type="button">Poster ma story</button>' +
-    '<p class="sheet-note">' + noteRecompenseClub() + "</p>";
+    '<p class="sheet-note">' + noteRecompenseClub() + "</p>" +
+    // La note et les avis viennent de Google : la source est citee, mais
+    // en pied de fiche et en petit. Avant, "Voir la fiche Google" etait
+    // un bouton pleine largeur au meme rang que nos propres actions --
+    // la fiche avait l'air d'etre une fenetre Google.
+    '<button type="button" class="club-source" id="sh-voir-google">Avis et photos : voir sur Google</button>';
 
   ouvrirFeuille(html, ".sheet-cta");
   // Fiche club en blanc (comme la Boutique), meme si la Carte derriere
@@ -6068,7 +6483,7 @@ function fenetreSoir() {
 
 function majRebours() {
   var f = fenetreSoir();
-  $("#o-fin").textContent = f.ouvert ? "encore " + f.texte : f.texte;
+  $("#o-fin").textContent = f.ouvert ? "Encore " + f.texte : f.texte;
 }
 
 function rendreOffre() {
@@ -6084,6 +6499,12 @@ function rendreOffre() {
     '<span class="photo">' +
       (OFFRE.foto ? '<img src="' + OFFRE.foto + '" alt="" loading="lazy">' : "") +
       '<span class="badge-offert">' + (epuise ? "Épuisé" : "Offert") + "</span>" +
+      // Meme signal de rarete que sur les cartes du catalogue : l'offre
+      // du soir est limitee en stock ET dans le temps, les deux doivent
+      // se voir sans avoir a lire.
+      (!epuise && OFFRE.stock <= 5
+        ? '<span class="badge-rarete">plus que ' + OFFRE.stock + "</span>"
+        : "") +
     "</span>" +
     '<span class="corps">' +
       "<strong>" + OFFRE.nom + "</strong>" +
@@ -6118,11 +6539,16 @@ function rendreListe() {
     var epuise = r.stock <= 0;
 
     var b = document.createElement("button");
-    b.className = "carte-reco" + (loin ? " loin" : "") + (epuise ? " epuise" : "");
+    b.className = "carte-reco" + (loin ? " loin" : " dispo") + (epuise ? " epuise" : "");
     b.type = "button";
     b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
 
-    var statut = epuise ? "épuisé" : (r.stock <= 5 ? "plus que " + r.stock : "");
+    // La rarete quitte la ligne de texte grise pour devenir un badge
+    // sur la photo : c'est un signal d'urgence, il doit se voir.
+    var rare = !epuise && r.stock > 0 && r.stock <= 5;
+    // Progression vers le palier, bornee a 100 : c'est elle qui
+    // remplace le "Encore X" repete a l'identique sur chaque carte.
+    var pct = r.cout > 0 ? Math.min(100, Math.round((ETAT.solde / r.cout) * 100)) : 100;
     var visuelInterieur = r.foto
       ? '<img src="' + r.foto + '" alt="" loading="lazy">'
       : r.art();
@@ -6131,16 +6557,25 @@ function rendreListe() {
     // bouton sur deux lignes des que le montant manquant depassait
     // 3 chiffres (ex. "Encore 2835 pts"), cassant l'alignement de
     // la grille de cartes.
-    var cta = epuise ? "Épuisé" : (loin ? "Encore " + nb(r.cout - ETAT.solde) : "Échanger");
+    var cta = epuise ? "Épuisé" : (loin ? "Pas encore" : "Échanger");
 
     b.innerHTML =
       '<span class="photo" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' +
         visuelInterieur +
         '<span class="prix-pastille">' + nb(r.cout) + "<span> pts</span></span>" +
+        (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
+        (rare ? '<span class="badge-rarete">plus que ' + r.stock + "</span>" : "") +
       "</span>" +
       '<span class="corps">' +
         "<strong>" + r.nom + "</strong>" +
-        '<span class="code">' + r.code + (statut ? " · " + statut : "") + "</span>" +
+        '<span class="code">' + r.code + "</span>" +
+        // La jauge ne s'affiche que tant que la recompense n'est pas
+        // atteinte : une barre pleine a 100% sous un bouton "Échanger"
+        // deja actif n'apprend rien et alourdit la carte.
+        (loin && !epuise
+          ? '<span class="jauge" role="presentation"><span class="jauge-barre" style="width:' + pct + '%"></span></span>' +
+            '<span class="jauge-txt">' + pct + " % · encore " + nb(r.cout - ETAT.solde) + " pts</span>"
+          : "") +
         '<span class="cta-visuelle">' + cta + "</span>" +
       "</span>";
 
@@ -6200,7 +6635,10 @@ async function rendreBons(neufCode) {
     e.innerHTML =
       '<span class="bon-qr">' + svgQr + "</span>" +
       '<span class="txt"><strong>' + bon.titre + "</strong><span>" + compteARebours(bon.expireA) + "</span></span>" +
-      '<span class="bon-code">' + bon.code + "</span>";
+      '<span class="bon-droite">' +
+        '<span class="bon-pret">Prêt</span>' +
+        '<span class="bon-code">' + bon.code + "</span>" +
+      "</span>";
     e.addEventListener("click", function (b, src) { return function () { ouvrirBon(b, src); }; }(bon, e));
     z.appendChild(e);
   }
