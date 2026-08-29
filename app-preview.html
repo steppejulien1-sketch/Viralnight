@@ -305,6 +305,23 @@
       .vue-amis[hidden], .vue-story[hidden] { display: flex; opacity: 0; visibility: hidden; pointer-events: none; }
       @media (prefers-reduced-motion: reduce) { .vue-amis, .vue-story { transition: none; } }
 
+      /* Au-dessus de tout, y compris la fiche club (.sheet, z-index 34) :
+         on l'ouvre depuis un bouton de la fiche, elle doit la recouvrir
+         entierement. Pas de padding ni de fond visible -- seule la
+         iframe compte, plein ecran sous le bouton de fermeture. */
+      .vue-google {
+        position: absolute; inset: 0; z-index: 50; background: #fff;
+        transition: opacity .3s ease, visibility .3s ease;
+      }
+      .vue-google[hidden] { display: block; opacity: 0; visibility: hidden; pointer-events: none; }
+      @media (prefers-reduced-motion: reduce) { .vue-google { transition: none; } }
+      .vue-google .va-close {
+        position: absolute; top: 16px; left: 16px; z-index: 2;
+        background: #fff; box-shadow: 0 4px 14px rgba(20,20,25,.18);
+      }
+      .vue-google .va-close svg { stroke: #6b6f76; }
+      .vg-iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
       .va-close {
         position: absolute; top: 16px; left: 16px; z-index: 2;
         width: 34px; height: 34px; border-radius: 50%; background: var(--s2); border: 0;
@@ -1397,6 +1414,10 @@
       .club-recompenses-lien {
         display: block; margin: 0 0 18px 27px; font-size: 13px; font-weight: 600; color: var(--ink2);
         text-decoration: none; cursor: pointer;
+        /* Reset des styles par defaut du navigateur : la classe habille
+           aussi bien un <a> (recompenses) qu'un <button> (fiche Google)
+           maintenant, meme registre de texte pour les deux. */
+        border: 0; background: none; padding: 0; font-family: inherit; text-align: left;
       }
       .club-recompenses-lien:hover, .club-recompenses-lien:focus-visible { color: var(--ink); }
 
@@ -1836,6 +1857,20 @@
         <div class="vue-story" id="vue-story" hidden>
           <h1 class="va-title">Poster ma story</h1>
           <div id="story-page-corps"></div>
+        </div>
+
+        <!-- ECRAN FICHE GOOGLE -- ouvre la fiche Google du club en
+             restant dans l'appli (demande de Julien : "je veux qu'on
+             puisse ouvrir la fiche google depuis mon app tout en
+             restant sur l'app", donc une iframe plutot qu'un lien qui
+             sort vers le navigateur). Pas de cle API : l'URL d'embed
+             Google Maps classique (?output=embed) fonctionne sans
+             authentification, contrairement a l'API JS Maps. -->
+        <div class="vue-google" id="vue-google" hidden>
+          <button type="button" class="va-close" id="vg-close" aria-label="Fermer la fiche Google">
+            <svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg>
+          </button>
+          <iframe id="vg-iframe" class="vg-iframe" title="Fiche Google du club" src="about:blank" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
 
         <div class="vue-amis" id="vue-amis" hidden>
@@ -3818,6 +3853,10 @@ function ouvrirClub(c, src, id) {
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
       (lienItineraire ? '<a class="club-adresse-lien" href="' + lienItineraire + '" target="_blank" rel="noopener noreferrer">Itinéraire</a>' : "") +
     "</div>" +
+    // Fiche Google du club, ouverte SANS quitter l'appli (demande de
+    // Julien) -- voir ouvrirFicheGoogle() : iframe plein ecran par
+    // dessus la fiche, pas un lien qui sort vers le navigateur.
+    '<button type="button" class="club-recompenses-lien" id="sh-voir-google">Voir la fiche Google →</button>' +
     '<a class="club-recompenses-lien" id="sh-voir-recompenses" href="#boutique">' +
       (RECOMPENSES.length || 4) + " récompenses à échanger ici →" +
     "</a>" +
@@ -3838,7 +3877,28 @@ function ouvrirClub(c, src, id) {
     activerVue("boutique");
   });
   $("#sh-poster-story")?.addEventListener("click", function () { ouvrirChoixReseau(c.nom); });
+  $("#sh-voir-google")?.addEventListener("click", function () { ouvrirFicheGoogle(c); });
 }
+
+// Ouvre la fiche Google du club (avis, photos, horaires) sans quitter
+// l'appli -- demande de Julien, qui trouvait le lien "Itineraire" (qui
+// sort vers l'appli Maps) insuffisant : il veut la vraie fiche Google
+// consultable depuis notre app. c.googleQuery (nom + adresse exacte,
+// pour eviter de tomber sur un homonyme) prime sur c.nom + c.adr si
+// fourni. Pas de cle API Google necessaire : l'URL d'embed classique
+// (?output=embed) est publique, contrairement a l'API JS Maps qui en
+// exige une.
+function ouvrirFicheGoogle(c) {
+  var requete = c.googleQuery || (c.nom + " " + (c.adr || ""));
+  VG_IFRAME.src = "https://www.google.com/maps?q=" + encodeURIComponent(requete) + "&output=embed";
+  VUE_GOOGLE.hidden = false;
+}
+function fermerFicheGoogle() {
+  VUE_GOOGLE.hidden = true;
+  VG_IFRAME.src = "about:blank";
+}
+var VUE_GOOGLE = $("#vue-google"), VG_IFRAME = $("#vg-iframe");
+$("#vg-close")?.addEventListener("click", fermerFicheGoogle);
 
 // Bareme reel du backend (fonction SQL story_points(), meme base que la
 // PWA clubbeur officielle -- voir 06-pwa-clubbeurs/src/lib/bareme.js,
@@ -4083,6 +4143,12 @@ function ouvrirChoixReseau(nomClub) {
   fermerAmis();
   fermerProfil();
   masquerCarteEtBoutique();
+  // Story en blanc, comme la Boutique (demande de Julien) : on reutilise
+  // le theme clair .screen.boutique-pro plutot que d'en creer un
+  // troisieme. masquerCarteEtBoutique() vient de le retirer -- on le
+  // repose ici, apres coup, sinon Amis/Profil (qui appellent la meme
+  // fonction) heriteraient aussi du blanc.
+  SCREEN.classList.add("boutique-pro");
   $("#story-page-corps").innerHTML = html;
   TAB_STORY.classList.add("on");
   TAB_STORY.setAttribute("aria-current", "page");
