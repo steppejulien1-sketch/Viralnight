@@ -516,16 +516,18 @@
       }
       .va-avatar-edit svg { width: 11px; height: 11px; stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .va-handle { margin: 0 0 18px; font-size: 15px; font-weight: 700; color: var(--ink); }
-      /* ---- Le QR traite comme un objet de marque ----
-         Avant : un carre blanc pose sur le fond, sans mise en scene.
-         Reference Snapchat : le code est l'objet central de l'ecran,
-         encadre, avec un halo et une animation de scan en boucle qui
-         dit "montre-moi a quelqu'un". */
+      /* ---- Le QR, pose simplement ----
+         Le halo rouge, le degrade rouge et le lisere rouge qui
+         entouraient le code sont retires (Julien : "la ligne rouge
+         bizarre, c'est moche, tu retires totalement"). Un code a
+         scanner n'a pas besoin d'etre mis en scene : ce qui compte est
+         qu'il se lise. Reste un cadre sombre neutre, assorti au reste
+         de l'appli, qui donne juste au blanc du module de quoi
+         respirer. */
       .va-qr-cadre {
         position: relative; width: 176px; margin: 0 auto 18px; padding: 14px;
         border-radius: var(--r4);
-        background: linear-gradient(160deg, rgba(255,47,69,.22), rgba(255,47,69,.06));
-        box-shadow: 0 0 34px rgba(255,47,69,.28), inset 0 0 0 1px rgba(255,47,69,.3);
+        background: var(--s1); border: 1px solid var(--line);
       }
       .va-qr {
         position: relative; width: 148px; height: 148px; margin: 0 auto; padding: 10px;
@@ -533,10 +535,8 @@
       }
       .va-qr svg { width: 100%; height: 100%; display: block; }
       /* La ligne de scan qui balayait le QR et ses equerres de visee
-         sont retirees (Julien : "retire le truc bizarre"). Un element
-         qui passe en boucle au-dessus d'un code a scanner fait gadget
-         et gene sa lecture. Le cadre et son halo restent : eux ne
-         bougent pas et posent le code comme un objet de marque. */
+         sont retirees elles aussi : un element qui passe en boucle
+         au-dessus d'un code a scanner fait gadget et gene sa lecture. */
 
       /* ---- Le gain, en typographie forte ----
          "Tu gagnes 150 points" etait noye dans un paragraphe gris de
@@ -925,59 +925,54 @@
       .pf-action:active { transform: scale(.97); }
 
       /* La carte de fidelite est la piece maitresse du profil : elle
-         portait juste un libelle et un nombre, ce qui la rendait moins
-         interessante que les tuiles au-dessus. Elle affiche desormais
-         le solde en grand et la progression vers le palier suivant --
-         c'est ce qui donne envie d'y revenir. */
+         affiche le solde en grand et la progression vers le palier
+         suivant -- c'est ce qui donne envie d'y revenir.
+
+         Elle a longtemps ete un aplat rouge degrade, double d'un voile
+         de rayures diagonales. Julien : "extremement moche". Le rouge
+         est une couleur de MARQUE, pas un fond de carte : etale sur
+         toute la surface il perd son poids et fait "boite de nuit
+         cheap", exactement ce que le produit evite. La carte reprend
+         donc l'habillage sombre du reste de l'appli (--s1 + --line),
+         et l'ambre -- deja la couleur des nombres de points ailleurs --
+         porte seul le chiffre et la barre. */
       .pf-fidelite {
         position: relative; overflow: hidden;
         width: 100%; display: block;
-        border: 0; border-radius: var(--r4); padding: 18px; margin: 0 0 22px; cursor: pointer;
-        text-align: left; font-family: inherit; color: #fff;
-        background: radial-gradient(130% 180% at 12% 0%, var(--accent), #6e0d1c 85%);
-        box-shadow: 0 16px 30px -16px rgba(255,47,69,.5);
-        transition: transform var(--tr-court), box-shadow var(--tr-court);
+        border: 1px solid var(--line); border-radius: var(--r4);
+        padding: 18px; margin: 0 0 22px; cursor: pointer;
+        text-align: left; font-family: inherit; color: var(--ink);
+        background: var(--s1);
+        transition: transform var(--tr-court), border-color var(--tr-court);
       }
-      .pf-fidelite:active { transform: scale(.985); }
-      /* Texture : un voile diagonal tres discret, pour que la carte ne
-         soit pas un aplat de couleur pur. */
-      .pf-fidelite::after {
-        content: ""; position: absolute; inset: 0; pointer-events: none;
-        background: repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 2px, transparent 2px 9px);
-      }
-      .pf-fidelite-ligne { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
-      .pf-fidelite-solde {
-        display: flex; align-items: baseline; gap: 6px; margin: 14px 0 0;
-        position: relative; z-index: 1;
-      }
+      .pf-fidelite:active { transform: scale(.985); border-color: var(--line2); }
+      .pf-fidelite-ligne { display: flex; align-items: center; gap: 14px; }
+      .pf-fidelite-solde { display: flex; align-items: baseline; gap: 6px; margin: 14px 0 0; }
       .pf-fidelite-solde strong {
         font-family: var(--mono); font-size: 30px; font-weight: 800;
-        letter-spacing: -.03em; line-height: 1; color: #fff;
+        letter-spacing: -.03em; line-height: 1; color: var(--ambre);
       }
-      .pf-fidelite-solde span { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.8); }
+      .pf-fidelite-solde span { font-size: 13px; font-weight: 700; color: var(--ink3); }
       .pf-fid-piste {
         display: block; height: 6px; margin: 12px 0 0; border-radius: var(--r-pill);
-        background: rgba(255,255,255,.22); overflow: hidden; position: relative; z-index: 1;
+        background: var(--s3); overflow: hidden;
       }
       .pf-fid-barre {
         display: block; height: 100%; width: 0; border-radius: var(--r-pill);
-        background: #fff; box-shadow: 0 0 10px rgba(255,255,255,.6);
+        background: var(--ambre);
         transition: width .6s cubic-bezier(.2,.7,.3,1);
       }
-      .pf-fid-txt {
-        margin: 9px 0 0; font-size: 12px; font-weight: 600;
-        color: rgba(255,255,255,.9); position: relative; z-index: 1;
-      }
+      .pf-fid-txt { margin: 9px 0 0; font-size: 12px; font-weight: 600; color: var(--ink3); }
       @media (prefers-reduced-motion: reduce) { .pf-fid-barre { transition: none; } }
       .pf-fidelite-ico {
         flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px;
-        background: rgba(255,255,255,.16); display: grid; place-items: center;
+        background: var(--s2); display: grid; place-items: center;
       }
-      .pf-fidelite-ico svg { width: 20px; height: 20px; fill: #fff; }
+      .pf-fidelite-ico svg { width: 20px; height: 20px; fill: var(--ambre); }
       .pf-fidelite-txt { flex: 1; min-width: 0; }
       .pf-fidelite-txt strong { display: block; font-size: 15.5px; font-weight: 800; }
-      .pf-fidelite-txt span { display: block; font-size: 12.5px; opacity: .85; margin-top: 2px; font-family: var(--mono); }
-      .pf-fidelite-chev { flex: 0 0 auto; width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-fidelite-txt span { display: block; font-size: 12.5px; color: var(--ink3); margin-top: 2px; }
+      .pf-fidelite-chev { flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
       .pf-liste { margin: 0 0 8px; }
       .pf-item {
@@ -2874,14 +2869,14 @@
           <h1 class="va-title">Ma fidélité</h1>
           <div class="solde-ligne" style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
             <span class="pf-fidelite-ico" style="width:40px;height:40px;border-radius:50%;background:var(--s2);display:grid;place-items:center" aria-hidden="true">
-              <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+              <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--ambre);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
             </span>
-            <strong id="hs-solde" style="font-size:22px;font-weight:800">0 pts</strong>
+            <strong id="hs-solde" style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--ambre)">0 pts</strong>
           </div>
           <p class="rg-section-titre" style="text-align:left">Historique</p>
           <div id="hs-liste" class="hist-carte"></div>
           <p class="rg-carte-desc" id="hs-vide" style="text-align:center;margin-top:16px;border:0;padding:0">
-            Aucun mouvement de points pour l'instant.
+            Poste ta première story pour gagner des points.
           </p>
         </div>
 
@@ -6194,11 +6189,11 @@ TAB_PROFIL?.addEventListener("click", async function () {
       var pctFid = cibleFid.cout > 0 ? Math.min(100, Math.round((ETAT.solde / cibleFid.cout) * 100)) : 0;
       barreFid.style.width = pctFid + "%";
       txtFid.textContent = ETAT.solde <= 0
-        ? "Poste ta première story pour commencer à cumuler"
+        ? "Poste ta première story pour démarrer"
         : nb(cibleFid.cout - ETAT.solde) + " pts avant " + cibleFid.nom;
     } else {
       barreFid.style.width = "100%";
-      txtFid.textContent = "Tu peux échanger une récompense dès maintenant";
+      txtFid.textContent = "Une récompense t'attend";
     }
   }
 
