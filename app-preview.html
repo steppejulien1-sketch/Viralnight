@@ -1451,287 +1451,54 @@
          l'ancien header sticky, pour ne pas coller au bord de l'ecran. */
       .sec-premiere { padding-top: 22px; }
 
-      /* ---- Choix du club, tout en haut de la boutique ----
-         La boutique servait un catalogue unique sans jamais dire a qui
-         il appartenait : le titre annoncait un club, les points un
-         autre. Le clubbeur frequente plusieurs endroits, le choix doit
-         donc etre visible et se changer en un geste, avant meme la
-         cagnotte -- c'est lui qui donne son sens a tout le reste de
-         l'ecran. Segmente plutot que menu deroulant : a deux clubs, un
-         menu cache l'information pour rien. */
-      .choix-club {
-        display: flex; gap: 4px; margin-bottom: var(--e3);
-        padding: 4px; border-radius: 14px;
-        background: var(--s2); border: 1px solid var(--line);
-      }
-      .choix-club button {
-        flex: 1; min-width: 0; padding: 9px 10px;
-        border: 0; border-radius: 10px; background: transparent;
-        font: inherit; font-size: 13px; font-weight: 650; letter-spacing: -.01em;
-        color: var(--ink3); cursor: pointer;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        transition: background .18s ease, color .18s ease, box-shadow .18s ease;
-      }
-      .choix-club button:hover { color: var(--ink2); }
-      .choix-club button[aria-pressed="true"] {
-        background: var(--bg); color: var(--ink);
-        box-shadow: 0 1px 3px rgba(20,20,25,.14);
-      }
-      .choix-club button:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
-      @media (prefers-reduced-motion: reduce) { .choix-club button { transition: none; } }
+      /* ---- Choisir son club AVANT de voir la boutique ----
+         Le segmente en haut de l'ecran faisait basculer le catalogue au
+         moindre tap : on arrivait sur la boutique d'un club sans jamais
+         l'avoir choisi, et un doigt qui traine changeait de club sans
+         qu'on comprenne. Julien : "il ne faut pas qu'ils voient
+         directement la boutique, il faut qu'ils choisissent dans une
+         petite liste".
 
-      /* Quatrieme version du solde (20 aout, nuit) : les trois
-         versions precedentes (chiffre nu, puis grosse carte en
-         degrade avec jeton) ont toutes ete jugees ratees — la
-         derniere "gache tout", trop presente a cote d'un reste
-         d'ecran tout en cartes blanches sobres. Copie fidele cette
-         fois, pas une synthese : chez Quick (MyQuick, verifie en
-         direct), le solde n'est PAS une carte a part — juste un
-         petit badge rond + chiffre, pose simplement dans l'entete,
-         sans fond, sans bordure, sans ombre. Meme traitement ici :
-         une ligne, pas une carte. Le corail reste le seul a porter
-         la couleur (regle du projet), mais en beaucoup plus discret. */
-      /* ---- Bloc de solde ----
-         Avant : une pastille ronde avec un eclair et un nombre a 22px,
-         perdue en haut de l'ecran. Julien : "je n'aime pas trop le truc
-         avec l'eclair". C'est pourtant l'information qui commande tout
-         l'ecran -- combien j'ai, et ce que ca me permet d'atteindre.
-         Reference Starbucks Rewards : le solde se lit d'un coup d'oeil,
-         la progression vers le palier suivant est juste dessous. */
-      .solde-carte {
-        position: relative; overflow: hidden;
-        padding: 18px 18px 16px; border-radius: var(--r4);
-        border: 1px solid rgba(255,47,69,.22);
-        background:
-          radial-gradient(120% 140% at 100% 0%, rgba(255,47,69,.16), transparent 60%),
-          linear-gradient(160deg, rgba(255,47,69,.09), rgba(255,47,69,.02));
+         L'ecran commence donc par la liste. Une fois le club choisi, il
+         reste choisi, et on en change par un lien explicite. */
+      .bq-choix { padding: 26px 0 0; }
+      .bq-choix h2 {
+        margin: 0 0 4px; font-size: 21px; font-weight: 800; letter-spacing: -.03em; color: var(--ink);
       }
-      .solde-label {
-        margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .09em;
-        text-transform: uppercase; color: var(--ink3);
-      }
-      .solde-chiffre { margin: 4px 0 0; display: flex; align-items: baseline; gap: 7px; }
-      /* Le nombre porte tout le poids de l'ecran : 42px, chiffres a
-         chasse fixe pour qu'il ne saute pas quand le solde change. */
-      .carte-solde-num {
-        font-family: var(--mono); font-size: 42px; font-weight: 800;
-        letter-spacing: -.035em; line-height: 1; color: var(--ink);
-        font-variant-numeric: tabular-nums;
-      }
-      .solde-chiffre span {
-        font-family: var(--sans); font-size: 15px; font-weight: 750;
-        color: var(--ink3); letter-spacing: -.01em;
-      }
-      /* ---- Progression vers la prochaine recompense atteignable ---- */
-      .solde-prog { margin-top: 14px; }
-      .solde-prog-piste {
-        display: block; height: 7px; border-radius: var(--r-pill);
-        background: rgba(128,128,140,.22); overflow: hidden;
-      }
-      .solde-prog-barre {
-        display: block; height: 100%; width: 0; border-radius: var(--r-pill);
-        background: linear-gradient(90deg, var(--marque-2), var(--marque));
-        box-shadow: 0 0 12px rgba(255,47,69,.5);
-        transition: width .6s cubic-bezier(.2,.7,.3,1);
-      }
-      .solde-prog-txt {
-        margin: 9px 0 0; font-size: 12.5px; font-weight: 550;
-        color: var(--ink3); line-height: 1.35;
-      }
-      .solde-prog-txt strong { color: var(--ink2); font-weight: 750; }
-      /* Etat "tu peux echanger maintenant" : barre pleine, et le
-         message change de registre au lieu de disparaitre. */
-      .solde-prog.pleine .solde-prog-barre { background: linear-gradient(90deg, #35d07f, #21a86a); box-shadow: 0 0 12px rgba(53,208,127,.5); }
-      .solde-prog.pleine .solde-prog-txt strong { color: #1c9a5f; }
-      @media (prefers-reduced-motion: reduce) { .solde-prog-barre { transition: none; } }
-      @keyframes majSolde { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
-      .carte-solde-num.maj { display: inline-block; animation: majSolde .45s cubic-bezier(.2,.8,.3,1); transform-origin: left bottom; }
-
-      .jeton { display: block; }
-
-      /* ---------------- Grille de cartes (catalogue) ---------------- */
-
-      /* Le catalogue quitte la liste "tracklist" pour une grille de
-         cartes — c'est la structure que demandait Julien en reprenant
-         le prompt v2 (Airbnb/Spotify/Figma) : icone posee sur un aplat
-         de couleur par famille, prix en gros, bouton d'echange en
-         pleine largeur. Utilisee uniquement par la boutique
-         (.screen.boutique-pro) ; la fiche club de l'ecran carte ne
-         s'en sert pas. */
-      /* Carte "photo en haut, infos en dessous" — modele repris de la
-         reference que Julien a montree (Pad'up) : vraie photo pleine
-         largeur, prix en pilule blanche posee sur la photo (meme role
-         que la pilule note "5.0 (2)" de la reference), bouton
-         d'echange en pilule pleine largeur sous le texte. Remplace
-         l'ancienne carte a pastille d'icone dans le coin. */
-      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
-
-      /* ---- Carte de recompense ----
-         Photo en haut, puis le texte SOUS la photo. Aucun texte, aucun
-         badge, aucun degrade sur l'image : elle se voit en entier. */
-      .carte-reco {
-        position: relative; display: flex; flex-direction: column; text-align: left;
-        width: 100%; background: var(--s1); border: 1px solid var(--line);
-        border-radius: var(--r4); overflow: hidden; padding: 0; cursor: pointer;
+      .bq-choix p { margin: 0 0 18px; font-size: 13px; color: var(--ink2); }
+      .bq-liste { display: grid; gap: 9px; }
+      .bq-club {
+        display: flex; align-items: center; gap: 12px; width: 100%;
+        padding: 14px 15px; border-radius: 16px; text-align: left;
+        background: var(--s1); border: 1px solid var(--line); cursor: pointer;
         font-family: inherit; color: var(--ink);
-        box-shadow: var(--ombre-1);
-        transition: transform var(--tr-court), box-shadow var(--tr-court), border-color var(--tr-court);
+        transition: transform var(--tr-court), border-color var(--tr-court);
       }
-      .carte-reco:hover { transform: translateY(-3px); box-shadow: var(--ombre-2); border-color: var(--line2); }
-      .carte-reco:active { transform: translateY(0) scale(.98); }
-      .carte-reco:focus-visible { outline: 3px solid var(--bouton); outline-offset: 3px; }
+      .bq-club:hover { border-color: var(--line2); }
+      .bq-club:active { transform: scale(.99); }
+      .bq-club:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
+      .bq-pastille {
+        flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+        background: var(--c, var(--accent)); color: #fff;
+        display: grid; place-items: center; font-size: 16px; font-weight: 800;
+      }
+      .bq-club-txt { flex: 1; min-width: 0; }
+      .bq-club-nom { display: block; font-size: 14.5px; font-weight: 750; letter-spacing: -.01em; }
+      .bq-club-sous { display: block; font-size: 11.5px; color: var(--ink2); margin-top: 2px; }
+      .bq-club svg { flex: 0 0 auto; width: 18px; height: 18px; stroke: var(--ink3); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
-      /* Carre : a largeur de grille egale, l'image gagne ~35% de hauteur
-         par rapport au 4/3 d'origine. C'est le "images trop petites". */
-      .carte-reco .photo {
-        position: relative; width: 100%; aspect-ratio: 1 / 1;
-        background: var(--tinte, #f0f0f2); overflow: hidden;
+      /* Le club courant, rappele en haut de la boutique avec le moyen
+         d'en changer -- sans ca, on ne sait plus quel catalogue on lit. */
+      .bq-actuel {
+        display: flex; align-items: center; gap: 8px;
+        margin-bottom: var(--e3); font-size: 12.5px; color: var(--ink2);
       }
-      .carte-reco .photo img {
-        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        transition: transform .5s cubic-bezier(.2,.7,.3,1);
+      .bq-actuel strong { color: var(--ink); font-weight: 750; }
+      .bq-actuel button {
+        margin-left: auto; border: 0; background: none; padding: 0; cursor: pointer;
+        font: inherit; font-size: 12.5px; font-weight: 700; color: var(--accent);
+        text-decoration: underline; text-underline-offset: 3px;
       }
-      .carte-reco:hover .photo img { transform: scale(1.04); }
-      .carte-reco .photo svg {
-        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-        width: 54%; height: 54%;
-      }
-
-      /* ---- Tout le texte vit ici, sous la photo ---- */
-      .carte-reco .corps {
-        display: flex; flex-direction: column; flex: 1;
-        padding: 12px 13px 14px;
-      }
-      .carte-reco strong {
-        display: block; font-size: 14.5px; font-weight: 750; letter-spacing: -.02em;
-        line-height: 1.25; color: var(--ink);
-      }
-      /* Le prix devient la deuxieme information la plus lisible de la
-         carte, juste sous le nom -- il etait sur la photo avant. */
-      .carte-reco .prix {
-        display: block; margin-top: 5px;
-        font-family: var(--mono); font-size: 15px; font-weight: 800;
-        letter-spacing: -.02em; color: var(--accent);
-      }
-      .carte-reco .prix span {
-        font-family: var(--sans); font-size: 10.5px; font-weight: 700;
-        color: var(--ink3); margin-left: 3px;
-      }
-
-      /* ---- Etat, en bas de carte ---- */
-      .carte-reco .jauge {
-        display: block; height: 4px; margin: 11px 0 0;
-        border-radius: var(--r-pill); background: var(--s3); overflow: hidden;
-      }
-      .carte-reco .jauge-barre {
-        display: block; height: 100%; border-radius: var(--r-pill);
-        background: linear-gradient(90deg, var(--marque-2), var(--marque));
-        transition: width .5s cubic-bezier(.2,.7,.3,1);
-      }
-      .carte-reco .jauge-txt {
-        display: block; margin-top: 6px; font-size: 11px; font-weight: 650;
-        color: var(--ink3); letter-spacing: -.01em;
-      }
-      .carte-reco .dispo-txt {
-        display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
-        margin-top: 10px; padding: 5px 10px; border-radius: var(--r-pill);
-        background: rgba(53,208,127,.16); color: #1c9a5f;
-        font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em;
-      }
-      .carte-reco.dispo { border-color: rgba(53,208,127,.5); }
-
-      /* ---- Rarete : SOUS la photo elle aussi ----
-         Elle etait posee sur l'image ; c'est encore du texte sur une
-         photo. Elle vit maintenant dans le corps, a cote du prix, et
-         garde sa couleur d'urgence pour rester reperable. */
-      .carte-reco .ligne-etat { display: flex; align-items: center; gap: 7px; margin-top: 5px; flex-wrap: wrap; }
-      .carte-reco .badge-rarete {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: 3px 8px; border-radius: var(--r-pill);
-        background: var(--urgence-fond); color: var(--urgence-texte);
-        font-size: 10px; font-weight: 800; letter-spacing: .01em;
-        text-transform: uppercase; white-space: nowrap;
-      }
-      .carte-reco .badge-rarete::before {
-        content: ""; width: 4px; height: 4px; border-radius: 50%;
-        background: currentColor; animation: rarete-pouls 1.8s ease-out infinite;
-      }
-      @keyframes rarete-pouls {
-        0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.7); }
-        70%  { box-shadow: 0 0 0 5px rgba(255,255,255,0); }
-        100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
-      }
-      .carte-reco .badge-epuise {
-        display: inline-flex; padding: 3px 8px; border-radius: var(--r-pill);
-        background: var(--s3); color: var(--ink3);
-        font-size: 10px; font-weight: 800; text-transform: uppercase;
-      }
-      .carte-reco.epuise { pointer-events: none; opacity: .62; }
-      .carte-reco.epuise .photo img { filter: saturate(.15) contrast(.98); }
-
-      /* Arrivee en cascade, retard pose en inline par le JS (--i). */
-      @keyframes reco-entre {
-        from { opacity: 0; transform: translateY(12px); }
-        to   { opacity: 1; transform: none; }
-      }
-      .carte-reco { animation: reco-entre .4s cubic-bezier(.2,.7,.3,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
-
-      @media (prefers-reduced-motion: reduce) {
-        .carte-reco, .carte-reco .badge-rarete::before { animation: none; }
-        .carte-reco .jauge-barre, .carte-reco .photo img { transition: none; }
-      }
-
-      /* ---------------- Offre du soir : banniere photo pleine largeur ---------------- */
-
-      /* L'offre du soir vivait dans la meme ligne plate que l'ancien
-         catalogue "tracklist" — depassee des que le catalogue est
-         devenu une grille de cartes a cote, jugee "pas fou" par
-         Julien. Meme famille que .carte-reco desormais : photo en
-         haut (texte blanc sur degrade sombre essaye puis abandonne —
-         la reference Pad'up garde ses photos "propres", texte en
-         dessous sur fond blanc), pilule "Offert" posee sur la photo
-         comme la pilule note "5.0 (2)" de la reference, contenu en
-         dessous avec bouton pilule noire pleine largeur. */
-      .offre-hero {
-        display: flex; flex-direction: column; width: 100%;
-        border: 1px solid var(--line); border-radius: 24px; overflow: hidden; padding: 0; cursor: pointer;
-        font-family: inherit; color: inherit; background: var(--s1);
-        box-shadow: 0 16px 32px -20px rgba(20,20,25,.3), 0 2px 5px rgba(20,20,25,.04);
-        transition: transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s ease;
-      }
-      .offre-hero:hover { box-shadow: 0 22px 40px -18px rgba(20,20,25,.3); transform: translateY(-3px); }
-      .offre-hero:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
-      .offre-hero .photo { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; }
-      .offre-hero .photo img {
-        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-      }
-      /* Plus de voile sombre en bas : il servait a decoller le badge
-         "OFFERT" d'une photo de bar sombre. Sur l'illustration en fond
-         clair, il ne laisse qu'une salissure grise -- et le badge, une
-         pastille blanche ombree, se lit tres bien sans lui. */
-      .offre-hero .badge-offert {
-        position: absolute; left: 12px; bottom: 12px;
-        font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
-        color: var(--bouton); background: rgba(255,255,255,.95); border-radius: 999px; padding: 6px 13px;
-        box-shadow: 0 2px 6px rgba(20,20,25,.15);
-      }
-      .offre-hero .corps { padding: 17px 18px 18px; text-align: left; }
-      .offre-hero strong {
-        display: block; font-size: 21px; font-weight: 800; letter-spacing: -.025em;
-        color: var(--ink); margin-bottom: 4px;
-      }
-      .offre-hero p { margin: 0 0 14px; font-size: 13.5px; font-weight: 550; line-height: 1.4; color: var(--ink2); }
-      .offre-hero del { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink3); }
-      .offre-hero .cta-visuelle {
-        display: block; text-align: center; border-radius: 999px;
-        background: var(--bouton); color: #fff; font-size: 15px; font-weight: 700;
-        letter-spacing: -.01em; padding: 13px;
-        box-shadow: 0 10px 20px -8px rgba(20,20,25,.4);
-      }
-      .offre-hero.epuise { opacity: .55; pointer-events: none; }
-      .offre-hero.epuise .photo img { filter: grayscale(.6); }
-      .offre-hero.epuise .badge-offert { background: var(--s3); color: var(--ink3); }
-      .offre-hero.epuise .cta-visuelle { background: var(--s3); color: var(--ink3); }
 
       /* ---- "Ce soir au ..." traite comme LE moment fort de l'ecran ----
          C'etait une section comme les autres, avec son compte a rebours
@@ -3209,8 +2976,16 @@
         <div class="vue vue-boutique" id="vue-boutique">
           <div class="app" id="app">
 
+            <!-- Ecran de choix : affiche tant qu'aucun club n'est
+                 selectionne, il masque tout le reste de la boutique. -->
+            <div class="bq-choix" id="bq-choix">
+              <h2>Où es-tu ce soir ?</h2>
+              <p>Choisis ton club pour voir ses récompenses.</p>
+              <div class="bq-liste" id="bq-liste"></div>
+            </div>
+
             <section class="sec sec-premiere">
-              <div class="choix-club" id="choix-club" role="group" aria-label="Choisir le club"></div>
+              <div class="bq-actuel" id="bq-actuel" hidden></div>
               <div class="solde-carte">
                 <p class="solde-label">Mes points</p>
                 <p class="solde-chiffre">
@@ -5417,6 +5192,12 @@ function ouvrirChoixReseau(nomClub) {
     var etapes = [
       { n: "1", t: "Ouvre " + (kindId === "tiktok" ? "TikTok" : "Instagram") },
       { n: "2", t: "Poste " + k.verbe + " en mentionnant " + cible },
+      // Troisieme etape demandee par Julien. Elle n'est pas decorative :
+      // les points ne sont pas disponibles tout de suite (unlocks_at,
+      // points_lock_hours du club), et une story supprimee dans la nuit
+      // n'est jamais payee. Le dire ici evite le message "j'ai poste,
+      // je n'ai rien recu" une heure plus tard.
+      { n: "3", t: "Tu reçois tes points 24 h après" },
     ];
     return (
       '<ol class="ps-steps">' +
@@ -7317,7 +7098,8 @@ var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
    ATTENTION : ne pas confondre avec un "code public d'etablissement" —
    celui-la appartient a /api/rewards-public, qui lit la base des
    GERANTS (mrukkexghpcqtwvwwcbe) : un catalogue sans rapport. */
-var CLUB_BOUTIQUE = "trebuchet";
+// Aucun club choisi au demarrage : la boutique commence par la liste.
+var CLUB_BOUTIQUE = null;
 
 // Catalogue de secours tant que les deux clubs n'existent pas dans la
 // table clubs : celui de Mirage, le seul peuple aujourd'hui. Sans lui la
@@ -7345,7 +7127,7 @@ async function resoudreIdsClubs() {
 }
 
 function idClubBoutique() {
-  return IDS_CLUBS[CLUB_BOUTIQUE] || CLUB_ID_DEMO;
+  return (CLUB_BOUTIQUE && IDS_CLUBS[CLUB_BOUTIQUE]) || CLUB_ID_DEMO;
 }
 
 /* "Ce soir au Le Trebuchet" : les noms de clubs portent deja leur
@@ -7365,27 +7147,59 @@ function auClub(nom) {
    plutot que de manipuler les classes une par une : deux boutons, le
    cout est nul et l'etat affiche ne peut pas diverger de CLUB_BOUTIQUE. */
 function rendreChoixClub() {
-  var hote = document.getElementById("choix-club");
-  if (!hote) return;
-  hote.innerHTML = Object.keys(CLUBS).map(function (k) {
-    var actif = k === CLUB_BOUTIQUE;
-    return '<button type="button" data-club="' + k + '" aria-pressed="' + actif + '">' +
-             CLUBS[k].nom +
-           "</button>";
-  }).join("");
+  var choix = document.getElementById("bq-choix");
+  var actuel = document.getElementById("bq-actuel");
+  var sections = document.querySelectorAll("#vue-boutique .sec");
+  if (!choix || !actuel) return;
+
+  var aucun = !CLUB_BOUTIQUE;
+  choix.hidden = !aucun;
+  actuel.hidden = aucun;
+  sections.forEach(function (sec) { sec.hidden = aucun; });
+
+  if (aucun) {
+    document.getElementById("bq-liste").innerHTML = Object.keys(CLUBS).map(function (k) {
+      var c = CLUBS[k];
+      return '<button type="button" class="bq-club" data-club="' + k + '">' +
+        '<span class="bq-pastille" style="--c:' + escapeHtmlSupport(c.c || "") + '">' +
+          escapeHtmlSupport((c.nom || "?").charAt(0)) +
+        "</span>" +
+        '<span class="bq-club-txt">' +
+          '<span class="bq-club-nom">' + escapeHtmlSupport(c.nom) + "</span>" +
+          '<span class="bq-club-sous">' + escapeHtmlSupport(c.adr || "") + "</span>" +
+        "</span>" +
+        '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>' +
+      "</button>";
+    }).join("");
+    return;
+  }
+
+  actuel.innerHTML = "<span>Tu es chez <strong>" + escapeHtmlSupport(CLUBS[CLUB_BOUTIQUE].nom) + "</strong></span>" +
+    '<button type="button" id="bq-changer">Changer</button>';
+
   var titre = document.getElementById("titre-soir");
   if (titre) titre.textContent = "Ce soir " + auClub(CLUBS[CLUB_BOUTIQUE].nom);
 }
 
 function brancherChoixClub() {
-  var hote = document.getElementById("choix-club");
-  if (!hote) return;
-  hote.addEventListener("click", function (ev) {
-    var bouton = ev.target.closest("button[data-club]");
-    if (!bouton || bouton.dataset.club === CLUB_BOUTIQUE) return;
-    CLUB_BOUTIQUE = bouton.dataset.club;
-    rendreChoixClub();
-    chargerRecompenses();
+  // Delegue sur la vue entiere : la liste et le lien "Changer" sont
+  // reecrits a chaque rendu, un gestionnaire pose sur eux serait perdu.
+  var vue = document.getElementById("vue-boutique");
+  if (!vue) return;
+  vue.addEventListener("click", function (ev) {
+    var club = ev.target.closest("[data-club]");
+    if (club) {
+      CLUB_BOUTIQUE = club.dataset.club;
+      rendreChoixClub();
+      chargerRecompenses();
+      return;
+    }
+    if (ev.target.closest("#bq-changer")) {
+      // On revient a la liste sans effacer le catalogue charge : si le
+      // meme club est rechoisi, rien ne clignote.
+      CLUB_BOUTIQUE = null;
+      rendreChoixClub();
+    }
   });
 }
 
@@ -7537,8 +7351,18 @@ async function chargerRecompenses() {
       .eq("active", true)
       .order("cost_points", { ascending: true });
     if (res.error) throw new Error(res.error.message);
-    var prefixe = prefixeClub(CLUBS[CLUB_BOUTIQUE].nom);
+    var prefixe = prefixeClub(CLUB_BOUTIQUE ? CLUBS[CLUB_BOUTIQUE].nom : "");
     RECOMPENSES = (res.data || []).map(function (r, i) { return completerRecompense(r, i, prefixe); });
+
+    /* L'offre du soir portait un identifiant invente ("o-shot"), pas un
+       UUID de la table rewards : redeem_reward ne trouvait rien et
+       "Recuperer mon bon" echouait a tous les coups, avec un message
+       generique. On la raccroche a la vraie recompense a 0 point du
+       catalogue quand le club en a une ; sinon on l'assume comme une
+       demo, et le bouton le dit au lieu de faire semblant. */
+    var gratuite = (res.data || []).filter(function (r) { return Number(r.cost_points) === 0; })[0];
+    OFFRE.id = gratuite ? gratuite.id : "o-shot";
+    OFFRE.reelle = !!gratuite;
   } catch (erreur) {
     console.error("[boutique] catalogue indisponible:", erreur.message);
     RECOMPENSES = [];
@@ -7824,6 +7648,11 @@ function ouvrirRecompense(item, src) {
     // n'a plus besoin de le repeter, seulement d'expliquer comment gagner
     // les points — sinon le meme chiffre s'affiche deux fois cote a cote.
     note = "Une story à 1 000 vues rapporte 80 pts.";
+  } else if (item.cout === 0 && item === OFFRE && !OFFRE.reelle) {
+    // Rien a echanger en base : un bouton actif qui echoue est pire
+    // qu'un bouton eteint qui explique.
+    cta = '<button class="sheet-cta" type="button" disabled>Bientôt disponible</button>';
+    note = "Ce club n'a pas encore activé son offre du soir.";
   } else if (item.cout === 0) {
     cta = '<button class="sheet-cta" id="sh-cta" type="button">Récupérer mon bon</button>';
     note = "Offert ce soir, ton solde ne bouge pas.";
