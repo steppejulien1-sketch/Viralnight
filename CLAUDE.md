@@ -94,6 +94,7 @@ lib/auth/         requireEstablishment : le garde-fou de securite des routes API
 lib/verification/ controle des contenus soumis par les clients
 lib/tracking/     QR codes et endpoints publics
 lib/ai/           prompts et clients OpenAI
+lib/points/       aussi : mentionAutomatique.js, le pont entre les deux bases
 lib/scheduling/   dates de soiree (une soiree du samedi soir finit le dimanche matin)
 ```
 
@@ -170,7 +171,8 @@ npm run db:test    # verifie les migrations sans les appliquer
   (`SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_PLACES_API_KEY`,
   `NOTIFICATION_EMAIL`, `NOTIFICATION_FROM`, `SITE_URL`, `INSTAGRAM_APP_ID`,
   `INSTAGRAM_APP_SECRET`, `INSTAGRAM_REDIRECT_URI`, `INSTAGRAM_STATE_SECRET`,
-  `INSTAGRAM_WEBHOOK_VERIFY_TOKEN`) ne vivent que sur Vercel. En local, les routes qui en
+  `INSTAGRAM_WEBHOOK_VERIFY_TOKEN`, `SUPABASE_CLUBBEUR_URL`,
+  `SUPABASE_CLUBBEUR_SERVICE_ROLE_KEY`, `INSTAGRAM_FORFAIT_STORY`) ne vivent que sur Vercel. En local, les routes qui en
   dependent repondent `Configuration serveur incomplete`. C'est normal.
 - **La connexion Instagram (`api/instagram.js`, `lib/instagram/`) exige une app Meta for
   Developers** (produit "Facebook Login for Business") cote Julien : le compte Instagram du

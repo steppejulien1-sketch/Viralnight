@@ -17,6 +17,7 @@
 
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 import { getSupabaseAdmin } from "../lib/db/supabaseAdmin.js";
+import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { signerState, verifierState } from "../lib/instagram/state.js";
 import {
   urlAutorisation,
@@ -25,10 +26,12 @@ import {
   trouverCompteInstagram,
   inscrireWebhookMentions,
   recupererAbonnes,
+  lireAuteurMention,
   MissingConfigError,
   InstagramApiError,
 } from "../lib/instagram/oauth.js";
 import { verifierChallengeWebhook, extraireMentions } from "../lib/instagram/webhook.js";
+import { deciderCreditMention, normaliserHandle } from "../lib/points/mentionAutomatique.js";
 
 function json(response, body, status = 200) {
   response.statusCode = status;
@@ -299,11 +302,125 @@ async function actionWebhook(request, response) {
       // l'index unique (establishment_id, media_id) sert exactement a ca.
       await supabase.from("instagram_mentions").upsert(lignes, { onConflict: "establishment_id,media_id", ignoreDuplicates: true });
     }
+
+    // Le pont vers la base clubbeur. Volontairement APRES l'enregistrement
+    // de la mention : si le credit automatique echoue (base clubbeur non
+    // configuree, App Review pas encore passee), la mention reste comptee
+    // comme avant. Aucune regression sur ce qui marche deja.
+    await crediterMentions(mentions, etablissementParIgUserId, supabase);
   } catch (error) {
     console.error("[instagram:webhook] enregistrement echoue:", error.message);
   }
 
   return texte(response, "EVENT_RECEIVED");
+}
+
+/* Transforme les mentions recues en points chez les clubbeurs.
+ *
+ * Quatre informations doivent se rejoindre, et elles vivent a quatre
+ * endroits : l'etablissement (base gerants), le club correspondant (base
+ * clubbeur, colonne clubs.establishment_id ajoutee par
+ * supabase/clubbeur_pont_points_automatiques.sql), l'auteur de la
+ * publication (Graph API, absent de l'evenement), et son compte clubbeur
+ * (users.handle -- exactement le pseudo saisi dans la page "Poster ma
+ * story"). Il manque un maillon, il n'y a pas de points : la raison est
+ * journalisee, jamais silencieuse.
+ *
+ * La DECISION vit dans lib/points/mentionAutomatique.js, testable en Node.
+ * Ici, on ne fait que rassembler les faits et appliquer le verdict. */
+async function crediterMentions(mentions, etablissementParIgUserId, supabaseGerants) {
+  let clubbeur;
+  try {
+    clubbeur = getSupabaseClubbeurAdmin();
+  } catch (error) {
+    console.error("[instagram:credit] base clubbeur indisponible:", error.message);
+    return;
+  }
+
+  const forfait = Number(process.env.INSTAGRAM_FORFAIT_STORY) || undefined;
+
+  for (const mention of mentions) {
+    const etablissementId = etablissementParIgUserId.get(mention.igUserId) || null;
+
+    try {
+      // 1. L'etablissement gerant -> le club clubbeur.
+      let clubId = null;
+      let jeton = null;
+      if (etablissementId) {
+        const { data: club } = await clubbeur
+          .from("clubs")
+          .select("id")
+          .eq("establishment_id", etablissementId)
+          .maybeSingle();
+        clubId = club?.id || null;
+
+        const { data: compte } = await supabaseGerants
+          .from("establishment_instagram_accounts")
+          .select("page_access_token")
+          .eq("establishment_id", etablissementId)
+          .maybeSingle();
+        jeton = compte?.page_access_token || null;
+      }
+
+      // 2. Qui a publie. Seul appel reseau du lot, et seul moyen d'obtenir
+      //    l'auteur : l'evenement ne le porte pas.
+      const auteur = jeton ? await lireAuteurMention(mention.mediaId, jeton) : null;
+      const handle = normaliserHandle(auteur?.username);
+
+      // 3. Le clubbeur derriere ce pseudo. ilike : Instagram renvoie le
+      //    username dans sa casse d'origine, le clubbeur a tape la sienne.
+      let clubbeurId = null;
+      if (handle) {
+        const { data: utilisateur } = await clubbeur
+          .from("users")
+          .select("id")
+          .ilike("handle", handle)
+          .maybeSingle();
+        clubbeurId = utilisateur?.id || null;
+      }
+
+      // 4. Deja credite ? La table tranche, et la cle primaire garantit de
+      //    toute facon l'idempotence cote base.
+      let dejaCredite = false;
+      if (clubId) {
+        const { data: trace } = await clubbeur
+          .from("instagram_mention_credits")
+          .select("media_id")
+          .eq("club_id", clubId)
+          .eq("media_id", mention.mediaId)
+          .maybeSingle();
+        dejaCredite = !!trace;
+      }
+
+      const decision = deciderCreditMention({
+        mention: { ...mention, publieeA: auteur?.publieeA },
+        etablissementId,
+        clubId,
+        clubbeurId,
+        dejaCredite,
+        forfaitStory: forfait,
+      });
+
+      if (!decision.crediter) {
+        console.log(`[instagram:credit] ${mention.mediaId} non credite: ${decision.raison}`);
+        continue;
+      }
+
+      const { data: grant, error } = await clubbeur.rpc("crediter_mention_instagram", {
+        p_club: decision.clubId,
+        p_user: decision.clubbeurId,
+        p_media: decision.mediaId,
+        p_points: decision.points,
+      });
+
+      if (error) console.error(`[instagram:credit] ${mention.mediaId} echec:`, error.message);
+      else if (grant) console.log(`[instagram:credit] ${mention.mediaId} -> ${decision.points} pts`);
+      else console.log(`[instagram:credit] ${mention.mediaId} deja credite (course)`);
+    } catch (error) {
+      // Une mention qui echoue ne doit pas emporter les suivantes.
+      console.error(`[instagram:credit] ${mention.mediaId} erreur:`, error.message);
+    }
+  }
 }
 
 // ---------------- action=collecter-abonnes (GET, appele par le cron Vercel) ----------------
