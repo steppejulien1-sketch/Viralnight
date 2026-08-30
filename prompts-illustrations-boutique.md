@@ -4,9 +4,19 @@
 conversation ChatGPT**, dans l'ordre : la 1re fixe le style, les 7 suivantes
 s'y accrochent.
 
-Format demande : carre 1024x1024, PNG. Pas de fond transparent (ChatGPT le
-rate une fois sur deux) : le fond pale est peint dans l'image, sa couleur est
-donnee dans chaque prompt et correspond exactement a la tuile de la boutique.
+Format demande : carre 1:1, PNG. Pas de fond transparent (ChatGPT le rate une
+fois sur deux) : le fond pale est peint dans l'image, sa couleur est donnee
+dans chaque prompt et correspond exactement a la tuile de la boutique.
+
+**Si ChatGPT rend un format bancal, ce n'est pas grave** : le montage detoure
+l'objet, le remet a l'echelle sur sa surface et repeint un fond carre propre.
+Trois choses, en revanche, rendent une image inutilisable, et il faut les
+refuser tout de suite :
+
+- l'objet TOUCHE ou DEPASSE un bord du cadre -- il n'y a plus rien a detourer ;
+- le fond n'est pas uni (degrade, texture, ombre etalee jusqu'aux bords) -- le
+  detourage part alors n'importe ou ;
+- il y a du texte, un chiffre ou un logo dans l'image.
 
 Fichiers a deposer ensuite dans `public/recompenses/` sous ces noms exacts :
 art-cocktail.png, art-shot.png, art-bouteille.png, art-pinte.png,
@@ -63,9 +73,62 @@ Colle ca avant la premiere image. Ca evite de re-decrire le style 8 fois.
 
 ## 4. Pinte de biere — `art-pinte.png`
 
-> Sujet 4 : une chope de biere droite qui s'evase vers le haut, vue de face,
-> biere jaune doree, mousse blanche epaisse et arrondie sur le dessus. Fond
-> uni #FDF1DC. Meme style que le precedent.
+Version detaillee. Le piege de la pinte, c'est la mousse : laissee libre, elle
+part en bulles, en debordements et en gouttes qui ruinent la serie. Elle doit
+etre decrite comme une forme, pas comme une matiere.
+
+> Sujet 4 : une pinte de biere, seule, vue de face.
+>
+> Composition. Un seul verre, strictement de face, parfaitement symetrique,
+> centre dans le cadre, pose sur une ligne de sol invisible. Aucun sous-verre,
+> aucune table, aucune goutte, aucune bulle en dehors du verre, aucun autre
+> objet.
+>
+> Le verre. Une chope droite qui s'evase legerement vers le haut : la base est
+> un peu plus etroite que l'ouverture, les cotes sont deux droites nettes, pas
+> de courbe ventrue. Les angles du bas sont arrondis. Le bord superieur est
+> une ellipse fine et reguliere, vue en legere plongee, ce qui montre a peine
+> l'interieur du verre. Pas d'anse. Le verre lui-meme est incolore : ce qu'on
+> voit a travers, c'est la biere.
+>
+> La biere. Un aplat uni jaune dore chaud, qui remplit le verre du bas
+> jusqu'aux trois quarts de sa hauteur. Sa surface haute est une ligne
+> horizontale nette, pas un degrade.
+>
+> La mousse. Une seule masse blanche cassee, posee sur la biere, occupant le
+> quart superieur du verre. Son dessus forme deux ou trois bosses arrondies et
+> regulieres, jamais plus, qui depassent d'a peine un cheveu au-dessus du bord
+> du verre -- elle ne deborde PAS, elle ne coule PAS le long du verre. Un
+> aplat uni, sans bulles dessinees, sans texture, sans petits points.
+>
+> Traitement. Illustration vectorielle plate. Contour continu d'epaisseur
+> constante, brun tres fonce #2A2420, la meme epaisseur sur le verre, la biere
+> et la mousse. Trois aplats en tout : le dore de la biere, le blanc casse de
+> la mousse, et une zone d'ombre unie a peine plus foncee sur le tiers gauche
+> de la biere pour donner le volume. Aucun reflet blanc brillant, aucun eclat,
+> aucun degrade complexe. Une ombre ovale, douce et tres claire, posee au sol
+> sous le verre.
+>
+> Cadrage. Le verre occupe environ 72% de la hauteur du cadre, centre, avec
+> une marge reguliere et generreuse tout autour : aucune partie du verre ni de
+> son ombre ne doit toucher un bord de l'image. Image carree, format 1:1. Fond
+> uni #FDF1DC, sans decor ni texture.
+>
+> A eviter absolument : photorealisme, rendu 3D, verre transparent realiste,
+> reflets brillants, condensation, gouttes, bulles, mousse qui deborde ou qui
+> coule, anse, main qui tient le verre, deuxieme verre, table, sous-verre,
+> texte, chiffre, logo, filigrane, cadre, bordure.
+
+Si le resultat ne va pas, les reprises les plus utiles :
+
+> La mousse deborde et coule. Refais-la : une seule masse posee sur la biere,
+> deux ou trois bosses arrondies, qui ne depasse pas le bord du verre.
+
+> Le verre touche le bord de l'image. Reduis-le et recentre-le, avec une
+> marge reguliere tout autour.
+
+> Trop de detail dans le verre. Supprime les reflets et la transparence :
+> aplats francs, contour net, rien d'autre.
 
 ## 5. Cordon VIP — `art-cordon.png`
 
@@ -125,8 +188,9 @@ reconnait pas a 60px. Il faut les deux, et il faut dire lequel domine.
 > ovale, douce et tres claire, posee au sol sous l'objet.
 >
 > Cadrage. L'ensemble cintre + jeton occupe environ 72% de la hauteur du
-> cadre, centre, avec une marge reguliere tout autour. Fond uni #F9F1E6, sans
-> decor ni texture.
+> cadre, centre, avec une marge reguliere tout autour : aucune partie de
+> l'objet ni de son ombre ne doit toucher un bord de l'image. Image carree,
+> format 1:1. Fond uni #F9F1E6, sans decor ni texture.
 >
 > A eviter absolument : photorealisme, rendu 3D, bois veine realiste, reflets
 > brillants sur le metal, ombre portee dure, perspective ou vue de trois
