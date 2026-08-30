@@ -184,18 +184,26 @@
         transition: opacity .35s ease;
       }
       .splash.masque { opacity: 0; pointer-events: none; }
-      /* Le bloc de marque du splash : le N arrondi + NOCTIFY en
-         lettrage espace, exactement le verrouillage du kit de marque
-         envoye par Julien. L'ancienne etoile generique est retiree. */
+      /* Le bloc de marque du splash. Le N arrondi a laisse la place au
+         logo au verre (demande de Julien : "ce logo-la, partout") --
+         c'est le meme que l'ecran d'accueil, donc la marque ne change
+         plus entre le chargement et la premiere page.
+
+         Le PNG ne remplit que sa bande verticale 22%-72% : on ne montre
+         que celle-la, sinon le logo occupe deux fois la hauteur utile.
+         Le filtre blanchit son fond creme, invisible sur le blanc du
+         splash. */
       .splash-brand {
         display: flex; flex-direction: column; align-items: center; gap: var(--e3);
       }
       .splash-mark {
-        width: 76px; height: 76px; display: block;
-        filter: drop-shadow(0 6px 14px rgba(255,47,69,.28));
+        width: 190px; aspect-ratio: 1 / .53; display: block; overflow: hidden;
         animation: splash-pouls 2.2s ease-in-out infinite;
       }
-      .splash-mark path { stroke: var(--marque); }
+      .splash-mark img {
+        display: block; width: 100%; height: auto; margin-top: -21%;
+        filter: url(#logo-blanc);
+      }
       .splash-mot {
         font-family: var(--sans); font-size: 13px; font-weight: 700;
         letter-spacing: .42em; text-indent: .42em; color: #15181d;
@@ -207,9 +215,12 @@
       /* Respiration du halo plutot qu'un clignotement : le logo garde sa
          taille (pas de scale, qui faisait "sauter" le mot dessous),
          seule l'intensite du rouge bouge. */
+      /* Le halo rouge n'avait de sens que sur le N monochrome. Sur un
+         dessin en couleur il salissait le trait : une respiration
+         d'opacite, plus discrete, suffit a dire "ca charge". */
       @keyframes splash-pouls {
-        0%, 100% { filter: drop-shadow(0 6px 12px rgba(255,47,69,.22)); }
-        50%      { filter: drop-shadow(0 6px 18px rgba(255,47,69,.45)); }
+        0%, 100% { opacity: 1; }
+        50%      { opacity: .82; }
       }
       /* Petite barre de progression sous le logo -- fausse (on ne sait
          pas vraiment combien de temps Supabase va prendre), mais remplie
@@ -2439,10 +2450,9 @@
 
         <div class="splash" id="splash" aria-hidden="true">
           <div class="splash-brand">
-            <svg class="splash-mark" viewBox="0 0 100 100" aria-hidden="true">
-              <path d="M22 78V31L78 78V31" fill="none" stroke-width="21"
-                    stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <span class="splash-mark" aria-hidden="true">
+              <img src="/noctify-logo-verre.png" alt="" width="1254" height="1254" />
+            </span>
             <span class="splash-mot">NOCTIFY</span>
           </div>
           <div class="splash-piste"><span class="splash-barre" id="splash-barre"></span></div>
