@@ -132,16 +132,105 @@ Si le resultat ne va pas, les reprises les plus utiles :
 
 ## 5. Cordon VIP — `art-cordon.png`
 
-> Sujet 5 : deux poteaux de cordon de securite gris argente, cote a cote, vus
-> de face, relies par un cordon dore qui retombe en courbe souple entre les
-> deux. Fond uni #F6EDDB. Meme style que le precedent.
+Version detaillee. Le piege du cordon : deux poteaux identiques vus de face
+donnent une image morte et symetrique, ou l'oeil ne sait pas quoi regarder.
+C'est la COURBE du cordon qui fait l'image, il faut donc la decrire.
+
+> Sujet 5 : un cordon de securite VIP, tendu entre deux poteaux.
+>
+> Composition. Deux poteaux identiques, verticaux, vus strictement de face,
+> l'un a gauche l'autre a droite, laissant entre eux un large vide. Un cordon
+> les relie de sommet a sommet en retombant au milieu : la courbe descend
+> d'environ un tiers de la hauteur des poteaux, souple et reguliere, jamais
+> tendue en ligne droite ni cassee en V. C'est elle le sujet. Rien d'autre
+> dans l'image : pas de tapis, pas de porte, pas de file d'attente.
+>
+> Les poteaux. Un fut droit et fin, gris metallique froid, pose sur une base
+> ronde et plate, plus large que le fut, qui donne l'aplomb. Au sommet, une
+> boule du meme metal, a peine plus large que le fut. Un petit anneau dore
+> juste sous la boule tient le cordon.
+>
+> Le cordon. Epais, souple, laiton dore chaud, nettement plus large que le
+> fut des poteaux -- c'est ce qui le rend lisible en petit. Ses deux
+> extremites se terminent par un embout dore arrondi accroche a l'anneau.
+> Aucune torsade, aucun detail de corde tressee : un aplat uni.
+>
+> Traitement. Illustration vectorielle plate. Contour continu d'epaisseur
+> constante, brun tres fonce #2A2420, la meme epaisseur sur les poteaux, les
+> bases et le cordon. Trois aplats en tout : le gris des poteaux, le dore du
+> cordon, et une ombre unie a peine plus foncee sous la courbe du cordon.
+> Aucun reflet brillant sur le metal. Une ombre ovale, douce et tres claire,
+> posee au sol sous chaque base.
+>
+> Cadrage. L'ensemble occupe environ 72% de la LARGEUR du cadre -- c'est un
+> sujet large, pas haut -- centre, avec une marge reguliere tout autour :
+> aucune partie de l'objet ni de son ombre ne doit toucher un bord de
+> l'image. Image carree, format 1:1. Fond uni #F6EDDB, sans decor ni texture.
+>
+> A eviter absolument : photorealisme, rendu 3D, reflets brillants, velours
+> realiste, corde tressee, perspective ou vue de trois quarts, tapis rouge,
+> porte, personnage, videur, plus de deux poteaux, texte, chiffre, logo,
+> filigrane, cadre, bordure.
+
+Si le resultat ne va pas :
+
+> Le cordon est tendu en ligne droite. Refais-le : il retombe en courbe
+> souple au milieu, d'environ un tiers de la hauteur des poteaux.
+
+> Le cordon est trop fin, il disparait en petit. Epaissis-le nettement, plus
+> large que le fut des poteaux.
+
+> Les poteaux touchent les bords. Reduis l'ensemble et recentre-le.
 
 ## 6. Coupe-file — `art-ticket.png`
 
-> Sujet 6 : un ticket d'entree rectangulaire aux coins arrondis, legerement
-> incline, avec une ligne de perforation en pointilles sur sa droite et un
-> petit eclair dore en son centre. Aucun texte sur le ticket. Fond uni
-> #F7ECDE. Meme style que le precedent.
+Version detaillee. Le piege du ticket : sans le pointille de souche et les
+deux encoches, ce n'est plus un ticket, c'est un rectangle. Ce sont ces deux
+details, et eux seuls, qui font reconnaitre l'objet.
+
+> Sujet 6 : un ticket d'entree, seul, vu de face.
+>
+> Composition. Un seul ticket, rectangulaire, plus large que haut, vu bien a
+> plat et strictement de face, centre, tres legerement incline (5 degres au
+> maximum, juste assez pour qu'il ne soit pas raide). Rien d'autre dans
+> l'image : pas de main, pas de deuxieme ticket, pas de fond de salle.
+>
+> Le ticket. Coins arrondis. Une ligne de perforation en pointilles reguliers
+> le traverse verticalement, au tiers droit, separant une souche plus etroite
+> du corps principal. A gauche et a droite, sur cette ligne, une petite
+> encoche semi-circulaire mordue dans le bord -- c'est le detail qui fait
+> lire "ticket" plutot que "carte".
+>
+> Le motif central. Dans le corps principal, un seul eclair dore, epais,
+> stylise, centre. Rien d'autre : pas de trait, pas de code-barres, pas de
+> lettre.
+>
+> Traitement. Illustration vectorielle plate. Contour continu d'epaisseur
+> constante, brun tres fonce #2A2420, la meme epaisseur sur le pourtour, les
+> encoches et l'eclair -- le pointille de perforation, lui, est plus fin.
+> Deux aplats en tout : le fond creme du ticket et le dore de l'eclair. Une
+> ombre ovale, douce et tres claire, posee au sol sous le ticket.
+>
+> Cadrage. Le ticket occupe environ 72% de la LARGEUR du cadre, centre, avec
+> une marge reguliere tout autour : aucune partie du ticket ni de son ombre
+> ne doit toucher un bord de l'image. Image carree, format 1:1. Fond uni
+> #F7ECDE, sans decor ni texture.
+>
+> A eviter absolument : photorealisme, rendu 3D, papier froisse, ombre
+> portee dure, perspective, main qui tient le ticket, plusieurs tickets,
+> code-barres, QR code, texte, chiffre, lettre, logo, filigrane, cadre,
+> bordure.
+
+Si le resultat ne va pas :
+
+> Il n'y a pas de pointille ni d'encoches, ca ressemble a une carte. Ajoute
+> la ligne de perforation verticale au tiers droit et une encoche
+> semi-circulaire de chaque cote sur cette ligne.
+
+> Il y a du texte ou un code-barres sur le ticket. Refais-le avec seulement
+> l'eclair au centre, rien d'autre.
+
+> Le ticket est trop incline. Redresse-le, 5 degres au maximum.
 
 ## 7. Bracelet d'entree — `art-bracelet.png`
 
