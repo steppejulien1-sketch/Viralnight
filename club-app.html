@@ -180,6 +180,40 @@
       .insta-txt span { display: block; font-size: 11.5px; color: var(--ink2); margin-top: 2px; }
       .insta-carte .bouton { min-height: 36px; padding: 0 14px; font-size: 12.5px; flex: 0 0 auto; }
 
+      /* ---- Affiche a imprimer ----
+         Un QR nu ne dit rien a personne : Julien : "le QR, on ne
+         comprend rien". Ce qu'un club colle au mur, ce n'est pas un
+         carre noir, c'est une affiche qui donne une raison de sortir son
+         telephone. On la genere donc entierement (A4, 150 dpi) et on
+         l'affiche en apercu : le gerant voit ce qu'il va imprimer. */
+      .affiche-apercu {
+        width: 100%; border-radius: 12px; display: block;
+        border: 1px solid var(--line2);
+        box-shadow: 0 10px 30px -18px rgba(16,18,22,.55);
+        background: #fff;
+      }
+      .qr-actions { display: grid; gap: 8px; width: 100%; }
+      .qr-actions .bouton { width: 100%; }
+
+      /* ---- Bandeau "mode demo" ----
+         Hors session, TOUS les boutons d'ecriture partaient quand meme
+         vers Supabase et revenaient avec "invalid input syntax for type
+         uuid: demo-establishment" : de l'exterieur, un bouton qui ne
+         marche pas. On coupe l'ecriture a la source et on dit pourquoi,
+         en francais, avant que quiconque clique. */
+      .bandeau-demo {
+        display: flex; align-items: center; gap: 10px;
+        background: var(--s2); border: 1px solid var(--line2);
+        border-radius: 14px; padding: 11px 13px; margin-bottom: 14px;
+        font-size: 12.5px; line-height: 1.4; color: var(--ink2);
+      }
+      .bandeau-demo strong { color: var(--ink); font-weight: 750; }
+      .bandeau-demo button {
+        margin-left: auto; flex: 0 0 auto; border: 0; background: none; padding: 0;
+        font: inherit; font-weight: 700; color: var(--accent);
+        text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+      }
+
       .section-titre {
         font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
         color: var(--ink3); margin: 22px 0 10px;
@@ -437,6 +471,7 @@
                 </div>
               </div>
 
+              <div id="fiche-bandeau"></div>
               <form id="fiche-form">
                 <div class="fiche-champ">
                   <label for="fiche-nom">Nom du club</label>
@@ -497,9 +532,12 @@
               <p class="ecran-sous">À imprimer et coller à l'entrée, au bar, aux toilettes.</p>
 
               <div class="qr-carte" id="qr-carte">
-                <div class="qr-image" id="qr-image"></div>
+                <img class="affiche-apercu" id="affiche-apercu" alt="Aperçu de l'affiche à imprimer" />
                 <p class="qr-code-txt">Code du club <strong id="qr-code">—</strong></p>
-                <a class="bouton pleine" id="qr-telecharger" download="qr-noctify.png">Télécharger en PNG</a>
+                <div class="qr-actions">
+                  <a class="bouton" id="affiche-telecharger" download="affiche-noctify.png">Télécharger l'affiche (A4)</a>
+                  <a class="bouton sobre" id="qr-telecharger" download="qr-noctify.png">Le QR seul</a>
+                </div>
                 <p class="fiche-msg" id="qr-msg"></p>
               </div>
 
@@ -884,6 +922,29 @@
         }).join("");
       }
 
+      /* Hors session, l'ecran affiche la demo : rien de ce qu'on y tape
+         ne peut etre enregistre. Un seul endroit pour le savoir, plutot
+         que la question posee dans chaque gestionnaire. */
+      function estDemo() { return !ETAT.session; }
+
+      function bandeauDemo(quoi) {
+        if (!estDemo()) return "";
+        return '<div class="bandeau-demo">' +
+          "<span><strong>Mode démo.</strong> Connecte-toi pour modifier " + quoi + ".</span>" +
+          '<button type="button" data-aller-connexion>Se connecter</button>' +
+        "</div>";
+      }
+
+      // Delegue : les bandeaux sont reecrits a chaque rendu, un
+      // gestionnaire par bandeau finirait par s'empiler.
+      document.addEventListener("click", function (ev) {
+        if (!ev.target.closest("[data-aller-connexion]")) return;
+        modeInscription = false;
+        majModePorte();
+        afficherPorte("Connecte-toi avec ton compte club.");
+        $("#porte-form").hidden = false;
+      });
+
       /* La carte Instagram du tableau de bord. Trois etats seulement, et
          chacun dit la meme chose sous un angle different : est-ce que les
          mentions sont detectees, oui ou non. */
@@ -932,10 +993,102 @@
          URL differentes le jour ou l'une des deux change, et un QR faux ne
          se voit pas a l'oeil -- il se decouvre le soir de la soiree. */
 
+      /* L'affiche, dessinee sur un canvas A4 a 150 dpi (1240x1754).
+         Canvas plutot que HTML->image : ca donne un vrai fichier PNG que
+         le gerant envoie a un imprimeur ou depose chez Photobox, sans
+         dependre de la boite de dialogue d'impression du navigateur, qui
+         ajoute ses marges et ses en-tetes.
+
+         Noir sur blanc, une seule couleur d'accent : une affiche collee
+         dans un couloir mal eclaire doit se lire de loin, et l'encre
+         couleur coute cher au club. */
+      function dessinerAffiche(qrImage, nomClub, handle) {
+        var L = 1240, H = 1754;
+        var canvas = document.createElement("canvas");
+        canvas.width = L; canvas.height = H;
+        var c = canvas.getContext("2d");
+
+        c.fillStyle = "#ffffff";
+        c.fillRect(0, 0, L, H);
+
+        var centre = L / 2;
+        c.textAlign = "center";
+
+        // Sur-titre
+        c.fillStyle = "#8e97a4";
+        c.font = "600 30px ui-monospace, Consolas, monospace";
+        c.fillText("NOCTIFY", centre, 130);
+
+        // Le titre : la promesse, en une ligne, lisible a cinq metres.
+        c.fillStyle = "#14161a";
+        c.font = "800 128px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText("GAGNE", centre, 300);
+        c.fillText("TES POINTS", centre, 425);
+
+        c.fillStyle = "#5b6472";
+        c.font = "500 40px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText("Poste une story, repars avec une récompense.", centre, 500);
+
+        // Le QR, la piece maitresse : le plus grand element de l'affiche.
+        var taille = 620;
+        var qrX = centre - taille / 2, qrY = 570;
+        c.strokeStyle = "#e3e7ed";
+        c.lineWidth = 3;
+        c.strokeRect(qrX - 22, qrY - 22, taille + 44, taille + 44);
+        c.drawImage(qrImage, qrX, qrY, taille, taille);
+
+        c.fillStyle = "#14161a";
+        c.font = "800 46px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText("Scanne-moi", centre, qrY + taille + 100);
+
+        // Les trois etapes. Numerotees : sans elles, le passant sait
+        // qu'il doit scanner mais pas ce qui se passe apres.
+        var etapes = [
+          ["1", "Scanne", "ce code"],
+          ["2", "Poste ta story", handle ? "en taguant @" + handle : "en taguant le club"],
+          ["3", "Récupère", "ta récompense"],
+        ];
+        var basY = 1440;
+        etapes.forEach(function (e, i) {
+          var x = L * (i + 0.5) / 3;
+          c.beginPath();
+          c.arc(x, basY - 46, 34, 0, Math.PI * 2);
+          c.fillStyle = "#ff2f45";
+          c.fill();
+          c.fillStyle = "#ffffff";
+          c.font = "800 34px ui-sans-serif, Arial, sans-serif";
+          c.fillText(e[0], x, basY - 34);
+
+          c.fillStyle = "#14161a";
+          c.font = "750 32px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+          c.fillText(e[1], x, basY + 32);
+          c.fillStyle = "#5b6472";
+          c.font = "500 28px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+          c.fillText(e[2], x, basY + 72);
+        });
+
+        // Le nom du club en pied : l'affiche appartient au club, pas a nous.
+        c.fillStyle = "#14161a";
+        c.font = "800 44px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText(nomClub || "", centre, H - 120);
+
+        return canvas.toDataURL("image/png");
+      }
+
+      // Le QR doit etre charge en Image avant d'etre dessine : drawImage
+      // sur une image pas encore decodee ne dessine rien, sans erreur.
+      function chargerImage(src) {
+        return new Promise(function (resolve, reject) {
+          var img = new Image();
+          img.onload = function () { resolve(img); };
+          img.onerror = reject;
+          img.src = src;
+        });
+      }
+
       async function rendreQr() {
         var etab = (ETAT.data && ETAT.data.establishment) || {};
         var code = etab.public_code;
-        var zone = $("#qr-image");
         var msg = $("#qr-msg");
         var lien = $("#qr-telecharger");
 
@@ -948,8 +1101,9 @@
         // ou, pire, un QR qui encode "undefined" et que quelqu'un imprime.
         if (!code) {
           $("#qr-code").textContent = "—";
-          zone.innerHTML = "";
+          $("#affiche-apercu").removeAttribute("src");
           lien.hidden = true;
+          $("#affiche-telecharger").hidden = true;
           msg.style.display = "block";
           msg.style.color = "var(--ink2)";
           msg.textContent = "Ce club n'a pas encore de code public. Contacte-nous, on le crée.";
@@ -958,6 +1112,7 @@
 
         $("#qr-code").textContent = code;
         lien.hidden = false;
+        $("#affiche-telecharger").hidden = false;
 
         // Hors session, tout l'ecran affiche la demo. Le dire ICI aussi :
         // un QR est fait pour etre imprime, et rien ne distingue a l'oeil
@@ -971,17 +1126,26 @@
         }
 
         var url = buildScanUrl(window.location.origin, code);
+        var nomClub = (etab.name || "").trim();
+        var handle = (etab.ig_handle || "").replace(/^@/, "").trim();
 
         try {
-          zone.innerHTML = await renderQrSvg(url);
-          lien.href = await renderQrPngDataUrl(url, { width: 1200 });
+          var pngQr = await renderQrPngDataUrl(url, { width: 1200 });
+          lien.href = pngQr;
           lien.download = "qr-noctify-" + String(code).toLowerCase() + ".png";
+
+          var affiche = dessinerAffiche(await chargerImage(pngQr), nomClub, handle);
+          $("#affiche-apercu").src = affiche;
+          var lienAffiche = $("#affiche-telecharger");
+          lienAffiche.href = affiche;
+          lienAffiche.download = "affiche-noctify-" + String(code).toLowerCase() + ".png";
         } catch (erreur) {
-          zone.innerHTML = "";
+          $("#affiche-apercu").removeAttribute("src");
           lien.hidden = true;
+          $("#affiche-telecharger").hidden = true;
           msg.style.display = "block";
           msg.style.color = "var(--accent)";
-          msg.textContent = "Le QR n'a pas pu être généré. Recharge la page.";
+          msg.textContent = "L'affiche n'a pas pu être générée. Recharge la page.";
         }
       }
 
@@ -991,27 +1155,33 @@
         var rewards = getActiveRewards(ETAT.data.rewards || []);
         var zone = $("#recompenses-liste");
 
+        // Hors session, tout est en lecture seule : les champs partaient
+        // sinon vers Supabase avec un id de demo et revenaient avec une
+        // erreur Postgres brute.
+        var inerte = estDemo() ? " disabled" : "";
+        $("#recompense-ajouter").disabled = estDemo();
+
         if (!rewards.length) {
-          zone.innerHTML = '<p class="vide">Aucune récompense pour l\'instant.</p>';
+          zone.innerHTML = bandeauDemo("tes récompenses") + '<p class="vide">Aucune récompense pour l\'instant.</p>';
           return;
         }
 
-        zone.innerHTML = rewards.map(function (r) {
+        zone.innerHTML = bandeauDemo("tes récompenses") + rewards.map(function (r) {
           return (
             '<div class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
-              '<div class="champ"><label>Nom</label><input type="text" data-champ="title" value="' + escapeHtml(r.title) + '" /></div>' +
+              '<div class="champ"><label>Nom</label><input type="text" data-champ="title" value="' + escapeHtml(r.title) + '"' + inerte + " /></div>" +
               '<div class="recompense-lignes">' +
-                '<div class="champ"><label>Seuil (pts)</label><input type="number" min="0" step="10" data-champ="points_required" value="' + Number(r.points_required || 0) + '" /></div>' +
-                '<div class="champ"><label>Stock max</label><input type="number" min="0" step="1" placeholder="Illimité" data-champ="max_redemptions" value="' + (r.max_redemptions ?? "") + '" /></div>' +
+                '<div class="champ"><label>Seuil (pts)</label><input type="number" min="0" step="10" data-champ="points_required" value="' + Number(r.points_required || 0) + '"' + inerte + " /></div>" +
+                '<div class="champ"><label>Stock max</label><input type="number" min="0" step="1" placeholder="Illimité" data-champ="max_redemptions" value="' + (r.max_redemptions ?? "") + '"' + inerte + " /></div>" +
               "</div>" +
-              '<div class="champ"><label>Famille</label><select data-champ="category">' +
+              '<div class="champ"><label>Famille</label><select data-champ="category"' + inerte + ">" +
                 ["bar", "acces", "vip"].map(function (c) {
                   return '<option value="' + c + '"' + (r.category === c ? " selected" : "") + ">" + ({ bar: "Bar", acces: "Accès", vip: "VIP" })[c] + "</option>";
                 }).join("") +
               "</select></div>" +
               '<div class="recompense-actions">' +
                 '<span class="recompense-etat" data-etat></span>' +
-                '<button type="button" class="retirer" data-retirer>Retirer</button>' +
+                '<button type="button" class="retirer" data-retirer' + inerte + ">Retirer</button>" +
               "</div>" +
             "</div>"
           );
@@ -1053,6 +1223,7 @@
       }
 
       $("#recompense-ajouter").addEventListener("click", async function () {
+        if (estDemo()) return;
         var { data, error } = await supabase.from("rewards").insert({
           establishment_id: ETAT.data.establishment.id,
           title: "Nouvelle récompense",
@@ -1070,6 +1241,11 @@
 
       function rendreFiche() {
         var e = ETAT.data.establishment;
+        $("#fiche-bandeau").innerHTML = bandeauDemo("ta fiche");
+        $("#fiche-enregistrer").disabled = estDemo();
+        $("#fiche-form").querySelectorAll("input, select").forEach(function (champ) {
+          champ.disabled = estDemo();
+        });
         $("#fiche-nom").value = e.name || "";
         $("#fiche-ville").value = e.city || "";
         $("#fiche-telephone").value = e.phone || "";
@@ -1096,6 +1272,7 @@
 
       $("#fiche-form").addEventListener("submit", async function (e) {
         e.preventDefault();
+        if (estDemo()) return;
         var bouton = $("#fiche-enregistrer");
         var msg = $("#fiche-msg");
         bouton.disabled = true;
