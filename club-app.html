@@ -111,6 +111,39 @@
       .bouton.pleine { width: 100%; }
       .bouton[disabled] { opacity: .55; cursor: default; }
 
+      /* ---- Chiffre d'entete du tableau de bord ----
+         Cinq cartes de meme taille, c'etait une liste, pas un tableau de
+         bord : rien ne disait ce qu'il fallait regarder en premier. Les
+         vues generees sont LE chiffre que le club achete, il prend donc
+         la place et la taille qui vont avec, avec sa courbe dessous.
+         Le reste devient secondaire, en petites cartes.
+
+         Le corail sert ici de couleur de marque sur la courbe, pas de
+         bouton d'action -- c'est son emploi correct. */
+      .hero {
+        background: var(--s1); border: 1px solid var(--line);
+        border-radius: 20px; padding: 18px 18px 8px; margin-bottom: 12px;
+        box-shadow: 0 1px 2px rgba(16,18,22,.04), 0 8px 24px -18px rgba(16,18,22,.35);
+      }
+      .hero-label {
+        font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+        letter-spacing: .1em; text-transform: uppercase; color: var(--ink3);
+      }
+      .hero-valeur {
+        display: block; margin-top: 6px; font-size: 42px; font-weight: 800;
+        letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums;
+      }
+      .hero-note { display: block; margin-top: 7px; font-size: 12px; color: var(--ink2); }
+      .hero-graphe { margin-top: 14px; height: 56px; }
+      .hero-graphe svg { display: block; width: 100%; height: 100%; overflow: visible; }
+      /* Les jours sans publication valent 0, pas "pas de donnee" : une
+         courbe qui saute les trous laisserait croire a une activite
+         continue. */
+      .hero-vide {
+        display: flex; align-items: center; height: 56px;
+        font-size: 12px; color: var(--ink3);
+      }
+
       /* ---- KPI (tableau de bord) ---- */
       .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 20px; }
       .kpi {
@@ -315,12 +348,14 @@
               <h1 class="ecran-titre">Tableau de bord</h1>
               <p class="ecran-sous" id="dash-etablissement">—</p>
 
+              <div class="hero">
+                <span class="hero-label">Vues générées</span>
+                <span class="hero-valeur" id="kpi-vues">—</span>
+                <span class="hero-note" id="kpi-vues-note"></span>
+                <div class="hero-graphe" id="hero-graphe"></div>
+              </div>
+
               <div class="kpis">
-                <div class="kpi">
-                  <span class="kpi-label">Vues générées</span>
-                  <span class="kpi-valeur" id="kpi-vues">—</span>
-                  <span class="kpi-note" id="kpi-vues-note"></span>
-                </div>
                 <div class="kpi">
                   <span class="kpi-label">Points distribués</span>
                   <span class="kpi-valeur" id="kpi-points">—</span>
@@ -676,12 +711,70 @@
 
       /* ================= TABLEAU DE BORD ================= */
 
+      /* Courbe des vues, 14 derniers jours. Dessinee a la main en SVG :
+         une librairie de graphes pour une seule sparkline couterait plus
+         cher en poids que tout le reste de la page.
+
+         Les jours sans publication valent 0 et sont dessines : les
+         sauter donnerait une courbe continue qui laisse croire a une
+         activite reguliere. Un club doit voir ses trous. */
+      function sparklineVues(validated) {
+        var JOURS = 14;
+        var jour = 86400000;
+        var finAujourdhui = new Date();
+        finAujourdhui.setHours(23, 59, 59, 999);
+        var fin = finAujourdhui.getTime();
+
+        // On compte a REBOURS depuis la fin d'aujourd'hui : le dernier
+        // seau est toujours le jour courant. Partir du debut de fenetre
+        // decalait tout d'un jour et retournait la courbe.
+        var seaux = new Array(JOURS).fill(0);
+        validated.forEach(function (sub) {
+          var t = Date.parse(sub.submitted_at || "");
+          if (!Number.isFinite(t)) return;
+          var recul = Math.floor((fin - t) / jour);
+          var index = JOURS - 1 - recul;
+          if (index >= 0 && index < JOURS) seaux[index] += Number(sub.views_count || 0);
+        });
+
+        var max = Math.max.apply(null, seaux);
+        if (!max) return null;
+
+        var L = 300, H = 56;
+        var pas = L / (JOURS - 1);
+        var points = seaux.map(function (v, i) {
+          return [i * pas, H - (v / max) * (H - 6) - 3];
+        });
+
+        var ligne = points.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ");
+        var aire = "0," + H + " " + ligne + " " + L + "," + H;
+        var dernier = points[points.length - 1];
+
+        return (
+          '<svg viewBox="0 0 ' + L + " " + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+            '<defs><linearGradient id="grad-vues" x1="0" y1="0" x2="0" y2="1">' +
+              '<stop offset="0%" stop-color="var(--accent)" stop-opacity=".22"/>' +
+              '<stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>' +
+            "</linearGradient></defs>" +
+            '<polygon points="' + aire + '" fill="url(#grad-vues)"/>' +
+            '<polyline points="' + ligne + '" fill="none" stroke="var(--accent)" stroke-width="2" ' +
+              'stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
+            '<circle cx="' + dernier[0].toFixed(1) + '" cy="' + dernier[1].toFixed(1) + '" r="3" ' +
+              'fill="var(--accent)" vector-effect="non-scaling-stroke"/>' +
+          "</svg>"
+        );
+      }
+
       function rendreDashboard() {
         var stats = getDashboardStats(ETAT.data);
         $("#dash-etablissement").textContent = ETAT.data.establishment.name || "—";
 
         $("#kpi-vues").textContent = nb.format(stats.reach);
         $("#kpi-vues-note").textContent = nb.format(stats.validatedCount) + " contenu" + (stats.validatedCount > 1 ? "s" : "") + " validé" + (stats.validatedCount > 1 ? "s" : "");
+
+        var courbe = sparklineVues(stats.validated);
+        $("#hero-graphe").innerHTML = courbe
+          || '<p class="hero-vide">Pas encore de publication sur les 14 derniers jours.</p>';
         $("#kpi-points").textContent = nb.format(stats.points);
         $("#kpi-scans").textContent = nb.format(stats.scanCount);
         $("#kpi-scans-note").textContent = stats.scanCount ? nb.format(stats.uniqueScanners) + " personnes différentes" : "Aucun scan encore";
@@ -928,6 +1021,7 @@
 
       async function rendreReglages() {
         $("#reglages-compte").textContent = ETAT.session ? (ETAT.session.user.email || "—") : "Mode démo — pas connecté";
+        majBoutonCompte();
 
         var zone = $("#reglages-instagram");
         if (!ETAT.session) {
@@ -973,11 +1067,35 @@
         }
       }
 
-      $("#reglages-deconnexion").addEventListener("click", async function () {
-        if (!ETAT.session) return;
-        await supabase.auth.signOut();
-        window.location.href = "./connexion.html";
+      /* Deux bugs ici. Sans session, le bouton sortait en silence : on
+         cliquait, rien ne se passait, jamais. Avec session, il renvoyait
+         vers connexion.html -- une page du SITE, avec un autre design,
+         exactement ce qu'on evite partout ailleurs dans ce fichier.
+         Dans les deux cas on reste dans l'appli et on montre la porte. */
+      $("#reglages-deconnexion").addEventListener("click", async function (ev) {
+        var bouton = ev.currentTarget;
+        bouton.disabled = true;
+
+        if (ETAT.session) {
+          await supabase.auth.signOut();
+          ETAT.session = null;
+        }
+
+        bouton.disabled = false;
+        modeInscription = false;
+        majModePorte();
+        afficherPorte("Connecte-toi avec ton compte club.");
+        // La porte se pose par-dessus l'onglet courant : sans ca, on
+        // reviendrait sur des Reglages qui parlent encore d'un compte
+        // qui n'existe plus.
+        $("#porte-form").hidden = false;
       });
+
+      // En mode demo, "Deconnexion" n'a aucun sens : personne n'est
+      // connecte. Le bouton annonce ce qu'il fait vraiment.
+      function majBoutonCompte() {
+        $("#reglages-deconnexion").textContent = ETAT.session ? "Déconnexion" : "Se connecter";
+      }
 
       demarrer();
     </script>
