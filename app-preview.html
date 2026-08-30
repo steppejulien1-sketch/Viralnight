@@ -1290,8 +1290,56 @@
          verre (pint(), plein) et le meme
          gabarit que l'ancien marqueur d'ami retire plus tot -- ancre en
          bas comme lui (transform-origin: bottom, voir majTailleMarqueurs). */
-      .moi-marker { width: 46px; height: 60px; transform-origin: bottom center; }
-      .moi-marker svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
+      .moi-marker { position: relative; width: 46px; height: 60px; transform-origin: bottom center; }
+      /* position/z-index explicites : sans eux, le halo (positionne)
+         passerait AU-DESSUS du verre (statique), et un z-index negatif
+         l'enverrait derriere le canvas de la carte -- .moi-marker ne
+         cree pas de contexte d'empilement a lui tout seul. */
+      .moi-marker .pint {
+        position: relative; z-index: 1;
+        width: 100%; height: 100%; display: block;
+        filter: drop-shadow(0 3px 5px rgba(0,0,0,.4));
+      }
+
+      /* Rien ne disait que ce verre-la, c'etait SOI -- Julien : "les gens
+         ne savent pas ce que c'est, j'ai envie qu'ils comprennent au
+         premier coup d'oeil que c'est eux". Sans l'ecrire : deux
+         signaux que tout le monde a deja appris ailleurs.
+
+         1. L'avatar. Depuis Snap Map, Zenly et Localiser, le marqueur
+            qui porte VOTRE tete est le votre. Aucune legende necessaire,
+            et ca ne se confond avec aucun badge de club.
+         2. Le halo qui respire au sol. C'est la grammaire du "vous etes
+            ici" de toutes les cartes. Les clubs, eux, ne pulsent pas :
+            le mouvement suffit a separer les deux familles. */
+      .moi-halo {
+        position: absolute; left: 50%; bottom: -6px;
+        width: 40px; height: 40px; margin-left: -20px;
+        border-radius: 50%; background: var(--accent, #ff6363);
+        opacity: .28; animation: moi-respire 2.6s ease-out infinite;
+        pointer-events: none; z-index: 0;
+      }
+      @keyframes moi-respire {
+        0%   { transform: scale(.45); opacity: .34; }
+        70%  { transform: scale(1.25); opacity: 0; }
+        100% { transform: scale(1.25); opacity: 0; }
+      }
+      .moi-avatar {
+        position: absolute; z-index: 2; top: -4px; right: -7px;
+        width: 24px; height: 24px; border-radius: 50%; overflow: hidden;
+        background: var(--accent, #ff6363); color: #fff;
+        border: 2.5px solid #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,.38);
+        display: grid; place-items: center;
+        font-size: 11px; font-weight: 800; line-height: 1;
+      }
+      .moi-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      /* Le contour blanc de la pastille se perd sur une carte claire ;
+         l'ombre portee le rattrape, mais un liseré interne aide encore. */
+      .moi-avatar svg { width: 13px; height: 13px; fill: #fff; }
+      @media (prefers-reduced-motion: reduce) {
+        .moi-halo { animation: none; opacity: .3; transform: scale(.9); }
+      }
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
          chaque deplacement) -- ne jamais lui donner de transform a
@@ -6131,14 +6179,46 @@ map.on("load", function () {
   // geolocalisation branchee), juste pour garder un repere visuel de
   // "je suis ici" pendant qu'on se deplace sur la carte -- demande de
   // Julien apres le retrait des amis de la carte ("un verre qui est
-  // nous", pas un point generique -- voir .moi-marker plus haut).
+  // nous", pas un point generique). Le verre seul ne disait pas a QUI
+  // il appartenait : l'avatar et le halo qui respire s'en chargent,
+  // sans une ligne de texte (voir .moi-marker plus haut).
   var porteurMoi = document.createElement("div");
   porteurMoi.className = "marker-porteur";
   var elMoi = document.createElement("div");
   elMoi.className = "moi-marker";
-  elMoi.innerHTML = pint(1);
+  // Silhouette par defaut : la maquette s'ouvre sans session, et un
+  // marqueur vide serait pire que pas de pastille du tout.
+  elMoi.innerHTML =
+    '<span class="moi-halo" aria-hidden="true"></span>' +
+    pint(1) +
+    '<span class="moi-avatar" id="moi-avatar" aria-hidden="true">' +
+      '<svg viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.4 20.5a7.6 7.6 0 0 1 15.2 0z"/></svg>' +
+    "</span>";
   elMoi.setAttribute("role", "img");
   elMoi.setAttribute("aria-label", "Ma position");
+
+  // La vraie tete du clubbeur des qu'on la connait -- c'est elle qui
+  // fait comprendre "c'est moi" sans le moindre mot. A defaut de photo,
+  // l'initiale de son pseudo ; a defaut de session, la silhouette
+  // posee juste au-dessus.
+  (async function avatarSurLaCarte() {
+    try {
+      var session = (await supabaseClubbeur.auth.getSession()).data.session;
+      if (!session) return;
+      var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).maybeSingle()).data;
+      if (!profil) return;
+      var pastille = document.getElementById("moi-avatar");
+      if (!pastille) return;
+      if (profil.avatar_url) {
+        pastille.innerHTML = '<img src="' + escapeHtmlSupport(profil.avatar_url) + '" alt="" />';
+      } else if (profil.handle) {
+        pastille.textContent = profil.handle.charAt(0).toUpperCase();
+      }
+    } catch (erreur) {
+      // La silhouette reste : un marqueur sans tete vaut mieux qu'une
+      // carte qui casse parce que le profil n'a pas repondu.
+    }
+  })();
   porteurMoi.appendChild(elMoi);
   new maplibregl.Marker({ element: porteurMoi, anchor: "bottom", opacityWhenCovered: 0 })
     .setLngLat(MOI)
