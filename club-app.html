@@ -1090,70 +1090,118 @@
         var canvas = document.createElement("canvas");
         canvas.width = L; canvas.height = H;
         var c = canvas.getContext("2d");
-
-        c.fillStyle = "#ffffff";
-        c.fillRect(0, 0, L, H);
-
         var centre = L / 2;
+
+        var NOIR = "#0b0d11", BLANC = "#ffffff", CORAIL = "#ff2f45", GRIS = "#8e97a4";
+
+        // Fond nocturne : c'est une affiche de boite de nuit, elle est
+        // collee dans un couloir sombre. Le QR, lui, garde son carton
+        // blanc -- un QR clair sur fond sombre ne se lit pas.
+        c.fillStyle = NOIR;
+        c.fillRect(0, 0, L, H);
         c.textAlign = "center";
 
-        // Sur-titre
-        c.fillStyle = "#8e97a4";
-        c.font = "600 30px ui-monospace, Consolas, monospace";
-        c.fillText("NOCTIFY", centre, 130);
+        function pastille(x, y, texte, fond, encre) {
+          c.font = "800 34px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+          var l = c.measureText(texte).width + 46;
+          var h = 62;
+          c.fillStyle = fond;
+          c.beginPath();
+          c.roundRect(x - l / 2, y - h / 2, l, h, h / 2);
+          c.fill();
+          c.fillStyle = encre;
+          c.fillText(texte, x, y + 12);
+        }
 
-        // Le titre : la promesse, en une ligne, lisible a cinq metres.
-        c.fillStyle = "#14161a";
-        c.font = "800 128px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
-        c.fillText("GAGNE", centre, 300);
-        c.fillText("TES POINTS", centre, 425);
+        // Les deux gains, en haut, comme sur l'affiche de reference : ils
+        // donnent un ordre de grandeur avant meme qu'on lise le titre.
+        pastille(215, 150, "+15 pts", CORAIL, BLANC);
+        pastille(L - 215, 150, "+50 pts", BLANC, NOIR);
 
-        c.fillStyle = "#5b6472";
-        c.font = "500 40px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
-        c.fillText("Poste une story, repars avec une récompense.", centre, 500);
+        c.fillStyle = BLANC;
+        c.font = "800 96px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText("TRANSFORME", centre, 330);
+        c.font = "600 58px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText("TA SOIRÉE EN", centre, 405);
+        c.fillStyle = CORAIL;
+        c.font = "800 132px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText("RÉCOMPENSES", centre, 525);
 
-        // Le QR, la piece maitresse : le plus grand element de l'affiche.
-        var taille = 620;
-        var qrX = centre - taille / 2, qrY = 570;
-        c.strokeStyle = "#e3e7ed";
-        c.lineWidth = 3;
-        c.strokeRect(qrX - 22, qrY - 22, taille + 44, taille + 44);
-        c.drawImage(qrImage, qrX, qrY, taille, taille);
+        // Le QR sur son carton blanc, avec les quatre equerres de
+        // l'affiche de reference : elles disent "vise ici" sans un mot.
+        var taille = 560, carton = taille + 90;
+        var cx = centre - carton / 2, cy = 610;
+        c.fillStyle = BLANC;
+        c.beginPath();
+        c.roundRect(cx, cy, carton, carton, 28);
+        c.fill();
+        c.drawImage(qrImage, cx + 45, cy + 45, taille, taille);
 
-        c.fillStyle = "#14161a";
-        c.font = "800 46px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
-        c.fillText("Scanne-moi", centre, qrY + taille + 100);
+        c.strokeStyle = CORAIL;
+        c.lineWidth = 10;
+        c.lineCap = "round";
+        var b = 46, m = 22;
+        [[cx + m, cy + m, 1, 1], [cx + carton - m, cy + m, -1, 1],
+         [cx + m, cy + carton - m, 1, -1], [cx + carton - m, cy + carton - m, -1, -1]]
+          .forEach(function (e) {
+            c.beginPath();
+            c.moveTo(e[0] + e[2] * b, e[1]);
+            c.lineTo(e[0], e[1]);
+            c.lineTo(e[0], e[1] + e[3] * b);
+            c.stroke();
+          });
 
-        // Les trois etapes. Numerotees : sans elles, le passant sait
-        // qu'il doit scanner mais pas ce qui se passe apres.
+        c.fillStyle = BLANC;
+        c.font = "800 44px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText("BOISSONS ET ENTRÉES À GAGNER", centre, cy + carton + 78);
+
+        // Les trois etapes : sans elles, le passant sait qu'il doit
+        // scanner mais pas ce qui se passe apres.
         var etapes = [
           ["1", "Scanne", "ce code"],
           ["2", "Poste ta story", handle ? "en taguant @" + handle : "en taguant le club"],
           ["3", "Récupère", "ta récompense"],
         ];
-        var basY = 1440;
+        var basY = 1420;
         etapes.forEach(function (e, i) {
           var x = L * (i + 0.5) / 3;
           c.beginPath();
-          c.arc(x, basY - 46, 34, 0, Math.PI * 2);
-          c.fillStyle = "#ff2f45";
+          c.arc(x, basY - 50, 32, 0, Math.PI * 2);
+          c.fillStyle = CORAIL;
           c.fill();
-          c.fillStyle = "#ffffff";
-          c.font = "800 34px ui-sans-serif, Arial, sans-serif";
-          c.fillText(e[0], x, basY - 34);
-
-          c.fillStyle = "#14161a";
-          c.font = "750 32px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
-          c.fillText(e[1], x, basY + 32);
-          c.fillStyle = "#5b6472";
-          c.font = "500 28px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
-          c.fillText(e[2], x, basY + 72);
+          c.fillStyle = BLANC;
+          c.font = "800 32px ui-sans-serif, Arial, sans-serif";
+          c.fillText(e[0], x, basY - 38);
+          c.fillStyle = BLANC;
+          c.font = "750 30px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+          c.fillText(e[1], x, basY + 26);
+          c.fillStyle = GRIS;
+          c.font = "500 26px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+          c.fillText(e[2], x, basY + 64);
         });
 
-        // Le nom du club en pied : l'affiche appartient au club, pas a nous.
-        c.fillStyle = "#14161a";
-        c.font = "800 44px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
-        c.fillText(nomClub || "", centre, H - 120);
+        // Un filet separe le pied des etapes : sans lui, "TELECHARGE
+        // L'APPLI" se lisait comme une quatrieme etape.
+        c.strokeStyle = "rgba(255,255,255,.14)";
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(120, H - 250);
+        c.lineTo(L - 120, H - 250);
+        c.stroke();
+
+        // Le logo PNG porte son propre fond creme, qui se verrait comme
+        // un rectangle beige sur le noir : on ecrit le nom, ce qui se lit
+        // de toute facon mieux de loin qu'un petit dessin.
+        c.fillStyle = GRIS;
+        c.font = "600 24px ui-monospace, Consolas, monospace";
+        c.fillText("TÉLÉCHARGE L'APPLI", centre, H - 185);
+        c.fillStyle = BLANC;
+        c.font = "800 56px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText("noctify", centre, H - 120);
+
+        c.fillStyle = GRIS;
+        c.font = "600 32px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
+        c.fillText(nomClub || "", centre, H - 62);
 
         return canvas.toDataURL("image/png");
       }
