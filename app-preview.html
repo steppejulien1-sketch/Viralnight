@@ -1302,25 +1302,26 @@
       }
 
 
-      /* Rien ne disait que ce verre-la, c'etait SOI -- Julien : "j'ai
-         envie que les gens comprennent au premier coup d'oeil que c'est
-         eux". Une pastille d'avatar a d'abord ete essayee (convention
-         Snap Map) : jugee "bizarre" sur un verre de 46px. Un mot a cote
-         du verre est plus direct, et se lit sans rien connaitre d'une
-         convention de carte.
+      /* Rien ne disait que ce verre-la, c'etait SOI. Deux essais avant
+         celui-ci : une pastille d'avatar sur le verre ("bizarre"), puis
+         le mot "Toi" colle a cote du marqueur -- ecrit SUR la carte, il
+         se melangeait aux noms de rue. Julien : "pas que ce soit ecrit
+         sur la carte".
 
-         Pose a DROITE du verre et verticalement au milieu : au-dessus,
-         il entrerait en collision avec la mousse et avec les etiquettes
-         de rue de la carte. */
-      .moi-etiquette {
-        position: absolute; z-index: 2; left: 100%; top: 50%;
-        transform: translateY(-50%); margin-left: 3px;
-        padding: 3px 8px; border-radius: 999px;
-        background: #fff; color: #14161a;
-        font-size: 11px; font-weight: 800; letter-spacing: -.01em;
-        line-height: 1.2; white-space: nowrap;
-        box-shadow: 0 2px 6px rgba(0,0,0,.45);
+         D'ou une legende, hors carte : le meme verre en miniature et le
+         mot a cote. On lit la regle une fois, dans un coin, et le
+         marqueur reste un dessin propre. Meme principe que la legende
+         d'une carte papier. */
+      .carte-legende {
+        position: absolute; top: 14px; left: 12px; z-index: 24;
+        display: flex; align-items: center; gap: 6px;
+        padding: 5px 11px 5px 6px; border-radius: 999px;
+        background: rgba(255,255,255,.94); color: #14161a;
+        font-size: 12px; font-weight: 750; letter-spacing: -.01em;
+        box-shadow: 0 3px 10px rgba(0,0,0,.32);
+        pointer-events: none;
       }
+      .carte-legende .pint { width: 17px; height: 23px; display: block; }
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
          chaque deplacement) -- ne jamais lui donner de transform a
@@ -3192,6 +3193,12 @@
 
           <div id="map"></div>
           <canvas id="etoiles" aria-hidden="true"></canvas>
+
+          <!-- Legende : dit ce que represente le verre sur la carte,
+               sans rien ecrire par-dessus la carte elle-meme. Remplie
+               par le JS, qui reutilise le meme pint() que le marqueur --
+               les deux ne peuvent donc pas diverger. -->
+          <div class="carte-legende" id="carte-legende"></div>
 
           <div class="club-rail" id="club-rail">
           </div>
@@ -5359,7 +5366,6 @@ function ouvrirChoixReseau(nomClub) {
     var etapes = [
       { n: "1", t: "Ouvre " + (kindId === "tiktok" ? "TikTok" : "Instagram") },
       { n: "2", t: "Poste " + k.verbe + " en mentionnant " + cible },
-      { n: "3", t: "Reviens nous le dire" },
     ];
     return (
       '<ol class="ps-steps">' +
@@ -5392,8 +5398,10 @@ function ouvrirChoixReseau(nomClub) {
     // vraie PWA clubbeur -- voir post-story.js, "on ne demande le lien
     // que pour les Reels et TikToks".
     if (kindId === "story") {
-      return '<p class="desc ps-hint">Une story n\'a pas de lien public : on la détecte via ta mention.</p>' +
-        '<input class="va-input" id="story-url" type="url" hidden />';
+      // La phrase d'explication a ete retiree (Julien) : une story sans
+      // champ de lien se comprend d'elle-meme. Le champ reste, masque,
+      // parce que le formulaire lit toujours #story-url a l'envoi.
+      return '<input class="va-input" id="story-url" type="url" hidden />';
     }
     return '<label class="rg-label" style="font-size:13px" for="story-url">Lien de ta publication</label>' +
       '<input class="va-input" id="story-url" type="url" placeholder="' +
@@ -5621,21 +5629,29 @@ function ouvrirChoixReseau(nomClub) {
   // a un tap sur une fiche club) : liste des vrais clubs de la base,
   // pour ne jamais soumettre a l'aveugle un nom invente.
   if (!nomClub) {
-    supabaseClubbeur.from("clubs").select("name, ig_handle").order("name").then(function (res) {
-      var select = $("#story-club");
-      if (!select || !res.data) return;
-      var handleParNom = {};
-      res.data.forEach(function (c) {
-        handleParNom[c.name] = c.ig_handle;
+    /* La liste vient de CLUBS -- les deux vrais clubs, les memes que
+       sur la carte et dans la boutique. Elle etait lue dans la table
+       clubs, qui ne contient que "Mirage" : on proposait donc de poster
+       pour un club de demo qui n'existe nulle part ailleurs dans
+       l'appli. Le handle Instagram a taguer est ensuite complete depuis
+       la base quand le club y existe pour de vrai. */
+    var select = $("#story-club");
+    if (select) {
+      Object.keys(CLUBS).forEach(function (k) {
         var option = document.createElement("option");
-        option.value = c.name;
-        option.textContent = c.name;
+        option.value = CLUBS[k].nom;
+        option.textContent = CLUBS[k].nom;
         select.appendChild(option);
+      });
+      var handleParNom = {};
+      supabaseClubbeur.from("clubs").select("name, ig_handle").then(function (res) {
+        (res.data || []).forEach(function (c) { handleParNom[c.name] = c.ig_handle; });
+        if (select.value) majHandle(handleParNom[select.value]);
       });
       select.addEventListener("change", function () {
         majHandle(handleParNom[select.value]);
       });
-    });
+    }
 
     activerScanClub();
   }
@@ -6032,15 +6048,15 @@ map.on("load", function () {
   // "je suis ici" pendant qu'on se deplace sur la carte -- demande de
   // Julien apres le retrait des amis de la carte ("un verre qui est
   // nous", pas un point generique). Le verre seul ne disait pas a QUI
-  // il appartenait : une etiquette "Toi" le dit, tout simplement
-  // (voir .moi-etiquette plus haut).
+  // il appartenait : la legende en haut a gauche de la carte le dit
+  // (voir .carte-legende plus haut).
   var porteurMoi = document.createElement("div");
   porteurMoi.className = "marker-porteur";
   var elMoi = document.createElement("div");
   elMoi.className = "moi-marker";
   // Silhouette par defaut : la maquette s'ouvre sans session, et un
   // marqueur vide serait pire que pas de pastille du tout.
-  elMoi.innerHTML = pint(1) + '<span class="moi-etiquette">Toi</span>';
+  elMoi.innerHTML = pint(1);
   elMoi.setAttribute("role", "img");
   elMoi.setAttribute("aria-label", "Ma position");
 
@@ -6049,6 +6065,7 @@ map.on("load", function () {
     .setLngLat(MOI)
     .addTo(map);
   marqueursEchelle.push({ el: elMoi, dx: 0, dy: 0 });
+
 
   majTailleMarqueurs();
   map.on("zoom", majTailleMarqueurs);
@@ -7847,6 +7864,12 @@ async function echanger(item) {
 /* ==========================================================
    DEPART
    ========================================================== */
+
+// La legende de la carte ne depend pas de la carte : si les tuiles ne
+// repondent pas, map.on("load") ne se declenche jamais, et une legende
+// qui disparaitrait avec elle serait un piege de plus a diagnostiquer.
+var legendeCarte = document.getElementById("carte-legende");
+if (legendeCarte) legendeCarte.innerHTML = pint(1) + "<span>Toi</span>";
 
 majCagnotte(false);
 rendreOffre();
