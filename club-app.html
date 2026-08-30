@@ -222,6 +222,59 @@
       .reco-photo-btn[disabled] { opacity: .5; cursor: default; text-decoration: none; }
       .reco-photo-aide { font-size: 11px; color: var(--ink3); }
 
+      /* ---- Ecran d'accueil ----
+         Le meme que l'appli clubbeur (fond clair, logo au verre, texte a
+         gauche), mais le texte s'adresse au GERANT, pas a son client :
+         un club qui ouvre ca doit comprendre en une phrase ce que
+         l'outil lui apporte, pas ce que ses clients y gagnent.
+
+         Pose par-dessus tout, comme .vue-accueil dans app-preview.html :
+         il ne fait pas partie des onglets, il disparait quand on entre. */
+      .accueil {
+        position: absolute; inset: 0; z-index: 34;
+        display: flex; flex-direction: column; justify-content: flex-start;
+        padding: 38px 26px 32px; text-align: left;
+        background: #ffffff; color: #15181d;
+        transition: opacity .35s ease, visibility .35s ease;
+      }
+      .accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
+      .accueil-titre {
+        margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.03em;
+        line-height: 1.2; text-align: center;
+      }
+      /* Le PNG du logo n'occupe que la bande verticale 22%-72%, le reste
+         est du fond vide : on ne montre que cette bande, sinon il prend
+         deux fois la hauteur necessaire. Meme rattrapage que dans
+         app-preview.html -- un PNG a fond transparent serait plus propre.
+         Ici le fond de l'ecran est deja blanc creme, aucun filtre n'est
+         necessaire. */
+      .accueil-logo {
+        width: min(280px, 100%); aspect-ratio: 1 / .53;
+        margin: auto auto 0; align-self: center; overflow: hidden;
+      }
+      /* Le PNG porte un fond creme qui se verrait comme un rectangle
+         beige sur le blanc : meme rattrapage que dans app-preview.html,
+         un leger gain par canal qui n'agit que sur les tons tres clairs
+         -- donc sur le fond, pas sur le verre. */
+      .accueil-logo img { display: block; width: 100%; height: auto; margin-top: -21%; filter: url(#logo-blanc-club); }
+      .accueil-texte { margin: auto 0 22px; }
+      .accueil-lead {
+        margin: 0; font-size: 14.5px; font-weight: 500;
+        letter-spacing: -.01em; line-height: 1.45; color: #5b6472;
+      }
+      .accueil-points { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+      .accueil-points li {
+        display: flex; gap: 9px; align-items: flex-start;
+        font-size: 13px; font-weight: 550; line-height: 1.4; color: #5b6472;
+      }
+      .accueil-points b { color: #15181d; font-weight: 750; }
+      .accueil-puce {
+        flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%;
+        background: rgba(255,47,69,.12); display: grid; place-items: center;
+      }
+      .accueil-puce svg { width: 10px; height: 10px; stroke: #ff2f45; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .accueil-actions { width: 100%; display: grid; gap: 10px; }
+
       /* ---- Bandeau "mode demo" ----
          Hors session, TOUS les boutons d'ecriture partaient quand meme
          vers Supabase et revenaient avec "invalid input syntax for type
@@ -404,6 +457,50 @@
                  revenir ici automatiquement. Meme compte Supabase que
                  partout ailleurs (aucun nouveau systeme de comptes), juste
                  le formulaire vit dans cette page. -->
+            <!-- Le filtre qui blanchit le fond du logo. Hors flux,
+                 invisible : il n'existe que pour etre reference par le
+                 CSS. color-interpolation-filters="sRGB" est
+                 indispensable, sinon les filtres travaillent en lineaire
+                 et les gains sont faux. -->
+            <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;pointer-events:none">
+              <filter id="logo-blanc-club" color-interpolation-filters="sRGB">
+                <feComponentTransfer>
+                  <feFuncR type="linear" slope="1.0324"/>
+                  <feFuncG type="linear" slope="1.0944"/>
+                  <feFuncB type="linear" slope="1.1435"/>
+                </feComponentTransfer>
+              </filter>
+            </svg>
+
+            <!-- ================= ECRAN D'ACCUEIL =================
+                 Premier ecran d'un club qui ouvre l'appli. Il parle du
+                 club, jamais de ses clients : c'est lui qui paie. -->
+            <div class="accueil" id="accueil">
+              <h1 class="accueil-titre">Noctify, côté club.</h1>
+
+              <p class="accueil-logo">
+                <img src="/noctify-logo-verre.png" alt="Noctify" width="1254" height="1254" />
+              </p>
+
+              <div class="accueil-texte">
+                <p class="accueil-lead">
+                  Vos clients publient vos soirées, vous voyez ce que ça rapporte.
+                </p>
+                <ul class="accueil-points">
+                  <li><span class="accueil-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                    <span><b>Les vues que vos soirées génèrent</b>, mesurées, pas estimées.</span></li>
+                  <li><span class="accueil-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                    <span><b>Vos récompenses</b>, que vous réglez vous-même.</span></li>
+                  <li><span class="accueil-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                    <span><b>Votre affiche à imprimer</b>, avec votre QR code.</span></li>
+                </ul>
+              </div>
+
+              <div class="accueil-actions">
+                <button type="button" class="bouton pleine" id="accueil-commencer">Commencer</button>
+              </div>
+            </div>
+
             <div class="porte" id="porte" hidden>
               <h1 class="ecran-titre" style="margin-bottom:14px">Noctify club</h1>
               <p id="porte-message">Connecte-toi avec ton compte club.</p>
@@ -681,6 +778,20 @@
       }
 
       var PORTE = $("#porte");
+      var ACCUEIL = $("#accueil");
+
+      // "Commencer" mene a la porte si personne n'est connecte, au
+      // tableau de bord sinon : le club qui revient ne doit pas se
+      // retaper un ecran de bienvenue chaque matin.
+      $("#accueil-commencer").addEventListener("click", function () {
+        ACCUEIL.classList.add("masque");
+        if (!ETAT.session) {
+          modeInscription = false;
+          majModePorte();
+          afficherPorte("Connecte-toi avec ton compte club.");
+          $("#porte-form").hidden = false;
+        }
+      });
       var TABS = document.querySelectorAll(".tab");
       var VUES = document.querySelectorAll(".vue");
 
@@ -745,6 +856,8 @@
 
         ETAT.session = data.session || null;
         ETAT.data = data;
+        // Deja connecte : l'accueil n'a rien a lui apprendre.
+        if (ETAT.session) ACCUEIL.classList.add("masque");
         await chargerInstagram();
         rendreDashboard();
         rendreRecompenses();
