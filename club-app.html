@@ -111,6 +111,49 @@
       .bouton.pleine { width: 100%; }
       .bouton[disabled] { opacity: .55; cursor: default; }
 
+      /* ---- Reprise du simulateur (Julien : "inspire-toi de la demo") ----
+         Ce qui fait sa densite : un kicker numerote en monospace, un
+         chiffre enorme accompagne de SA VARIATION, une petite serie en
+         barres qui donne la forme des dernieres soirees, et un flux
+         d'activite qui prouve que ca vit. On garde le fond clair demande
+         plus tot -- c'est la structure qu'on emprunte, pas la couleur. */
+      .kicker-sec {
+        display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+        font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+        letter-spacing: .16em; text-transform: uppercase; color: var(--ink3);
+      }
+      .kicker-sec::before {
+        content: ""; width: 6px; height: 6px; border-radius: 1px;
+        background: var(--accent); transform: rotate(45deg); flex: 0 0 auto;
+      }
+
+      /* La variation : sans elle, un grand nombre ne dit rien. 33 937
+         vues, c'est beaucoup ou peu ? +18 % repond. */
+      .hero-delta {
+        display: inline-flex; align-items: center; gap: 4px;
+        margin-left: 10px; padding: 3px 9px; border-radius: 999px;
+        font-family: var(--mono); font-size: 11px; font-weight: 700;
+        vertical-align: middle;
+      }
+      .hero-delta.hausse { background: rgba(18,135,77,.12); color: var(--succes); }
+      .hero-delta.baisse { background: rgba(255,47,69,.1); color: var(--accent); }
+      .hero-delta.plat { background: var(--s2); color: var(--ink3); }
+
+      /* Les barres : une par soiree, la derniere en corail. Elles disent
+         la REGULARITE, ce qu'une courbe lissee cache. */
+      .hero-barres { display: flex; align-items: flex-end; gap: 4px; height: 46px; margin-top: 14px; }
+      .hero-barre {
+        flex: 1; min-width: 0; border-radius: 3px 3px 0 0;
+        background: var(--s3); min-height: 3px;
+      }
+      .hero-barre.forte { background: var(--ink); }
+      .hero-barre.derniere { background: var(--accent); }
+      .hero-legende {
+        display: flex; justify-content: space-between; margin-top: 7px;
+        font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--ink3);
+      }
+
       /* ---- Chiffre d'entete du tableau de bord ----
          Cinq cartes de meme taille, c'etait une liste, pas un tableau de
          bord : rien ne disait ce qu'il fallait regarder en premier. Les
@@ -167,6 +210,9 @@
         background: var(--s1); border: 1px solid var(--line);
         border-radius: 16px; padding: 14px 15px; margin-bottom: 20px;
       }
+      /* display:flex bat la regle [hidden] du navigateur : sans cette
+         ligne, la carte masquee laissait une bande vide sous le hero. */
+      .insta-carte[hidden] { display: none; }
       .insta-carte.a-faire { border-color: rgba(255,47,69,.35); }
       .insta-ico {
         flex: 0 0 auto; width: 38px; height: 38px; border-radius: 12px;
@@ -584,14 +630,17 @@
 
             <!-- ================= TABLEAU DE BORD ================= -->
             <div class="vue actif" id="vue-dashboard">
+              <p class="kicker-sec">01 · Vue générale</p>
               <h1 class="ecran-titre">Tableau de bord</h1>
               <p class="ecran-sous" id="dash-etablissement">—</p>
 
               <div class="hero">
                 <span class="hero-label">Vues générées</span>
-                <span class="hero-valeur" id="kpi-vues">—</span>
+                <span class="hero-valeur"><span id="kpi-vues">—</span><span class="hero-delta plat" id="kpi-delta"></span></span>
                 <span class="hero-note" id="kpi-vues-note"></span>
-                <div class="hero-graphe" id="hero-graphe"></div>
+                <div class="hero-barres" id="hero-barres"></div>
+                <div class="hero-legende"><span>14 derniers jours</span><span id="hero-legende-fin">Aujourd'hui</span></div>
+                <div class="hero-graphe" id="hero-graphe" hidden></div>
               </div>
 
               <div class="insta-carte" id="dash-instagram" hidden></div>
@@ -1099,51 +1148,45 @@
          Les jours sans publication valent 0 et sont dessines : les
          sauter donnerait une courbe continue qui laisse croire a une
          activite reguliere. Un club doit voir ses trous. */
-      function sparklineVues(validated) {
-        var JOURS = 14;
+      /* Vues par jour sur 14 jours. Sortie de la sparkline parce que les
+         barres, la variation et la courbe lisent tous la meme serie : la
+         calculer trois fois, c'est trois occasions de diverger. */
+      function seauxVues(validated, jours) {
+        var JOURS = jours || 14;
         var jour = 86400000;
-        var finAujourdhui = new Date();
-        finAujourdhui.setHours(23, 59, 59, 999);
-        var fin = finAujourdhui.getTime();
-
-        // On compte a REBOURS depuis la fin d'aujourd'hui : le dernier
-        // seau est toujours le jour courant. Partir du debut de fenetre
-        // decalait tout d'un jour et retournait la courbe.
+        var f = new Date(); f.setHours(23, 59, 59, 999);
+        var fin = f.getTime();
         var seaux = new Array(JOURS).fill(0);
         validated.forEach(function (sub) {
           var t = Date.parse(sub.submitted_at || "");
           if (!Number.isFinite(t)) return;
-          var recul = Math.floor((fin - t) / jour);
-          var index = JOURS - 1 - recul;
+          var index = JOURS - 1 - Math.floor((fin - t) / jour);
           if (index >= 0 && index < JOURS) seaux[index] += Number(sub.views_count || 0);
         });
+        return seaux;
+      }
 
+      /* La variation : la seconde moitie de la periode contre la
+         premiere. Pas "vs hier" -- une seule soiree ratee ferait
+         -100 % et ne dirait rien d'utile a un club qui ouvre deux
+         soirs par semaine. */
+      function variationVues(seaux) {
+        var moitie = Math.floor(seaux.length / 2);
+        var avant = seaux.slice(0, moitie).reduce(function (a, b) { return a + b; }, 0);
+        var apres = seaux.slice(moitie).reduce(function (a, b) { return a + b; }, 0);
+        if (!avant) return apres ? null : 0; // null = pas de base de comparaison
+        return Math.round(((apres - avant) / avant) * 100);
+      }
+
+      function rendreBarres(seaux) {
         var max = Math.max.apply(null, seaux);
-        if (!max) return null;
-
-        var L = 300, H = 56;
-        var pas = L / (JOURS - 1);
-        var points = seaux.map(function (v, i) {
-          return [i * pas, H - (v / max) * (H - 6) - 3];
-        });
-
-        var ligne = points.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ");
-        var aire = "0," + H + " " + ligne + " " + L + "," + H;
-        var dernier = points[points.length - 1];
-
-        return (
-          '<svg viewBox="0 0 ' + L + " " + H + '" preserveAspectRatio="none" aria-hidden="true">' +
-            '<defs><linearGradient id="grad-vues" x1="0" y1="0" x2="0" y2="1">' +
-              '<stop offset="0%" stop-color="var(--accent)" stop-opacity=".22"/>' +
-              '<stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>' +
-            "</linearGradient></defs>" +
-            '<polygon points="' + aire + '" fill="url(#grad-vues)"/>' +
-            '<polyline points="' + ligne + '" fill="none" stroke="var(--accent)" stroke-width="2" ' +
-              'stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
-            '<circle cx="' + dernier[0].toFixed(1) + '" cy="' + dernier[1].toFixed(1) + '" r="3" ' +
-              'fill="var(--accent)" vector-effect="non-scaling-stroke"/>' +
-          "</svg>"
-        );
+        var zone = $("#hero-barres");
+        if (!max) { zone.innerHTML = ""; return; }
+        zone.innerHTML = seaux.map(function (v, i) {
+          var h = Math.max(3, Math.round((v / max) * 46));
+          var cls = i === seaux.length - 1 ? " derniere" : (v >= max * 0.6 ? " forte" : "");
+          return '<span class="hero-barre' + cls + '" style="height:' + h + 'px"></span>';
+        }).join("");
       }
 
       function rendreDashboard() {
@@ -1155,9 +1198,31 @@
 
         rendreCarteInstagram();
 
-        var courbe = sparklineVues(stats.validated);
-        $("#hero-graphe").innerHTML = courbe
-          || '<p class="hero-vide">Pas encore de publication sur les 14 derniers jours.</p>';
+        var seaux = seauxVues(stats.validated, 14);
+        rendreBarres(seaux);
+
+        var variation = variationVues(seaux);
+        var delta = $("#kpi-delta");
+        if (variation === null) {
+          // Rien avant : afficher "+∞ %" serait faux, et "0 %" aussi.
+          delta.className = "hero-delta plat";
+          delta.textContent = "nouveau";
+        } else {
+          delta.className = "hero-delta " + (variation > 0 ? "hausse" : variation < 0 ? "baisse" : "plat");
+          delta.textContent = (variation > 0 ? "↑ +" : variation < 0 ? "↓ " : "→ ") + variation + " %";
+        }
+
+        // La courbe et les barres dessinaient la MEME serie l'une sous
+        // l'autre. Les barres disent mieux la regularite d'un club qui
+        // n'ouvre que deux soirs par semaine : une courbe lisse les
+        // trous, alors que ce sont eux, l'information. La courbe ne
+        // reste que pour le cas ou il n'y a rien a montrer.
+        var vide = seaux.every(function (v) { return !v; });
+        $("#hero-graphe").hidden = !vide;
+        $("#hero-barres").hidden = vide;
+        if (vide) {
+          $("#hero-graphe").innerHTML = '<p class="hero-vide">Pas encore de publication sur les 14 derniers jours.</p>';
+        }
         $("#kpi-points").textContent = nb.format(stats.points);
         $("#kpi-scans").textContent = nb.format(stats.scanCount);
         $("#kpi-scans-note").textContent = stats.scanCount ? nb.format(stats.uniqueScanners) + " personnes différentes" : "Aucun scan encore";
