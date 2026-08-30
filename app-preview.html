@@ -3987,8 +3987,59 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
     VUE_ACCUEIL.classList.add("masque");
     assurerProfil(session.user);
     chargerSoldeReel(session.user.id);
+    creditScanUrl();
   }
 });
+
+/* ==========================================================
+   ARRIVEE PAR LE QR DU CLUB (?club=<slug>)
+
+   Le QR colle au mur du club ouvre cette page. Jusqu'ici elle
+   n'en faisait RIEN : le scanner integre (bouton "Scanner le QR"
+   dans Poster ma story) appelait bien checkin_scan, mais un scan
+   avec l'appareil photo du telephone -- ce que fait un client
+   normal -- ouvrait juste l'appli, sans un point. Julien : "le QR
+   ne redirige pas, est-ce que je gagne des points si je scanne ?".
+   Non, justement.
+
+   checkin_scan credite le bonus de scan et se protege lui-meme des
+   abus (une fois par club toutes les 12h) : on peut donc l'appeler
+   sans compter les passages nous-memes.
+
+   Le slug est garde si personne n'est connecte : on ne perd pas le
+   check-in de quelqu'un qui doit d'abord creer son compte, sinon il
+   faudrait ressortir et rescanner l'affiche.
+   ========================================================== */
+var CLE_SCAN_EN_ATTENTE = "vn_scan_en_attente";
+
+async function creditScanUrl() {
+  var params = new URLSearchParams(location.search);
+  var slug = params.get("club");
+
+  if (slug) {
+    try { sessionStorage.setItem(CLE_SCAN_EN_ATTENTE, slug); } catch (e) {}
+    // L'URL est nettoyee tout de suite : un rechargement ne doit pas
+    // rejouer le scan, et le slug n'a plus rien a faire dans la barre
+    // d'adresse une fois lu.
+    history.replaceState(null, "", location.pathname + location.hash);
+  } else {
+    try { slug = sessionStorage.getItem(CLE_SCAN_EN_ATTENTE); } catch (e) {}
+  }
+  if (!slug) return;
+
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return; // on retentera apres la connexion
+
+  try { sessionStorage.removeItem(CLE_SCAN_EN_ATTENTE); } catch (e) {}
+
+  var res = await supabaseClubbeur.rpc("checkin_scan", { p_club_slug: String(slug).trim().toLowerCase() });
+  if (res.error || !(res.data && res.data[0])) return;
+
+  activerVue("boutique");
+  await chargerSoldeReel(session.user.id);
+}
+
+creditScanUrl();
 
 // Cree la ligne public.users si elle n'existe pas encore. Necessaire
 // pour "Ajouter un ami" plus bas : add_friend() a besoin que l'appelant

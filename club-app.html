@@ -515,20 +515,34 @@
                 <div class="fiche-champ">
                   <label for="fiche-categorie">Type d'établissement</label>
                   <select id="fiche-categorie">
+                    <!-- Restaurant, salle evenementielle et "Autre" sont
+                         retires (Julien) : Noctify ne s'adresse qu'a des
+                         lieux de sortie nocturne, et proposer des
+                         categories qu'on ne saura pas exploiter donne un
+                         produit plus flou, pas plus large. -->
                     <option value="club">Boîte de nuit</option>
                     <option value="bar">Bar</option>
-                    <option value="restaurant">Restaurant</option>
-                    <option value="event_venue">Salle événementielle</option>
-                    <option value="other">Autre</option>
+                    <option value="discotheque">Discothèque</option>
                   </select>
+                </div>
+                <div class="fiche-champ">
+                  <label for="fiche-adresse">Adresse</label>
+                  <input type="text" id="fiche-adresse" maxlength="140" placeholder="Rue et numéro" />
+                  <span class="fiche-aide">Affichée sur ta fiche dans l'appli, et utilisée pour te placer sur la carte.</span>
                 </div>
                 <div class="fiche-champ">
                   <label for="fiche-instagram">Compte Instagram (sans @)</label>
                   <input type="text" id="fiche-instagram" maxlength="60" placeholder="mirage.brussels" />
                 </div>
                 <div class="fiche-champ">
-                  <label for="fiche-couleur">Couleur de la fiche</label>
+                  <!-- "Couleur de la fiche" ne voulait rien dire (Julien :
+                       "je ne comprends pas ce que c'est"). C'est la
+                       couleur de la pastille du club sur la carte de
+                       l'appli clubbeur : on le dit, et l'apercu juste
+                       au-dessus la montre en direct. -->
+                  <label for="fiche-couleur">Couleur de ton point sur la carte</label>
                   <input type="color" id="fiche-couleur" />
+                  <span class="fiche-aide">C'est la couleur de ta pastille sur la carte des clubs.</span>
                 </div>
                 <p class="fiche-msg" id="fiche-msg"></p>
                 <button type="submit" class="bouton pleine" id="fiche-enregistrer">Enregistrer</button>
@@ -613,7 +627,49 @@
       import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
       import { fetchDashboardData, fallbackDashboardData } from "./dashboardData.js";
       import { getDashboardStats, getActiveRewards } from "./lib/dashboardStats.js";
-      import { buildScanUrl, renderQrSvg, renderQrPngDataUrl } from "./lib/tracking/qrCode.js";
+      import { renderQrPngDataUrl } from "./lib/tracking/qrCode.js";
+      import { createClient } from "@supabase/supabase-js";
+
+      /* Deuxieme connexion, en LECTURE seule, vers la base des clubbeurs.
+         Le QR doit ouvrir l'appli des clubbeurs, et cette appli identifie
+         un club par son `slug` -- une donnee qui vit dans l'autre base.
+         Cle anon, deja publique dans le bundle d'app-preview.html.
+
+         C'est un contournement : le lien propre entre les deux bases est
+         la colonne clubs.establishment_id
+         (supabase/clubbeur_pont_points_automatiques.sql). Tant qu'elle
+         n'existe pas, on rapproche les deux cotes par le NOM du club. */
+      var supabaseClubbeur = createClient(
+        "https://gcopwgmqjiufemapamek.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdjb3B3Z21xaml1ZmVtYXBhbWVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDIzMDUsImV4cCI6MjEwMTUxODMwNX0.Vni3uEoA1glVVbALyh4JPI2TNZRaHc52py3NKsmEBlU",
+        { auth: { persistSession: false, autoRefreshToken: false } },
+      );
+
+      /* L'URL encodee dans le QR. Elle ouvre l'appli clubbeur avec le
+         slug du club : c'est ce que creditScanUrl() y attend pour
+         appeler checkin_scan et creder le bonus de scan.
+
+         Avant, le QR pointait sur /scan.html -- le parcours cote
+         GERANTS, anonyme, qui ne credite aucun point dans l'appli des
+         clubbeurs. Scanner l'affiche ne rapportait donc rien. */
+      function urlScanClubbeur(slug) {
+        var url = new URL("/app-preview.html", window.location.origin);
+        url.searchParams.set("club", slug);
+        return url.toString();
+      }
+
+      async function slugClubbeur(nomClub) {
+        // Hors session, tout l'ecran est une demo : inutile d'interroger
+        // la vraie base pour un club qui n'est pas le sien.
+        if (estDemo()) return "demo";
+        if (!nomClub) return null;
+        try {
+          var res = await supabaseClubbeur.from("clubs").select("slug").eq("name", nomClub).maybeSingle();
+          return (res.data && res.data.slug) || null;
+        } catch (erreur) {
+          return null;
+        }
+      }
 
       var $ = function (s) { return document.querySelector(s); };
       var nb = new Intl.NumberFormat("fr-FR");
@@ -1152,8 +1208,24 @@
           msg.style.display = "none";
         }
 
-        var url = buildScanUrl(window.location.origin, code);
         var nomClub = (etab.name || "").trim();
+        var slug = await slugClubbeur(nomClub);
+
+        // Sans slug, le club n'existe pas encore cote clubbeurs : le QR
+        // ouvrirait une appli qui ne saurait pas a qui creder le scan.
+        // On le dit, plutot que d'imprimer une affiche qui ne rapporte
+        // rien -- c'est exactement le bug d'avant.
+        if (!slug) {
+          $("#affiche-apercu").removeAttribute("src");
+          lien.hidden = true;
+          $("#affiche-telecharger").hidden = true;
+          msg.style.display = "block";
+          msg.style.color = "var(--accent)";
+          msg.textContent = "Ce club n'existe pas encore dans l'appli des clubbeurs : le QR ne donnerait aucun point. Contacte-nous.";
+          return;
+        }
+
+        var url = urlScanClubbeur(slug);
         var handle = (etab.ig_handle || "").replace(/^@/, "").trim();
 
         try {
@@ -1387,6 +1459,7 @@
         });
         $("#fiche-nom").value = e.name || "";
         $("#fiche-ville").value = e.city || "";
+        $("#fiche-adresse").value = e.address || "";
         $("#fiche-telephone").value = e.phone || "";
         $("#fiche-categorie").value = e.category || "club";
         $("#fiche-instagram").value = (e.ig_handle || "").replace(/^@/, "");
@@ -1424,6 +1497,7 @@
           phone: $("#fiche-telephone").value.trim() || null,
           category: $("#fiche-categorie").value,
           ig_handle: handle || null,
+          address: $("#fiche-adresse").value.trim() || null,
           primary_color: $("#fiche-couleur").value,
         };
 
