@@ -195,6 +195,33 @@
       .qr-actions { display: grid; gap: 8px; width: 100%; }
       .qr-actions .bouton { width: 100%; }
 
+      /* ---- Photo d'une recompense ----
+         Le club montre ce qu'il donne vraiment. Sans photo, la boutique
+         du clubbeur retombe sur l'illustration choisie d'apres le titre
+         (choisirArt), ce qui reste le cas le plus frequent : la vignette
+         affiche donc TOUJOURS quelque chose, jamais un trou gris. */
+      .reco-photo {
+        display: flex; align-items: center; gap: 11px; margin-bottom: 10px;
+      }
+      .reco-photo-vue {
+        flex: 0 0 auto; width: 58px; height: 58px; border-radius: 12px;
+        overflow: hidden; background: var(--s2); border: 1px solid var(--line);
+        display: grid; place-items: center;
+      }
+      .reco-photo-vue img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .reco-photo-vue span {
+        font-size: 10px; font-weight: 700; color: var(--ink3); text-align: center; padding: 0 4px; line-height: 1.2;
+      }
+      .reco-photo-actions { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+      .reco-photo-btn {
+        border: 0; background: none; padding: 0; cursor: pointer; font: inherit;
+        font-size: 12px; font-weight: 700; color: var(--accent);
+        text-decoration: underline; text-underline-offset: 3px; text-align: left;
+      }
+      .reco-photo-btn.sobre { color: var(--ink3); }
+      .reco-photo-btn[disabled] { opacity: .5; cursor: default; text-decoration: none; }
+      .reco-photo-aide { font-size: 11px; color: var(--ink3); }
+
       /* ---- Bandeau "mode demo" ----
          Hors session, TOUS les boutons d'ecriture partaient quand meme
          vers Supabase et revenaient avec "invalid input syntax for type
@@ -1169,6 +1196,21 @@
         zone.innerHTML = bandeauDemo("tes récompenses") + rewards.map(function (r) {
           return (
             '<div class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
+              '<div class="reco-photo">' +
+                '<span class="reco-photo-vue">' +
+                  (r.image_url
+                    ? '<img src="' + escapeHtml(r.image_url) + '" alt="" />'
+                    : "<span>Illustration auto</span>") +
+                "</span>" +
+                '<span class="reco-photo-actions">' +
+                  '<button type="button" class="reco-photo-btn" data-photo' + inerte + ">" +
+                    (r.image_url ? "Changer la photo" : "Ajouter une photo") +
+                  "</button>" +
+                  (r.image_url
+                    ? '<button type="button" class="reco-photo-btn sobre" data-photo-retirer' + inerte + ">Retirer la photo</button>"
+                    : '<span class="reco-photo-aide">Sinon, un dessin est choisi selon le nom.</span>') +
+                "</span>" +
+              "</div>" +
               '<div class="champ"><label>Nom</label><input type="text" data-champ="title" value="' + escapeHtml(r.title) + '"' + inerte + " /></div>" +
               '<div class="recompense-lignes">' +
                 '<div class="champ"><label>Seuil (pts)</label><input type="number" min="0" step="10" data-champ="points_required" value="' + Number(r.points_required || 0) + '"' + inerte + " /></div>" +
@@ -1193,6 +1235,103 @@
         zone.querySelectorAll("[data-retirer]").forEach(function (bouton) {
           bouton.addEventListener("click", function () { retirerRecompense(bouton.closest("[data-reward-id]")); });
         });
+        zone.querySelectorAll("[data-photo]").forEach(function (bouton) {
+          bouton.addEventListener("click", function () { choisirPhoto(bouton.closest("[data-reward-id]")); });
+        });
+        zone.querySelectorAll("[data-photo-retirer]").forEach(function (bouton) {
+          bouton.addEventListener("click", function () { majPhotoRecompense(bouton.closest("[data-reward-id]"), null); });
+        });
+      }
+
+      /* ---- Photo d'une recompense ----
+         Un seul <input type=file> cree a la volee, pas un par carte : dix
+         recompenses feraient dix champs caches dans le DOM pour un seul
+         usage a la fois. */
+      function choisirPhoto(carte) {
+        if (estDemo()) return;
+        var champ = document.createElement("input");
+        champ.type = "file";
+        champ.accept = "image/*";
+        champ.addEventListener("change", async function () {
+          var fichier = champ.files && champ.files[0];
+          if (fichier) await envoyerPhoto(carte, fichier);
+        });
+        champ.click();
+      }
+
+      /* Recadrage en carre AVANT l'envoi. C'est la seule chose qui
+         empeche la boutique du clubbeur de redevenir la grille
+         depareillee qu'on a passe une matinee a corriger : les vignettes
+         y sont carrees, une photo de telephone en 3:4 y serait rognee au
+         hasard. On rogne donc au centre, une fois, ici -- et on
+         redimensionne a 640px, une photo brute de 5 Mo n'ayant aucune
+         chance de partir depuis le wifi d'un club. */
+      function carrerImage(fichier) {
+        return new Promise(function (resolve) {
+          var url = URL.createObjectURL(fichier);
+          var img = new Image();
+          img.onload = function () {
+            try {
+              var cote = Math.min(img.naturalWidth, img.naturalHeight);
+              var sx = (img.naturalWidth - cote) / 2;
+              var sy = (img.naturalHeight - cote) / 2;
+              var T = Math.min(640, cote);
+              var canvas = document.createElement("canvas");
+              canvas.width = T; canvas.height = T;
+              canvas.getContext("2d").drawImage(img, sx, sy, cote, cote, 0, 0, T, T);
+              canvas.toBlob(function (blob) {
+                URL.revokeObjectURL(url);
+                resolve(blob || fichier);
+              }, "image/jpeg", 0.85);
+            } catch (e) {
+              URL.revokeObjectURL(url);
+              resolve(fichier);
+            }
+          };
+          img.onerror = function () { URL.revokeObjectURL(url); resolve(fichier); };
+          img.src = url;
+        });
+      }
+
+      async function envoyerPhoto(carte, fichier) {
+        var etat = carte.querySelector("[data-etat]");
+        etat.textContent = "Envoi de la photo…";
+
+        var carree = await carrerImage(fichier);
+        // Le dossier porte l'establishment_id : c'est ce que verifie la
+        // policy de storage (migration 202608310001).
+        var chemin = ETAT.data.establishment.id + "/" + carte.dataset.rewardId + "-" + Date.now() + ".jpg";
+
+        var envoi = await supabase.storage.from("reward-photos").upload(chemin, carree, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+        if (envoi.error) {
+          etat.textContent = "Photo non envoyée";
+          return;
+        }
+
+        var url = supabase.storage.from("reward-photos").getPublicUrl(chemin).data.publicUrl;
+        await majPhotoRecompense(carte, url);
+      }
+
+      async function majPhotoRecompense(carte, url) {
+        if (estDemo()) return;
+        var etat = carte.querySelector("[data-etat]");
+        etat.textContent = "Enregistrement…";
+        var { error } = await supabase.from("rewards").update({ image_url: url }).eq("id", carte.dataset.rewardId);
+        if (error) {
+          // La colonne peut ne pas exister tant que la migration n'est
+          // pas passee : le dire en clair plutot que de laisser le
+          // message Postgres brut, illisible pour un gerant.
+          etat.textContent = /image_url/.test(error.message)
+            ? "Photos indisponibles (migration non appliquée)"
+            : "Non enregistré";
+          return;
+        }
+        var reward = (ETAT.data.rewards || []).find(function (r) { return String(r.id) === String(carte.dataset.rewardId); });
+        if (reward) reward.image_url = url;
+        rendreRecompenses();
       }
 
       async function enregistrerRecompense(carte) {
