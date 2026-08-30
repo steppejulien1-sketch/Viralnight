@@ -1674,18 +1674,11 @@
       .offre-hero .photo { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; }
       .offre-hero .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        filter: saturate(1.25) contrast(1.1);
       }
-      /* Meme recadrage que la carte (voir .carte-reco .photo img) sur
-         le fichier 16:9 du verre, pour la banniere de l'offre du soir. */
-      .offre-hero .photo img[src*="shot-hero"] {
-        transform: scale(1.15); object-position: 40% 55%;
-      }
-      .offre-hero .photo::after {
-        content: ""; position: absolute; inset: 0;
-        background: linear-gradient(to top, rgba(10,10,12,.45) 0%, rgba(10,10,12,0) 40%);
-        pointer-events: none;
-      }
+      /* Plus de voile sombre en bas : il servait a decoller le badge
+         "OFFERT" d'une photo de bar sombre. Sur l'illustration en fond
+         clair, il ne laisse qu'une salissure grise -- et le badge, une
+         pastille blanche ombree, se lit tres bien sans lui. */
       .offre-hero .badge-offert {
         position: absolute; left: 12px; bottom: 12px;
         font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
@@ -2277,6 +2270,38 @@
       }
       .ps-pseudo-champ.ok .ps-pseudo-ok { display: grid; }
       .ps-pseudo-ok svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* ---- Trois vignettes : ce qu'on attend, et les deux erreurs ----
+         "Capture d'ecran de ton profil" ne dit pas grand-chose a 2h du
+         matin : la moitie des gens envoient leur story, l'autre moitie
+         un cadrage ou le pseudo est coupe -- justement la seule chose
+         dont le club a besoin. Trois schemas valent mieux que la
+         phrase. Dessines et non photographies : une vraie capture de
+         profil mettrait le compte de quelqu'un en clair dans une appli
+         publique, et un schema montre mieux ce qui compte (le pseudo en
+         haut) qu'une capture ou l'oeil se perd dans le contenu. */
+      .ps-exemples { display: flex; gap: 8px; }
+      .ps-exemple { flex: 1; min-width: 0; text-align: center; }
+      .ps-exemple-vue {
+        position: relative; width: 100%; aspect-ratio: 9 / 16;
+        border-radius: 9px; overflow: hidden;
+        background: var(--s1); border: 1px solid var(--line2);
+      }
+      .ps-exemple.ko .ps-exemple-vue { opacity: .62; }
+      .ps-exemple svg { display: block; width: 100%; height: 100%; }
+      .ps-exemple-jug {
+        position: absolute; top: 3px; right: 3px;
+        width: 15px; height: 15px; border-radius: 50%;
+        display: grid; place-items: center;
+        background: var(--succes-texte, #57d98a);
+      }
+      .ps-exemple.ko .ps-exemple-jug { background: var(--ink3); }
+      .ps-exemple-jug svg { width: 9px; height: 9px; stroke: #fff; fill: none; stroke-width: 3.2; stroke-linecap: round; }
+      .ps-exemple-txt {
+        display: block; margin-top: 5px;
+        font-size: 10.5px; font-weight: 650; line-height: 1.25; color: var(--ink3);
+      }
+      .ps-exemple.ok .ps-exemple-txt { color: var(--ink2); }
 
       /* La zone de depot est aussi une cible de collage et de glisser-
          deposer, pas seulement un input fichier -- .survol est pose par
@@ -5313,6 +5338,65 @@ function ouvrirChoixReseau(nomClub) {
     });
   }
 
+  /* Les trois vignettes d'exemple. Schemas d'un profil Instagram, pas
+     de vraies captures -- voir .ps-exemples dans le CSS. Volontairement
+     grossiers : a 64px de large, tout detail supplementaire devient du
+     bruit. */
+  function vignetteProfil(options) {
+    var coupe = options && options.coupe;
+    var y = coupe ? -13 : 0;
+    return (
+      '<svg viewBox="0 0 54 96" aria-hidden="true">' +
+        '<rect width="54" height="96" fill="var(--s2)"/>' +
+        '<g transform="translate(0 ' + y + ')">' +
+          // avatar + pseudo : c'est CE bloc que le club doit pouvoir lire
+          '<circle cx="16" cy="19" r="9" fill="var(--line2)"/>' +
+          '<rect x="29" y="14" width="19" height="3.4" rx="1.7" fill="var(--ink3)"/>' +
+          '<rect x="29" y="20" width="13" height="2.6" rx="1.3" fill="var(--line2)"/>' +
+          '<rect x="7" y="33" width="40" height="2.6" rx="1.3" fill="var(--line2)"/>' +
+          // la grille de publications, juste pour que ca "fasse profil"
+          '<g fill="var(--line2)">' +
+            '<rect x="7" y="42" width="12" height="12" rx="1.5"/><rect x="21" y="42" width="12" height="12" rx="1.5"/><rect x="35" y="42" width="12" height="12" rx="1.5"/>' +
+            '<rect x="7" y="56" width="12" height="12" rx="1.5"/><rect x="21" y="56" width="12" height="12" rx="1.5"/><rect x="35" y="56" width="12" height="12" rx="1.5"/>' +
+          "</g>" +
+        "</g>" +
+      "</svg>"
+    );
+  }
+
+  function vignetteStory() {
+    return (
+      '<svg viewBox="0 0 54 96" aria-hidden="true">' +
+        '<rect width="54" height="96" fill="var(--line2)"/>' +
+        // une story : une image plein cadre, un anneau en haut, pas de pseudo lisible
+        '<circle cx="11" cy="10" r="6" fill="none" stroke="var(--s2)" stroke-width="1.6"/>' +
+        '<rect x="20" y="8" width="16" height="2.6" rx="1.3" fill="var(--s2)" opacity=".8"/>' +
+        '<path d="M0 62l14-14 12 11 10-9 18 17v29H0z" fill="var(--ink3)" opacity=".5"/>' +
+        '<circle cx="38" cy="30" r="6" fill="var(--s2)" opacity=".65"/>' +
+      "</svg>"
+    );
+  }
+
+  function blocExemples() {
+    var oui = '<span class="ps-exemple-jug"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
+    var non = '<span class="ps-exemple-jug"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>';
+    var items = [
+      ["ok", vignetteProfil(null), oui, "Ton profil, pseudo visible"],
+      ["ko", vignetteStory(), non, "Pas ta story"],
+      ["ko", vignetteProfil({ coupe: true }), non, "Pseudo coupé"],
+    ];
+    return (
+      '<div class="ps-exemples">' +
+      items.map(function (it) {
+        return '<div class="ps-exemple ' + it[0] + '">' +
+          '<div class="ps-exemple-vue">' + it[1] + it[2] + "</div>" +
+          '<span class="ps-exemple-txt">' + it[3] + "</span>" +
+        "</div>";
+      }).join("") +
+      "</div>"
+    );
+  }
+
   function blocIdentite() {
     return (
       '<div class="ps-identite">' +
@@ -5323,6 +5407,7 @@ function ouvrirChoixReseau(nomClub) {
           '<input type="text" id="story-pseudo-ig" placeholder="ton.pseudo" autocapitalize="off" autocomplete="off" />' +
           '<span class="ps-pseudo-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
         "</div>" +
+        blocExemples() +
         '<label class="ps-capture" id="story-capture-label" for="story-capture-file">' +
           '<input type="file" accept="image/*" id="story-capture-file" hidden />' +
           '<span class="ps-capture-ico"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2.5h6L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg></span>' +
@@ -5403,6 +5488,15 @@ function ouvrirChoixReseau(nomClub) {
   var html =
     '<div class="sheet-ok">' +
       '<form id="story-form" style="display:grid;gap:14px;text-align:left">' +
+        // Rempli par verifierIdentite() plus bas, seulement si ce
+        // clubbeur n'a pas encore de capture de profil enregistree --
+        // vide sinon, jamais redemande, et le formulaire commence alors
+        // directement par le club. Place tout en haut (demande de
+        // Julien) : c'est le seul bloc qui ne se remplit qu'une fois
+        // dans la vie du compte, il doit etre expedie avant le reste
+        // plutot que d'attendre au milieu du parcours de chaque soir.
+        // Deja sa propre carte (.ps-identite), pas de .ps-groupe autour.
+        '<div id="story-identite"></div>' +
         // GROUPE 1 -- Club (seulement si pas deja connu depuis une fiche).
         // Savoir QUI on va taguer avant l'avertissement a ce sujet.
         (nomClub
@@ -5420,11 +5514,6 @@ function ouvrirChoixReseau(nomClub) {
               '<label class="rg-label" style="font-size:13px" for="story-club">Ou choisis-le dans la liste</label>' +
               '<select class="va-input" id="story-club" required><option value="">Choisis un club…</option></select>' +
             "</div>") +
-        // Rempli par verifierIdentite() plus bas, seulement si ce
-        // clubbeur n'a pas encore de capture de profil enregistree --
-        // vide sinon, jamais redemande. Deja sa propre carte (.ps-identite),
-        // pas besoin d'un .ps-groupe de plus autour.
-        '<div id="story-identite"></div>' +
         // GROUPE 2 -- Format : l'avertissement, le pseudo copiable et les
         // 3 boutons Story/Reel/TikTok forment une seule decision ("quoi
         // poster, a qui le dire"), rangee dans une seule carte au lieu de
@@ -5532,6 +5621,8 @@ function ouvrirChoixReseau(nomClub) {
       $("#story-capture-txt").textContent = "Capture ajoutée";
       $("#story-capture-preview").hidden = false;
       $("#story-capture-img").src = URL.createObjectURL(captureChoisie);
+      var exemples = conteneur.querySelector(".ps-exemples");
+      if (exemples) exemples.hidden = true;
       majLegendeCapture();
     }
 
@@ -5570,6 +5661,8 @@ function ouvrirChoixReseau(nomClub) {
       label.classList.remove("rempli");
       $("#story-capture-txt").textContent = "Capture d'écran de ton profil";
       $("#story-capture-preview").hidden = true;
+      var exemplesRetour = conteneur.querySelector(".ps-exemples");
+      if (exemplesRetour) exemplesRetour.hidden = false;
     });
 
     // Le pseudo est nettoye a la sortie du champ, pas a chaque frappe :
@@ -7358,10 +7451,11 @@ var FOTOS = {
   artTicket:    "https://images.unsplash.com/photo-1515139372923-c923c9e9a18c?w=240&q=70&auto=format&fit=crop"
 };
 
-// Meme photo que FOTOS.artShot, recadree en 16:9 au lieu de 4:3 pour
-// la banniere pleine largeur de l'offre du soir (.offre-hero) — le
-// cadrage carte serait trop serre/deforme a cette taille.
-var FOTO_OFFRE_HERO = "/recompenses/shot-hero.jpg";
+// Meme illustration que FOTOS.artShot, remontee en 16:9 : le cadrage
+// carre de la vignette serait trop serre a cette largeur. L'ancienne
+// photo de whisky ne tenait plus la comparaison une fois le reste du
+// catalogue passe au dessin.
+var FOTO_OFFRE_HERO = "/recompenses/art-shot-hero.webp";
 
 /* Reconnait le type d'objet dans le TITRE tape par le gerant, pour lui
    donner un dessin precis (un cocktail plutot qu'un pictogramme
@@ -7458,7 +7552,7 @@ var OFFRE = {
   club: "cactus",
   // Meme dessin/photo que la recompense "Shot maison" : c'est le meme
   // produit, juste en plus grand pour la banniere (FOTO_OFFRE_HERO).
-  art: artShot, glow: "rgba(243,187,78,.24)", foto: FOTO_OFFRE_HERO,
+  art: artShot, glow: "#fef2db", foto: FOTO_OFFRE_HERO,
   cout: 0, avant: 70, stock: 20,
   desc: "Poste ta première story de la soirée avec le tag du Cactus Club, et le shot est offert.",
   regles: [
