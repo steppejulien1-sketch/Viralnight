@@ -2318,6 +2318,27 @@
       .ps-identite.appel { animation: ps-appel 1.1s ease-out 2; }
       @media (prefers-reduced-motion: reduce) { .ps-identite.appel { animation: none; } }
 
+      /* ---- Deux vrais exemples, sous le bouton ----
+         "Capture d'ecran de ton profil" ne dit pas ou regarder. Deux
+         captures reelles, envoyees par Julien (son profil et celui d'un
+         ami), le montrent d'un coup d'oeil. L'une est en theme clair,
+         l'autre en sombre : ca repond aussi, sans le dire, a la
+         question "et si mon Instagram est en noir ?".
+
+         Recadrees sur l'EN-TETE du profil seulement -- c'est la partie
+         qui compte, et ca ecarte le bloc "Contacts a decouvrir" de la
+         capture claire, qui montrait le visage d'une troisieme
+         personne sans rapport avec la demo. */
+      .ps-modeles { display: grid; gap: 7px; }
+      .ps-modeles-titre {
+        margin: 0; font-size: 11.5px; font-weight: 650; color: var(--ink3); line-height: 1.35;
+      }
+      .ps-modeles-vues { display: flex; gap: 7px; }
+      .ps-modeles-vues img {
+        flex: 1; min-width: 0; width: 50%; height: auto;
+        border-radius: 10px; border: 1px solid var(--line2); display: block;
+      }
+
       /* L'apercu de la capture (cadre 9:16 avec une croix) a ete
          retire a la demande de Julien : sur une carte qui ne doit
          contenir que deux champs, il pesait plus qu'il n'aidait. Le
@@ -5318,6 +5339,13 @@ function ouvrirChoixReseau(nomClub) {
           '<span class="ps-capture-ico"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2.5h6L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg></span>' +
           '<span class="ps-capture-txt" id="story-capture-txt">Capture d\'écran de ton profil</span>' +
         "</label>" +
+        '<div class="ps-modeles">' +
+          '<p class="ps-modeles-titre">Comme ça — on doit lire ton pseudo en haut.</p>' +
+          '<div class="ps-modeles-vues">' +
+            '<img src="/story-exemples/exemple-profil-clair.webp" alt="Exemple de capture : profil Instagram, thème clair" loading="lazy" />' +
+            '<img src="/story-exemples/exemple-profil-sombre.webp" alt="Exemple de capture : profil Instagram, thème sombre" loading="lazy" />' +
+          "</div>" +
+        "</div>" +
       "</div>"
     );
   }
@@ -5515,6 +5543,8 @@ function ouvrirChoixReseau(nomClub) {
       captureChoisie = await compresserCapture(fichier);
       label.classList.add("rempli");
       $("#story-capture-txt").textContent = "Capture ajoutée";
+      var modeles = conteneur.querySelector(".ps-modeles");
+      if (modeles) modeles.hidden = true;
     }
 
     champFichier.addEventListener("change", function () {
