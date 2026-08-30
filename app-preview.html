@@ -1184,27 +1184,59 @@
          annonce deja ce qu'on va voir en tapant dessus. Point de
          statut ouvert/ferme en overlay, ombre au sol (::before) pour
          le detacher un peu du fond de carte. */
+      /* Ancrage : le badge etait pose PAR SON CENTRE sur les
+         coordonnees (anchor "center"), donc il ne designait aucun point
+         precis -- Julien voulait "bien mettre les clubs aux endroits".
+         Il porte maintenant une pointe (::before) et c'est cette pointe
+         qui touche le lieu exact, comme une epingle de carte.
+
+         MARGE DU BAS : MapLibre ancre le PORTEUR, pas le badge. La
+         marge reserve dans le porteur la place de la pointe, sans quoi
+         un anchor "bottom" poserait le bas du CERCLE sur le club et la
+         pointe pendrait 11px trop bas.
+
+         overflow: hidden est retire (il decoupait tout ce qui depasse,
+         donc la pointe) ; c'est l'image qui porte desormais son propre
+         arrondi pour rester un disque. */
       .club-badge {
-        width: 58px; height: 58px; border-radius: 50%; overflow: hidden;
+        width: 58px; height: 58px; border-radius: 50%;
+        margin-bottom: 11px;
         background: var(--s2); border: 3px solid var(--c);
         box-shadow: 0 4px 12px -2px rgba(0,0,0,.5);
         position: relative; cursor: pointer;
+        /* Le scale de majTailleMarqueurs doit pivoter autour de la
+           POINTE, pas du centre : sinon le club se decolle de son lieu
+           des que la carte change de zoom. */
+        transform-origin: 50% calc(100% + 11px);
       }
-      .club-badge img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .club-badge img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
+      /* La pointe. Reprend la couleur de l'anneau : le cercle et sa
+         pointe doivent se lire comme un seul objet, pas comme un badge
+         pose sur un triangle. Le -2px la fait mordre sur l'anneau pour
+         qu'aucun liseré de fond ne passe entre les deux. */
       .club-badge::before {
-        content: ""; position: absolute; left: 50%; bottom: -8px; translate: -50% 0;
-        width: 16px; height: 6px; border-radius: 50%; background: rgba(10,8,8,.4); filter: blur(1.5px);
+        content: ""; position: absolute; left: 50%; top: 100%;
+        translate: -50% -2px;
+        width: 9px; height: 12px; background: var(--c);
+        clip-path: polygon(50% 100%, 0 0, 100% 0);
       }
+      .club-badge.shut::before { background: #b6bcc6; }
       .club-badge.shut { border-color: #b6bcc6; filter: grayscale(.45) brightness(.82); }
       .club-badge-dot {
         position: absolute; right: -2px; bottom: -2px; width: 15px; height: 15px;
         border-radius: 50%; border: 2.5px solid #fff; background: var(--succes-texte, #57d98a);
       }
       .club-badge.shut .club-badge-dot { background: #9aa1ab; }
-      .club-badge.hot::after {
-        content: ""; position: absolute; inset: -3px; border-radius: 50%;
-        border: 2.5px solid var(--c); animation: ping 2.6s cubic-bezier(.2,.6,.35,1) infinite;
-      }
+      /* Anneau qui pulse sur les clubs "chauds". Il n'a en fait JAMAIS
+         ete visible : l'ancien overflow: hidden du badge le decoupait
+         entierement (inset negatif = hors du cadre). Retirer overflow
+         pour laisser passer la pointe l'aurait donc fait apparaitre
+         d'un coup -- un anneau rouge anime que personne n'a demande, en
+         plein dans ce que Julien evite ("pas trop de rouge, fin et
+         soigne"). Neutralise ici pour que la pose de la pointe ne
+         change QUE la pointe ; a reactiver en supprimant ce display
+         si l'effet est voulu un jour. */
+      .club-badge.hot::after { display: none; }
       @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
 
@@ -5625,7 +5657,7 @@ map.on("load", function () {
     // TRANSPARENCE a travers la planete, signale par Julien comme
     // "pas propre". A 0, ils disparaissent completement une fois
     // caches par la sphere.
-    new maplibregl.Marker({ element: porteur, anchor: "center", opacityWhenCovered: 0 })
+    new maplibregl.Marker({ element: porteur, anchor: "bottom", opacityWhenCovered: 0 })
       .setLngLat(c.lngLat)
       .addTo(map);
     var ecart = ecartAleatoire();
