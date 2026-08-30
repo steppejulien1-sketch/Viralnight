@@ -514,7 +514,7 @@
         position: absolute; right: 1px; bottom: 1px; width: 22px; height: 22px; border-radius: 50%;
         background: var(--s1); box-shadow: 0 0 0 2px var(--bg); display: grid; place-items: center;
       }
-      .va-avatar-edit svg { width: 11px; height: 11px; stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .va-avatar-edit svg { width: 11px; height: 11px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .va-handle { margin: 0 0 18px; font-size: 15px; font-weight: 700; color: var(--ink); }
       /* ---- Le QR, pose simplement ----
          Le halo rouge, le degrade rouge et le lisere rouge qui
@@ -897,7 +897,7 @@
         position: absolute; right: 2px; bottom: 2px; width: 26px; height: 26px; border-radius: 50%;
         background: var(--s1); box-shadow: 0 0 0 2px var(--bg); display: grid; place-items: center;
       }
-      .pf-avatar-edit svg { width: 13px; height: 13px; stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-avatar-edit svg { width: 13px; height: 13px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .pf-nom { margin: 0 0 3px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
       .pf-sub { margin: 0; font-size: 13px; color: var(--ink3); font-weight: 650; }
 
@@ -947,10 +947,15 @@
         border: 1px solid var(--line); border-radius: var(--r4);
         padding: 18px; margin: 0 0 22px; cursor: pointer;
         text-align: left; font-family: inherit; color: var(--ink);
-        background: var(--s1);
+        /* Un voile rouge tres peu opaque POSE SUR la surface sombre, pas
+           un aplat : la carte reste dans la famille du reste de l'appli
+           mais se teinte assez pour qu'on la lise comme "la carte du
+           club". Le liseré rouge fait le reste du travail. */
+        background: linear-gradient(180deg, rgba(255,47,69,.13), rgba(255,47,69,.04)), var(--s1);
+        border-color: rgba(255,47,69,.30);
         transition: transform var(--tr-court), border-color var(--tr-court);
       }
-      .pf-fidelite:active { transform: scale(.985); border-color: var(--line2); }
+      .pf-fidelite:active { transform: scale(.985); border-color: rgba(255,47,69,.5); }
       .pf-fidelite-ligne { display: flex; align-items: center; gap: 14px; }
       .pf-fidelite-solde { display: flex; align-items: baseline; gap: 6px; margin: 14px 0 0; }
       .pf-fidelite-solde strong {
@@ -960,7 +965,7 @@
       .pf-fidelite-solde span { font-size: 13px; font-weight: 700; color: var(--ink3); }
       .pf-fid-piste {
         display: block; height: 4px; margin: 12px 0 0; border-radius: var(--r-pill);
-        background: var(--s3); overflow: hidden;
+        background: rgba(255,47,69,.18); overflow: hidden;
       }
       .pf-fid-barre {
         display: block; height: 100%; width: 0; border-radius: var(--r-pill);
@@ -1048,7 +1053,46 @@
 
       /* Favoris : chaque ligne ouvre la fiche du club, avec un bouton
          dedie pour le retirer sans repasser par sa fiche. */
-      .fv-item { display: flex; align-items: center; gap: 10px; padding: 4px; }
+      /* ---- Ecran Favoris ----
+         Avant : une ligne de texte nue dans une carte, et pour l'etat
+         vide un petit paragraphe gris perdu au milieu du noir -- Julien :
+         "tout est noir et il y a un tout petit truc favori qui sort".
+         Les lignes reprennent maintenant le "photo ronde + anneau de
+         couleur + statut" des badges de la carte, pour qu'un club se
+         reconnaisse d'un ecran a l'autre, et l'etat vide devient une
+         vraie invitation au lieu d'une phrase orpheline. */
+      .fv-item {
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 12px; margin: 0 0 10px;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 16px;
+      }
+      .fv-foto {
+        flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%;
+        border: 2px solid var(--c, var(--accent)); overflow: hidden; background: var(--s2);
+      }
+      .fv-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .fv-item.shut .fv-foto { border-color: #b6bcc6; filter: grayscale(.45) brightness(.85); }
+      .fv-nom {
+        flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px;
+        background: none; border: 0; padding: 0; text-align: left; cursor: pointer;
+        font-family: inherit; color: var(--ink);
+      }
+      .fv-nom strong { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .fv-nom span { font-size: 12.5px; color: var(--ink3); }
+      .fv-retirer {
+        flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
+        border: 0; background: var(--s2); display: grid; place-items: center; cursor: pointer;
+      }
+      .fv-retirer svg { width: 14px; height: 14px; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; }
+      .fv-retirer:active { transform: scale(.94); }
+      .fv-vide-bloc { text-align: center; padding: 34px 20px 12px; }
+      .fv-vide-ico {
+        width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 50%;
+        background: rgba(255,47,69,.12); display: grid; place-items: center;
+      }
+      .fv-vide-ico svg { width: 26px; height: 26px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linejoin: round; }
+      .fv-vide-bloc strong { display: block; font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+      .fv-vide-bloc span { display: block; font-size: 13.5px; color: var(--ink3); line-height: 1.5; max-width: 30ch; margin: 0 auto; }
       .fv-nom {
         flex: 1 1 auto; min-width: 0; text-align: left; background: none; border: 0; padding: 0;
         cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--ink);
@@ -2925,10 +2969,13 @@
           <div class="va-poignee" id="fv-poignee" aria-hidden="true"></div>
           <h1 class="va-title">Favoris</h1>
           <div id="fv-liste"></div>
-          <p class="rg-carte-desc" id="fv-vide" style="text-align:center;margin-top:24px">
-            Aucun club en favori pour l'instant. Tape sur le cœur, en haut de la fiche d'un
-            club sur la carte, pour l'ajouter ici.
-          </p>
+          <div class="fv-vide-bloc" id="fv-vide">
+            <span class="fv-vide-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.6 12 20 12 20z"/></svg>
+            </span>
+            <strong>Aucun favori</strong>
+            <span>Tape sur le cœur d'un club pour le retrouver ici.</span>
+          </div>
         </div>
 
         <!-- ================= ECRAN AIDE & SUPPORT =================
@@ -5601,17 +5648,22 @@ function majTailleMarqueurs() {
   // carte ("trop petit, on ne voit rien", signale par Julien). Rien a
   // faire chevaucher a cette echelle, donc pas de raison de les
   // retrecir autant.
-  var s = Math.max(0.55, Math.pow(t, 1.6));
+  // Plancher remonte encore (0.55 -> 0.70) : Julien ne voyait plus les
+  // clubs en dezoomant ("on ne voit plus loin").
+  var s = Math.max(0.70, Math.pow(t, 1.6));
   // L'ecart ne doit JAMAIS deplacer un badge a l'echelle rue (chercher
   // un club precis exige une position exacte) : il ne s'applique qu'en
   // dessous d'un zoom moyen (t < .4), et disparait completement au-dela
   // -- translate() n'est pas affecte par le scale() qui suit, l'ecart
   // reste donc en vrais pixels ecran quelle que soit la taille du badge.
   var portionEcart = Math.max(0, 1 - t / 0.4);
-  // Fondu des badges de club entre le zoom 2.2 et 3.4 : au-dela on est
-  // assez pres pour que les deux clubs se separent a l'ecran, en deca
-  // on est a l'echelle du globe et ils ne font qu'une tache.
-  var fonduClubs = Math.max(0, Math.min(1, (z - 2.2) / 1.2));
+  // Fondu des badges de club. Il courait avant de 2.2 a 3.4, ce qui les
+  // effacait des qu'on prenait un peu de recul -- Julien : "on ne voit
+  // plus les clubs, on ne voit plus loin". Le seuil descend a 0.9-1.8 :
+  // les clubs restent visibles pratiquement partout (minZoom = 0.6), et
+  // le fondu ne sert plus qu'a eviter la tache indistincte quand on est
+  // vraiment a l'echelle du globe.
+  var fonduClubs = Math.max(0, Math.min(1, (z - 0.9) / 0.9));
   marqueursEchelle.forEach(function (m) {
     var dx = (m.dx * portionEcart).toFixed(1), dy = (m.dy * portionEcart).toFixed(1);
     m.el.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + s.toFixed(3) + ")";
@@ -6376,10 +6428,21 @@ function chargerFavoris() {
   // retirer. Signale par Julien ("pas vraiment fonctionnel"). Chaque
   // ligne ouvre maintenant la fiche du club, et un bouton dedie le
   // retire directement depuis cet ecran.
+  // Le favori ne stocke que {id, nom} : tout le reste (photo, couleur,
+  // statut) se relit dans CLUBS au moment de l'affichage, pour ne pas
+  // figer dans localStorage des donnees qui changent.
   $("#fv-liste").innerHTML = favoris.map(function (f) {
-    return '<div class="rg-carte fv-item">' +
-      '<button type="button" class="fv-nom" data-id="' + escapeHtmlSupport(f.id) + '">' + escapeHtmlSupport(f.nom) + "</button>" +
-      '<button type="button" class="fv-retirer" data-id="' + escapeHtmlSupport(f.id) + '" aria-label="Retirer ' + escapeHtmlSupport(f.nom) + ' des favoris">' +
+    var c = CLUBS[f.id];
+    var nom = c ? c.nom : f.nom;
+    var sous = c ? [c.statut, c.horaire].filter(Boolean).join(" · ") : "";
+    return '<div class="fv-item' + (c && c.shut ? " shut" : "") + '"' +
+        (c ? ' style="--c:' + c.c + '"' : "") + ">" +
+      (c ? '<span class="fv-foto"><img src="' + fotoClub(c) + '" alt="" /></span>' : "") +
+      '<button type="button" class="fv-nom" data-id="' + escapeHtmlSupport(f.id) + '">' +
+        "<strong>" + escapeHtmlSupport(nom) + "</strong>" +
+        (sous ? "<span>" + escapeHtmlSupport(sous) + "</span>" : "") +
+      "</button>" +
+      '<button type="button" class="fv-retirer" data-id="' + escapeHtmlSupport(f.id) + '" aria-label="Retirer ' + escapeHtmlSupport(nom) + ' des favoris">' +
         '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
       "</button>" +
     "</div>";
