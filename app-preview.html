@@ -1484,10 +1484,25 @@
         text-decoration: underline; text-underline-offset: 3px;
       }
 
+      /* La liste FLOTTE au-dessus de la boutique au lieu de la pousser :
+         Julien veut "choisir parmi la liste tout en voyant la boutique
+         derriere". Repliee, elle ne prend aucune place ; depliee, elle
+         recouvre le haut du catalogue sans le deplacer -- rien ne saute
+         a l'ouverture ni a la fermeture. */
       .bq-liste {
-        display: grid; gap: 7px; margin-bottom: var(--e3);
+        position: absolute; left: 0; right: 0; top: 100%; z-index: 12;
+        display: grid; gap: 7px; margin-top: 6px; padding: 8px;
+        background: var(--s1); border: 1px solid var(--line2);
+        border-radius: 18px; box-shadow: 0 18px 44px -18px rgba(0,0,0,.55);
       }
       .bq-liste[hidden] { display: none; }
+      /* Le conteneur du club sert d'ancrage a la liste. */
+      .bq-actuel { position: relative; }
+      .bq-principale {
+        flex: 0 0 auto; margin-left: 6px; padding: 2px 7px; border-radius: 999px;
+        background: var(--s2); color: var(--ink3);
+        font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+      }
       .bq-club {
         display: flex; align-items: center; gap: 11px; width: 100%;
         padding: 11px 13px; border-radius: 14px; text-align: left;
@@ -7180,6 +7195,25 @@ function clubLePlusProche() {
    choisi lui-meme -- sa decision passe avant notre estimation. */
 var choixManuelClub = false;
 
+/* La "boutique principale" : le dernier club choisi a la main. C'est lui
+   qu'on retrouve en rouvrant l'appli, avant meme que la position
+   reponde -- quelqu'un qui sort toujours au meme endroit ne doit pas
+   redesigner son club chaque soir. La geolocalisation ne le remplace
+   que si elle designe un AUTRE club et qu'aucun choix manuel n'a ete
+   fait dans cette session. */
+var CLE_CLUB_PRINCIPAL = "vn_club_principal";
+
+function clubPrincipal() {
+  try {
+    var k = localStorage.getItem(CLE_CLUB_PRINCIPAL);
+    return k && CLUBS[k] ? k : null;
+  } catch (e) { return null; }
+}
+
+function memoriserClubPrincipal(cle) {
+  try { localStorage.setItem(CLE_CLUB_PRINCIPAL, cle); } catch (e) {}
+}
+
 function localiser() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(function (pos) {
@@ -7249,6 +7283,7 @@ function rendreChoixClub() {
         '<span class="bq-club-nom">' + escapeHtmlSupport(c.nom) + "</span>" +
         '<span class="bq-club-sous">' + escapeHtmlSupport(c.adr || "") + "</span>" +
       "</span>" +
+      (k === clubPrincipal() ? '<span class="bq-principale">Principale</span>' : "") +
       (dist != null ? '<span class="bq-club-loin">' + (dist < 1 ? Math.round(dist * 1000) + " m" : Math.round(dist) + " km") + "</span>" : "") +
     "</button>";
   }).join("");
@@ -7261,6 +7296,16 @@ function brancherChoixClub() {
   // Delegue : la liste et le lien sont reecrits a chaque rendu.
   var vue = document.getElementById("vue-boutique");
   if (!vue) return;
+
+  // Un panneau flottant doit se fermer quand on tape a cote, sinon il
+  // reste ouvert par-dessus le catalogue qu'on essaie de lire.
+  document.addEventListener("click", function (ev) {
+    var liste = document.getElementById("bq-liste");
+    if (!liste || liste.hidden) return;
+    if (ev.target.closest("#bq-liste") || ev.target.closest("#bq-changer")) return;
+    liste.hidden = true;
+    rendreChoixClub();
+  });
   vue.addEventListener("click", function (ev) {
     if (ev.target.closest("#bq-localiser")) {
       localiser();
@@ -7278,6 +7323,7 @@ function brancherChoixClub() {
     if (club.dataset.club === CLUB_BOUTIQUE) { rendreChoixClub(); return; }
     choixManuelClub = true;
     CLUB_BOUTIQUE = club.dataset.club;
+    memoriserClubPrincipal(CLUB_BOUTIQUE);
     rendreChoixClub();
     chargerRecompenses();
   });
@@ -7844,6 +7890,7 @@ rendreListe();
 // Les ids des clubs se resolvent AVANT le premier catalogue : sinon le
 // premier chargement retombe sur le club de demo alors que la base
 // connait deja le bon.
+if (clubPrincipal()) CLUB_BOUTIQUE = clubPrincipal();
 rendreChoixClub();
 brancherChoixClub();
 detecterClubProche();
