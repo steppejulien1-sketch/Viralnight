@@ -153,6 +153,33 @@
       .kpi-valeur { display: block; margin-top: 8px; font-size: 24px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
       .kpi-note { display: block; margin-top: 2px; font-size: 11px; color: var(--ink2); }
 
+      /* ---- Carte Instagram du tableau de bord ----
+         La connexion Instagram etait enterree en bas des Reglages, alors
+         que c'est elle qui fait tout le travail : sans elle, aucune
+         mention n'est detectee et rien ne se credite tout seul. Elle
+         remonte donc sur le tableau de bord, avec son etat en clair.
+
+         Volontairement une CARTE et pas un KPI : tant que le club n'est
+         pas connecte, ce n'est pas un chiffre a lire mais une action a
+         faire. */
+      .insta-carte {
+        display: flex; align-items: center; gap: 12px;
+        background: var(--s1); border: 1px solid var(--line);
+        border-radius: 16px; padding: 14px 15px; margin-bottom: 20px;
+      }
+      .insta-carte.a-faire { border-color: rgba(255,47,69,.35); }
+      .insta-ico {
+        flex: 0 0 auto; width: 38px; height: 38px; border-radius: 12px;
+        display: grid; place-items: center; background: var(--s2);
+      }
+      .insta-ico svg { width: 20px; height: 20px; fill: none; stroke: var(--ink2); stroke-width: 1.8; }
+      .insta-carte.ok .insta-ico { background: rgba(18,135,77,.12); }
+      .insta-carte.ok .insta-ico svg { stroke: var(--succes); }
+      .insta-txt { flex: 1; min-width: 0; }
+      .insta-txt strong { display: block; font-size: 13.5px; font-weight: 750; }
+      .insta-txt span { display: block; font-size: 11.5px; color: var(--ink2); margin-top: 2px; }
+      .insta-carte .bouton { min-height: 36px; padding: 0 14px; font-size: 12.5px; flex: 0 0 auto; }
+
       .section-titre {
         font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
         color: var(--ink3); margin: 22px 0 10px;
@@ -355,6 +382,8 @@
                 <div class="hero-graphe" id="hero-graphe"></div>
               </div>
 
+              <div class="insta-carte" id="dash-instagram" hidden></div>
+
               <div class="kpis">
                 <div class="kpi">
                   <span class="kpi-label">Points distribués</span>
@@ -542,7 +571,43 @@
         });
       });
 
-      var ETAT = { data: null, session: null };
+      var ETAT = { data: null, session: null, instagram: null };
+
+      /* Statut Instagram, lu une seule fois et partage entre le tableau
+         de bord et les reglages -- deux appels pour la meme reponse, sur
+         le reseau d'un telephone, c'est deux fois plus d'occasions
+         d'echouer. null = pas encore lu, false = indisponible. */
+      async function chargerInstagram() {
+        if (!ETAT.session) { ETAT.instagram = null; return; }
+        try {
+          var reponse = await fetch("/api/instagram?action=status", {
+            headers: { Authorization: "Bearer " + ETAT.session.access_token },
+          });
+          ETAT.instagram = await reponse.json();
+        } catch (erreur) {
+          ETAT.instagram = false;
+        }
+      }
+
+      async function connecterInstagram(bouton) {
+        bouton.disabled = true;
+        bouton.textContent = "Redirection…";
+        try {
+          var r = await fetch("/api/instagram?action=connect", {
+            headers: { Authorization: "Bearer " + ETAT.session.access_token },
+          });
+          var corps = await r.json();
+          if (corps && corps.url) { window.location.href = corps.url; return; }
+          throw new Error(corps && corps.error);
+        } catch (erreur) {
+          // Sans ce retour, un echec laissait le bouton bloque sur
+          // "Redirection…" et le gerant attendait une page qui ne
+          // viendrait jamais.
+          bouton.disabled = false;
+          bouton.textContent = "Connecter Instagram";
+          alert("La connexion Instagram est indisponible pour le moment.");
+        }
+      }
 
       // Porte de connexion desactivee temporairement (Julien : "retire-moi
       // la page de connexion pour le moment", pas de mot de passe sous la
@@ -559,6 +624,7 @@
 
         ETAT.session = data.session || null;
         ETAT.data = data;
+        await chargerInstagram();
         rendreDashboard();
         rendreRecompenses();
         rendreFiche();
@@ -772,6 +838,8 @@
         $("#kpi-vues").textContent = nb.format(stats.reach);
         $("#kpi-vues-note").textContent = nb.format(stats.validatedCount) + " contenu" + (stats.validatedCount > 1 ? "s" : "") + " validé" + (stats.validatedCount > 1 ? "s" : "");
 
+        rendreCarteInstagram();
+
         var courbe = sparklineVues(stats.validated);
         $("#hero-graphe").innerHTML = courbe
           || '<p class="hero-vide">Pas encore de publication sur les 14 derniers jours.</p>';
@@ -814,6 +882,48 @@
             "</div>"
           );
         }).join("");
+      }
+
+      /* La carte Instagram du tableau de bord. Trois etats seulement, et
+         chacun dit la meme chose sous un angle different : est-ce que les
+         mentions sont detectees, oui ou non. */
+      function rendreCarteInstagram() {
+        var carte = $("#dash-instagram");
+        var ICONE = '<span class="insta-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>';
+
+        // Hors session, la carte n'a rien de vrai a dire : on la cache
+        // plutot que d'inviter a connecter un compte qui n'existe pas.
+        if (!ETAT.session) { carte.hidden = true; return; }
+        carte.hidden = false;
+
+        if (!ETAT.instagram || ETAT.instagram.error) {
+          carte.className = "insta-carte";
+          carte.innerHTML = ICONE + '<span class="insta-txt"><strong>Instagram</strong><span>Statut indisponible pour le moment.</span></span>';
+          return;
+        }
+
+        if (!ETAT.instagram.connecte) {
+          carte.className = "insta-carte a-faire";
+          carte.innerHTML = ICONE +
+            '<span class="insta-txt"><strong>Instagram non connecté</strong>' +
+            "<span>Sans ça, les mentions de ton club ne sont pas détectées.</span></span>" +
+            '<button type="button" class="bouton" id="dash-insta-connecter">Connecter</button>';
+          $("#dash-insta-connecter").addEventListener("click", function (ev) {
+            connecterInstagram(ev.currentTarget);
+          });
+          return;
+        }
+
+        var mentions = ETAT.instagram.mentions || 0;
+        carte.className = "insta-carte ok";
+        carte.innerHTML = ICONE +
+          '<span class="insta-txt"><strong>@' + escapeHtml(ETAT.instagram.username) + "</strong>" +
+          "<span>" + nb.format(mentions) + " mention" + (mentions > 1 ? "s" : "") + " détectée" + (mentions > 1 ? "s" : "") +
+          // webhookActif est la seule chose qui separe "connecte" de
+          // "detecte vraiment" : un compte relie dont l'abonnement au
+          // webhook a echoue ne remontera jamais une seule mention.
+          (ETAT.instagram.webhookActif ? " · détection automatique active" : " · détection automatique inactive") +
+          "</span></span>";
       }
 
       /* ================= QR CODE =================
@@ -1028,50 +1138,50 @@
           zone.innerHTML = '<p class="vide" style="padding:14px 0">Connecte-toi pour gérer Instagram.</p>';
           return;
         }
-        try {
-          var reponse = await fetch("/api/instagram?action=status", {
-            headers: { Authorization: "Bearer " + ETAT.session.access_token },
-          });
-          var statut = await reponse.json();
-
-          if (!statut.connecte) {
-            zone.innerHTML =
-              '<div class="reglage-ligne" style="border-bottom:0">' +
-                '<span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>' +
-                '<span class="reglage-txt"><strong>Pas encore connecté</strong><span>Voir les mentions et les abonnés gagnés</span></span>' +
-              "</div>" +
-              '<button type="button" class="bouton pleine" id="instagram-connecter">Connecter Instagram</button>';
-            $("#instagram-connecter").addEventListener("click", async function (ev) {
-              ev.currentTarget.disabled = true;
-              ev.currentTarget.textContent = "Redirection…";
-              var r = await fetch("/api/instagram?action=connect", { headers: { Authorization: "Bearer " + ETAT.session.access_token } });
-              var corps = await r.json().catch(function () { return null; });
-              if (corps && corps.url) window.location.href = corps.url;
-            });
-            return;
-          }
-
-          var gain = statut.abonnesGagnes;
-          zone.innerHTML =
-            '<div class="reglage-ligne">' +
-              '<span class="point-vert"></span>' +
-              '<span class="reglage-txt"><strong>Connecté à @' + escapeHtml(statut.username) + "</strong>" +
-              "<span>" + nb.format(statut.mentions || 0) + " mention" + (statut.mentions > 1 ? "s" : "") + " reçue" + (statut.mentions > 1 ? "s" : "") + "</span></span>" +
-            "</div>" +
-            (gain !== null && gain !== undefined
-              ? '<div class="reglage-ligne"><span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 20V4M5 11l7-7 7 7"/></svg></span>' +
-                '<span class="reglage-txt"><strong>' + (gain >= 0 ? "+" : "") + nb.format(gain) + ' abonnés</strong><span>Depuis que ce club est sur Noctify</span></span></div>'
-              : "");
-        } catch (err) {
+        // Statut deja charge par chargerInstagram() : pas de second
+        // appel pour la meme reponse.
+        var statut = ETAT.instagram;
+        if (!statut) {
           zone.innerHTML = '<p class="vide" style="padding:14px 0">Statut Instagram indisponible pour le moment.</p>';
+          return;
         }
+
+        if (!statut.connecte) {
+          zone.innerHTML =
+            '<div class="reglage-ligne" style="border-bottom:0">' +
+              '<span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>' +
+              '<span class="reglage-txt"><strong>Pas encore connecté</strong><span>Les mentions de ton club ne sont pas détectées</span></span>' +
+            "</div>" +
+            '<button type="button" class="bouton pleine" id="instagram-connecter">Connecter Instagram</button>';
+          $("#instagram-connecter").addEventListener("click", function (ev) {
+            connecterInstagram(ev.currentTarget);
+          });
+          return;
+        }
+
+        var gain = statut.abonnesGagnes;
+        var mentions = statut.mentions || 0;
+        zone.innerHTML =
+          '<div class="reglage-ligne">' +
+            '<span class="point-vert"></span>' +
+            '<span class="reglage-txt"><strong>Connecté à @' + escapeHtml(statut.username) + "</strong>" +
+            "<span>" + nb.format(mentions) + " mention" + (mentions > 1 ? "s" : "") + " reçue" + (mentions > 1 ? "s" : "") + "</span></span>" +
+          "</div>" +
+          // Un compte relie dont l'abonnement au webhook a echoue ne
+          // remontera jamais une mention : le dire, plutot que de laisser
+          // croire que tout tourne parce que le compte est vert.
+          '<div class="reglage-ligne">' +
+            '<span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+            '<span class="reglage-txt"><strong>Détection automatique</strong><span>' +
+            (statut.webhookActif ? "Active — les mentions arrivent toutes seules" : "Inactive — reconnecte le compte pour l'activer") +
+            "</span></span>" +
+          "</div>" +
+          (gain !== null && gain !== undefined
+            ? '<div class="reglage-ligne" style="border-bottom:0"><span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 20V4M5 11l7-7 7 7"/></svg></span>' +
+              '<span class="reglage-txt"><strong>' + (gain >= 0 ? "+" : "") + nb.format(gain) + ' abonnés</strong><span>Depuis que ce club est sur Noctify</span></span></div>'
+            : "");
       }
 
-      /* Deux bugs ici. Sans session, le bouton sortait en silence : on
-         cliquait, rien ne se passait, jamais. Avec session, il renvoyait
-         vers connexion.html -- une page du SITE, avec un autre design,
-         exactement ce qu'on evite partout ailleurs dans ce fichier.
-         Dans les deux cas on reste dans l'appli et on montre la porte. */
       $("#reglages-deconnexion").addEventListener("click", async function (ev) {
         var bouton = ev.currentTarget;
         bouton.disabled = true;
