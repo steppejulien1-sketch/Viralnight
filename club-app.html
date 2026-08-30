@@ -83,15 +83,24 @@
         background: var(--bg); color: var(--ink);
       }
 
+      /* padding-haut resserre (22 -> 14) : Julien trouvait "trop
+         d'espace blanc au-dessus". Le mockup a deja son propre creux en
+         haut de l'ecran, la marge s'y ajoutait. */
       .vue {
-        position: absolute; inset: 0; padding: 22px 20px 100px; overflow-y: auto;
+        position: absolute; inset: 0; padding: 14px 20px 100px; overflow-y: auto;
         opacity: 0; visibility: hidden; transition: opacity .18s ease;
       }
       .vue.actif { opacity: 1; visibility: visible; }
       @media (prefers-reduced-motion: reduce) { .vue { transition: none; } }
 
       .ecran-titre { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -.03em; }
-      .ecran-sous { margin: 0 0 20px; font-size: 13px; color: var(--ink2); }
+      .ecran-sous { margin: 0 0 16px; font-size: 13px; color: var(--ink2); }
+      /* La marge haute de .section-titre s'ajoutait a celle de
+         .ecran-sous : 42 px de vide entre le sous-titre et la premiere
+         section. Un titre qui suit directement le chapeau n'en a pas
+         besoin. */
+      .ecran-sous + .section-titre,
+      .kicker-sec + .ecran-titre { margin-top: 0; }
 
       /* ---- Connexion requise ---- */
       .porte {
@@ -110,6 +119,34 @@
       .bouton.sobre { background: var(--s2); color: var(--ink); }
       .bouton.pleine { width: 100%; }
       .bouton[disabled] { opacity: .55; cursor: default; }
+
+      /* ---- Bareme de points ----
+         La table establishment_point_rules existait depuis le debut, avec
+         ses valeurs par defaut, et rien dans l'appli ne permettait d'y
+         toucher : le tableau de bord affichait "Selon votre bareme" sans
+         que le gerant puisse le voir, encore moins le changer.
+
+         Une ligne par regle plutot qu'un formulaire en colonnes : sur un
+         telephone, un libelle et un champ cote a cote se lisent d'un coup
+         d'oeil, deux colonnes de champs non. */
+      .bareme-ligne {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 0; border-bottom: 1px solid var(--line);
+      }
+      .bareme-ligne:last-child { border-bottom: 0; }
+      .bareme-txt { flex: 1; min-width: 0; }
+      .bareme-txt strong { display: block; font-size: 13.5px; font-weight: 700; }
+      .bareme-txt span { display: block; font-size: 11.5px; color: var(--ink3); margin-top: 1px; line-height: 1.35; }
+      .bareme-champ { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
+      .bareme-champ input {
+        width: 74px; text-align: right; padding: 9px 10px;
+        border-radius: 10px; border: 1px solid var(--line2);
+        background: var(--s2); color: var(--ink);
+        font-family: var(--mono); font-size: 14px; font-weight: 700;
+      }
+      .bareme-champ input:focus { outline: 2px solid var(--bouton); outline-offset: 1px; }
+      .bareme-champ input[disabled] { opacity: .55; }
+      .bareme-unite { font-family: var(--mono); font-size: 10.5px; color: var(--ink3); width: 26px; }
 
       /* ---- Panneau de graphique, repris du simulateur ----
          Ce qui en fait un vrai graphique et non une sparkline : un
@@ -792,6 +829,20 @@
               <button type="button" class="bouton sobre pleine" id="reglages-deconnexion">Déconnexion</button>
             </div>
 
+            <!-- ================= BAREME ================= -->
+            <div class="vue" id="vue-bareme">
+              <p class="kicker-sec">02 · Points</p>
+              <h1 class="ecran-titre">Votre barème</h1>
+              <p class="ecran-sous">Ce que rapporte chaque publication de vos clients.</p>
+
+              <div id="bareme-bandeau"></div>
+
+              <div class="carte" id="bareme-liste"></div>
+
+              <p class="fiche-msg" id="bareme-msg"></p>
+              <button type="button" class="bouton pleine" id="bareme-enregistrer">Enregistrer le barème</button>
+            </div>
+
             <!-- ================= QR CODE =================
                  Le QR affiche a l'entree encode /scan.html?c=<code public>.
                  Genere ici plutot que renvoye par le serveur : c'est la meme
@@ -833,6 +884,10 @@
               <button class="tab" type="button" data-tab="recompenses">
                 <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
                 <span class="lbl">Récompenses</span>
+              </button>
+              <button class="tab" type="button" data-tab="bareme">
+                <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg>
+                <span class="lbl">Points</span>
               </button>
               <button class="tab" type="button" data-tab="qr">
                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>
@@ -1018,6 +1073,7 @@
         rendreFiche();
         rendreReglages();
         rendreQr();
+        rendreBareme();
 
         // Le splash ne part qu'une fois les donnees en place : le faire
         // disparaitre plus tot montrerait un tableau de bord vide qui se
@@ -1443,6 +1499,91 @@
           (ETAT.instagram.webhookActif ? " · détection automatique active" : " · détection automatique inactive") +
           "</span></span>";
       }
+
+      /* ================= BAREME =================
+         Les cles suivent dashboardData.js cote lecture et la table
+         establishment_point_rules cote ecriture -- le mapping vit ici et
+         nulle part ailleurs, pour qu'une colonne renommee ne se corrige
+         qu'a un seul endroit. */
+      var REGLES_BAREME = [
+        ["storyViewsPerThousand", "story_views_per_thousand", "Story Instagram",
+         "Points par tranche de 1 000 vues", "pts"],
+        ["videoViewsPerThousand", "video_views_per_thousand", "Reel ou TikTok",
+         "Points par tranche de 1 000 vues", "pts"],
+        ["viralBonus", "viral_bonus", "Prime virale",
+         "Versée une seule fois au-delà de 10 000 vues", "pts"],
+        ["qrCheckin", "qr_checkin", "Scan du QR",
+         "Bonus de présence, une fois toutes les 12 h", "pts"],
+        ["monthlyAmbassador", "monthly_ambassador", "Ambassadeur du mois",
+         "Prime au client qui vous a le plus fait voir", "pts"],
+      ];
+
+      function rendreBareme() {
+        var regles = ETAT.data.pointRules || {};
+        var inerte = estDemo() ? " disabled" : "";
+
+        $("#bareme-bandeau").innerHTML = bandeauDemo("ton barème");
+        $("#bareme-enregistrer").disabled = estDemo();
+
+        $("#bareme-liste").innerHTML = REGLES_BAREME.map(function (r) {
+          return '<div class="bareme-ligne">' +
+            '<span class="bareme-txt"><strong>' + escapeHtml(r[2]) + "</strong>" +
+            "<span>" + escapeHtml(r[3]) + "</span></span>" +
+            '<span class="bareme-champ">' +
+              '<input type="number" min="0" max="9999" step="5" data-regle="' + r[0] + '" value="' +
+                Number(regles[r[0]] ?? 0) + '"' + inerte + " />" +
+              '<span class="bareme-unite">' + escapeHtml(r[4]) + "</span>" +
+            "</span>" +
+          "</div>";
+        }).join("");
+      }
+
+      $("#bareme-enregistrer").addEventListener("click", async function (ev) {
+        if (estDemo()) return;
+        var bouton = ev.currentTarget;
+        var msg = $("#bareme-msg");
+
+        function dire(texte, erreur) {
+          msg.style.display = "block";
+          msg.style.color = erreur ? "var(--accent)" : "var(--succes)";
+          msg.textContent = texte;
+        }
+
+        // Les colonnes portent toutes un check(>= 0) : une valeur negative
+        // serait refusee par Postgres avec un message illisible. On la
+        // rattrape ici, en francais.
+        var payload = { establishment_id: ETAT.data.establishment.id };
+        var invalide = false;
+        REGLES_BAREME.forEach(function (r) {
+          var champ = $('[data-regle="' + r[0] + '"]');
+          var valeur = Math.round(Number(champ.value));
+          if (!Number.isFinite(valeur) || valeur < 0) { invalide = true; return; }
+          payload[r[1]] = valeur;
+        });
+        if (invalide) return dire("Chaque valeur doit être un nombre positif.", true);
+
+        bouton.disabled = true;
+        bouton.textContent = "Enregistrement…";
+
+        // upsert sur establishment_id : la ligne de bareme n'existe pas
+        // forcement (elle n'est creee qu'a la premiere modification), et
+        // un update pur ne creerait rien.
+        var { error } = await supabase
+          .from("establishment_point_rules")
+          .upsert(payload, { onConflict: "establishment_id" });
+
+        bouton.disabled = false;
+        bouton.textContent = "Enregistrer le barème";
+
+        if (error) return dire("Barème non enregistré : " + error.message, true);
+
+        // L'etat local suit, sinon le tableau de bord continuerait de
+        // calculer avec l'ancien bareme jusqu'au prochain rechargement.
+        REGLES_BAREME.forEach(function (r) {
+          ETAT.data.pointRules[r[0]] = payload[r[1]];
+        });
+        dire("Barème enregistré.", false);
+      });
 
       /* ================= QR CODE =================
          Genere dans le navigateur, avec la meme fonction que qr.html
