@@ -2266,8 +2266,74 @@
       .ps-capture-ico svg { width: 15px; height: 15px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .ps-capture-txt { font-size: 13px; font-weight: 650; color: var(--ink2); }
       .ps-capture.rempli .ps-capture-txt { color: var(--ink); }
-      .ps-capture-preview { display: flex; justify-content: center; }
-      .ps-capture-preview img { max-height: 130px; border-radius: 12px; border: 1px solid var(--line2); }
+      /* Le pseudo est valide : un ✓ vert plutot qu'un message d'erreur
+         apres coup. On confirme pendant la frappe, on ne sanctionne pas
+         a l'envoi. */
+      .ps-pseudo-champ.ok { border-color: var(--succes-texte, #57d98a); }
+      .ps-pseudo-ok {
+        flex: 0 0 auto; width: 20px; height: 20px; margin-right: 9px;
+        display: none; place-items: center;
+        border-radius: 50%; background: var(--succes-texte, #57d98a);
+      }
+      .ps-pseudo-champ.ok .ps-pseudo-ok { display: grid; }
+      .ps-pseudo-ok svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* La zone de depot est aussi une cible de collage et de glisser-
+         deposer, pas seulement un input fichier -- .survol est pose par
+         le JS pendant un survol de fichier. */
+      .ps-capture.survol {
+        border-style: solid; border-color: var(--bouton);
+        background: color-mix(in srgb, var(--bouton) 8%, transparent);
+      }
+
+      /* Au retour d'Instagram : la carte d'identite s'annonce au lieu de
+         se laisser trouver. Une seule pulsation, pas une animation en
+         boucle qui parasiterait la lecture. */
+      @keyframes ps-appel {
+        0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--bouton) 45%, transparent); }
+        100% { box-shadow: 0 0 0 14px transparent; }
+      }
+      .ps-identite.appel { animation: ps-appel 1.1s ease-out 2; }
+      @media (prefers-reduced-motion: reduce) { .ps-identite.appel { animation: none; } }
+
+      /* ---- La capture, montree comme un ecran de telephone ----
+         Avant : une vignette de 130px de haut dans une bordure, qui
+         lisait comme une piece jointe de mail. Une capture de story est
+         un objet 9:16 ; la montrer a ses vraies proportions, legerement
+         inclinee et avec le pseudo dessus, la rend a ce qu'elle est --
+         ce que le clubbeur vient de publier, pas un justificatif. */
+      .ps-capture-preview { display: flex; justify-content: center; padding: 4px 0 2px; }
+      .ps-capture-cadre {
+        position: relative; width: 132px; aspect-ratio: 9 / 16;
+        border-radius: 16px; overflow: hidden; background: var(--s1);
+        border: 1px solid var(--line2);
+        box-shadow: 0 14px 28px -14px rgba(20,20,25,.45);
+        transform: rotate(-2.5deg);
+        transition: transform var(--tr-court);
+      }
+      .ps-capture-cadre:hover { transform: rotate(0deg); }
+      .ps-capture-cadre img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      /* Voile sous le pseudo seulement : un degrade sur toute la hauteur
+         assombrirait la capture qu'on demande justement de pouvoir lire. */
+      .ps-capture-cadre figcaption {
+        position: absolute; left: 0; right: 0; bottom: 0;
+        padding: 20px 9px 8px;
+        background: linear-gradient(to top, rgba(10,10,12,.82), transparent);
+        color: #fff; font-family: var(--mono, inherit);
+        font-size: 11.5px; font-weight: 700; letter-spacing: -.01em;
+        text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .ps-capture-cadre figcaption:empty { display: none; }
+      /* Remplacer une capture ne doit pas obliger a re-trouver le champ
+         plus haut : le bouton vit sur l'image. */
+      .ps-capture-refaire {
+        position: absolute; top: 7px; right: 7px;
+        width: 26px; height: 26px; border: 0; border-radius: 50%;
+        background: rgba(10,10,12,.55); color: #fff; cursor: pointer;
+        display: grid; place-items: center; padding: 0;
+      }
+      .ps-capture-refaire svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+      @media (prefers-reduced-motion: reduce) { .ps-capture-cadre { transform: none; transition: none; } }
 
       /* Avertissement, maintenant range dans la carte "Format" (.ps-groupe)
          plutot que sa propre boite ambre isolee -- une boite de moins a
@@ -3653,9 +3719,47 @@ var SCREEN = $(".screen");
 // c'est chiant, il n'y a pas de logique"). Choisir un format ne fait
 // plus que le selectionner ; ouvrir l'appli est maintenant une action
 // separee et explicite, a l'etape 3 seulement.
+// Vrai entre le tap sur "Ouvrir Instagram" et le retour dans l'appli.
+// Sert a reclamer la capture d'ecran au bon moment -- voir le
+// visibilitychange dans verifierIdentite().
+var partiPublier = false;
+
+// Publie par verifierIdentite() quand la carte d'identite Instagram est
+// affichee ; null le reste du temps.
+var identiteActive = null;
+
+// Sur ordinateur, une capture d'ecran part dans le presse-papier et
+// nulle part ailleurs : sans le collage, il faut d'abord l'enregistrer
+// en fichier pour pouvoir la donner.
+document.addEventListener("paste", function (ev) {
+  if (!identiteActive || !document.getElementById("story-capture-file")) return;
+  var items = (ev.clipboardData && ev.clipboardData.items) || [];
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].type && items[i].type.indexOf("image/") === 0) {
+      ev.preventDefault();
+      identiteActive.retenirCapture(items[i].getAsFile());
+      return;
+    }
+  }
+});
+
+/* Au retour d'Instagram, la capture vient d'etre prise et se trouve en
+   tete de pellicule : c'est LE moment ou la demander coute le moins.
+   Avant, on la reclamait avant meme d'aller poster, quand elle
+   n'existait pas encore -- il fallait sortir de l'appli, aller la
+   chercher, revenir. On ne fait que ramener la carte sous les yeux :
+   rien ne s'ouvre tout seul, le clubbeur garde la main. */
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState !== "visible" || !partiPublier) return;
+  partiPublier = false;
+  if (!identiteActive || identiteActive.aUneCapture()) return;
+  identiteActive.rappeler();
+});
+
 $("#story-page-corps")?.addEventListener("click", function (e) {
   var bouton = e.target.closest("#story-ouvrir-app");
   if (!bouton) return;
+  partiPublier = true;
   ouvrirAppOuWeb(bouton.dataset.schema, bouton.dataset.secours);
 });
 
@@ -5156,18 +5260,83 @@ function ouvrirChoixReseau(nomClub) {
   // chiffres, point, underscore -- un vrai pseudo Instagram.
   var PSEUDO_IG_RE = /^[a-zA-Z0-9._]{2,30}$/;
 
+  // La capture retenue. Variable a part plutot que
+  // #story-capture-file.files : un fichier colle ou depose n'alimente
+  // pas le FileList de l'input, et l'image est de toute facon
+  // recompressee avant d'etre gardee.
+  var captureChoisie = null;
+
+  /* On demande un pseudo, les gens collent le lien de leur profil --
+     c'est ce que partage Instagram. Refuser sechement une URL alors
+     qu'elle contient exactement l'information demandee etait une
+     impasse : on en extrait le pseudo. Gere aussi le @ colle devant et
+     le ?igsh=... que l'appli accroche a ses liens de partage. */
+  function nettoyerPseudoIg(brut) {
+    var v = (brut || "").trim();
+    if (!v) return "";
+    var url = v.match(/(?:instagram\.com|instagr\.am)\/([^/?#\s]+)/i);
+    if (url) v = url[1];
+    return v.replace(/^@/, "").replace(/[/?#].*$/, "").trim();
+  }
+
+  /* Une capture de telephone pese 3 a 6 Mo. Sur le reseau d'un club a
+     2h du matin, l'envoi echoue -- et le clubbeur perd ses points pour
+     une raison qui n'a rien a voir avec lui. 1080px de large suffit
+     largement a lire un pseudo sur un profil. Si quoi que ce soit
+     echoue (format exotique, canvas indisponible), on renvoie le
+     fichier d'origine : mieux vaut un envoi lourd qu'un envoi perdu. */
+  function compresserCapture(fichier) {
+    return new Promise(function (resolve) {
+      if (!/^image\//.test(fichier.type || "")) return resolve(fichier);
+      var url = URL.createObjectURL(fichier);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var largeur = Math.min(1080, img.naturalWidth);
+          var ratio = largeur / img.naturalWidth;
+          var canvas = document.createElement("canvas");
+          canvas.width = Math.round(largeur);
+          canvas.height = Math.round(img.naturalHeight * ratio);
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(function (blob) {
+            URL.revokeObjectURL(url);
+            if (!blob || blob.size >= fichier.size) return resolve(fichier);
+            resolve(new File([blob], "profil.jpg", { type: "image/jpeg" }));
+          }, "image/jpeg", 0.82);
+        } catch (e) {
+          URL.revokeObjectURL(url);
+          resolve(fichier);
+        }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(fichier); };
+      img.src = url;
+    });
+  }
+
   function blocIdentite() {
     return (
       '<div class="ps-identite">' +
         '<p class="ps-identite-titre">Ton profil Instagram</p>' +
         '<p class="ps-identite-sub">A faire une seule fois : le club doit pouvoir te reconnaitre derriere ta mention.</p>' +
-        '<div class="ps-pseudo-champ"><span>@</span><input type="text" id="story-pseudo-ig" placeholder="ton.pseudo" autocapitalize="off" autocomplete="off" /></div>' +
+        '<div class="ps-pseudo-champ" id="story-pseudo-champ">' +
+          "<span>@</span>" +
+          '<input type="text" id="story-pseudo-ig" placeholder="ton.pseudo" autocapitalize="off" autocomplete="off" />' +
+          '<span class="ps-pseudo-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+        "</div>" +
         '<label class="ps-capture" id="story-capture-label" for="story-capture-file">' +
           '<input type="file" accept="image/*" id="story-capture-file" hidden />' +
           '<span class="ps-capture-ico"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2.5h6L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg></span>' +
           '<span class="ps-capture-txt" id="story-capture-txt">Capture d\'écran de ton profil</span>' +
         "</label>" +
-        '<div class="ps-capture-preview" id="story-capture-preview" hidden><img id="story-capture-img" alt="" /></div>' +
+        '<div class="ps-capture-preview" id="story-capture-preview" hidden>' +
+          '<figure class="ps-capture-cadre" style="margin:0">' +
+            '<img id="story-capture-img" alt="" />' +
+            '<button type="button" class="ps-capture-refaire" id="story-capture-refaire" aria-label="Changer la capture">' +
+              '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+            "</button>" +
+            '<figcaption id="story-capture-legende"></figcaption>' +
+          "</figure>" +
+        "</div>" +
       "</div>"
     );
   }
@@ -5349,14 +5518,91 @@ function ouvrirChoixReseau(nomClub) {
     conteneur.innerHTML = blocIdentite();
 
     var champFichier = $("#story-capture-file");
-    champFichier.addEventListener("change", function () {
-      var fichier = champFichier.files && champFichier.files[0];
-      if (!fichier) return;
-      $("#story-capture-label").classList.add("rempli");
-      $("#story-capture-txt").textContent = fichier.name;
+    var label = $("#story-capture-label");
+    var champPseudo = $("#story-pseudo-ig");
+    var champPseudoBoite = $("#story-pseudo-champ");
+
+    // Un seul chemin d'entree pour la capture, quelle que soit sa
+    // provenance : tap sur le champ, collage, ou glisser-deposer.
+    async function retenirCapture(fichier) {
+      if (!fichier || !/^image\//.test(fichier.type || "")) return;
+      $("#story-capture-txt").textContent = "Compression…";
+      captureChoisie = await compresserCapture(fichier);
+      label.classList.add("rempli");
+      $("#story-capture-txt").textContent = "Capture ajoutée";
       $("#story-capture-preview").hidden = false;
-      $("#story-capture-img").src = URL.createObjectURL(fichier);
+      $("#story-capture-img").src = URL.createObjectURL(captureChoisie);
+      majLegendeCapture();
+    }
+
+    // Le pseudo s'ecrit sur la capture : les deux ne sont plus deux
+    // champs empiles mais un seul objet, ce que le club recevra.
+    function majLegendeCapture() {
+      var legende = $("#story-capture-legende");
+      if (!legende) return;
+      var pseudo = nettoyerPseudoIg(champPseudo.value);
+      legende.textContent = PSEUDO_IG_RE.test(pseudo) ? "@" + pseudo : "";
+    }
+
+    champFichier.addEventListener("change", function () {
+      retenirCapture(champFichier.files && champFichier.files[0]);
     });
+
+    ["dragenter", "dragover"].forEach(function (nom) {
+      label.addEventListener(nom, function (ev) { ev.preventDefault(); label.classList.add("survol"); });
+    });
+    ["dragleave", "dragend"].forEach(function (nom) {
+      label.addEventListener(nom, function () { label.classList.remove("survol"); });
+    });
+    label.addEventListener("drop", function (ev) {
+      ev.preventDefault();
+      label.classList.remove("survol");
+      retenirCapture(ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]);
+    });
+
+    // Le clic sur la croix ne doit pas remonter au <label>, sinon il
+    // rouvre le selecteur de fichier dans la foulee.
+    $("#story-capture-refaire").addEventListener("click", function (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      captureChoisie = null;
+      champFichier.value = "";
+      label.classList.remove("rempli");
+      $("#story-capture-txt").textContent = "Capture d'écran de ton profil";
+      $("#story-capture-preview").hidden = true;
+    });
+
+    // Le pseudo est nettoye a la sortie du champ, pas a chaque frappe :
+    // reecrire la valeur pendant qu'on tape deplacerait le curseur.
+    champPseudo.addEventListener("input", function () {
+      var pseudo = nettoyerPseudoIg(champPseudo.value);
+      champPseudoBoite.classList.toggle("ok", PSEUDO_IG_RE.test(pseudo));
+      majLegendeCapture();
+    });
+    champPseudo.addEventListener("blur", function () {
+      var pseudo = nettoyerPseudoIg(champPseudo.value);
+      if (pseudo !== champPseudo.value) champPseudo.value = pseudo;
+      champPseudoBoite.classList.toggle("ok", PSEUDO_IG_RE.test(pseudo));
+      majLegendeCapture();
+    });
+
+    /* Les deux ecouteurs sur document (collage, retour d'appli) sont
+       cables une seule fois, tout en haut : la page "Poster ma story"
+       est reconstruite a chaque ouverture, les rattacher ici en
+       empilerait un jeu de plus a chaque fois. On ne publie donc que ce
+       dont ils ont besoin. */
+    identiteActive = {
+      retenirCapture: retenirCapture,
+      aUneCapture: function () { return !!captureChoisie; },
+      rappeler: function () {
+        var carte = document.querySelector(".ps-identite");
+        if (!carte) return;
+        $("#story-capture-txt").textContent = "Ajoute ta capture, elle est en haut de ta pellicule";
+        carte.scrollIntoView({ behavior: "smooth", block: "center" });
+        carte.classList.add("appel");
+        setTimeout(function () { carte.classList.remove("appel"); }, 2600);
+      },
+    };
   })();
 
   // Met a jour la mention ("Tague @lehandle") et l'etape 2 des qu'on
@@ -5537,12 +5783,11 @@ function ouvrirChoixReseau(nomClub) {
     var pseudoIg = null;
     if (identiteRequise) {
       var champPseudo = $("#story-pseudo-ig");
-      pseudoIg = champPseudo.value.trim().replace(/^@/, "");
+      pseudoIg = nettoyerPseudoIg(champPseudo.value);
       if (!PSEUDO_IG_RE.test(pseudoIg)) {
         return dire("Pseudo Instagram invalide : lettres, chiffres, point et underscore.", true);
       }
-      var fichierCapture = $("#story-capture-file").files && $("#story-capture-file").files[0];
-      if (!fichierCapture) return dire("Ajoute une capture d'écran de ton profil Instagram.", true);
+      if (!captureChoisie) return dire("Ajoute une capture d'écran de ton profil Instagram.", true);
     }
 
     bouton.disabled = true;
@@ -5568,7 +5813,7 @@ function ouvrirChoixReseau(nomClub) {
         return dire("Ta session a expiré, reconnecte-toi.", true);
       }
       var uid = sessionIdentite.user.id;
-      var fichierCapture2 = $("#story-capture-file").files[0];
+      var fichierCapture2 = captureChoisie;
       var ext = (fichierCapture2.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
       var chemin = clubRow.data.id + "/" + uid + "/profil-" + Date.now() + "." + ext;
 
