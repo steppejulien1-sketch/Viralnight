@@ -89,9 +89,60 @@ Colle ca avant la premiere image. Ca evite de re-decrire le style 8 fois.
 
 ## 8. Vestiaire — `art-cintre.png`
 
-> Sujet 8 : un cintre en bois beige clair, vu de face, avec un petit jeton de
-> vestiaire rond et dore suspendu a son crochet par une cordelette. Aucun
-> chiffre sur le jeton. Fond uni #F9F1E6. Meme style que le precedent.
+Version detaillee : le vestiaire est le sujet le plus dur de la serie, parce
+qu'un cintre seul ne dit pas "vestiaire de club" et qu'un jeton seul ne se
+reconnait pas a 60px. Il faut les deux, et il faut dire lequel domine.
+
+> Sujet 8 : un vestiaire de boite de nuit, represente par un cintre en bois
+> avec son jeton de consigne accroche.
+>
+> Composition. Le cintre est vu de face, strictement de face, parfaitement
+> symetrique, centre dans le cadre, la barre horizontale legerement plus bas
+> que le milieu de l'image. Le crochet metallique remonte au-dessus des
+> epaules, forme un J regulier dont l'ouverture regarde vers la gauche. Le
+> jeton est suspendu a la BARRE du cintre, pas au crochet, decale a droite du
+> centre, pendu au bout d'une cordelette courte et souple qui retombe droit.
+> Rien d'autre dans l'image : pas de portant, pas de mur, pas de vetement.
+>
+> Le cintre. Bois clair legerement chaud, un aplat uni beige-sable, la barre
+> et les epaules du meme bois. Epaules en pente douce, pas anguleuses ; leurs
+> extremites sont arrondies. La barre du bas est un rectangle simple aux
+> angles arrondis. Le crochet est d'un gris metallique froid, plus fonce que
+> le bois, pour qu'on lise deux materiaux differents.
+>
+> Le jeton. Un disque parfaitement rond, laiton dore, vu de face, avec un
+> petit trou de suspension pres de son bord haut. Une fine bordure plus
+> sombre en fait le tour, comme la tranche d'une piece. Sa surface reste
+> VIDE : aucun chiffre, aucune lettre, aucun logo, aucun motif. Son diametre
+> vaut environ le tiers de la largeur du cintre -- assez gros pour se lire en
+> petit, assez petit pour rester un accessoire.
+>
+> Traitement. Illustration vectorielle plate. Contour continu d'epaisseur
+> constante, brun tres fonce #2A2420, la meme epaisseur sur le cintre, le
+> crochet, la cordelette et le jeton. Trois aplats de couleur en tout : le
+> bois, le metal du crochet, le dore du jeton. Aucun degrade complique, tout
+> au plus une zone d'ombre unie sur la face inferieure de la barre. Une ombre
+> ovale, douce et tres claire, posee au sol sous l'objet.
+>
+> Cadrage. L'ensemble cintre + jeton occupe environ 72% de la hauteur du
+> cadre, centre, avec une marge reguliere tout autour. Fond uni #F9F1E6, sans
+> decor ni texture.
+>
+> A eviter absolument : photorealisme, rendu 3D, bois veine realiste, reflets
+> brillants sur le metal, ombre portee dure, perspective ou vue de trois
+> quarts, vetement sur le cintre, plusieurs cintres, main qui tient l'objet,
+> texte, chiffre, lettre, logo, filigrane, cadre, bordure.
+
+Si le resultat ne va pas, les reprises les plus utiles :
+
+> Le jeton est accroche au crochet. Deplace-le : il pend a la barre
+> horizontale du cintre, decale a droite, au bout d'une cordelette courte.
+
+> Le cintre est trop fin, il disparait en petit. Epaissis la barre et les
+> epaules, et raccourcis le crochet.
+
+> Il y a un chiffre sur le jeton. Refais-le entierement vide, sans aucune
+> marque.
 
 ---
 
