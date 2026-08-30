@@ -94,7 +94,8 @@ lib/auth/         requireEstablishment : le garde-fou de securite des routes API
 lib/verification/ controle des contenus soumis par les clients
 lib/tracking/     QR codes et endpoints publics
 lib/ai/           prompts et clients OpenAI
-lib/points/       aussi : mentionAutomatique.js, le pont entre les deux bases
+lib/points/       aussi : mentionAutomatique.js (pont entre les deux bases)
+                  et verificationStory.js (story supprimee avant l'echeance)
 lib/scheduling/   dates de soiree (une soiree du samedi soir finit le dimanche matin)
 ```
 

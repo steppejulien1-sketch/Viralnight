@@ -27,11 +27,13 @@ import {
   inscrireWebhookMentions,
   recupererAbonnes,
   lireAuteurMention,
+  verifierMediaExiste,
   MissingConfigError,
   InstagramApiError,
 } from "../lib/instagram/oauth.js";
 import { verifierChallengeWebhook, extraireMentions } from "../lib/instagram/webhook.js";
 import { deciderCreditMention, normaliserHandle } from "../lib/points/mentionAutomatique.js";
+import { deciderSortStory, SORTS } from "../lib/points/verificationStory.js";
 
 function json(response, body, status = 200) {
   response.statusCode = status;
@@ -496,6 +498,90 @@ async function actionCollecterAbonnes(request, response) {
 
 // ---------------- dispatch ----------------
 
+/* ---------------- action=verifier-stories (GET, cron quotidien) ----------------
+ *
+ * Une story vit 24 h. Quelqu'un peut poster, declencher la mention, se faire
+ * crediter, puis supprimer trois heures plus tard : le club a paye une
+ * visibilite qui n'a pas eu lieu, et Meta n'envoie rien pour le signaler.
+ *
+ * On va donc verifier, juste avant que les points deviennent depensables --
+ * ce moment existe deja (unlocks_at, pose par crediter_mention_instagram
+ * d'apres clubs.points_lock_hours, mis a 20 h). Un media supprime cesse de
+ * repondre : c'est le seul signal disponible, et il suffit.
+ *
+ * La decision vit dans lib/points/verificationStory.js, testee en Node ; ici
+ * on ne fait que la rassembler et l'appliquer.
+ */
+async function actionVerifierStories(request, response) {
+  if (request.method !== "GET") return json(response, { error: "Methode non supportee." }, 405);
+  if (!estAppelCron(request)) return json(response, { error: "Non autorise." }, 401);
+
+  let clubbeur, gerants;
+  try {
+    clubbeur = getSupabaseClubbeurAdmin();
+    gerants = getSupabaseAdmin();
+  } catch (error) {
+    return json(response, { error: "Configuration serveur incomplete." }, 500);
+  }
+
+  // Seuls les credits encore en attente : un grant deja libere n'est plus
+  // repris (le clubbeur a pu depenser les points), et un credit deja annule
+  // n'a plus rien a verifier.
+  const { data: credits, error: erreurLecture } = await clubbeur
+    .from("instagram_mention_credits")
+    .select("club_id, media_id, point_grant_id, clubs(establishment_id), point_grants(unlocks_at, released)")
+    .is("annule_le", null)
+    .not("point_grant_id", "is", null)
+    .limit(200);
+
+  if (erreurLecture) return json(response, { error: erreurLecture.message }, 500);
+
+  let verifiees = 0, annulees = 0, gardees = 0, attendues = 0;
+
+  for (const credit of credits || []) {
+    const grant = credit.point_grants;
+    if (!grant || grant.released) continue;
+
+    // Premier filtre, sans reseau : inutile d'appeler Meta pour une story
+    // qui a encore des heures devant elle.
+    const preDecision = deciderSortStory({ etatMedia: "present", unlocksAt: grant.unlocks_at });
+    if (preDecision.sort === SORTS.ATTENDRE) { attendues++; continue; }
+
+    const etablissementId = credit.clubs?.establishment_id;
+    if (!etablissementId) { gardees++; continue; }
+
+    const { data: compte } = await gerants
+      .from("establishment_instagram_accounts")
+      .select("page_access_token")
+      .eq("establishment_id", etablissementId)
+      .maybeSingle();
+
+    const jeton = compte?.page_access_token;
+    // Sans jeton, on ne peut RIEN prouver : garder, jamais annuler.
+    const etatMedia = jeton ? await verifierMediaExiste(credit.media_id, jeton) : "indetermine";
+    verifiees++;
+
+    const decision = deciderSortStory({ etatMedia, unlocksAt: grant.unlocks_at });
+    if (decision.sort !== SORTS.ANNULER) {
+      gardees++;
+      continue;
+    }
+
+    const { error } = await clubbeur.rpc("annuler_mention_instagram", {
+      p_club: credit.club_id,
+      p_media: credit.media_id,
+    });
+    if (error) {
+      console.error(`[instagram:verif] ${credit.media_id} annulation echouee:`, error.message);
+      continue;
+    }
+    annulees++;
+    console.log(`[instagram:verif] ${credit.media_id} annule: ${decision.raison}`);
+  }
+
+  return json(response, { verifiees, annulees, gardees, attendues });
+}
+
 const ACTIONS = {
   connect: actionConnect,
   callback: actionCallback,
@@ -503,6 +589,7 @@ const ACTIONS = {
   status: actionStatus,
   webhook: actionWebhook,
   "collecter-abonnes": actionCollecterAbonnes,
+  "verifier-stories": actionVerifierStories,
 };
 
 export default async function handler(request, response) {

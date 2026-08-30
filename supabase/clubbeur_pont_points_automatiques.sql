@@ -38,6 +38,10 @@ create table if not exists public.instagram_mention_credits (
   user_id        uuid not null references public.users(id) on delete cascade,
   point_grant_id uuid references public.point_grants(id) on delete set null,
   created_at     timestamptz not null default now(),
+  -- Rempli quand la verification differee constate que la story a ete
+  -- supprimee avant l'echeance. La ligne est GARDEE : elle empeche de
+  -- recrediter le meme media si Meta redelivre l'evenement.
+  annule_le      timestamptz,
   primary key (club_id, media_id)
 );
 
@@ -113,6 +117,71 @@ $$;
 revoke all on function public.crediter_mention_instagram(uuid, uuid, text, integer) from public;
 revoke all on function public.crediter_mention_instagram(uuid, uuid, text, integer) from anon;
 revoke all on function public.crediter_mention_instagram(uuid, uuid, text, integer) from authenticated;
+
+-- ---------------------------------------------------------------------
+-- 4. Annuler des points deja credites, quand la story a disparu avant
+--    l'echeance. Une story vit 24 h ; quelqu'un peut poster, declencher
+--    la mention, puis supprimer trois heures plus tard -- le club a paye
+--    une visibilite qui n'a pas eu lieu.
+--
+--    On SUPPRIME le point_grant plutot que de le marquer : tant qu'il
+--    n'est pas libere (released = false), il n'a jamais compte dans le
+--    solde, donc rien a compenser. On refuse d'ailleurs de toucher a un
+--    grant deja libere -- reprendre des points qu'un clubbeur a peut-etre
+--    deja depenses creerait un solde negatif.
+-- ---------------------------------------------------------------------
+create or replace function public.annuler_mention_instagram(
+  p_club  uuid,
+  p_media text
+) returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_grant uuid;
+  v_libere boolean;
+begin
+  select c.point_grant_id, g.released
+    into v_grant, v_libere
+    from public.instagram_mention_credits c
+    left join public.point_grants g on g.id = c.point_grant_id
+   where c.club_id = p_club and c.media_id = p_media;
+
+  if not found then
+    return false;
+  end if;
+
+  -- Deja libere : trop tard, on ne reprend rien.
+  if v_libere is true then
+    return false;
+  end if;
+
+  if v_grant is not null then
+    delete from public.point_grants where id = v_grant;
+  end if;
+
+  update public.instagram_mention_credits
+     set annule_le = now(), point_grant_id = null
+   where club_id = p_club and media_id = p_media;
+
+  return true;
+end;
+$$;
+
+revoke all on function public.annuler_mention_instagram(uuid, text) from public;
+revoke all on function public.annuler_mention_instagram(uuid, text) from anon;
+revoke all on function public.annuler_mention_instagram(uuid, text) from authenticated;
+
+-- ---------------------------------------------------------------------
+-- 5. Delai avant que les points deviennent depensables : 20 h.
+--    Pas 24 : une story vit 24 h, verifier a 24 h tombe pile au moment ou
+--    elle expire d'elle-meme et ou l'API peut deja ne plus la rendre --
+--    on annulerait des points parfaitement legitimes.
+-- ---------------------------------------------------------------------
+update public.clubs
+   set points_lock_hours = 20
+ where points_lock_hours is null or points_lock_hours > 20;
 
 -- ---------------------------------------------------------------------
 -- A FAIRE ENSUITE, a la main : relier chaque club a son etablissement.
