@@ -161,6 +161,39 @@
       }
       .fiche-champ input[type="color"] { padding: 4px; height: 44px; cursor: pointer; }
       .fiche-msg { font-size: 12.5px; margin: 4px 0 0; display: none; }
+      .fiche-aide { display: block; margin-top: 5px; font-size: 11.5px; color: var(--ink3); line-height: 1.4; }
+
+      /* Bascule connexion / inscription. Un lien discret, pas un second
+         bouton plein : creer un compte est l'action rare, se connecter
+         l'action de tous les jours. */
+      .porte-bascule {
+        border: 0; background: none; padding: 6px 0 0; cursor: pointer;
+        font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink2);
+        text-decoration: underline; text-underline-offset: 3px;
+      }
+      .porte-bascule:hover { color: var(--ink); }
+
+      /* ---- QR code ----
+         Fond BLANC impose, quel que soit le theme : un QR sur fond sombre
+         ne se lit pas de facon fiable par les appareils photo, qui
+         s'attendent a des modules sombres sur clair. C'est la seule
+         surface blanche de l'appli, et c'est deliberé. */
+      .qr-carte {
+        display: grid; gap: 12px; justify-items: center;
+        padding: 18px; border-radius: 18px;
+        background: var(--s1); border: 1px solid var(--line);
+      }
+      .qr-image {
+        width: 100%; max-width: 230px; aspect-ratio: 1;
+        background: #fff; border-radius: 12px; padding: 10px;
+        display: grid; place-items: center;
+      }
+      .qr-image svg, .qr-image img { width: 100%; height: 100%; display: block; }
+      .qr-code-txt { margin: 0; font-size: 13px; color: var(--ink2); }
+      .qr-code-txt strong {
+        font-family: var(--mono); font-size: 15px; letter-spacing: .08em; color: var(--ink);
+      }
+      .qr-carte .bouton { width: 100%; text-align: center; }
       .apercu-fiche {
         display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px;
         background: var(--s1); border: 1px solid var(--line); margin-bottom: 18px;
@@ -228,6 +261,14 @@
               <h1 class="ecran-titre" style="margin-bottom:14px">Noctify club</h1>
               <p id="porte-message">Connecte-toi avec ton compte club.</p>
               <form id="porte-form" style="display:grid;gap:10px;width:100%;max-width:260px;text-align:left">
+                <!-- Nom du club : demande a l'inscription seulement. Sans lui,
+                     le compte se cree sans etablissement derriere et le
+                     gerant atterrit sur un tableau de bord vide sans
+                     comprendre pourquoi. -->
+                <div class="fiche-champ" style="margin-bottom:0" id="porte-champ-club" hidden>
+                  <label for="porte-club">Nom du club</label>
+                  <input type="text" id="porte-club" autocomplete="organization" />
+                </div>
                 <div class="fiche-champ" style="margin-bottom:0">
                   <label for="porte-email">Email</label>
                   <input type="email" id="porte-email" autocomplete="username" required />
@@ -235,9 +276,11 @@
                 <div class="fiche-champ" style="margin-bottom:0">
                   <label for="porte-password">Mot de passe</label>
                   <input type="password" id="porte-password" autocomplete="current-password" required />
+                  <span class="fiche-aide" id="porte-aide-mdp" hidden>8 caractères minimum, dont un chiffre.</span>
                 </div>
                 <p class="fiche-msg" id="porte-form-msg"></p>
                 <button type="submit" class="bouton pleine" id="porte-submit">Se connecter</button>
+                <button type="button" class="porte-bascule" id="porte-bascule">Pas encore de compte ? En créer un</button>
               </form>
             </div>
 
@@ -261,6 +304,15 @@
                   <span class="kpi-label">Scans QR</span>
                   <span class="kpi-valeur" id="kpi-scans">—</span>
                   <span class="kpi-note" id="kpi-scans-note"></span>
+                </div>
+                <!-- Demande de Julien : "le nombre de gens qui ont rejoint".
+                     Ce sont les personnes distinctes ayant depose au moins un
+                     contenu, pas les scans : quelqu'un qui scanne sans jamais
+                     publier n'a pas rejoint le programme. -->
+                <div class="kpi">
+                  <span class="kpi-label">Membres</span>
+                  <span class="kpi-valeur" id="kpi-membres">—</span>
+                  <span class="kpi-note" id="kpi-membres-note"></span>
                 </div>
                 <div class="kpi">
                   <span class="kpi-label">Récompenses prises</span>
@@ -345,6 +397,36 @@
               <button type="button" class="bouton sobre pleine" id="reglages-deconnexion">Déconnexion</button>
             </div>
 
+            <!-- ================= QR CODE =================
+                 Le QR affiche a l'entree encode /scan.html?c=<code public>.
+                 Genere ici plutot que renvoye par le serveur : c'est la meme
+                 fonction que qr.html (lib/tracking/qrCode.js), donc les deux
+                 pages ne peuvent pas encoder des URL differentes. -->
+            <div class="vue" id="vue-qr">
+              <h1 class="ecran-titre">Mon QR code</h1>
+              <p class="ecran-sous">À imprimer et coller à l'entrée, au bar, aux toilettes.</p>
+
+              <div class="qr-carte" id="qr-carte">
+                <div class="qr-image" id="qr-image"></div>
+                <p class="qr-code-txt">Code du club <strong id="qr-code">—</strong></p>
+                <a class="bouton pleine" id="qr-telecharger" download="qr-noctify.png">Télécharger en PNG</a>
+                <p class="fiche-msg" id="qr-msg"></p>
+              </div>
+
+              <div class="kpis" style="margin-top:16px">
+                <div class="kpi">
+                  <span class="kpi-label">Scans</span>
+                  <span class="kpi-valeur" id="qr-kpi-scans">—</span>
+                  <span class="kpi-note">Depuis le début</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Personnes</span>
+                  <span class="kpi-valeur" id="qr-kpi-uniques">—</span>
+                  <span class="kpi-note">Scanners différents</span>
+                </div>
+              </div>
+            </div>
+
             <nav class="tabs">
               <button class="tab on" type="button" data-tab="dashboard" aria-current="page">
                 <svg viewBox="0 0 24 24"><path d="M3 13h4v7H3zM10 8h4v12h-4zM17 3h4v17h-4z"/></svg>
@@ -353,6 +435,10 @@
               <button class="tab" type="button" data-tab="recompenses">
                 <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
                 <span class="lbl">Récompenses</span>
+              </button>
+              <button class="tab" type="button" data-tab="qr">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>
+                <span class="lbl">QR</span>
               </button>
               <button class="tab" type="button" data-tab="fiche">
                 <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
@@ -372,6 +458,7 @@
       import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
       import { fetchDashboardData, fallbackDashboardData } from "./dashboardData.js";
       import { getDashboardStats, getActiveRewards } from "./lib/dashboardStats.js";
+      import { buildScanUrl, renderQrSvg, renderQrPngDataUrl } from "./lib/tracking/qrCode.js";
 
       var $ = function (s) { return document.querySelector(s); };
       var nb = new Intl.NumberFormat("fr-FR");
@@ -415,6 +502,7 @@
         rendreRecompenses();
         rendreFiche();
         rendreReglages();
+        rendreQr();
       }
 
       function afficherPorte(message) {
@@ -437,30 +525,124 @@
         return (error && error.message) || "Une erreur est survenue.";
       }
 
+      /* Connexion ET inscription dans le meme formulaire. Un club qui
+         decouvre l'appli n'avait aucun moyen de creer son compte ici : il
+         fallait passer par inscription.html, une page du SITE, avec un
+         autre design -- exactement la rupture que Julien reproche a
+         app.html ("c'est un site, ce n'est pas fou").
+
+         Meme flux que auth.js : signUp avec le nom du club en metadonnee,
+         puis /api/create-client pour creer l'etablissement. Sans ce second
+         appel, le nom saisi part dans user_metadata et n'est jamais lu :
+         le gerant se retrouve avec un compte sans club derriere. */
+      var modeInscription = false;
+
+      function majModePorte() {
+        $("#porte-champ-club").hidden = !modeInscription;
+        $("#porte-club").required = modeInscription;
+        $("#porte-aide-mdp").hidden = !modeInscription;
+        $("#porte-password").setAttribute("autocomplete", modeInscription ? "new-password" : "current-password");
+        $("#porte-submit").textContent = modeInscription ? "Créer mon compte" : "Se connecter";
+        $("#porte-bascule").textContent = modeInscription
+          ? "J'ai déjà un compte, me connecter"
+          : "Pas encore de compte ? En créer un";
+        $("#porte-message").textContent = modeInscription
+          ? "Crée le compte de ton club."
+          : "Connecte-toi avec ton compte club.";
+        $("#porte-form-msg").style.display = "none";
+      }
+
+      $("#porte-bascule").addEventListener("click", function () {
+        modeInscription = !modeInscription;
+        majModePorte();
+      });
+
+      // Meme regle qu'auth.js : 8 caracteres et un chiffre. Verifiee ici
+      // pour dire pourquoi avant l'aller-retour reseau -- Supabase renvoie
+      // un message en anglais, trop technique pour un gerant de club.
+      function motDePasseValide(valeur) {
+        return valeur.length >= 8 && /\d/.test(valeur);
+      }
+
       $("#porte-form").addEventListener("submit", async function (e) {
         e.preventDefault();
         var bouton = $("#porte-submit");
         var msg = $("#porte-form-msg");
         var email = $("#porte-email").value.trim();
         var password = $("#porte-password").value;
+        var club = $("#porte-club").value.trim();
 
-        bouton.disabled = true;
-        bouton.textContent = "Connexion…";
-        msg.style.display = "none";
-
-        var { error } = await supabase.auth.signInWithPassword({ email: email, password: password });
-
-        bouton.disabled = false;
-        bouton.textContent = "Se connecter";
-
-        if (error) {
+        function dire(texte, erreur) {
           msg.style.display = "block";
-          msg.style.color = "var(--accent)";
-          msg.textContent = traduireErreurConnexion(error);
-          return;
+          msg.style.color = erreur ? "var(--accent)" : "var(--ink2)";
+          msg.textContent = texte;
         }
 
-        // Connecte : on reste sur CETTE page (jamais de redirection vers
+        if (modeInscription && !club) return dire("Indique le nom de ton club.", true);
+        if (modeInscription && !motDePasseValide(password)) {
+          return dire("Mot de passe trop simple : 8 caractères minimum, dont un chiffre.", true);
+        }
+
+        var libelle = bouton.textContent;
+        bouton.disabled = true;
+        bouton.textContent = modeInscription ? "Création…" : "Connexion…";
+        msg.style.display = "none";
+
+        try {
+          if (modeInscription) {
+            var { data, error: erreurInscription } = await supabase.auth.signUp({
+              email: email,
+              password: password,
+              options: {
+                data: { club_name: club },
+                emailRedirectTo: window.location.href,
+              },
+            });
+            if (erreurInscription) throw erreurInscription;
+
+            // Pas de session : Supabase attend la confirmation par email.
+            // On ne peut donc pas encore creer l'etablissement (aucun jeton
+            // pour appeler l'API) -- on le dira a la premiere connexion.
+            if (!data.session) {
+              dire("Compte créé. Ouvre l'email envoyé à " + email + " pour confirmer, puis connecte-toi.", false);
+              modeInscription = false;
+              majModePorte();
+              return;
+            }
+
+            // Non bloquant : si la creation du club echoue (reseau), le
+            // compte existe quand meme et le gerant peut se connecter. Le
+            // faire echouer ici perdrait l'inscription entiere pour un
+            // appel secondaire.
+            try {
+              await fetch("/api/create-client", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: "Bearer " + data.session.access_token,
+                },
+                body: JSON.stringify({ establishment_name: club }),
+              });
+            } catch (erreurClub) {
+              console.error("[club-app] creation du club", erreurClub);
+            }
+          } else {
+            var { error: erreurConnexion } = await supabase.auth.signInWithPassword({
+              email: email,
+              password: password,
+            });
+            if (erreurConnexion) throw erreurConnexion;
+          }
+        } catch (error) {
+          bouton.disabled = false;
+          bouton.textContent = libelle;
+          return dire(traduireErreurConnexion(error), true);
+        }
+
+        bouton.disabled = false;
+        bouton.textContent = libelle;
+
+        // On reste sur CETTE page (jamais de redirection vers
         // connexion.html/app.html) -- on recharge juste les vraies donnees.
         PORTE.hidden = true;
         await demarrer();
@@ -477,6 +659,14 @@
         $("#kpi-points").textContent = nb.format(stats.points);
         $("#kpi-scans").textContent = nb.format(stats.scanCount);
         $("#kpi-scans-note").textContent = stats.scanCount ? nb.format(stats.uniqueScanners) + " personnes différentes" : "Aucun scan encore";
+        // "Membres" = personnes distinctes ayant depose au moins un
+        // contenu. Volontairement different des scanners uniques affiches
+        // juste au-dessus : scanner le QR n'est pas rejoindre.
+        $("#kpi-membres").textContent = nb.format(stats.activeCustomers);
+        $("#kpi-membres-note").textContent = stats.activeCustomers
+          ? nb.format(stats.rewardedCustomers) + " ont pris une récompense"
+          : "Personne n'a encore publié";
+
         $("#kpi-recompenses").textContent = nb.format(stats.redemptions.length);
         $("#kpi-recompenses-note").textContent = nb.format(stats.activeRewards.length) + " active" + (stats.activeRewards.length > 1 ? "s" : "") + " dans la boutique";
 
@@ -505,6 +695,65 @@
             "</div>"
           );
         }).join("");
+      }
+
+      /* ================= QR CODE =================
+         Genere dans le navigateur, avec la meme fonction que qr.html
+         (lib/tracking/qrCode.js) : deux implementations donneraient deux
+         URL differentes le jour ou l'une des deux change, et un QR faux ne
+         se voit pas a l'oeil -- il se decouvre le soir de la soiree. */
+
+      async function rendreQr() {
+        var etab = (ETAT.data && ETAT.data.establishment) || {};
+        var code = etab.public_code;
+        var zone = $("#qr-image");
+        var msg = $("#qr-msg");
+        var lien = $("#qr-telecharger");
+
+        var stats = getDashboardStats(ETAT.data);
+        $("#qr-kpi-scans").textContent = nb.format(stats.scanCount);
+        $("#qr-kpi-uniques").textContent = nb.format(stats.uniqueScanners);
+
+        // Pas de code public : le club existe mais n'a jamais ete
+        // provisionne. Le dire clairement plutot que d'afficher un QR vide
+        // ou, pire, un QR qui encode "undefined" et que quelqu'un imprime.
+        if (!code) {
+          $("#qr-code").textContent = "—";
+          zone.innerHTML = "";
+          lien.hidden = true;
+          msg.style.display = "block";
+          msg.style.color = "var(--ink2)";
+          msg.textContent = "Ce club n'a pas encore de code public. Contacte-nous, on le crée.";
+          return;
+        }
+
+        $("#qr-code").textContent = code;
+        lien.hidden = false;
+
+        // Hors session, tout l'ecran affiche la demo. Le dire ICI aussi :
+        // un QR est fait pour etre imprime, et rien ne distingue a l'oeil
+        // un QR d'exemple d'un vrai.
+        if (ETAT.data.source === "demo") {
+          msg.style.display = "block";
+          msg.style.color = "var(--ink2)";
+          msg.textContent = "Exemple de démonstration — ce n'est pas le QR de ton club.";
+        } else {
+          msg.style.display = "none";
+        }
+
+        var url = buildScanUrl(window.location.origin, code);
+
+        try {
+          zone.innerHTML = await renderQrSvg(url);
+          lien.href = await renderQrPngDataUrl(url, { width: 1200 });
+          lien.download = "qr-noctify-" + String(code).toLowerCase() + ".png";
+        } catch (erreur) {
+          zone.innerHTML = "";
+          lien.hidden = true;
+          msg.style.display = "block";
+          msg.style.color = "var(--accent)";
+          msg.textContent = "Le QR n'a pas pu être généré. Recharge la page.";
+        }
       }
 
       /* ================= RECOMPENSES ================= */

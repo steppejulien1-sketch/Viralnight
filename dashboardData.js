@@ -77,6 +77,11 @@ export const fallbackDashboardData = {
   establishment: {
     id: "demo-establishment",
     name: "Mirage Club Brussels",
+    // Code public de DEMO : sert a montrer l'onglet QR de club-app.html
+    // hors session. Il ne resout aucun etablissement reel -- l'ecran
+    // l'annonce d'ailleurs comme un exemple, pour que personne ne
+    // l'imprime en croyant que c'est le sien.
+    public_code: "DEMO2026",
     address: "Avenue Louise 100",
     city: "Brussels",
     category: "club",
