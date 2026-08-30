@@ -1301,44 +1301,25 @@
         filter: drop-shadow(0 3px 5px rgba(0,0,0,.4));
       }
 
-      /* Rien ne disait que ce verre-la, c'etait SOI -- Julien : "les gens
-         ne savent pas ce que c'est, j'ai envie qu'ils comprennent au
-         premier coup d'oeil que c'est eux". Sans l'ecrire : deux
-         signaux que tout le monde a deja appris ailleurs.
 
-         1. L'avatar. Depuis Snap Map, Zenly et Localiser, le marqueur
-            qui porte VOTRE tete est le votre. Aucune legende necessaire,
-            et ca ne se confond avec aucun badge de club.
-         2. Le halo qui respire au sol. C'est la grammaire du "vous etes
-            ici" de toutes les cartes. Les clubs, eux, ne pulsent pas :
-            le mouvement suffit a separer les deux familles. */
-      .moi-halo {
-        position: absolute; left: 50%; bottom: -6px;
-        width: 40px; height: 40px; margin-left: -20px;
-        border-radius: 50%; background: var(--accent, #ff6363);
-        opacity: .28; animation: moi-respire 2.6s ease-out infinite;
-        pointer-events: none; z-index: 0;
-      }
-      @keyframes moi-respire {
-        0%   { transform: scale(.45); opacity: .34; }
-        70%  { transform: scale(1.25); opacity: 0; }
-        100% { transform: scale(1.25); opacity: 0; }
-      }
-      .moi-avatar {
-        position: absolute; z-index: 2; top: -4px; right: -7px;
-        width: 24px; height: 24px; border-radius: 50%; overflow: hidden;
-        background: var(--accent, #ff6363); color: #fff;
-        border: 2.5px solid #fff;
-        box-shadow: 0 2px 5px rgba(0,0,0,.38);
-        display: grid; place-items: center;
-        font-size: 11px; font-weight: 800; line-height: 1;
-      }
-      .moi-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      /* Le contour blanc de la pastille se perd sur une carte claire ;
-         l'ombre portee le rattrape, mais un liseré interne aide encore. */
-      .moi-avatar svg { width: 13px; height: 13px; fill: #fff; }
-      @media (prefers-reduced-motion: reduce) {
-        .moi-halo { animation: none; opacity: .3; transform: scale(.9); }
+      /* Rien ne disait que ce verre-la, c'etait SOI -- Julien : "j'ai
+         envie que les gens comprennent au premier coup d'oeil que c'est
+         eux". Une pastille d'avatar a d'abord ete essayee (convention
+         Snap Map) : jugee "bizarre" sur un verre de 46px. Un mot a cote
+         du verre est plus direct, et se lit sans rien connaitre d'une
+         convention de carte.
+
+         Pose a DROITE du verre et verticalement au milieu : au-dessus,
+         il entrerait en collision avec la mousse et avec les etiquettes
+         de rue de la carte. */
+      .moi-etiquette {
+        position: absolute; z-index: 2; left: 100%; top: 50%;
+        transform: translateY(-50%); margin-left: 3px;
+        padding: 3px 8px; border-radius: 999px;
+        background: #fff; color: #14161a;
+        font-size: 11px; font-weight: 800; letter-spacing: -.01em;
+        line-height: 1.2; white-space: nowrap;
+        box-shadow: 0 2px 6px rgba(0,0,0,.45);
       }
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
@@ -2319,38 +2300,6 @@
       .ps-pseudo-champ.ok .ps-pseudo-ok { display: grid; }
       .ps-pseudo-ok svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 
-      /* ---- Trois vignettes : ce qu'on attend, et les deux erreurs ----
-         "Capture d'ecran de ton profil" ne dit pas grand-chose a 2h du
-         matin : la moitie des gens envoient leur story, l'autre moitie
-         un cadrage ou le pseudo est coupe -- justement la seule chose
-         dont le club a besoin. Trois schemas valent mieux que la
-         phrase. Dessines et non photographies : une vraie capture de
-         profil mettrait le compte de quelqu'un en clair dans une appli
-         publique, et un schema montre mieux ce qui compte (le pseudo en
-         haut) qu'une capture ou l'oeil se perd dans le contenu. */
-      .ps-exemples { display: flex; gap: 8px; }
-      .ps-exemple { flex: 1; min-width: 0; text-align: center; }
-      .ps-exemple-vue {
-        position: relative; width: 100%; aspect-ratio: 9 / 16;
-        border-radius: 9px; overflow: hidden;
-        background: var(--s1); border: 1px solid var(--line2);
-      }
-      .ps-exemple.ko .ps-exemple-vue { opacity: .62; }
-      .ps-exemple svg { display: block; width: 100%; height: 100%; }
-      .ps-exemple-jug {
-        position: absolute; top: 3px; right: 3px;
-        width: 15px; height: 15px; border-radius: 50%;
-        display: grid; place-items: center;
-        background: var(--succes-texte, #57d98a);
-      }
-      .ps-exemple.ko .ps-exemple-jug { background: var(--ink3); }
-      .ps-exemple-jug svg { width: 9px; height: 9px; stroke: #fff; fill: none; stroke-width: 3.2; stroke-linecap: round; }
-      .ps-exemple-txt {
-        display: block; margin-top: 5px;
-        font-size: 10.5px; font-weight: 650; line-height: 1.25; color: var(--ink3);
-      }
-      .ps-exemple.ok .ps-exemple-txt { color: var(--ink2); }
-
       /* La zone de depot est aussi une cible de collage et de glisser-
          deposer, pas seulement un input fichier -- .survol est pose par
          le JS pendant un survol de fichier. */
@@ -2369,40 +2318,12 @@
       .ps-identite.appel { animation: ps-appel 1.1s ease-out 2; }
       @media (prefers-reduced-motion: reduce) { .ps-identite.appel { animation: none; } }
 
-      /* ---- La capture, montree comme un ecran de telephone ----
-         Avant : une vignette de 130px de haut dans une bordure, qui
-         lisait comme une piece jointe de mail. Une capture de story est
-         un objet 9:16 ; la montrer a ses vraies proportions, legerement
-         inclinee et avec le pseudo dessus, la rend a ce qu'elle est --
-         ce que le clubbeur vient de publier, pas un justificatif. */
-      .ps-capture-preview { display: flex; justify-content: center; padding: 4px 0 2px; }
-      .ps-capture-cadre {
-        position: relative; width: 132px; aspect-ratio: 9 / 16;
-        border-radius: 16px; overflow: hidden; background: var(--s1);
-        border: 1px solid var(--line2);
-        box-shadow: 0 14px 28px -14px rgba(20,20,25,.45);
-      }
-      .ps-capture-cadre img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      /* Voile sous le pseudo seulement : un degrade sur toute la hauteur
-         assombrirait la capture qu'on demande justement de pouvoir lire. */
-      .ps-capture-cadre figcaption {
-        position: absolute; left: 0; right: 0; bottom: 0;
-        padding: 20px 9px 8px;
-        background: linear-gradient(to top, rgba(10,10,12,.82), transparent);
-        color: #fff; font-family: var(--mono, inherit);
-        font-size: 11.5px; font-weight: 700; letter-spacing: -.01em;
-        text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      .ps-capture-cadre figcaption:empty { display: none; }
-      /* Remplacer une capture ne doit pas obliger a re-trouver le champ
-         plus haut : le bouton vit sur l'image. */
-      .ps-capture-refaire {
-        position: absolute; top: 7px; right: 7px;
-        width: 26px; height: 26px; border: 0; border-radius: 50%;
-        background: rgba(10,10,12,.55); color: #fff; cursor: pointer;
-        display: grid; place-items: center; padding: 0;
-      }
-      .ps-capture-refaire svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; }
+      /* L'apercu de la capture (cadre 9:16 avec une croix) a ete
+         retire a la demande de Julien : sur une carte qui ne doit
+         contenir que deux champs, il pesait plus qu'il n'aidait. Le
+         libelle du bouton passant a "Capture ajoutee" suffit a
+         confirmer. Deux vraies captures d'exemple viendront a la
+         place. */
 
       /* Avertissement, maintenant range dans la carte "Format" (.ps-groupe)
          plutot que sa propre boite ambre isolee -- une boite de moins a
@@ -5382,65 +5303,6 @@ function ouvrirChoixReseau(nomClub) {
     });
   }
 
-  /* Les trois vignettes d'exemple. Schemas d'un profil Instagram, pas
-     de vraies captures -- voir .ps-exemples dans le CSS. Volontairement
-     grossiers : a 64px de large, tout detail supplementaire devient du
-     bruit. */
-  function vignetteProfil(options) {
-    var coupe = options && options.coupe;
-    var y = coupe ? -13 : 0;
-    return (
-      '<svg viewBox="0 0 54 96" aria-hidden="true">' +
-        '<rect width="54" height="96" fill="var(--s2)"/>' +
-        '<g transform="translate(0 ' + y + ')">' +
-          // avatar + pseudo : c'est CE bloc que le club doit pouvoir lire
-          '<circle cx="16" cy="19" r="9" fill="var(--line2)"/>' +
-          '<rect x="29" y="14" width="19" height="3.4" rx="1.7" fill="var(--ink3)"/>' +
-          '<rect x="29" y="20" width="13" height="2.6" rx="1.3" fill="var(--line2)"/>' +
-          '<rect x="7" y="33" width="40" height="2.6" rx="1.3" fill="var(--line2)"/>' +
-          // la grille de publications, juste pour que ca "fasse profil"
-          '<g fill="var(--line2)">' +
-            '<rect x="7" y="42" width="12" height="12" rx="1.5"/><rect x="21" y="42" width="12" height="12" rx="1.5"/><rect x="35" y="42" width="12" height="12" rx="1.5"/>' +
-            '<rect x="7" y="56" width="12" height="12" rx="1.5"/><rect x="21" y="56" width="12" height="12" rx="1.5"/><rect x="35" y="56" width="12" height="12" rx="1.5"/>' +
-          "</g>" +
-        "</g>" +
-      "</svg>"
-    );
-  }
-
-  function vignetteStory() {
-    return (
-      '<svg viewBox="0 0 54 96" aria-hidden="true">' +
-        '<rect width="54" height="96" fill="var(--line2)"/>' +
-        // une story : une image plein cadre, un anneau en haut, pas de pseudo lisible
-        '<circle cx="11" cy="10" r="6" fill="none" stroke="var(--s2)" stroke-width="1.6"/>' +
-        '<rect x="20" y="8" width="16" height="2.6" rx="1.3" fill="var(--s2)" opacity=".8"/>' +
-        '<path d="M0 62l14-14 12 11 10-9 18 17v29H0z" fill="var(--ink3)" opacity=".5"/>' +
-        '<circle cx="38" cy="30" r="6" fill="var(--s2)" opacity=".65"/>' +
-      "</svg>"
-    );
-  }
-
-  function blocExemples() {
-    var oui = '<span class="ps-exemple-jug"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
-    var non = '<span class="ps-exemple-jug"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>';
-    var items = [
-      ["ok", vignetteProfil(null), oui, "Ton profil, pseudo visible"],
-      ["ko", vignetteStory(), non, "Pas ta story"],
-      ["ko", vignetteProfil({ coupe: true }), non, "Pseudo coupé"],
-    ];
-    return (
-      '<div class="ps-exemples">' +
-      items.map(function (it) {
-        return '<div class="ps-exemple ' + it[0] + '">' +
-          '<div class="ps-exemple-vue">' + it[1] + it[2] + "</div>" +
-          '<span class="ps-exemple-txt">' + it[3] + "</span>" +
-        "</div>";
-      }).join("") +
-      "</div>"
-    );
-  }
-
   function blocIdentite() {
     return (
       '<div class="ps-identite">' +
@@ -5451,21 +5313,11 @@ function ouvrirChoixReseau(nomClub) {
           '<input type="text" id="story-pseudo-ig" placeholder="ton.pseudo" autocapitalize="off" autocomplete="off" />' +
           '<span class="ps-pseudo-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
         "</div>" +
-        blocExemples() +
         '<label class="ps-capture" id="story-capture-label" for="story-capture-file">' +
           '<input type="file" accept="image/*" id="story-capture-file" hidden />' +
           '<span class="ps-capture-ico"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2.5h6L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg></span>' +
           '<span class="ps-capture-txt" id="story-capture-txt">Capture d\'écran de ton profil</span>' +
         "</label>" +
-        '<div class="ps-capture-preview" id="story-capture-preview" hidden>' +
-          '<figure class="ps-capture-cadre" style="margin:0">' +
-            '<img id="story-capture-img" alt="" />' +
-            '<button type="button" class="ps-capture-refaire" id="story-capture-refaire" aria-label="Changer la capture">' +
-              '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
-            "</button>" +
-            '<figcaption id="story-capture-legende"></figcaption>' +
-          "</figure>" +
-        "</div>" +
       "</div>"
     );
   }
@@ -5663,20 +5515,6 @@ function ouvrirChoixReseau(nomClub) {
       captureChoisie = await compresserCapture(fichier);
       label.classList.add("rempli");
       $("#story-capture-txt").textContent = "Capture ajoutée";
-      $("#story-capture-preview").hidden = false;
-      $("#story-capture-img").src = URL.createObjectURL(captureChoisie);
-      var exemples = conteneur.querySelector(".ps-exemples");
-      if (exemples) exemples.hidden = true;
-      majLegendeCapture();
-    }
-
-    // Le pseudo s'ecrit sur la capture : les deux ne sont plus deux
-    // champs empiles mais un seul objet, ce que le club recevra.
-    function majLegendeCapture() {
-      var legende = $("#story-capture-legende");
-      if (!legende) return;
-      var pseudo = nettoyerPseudoIg(champPseudo.value);
-      legende.textContent = PSEUDO_IG_RE.test(pseudo) ? "@" + pseudo : "";
     }
 
     champFichier.addEventListener("change", function () {
@@ -5695,32 +5533,16 @@ function ouvrirChoixReseau(nomClub) {
       retenirCapture(ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]);
     });
 
-    // Le clic sur la croix ne doit pas remonter au <label>, sinon il
-    // rouvre le selecteur de fichier dans la foulee.
-    $("#story-capture-refaire").addEventListener("click", function (ev) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      captureChoisie = null;
-      champFichier.value = "";
-      label.classList.remove("rempli");
-      $("#story-capture-txt").textContent = "Capture d'écran de ton profil";
-      $("#story-capture-preview").hidden = true;
-      var exemplesRetour = conteneur.querySelector(".ps-exemples");
-      if (exemplesRetour) exemplesRetour.hidden = false;
-    });
-
     // Le pseudo est nettoye a la sortie du champ, pas a chaque frappe :
     // reecrire la valeur pendant qu'on tape deplacerait le curseur.
     champPseudo.addEventListener("input", function () {
       var pseudo = nettoyerPseudoIg(champPseudo.value);
       champPseudoBoite.classList.toggle("ok", PSEUDO_IG_RE.test(pseudo));
-      majLegendeCapture();
     });
     champPseudo.addEventListener("blur", function () {
       var pseudo = nettoyerPseudoIg(champPseudo.value);
       if (pseudo !== champPseudo.value) champPseudo.value = pseudo;
       champPseudoBoite.classList.toggle("ok", PSEUDO_IG_RE.test(pseudo));
-      majLegendeCapture();
     });
 
     /* Les deux ecouteurs sur document (collage, retour d'appli) sont
@@ -6180,45 +6002,18 @@ map.on("load", function () {
   // "je suis ici" pendant qu'on se deplace sur la carte -- demande de
   // Julien apres le retrait des amis de la carte ("un verre qui est
   // nous", pas un point generique). Le verre seul ne disait pas a QUI
-  // il appartenait : l'avatar et le halo qui respire s'en chargent,
-  // sans une ligne de texte (voir .moi-marker plus haut).
+  // il appartenait : une etiquette "Toi" le dit, tout simplement
+  // (voir .moi-etiquette plus haut).
   var porteurMoi = document.createElement("div");
   porteurMoi.className = "marker-porteur";
   var elMoi = document.createElement("div");
   elMoi.className = "moi-marker";
   // Silhouette par defaut : la maquette s'ouvre sans session, et un
   // marqueur vide serait pire que pas de pastille du tout.
-  elMoi.innerHTML =
-    '<span class="moi-halo" aria-hidden="true"></span>' +
-    pint(1) +
-    '<span class="moi-avatar" id="moi-avatar" aria-hidden="true">' +
-      '<svg viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.4 20.5a7.6 7.6 0 0 1 15.2 0z"/></svg>' +
-    "</span>";
+  elMoi.innerHTML = pint(1) + '<span class="moi-etiquette">Toi</span>';
   elMoi.setAttribute("role", "img");
   elMoi.setAttribute("aria-label", "Ma position");
 
-  // La vraie tete du clubbeur des qu'on la connait -- c'est elle qui
-  // fait comprendre "c'est moi" sans le moindre mot. A defaut de photo,
-  // l'initiale de son pseudo ; a defaut de session, la silhouette
-  // posee juste au-dessus.
-  (async function avatarSurLaCarte() {
-    try {
-      var session = (await supabaseClubbeur.auth.getSession()).data.session;
-      if (!session) return;
-      var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).maybeSingle()).data;
-      if (!profil) return;
-      var pastille = document.getElementById("moi-avatar");
-      if (!pastille) return;
-      if (profil.avatar_url) {
-        pastille.innerHTML = '<img src="' + escapeHtmlSupport(profil.avatar_url) + '" alt="" />';
-      } else if (profil.handle) {
-        pastille.textContent = profil.handle.charAt(0).toUpperCase();
-      }
-    } catch (erreur) {
-      // La silhouette reste : un marqueur sans tete vaut mieux qu'une
-      // carte qui casse parce que le profil n'a pas repondu.
-    }
-  })();
   porteurMoi.appendChild(elMoi);
   new maplibregl.Marker({ element: porteurMoi, anchor: "bottom", opacityWhenCovered: 0 })
     .setLngLat(MOI)
@@ -7586,7 +7381,31 @@ function prefixeClub(nom) {
   return sansAccents.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3).padEnd(3, "X");
 }
 
+/* Le catalogue affiche ne colle plus a celui de la base : Julien veut
+   la pinte a la place du coupe-file, et le vestiaire a la place du
+   carre VIP. Le changement propre est en SQL
+   (supabase/clubbeur_deux_vrais_clubs.sql), mais la cle anon est en
+   lecture seule -- RLS refuse silencieusement l'ecriture (204, zero
+   ligne touchee). En attendant que ce SQL soit passe, on renomme a
+   l'affichage.
+
+   Le COUT n'est volontairement pas touche : c'est redeem_reward, en
+   base, qui debite le clubbeur. Afficher un prix different de celui qui
+   sera preleve casserait l'echange au moment ou il compte. Les couts
+   d'origine (600 et 1200) restent donc, jusqu'au SQL.
+
+   Ces deux lignes deviennent inertes des que le SQL est passe : les
+   titres d'origine n'existeront plus. */
+var REMPLACEMENTS = {
+  "Coupe-file garanti": { nom: "Une pinte offerte", fam: "bar" },
+  "Accès carré VIP": { nom: "Vestiaire offert", fam: "acces" },
+};
+
 function completerRecompense(r, index, prefixe) {
+  var remplace = REMPLACEMENTS[r.title];
+  if (remplace) {
+    r = Object.assign({}, r, { title: remplace.nom, category: remplace.fam, description: null });
+  }
   var visuel = choisirArt(r.title, r.category);
   return {
     id: r.id, nom: r.title, cout: r.cost_points, fam: r.category,
