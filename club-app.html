@@ -111,6 +111,30 @@
       .bouton.pleine { width: 100%; }
       .bouton[disabled] { opacity: .55; cursor: default; }
 
+      /* ---- Panneau de graphique, repris du simulateur ----
+         Ce qui en fait un vrai graphique et non une sparkline : un
+         en-tete qui dit ce qu'on regarde, une echelle lisible a gauche,
+         des reperes de date en bas, et des points sur la ligne. Sans
+         l'echelle, une courbe ne dit que "ca monte" -- jamais combien. */
+      .panneau {
+        background: var(--s1); border: 1px solid var(--line);
+        border-radius: 18px; padding: 16px 16px 12px; margin-bottom: 20px;
+      }
+      .panneau-titre { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+      .panneau-sous { margin: 2px 0 14px; font-size: 11.5px; color: var(--ink2); }
+      .graphe { position: relative; height: 132px; }
+      .graphe svg { display: block; width: 100%; height: 100%; overflow: visible; }
+      .graphe-max {
+        position: absolute; top: -2px; left: 0;
+        font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em;
+        color: var(--ink3); background: var(--s1); padding-right: 6px;
+      }
+      .graphe-x {
+        display: flex; justify-content: space-between; margin-top: 8px;
+        font-family: var(--mono); font-size: 9px; letter-spacing: .08em;
+        text-transform: uppercase; color: var(--ink3);
+      }
+
       /* ---- Reprise du simulateur (Julien : "inspire-toi de la demo") ----
          Ce qui fait sa densite : un kicker numerote en monospace, un
          chiffre enorme accompagne de SA VARIATION, une petite serie en
@@ -635,7 +659,7 @@
               <p class="ecran-sous" id="dash-etablissement">—</p>
 
               <div class="hero">
-                <span class="hero-label">Vues générées</span>
+                <span class="hero-label">Abonnés touchés</span>
                 <span class="hero-valeur"><span id="kpi-vues">—</span><span class="hero-delta plat" id="kpi-delta"></span></span>
                 <span class="hero-note" id="kpi-vues-note"></span>
                 <div class="hero-barres" id="hero-barres"></div>
@@ -643,32 +667,37 @@
                 <div class="hero-graphe" id="hero-graphe" hidden></div>
               </div>
 
+              <div class="panneau">
+                <p class="panneau-titre">Abonnés touchés par soirée</p>
+                <p class="panneau-sous">Ce que vos clients ont fait voir de vous.</p>
+                <div class="graphe" id="graphe-reach">
+                  <span class="graphe-max" id="graphe-max"></span>
+                </div>
+                <div class="graphe-x" id="graphe-x"></div>
+              </div>
+
               <div class="insta-carte" id="dash-instagram" hidden></div>
 
               <div class="kpis">
                 <div class="kpi">
-                  <span class="kpi-label">Points distribués</span>
+                  <span class="kpi-label">Points attribués</span>
                   <span class="kpi-valeur" id="kpi-points">—</span>
                   <span class="kpi-note">Selon votre barème</span>
                 </div>
                 <div class="kpi">
-                  <span class="kpi-label">Scans QR</span>
-                  <span class="kpi-valeur" id="kpi-scans">—</span>
-                  <span class="kpi-note" id="kpi-scans-note"></span>
+                  <span class="kpi-label">Récompenses utilisées</span>
+                  <span class="kpi-valeur" id="kpi-recompenses">—</span>
+                  <span class="kpi-note" id="kpi-recompenses-note"></span>
                 </div>
-                <!-- Demande de Julien : "le nombre de gens qui ont rejoint".
-                     Ce sont les personnes distinctes ayant depose au moins un
-                     contenu, pas les scans : quelqu'un qui scanne sans jamais
-                     publier n'a pas rejoint le programme. -->
                 <div class="kpi">
                   <span class="kpi-label">Membres</span>
                   <span class="kpi-valeur" id="kpi-membres">—</span>
                   <span class="kpi-note" id="kpi-membres-note"></span>
                 </div>
                 <div class="kpi">
-                  <span class="kpi-label">Récompenses prises</span>
-                  <span class="kpi-valeur" id="kpi-recompenses">—</span>
-                  <span class="kpi-note" id="kpi-recompenses-note"></span>
+                  <span class="kpi-label">Scans QR</span>
+                  <span class="kpi-valeur" id="kpi-scans">—</span>
+                  <span class="kpi-note" id="kpi-scans-note"></span>
                 </div>
               </div>
 
@@ -1189,6 +1218,86 @@
         }).join("");
       }
 
+      /* Le graphique "par soiree", repris du simulateur. Une soiree = un
+         jour ou il s'est passe quelque chose : on ne trace QUE ces jours,
+         pas les 14 cases du calendrier. Un club ouvert le vendredi et le
+         samedi n'a pas cinq soirees a zero dans la semaine, il en a deux
+         -- les afficher a plat ecraserait la courbe contre le bas et
+         donnerait l'impression d'une activite en chute. */
+      function rendreGraphe(validated) {
+        var parJour = {};
+        validated.forEach(function (sub) {
+          var t = Date.parse(sub.submitted_at || "");
+          if (!Number.isFinite(t)) return;
+          var d = new Date(t);
+          var cle = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+          parJour[cle] = (parJour[cle] || 0) + Number(sub.views_count || 0);
+        });
+
+        var jours = Object.keys(parJour).sort().slice(-10);
+        var zone = $("#graphe-reach");
+        var axeX = $("#graphe-x");
+        var maxEl = $("#graphe-max");
+
+        if (jours.length < 2) {
+          zone.querySelectorAll("svg").forEach(function (n) { n.remove(); });
+          maxEl.textContent = "";
+          axeX.innerHTML = "";
+          zone.insertAdjacentHTML("beforeend",
+            '<p class="hero-vide">Il faut au moins deux soirées pour tracer une courbe.</p>');
+          return;
+        }
+
+        var valeurs = jours.map(function (j) { return parJour[j]; });
+        var max = Math.max.apply(null, valeurs);
+        var L = 300, H = 120, hautMarge = 10;
+
+        var pts = valeurs.map(function (v, i) {
+          var x = (i / (valeurs.length - 1)) * L;
+          var y = H - (v / max) * (H - hautMarge);
+          return [x, y];
+        });
+        var ligne = pts.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ");
+
+        // Trois reperes horizontaux : sans eux on lit une forme, pas des
+        // valeurs.
+        var grille = [0.25, 0.5, 0.75].map(function (f) {
+          var y = (H - hautMarge) * f + hautMarge;
+          return '<line x1="0" y1="' + y.toFixed(1) + '" x2="' + L + '" y2="' + y.toFixed(1) +
+            '" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+        }).join("");
+
+        zone.querySelectorAll("svg, .hero-vide").forEach(function (n) { n.remove(); });
+        zone.insertAdjacentHTML("beforeend",
+          '<svg viewBox="0 0 ' + L + " " + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+            '<defs><linearGradient id="grad-reach" x1="0" y1="0" x2="0" y2="1">' +
+              '<stop offset="0%" stop-color="var(--accent)" stop-opacity=".18"/>' +
+              '<stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>' +
+            "</linearGradient></defs>" +
+            grille +
+            '<polygon points="0,' + H + " " + ligne + " " + L + "," + H + '" fill="url(#grad-reach)"/>' +
+            '<polyline points="' + ligne + '" fill="none" stroke="var(--accent)" stroke-width="2.4" ' +
+              'stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
+            pts.map(function (p) {
+              return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.2" ' +
+                'fill="var(--s1)" stroke="var(--accent)" stroke-width="2.2" vector-effect="non-scaling-stroke"/>';
+            }).join("") +
+          "</svg>");
+
+        maxEl.textContent = nb.format(max);
+
+        function jourCourt(cle) {
+          var d = new Date(cle + "T12:00:00");
+          return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+        }
+        // Trois reperes seulement : dix dates sur la largeur d'un
+        // telephone se chevauchent et deviennent illisibles.
+        axeX.innerHTML =
+          "<span>" + jourCourt(jours[0]) + "</span>" +
+          "<span>" + jourCourt(jours[Math.floor((jours.length - 1) / 2)]) + "</span>" +
+          "<span>" + jourCourt(jours[jours.length - 1]) + "</span>";
+      }
+
       function rendreDashboard() {
         var stats = getDashboardStats(ETAT.data);
         $("#dash-etablissement").textContent = ETAT.data.establishment.name || "—";
@@ -1217,6 +1326,8 @@
         // n'ouvre que deux soirs par semaine : une courbe lisse les
         // trous, alors que ce sont eux, l'information. La courbe ne
         // reste que pour le cas ou il n'y a rien a montrer.
+        rendreGraphe(stats.validated);
+
         var vide = seaux.every(function (v) { return !v; });
         $("#hero-graphe").hidden = !vide;
         $("#hero-barres").hidden = vide;
@@ -1229,9 +1340,13 @@
         // "Membres" = personnes distinctes ayant depose au moins un
         // contenu. Volontairement different des scanners uniques affiches
         // juste au-dessus : scanner le QR n'est pas rejoindre.
+        // "42 recompenses prises" et "42 ont pris une recompense"
+        // disaient deux fois la meme chose a deux cases d'ecart. Chaque
+        // carte porte maintenant une information qu'aucune autre ne
+        // donne.
         $("#kpi-membres").textContent = nb.format(stats.activeCustomers);
         $("#kpi-membres-note").textContent = stats.activeCustomers
-          ? nb.format(stats.rewardedCustomers) + " ont pris une récompense"
+          ? "Ont publié au moins une fois"
           : "Personne n'a encore publié";
 
         $("#kpi-recompenses").textContent = nb.format(stats.redemptions.length);
