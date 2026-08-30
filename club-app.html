@@ -53,21 +53,33 @@
         padding: 5px; flex: 0 0 auto;
         box-shadow: 0 44px 100px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
       }
+      /* Theme CLAIR (demande de Julien : "mets en blanc"). L'appli
+         clubbeur est nocturne parce qu'on s'en sert en boite, a 2h du
+         matin ; celle-ci se lit dans un bureau, sur une compta, en
+         plein jour. Meme raisonnement que la boutique d'app-preview.html
+         (.screen.boutique-pro), passee au clair pour la meme raison.
+
+         Le relief vient du contraste de surfaces (s1 blanc sur bg gris
+         tres pale), pas de la couleur -- regle du design system.
+
+         --ambre et --succes sont assombris : #ffb020 et #57d98a etaient
+         calibres pour du texte sur fond noir, ils deviennent illisibles
+         sur blanc. */
       .screen {
         position: relative; width: 100%; height: 100%; border-radius: 43px;
-        overflow: hidden; background: #1a1d24; user-select: none;
-        --ink:   #ffffff;
-        --ink2:  #b6a99e;
-        --ink3:  #8a7a6e;
-        --bg:    #120d0d;
-        --s1:    #1c1512;
-        --s2:    #261c17;
-        --s3:    #30231c;
-        --line:  rgba(255,235,220,.08);
-        --line2: rgba(255,235,220,.14);
+        overflow: hidden; background: #ffffff; user-select: none;
+        --ink:   #14161a;
+        --ink2:  #5b6472;
+        --ink3:  #8e97a4;
+        --bg:    #f6f7f9;
+        --s1:    #ffffff;
+        --s2:    #eef0f4;
+        --s3:    #e3e7ed;
+        --line:  rgba(16,18,22,.09);
+        --line2: rgba(16,18,22,.15);
         --accent: #ff2f45;
-        --ambre: #ffb020;
-        --succes: #57d98a;
+        --ambre: #a86500;
+        --succes: #12874d;
         background: var(--bg); color: var(--ink);
       }
 
@@ -124,7 +136,7 @@
         flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; background: var(--s2);
         display: grid; place-items: center; font-size: 10px; font-weight: 800; color: var(--ink2);
       }
-      .act-ico.gain { background: rgba(87,217,138,.15); color: var(--succes); }
+      .act-ico.gain { background: rgba(18,135,77,.12); color: var(--succes); }
       .act-txt { flex: 1 1 auto; min-width: 0; }
       .act-txt strong { display: block; font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .act-txt span { display: block; font-size: 11px; color: var(--ink3); }
@@ -183,9 +195,15 @@
         padding: 18px; border-radius: 18px;
         background: var(--s1); border: 1px solid var(--line);
       }
+      /* Le fond blanc reste impose, quel que soit le theme : un QR sur
+         fond sombre ne se lit pas de facon fiable par les appareils
+         photo, qui attendent des modules sombres sur clair. Depuis que
+         la carte est blanche elle aussi, il lui faut un liseré, sinon
+         le QR flotte sans limite visible. */
       .qr-image {
         width: 100%; max-width: 230px; aspect-ratio: 1;
         background: #fff; border-radius: 12px; padding: 10px;
+        border: 1px solid var(--line2);
         display: grid; place-items: center;
       }
       .qr-image svg, .qr-image img { width: 100%; height: 100%; display: block; }
@@ -219,20 +237,28 @@
       .reglage-txt span { display: block; font-size: 11.5px; color: var(--ink3); margin-top: 1px; }
       .point-vert { width: 8px; height: 8px; border-radius: 50%; background: var(--succes); flex: 0 0 auto; }
 
-      /* ---- Barre d'onglets (4, meme habillage qu'app-preview.html) ---- */
+      /* ---- Barre d'onglets (5, meme habillage qu'app-preview.html) ----
+         grid-template-columns suit le NOMBRE d'onglets : reste a 4 apres
+         l'ajout du QR, le cinquieme debordait de la barre. auto-fit
+         plutot qu'un chiffre en dur, pour que le prochain onglet ajoute
+         ne repose pas ce probleme. */
       .tabs {
         position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
-        background: rgba(17,12,11,.86); border-top: 1px solid rgba(255,235,220,.1);
+        background: rgba(255,255,255,.88); border-top: 1px solid rgba(16,18,22,.1);
         backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-        display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; padding-bottom: 18px;
+        display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+        align-items: center; padding-bottom: 18px;
       }
       .tab {
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
         background: none; border: 0; cursor: pointer; padding: 0; font-family: inherit;
       }
-      .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
-      .tab svg { width: 23px; height: 23px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: #838a96; }
-      .tab .lbl { font-size: 10px; font-weight: 700; letter-spacing: -.01em; color: #838a96; }
+      .tab:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; border-radius: 10px; }
+      .tab svg { width: 23px; height: 23px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: var(--ink3); }
+      .tab .lbl { font-size: 10px; font-weight: 700; letter-spacing: -.01em; color: var(--ink3); }
+      /* Le libelle sur 5 colonnes : "Récompenses" ne tient plus, il
+         debordait sur ses voisins au lieu d'etre coupe. */
+      .tab .lbl { max-width: 100%; padding: 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .tab.on svg, .tab.on .lbl { stroke: var(--accent); color: var(--accent); }
     </style>
   </head>
