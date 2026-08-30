@@ -1459,53 +1459,55 @@
          l'ancien header sticky, pour ne pas coller au bord de l'ecran. */
       .sec-premiere { padding-top: 22px; }
 
-      /* ---- Choisir son club AVANT de voir la boutique ----
-         Le segmente en haut de l'ecran faisait basculer le catalogue au
-         moindre tap : on arrivait sur la boutique d'un club sans jamais
-         l'avoir choisi, et un doigt qui traine changeait de club sans
-         qu'on comprenne. Julien : "il ne faut pas qu'ils voient
-         directement la boutique, il faut qu'ils choisissent dans une
-         petite liste".
+      /* ---- Le club de la boutique ----
+         Premiere version : une liste PLEIN ECRAN avant d'acceder a la
+         boutique. Julien : "je t'ai dit de laisser la boutique comme
+         c'est". Il avait raison -- transformer une suggestion en peage
+         fait payer a tout le monde un choix que la geolocalisation sait
+         faire toute seule.
 
-         L'ecran commence donc par la liste. Une fois le club choisi, il
-         reste choisi, et on en change par un lien explicite. */
-      .bq-choix { padding: 26px 0 0; }
-      .bq-choix h2 {
-        margin: 0 0 4px; font-size: 21px; font-weight: 800; letter-spacing: -.03em; color: var(--ink);
-      }
-      .bq-choix p { margin: 0 0 18px; font-size: 13px; color: var(--ink2); }
-      .bq-liste { display: grid; gap: 9px; }
-      .bq-club {
-        display: flex; align-items: center; gap: 12px; width: 100%;
-        padding: 14px 15px; border-radius: 16px; text-align: left;
-        background: var(--s1); border: 1px solid var(--line); cursor: pointer;
-        font-family: inherit; color: var(--ink);
-        transition: transform var(--tr-court), border-color var(--tr-court);
-      }
-      .bq-club:hover { border-color: var(--line2); }
-      .bq-club:active { transform: scale(.99); }
-      .bq-club:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
-      .bq-pastille {
-        flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
-        background: var(--c, var(--accent)); color: #fff;
-        display: grid; place-items: center; font-size: 16px; font-weight: 800;
-      }
-      .bq-club-txt { flex: 1; min-width: 0; }
-      .bq-club-nom { display: block; font-size: 14.5px; font-weight: 750; letter-spacing: -.01em; }
-      .bq-club-sous { display: block; font-size: 11.5px; color: var(--ink2); margin-top: 2px; }
-      .bq-club svg { flex: 0 0 auto; width: 18px; height: 18px; stroke: var(--ink3); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-
-      /* Le club courant, rappele en haut de la boutique avec le moyen
-         d'en changer -- sans ca, on ne sait plus quel catalogue on lit. */
+         Donc : la boutique s'ouvre directement sur le club le plus
+         proche, et la liste n'est qu'un petit panneau qu'on deplie si ce
+         n'est pas le bon. */
       .bq-actuel {
         display: flex; align-items: center; gap: 8px;
         margin-bottom: var(--e3); font-size: 12.5px; color: var(--ink2);
       }
       .bq-actuel strong { color: var(--ink); font-weight: 750; }
+      /* Le premier bouton pousse les suivants a droite : la ligne garde
+         sa forme qu'il y ait un ou deux liens. */
+      .bq-actuel > span { flex: 1; min-width: 0; }
+      .bq-actuel button + button { margin-left: 12px; }
       .bq-actuel button {
-        margin-left: auto; border: 0; background: none; padding: 0; cursor: pointer;
+        border: 0; background: none; padding: 0; cursor: pointer;
         font: inherit; font-size: 12.5px; font-weight: 700; color: var(--accent);
         text-decoration: underline; text-underline-offset: 3px;
+      }
+
+      .bq-liste {
+        display: grid; gap: 7px; margin-bottom: var(--e3);
+      }
+      .bq-liste[hidden] { display: none; }
+      .bq-club {
+        display: flex; align-items: center; gap: 11px; width: 100%;
+        padding: 11px 13px; border-radius: 14px; text-align: left;
+        background: var(--s1); border: 1px solid var(--line); cursor: pointer;
+        font-family: inherit; color: var(--ink);
+        transition: border-color var(--tr-court);
+      }
+      .bq-club[aria-current="true"] { border-color: var(--accent); }
+      .bq-club:active { transform: scale(.99); }
+      .bq-club:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
+      .bq-pastille {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+        background: var(--c, var(--accent)); color: #fff;
+        display: grid; place-items: center; font-size: 14px; font-weight: 800;
+      }
+      .bq-club-txt { flex: 1; min-width: 0; }
+      .bq-club-nom { display: block; font-size: 13.5px; font-weight: 750; letter-spacing: -.01em; }
+      .bq-club-sous { display: block; font-size: 11px; color: var(--ink2); margin-top: 1px; }
+      .bq-club-loin {
+        flex: 0 0 auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink3);
       }
 
       /* ---- "Ce soir au ..." traite comme LE moment fort de l'ecran ----
@@ -2982,16 +2984,9 @@
         <div class="vue vue-boutique" id="vue-boutique">
           <div class="app" id="app">
 
-            <!-- Ecran de choix : affiche tant qu'aucun club n'est
-                 selectionne, il masque tout le reste de la boutique. -->
-            <div class="bq-choix" id="bq-choix">
-              <h2>Où es-tu ce soir ?</h2>
-              <p>Choisis ton club pour voir ses récompenses.</p>
-              <div class="bq-liste" id="bq-liste"></div>
-            </div>
-
             <section class="sec sec-premiere">
-              <div class="bq-actuel" id="bq-actuel" hidden></div>
+              <div class="bq-actuel" id="bq-actuel"></div>
+              <div class="bq-liste" id="bq-liste" hidden></div>
               <div class="solde-carte">
                 <p class="solde-label">Mes points</p>
                 <p class="solde-chiffre">
@@ -7106,8 +7101,10 @@ var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
    ATTENTION : ne pas confondre avec un "code public d'etablissement" —
    celui-la appartient a /api/rewards-public, qui lit la base des
    GERANTS (mrukkexghpcqtwvwwcbe) : un catalogue sans rapport. */
-// Aucun club choisi au demarrage : la boutique commence par la liste.
-var CLUB_BOUTIQUE = null;
+// Un club par defaut des le premier rendu -- la geolocalisation le
+// corrigera si elle repond. La boutique ne doit jamais attendre une
+// permission pour s'afficher.
+var CLUB_BOUTIQUE = Object.keys(CLUBS)[0];
 
 // Catalogue de secours tant que les deux clubs n'existent pas dans la
 // table clubs : celui de Mirage, le seul peuple aujourd'hui. Sans lui la
@@ -7154,60 +7151,135 @@ function auClub(nom) {
 /* Les deux clubs en haut de la boutique. Redessine a chaque changement
    plutot que de manipuler les classes une par une : deux boutons, le
    cout est nul et l'etat affiche ne peut pas diverger de CLUB_BOUTIQUE. */
+/* Distance a vol d'oiseau, en km. Haversine plutot qu'une difference de
+   coordonnees : a 65 km d'ecart entre Ciney et Auderghem, un calcul plat
+   se tromperait de club selon la latitude. */
+function distanceKm(a, b) {
+  var R = 6371;
+  var rad = Math.PI / 180;
+  var dLat = (b[1] - a[1]) * rad;
+  var dLon = (b[0] - a[0]) * rad;
+  var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(a[1] * rad) * Math.cos(b[1] * rad) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// Distances au clubbeur, remplies si la geolocalisation repond. Sert a
+// choisir le club par defaut ET a l'afficher dans la liste.
+var DISTANCES_CLUBS = {};
+
+function clubLePlusProche() {
+  var cles = Object.keys(DISTANCES_CLUBS);
+  if (!cles.length) return null;
+  return cles.sort(function (a, b) { return DISTANCES_CLUBS[a] - DISTANCES_CLUBS[b]; })[0];
+}
+
+/* La boutique s'ouvre sur le club le plus proche. Non bloquant : l'ecran
+   est deja affiche avec un club par defaut quand la position arrive, on
+   ne fait que corriger. Et on ne corrige PAS si le clubbeur a deja
+   choisi lui-meme -- sa decision passe avant notre estimation. */
+var choixManuelClub = false;
+
+function localiser() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(function (pos) {
+    Object.keys(CLUBS).forEach(function (k) {
+      DISTANCES_CLUBS[k] = distanceKm([pos.coords.longitude, pos.coords.latitude], CLUBS[k].lngLat);
+    });
+    var proche = clubLePlusProche();
+    if (proche && !choixManuelClub && proche !== CLUB_BOUTIQUE) {
+      CLUB_BOUTIQUE = proche;
+      rendreChoixClub();
+      chargerRecompenses();
+      return;
+    }
+    rendreChoixClub();
+  }, function () {
+    // Refus ou echec : on garde le club par defaut, sans rien dire. Une
+    // erreur de geolocalisation n'interesse personne dans une boutique.
+    positionRefusee = true;
+    rendreChoixClub();
+  }, { timeout: 8000, maximumAge: 600000 });
+}
+
+var positionRefusee = false;
+
+/* On ne DEMANDE pas la position au chargement.
+   Deux raisons. La bonne : une fenetre de permission qui surgit a la
+   seconde ou on ouvre la boutique, avant meme d'avoir vu quoi que ce
+   soit, se fait refuser -- et un refus est definitif, on ne repose plus
+   jamais la question. La brutale : dans un navigateur embarque, cette
+   demande fige carrement le rendu.
+
+   Donc : si la permission a DEJA ete accordee, on localise tout de suite
+   et le bon club s'affiche tout seul. Sinon, la ligne du club propose
+   "Utiliser ma position" -- le clubbeur demande, il ne subit pas. */
+function detecterClubProche() {
+  if (!navigator.geolocation) return;
+  if (!navigator.permissions || !navigator.permissions.query) return;
+  navigator.permissions.query({ name: "geolocation" }).then(function (etat) {
+    if (etat.state === "granted") localiser();
+    else rendreChoixClub();
+  }).catch(function () {});
+}
+
 function rendreChoixClub() {
-  var choix = document.getElementById("bq-choix");
   var actuel = document.getElementById("bq-actuel");
-  var sections = document.querySelectorAll("#vue-boutique .sec");
-  if (!choix || !actuel) return;
+  var liste = document.getElementById("bq-liste");
+  if (!actuel || !liste) return;
 
-  var aucun = !CLUB_BOUTIQUE;
-  choix.hidden = !aucun;
-  actuel.hidden = aucun;
-  sections.forEach(function (sec) { sec.hidden = aucun; });
+  var d = DISTANCES_CLUBS[CLUB_BOUTIQUE];
+  actuel.innerHTML =
+    "<span>Tu es chez <strong>" + escapeHtmlSupport(CLUBS[CLUB_BOUTIQUE].nom) + "</strong>" +
+    (d != null ? " · " + (d < 1 ? Math.round(d * 1000) + " m" : d.toFixed(d < 10 ? 1 : 0) + " km") : "") +
+    "</span>" +
+    (DISTANCES_CLUBS[CLUB_BOUTIQUE] == null && !positionRefusee
+      ? '<button type="button" id="bq-localiser">Utiliser ma position</button>'
+      : "") +
+    '<button type="button" id="bq-changer">' + (liste.hidden ? "Changer" : "Fermer") + "</button>";
 
-  if (aucun) {
-    document.getElementById("bq-liste").innerHTML = Object.keys(CLUBS).map(function (k) {
-      var c = CLUBS[k];
-      return '<button type="button" class="bq-club" data-club="' + k + '">' +
-        '<span class="bq-pastille" style="--c:' + escapeHtmlSupport(c.c || "") + '">' +
-          escapeHtmlSupport((c.nom || "?").charAt(0)) +
-        "</span>" +
-        '<span class="bq-club-txt">' +
-          '<span class="bq-club-nom">' + escapeHtmlSupport(c.nom) + "</span>" +
-          '<span class="bq-club-sous">' + escapeHtmlSupport(c.adr || "") + "</span>" +
-        "</span>" +
-        '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>' +
-      "</button>";
-    }).join("");
-    return;
-  }
-
-  actuel.innerHTML = "<span>Tu es chez <strong>" + escapeHtmlSupport(CLUBS[CLUB_BOUTIQUE].nom) + "</strong></span>" +
-    '<button type="button" id="bq-changer">Changer</button>';
+  liste.innerHTML = Object.keys(CLUBS).map(function (k) {
+    var c = CLUBS[k];
+    var dist = DISTANCES_CLUBS[k];
+    return '<button type="button" class="bq-club" data-club="' + k + '" aria-current="' + (k === CLUB_BOUTIQUE) + '">' +
+      '<span class="bq-pastille" style="--c:' + escapeHtmlSupport(c.c || "") + '">' +
+        escapeHtmlSupport((c.nom || "?").charAt(0)) +
+      "</span>" +
+      '<span class="bq-club-txt">' +
+        '<span class="bq-club-nom">' + escapeHtmlSupport(c.nom) + "</span>" +
+        '<span class="bq-club-sous">' + escapeHtmlSupport(c.adr || "") + "</span>" +
+      "</span>" +
+      (dist != null ? '<span class="bq-club-loin">' + (dist < 1 ? Math.round(dist * 1000) + " m" : Math.round(dist) + " km") + "</span>" : "") +
+    "</button>";
+  }).join("");
 
   var titre = document.getElementById("titre-soir");
   if (titre) titre.textContent = "Ce soir " + auClub(CLUBS[CLUB_BOUTIQUE].nom);
 }
 
 function brancherChoixClub() {
-  // Delegue sur la vue entiere : la liste et le lien "Changer" sont
-  // reecrits a chaque rendu, un gestionnaire pose sur eux serait perdu.
+  // Delegue : la liste et le lien sont reecrits a chaque rendu.
   var vue = document.getElementById("vue-boutique");
   if (!vue) return;
   vue.addEventListener("click", function (ev) {
-    var club = ev.target.closest("[data-club]");
-    if (club) {
-      CLUB_BOUTIQUE = club.dataset.club;
-      rendreChoixClub();
-      chargerRecompenses();
+    if (ev.target.closest("#bq-localiser")) {
+      localiser();
       return;
     }
     if (ev.target.closest("#bq-changer")) {
-      // On revient a la liste sans effacer le catalogue charge : si le
-      // meme club est rechoisi, rien ne clignote.
-      CLUB_BOUTIQUE = null;
+      var liste = document.getElementById("bq-liste");
+      liste.hidden = !liste.hidden;
       rendreChoixClub();
+      return;
     }
+    var club = ev.target.closest("[data-club]");
+    if (!club) return;
+    document.getElementById("bq-liste").hidden = true;
+    if (club.dataset.club === CLUB_BOUTIQUE) { rendreChoixClub(); return; }
+    choixManuelClub = true;
+    CLUB_BOUTIQUE = club.dataset.club;
+    rendreChoixClub();
+    chargerRecompenses();
   });
 }
 
@@ -7774,6 +7846,7 @@ rendreListe();
 // connait deja le bon.
 rendreChoixClub();
 brancherChoixClub();
+detecterClubProche();
 resoudreIdsClubs().then(chargerRecompenses);
 rendreBons(null);
 majRebours();
