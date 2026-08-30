@@ -1421,6 +1421,35 @@
          l'ancien header sticky, pour ne pas coller au bord de l'ecran. */
       .sec-premiere { padding-top: 22px; }
 
+      /* ---- Choix du club, tout en haut de la boutique ----
+         La boutique servait un catalogue unique sans jamais dire a qui
+         il appartenait : le titre annoncait un club, les points un
+         autre. Le clubbeur frequente plusieurs endroits, le choix doit
+         donc etre visible et se changer en un geste, avant meme la
+         cagnotte -- c'est lui qui donne son sens a tout le reste de
+         l'ecran. Segmente plutot que menu deroulant : a deux clubs, un
+         menu cache l'information pour rien. */
+      .choix-club {
+        display: flex; gap: 4px; margin-bottom: var(--e3);
+        padding: 4px; border-radius: 14px;
+        background: var(--s2); border: 1px solid var(--line);
+      }
+      .choix-club button {
+        flex: 1; min-width: 0; padding: 9px 10px;
+        border: 0; border-radius: 10px; background: transparent;
+        font: inherit; font-size: 13px; font-weight: 650; letter-spacing: -.01em;
+        color: var(--ink3); cursor: pointer;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+      }
+      .choix-club button:hover { color: var(--ink2); }
+      .choix-club button[aria-pressed="true"] {
+        background: var(--bg); color: var(--ink);
+        box-shadow: 0 1px 3px rgba(20,20,25,.14);
+      }
+      .choix-club button:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
+      @media (prefers-reduced-motion: reduce) { .choix-club button { transition: none; } }
+
       /* Quatrieme version du solde (20 aout, nuit) : les trois
          versions precedentes (chiffre nu, puis grosse carte en
          degrade avec jeton) ont toutes ete jugees ratees — la
@@ -3097,6 +3126,7 @@
           <div class="app" id="app">
 
             <section class="sec sec-premiere">
+              <div class="choix-club" id="choix-club" role="group" aria-label="Choisir le club"></div>
               <div class="solde-carte">
                 <p class="solde-label">Mes points</p>
                 <p class="solde-chiffre">
@@ -3111,7 +3141,7 @@
 
             <section class="sec sec-soir">
               <div class="sec-head">
-                <h2>Ce soir au Cactus Club</h2>
+                <h2 id="titre-soir">Ce soir</h2>
                 <span class="sub" id="o-fin"></span>
               </div>
               <div id="liste-soir"></div>
@@ -6959,16 +6989,91 @@ $("#pf-deconnexion")?.addEventListener("click", async function () {
 
 var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
 
-/* L'id du club (base clubbeur, gcopwgmqjiufemapamek) dont la boutique
-   affiche le catalogue. Dans la vraie appli, il viendrait du scan QR
-   ou du club selectionne ; ici, pour cette maquette, celui de Mirage —
-   le seul vrai club existant aujourd'hui.
-   ATTENTION : ne pas confondre avec un "code public d'etablissement"
-   (CODE_CLUB="6VAUMQB5" avant cette modif) -- celui-la appartenait a
-   /api/rewards-public, qui lit la base des GERANTS
-   (mrukkexghpcqtwvwwcbe, table rewards avec establishment_id) : un
-   catalogue totalement different et sans rapport avec celui-ci. */
-var CLUB_ID_BOUTIQUE = "ff1abccb-adeb-496a-a8db-16706a9d467b";
+/* Le club dont la boutique affiche le catalogue. Dans la vraie appli il
+   viendrait du scan QR ; ici le clubbeur le choisit lui-meme en haut de
+   l'ecran, parmi les deux vrais clubs de CLUBS (les memes que sur la
+   carte). Avant, la boutique servait en dur le catalogue de "Mirage" —
+   un club de demo que Julien a fait retirer de la carte — sous un titre
+   qui annoncait, lui, le Cactus Club.
+
+   L'id se resout par NOM au chargement (table clubs de la base
+   clubbeur) plutot que d'etre ecrit en dur : le jour ou les deux clubs
+   y sont crees, l'ecran se branche tout seul sans toucher au code.
+
+   ATTENTION : ne pas confondre avec un "code public d'etablissement" —
+   celui-la appartient a /api/rewards-public, qui lit la base des
+   GERANTS (mrukkexghpcqtwvwwcbe) : un catalogue sans rapport. */
+var CLUB_BOUTIQUE = "trebuchet";
+
+// Catalogue de secours tant que les deux clubs n'existent pas dans la
+// table clubs : celui de Mirage, le seul peuple aujourd'hui. Sans lui la
+// boutique serait simplement vide, ce qui serait une regression par
+// rapport a ce qui tourne. A supprimer des que les vrais clubs y sont.
+var CLUB_ID_DEMO = "ff1abccb-adeb-496a-a8db-16706a9d467b";
+
+// Ids resolus depuis la base, par cle de CLUBS. Rempli une fois au
+// chargement.
+var IDS_CLUBS = {};
+
+async function resoudreIdsClubs() {
+  try {
+    var noms = Object.keys(CLUBS).map(function (k) { return CLUBS[k].nom; });
+    var res = await supabaseClubbeur.from("clubs").select("id, name").in("name", noms);
+    if (res.error) throw new Error(res.error.message);
+    (res.data || []).forEach(function (ligne) {
+      Object.keys(CLUBS).forEach(function (k) {
+        if (CLUBS[k].nom === ligne.name) IDS_CLUBS[k] = ligne.id;
+      });
+    });
+  } catch (erreur) {
+    console.error("[boutique] ids clubs indisponibles:", erreur.message);
+  }
+}
+
+function idClubBoutique() {
+  return IDS_CLUBS[CLUB_BOUTIQUE] || CLUB_ID_DEMO;
+}
+
+/* "Ce soir au Le Trebuchet" : les noms de clubs portent deja leur
+   article, il faut donc le contracter au lieu de coller "au " devant.
+   Heuristique volontairement courte -- deux clubs aujourd'hui, et un
+   nom sans article ("Cactus Club") prend "au", ce qui est le cas le
+   plus frequent pour un nom d'etablissement. */
+function auClub(nom) {
+  if (/^Les /i.test(nom)) return "aux " + nom.slice(4);
+  if (/^Le /i.test(nom)) return "au " + nom.slice(3);
+  if (/^La /i.test(nom)) return "à la " + nom.slice(3);
+  if (/^L'/i.test(nom)) return "à l'" + nom.slice(2);
+  return "au " + nom;
+}
+
+/* Les deux clubs en haut de la boutique. Redessine a chaque changement
+   plutot que de manipuler les classes une par une : deux boutons, le
+   cout est nul et l'etat affiche ne peut pas diverger de CLUB_BOUTIQUE. */
+function rendreChoixClub() {
+  var hote = document.getElementById("choix-club");
+  if (!hote) return;
+  hote.innerHTML = Object.keys(CLUBS).map(function (k) {
+    var actif = k === CLUB_BOUTIQUE;
+    return '<button type="button" data-club="' + k + '" aria-pressed="' + actif + '">' +
+             CLUBS[k].nom +
+           "</button>";
+  }).join("");
+  var titre = document.getElementById("titre-soir");
+  if (titre) titre.textContent = "Ce soir " + auClub(CLUBS[CLUB_BOUTIQUE].nom);
+}
+
+function brancherChoixClub() {
+  var hote = document.getElementById("choix-club");
+  if (!hote) return;
+  hote.addEventListener("click", function (ev) {
+    var bouton = ev.target.closest("button[data-club]");
+    if (!bouton || bouton.dataset.club === CLUB_BOUTIQUE) return;
+    CLUB_BOUTIQUE = bouton.dataset.club;
+    rendreChoixClub();
+    chargerRecompenses();
+  });
+}
 
 /* Visuels des recompenses. Cle = nom de la fonction art* correspondante,
    pour associer l'image au dessin qu'elle remplace sans dupliquer les
@@ -7086,11 +7191,11 @@ async function chargerRecompenses() {
     var res = await supabaseClubbeur
       .from("rewards")
       .select("id, title, description, cost_points, category, stock_limit, stock_remaining")
-      .eq("club_id", CLUB_ID_BOUTIQUE)
+      .eq("club_id", idClubBoutique())
       .eq("active", true)
       .order("cost_points", { ascending: true });
     if (res.error) throw new Error(res.error.message);
-    var prefixe = "VN";
+    var prefixe = prefixeClub(CLUBS[CLUB_BOUTIQUE].nom);
     RECOMPENSES = (res.data || []).map(function (r, i) { return completerRecompense(r, i, prefixe); });
   } catch (erreur) {
     console.error("[boutique] catalogue indisponible:", erreur.message);
@@ -7479,7 +7584,12 @@ async function echanger(item) {
 majCagnotte(false);
 rendreOffre();
 rendreListe();
-chargerRecompenses();
+// Les ids des clubs se resolvent AVANT le premier catalogue : sinon le
+// premier chargement retombe sur le club de demo alors que la base
+// connait deja le bon.
+rendreChoixClub();
+brancherChoixClub();
+resoudreIdsClubs().then(chargerRecompenses);
 rendreBons(null);
 majRebours();
 setInterval(majRebours, 30000);
