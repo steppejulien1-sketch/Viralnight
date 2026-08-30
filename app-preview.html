@@ -1530,12 +1530,9 @@
       }
       .carte-reco .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        filter: saturate(1.2) contrast(1.08);
         transition: transform .5s cubic-bezier(.2,.7,.3,1);
       }
       .carte-reco:hover .photo img { transform: scale(1.04); }
-      /* Recadrage du verre, pas centre dans le fichier source. */
-      .carte-reco .photo img[src*="shot-carte"] { object-position: 42% 52%; }
       .carte-reco .photo svg {
         position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
         width: 54%; height: 54%;
@@ -1743,7 +1740,6 @@
          pour la detacher du fond. */
       .sheet-visuel.foto img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        filter: saturate(1.1) contrast(1.03);
       }
       .sheet-visuel.foto::after {
         content: ""; position: absolute; inset: 0; border-radius: inherit;
@@ -6974,35 +6970,40 @@ var FAMILLES = { bar: "Bar", acces: "Accès", vip: "VIP" };
    catalogue totalement different et sans rapport avec celui-ci. */
 var CLUB_ID_BOUTIQUE = "ff1abccb-adeb-496a-a8db-16706a9d467b";
 
-/* Photos libres de droits (licence Unsplash — usage commercial libre,
-   sans attribution requise), une par objet identifiable. Verifiees a
-   la main (recherche + verification du contenu + verification que le
-   lien repond bien une image) avant d'etre integrees ; pas d'URL
-   devinee. Cle = nom de la fonction art* correspondante, pour associer
-   la photo au dessin qu'elle remplace sans dupliquer les tables
-   ci-dessous. Pas de photo pour artPinte/artCintre/artBracelet : ces
-   familles ne sont pas visibles dans le catalogue reel aujourd'hui,
-   pas la peine d'en chercher tant qu'elles ne servent pas. */
-// Cocktail et shot remplaces par des photos que Julien a lui-meme
-// choisies comme reference (verre en cristal taille/zeste d'orange
-// pour le cocktail, whisky sec pour le shot) — cherchees et verifiees
-// sur Unsplash a l'identique du reste de FOTOS, aucune ne pouvait
-// etre reprise telle quelle (celle du whisky avait des pistaches et
-// un casse-noix en premier plan, hors sujet).
-// Cocktail et shot : les propres photos de Julien (envoyees dans le
-// chat, retrouvees dans son dossier Telechargements — nicolae_balt-
-// drink-7792428.jpg et stevepb-pistachios-3450670.jpg), recadrees a la
-// main (PIL, voir historique de commande) pour ne garder que le verre
-// sur la seconde — elle avait des pistaches et un casse-noix au premier
-// plan hors-sujet, aucun outil de retouche disponible pour les effacer
-// autrement qu'en cadrant serre autour du verre. Fichiers dans
-// public/recompenses/, servis tels quels par Vite. Bouteille/cordon/
-// ticket restent des photos Unsplash : Julien n'a pas encore envoye
-// les siennes pour ces familles-la.
+/* Visuels des recompenses. Cle = nom de la fonction art* correspondante,
+   pour associer l'image au dessin qu'elle remplace sans dupliquer les
+   tables ci-dessous.
+
+   Historique : d'abord des dessins SVG faits main (juges "IA
+   degueulasse"), puis des photos — les propres photos de Julien pour le
+   cocktail et le shot, des photos Unsplash pour le reste. Le probleme
+   n'etait pas la qualite de chaque image mais leur melange : trois
+   sources, trois eclairages, trois echelles dans la meme grille.
+
+   Depuis le 30/08/2026 : illustrations plates generees par ChatGPT a
+   partir d'un brief unique (voir prompts-illustrations-boutique.md), une
+   par famille. Un dessin ne promet pas un objet precis, la ou une photo
+   de cocktail laisse croire qu'on recevra CE cocktail-la — et surtout,
+   chaque club inventera ses propres recompenses : il n'y aura jamais une
+   vraie photo par recompense, alors qu'un pictogramme par famille couvre
+   tout via choisirArt().
+
+   Le fond pale est PEINT dans le fichier, pas transparent : l'image EST
+   la vignette. Le `glow` associe plus bas reprend exactement ce fond,
+   sinon le halo de la fiche detail jure avec la vignette.
+
+   Recadrage au montage (PIL) : detourage du fond, puis mise a l'echelle
+   sur la SURFACE de l'objet, pas sa hauteur — a hauteur egale, un objet
+   trapu comme le shot ecrase un objet elance comme la bouteille.
+
+   Cordon et ticket restent des photos Unsplash (licence libre, usage
+   commercial) tant que leurs dessins n'existent pas. Rien pour
+   artPinte/artCintre/artBracelet : ces familles ne sont pas dans le
+   catalogue reel aujourd'hui, elles retombent sur le SVG. */
 var FOTOS = {
-  artCocktail:  "/recompenses/cocktail-carte.jpg",
-  artBouteille: "https://images.unsplash.com/photo-1514242879996-d7b3bb2dd531?w=240&q=70&auto=format&fit=crop",
-  artShot:      "/recompenses/shot-carte.jpg",
+  artCocktail:  "/recompenses/art-cocktail.webp",
+  artBouteille: "/recompenses/art-bouteille.webp",
+  artShot:      "/recompenses/art-shot.webp",
   artCordon:    "https://images.unsplash.com/photo-1640292767657-3c817244f77b?w=240&q=70&auto=format&fit=crop",
   artTicket:    "https://images.unsplash.com/photo-1515139372923-c923c9e9a18c?w=240&q=70&auto=format&fit=crop"
 };
@@ -7024,15 +7025,15 @@ var FOTO_OFFRE_HERO = "/recompenses/shot-hero.jpg";
 // toujours undefined et tout retombait sur le dessin, invisible en
 // dev (noms preserves) mais casse en prod. Piege paye une fois.
 var REPLIS_FAMILLE = {
-  bar:   [artCocktail, "rgba(242,161,168,.22)", "artCocktail"],
+  bar:   [artCocktail, "#fbe8ea", "artCocktail"],
   acces: [artBracelet, "rgba(242,179,174,.22)", "artBracelet"],
   vip:   [artCordon,   "rgba(217,178,106,.24)", "artCordon"]
 };
 var INDICES_TITRE = [
-  [/bouteille|champagne|magnum/i, artBouteille, "rgba(44,92,71,.34)", "artBouteille"],
+  [/bouteille|champagne|magnum/i, artBouteille, "#b7c8c1", "artBouteille"],
   [/cordon|carr[ée].?vip|salon/i, artCordon, "rgba(217,178,106,.24)", "artCordon"],
-  [/cocktail/i, artCocktail, "rgba(242,161,168,.22)", "artCocktail"],
-  [/shot/i, artShot, "rgba(243,187,78,.24)", "artShot"],
+  [/cocktail/i, artCocktail, "#fbe8ea", "artCocktail"],
+  [/shot/i, artShot, "#fef2db", "artShot"],
   [/pinte|bi[èe]re/i, artPinte, "rgba(243,187,78,.2)", "artPinte"],
   [/vestiaire|manteau/i, artCintre, "rgba(227,192,143,.22)", "artCintre"],
   [/coupe.?file|file/i, artTicket, "rgba(217,161,90,.2)", "artTicket"],
