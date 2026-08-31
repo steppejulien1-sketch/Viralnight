@@ -1763,9 +1763,20 @@
          aligne a droite, qui ouvre la liste. Le nom, lui, vit dans le
          titre -- un seul endroit. */
       .bq-actuel {
-        position: relative; display: flex; justify-content: flex-end;
+        position: relative; display: flex; align-items: center;
+        justify-content: flex-end; gap: 8px;
         margin-bottom: var(--e3);
       }
+      /* Signale un club dont le catalogue n'existe pas encore en base :
+         les deux clubs affichent alors la meme liste, et sans ce mot
+         "changer de club" a l'air de ne rien faire. */
+      .bq-partage {
+        margin-right: auto; padding: 4px 9px; border-radius: 999px;
+        background: var(--s2); color: var(--ink3);
+        font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+
       .bq-changer {
         display: inline-flex; align-items: center; gap: 6px;
         padding: 7px 12px; border-radius: 999px; cursor: pointer;
@@ -2278,7 +2289,12 @@
          "Envoyer"), jamais aux badges de marque. */
       .reseau-ico { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #fff; }
       .reseau-ico svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-      .reseau-ico.ig { background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7); }
+      /* Les deux logos portent desormais leurs vraies couleurs dans le
+         SVG (degrade Instagram, decalages cyan/rouge de TikTok) : la
+         pastille ne les recolore plus, elle ne fait que les poser. Le
+         fond noir reste sous TikTok, c'est le sien. */
+      .reseau-ico.ig { background: none; }
+      .reseau-ico.ig svg { width: 100%; height: 100%; stroke: none; fill: none; }
       .reseau-ico.tk { background: #010101; }
       .reseau-ico.tk svg { fill: currentColor; stroke: none; }
       /* Gain directement sur le bouton (badge coin haut-droit), plutot
@@ -2765,6 +2781,13 @@
              lineaire, ce qui donnerait des gains faux. -->
         <svg width="0" height="0" aria-hidden="true" focusable="false"
              style="position:absolute;pointer-events:none">
+          <!-- Degrade officiel Instagram, defini une seule fois : les
+               trois boutons de format le referencent par son id. -->
+          <linearGradient id="ig-g" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="#ffdd55"/><stop offset="25%" stop-color="#ff8a3d"/>
+            <stop offset="50%" stop-color="#ff2b6b"/><stop offset="75%" stop-color="#d92bbd"/>
+            <stop offset="100%" stop-color="#8a3ab9"/>
+          </linearGradient>
           <filter id="logo-blanc" color-interpolation-filters="sRGB">
             <feComponentTransfer>
               <feFuncR type="linear" slope="1.0324"/>
@@ -5333,7 +5356,7 @@ var KINDS_STORY = [
     id: "story", label: "Story", classe: "ig",
     schema: "instagram://story-camera", secours: "https://www.instagram.com/",
     verbe: "une story",
-    icone: '<rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>',
+    icone: '<rect x="1.6" y="1.6" width="20.8" height="20.8" rx="6.2" fill="url(#ig-g)"/><rect x="5.1" y="5.1" width="13.8" height="13.8" rx="4.3" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="16.9" cy="7.1" r="1.15" fill="#fff"/>',
   },
   {
     id: "reel", label: "Reel", classe: "ig",
@@ -5341,7 +5364,9 @@ var KINDS_STORY = [
     verbe: "un Reel", url: true,
     // Meme icone que "story" (demande de Julien : Story et Reel sont
     // tous deux Instagram, un seul logo, pas deux traces differents).
-    icone: '<rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>',
+    // L'id du degrade est reutilise : deux <svg> peuvent partager la meme
+    // definition dans le document, le second la retrouve par son id.
+    icone: '<rect x="1.6" y="1.6" width="20.8" height="20.8" rx="6.2" fill="url(#ig-g)"/><rect x="5.1" y="5.1" width="13.8" height="13.8" rx="4.3" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="16.9" cy="7.1" r="1.15" fill="#fff"/>',
   },
   {
     id: "tiktok", label: "TikTok", classe: "tk",
@@ -5349,7 +5374,10 @@ var KINDS_STORY = [
     verbe: "un TikTok", url: true,
     // Vrai logo TikTok (le trace "note" officiel), pas une approximation
     // maison -- signale par Julien ("ce n'est pas le bon logo").
-    icone: '<path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6c0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64c0 3.33 2.76 5.7 5.69 5.7c3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/>',
+    // Le trace officiel a trois couches : la note blanche, son decalage
+    // rouge et son decalage cyan. Sans les deux decalages, c'est une
+    // note de musique blanche -- pas le logo TikTok.
+    icone: '<path d="M13.6 2.2h2.7c.2 1.5 1 2.8 2.2 3.6.8.5 1.7.8 2.7.9v2.8c-1.8-.05-3.5-.6-4.9-1.6v6.6c0 3.3-2.7 6-6 6s-6-2.7-6-6 2.7-6 6-6c.3 0 .6 0 .9.06v2.9a3.2 3.2 0 1 0 2.4 3.1V2.2z" fill="#fff"/><path d="M12.4 2.2h1.2v12.3a3.2 3.2 0 0 1-5.6 2.1 3.2 3.2 0 0 0 4.4-3V2.2z" fill="#ff2c55" opacity=".9"/><path d="M10.3 11.3v1.4a3.2 3.2 0 0 0-1.9 5.7 3.2 3.2 0 0 1 1.9-5.8v-1.3z" fill="#25f4ee" opacity=".9"/>',
   },
 ];
 
@@ -5457,7 +5485,7 @@ function ouvrirChoixReseau(nomClub) {
     return (
       '<div class="ps-identite">' +
         '<p class="ps-identite-titre">Ton profil Instagram</p>' +
-        '<p class="ps-identite-sub">A faire une seule fois : le club doit pouvoir te reconnaitre derriere ta mention.</p>' +
+        '<p class="ps-identite-sub">À faire une seule fois : le club doit pouvoir te reconnaître derrière ta mention.</p>' +
         '<div class="ps-pseudo-champ" id="story-pseudo-champ">' +
           "<span>@</span>" +
           '<input type="text" id="story-pseudo-ig" placeholder="ton.pseudo" autocapitalize="off" autocomplete="off" />' +
@@ -5614,12 +5642,16 @@ function ouvrirChoixReseau(nomClub) {
         // selectionner ; ce bouton est la seule action qui bascule
         // reellement vers l'appli.
         '<div class="ps-groupe">' +
-          '<span class="ps-groupe-titre">Publier</span>' +
+          '<span class="ps-groupe-titre">Publication</span>' +
           '<div id="story-ouvrir">' + blocOuvrir("story") + "</div>" +
           '<div id="story-etapes">' + blocEtapes("story", null) + "</div>" +
           '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
           '<p class="desc" id="story-msg" style="display:none;margin:0"></p>' +
-          '<button type="submit" class="sheet-cta" id="story-envoyer">Envoyer</button>' +
+          // "Envoyer" n'envoyait rien : la story est deja sur Instagram
+          // quand on arrive ici. Le bouton DECLARE la publication -- la
+          // page s'appelle "Poster ma story" et l'etape 2 dit "Poste une
+          // story", le bouton final doit parler la meme langue.
+          '<button type="submit" class="sheet-cta" id="story-envoyer">J&rsquo;ai posté</button>' +
         "</div>" +
       "</form>" +
     "</div>";
@@ -5928,7 +5960,7 @@ function ouvrirChoixReseau(nomClub) {
     }
 
     bouton.disabled = true;
-    bouton.textContent = "Envoi...";
+    bouton.textContent = "Envoi…";
 
     // submit_story est la VRAIE fonction deja construite en base (pas
     // notre story_submit maison, redondante) : elle cree la ligne en
@@ -5938,7 +5970,7 @@ function ouvrirChoixReseau(nomClub) {
     var clubRow = await supabaseClubbeur.from("clubs").select("id").eq("name", club).maybeSingle();
     if (!clubRow.data) {
       bouton.disabled = false;
-      bouton.textContent = "Envoyer";
+      bouton.textContent = "J'ai posté";
       return dire("Ce club n'est pas encore répertorié.", true);
     }
 
@@ -5946,7 +5978,7 @@ function ouvrirChoixReseau(nomClub) {
       var sessionIdentite = (await supabaseClubbeur.auth.getSession()).data.session;
       if (!sessionIdentite) {
         bouton.disabled = false;
-        bouton.textContent = "Envoyer";
+        bouton.textContent = "J'ai posté";
         return dire("Ta session a expiré, reconnecte-toi.", true);
       }
       var uid = sessionIdentite.user.id;
@@ -5961,21 +5993,21 @@ function ouvrirChoixReseau(nomClub) {
       var erreurHandle = (await supabaseClubbeur.from("users").update({ handle: pseudoIg }).eq("id", uid)).error;
       if (erreurHandle) {
         bouton.disabled = false;
-        bouton.textContent = "Envoyer";
+        bouton.textContent = "J'ai posté";
         return dire(/duplicate|unique/i.test(erreurHandle.message) ? "Ce pseudo est déjà pris." : "Pseudo non enregistré, réessaie.", true);
       }
 
       var erreurEnvoi = (await supabaseClubbeur.storage.from("story-proofs").upload(chemin, fichierCapture2, { contentType: fichierCapture2.type || "image/jpeg" })).error;
       if (erreurEnvoi) {
         bouton.disabled = false;
-        bouton.textContent = "Envoyer";
+        bouton.textContent = "J'ai posté";
         return dire("La capture n'a pas pu être envoyée, réessaie.", true);
       }
 
       var erreurProfil = (await supabaseClubbeur.rpc("set_profile_proof", { p_path: chemin })).error;
       if (erreurProfil) {
         bouton.disabled = false;
-        bouton.textContent = "Envoyer";
+        bouton.textContent = "J'ai posté";
         return dire("La capture n'a pas pu être enregistrée, réessaie.", true);
       }
     }
@@ -5984,7 +6016,7 @@ function ouvrirChoixReseau(nomClub) {
       p_club: clubRow.data.id, p_kind: kindChoisi, p_views: 0, p_proof: null, p_url: url,
     });
     bouton.disabled = false;
-    bouton.textContent = "Envoyer";
+    bouton.textContent = "J'ai posté";
 
     if (res.error) {
       var messages = {
