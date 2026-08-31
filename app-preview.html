@@ -4170,11 +4170,22 @@ function majCagnotte(animer) {
   majProgressionSolde();
 }
 
-// Barre de progression du bloc de solde : elle vise la prochaine
-// recompense ENCORE hors de portee (prochaine(), deja utilisee
-// ailleurs). Quand il n'y en a plus, tout est atteignable : la barre
-// se remplit et le message change de registre plutot que de
-// disparaitre, sinon le bloc aurait l'air casse.
+/* Barre de progression du bloc de solde : elle vise la prochaine
+   recompense ENCORE hors de portee (prochaine(), deja utilisee ailleurs).
+
+   La legende disait "250 pts avant Un cocktail offert". Julien : "on
+   dirait de l'IA". Deux defauts, et aucun n'est une question de gout :
+
+   1. Le chiffre est deja ecrit sur la carte du cocktail, trois
+      centimetres plus bas ("Encore 250 pts"). L'ecran disait deux fois
+      la meme chose.
+   2. Le ton. "X avant Y" est une phrase d'encouragement, pas un
+      libelle -- c'est la voix d'un coach, et c'est exactement ce qui
+      fait "genere". Une legende de jauge nomme ce que la jauge mesure,
+      elle ne motive pas.
+
+   Donc : le nom de la cible, rien d'autre. Le chiffre reste sur la
+   carte, ou il a toujours ete. */
 function majProgressionSolde() {
   var bloc = $("#solde-prog");
   var barre = $("#solde-prog-barre");
@@ -4187,8 +4198,8 @@ function majProgressionSolde() {
     barre.style.width = "100%";
     var dispo = RECOMPENSES.filter(function (r) { return r.cout <= ETAT.solde && r.stock > 0; }).length;
     txt.innerHTML = dispo
-      ? "<strong>" + dispo + (dispo > 1 ? " récompenses" : " récompense") + "</strong> à échanger maintenant"
-      : "Aucune récompense disponible pour le moment";
+      ? "<strong>" + dispo + (dispo > 1 ? " récompenses" : " récompense") + "</strong> à ta portée"
+      : "Aucune récompense disponible";
     return;
   }
 
@@ -4196,14 +4207,14 @@ function majProgressionSolde() {
   var pct = cible.cout > 0 ? Math.min(100, Math.round((ETAT.solde / cible.cout) * 100)) : 0;
   barre.style.width = pct + "%";
 
-  // Compte neuf : annoncer "plus que 300 pts" a quelqu'un qui n'a rien
-  // encore, c'est lui presenter une dette. On lui dit par quoi commencer.
+  // Compte neuf : la jauge est a zero, la nommer par une cible qu'on
+  // n'a pas commence a viser ne veut rien dire.
   if (ETAT.solde <= 0) {
-    txt.innerHTML = "Poste ta première story pour commencer à cumuler";
+    txt.innerHTML = "Aucun point pour l'instant";
     return;
   }
 
-  txt.innerHTML = "<strong>" + nb(cible.cout - ETAT.solde) + " pts</strong> avant <strong>" + cible.nom + "</strong>";
+  txt.innerHTML = "Vers <strong>" + escapeHtmlSupport(cible.nom) + "</strong>";
 }
 
 /* ==========================================================
