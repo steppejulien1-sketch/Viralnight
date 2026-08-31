@@ -1844,8 +1844,8 @@
          titre -- un seul endroit. */
       /* Le titre porte le chevron et ancre la liste. */
       .sec-soir .sec-head { position: relative; }
-      #titre-soir { cursor: pointer; }
-      #titre-soir::after {
+      #titre-soir.selectionnable { cursor: pointer; }
+      #titre-soir.selectionnable::after {
         content: ""; display: inline-block; vertical-align: middle;
         width: 7px; height: 7px; margin: -4px 0 0 8px;
         border-right: 2.2px solid var(--ink3); border-bottom: 2.2px solid var(--ink3);
@@ -4177,7 +4177,14 @@ if (BOUTON_EMAIL) {
 
 supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
   if (session) {
-    VUE_ACCUEIL.classList.add("masque");
+    /* L'accueil ne disparait PLUS automatiquement quand une session
+       existe. Julien : "quand je reactualise, j'arrive sur la page
+       d'accueil normale, ensuite le truc Insta, puis directement le
+       magasin". La sequence est donc toujours la meme, connecte ou non.
+
+       Un deja-connecte n'a rien a faire des boutons Apple/Google/email :
+       ils cedent la place a un seul bouton "Entrer". */
+    preparerAccueilConnecte();
     assurerProfil(session.user);
     chargerSoldeReel(session.user.id);
     creditScanUrl();
@@ -4185,6 +4192,20 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
     verifierIdentiteIg(session);
   }
 });
+
+/* Session deja ouverte : l'accueil garde son logo et son texte, mais
+   les trois entrees de connexion n'ont plus de sens. Une seule action
+   reste, et c'est elle qui fait avancer la sequence. */
+function preparerAccueilConnecte() {
+  var actions = document.querySelector(".ac-actions");
+  if (!actions || actions.dataset.connecte === "1") return;
+  actions.dataset.connecte = "1";
+  actions.innerHTML =
+    '<button type="button" class="ac-btn ac-btn-marque" id="ac-entrer">Entrer</button>';
+  document.getElementById("ac-entrer").addEventListener("click", function () {
+    VUE_ACCUEIL.classList.add("masque");
+  });
+}
 
 /* ==========================================================
    ARRIVEE PAR LE QR DU CLUB (?club=<slug>)
@@ -4618,43 +4639,31 @@ function pint(level, cls) {
 // par curl) et heures.be. A rafraichir si Julien renvoie une capture
 // plus recente -- ce ne sont pas des valeurs live.
 var CLUBS = {
-  trebuchet: {
-    nom: "Le Trébuchet", adr: "Rue RN 4, 5590 Ciney", c: "#ff2f45",
-    // googleQuery : adresse complete plutot que nom+adr abrege, pour
-    // que la fiche Google (ouvrirFicheGoogle) tombe sur le bon
-    // etablissement et pas un homonyme.
-    googleQuery: "Le Trébuchet DanceClub, N4, 5590 Pessoux, Belgique",
-    lngLat: [5.2127, 50.2797], hot: true, type: "club",
-    note: 3.7, avis: 130, prix: "20-70 € par personne", prixSignale: 31,
-    tel: "0475 77 75 05", site: "trebuchet.be",
-    // Horaires reels, releves sur trebuchet.be/club.html ("ouverture des
-    // portes des 22h30") et recoupes sur heures.be : vendredi et samedi,
-    // 22h30 -> 03h00. Plus de fourchette inventee.
-    statut: "Fermé", horaire: "Ouvre vendredi à 22h30", shut: true,
-    jours: "Vendredi et samedi", heures: "22h30 – 03h00",
-    // Partenaire Noctify : ouvre le bloc de conversion (points/story)
-    // en haut de la fiche. Un club non partenaire ne l'aurait pas.
+  mirano: {
+    nom: "Mirano", adr: "Chaussée de Louvain 38, 1210 Saint-Josse-ten-Noode", c: "#ff2f45",
+    // googleQuery : adresse complete plutot que le seul nom -- il existe
+    // un Mirage Club a Paris et un Mirano a Paris aussi, la fiche Google
+    // tomberait sur un homonyme.
+    googleQuery: "Mirano Brussels, Chaussée de Louvain 38, 1210 Saint-Josse-ten-Noode, Belgique",
+    // Coordonnees geocodees sur l'adresse (Nominatim/OpenStreetMap), pas
+    // estimees a l'oeil sur la carte.
+    lngLat: [4.37139, 50.84937], hot: true, type: "club",
+    // Pas de note ni de nombre d'avis : Google en a, mais aucune source
+    // fiable ne donne le chiffre exact, et un chiffre invente sur une
+    // fiche de club est exactement ce qu'on ne fait pas ici. A remplir
+    // quand la fiche Google sera reliee (api/import-opening-hours.js sait
+    // deja le faire pour les horaires).
+    note: null, avis: null, prix: null,
+    tel: "+32 456 68 88 52", site: "miranobrussels.com",
+    ig: "miranobrussels",
+    // Vendredi et samedi soir jusqu'au matin -- recoupe sur le site
+    // officiel, Yelp et Resident Advisor. Le club n'ouvre pas en semaine.
+    statut: "Fermé", horaire: "Ouvre vendredi à 23h00", shut: true,
+    jours: "Vendredi et samedi", heures: "23h00 – 06h00",
     partenaire: true,
-    ambiance: ["Permet de danser", "Cocktails", "Grande piste"]
-  },
-  cactus: {
-    nom: "Cactus Club", adr: "Bd du Souverain 147, 1160 Auderghem", c: "#3b4250",
-    googleQuery: "Cactus Club, Boulevard du Souverain 147, 1160 Auderghem, Belgique",
-    lngLat: [4.4266, 50.8157], type: "club",
-    note: 3.7, avis: 715, prix: null,
-    // cactusclub.be (sans tiret) : c'est le domaine officiel, l'ancien
-    // cactus-club.be ne menait nulle part. Telephone confirme sur le site.
-    tel: "02 672 67 01", site: "cactusclub.be",
-    // Horaires officiels : vendredi et samedi 22h30 -> 06h00. Le site
-    // precise qu'en ete le club n'ouvre que le samedi.
-    statut: "Fermé", horaire: "Ouvre vendredi à 22h30", shut: true,
-    jours: "Vendredi et samedi", heures: "22h30 – 06h00",
-    noteHoraire: "En été, uniquement le samedi",
-    partenaire: true,
-    ambiance: ["Permet de danser", "Terrasse", "Ambiance club"]
+    ambiance: ["Le plus grand club de Bruxelles", "Ancien cinéma de 1934", "Programmation urbaine"]
   }
 };
-
 // "club" -> "Boîte de nuit", "bar" -> "Bar" : juste en texte lisible
 // pour la ligne meta de la fiche.
 function libelleType(type) {
@@ -5462,9 +5471,17 @@ function heroClub(c) {
       // que l'appli apporte dans ce club.
       '<div class="club-hero-scrim">' +
         '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
+        // La note Google n'est pas toujours connue : sans elle, l'etoile
+        // et le compteur d'avis disparaissent au lieu d'afficher un
+        // chiffre invente -- et null.toFixed() faisait planter le rendu
+        // de la fiche entiere.
         '<p class="club-meta">' +
-          '<svg class="club-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>' +
-          '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong> (" + c.avis + ") · " + libelleType(c.type) +
+          (c.note != null
+            ? '<svg class="club-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>' +
+              '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong>" +
+              (c.avis != null ? " (" + c.avis + ")" : "") + " · "
+            : "") +
+          libelleType(c.type) +
         "</p>" +
         // "C'est ouvert ?" est la premiere question : la reponse monte
         // sur la photo au lieu d'attendre une ligne de liste plus bas.
@@ -7681,6 +7698,9 @@ var positionRefusee = false;
    et le bon club s'affiche tout seul. Sinon, la ligne du club propose
    "Utiliser ma position" -- le clubbeur demande, il ne subit pas. */
 function detecterClubProche() {
+  // Un seul club : rien a departager, et demander la position pour
+  // confirmer l'evidence serait une permission reclamee pour rien.
+  if (Object.keys(CLUBS).length < 2) return;
   if (!navigator.geolocation) return;
   if (!navigator.permissions || !navigator.permissions.query) return;
 
@@ -7706,10 +7726,23 @@ function rendreChoixClub() {
   var liste = document.getElementById("bq-liste");
   if (!titre || !liste) return;
 
-  // Le titre EST le selecteur : il porte le nom du club et l'etat de la
-  // liste. Plus de pastille "catalogue de demo" ni de bouton "changer de
-  // club" -- Julien : "tu mets juste ce soir au Mirage".
   titre.textContent = "Ce soir " + auClub(CLUBS[CLUB_BOUTIQUE].nom);
+
+  /* Un seul club : le titre redevient un titre. Le chevron et la liste
+     promettaient un choix qui n'existe pas -- taper dessus n'aurait
+     ouvert qu'une liste d'un element. Ils reviendront d'eux-memes le
+     jour ou un deuxieme club est ajoute a CLUBS. */
+  var plusieurs = Object.keys(CLUBS).length > 1;
+  titre.classList.toggle("selectionnable", plusieurs);
+  if (!plusieurs) {
+    titre.removeAttribute("role");
+    titre.removeAttribute("tabindex");
+    titre.removeAttribute("aria-expanded");
+    liste.hidden = true;
+    return;
+  }
+  titre.setAttribute("role", "button");
+  titre.setAttribute("tabindex", "0");
   titre.setAttribute("aria-expanded", String(!liste.hidden));
 
   var enTete = (DISTANCES_CLUBS[CLUB_BOUTIQUE] == null && !positionRefusee)
@@ -7943,7 +7976,7 @@ var OFFRE = {
   fam: "bar",
   // Cle du club concerne dans CLUBS : c'est ce qui allume la pastille
   // "ce soir" sur le bon badge, sous la carte.
-  club: "cactus",
+  club: "mirano",
   // Le cocktail et non le shot (demande de Julien). Meme dessin que la
   // recompense "Un cocktail offert" du catalogue : c'est le meme produit,
   // il ne peut pas etre illustre de deux facons.
