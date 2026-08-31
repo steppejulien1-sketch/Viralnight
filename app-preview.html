@@ -1043,11 +1043,17 @@
            un aplat : la carte reste dans la famille du reste de l'appli
            mais se teinte assez pour qu'on la lise comme "la carte du
            club". Le liseré rouge fait le reste du travail. */
-        background: linear-gradient(180deg, rgba(255,47,69,.13), rgba(255,47,69,.04)), var(--s1);
-        border-color: rgba(255,47,69,.30);
+        /* Surface neutre, liseré neutre. Le voile rouge etale sur toute
+           la carte etait le meme defaut que l'aplat degrade d'avant, en
+           plus discret : du rouge partout, donc du rouge nulle part
+           (Julien, en voyant la carte : "beaucoup trop l'air d'etre
+           vibecode"). Le rouge ne reste que sur la barre, en trait fin.
+           C'est le seul endroit ou il porte une information. */
+        background: var(--s1);
+        border-color: var(--line);
         transition: transform var(--tr-court), border-color var(--tr-court);
       }
-      .pf-fidelite:active { transform: scale(.985); border-color: rgba(255,47,69,.5); }
+      .pf-fidelite:active { transform: scale(.985); border-color: var(--line2); }
       /* L icone en pastille et la ligne titre/sous-titre/chevron sont
          retirees : elles faisaient de la carte une ligne de menu de plus,
          alors que tout le bas de l ecran en est deja fait (Julien : "tout
@@ -1064,13 +1070,15 @@
       .pf-fidelite-solde { display: flex; align-items: baseline; gap: 7px; margin: 7px 0 0; }
       .pf-fidelite-solde strong {
         font-family: var(--mono); font-size: 34px; font-weight: 800;
-        letter-spacing: -.035em; line-height: 1; color: var(--accent);
+        /* Le nombre en encre, pas en rouge : un grand chiffre rouge sur
+           fond rose etait exactement l'image "carte generee". */
+        letter-spacing: -.035em; line-height: 1; color: var(--ink);
         font-variant-numeric: tabular-nums;
       }
       .pf-fidelite-solde span { font-size: 14px; font-weight: 750; color: var(--ink3); }
       .pf-fid-piste {
         display: block; height: 4px; margin: 12px 0 0; border-radius: var(--r-pill);
-        background: rgba(255,47,69,.18); overflow: hidden;
+        background: var(--line2); overflow: hidden;
       }
       .pf-fid-barre {
         display: block; height: 100%; width: 0; border-radius: var(--r-pill);
@@ -1613,10 +1621,11 @@
       .solde-carte {
         position: relative; overflow: hidden;
         padding: 18px 18px 16px; border-radius: var(--r4);
-        border: 1px solid rgba(255,47,69,.22);
-        background:
-          radial-gradient(120% 140% at 100% 0%, rgba(255,47,69,.16), transparent 60%),
-          linear-gradient(160deg, rgba(255,47,69,.09), rgba(255,47,69,.02));
+        /* Meme correction que .pf-fidelite : surface neutre. Les deux
+           degrades rouges superposes donnaient un lavis rose qui faisait
+           "carte generee" plus que "carte de fidelite". */
+        border: 1px solid var(--line);
+        background: var(--s1);
       }
       .solde-label {
         margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .09em;
@@ -1642,8 +1651,10 @@
       }
       .solde-prog-barre {
         display: block; height: 100%; width: 0; border-radius: var(--r-pill);
-        background: linear-gradient(90deg, var(--marque-2), var(--marque));
-        box-shadow: 0 0 12px rgba(255,47,69,.5);
+        /* Aplat, sans halo : le box-shadow colore autour d'une barre de
+           progression est le tic le plus reconnaissable du design genere.
+           Une barre n'a pas besoin de briller pour se lire. */
+        background: var(--marque);
         transition: width .6s cubic-bezier(.2,.7,.3,1);
       }
       .solde-prog-txt {
@@ -1653,7 +1664,7 @@
       .solde-prog-txt strong { color: var(--ink2); font-weight: 750; }
       /* Etat "tu peux echanger maintenant" : barre pleine, et le
          message change de registre au lieu de disparaitre. */
-      .solde-prog.pleine .solde-prog-barre { background: linear-gradient(90deg, #35d07f, #21a86a); box-shadow: 0 0 12px rgba(53,208,127,.5); }
+      .solde-prog.pleine .solde-prog-barre { background: #21a86a; }
       .solde-prog.pleine .solde-prog-txt strong { color: #1c9a5f; }
       @media (prefers-reduced-motion: reduce) { .solde-prog-barre { transition: none; } }
       @keyframes majSolde { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
@@ -2073,7 +2084,10 @@
         position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
         background: rgba(255,255,255,.92); border-top: 1px solid var(--line2, #dedee2);
         backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding-bottom: 18px;
+        /* Un peu d'air sur les cotes : sans lui, "Récompenses" (le plus
+           long des cinq libelles) collait au bord de l'ecran (Julien :
+           "c'est un peu trop vers le bord de l'application"). */
+        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding: 0 8px 18px;
       }
       .tab {
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
@@ -2150,6 +2164,41 @@
         height: 190px; background: var(--s2);
       }
       .club-hero-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      /* Entete facon fiche d'etablissement : la photo de profil du club a
+         gauche, le nom et le type a droite. Le nom reste en blanc sur le
+         scrim, comme avant. */
+      .club-hero-ligne { display: flex; align-items: center; gap: 12px; }
+      .club-hero-avatar {
+        flex: 0 0 auto; width: 52px; height: 52px; border-radius: 50%;
+        overflow: hidden; display: grid; place-items: center;
+        box-shadow: 0 0 0 2.5px rgba(255,255,255,.9);
+      }
+      .club-hero-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .club-avatar-mono {
+        width: 100%; height: 100%; display: grid; place-items: center;
+        font-size: 24px; font-weight: 800; color: #fff;
+      }
+      .club-hero-titre { min-width: 0; }
+
+      /* Horaires depliables, facon fiche Google. */
+      .club-horaires { width: 100%; text-align: left; background: none; border: 0; font-family: inherit; cursor: pointer; }
+      .club-horaires-chev {
+        flex: 0 0 auto; width: 18px; height: 18px; stroke: var(--ink3); fill: none;
+        stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+        transition: transform var(--tr-court);
+      }
+      .club-horaires.ouvert .club-horaires-chev { transform: rotate(180deg); }
+      @media (prefers-reduced-motion: reduce) { .club-horaires-chev { transition: none; } }
+      .club-horaires-jours { padding: 2px 0 12px 40px; }
+      .club-jour {
+        display: grid; grid-template-columns: 78px auto 1fr; gap: 10px; align-items: baseline;
+        padding: 5px 0; font-size: 13.5px; color: var(--ink2);
+      }
+      .club-jour-nom { font-weight: 650; }
+      .club-jour-h { font-variant-numeric: tabular-nums; }
+      .club-jour-soiree { color: var(--ink3); font-size: 12.5px; text-align: right; }
+      /* Le jour d'aujourd'hui ressort, comme sur Google. */
+      .club-jour.auj { color: var(--ink); font-weight: 750; }
       .club-hero-scrim {
         position: absolute; inset: auto 0 0 0; padding: 34px 18px 16px;
         background: linear-gradient(to top, rgba(8,6,5,.92), rgba(8,6,5,.5) 55%, transparent);
@@ -2277,80 +2326,6 @@
       }
       .club-statut-chip.ferme::before { background: #ff8577; }
 
-      /* ---- Tags d'ambiance ----
-         "Permet de danser" etait une ligne isolee avec une icone. Les
-         attributs d'un lieu se lisent mieux en pastilles alignees. */
-      .club-tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 16px; }
-      .club-tag {
-        display: inline-flex; align-items: center; padding: 6px 11px;
-        border-radius: var(--r-pill); background: var(--s2);
-        border: 1px solid var(--line);
-        font-size: 12.5px; font-weight: 650; color: var(--ink2);
-      }
-      /* ---- Les soirees, le lieu, l'histoire ----
-         Une fiche Google dit "ouvert vendredi". Elle ne dit pas ce qu'on
-         y entend ce soir-la, ni pourquoi ce lieu-la plutot qu'un autre.
-         C'est exactement ce qu'on peut apporter qu'elle n'a pas -- et la
-         seule raison d'ouvrir notre fiche au lieu de la sienne. */
-      .club-sec-titre {
-        margin: 20px 0 10px; font-size: 11px; font-weight: 700;
-        text-transform: uppercase; letter-spacing: .09em; color: var(--ink3);
-      }
-
-      .club-soirees { display: grid; gap: 7px; }
-      .club-soiree {
-        display: flex; align-items: center; gap: 11px;
-        padding: 11px 13px; border-radius: 14px;
-        background: var(--s1); border: 1px solid var(--line);
-      }
-      .club-soiree-jour {
-        flex: 0 0 auto; width: 66px;
-        font-family: var(--mono); font-size: 10.5px; font-weight: 700;
-        letter-spacing: .04em; text-transform: uppercase; color: var(--ink3);
-      }
-      .club-soiree-nom { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 750; letter-spacing: -.01em; }
-      .club-soiree-h { flex: 0 0 auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink2); }
-
-      /* Les particularites du lieu : une liste a puces coche plutot que
-         des pastilles -- ce sont des phrases, pas des mots-cles. */
-      .club-lieu { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-      .club-lieu li {
-        display: flex; gap: 9px; align-items: flex-start;
-        font-size: 13px; font-weight: 550; color: var(--ink2); line-height: 1.4;
-      }
-      .club-lieu-puce {
-        flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; border-radius: 50%;
-        background: rgba(255,47,69,.12); display: grid; place-items: center;
-      }
-      .club-lieu-puce svg { width: 9px; height: 9px; stroke: var(--accent); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-
-      /* La frise : un filet vertical, une annee en chasse fixe, un texte.
-         Quatre lignes maximum -- une frise qu'on ne lit pas est un
-         ornement. */
-      .club-frise { margin: 0; padding: 0 0 0 4px; list-style: none; }
-      .club-frise li {
-        position: relative; padding: 0 0 14px 20px;
-        border-left: 1.5px solid var(--line2);
-      }
-      .club-frise li:last-child { padding-bottom: 0; border-left-color: transparent; }
-      .club-frise li::before {
-        content: ""; position: absolute; left: -5px; top: 5px;
-        width: 8px; height: 8px; border-radius: 50%;
-        background: var(--accent);
-      }
-      .club-frise b {
-        display: block; font-family: var(--mono); font-size: 11px; font-weight: 700;
-        letter-spacing: .06em; color: var(--ink3);
-      }
-      .club-frise span { display: block; margin-top: 2px; font-size: 13px; font-weight: 550; color: var(--ink2); line-height: 1.4; }
-
-      /* Apparition en cascade quand la fiche s'ouvre. */
-      @keyframes tag-monte { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-      .club-tag { animation: tag-monte .3s cubic-bezier(.2,.7,.3,1) both; }
-      .club-tag:nth-child(2) { animation-delay: .05s; }
-      .club-tag:nth-child(3) { animation-delay: .1s; }
-      .club-tag:nth-child(4) { animation-delay: .15s; }
-
       /* ---- Bloc partenaire : le point de conversion de la fiche ----
          Les recompenses et "Poster ma story" etaient deux lignes parmi
          d'autres, tout en bas. C'est pourtant la seule raison d'ouvrir
@@ -2393,8 +2368,6 @@
       .club-info-txt { flex: 1 1 auto; min-width: 0; }
       .club-info-principal { font-size: 15px; font-weight: 700; color: var(--ink); }
       .club-info-principal.ferme { color: #d93025; }
-      .club-info-sub { font-size: 13px; font-weight: 550; color: var(--ink3); margin-top: 2px; }
-      .club-info-chev { flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; margin-top: 2px; }
       .club-info-ligne.lien .club-info-principal { color: #1a73e8; }
 
       /* Recompenses disponibles : rappel discret, pas un bouton --
@@ -3939,7 +3912,9 @@ function compteARebours(expireA) {
   if (ms <= 0) return "Expiré";
   var h = Math.floor(ms / 3600000);
   var m = Math.floor((ms % 3600000) / 60000);
-  return "Expire dans " + (h > 0 ? h + " h " + String(m).padStart(2, "0") : m + " min");
+  // "5 h 00" se lisait comme une heure de la journee, pas comme une
+  // duree. Au-dela d'une heure, les minutes n'apprennent rien.
+  return "Expire dans " + (h > 0 ? h + " h" : m + " min");
 }
 
 /* ==========================================================
@@ -4649,7 +4624,11 @@ function majProgressionSolde() {
   // Nommer la cible marche aussi bien a zero -- c'est la premiere
   // recompense a portee, l'information est utile des le premier ecran.
 
-  txt.innerHTML = "Vers <strong>" + escapeHtmlSupport(cible.nom) + "</strong>";
+  // Le nom seul, sans "Vers". La preposition transformait un libelle en
+  // debut de phrase, et "Vers Un cocktail offert" se lisait casse a cause
+  // de l'article capitalise au milieu. Une legende de jauge nomme sa
+  // cible, elle ne fait pas une phrase.
+  txt.innerHTML = "<strong>" + escapeHtmlSupport(cible.nom) + "</strong>";
 }
 
 /* ==========================================================
@@ -4719,6 +4698,18 @@ var CLUBS = {
     note: null, avis: null, prix: null,
     tel: "+32 456 68 88 52", site: "miranobrussels.com",
     ig: "miranobrussels",
+    /* Les vraies photos du club. Tant qu'elles sont nulles, l'entete
+       retombe sur une image d'ambiance generique (fotoClub) et sur un
+       monogramme -- volontairement, plutot qu'une photo prise ailleurs :
+       une image trouvee sur Google appartient a quelqu'un.
+
+       photo  : banniere, format paysage (au moins 1200x600).
+       avatar : photo de profil, carree, elle est rognee en rond.
+       Deposer les fichiers dans public/clubs/ et mettre le chemin ici.
+       api/import-opening-hours.js sait deja parler a Google Places, qui
+       fournit des photos utilisables avec attribution si on prefere
+       les tirer de la fiche du club plutot que de les deposer a la main. */
+    photo: null, avatar: null,
     /* Du jeudi au samedi : l'exploitant (artblanc.be) annonce le Cafe
        Afro le jeudi des 21h, en plus des vendredis et samedis a 23h.
        D'autres sources ne citent que le week-end -- on suit celle qui
@@ -4738,13 +4729,27 @@ var CLUBS = {
 
     ambiance: ["Hip-hop & R&B", "Piste de danse tournante", "Ancien cinéma", "Bâtiment classé"],
 
-    // La programmation par soir. C'est LA chose qu'un clubbeur cherche et
-    // qu'une fiche Google ne donne pas : pas "ouvert vendredi", mais quoi
-    // y entendre ce soir-la.
-    soirees: [
-      { jour: "Jeudi", nom: "Café Afro", heure: "dès 21h00" },
-      { jour: "Vendredi", nom: "Hip-hop & R&B", heure: "dès 23h00" },
-      { jour: "Samedi", nom: "Hip-hop & R&B", heure: "dès 23h00" },
+    /* Un vrai calendrier par jour, les sept jours declares -- c'est ce qui
+       permet de deplier les horaires comme le fait Google (demande de
+       Julien : "je veux l'horaire comme sur Google, quand tu cliques ca
+       ouvre les jours et tu peux voir tout").
+
+       La programmation du soir vit sur la meme ligne que l'horaire au lieu
+       d'une section a part : c'est la meme information (ce jour-la, le club
+       ouvre a telle heure pour telle soiree), et la separer obligeait a
+       lire deux blocs pour repondre a une seule question.
+
+       Memes sources que le reste de la fiche : l'exploitant (artblanc.be)
+       annonce le Cafe Afro le jeudi des 21h, les vendredis et samedis a
+       23h. Rien d'invente pour remplir les jours fermes. */
+    horaires: [
+      { jour: "Lundi",    ferme: true },
+      { jour: "Mardi",    ferme: true },
+      { jour: "Mercredi", ferme: true },
+      { jour: "Jeudi",    de: "21:00", a: "06:00", soiree: "Café Afro" },
+      { jour: "Vendredi", de: "23:00", a: "06:00", soiree: "Hip-hop & R&B" },
+      { jour: "Samedi",   de: "23:00", a: "06:00", soiree: "Hip-hop & R&B" },
+      { jour: "Dimanche", ferme: true },
     ],
 
     // Ce qui distingue physiquement le lieu. Aucun club de Bruxelles n'a
@@ -5539,7 +5544,23 @@ map.on("style.load", function () {
 // public/recompenses/ pour les photos de recompenses.
 var PHOTOS_AMBIANCE = ["/ambiance/hero-nightclub.webp", "/ambiance/hero-auth.jpg"];
 function fotoClub(c) {
-  return PHOTOS_AMBIANCE[c.nom.length % PHOTOS_AMBIANCE.length];
+  // La vraie photo du club si elle a ete deposee ; sinon une image
+  // d'ambiance, qui reste un pis-aller assume -- elle ne montre pas ce
+  // club-la, et ca se voit (voir photo/avatar dans CLUBS).
+  return c.photo || PHOTOS_AMBIANCE[c.nom.length % PHOTOS_AMBIANCE.length];
+}
+
+/* La photo de profil du club, ronde, posee sur la banniere -- comme
+   l'entete d'un compte Instagram ou d'une fiche d'etablissement Google
+   (demande de Julien : "tu mets une photo de profil du club").
+
+   Sans fichier, un monogramme sur la couleur du club plutot qu'un rond
+   vide ou une icone generique : ca se lit comme un choix, pas comme une
+   image qui n'a pas charge. */
+function avatarClub(c) {
+  if (c.avatar) return '<img src="' + c.avatar + '" alt="" />';
+  return '<span class="club-avatar-mono" style="background:' + (c.c || "#ff2f45") + '">' +
+    escapeHtmlSupport(c.nom.charAt(0).toUpperCase()) + "</span>";
 }
 
 // Grande photo d'entete avec nom + note incrustes dessus (scrim degrade),
@@ -5558,7 +5579,10 @@ function heroClub(c) {
       // "Tu gagnes des points ici" juste dessous dit deja, en clair, ce
       // que l'appli apporte dans ce club.
       '<div class="club-hero-scrim">' +
-        '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
+        '<div class="club-hero-ligne">' +
+          '<span class="club-hero-avatar">' + avatarClub(c) + "</span>" +
+          '<span class="club-hero-titre">' +
+            '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
         // La note Google n'est pas toujours connue : sans elle, l'etoile
         // et le compteur d'avis disparaissent au lieu d'afficher un
         // chiffre invente -- et null.toFixed() faisait planter le rendu
@@ -5570,7 +5594,9 @@ function heroClub(c) {
               (c.avis != null ? " (" + c.avis + ")" : "") + " · "
             : "") +
           libelleType(c.type) +
-        "</p>" +
+            "</p>" +
+          "</span>" +
+        "</div>" +
         // "C'est ouvert ?" est la premiere question : la reponse monte
         // sur la photo au lieu d'attendre une ligne de liste plus bas.
         '<span class="club-statut-chip' + (c.shut ? " ferme" : "") + '">' +
@@ -5648,35 +5674,40 @@ function ouvrirClub(c, src, id) {
     '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0 4 4m-4-4L8 7"/><path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg></span>' +
     "<span>Partager</span></button>";
 
-  // Lignes horaires/prix/telephone : meme lecture qu'une fiche Google
-  // (icone, ligne principale, sous-ligne, chevron), mais chaque ligne
-  // ne sort de rien -- ce sont des rappels d'info, pas des menus qui
-  // se depliraient vraiment.
-  var chevron = '<svg class="club-info-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
-  var ligneHoraires =
-    '<div class="club-info-ligne">' +
-      '<span class="club-info-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>' +
-      '<span class="club-info-txt"><span class="club-info-principal' + (c.shut ? " ferme" : "") + '">' + c.statut + " · " + c.horaire + "</span>" +
-        (c.jours ? '<span class="club-info-sub">' + c.jours + " · " + c.heures +
-          (c.noteHoraire ? " · " + c.noteHoraire : "") + "</span>" : "") +
-      "</span>" +
-    "</div>";
-  // Prix retire de la fiche (demande de Julien : "le prix, tu n'es pas
-  // oblige de le mettre"). Une fourchette large recopiee d'une capture
-  // Google n'apprend rien a un clubbeur et porte un chevron qui laisse
-  // croire qu'on peut la deplier. Les donnees restent dans CLUBS si on
-  // veut y revenir.
-  var lignePrix = "";
-  var ligneTel = c.tel ?
-    '<div class="club-info-ligne lien">' +
-      '<span class="club-info-ico"><svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.6 21 3 12.4 3 2c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"/></svg></span>' +
-      '<a class="club-info-txt club-info-principal" href="tel:' + c.tel.replace(/\s+/g, "") + '" style="text-decoration:none">' + c.tel + "</a>" +
-    "</div>" : "";
+  /* Les horaires se deplient, comme sur une fiche Google (demande de
+     Julien : "je veux l'horaire comme sur Google, quand tu cliques ca
+     ouvre les jours et tu peux voir tout").
 
-  // Attributs du lieu en pastilles alignees plutot qu'une ligne isolee.
-  var tags = (c.ambiance || ["Permet de danser"])
-    .map(function (t) { return '<span class="club-tag">' + t + "</span>"; })
-    .join("");
+     Repliee, la ligne repond a la seule question qui compte en arrivant :
+     est-ce que c'est ouvert. Depliee, elle donne les sept jours, avec la
+     soiree du soir sur la meme ligne que son horaire -- c'est ce qui
+     remplace l'ancienne section "Les soirees", qui redisait la meme chose
+     deux blocs plus bas.
+
+     Ont saute avec elle, sur demande de Julien ("il y a trop d'infos
+     inutiles") : les pastilles d'ambiance, la ligne telephone (le bouton
+     "Appeler" juste au-dessus fait deja exactement ca), "Le lieu" et la
+     frise "Depuis 1912". Les donnees restent dans CLUBS. */
+  var AUJ = (new Date().getDay() + 6) % 7; // 0 = lundi, comme c.horaires
+  var blocHoraires = "";
+  if (c.horaires && c.horaires.length) {
+    blocHoraires =
+      '<button type="button" class="club-info-ligne club-horaires" id="sh-horaires" aria-expanded="false" aria-controls="sh-horaires-jours">' +
+        '<span class="club-info-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>' +
+        '<span class="club-info-txt"><span class="club-info-principal' + (c.shut ? " ferme" : "") + '">' +
+          escapeHtmlSupport(c.statut + " · " + c.horaire) + "</span></span>" +
+        '<svg class="club-horaires-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>' +
+      "</button>" +
+      '<div class="club-horaires-jours" id="sh-horaires-jours" hidden>' +
+        c.horaires.map(function (j, i) {
+          return '<div class="club-jour' + (i === AUJ ? " auj" : "") + '">' +
+            '<span class="club-jour-nom">' + escapeHtmlSupport(j.jour) + "</span>" +
+            '<span class="club-jour-h">' + (j.ferme ? "Fermé" : escapeHtmlSupport(j.de + " – " + j.a)) + "</span>" +
+            '<span class="club-jour-soiree">' + (j.soiree ? escapeHtmlSupport(j.soiree) : "") + "</span>" +
+          "</div>";
+        }).join("") +
+      "</div>";
+  }
 
   // Le bloc partenaire remonte AVANT les infos pratiques : c'est le
   // seul contenu qu'on ne trouve pas sur Maps, donc la raison d'ouvrir
@@ -5690,46 +5721,6 @@ function ouvrirClub(c, src, id) {
           (RECOMPENSES.length || 4) + " récompenses à échanger ici →" +
         "</a>" +
       "</div>"
-    : "";
-
-  /* Les soirees : le programme par soir, ce qu'une fiche Google ne
-     donne jamais. Chaque bloc n'existe que si la donnee existe -- une
-     section vide avec un titre est pire que pas de section. */
-  var blocSoirees = (c.soirees && c.soirees.length)
-    ? '<p class="club-sec-titre">Les soirées</p><div class="club-soirees">' +
-        c.soirees.map(function (s) {
-          return '<div class="club-soiree">' +
-            '<span class="club-soiree-jour">' + escapeHtmlSupport(s.jour) + "</span>" +
-            '<span class="club-soiree-nom">' + escapeHtmlSupport(s.nom) + "</span>" +
-            '<span class="club-soiree-h">' + escapeHtmlSupport(s.heure) + "</span>" +
-          "</div>";
-        }).join("") +
-      "</div>"
-    : "";
-
-  var blocLieu = (c.lieu && c.lieu.length)
-    ? '<p class="club-sec-titre">Le lieu</p><ul class="club-lieu">' +
-        c.lieu.map(function (l) {
-          return "<li>" +
-            '<span class="club-lieu-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
-            "<span>" + escapeHtmlSupport(l) + "</span>" +
-          "</li>";
-        }).join("") +
-        (c.capacite
-          ? "<li>" +
-            '<span class="club-lieu-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
-            "<span>" + escapeHtmlSupport(c.capacite) + "</span>" +
-            "</li>"
-          : "") +
-      "</ul>"
-    : "";
-
-  var blocHistoire = (c.histoire && c.histoire.length)
-    ? '<p class="club-sec-titre">Depuis 1912</p><ul class="club-frise">' +
-        c.histoire.map(function (h) {
-          return "<li><b>" + escapeHtmlSupport(h[0]) + "</b><span>" + escapeHtmlSupport(h[1]) + "</span></li>";
-        }).join("") +
-      "</ul>"
     : "";
 
   // Le compte Instagram, en ligne d'info : c'est le compte a taguer pour
@@ -5747,13 +5738,11 @@ function ouvrirClub(c, src, id) {
     heroClub(c) +
     blocPartenaire +
     '<div class="club-actions-row">' + actions + "</div>" +
-    '<div class="club-tags">' + tags + "</div>" +
     '<div class="club-adresse">' +
       '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
     "</div>" +
-    ligneHoraires + lignePrix + ligneTel + ligneIg +
-    blocSoirees + blocLieu + blocHistoire;
+    blocHoraires + ligneIg;
   // Retires (Julien) : la note "300 pts pour un cocktail offert, tu en as
   // 0" repetait la boutique en pointant un solde vide, et "Avis et photos
   // : voir sur Google" renvoyait chez Google depuis notre propre fiche.
@@ -5766,6 +5755,14 @@ function ouvrirClub(c, src, id) {
   // fond/texte/gris.
   sheet.classList.add("clair");
   cablerFavoriClub(id, c.nom);
+  // Les horaires se deplient sur place, sans quitter la fiche.
+  $("#sh-horaires")?.addEventListener("click", function () {
+    var zone = $("#sh-horaires-jours");
+    var ouvrir = zone.hidden;
+    zone.hidden = !ouvrir;
+    this.setAttribute("aria-expanded", String(ouvrir));
+    this.classList.toggle("ouvert", ouvrir);
+  });
   $("#sh-voir-recompenses")?.addEventListener("click", function (e) {
     e.preventDefault();
     fermerFeuille();
@@ -5831,7 +5828,7 @@ $("#vg-close")?.addEventListener("click", fermerFicheGoogle);
 var BAREME_STORY = {
   story: { pts: "+100", texte: "Montant fixe." },
   reel: { pts: "+60", texte: "Montant fixe." },
-  tiktok: { pts: "+60", texte: "+ 7 pts par 100 vues, comptées par TikTok." },
+  tiktok: { pts: "+60", texte: "+ 7 pts par 100 vues." },
 };
 
 // Story et Reel s'ouvrent tous deux dans Instagram (meme icone dégradée),
@@ -5978,7 +5975,10 @@ function ouvrirChoixReseau(nomClub) {
       // Le badge du bouton TikTok montre le forfait fixe (+60) mais pas
       // le bonus aux vues, variable -- sans cette ligne, on sous-vend le
       // format le plus genereux de la liste.
-      (kindId === "tiktok" ? '<p class="desc ps-hint">+ 7 pts par 100 vues, comptées par TikTok, en plus du forfait.</p>' : "");
+      // "comptees par TikTok, en plus du forfait" empilait trois
+      // precisions pour une seule idee. Le +60 est affiche juste au-
+      // dessus : un "+ 7 pts par 100 vues" se lit deja comme un ajout.
+      (kindId === "tiktok" ? '<p class="desc ps-hint">+ 7 pts par 100 vues.</p>' : "");
   }
 
   // Tout sur une seule page, rien de cache derriere une etape -- Julien
@@ -7043,7 +7043,7 @@ TAB_PROFIL?.addEventListener("click", async function () {
       // avant Un cocktail offert") que Julien avait deja refusee la-bas --
       // "on dirait de l'IA" -- et sur un "Poste ta premiere story pour
       // demarrer" du meme registre.
-      txtFid.innerHTML = "Vers <strong>" + escapeHtmlSupport(cibleFid.nom) + "</strong>";
+      txtFid.innerHTML = "<strong>" + escapeHtmlSupport(cibleFid.nom) + "</strong>";
     } else {
       barreFid.style.width = "100%";
       var dispoFid = RECOMPENSES.filter(function (rc) { return rc.cout <= ETAT.solde && rc.stock > 0; }).length;
@@ -8068,7 +8068,7 @@ function prefixeClub(nom) {
    Ces deux lignes deviennent inertes des que le SQL est passe : les
    titres d'origine n'existeront plus. */
 var REMPLACEMENTS = {
-  "Coupe-file garanti": { nom: "Une pinte offerte", fam: "bar" },
+  "Coupe-file garanti": { nom: "Pinte offerte", fam: "bar" },
   "Accès carré VIP": { nom: "Vestiaire offert", fam: "acces" },
 };
 
@@ -8124,13 +8124,16 @@ async function chargerRecompenses() {
 }
 
 var OFFRE = {
-  id: "o-cocktail", nom: "Un cocktail offert", court: "À ta première story de la soirée",
+  // "Un cocktail offert" -> "Cocktail offert" : l'article ne sert a rien
+  // dans un nom de recompense, et il se voyait des que le nom etait
+  // repris ailleurs ("Vers Un cocktail offert").
+  id: "o-cocktail", nom: "Cocktail offert", court: "À ta première story de la soirée",
   fam: "bar",
   // Cle du club concerne dans CLUBS : c'est ce qui allume la pastille
   // "ce soir" sur le bon badge, sous la carte.
   club: "mirano",
   // Le cocktail et non le shot (demande de Julien). Meme dessin que la
-  // recompense "Un cocktail offert" du catalogue : c'est le meme produit,
+  // recompense "Cocktail offert" du catalogue : c'est le meme produit,
   // il ne peut pas etre illustre de deux facons.
   art: artCocktail, glow: "#fbe8ea", foto: FOTO_OFFRE_HERO,
   cout: 0, avant: 70, stock: 20,
