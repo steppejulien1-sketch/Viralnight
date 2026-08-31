@@ -4237,14 +4237,20 @@ if (BOUTON_EMAIL) {
 
 supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
   if (session) {
-    /* L'accueil ne disparait PLUS automatiquement quand une session
-       existe. Julien : "quand je reactualise, j'arrive sur la page
-       d'accueil normale, ensuite le truc Insta, puis directement le
-       magasin". La sequence est donc toujours la meme, connecte ou non.
+    /* L'accueil s'efface des qu'une session existe, comme a l'origine.
 
-       Un deja-connecte n'a rien a faire des boutons Apple/Google/email :
-       ils cedent la place a un seul bouton "Entrer". */
-    preparerAccueilConnecte();
+       J'avais essaye deux autres choses, toutes deux mauvaises :
+       remplacer Apple/Google/email par un seul bouton "Entrer" (ca vidait
+       l'ecran que Julien avait valide), puis garder l'accueil sans
+       fermeture automatique -- et la, un utilisateur deja connecte
+       restait BLOQUE dessus : le raccourci "Explorer sans compte" avait
+       ete retire, et se reconnecter le ramenait au meme ecran.
+
+       La sequence demandee (accueil -> Instagram -> recompenses) marche
+       de toute facon ainsi : sans session on voit l'accueil, on se
+       connecte, l'ecran Instagram prend le relais, puis les
+       recompenses. */
+    VUE_ACCUEIL.classList.add("masque");
     assurerProfil(session.user);
     chargerSoldeReel(session.user.id);
     creditScanUrl();
@@ -4252,20 +4258,6 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
     verifierIdentiteIg(session);
   }
 });
-
-/* Session deja ouverte : l'accueil garde son logo et son texte, mais
-   les trois entrees de connexion n'ont plus de sens. Une seule action
-   reste, et c'est elle qui fait avancer la sequence. */
-function preparerAccueilConnecte() {
-  var actions = document.querySelector(".ac-actions");
-  if (!actions || actions.dataset.connecte === "1") return;
-  actions.dataset.connecte = "1";
-  actions.innerHTML =
-    '<button type="button" class="ac-btn ac-btn-marque" id="ac-entrer">Entrer</button>';
-  document.getElementById("ac-entrer").addEventListener("click", function () {
-    VUE_ACCUEIL.classList.add("masque");
-  });
-}
 
 /* ==========================================================
    ARRIVEE PAR LE QR DU CLUB (?club=<slug>)
