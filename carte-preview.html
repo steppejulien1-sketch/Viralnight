@@ -1131,7 +1131,7 @@ function genererArbres() {
 
   /* Le ciel doit "bouger" quand on tourne/deplace le globe (demande
      de Julien, encore statique face a la camera avant) : on tourne et
-     on decale legerement tout le calque etoiles+lune selon l'ecart de
+     on decale legerement tout le calque d'etoiles selon l'ecart de
      bearing/centre par rapport au chargement -- jamais 1 pour 1 (ce
      serait le meme mouvement qu'un fond colle a la sphere), un
      facteur reduit suffit a donner l'impression d'un decor lointain
@@ -1141,25 +1141,9 @@ function genererArbres() {
   // Meme position pour les deux (jamais affiches en meme temps) : en
   // haut a gauche, la ou vivait l'icone de pinte du bouton profil
   // avant qu'on la retire — cet espace se retrouvait vide sinon.
-  var CIEL_X = .24, CIEL_Y = .15;
-
-  /* --- La lune : corps en degrade (ombre legere en bas-droite, comme
-         eclairee de haut-gauche) et trois cirques lunaires en aplat
-         plus sombre. Plus de halo/glow autour — juste le disque, plus
-         net, moins "jeu video". --- */
-  function dessinerLune() {
-    var mx = CIEL_X * W, my = CIEL_Y * H, mr = Math.min(W, H) * .095;
-    var corps = ctx.createRadialGradient(mx - mr * .3, my - mr * .3, mr * .2, mx, my, mr);
-    corps.addColorStop(0, "#fffef6");
-    corps.addColorStop(1, "#d5d1ba");
-    ctx.fillStyle = corps;
-    ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.29); ctx.fill();
-
-    ctx.fillStyle = "rgba(160,154,128,.4)";
-    [[-.25, -.12, .22], [.18, .3, .16], [.36, -.22, .12]].forEach(function (c) {
-      ctx.beginPath(); ctx.arc(mx + c[0] * mr, my + c[1] * mr, c[2] * mr, 0, 6.29); ctx.fill();
-    });
-  }
+  // dessinerLune() et CIEL_X/CIEL_Y supprimees a la demande de Julien
+  // ("la lune est inutile, c est moche") : le ciel ne garde que ses
+  // etoiles. Meme suppression que dans app-preview.html.
 
   /* --- Le soleil : disque avec assombrissement centre-bord (le
          "limb darkening" d'une vraie photo du soleil — le centre est
@@ -1168,8 +1152,8 @@ function genererArbres() {
 
          dessinerSoleil() et dessinerFondJour() (soleil + fond bleu +
          nuages du mode jour) supprimees a la demande de Julien : le
-         ciel reste etoile en permanence desormais, la lune reste
-         reservee a la nuit. Elles n'etaient plus appelees nulle part. --- */
+         ciel reste etoile en permanence desormais. Elles n'etaient plus
+         appelees nulle part. --- */
 
   var opacite = 1, dernier = 0;
 
@@ -1183,10 +1167,6 @@ function genererArbres() {
     ctx.fillRect(0, 0, W, H);
     if (opacite <= 0) return;
     ctx.globalAlpha = opacite;
-
-    // La lune reste fixe a l'ecran (pas de rotation/decalage) : seul le
-    // champ d'etoiles doit suivre le globe, demande de Julien.
-    if (estNuit()) dessinerLune();
 
     ctx.save();
     // Rotation inverse du bearing : quand la camera tourne autour du

@@ -911,7 +911,7 @@
          suit les deux themes sans travail supplementaire.
 
          La carte est volontairement absente de cette liste : c'est un
-         globe de nuit (ciel etoile, lune, etoiles filantes). Un fond
+         globe de nuit (ciel etoile, etoiles filantes). Un fond
          clair ferait disparaitre tout ce qui s'y trouve.
          ============================================================ */
       .vue-profil, .vue-amis, .vue-story {
@@ -961,9 +961,13 @@
          sont retires a la demande de Julien ("retire le rouge du
          profil") -- ne pas les remettre sans qu'il le redemande.
          L'etat presse sur la photo, lui, reste : il confirme le tap. */
-      .pf-head { text-align: center; padding-top: 44px; margin: 0 0 24px; }
+      /* 44px de padding au-dessus de la photo faisaient un trou blanc en
+         haut d'ecran (Julien : "il y a trop d'espaces blancs autour de la
+         photo de profil"). La cloche vit en absolu a 16px et ne bouge
+         pas ; rien ne l'empeche donc de remonter. */
+      .pf-head { text-align: center; padding-top: 16px; margin: 0 0 18px; }
       .pf-avatar {
-        position: relative; width: 84px; height: 84px; margin: 0 auto 14px; border-radius: 50%;
+        position: relative; width: 84px; height: 84px; margin: 0 auto 11px; border-radius: 50%;
         background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
         border: 0; padding: 0; cursor: pointer; display: grid; place-items: center;
         transition: transform var(--tr-court);
@@ -1044,13 +1048,26 @@
         transition: transform var(--tr-court), border-color var(--tr-court);
       }
       .pf-fidelite:active { transform: scale(.985); border-color: rgba(255,47,69,.5); }
-      .pf-fidelite-ligne { display: flex; align-items: center; gap: 14px; }
-      .pf-fidelite-solde { display: flex; align-items: baseline; gap: 6px; margin: 14px 0 0; }
-      .pf-fidelite-solde strong {
-        font-family: var(--mono); font-size: 26px; font-weight: 700;
-        letter-spacing: -.03em; line-height: 1; color: var(--accent);
+      /* L icone en pastille et la ligne titre/sous-titre/chevron sont
+         retirees : elles faisaient de la carte une ligne de menu de plus,
+         alors que tout le bas de l ecran en est deja fait (Julien : "tout
+         le profil fait trop code", "trop le truc de reglage"). Reste un
+         libelle discret, le chevron qui dit qu on peut entrer, et le
+         nombre qui porte la carte. */
+      .pf-fid-entete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .pf-fid-label {
+        font-size: 11.5px; font-weight: 800; letter-spacing: .09em;
+        text-transform: uppercase; color: var(--ink3);
       }
-      .pf-fidelite-solde span { font-size: 13px; font-weight: 700; color: var(--ink3); }
+      /* Meme traitement que le solde de la boutique : chasse fixe pour
+         que le nombre ne saute pas quand il change. */
+      .pf-fidelite-solde { display: flex; align-items: baseline; gap: 7px; margin: 7px 0 0; }
+      .pf-fidelite-solde strong {
+        font-family: var(--mono); font-size: 34px; font-weight: 800;
+        letter-spacing: -.035em; line-height: 1; color: var(--accent);
+        font-variant-numeric: tabular-nums;
+      }
+      .pf-fidelite-solde span { font-size: 14px; font-weight: 750; color: var(--ink3); }
       .pf-fid-piste {
         display: block; height: 4px; margin: 12px 0 0; border-radius: var(--r-pill);
         background: rgba(255,47,69,.18); overflow: hidden;
@@ -1062,14 +1079,6 @@
       }
       .pf-fid-txt { margin: 9px 0 0; font-size: 12px; font-weight: 600; color: var(--ink3); }
       @media (prefers-reduced-motion: reduce) { .pf-fid-barre { transition: none; } }
-      .pf-fidelite-ico {
-        flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px;
-        background: rgba(255,47,69,.12); display: grid; place-items: center;
-      }
-      .pf-fidelite-ico svg { width: 20px; height: 20px; fill: var(--accent); }
-      .pf-fidelite-txt { flex: 1; min-width: 0; }
-      .pf-fidelite-txt strong { display: block; font-size: 15.5px; font-weight: 800; }
-      .pf-fidelite-txt span { display: block; font-size: 12.5px; color: var(--ink3); margin-top: 2px; }
       .pf-fidelite-chev { flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
       .pf-liste { margin: 0 0 8px; }
@@ -3186,7 +3195,7 @@
               </button>
               <input type="file" accept="image/*" id="pf-avatar-file" hidden />
               <p class="pf-nom" id="pf-handle">@...</p>
-              <p class="pf-sub">Clubbeur</p>
+              <p class="pf-sub" id="pf-sub"></p>
             </div>
 
             <div class="pf-actions">
@@ -3205,18 +3214,12 @@
             </div>
 
             <button type="button" class="pf-fidelite" id="pf-fidelite">
-              <span class="pf-fidelite-ligne">
-                <span class="pf-fidelite-ico" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
-                </span>
-                <span class="pf-fidelite-txt">
-                  <strong>Ma fidélité</strong>
-                  <span id="pf-points">historique des récompenses</span>
-                </span>
+              <span class="pf-fid-entete">
+                <span class="pf-fid-label">Mes points</span>
                 <svg class="pf-fidelite-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
               </span>
               <span class="pf-fidelite-solde">
-                <strong id="pf-fid-solde">0</strong><span>points</span>
+                <strong id="pf-fid-solde">0</strong><span>pts</span>
               </span>
               <span class="pf-fid-piste"><span class="pf-fid-barre" id="pf-fid-barre"></span></span>
               <p class="pf-fid-txt" id="pf-fid-txt"></p>
@@ -3339,7 +3342,7 @@
           <div class="va-poignee" id="hs-poignee" aria-hidden="true"></div>
           <h1 class="va-title">Ma fidélité</h1>
           <div class="solde-ligne" style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-            <span class="pf-fidelite-ico" style="width:40px;height:40px;border-radius:50%;background:var(--s2);display:grid;place-items:center" aria-hidden="true">
+            <span style="flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--s2);display:grid;place-items:center" aria-hidden="true">
               <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
             </span>
             <strong id="hs-solde" style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--accent)">0 pts</strong>
@@ -4630,12 +4633,12 @@ function majProgressionSolde() {
   var pct = cible.cout > 0 ? Math.min(100, Math.round((ETAT.solde / cible.cout) * 100)) : 0;
   barre.style.width = pct + "%";
 
-  // Compte neuf : la jauge est a zero, la nommer par une cible qu'on
-  // n'a pas commence a viser ne veut rien dire.
-  if (ETAT.solde <= 0) {
-    txt.innerHTML = "Aucun point pour l'instant";
-    return;
-  }
+  // Plus de cas particulier a zero. Il affichait "Aucun point pour
+  // l'instant", et la carte disait alors trois fois la meme chose : le
+  // libelle "Mes points", le 0 en gros, puis la phrase (Julien : "mes
+  // points, zero point, aucun point pour l'instant, ca fait trop code").
+  // Nommer la cible marche aussi bien a zero -- c'est la premiere
+  // recompense a portee, l'information est utile des le premier ecran.
 
   txt.innerHTML = "Vers <strong>" + escapeHtmlSupport(cible.nom) + "</strong>";
 }
@@ -5327,30 +5330,17 @@ function snapifie() {
 
   /* Le ciel doit "bouger" quand on tourne/deplace le globe (demande
      de Julien, encore statique face a la camera avant) : on tourne et
-     on decale legerement tout le calque etoiles+lune en fonction de
+     on decale legerement tout le calque d'etoiles en fonction de
      l'ecart de bearing et de centre par rapport au chargement --
      jamais 1 pour 1 (ce serait le meme mouvement qu'un fond colle a
      la sphere, pas un ciel lointain), un facteur reduit suffit a
      donner l'impression d'un decor qui suit la rotation. */
   var bearing0 = map.getBearing(), centre0 = map.getCenter();
 
-  /* --- Lune, soleil, fond du mode jour : voir carte-preview.html
-         pour le detail, code identique. --- */
-  var CIEL_X = .24, CIEL_Y = .15;
-
-  function dessinerLune() {
-    var mx = CIEL_X * W, my = CIEL_Y * H, mr = Math.min(W, H) * .095;
-    var corps = ctx.createRadialGradient(mx - mr * .3, my - mr * .3, mr * .2, mx, my, mr);
-    corps.addColorStop(0, "#fffef6");
-    corps.addColorStop(1, "#d5d1ba");
-    ctx.fillStyle = corps;
-    ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.29); ctx.fill();
-
-    ctx.fillStyle = "rgba(160,154,128,.4)";
-    [[-.25, -.12, .22], [.18, .3, .16], [.36, -.22, .12]].forEach(function (c) {
-      ctx.beginPath(); ctx.arc(mx + c[0] * mr, my + c[1] * mr, c[2] * mr, 0, 6.29); ctx.fill();
-    });
-  }
+  // dessinerLune() supprimee a la demande de Julien ("la lune est
+  // inutile, c est moche") : le ciel ne garde que les etoiles et leurs
+  // filantes. CIEL_X/CIEL_Y, qui ne servaient qu a la placer, partent
+  // avec elle.
 
   // dessinerSoleil() et dessinerFondJour() (soleil + nuages du mode jour)
   // supprimees : le ciel reste etoile en permanence desormais, elles
@@ -5379,8 +5369,9 @@ function snapifie() {
 
   function lancerFilante() {
     filante = {
-      // Depart dans la moitie haute, jamais dans le coin de la lune.
-      x: W * (0.05 + Math.random() * 0.55),
+      // Depart dans la moitie haute. La contrainte "jamais dans le coin
+      // de la lune" tombe avec la lune : toute la largeur est libre.
+      x: W * (0.05 + Math.random() * 0.80),
       y: H * (0.04 + Math.random() * 0.34),
       // Descente vers la droite, entre 23 et 45 degres.
       angle: Math.PI * (0.13 + Math.random() * 0.12),
@@ -5442,11 +5433,10 @@ function snapifie() {
     if (opacite <= 0) return;
     ctx.globalAlpha = opacite;
 
-    // La lune reste fixe a l'ecran (pas de rotation/decalage) : seul le
-    // champ d'etoiles doit suivre le globe, demande de Julien. La
-    // filante suit la meme regle -- elle traverse le ciel vu par le
-    // spectateur, pas la sphere.
-    if (estNuit()) { dessinerLune(); dessinerFilante(); }
+    // La filante traverse le ciel vu par le spectateur, pas la sphere :
+    // elle reste donc fixe a l'ecran, seul le champ d'etoiles suit le
+    // globe (demande de Julien).
+    if (estNuit()) dessinerFilante();
 
     ctx.save();
     // Rotation inverse du bearing : quand la camera tourne autour du
@@ -7019,9 +7009,15 @@ TAB_PROFIL?.addEventListener("click", async function () {
     avatarInit.textContent = (monHandle || nomRepli).charAt(0).toUpperCase();
   }
 
-  // Le solde quitte la sous-ligne pour le grand chiffre de la carte ;
-  // la sous-ligne redevient ce qu'elle decrit vraiment (ou mene le tap).
-  $("#pf-points").textContent = "historique des récompenses";
+  // Sous le pseudo : depuis quand la personne est la. "Clubbeur" ne
+  // disait rien -- tout le monde l'est (Julien : "Clubbeur, tu peux
+  // retirer, mais tu peux mettre autre chose"). La date d'inscription
+  // vient de la session, sans requete supplementaire.
+  var creeLe = session.user.created_at ? new Date(session.user.created_at) : null;
+  $("#pf-sub").textContent = creeLe && !isNaN(creeLe)
+    ? "Membre depuis " + creeLe.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })
+    : "";
+
   $("#pf-fid-solde").textContent = nb(ETAT.solde);
 
   // Meme logique que la barre de la boutique : on vise la prochaine
@@ -7033,12 +7029,18 @@ TAB_PROFIL?.addEventListener("click", async function () {
     if (cibleFid) {
       var pctFid = cibleFid.cout > 0 ? Math.min(100, Math.round((ETAT.solde / cibleFid.cout) * 100)) : 0;
       barreFid.style.width = pctFid + "%";
-      txtFid.textContent = ETAT.solde <= 0
-        ? "Poste ta première story pour démarrer"
-        : nb(cibleFid.cout - ETAT.solde) + " pts avant " + cibleFid.nom;
+      // Meme regle que la jauge de la boutique : on nomme la cible, on ne
+      // motive pas. Le profil etait reste sur l'ancienne formule ("250 pts
+      // avant Un cocktail offert") que Julien avait deja refusee la-bas --
+      // "on dirait de l'IA" -- et sur un "Poste ta premiere story pour
+      // demarrer" du meme registre.
+      txtFid.innerHTML = "Vers <strong>" + escapeHtmlSupport(cibleFid.nom) + "</strong>";
     } else {
       barreFid.style.width = "100%";
-      txtFid.textContent = "Une récompense t'attend";
+      var dispoFid = RECOMPENSES.filter(function (rc) { return rc.cout <= ETAT.solde && rc.stock > 0; }).length;
+      txtFid.innerHTML = dispoFid
+        ? "<strong>" + dispoFid + (dispoFid > 1 ? " récompenses" : " récompense") + "</strong> à ta portée"
+        : "Aucune récompense disponible";
     }
   }
 
