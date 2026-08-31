@@ -174,14 +174,20 @@ revoke all on function public.annuler_mention_instagram(uuid, text) from anon;
 revoke all on function public.annuler_mention_instagram(uuid, text) from authenticated;
 
 -- ---------------------------------------------------------------------
--- 5. Delai avant que les points deviennent depensables : 20 h.
---    Pas 24 : une story vit 24 h, verifier a 24 h tombe pile au moment ou
---    elle expire d'elle-meme et ou l'API peut deja ne plus la rendre --
---    on annulerait des points parfaitement legitimes.
+-- 5. Delai avant que les points deviennent depensables : 24 h.
+--    C'est la duree de vie d'une story, donc ce que le clubbeur comprend
+--    sans explication -- et c'est ce que l'appli lui annonce ("tu recois
+--    tes points 24 h apres").
+--
+--    La VERIFICATION, elle, passe 4 h avant (voir
+--    MARGE_VERIFICATION_HEURES dans lib/points/verificationStory.js) :
+--    verifier pile a 24 h tomberait au moment ou la story expire d'elle-
+--    meme, et l'API pourrait deja ne plus la rendre -- on annulerait des
+--    points parfaitement legitimes.
 -- ---------------------------------------------------------------------
 update public.clubs
-   set points_lock_hours = 20
- where points_lock_hours is null or points_lock_hours > 20;
+   set points_lock_hours = 24
+ where points_lock_hours is null or points_lock_hours <> 24;
 
 -- ---------------------------------------------------------------------
 -- A FAIRE ENSUITE, a la main : relier chaque club a son etablissement.

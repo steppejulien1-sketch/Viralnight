@@ -1054,6 +1054,40 @@
         margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line);
         font-size: 13px; color: var(--ink2); line-height: 1.5;
       }
+      /* ---- Lignes de reglages ----
+         Avant : une CARTE par information. Cinq boites identiques de
+         16px de padding pour cinq faits d'une ligne, plus
+         style="border-top:0; padding-top:0; margin-top:6px" recopie en
+         inline sur chacune pour neutraliser une classe qui se battait
+         contre elle-meme. Julien : "c'est trop vibecode, on dirait de
+         l'IA". Il a raison : c'etait de la repetition a la place d'une
+         hierarchie.
+
+         Maintenant : une seule carte, des lignes separees par un filet.
+         Le libelle a gauche, la valeur en dessous, l'action a droite --
+         la meme grammaire que les reglages d'un telephone. */
+      .rg-liste {
+        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        padding: 2px 16px; margin: 0 0 14px;
+      }
+      .rg-ligne {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 0; border-bottom: 1px solid var(--line);
+      }
+      .rg-ligne:last-child { border-bottom: 0; }
+      .rg-ligne-txt { flex: 1; min-width: 0; }
+      .rg-ligne-txt strong {
+        display: block; font-size: 14px; font-weight: 700; color: var(--ink);
+      }
+      .rg-ligne-txt span {
+        display: block; margin-top: 2px; font-size: 13px; font-weight: 550;
+        color: var(--ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      /* Une valeur absente s'ecrit avec un tiret, pas avec une phrase.
+         "Information non fournie" sonne comme un defaut de base de
+         donnees ; le tiret se lit comme un champ vide, ce qu'il est. */
+      .rg-ligne-txt span.vide { color: var(--ink3); }
+
       .rg-lien {
         background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
         font-size: 13.5px; font-weight: 700; color: var(--accent); text-decoration: underline;
@@ -3015,49 +3049,31 @@
           <div class="va-poignee" id="rg-poignee" aria-hidden="true"></div>
           <h1 class="va-title">Réglages</h1>
 
-          <div class="rg-carte">
-            <div class="rg-carte-ligne">
-              <span class="rg-label">Pseudo</span>
+          <div class="rg-liste">
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Pseudo</strong><span id="rg-pseudo">—</span></span>
               <button type="button" class="rg-lien" id="rg-pseudo-modifier">Modifier</button>
             </div>
-            <p class="rg-carte-desc" id="rg-pseudo" style="border-top:0; padding-top:0; margin-top:6px">...</p>
-          </div>
-
-          <div class="rg-carte">
-            <div class="rg-carte-ligne">
-              <span class="rg-label">Adresse e-mail</span>
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Adresse e-mail</strong><span id="rg-email">—</span></span>
               <button type="button" class="rg-lien" id="rg-email-modifier">Modifier</button>
             </div>
-            <p class="rg-carte-desc" id="rg-email" style="border-top:0; padding-top:0; margin-top:6px">...</p>
-          </div>
-
-          <div class="rg-carte">
-            <div class="rg-carte-ligne">
-              <span class="rg-label">Numéro de téléphone</span>
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Téléphone</strong><span class="vide" id="rg-telephone">—</span></span>
               <button type="button" class="rg-lien" id="rg-telephone-modifier">Ajouter</button>
             </div>
-            <p class="rg-carte-desc" id="rg-telephone" style="border-top:0; padding-top:0; margin-top:6px">Information non fournie</p>
-          </div>
-
-          <div class="rg-carte">
-            <div class="rg-carte-ligne">
-              <span class="rg-label">Adresse</span>
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Adresse</strong><span class="vide" id="rg-adresse">—</span></span>
               <button type="button" class="rg-lien" id="rg-adresse-modifier">Ajouter</button>
             </div>
-            <p class="rg-carte-desc" id="rg-adresse" style="border-top:0; padding-top:0; margin-top:6px">Information non fournie</p>
           </div>
 
-          <div class="rg-carte">
-            <div class="rg-carte-ligne">
-              <span class="rg-label">Langue</span>
+          <div class="rg-liste">
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Langue</strong><span id="rg-langue">Français</span></span>
             </div>
-            <p class="rg-carte-desc" id="rg-langue" style="border-top:0; padding-top:0; margin-top:6px">Français</p>
-          </div>
-
-          <div class="rg-carte">
-            <div class="rg-carte-ligne">
-              <span class="rg-label">Membre depuis</span>
-              <span class="rg-valeur" id="rg-membre-depuis">...</span>
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Membre depuis</strong><span id="rg-membre-depuis">—</span></span>
             </div>
           </div>
 
@@ -5464,11 +5480,13 @@ function ouvrirChoixReseau(nomClub) {
       // Troisieme etape demandee par Julien. Elle n'est pas decorative :
       // les points ne sont pas disponibles tout de suite (unlocks_at,
       // points_lock_hours du club), et une story supprimee dans la nuit
-      // n'est jamais payee (20 h, pas 24 : une story vit 24 h, verifier
-      // pile a l'expiration annulerait des points legitimes). Le dire ici
-      // evite le message "j'ai poste,
+      // n'est jamais payee. 24 h, comme la duree de vie d'une story :
+      // c'est ce que le clubbeur comprend sans explication. La
+      // VERIFICATION, elle, passe a 20 h -- avant l'echeance, tant que
+      // la story est encore interrogeable. Le dire ici evite le message
+      // "j'ai poste,
       // je n'ai rien recu" une heure plus tard.
-      { n: "3", t: "Tu reçois tes points 20 h après" },
+      { n: "3", t: "Tu reçois tes points 24 h après" },
     ];
     return (
       '<ol class="ps-steps">' +
@@ -7079,8 +7097,8 @@ $("#pf-reglages")?.addEventListener("click", async function () {
   var nomRepliReglages = String(session.user.email || "").split("@")[0];
   $("#rg-pseudo").textContent = profil && profil.handle ? "@" + profil.handle : nomRepliReglages;
   $("#rg-email").textContent = session.user.email;
-  $("#rg-telephone").textContent = (profil && profil.telephone) || "Information non fournie";
-  $("#rg-adresse").textContent = (profil && profil.adresse) || "Information non fournie";
+  remplirLigneReglage("#rg-telephone", profil && profil.telephone, "#rg-telephone-modifier");
+  remplirLigneReglage("#rg-adresse", profil && profil.adresse, "#rg-adresse-modifier");
   $("#rg-langue").textContent = (profil && profil.langue) || "Français";
   $("#rg-telephone-modifier").textContent = profil && profil.telephone ? "Modifier" : "Ajouter";
   $("#rg-adresse-modifier").textContent = profil && profil.adresse ? "Modifier" : "Ajouter";
@@ -7134,8 +7152,8 @@ function champTexteLibre(id, colonne, libelle) {
       window.alert("Ça n'a pas marché : " + res.error.message);
       return;
     }
-    $("#rg-" + colonne).textContent = propre || "Information non fournie";
-    $("#" + id).textContent = propre ? "Modifier" : "Ajouter";
+    // Un seul endroit decide de l'apparence d'une ligne vide.
+    remplirLigneReglage("#rg-" + colonne, propre, "#" + id);
   });
 }
 champTexteLibre("rg-telephone-modifier", "telephone", "Numéro de téléphone");

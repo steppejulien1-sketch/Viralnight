@@ -1,7 +1,7 @@
 // Tests de la verification differee des stories : que fait-on des points
 // d'une story qui a peut-etre ete supprimee. Aucun appel reseau.
 
-const { deciderSortStory, echeancePoints, SORTS, DELAI_POINTS_HEURES } = await import(
+const { deciderSortStory, echeancePoints, SORTS, DELAI_POINTS_HEURES, MARGE_VERIFICATION_HEURES } = await import(
   "../lib/points/verificationStory.js"
 );
 
@@ -15,11 +15,26 @@ const MAINTENANT = Date.parse("2026-08-31T18:00:00Z");
 const ECHUE = "2026-08-31T17:00:00Z";     // il y a une heure
 const A_VENIR = "2026-08-31T23:00:00Z";   // dans cinq heures
 
-console.log("\nAvant l'echeance, on ne touche a rien");
+console.log("\nHors fenetre de verification, on ne touche a rien");
 for (const etat of ["present", "absent", "indetermine"]) {
   const d = deciderSortStory({ etatMedia: etat, unlocksAt: A_VENIR, maintenant: MAINTENANT });
   check(`${etat} -> attendre`, d.sort === SORTS.ATTENDRE, JSON.stringify(d));
 }
+
+// La fenetre s'ouvre AVANT l'echeance : verifier apres ne sert a rien, les
+// points sont deja liberes et on ne les reprend plus.
+console.log("\nLa fenetre s'ouvre avant l'echeance, jamais apres");
+check("marge de 4 h", MARGE_VERIFICATION_HEURES === 4, String(MARGE_VERIFICATION_HEURES));
+check("3 h avant l'echeance : on verifie",
+  deciderSortStory({ etatMedia: "absent", unlocksAt: "2026-08-31T21:00:00Z", maintenant: MAINTENANT }).sort === SORTS.ANNULER);
+check("exactement 4 h avant : on verifie",
+  deciderSortStory({ etatMedia: "absent", unlocksAt: "2026-08-31T22:00:00Z", maintenant: MAINTENANT }).sort === SORTS.ANNULER);
+check("6 h avant : trop tot",
+  deciderSortStory({ etatMedia: "absent", unlocksAt: "2026-09-01T00:00:00Z", maintenant: MAINTENANT }).sort === SORTS.ATTENDRE);
+check("et le motif le dit",
+  deciderSortStory({ etatMedia: "absent", unlocksAt: "2026-09-01T00:00:00Z", maintenant: MAINTENANT }).raison === "trop_tot");
+check("marge reglable : a 1 h, 3 h avant c'est trop tot",
+  deciderSortStory({ etatMedia: "absent", unlocksAt: "2026-08-31T21:00:00Z", maintenant: MAINTENANT, margeHeures: 1 }).sort === SORTS.ATTENDRE);
 
 console.log("\nA l'echeance");
 const supprimee = deciderSortStory({ etatMedia: "absent", unlocksAt: ECHUE, maintenant: MAINTENANT });
@@ -42,9 +57,9 @@ check("exactement un cas sur trois annule", sorts.filter((s) => s === SORTS.ANNU
   JSON.stringify(sorts));
 
 console.log("\nEcheance calculee");
-check("delai par defaut a 20 h", DELAI_POINTS_HEURES === 20, String(DELAI_POINTS_HEURES));
+check("delai par defaut a 24 h", DELAI_POINTS_HEURES === 24, String(DELAI_POINTS_HEURES));
 const e = echeancePoints("2026-08-31T02:00:00Z");
-check("02h00 + 20 h = 22h00", e && e.toISOString() === "2026-08-31T22:00:00.000Z", e && e.toISOString());
+check("02h00 + 24 h = 02h00 le lendemain", e && e.toISOString() === "2026-09-01T02:00:00.000Z", e && e.toISOString());
 check("delai personnalise", echeancePoints("2026-08-31T02:00:00Z", 6).toISOString() === "2026-08-31T08:00:00.000Z");
 check("date illisible -> null", echeancePoints("pas-une-date") === null);
 
