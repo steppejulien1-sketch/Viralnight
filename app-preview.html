@@ -1777,6 +1777,16 @@
         text-transform: uppercase;
       }
 
+      /* Signale un club dont le catalogue n'existe pas encore en base :
+         les deux clubs affichent alors la meme liste, et sans ce mot
+         "changer de club" a l'air de ne rien faire. */
+      .bq-partage {
+        margin-right: auto; padding: 4px 9px; border-radius: 999px;
+        background: var(--s2); color: var(--ink3);
+        font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em;
+        text-transform: uppercase; white-space: nowrap;
+      }
+
       .bq-changer {
         display: inline-flex; align-items: center; gap: 6px;
         padding: 7px 12px; border-radius: 999px; cursor: pointer;
@@ -7565,10 +7575,22 @@ var positionRefusee = false;
 function detecterClubProche() {
   if (!navigator.geolocation) return;
   if (!navigator.permissions || !navigator.permissions.query) return;
-  navigator.permissions.query({ name: "geolocation" }).then(function (etat) {
-    if (etat.state === "granted") localiser();
-    else rendreChoixClub();
-  }).catch(function () {});
+
+  /* permissions.query peut ne JAMAIS repondre : c'est le cas dans les
+     navigateurs embarques (constate en developpement, la page restait
+     figee). Une promesse qui ne se resout pas n'a pas de gestionnaire
+     d'erreur -- il faut donc l'arbitrer contre une horloge, sinon on
+     attend indefiniment une reponse qui ne viendra pas. */
+  var horloge = new Promise(function (resolve) {
+    setTimeout(function () { resolve({ state: "prompt" }); }, 1500);
+  });
+
+  Promise.race([navigator.permissions.query({ name: "geolocation" }), horloge])
+    .then(function (etat) {
+      if (etat && etat.state === "granted") localiser();
+      else rendreChoixClub();
+    })
+    .catch(function () {});
 }
 
 function rendreChoixClub() {
@@ -7578,6 +7600,12 @@ function rendreChoixClub() {
 
   // Aucun nom de club ici : il est deja dans le titre juste en dessous.
   actuel.innerHTML =
+    // Le club n'a pas de catalogue a lui en base : le dire, sinon
+    // changer de club ne change que le titre et l'ecran passe pour
+    // casse. C'est clubbeur_deux_vrais_clubs.sql qui manque.
+    (!IDS_CLUBS[CLUB_BOUTIQUE]
+      ? '<span class="bq-partage">Catalogue de démonstration</span>'
+      : "") +
     '<button type="button" class="bq-changer" id="bq-changer" aria-expanded="' + (!liste.hidden) + '">' +
       '<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>' +
       (liste.hidden ? "Changer de club" : "Fermer") +
