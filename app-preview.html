@@ -2269,6 +2269,63 @@
         border: 1px solid var(--line);
         font-size: 12.5px; font-weight: 650; color: var(--ink2);
       }
+      /* ---- Les soirees, le lieu, l'histoire ----
+         Une fiche Google dit "ouvert vendredi". Elle ne dit pas ce qu'on
+         y entend ce soir-la, ni pourquoi ce lieu-la plutot qu'un autre.
+         C'est exactement ce qu'on peut apporter qu'elle n'a pas -- et la
+         seule raison d'ouvrir notre fiche au lieu de la sienne. */
+      .club-sec-titre {
+        margin: 20px 0 10px; font-size: 11px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .09em; color: var(--ink3);
+      }
+
+      .club-soirees { display: grid; gap: 7px; }
+      .club-soiree {
+        display: flex; align-items: center; gap: 11px;
+        padding: 11px 13px; border-radius: 14px;
+        background: var(--s1); border: 1px solid var(--line);
+      }
+      .club-soiree-jour {
+        flex: 0 0 auto; width: 66px;
+        font-family: var(--mono); font-size: 10.5px; font-weight: 700;
+        letter-spacing: .04em; text-transform: uppercase; color: var(--ink3);
+      }
+      .club-soiree-nom { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 750; letter-spacing: -.01em; }
+      .club-soiree-h { flex: 0 0 auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink2); }
+
+      /* Les particularites du lieu : une liste a puces coche plutot que
+         des pastilles -- ce sont des phrases, pas des mots-cles. */
+      .club-lieu { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+      .club-lieu li {
+        display: flex; gap: 9px; align-items: flex-start;
+        font-size: 13px; font-weight: 550; color: var(--ink2); line-height: 1.4;
+      }
+      .club-lieu-puce {
+        flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; border-radius: 50%;
+        background: rgba(255,47,69,.12); display: grid; place-items: center;
+      }
+      .club-lieu-puce svg { width: 9px; height: 9px; stroke: var(--accent); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* La frise : un filet vertical, une annee en chasse fixe, un texte.
+         Quatre lignes maximum -- une frise qu'on ne lit pas est un
+         ornement. */
+      .club-frise { margin: 0; padding: 0 0 0 4px; list-style: none; }
+      .club-frise li {
+        position: relative; padding: 0 0 14px 20px;
+        border-left: 1.5px solid var(--line2);
+      }
+      .club-frise li:last-child { padding-bottom: 0; border-left-color: transparent; }
+      .club-frise li::before {
+        content: ""; position: absolute; left: -5px; top: 5px;
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--accent);
+      }
+      .club-frise b {
+        display: block; font-family: var(--mono); font-size: 11px; font-weight: 700;
+        letter-spacing: .06em; color: var(--ink3);
+      }
+      .club-frise span { display: block; margin-top: 2px; font-size: 13px; font-weight: 550; color: var(--ink2); line-height: 1.4; }
+
       /* Apparition en cascade quand la fiche s'ouvre. */
       @keyframes tag-monte { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
       .club-tag { animation: tag-monte .3s cubic-bezier(.2,.7,.3,1) both; }
@@ -4656,12 +4713,50 @@ var CLUBS = {
     note: null, avis: null, prix: null,
     tel: "+32 456 68 88 52", site: "miranobrussels.com",
     ig: "miranobrussels",
-    // Vendredi et samedi soir jusqu'au matin -- recoupe sur le site
-    // officiel, Yelp et Resident Advisor. Le club n'ouvre pas en semaine.
-    statut: "Fermé", horaire: "Ouvre vendredi à 23h00", shut: true,
-    jours: "Vendredi et samedi", heures: "23h00 – 06h00",
+    /* Du jeudi au samedi : l'exploitant (artblanc.be) annonce le Cafe
+       Afro le jeudi des 21h, en plus des vendredis et samedis a 23h.
+       D'autres sources ne citent que le week-end -- on suit celle qui
+       exploite le lieu. Le detail par soir vit dans `soirees` ci-dessous ;
+       cette ligne ne donne que l'amplitude, sinon les deux se
+       contrediraient. */
+    statut: "Fermé", horaire: "Ouvre jeudi à 21h00", shut: true,
+    jours: "Du jeudi au samedi", heures: "21h00 – 06h00",
     partenaire: true,
-    ambiance: ["Le plus grand club de Bruxelles", "Ancien cinéma de 1934", "Programmation urbaine"]
+
+    /* Tout ce qui suit est verifie, jamais devine. Sources : le site du
+       club, artblanc.be (l'exploitant depuis 2019), la fiche patrimoine
+       et Wikipedia. Les chiffres viennent de l'exploitant lui-meme --
+       une autre source annonce "jusqu'a 1000", non confirmee ailleurs,
+       donc ecartee. */
+    capacite: "Plus de 620 personnes en configuration club",
+
+    ambiance: ["Hip-hop & R&B", "Piste de danse tournante", "Ancien cinéma", "Bâtiment classé"],
+
+    // La programmation par soir. C'est LA chose qu'un clubbeur cherche et
+    // qu'une fiche Google ne donne pas : pas "ouvert vendredi", mais quoi
+    // y entendre ce soir-la.
+    soirees: [
+      { jour: "Jeudi", nom: "Café Afro", heure: "dès 21h00" },
+      { jour: "Vendredi", nom: "Hip-hop & R&B", heure: "dès 23h00" },
+      { jour: "Samedi", nom: "Hip-hop & R&B", heure: "dès 23h00" },
+    ],
+
+    // Ce qui distingue physiquement le lieu. Aucun club de Bruxelles n'a
+    // ca, et c'est ce qui donne envie d'y aller.
+    lieu: [
+      "Piste de danse tournante, motorisée",
+      "Anciens gradins de cinéma conservés",
+      "Écran LED géant et balcons",
+      "Deux scènes : Main room et Café Mirano",
+    ],
+
+    // Quatre dates, pas douze : une frise qui se lit en cinq secondes.
+    histoire: [
+      ["1912", "Grand Casino de Saint-Josse, café-concert"],
+      ["1934", "Devient le cinéma Mirano, 600 places"],
+      ["1981", "Dernier film passé en 1978, le lieu devient le Mirano Continental"],
+      ["2019", "Réouverture après deux ans de travaux"],
+    ]
   }
 };
 // "club" -> "Boîte de nuit", "bar" -> "Bar" : juste en texte lisible
@@ -5604,6 +5699,57 @@ function ouvrirClub(c, src, id) {
       "</div>"
     : "";
 
+  /* Les soirees : le programme par soir, ce qu'une fiche Google ne
+     donne jamais. Chaque bloc n'existe que si la donnee existe -- une
+     section vide avec un titre est pire que pas de section. */
+  var blocSoirees = (c.soirees && c.soirees.length)
+    ? '<p class="club-sec-titre">Les soirées</p><div class="club-soirees">' +
+        c.soirees.map(function (s) {
+          return '<div class="club-soiree">' +
+            '<span class="club-soiree-jour">' + escapeHtmlSupport(s.jour) + "</span>" +
+            '<span class="club-soiree-nom">' + escapeHtmlSupport(s.nom) + "</span>" +
+            '<span class="club-soiree-h">' + escapeHtmlSupport(s.heure) + "</span>" +
+          "</div>";
+        }).join("") +
+      "</div>"
+    : "";
+
+  var blocLieu = (c.lieu && c.lieu.length)
+    ? '<p class="club-sec-titre">Le lieu</p><ul class="club-lieu">' +
+        c.lieu.map(function (l) {
+          return "<li>" +
+            '<span class="club-lieu-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+            "<span>" + escapeHtmlSupport(l) + "</span>" +
+          "</li>";
+        }).join("") +
+        (c.capacite
+          ? "<li>" +
+            '<span class="club-lieu-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+            "<span>" + escapeHtmlSupport(c.capacite) + "</span>" +
+            "</li>"
+          : "") +
+      "</ul>"
+    : "";
+
+  var blocHistoire = (c.histoire && c.histoire.length)
+    ? '<p class="club-sec-titre">Depuis 1912</p><ul class="club-frise">' +
+        c.histoire.map(function (h) {
+          return "<li><b>" + escapeHtmlSupport(h[0]) + "</b><span>" + escapeHtmlSupport(h[1]) + "</span></li>";
+        }).join("") +
+      "</ul>"
+    : "";
+
+  // Le compte Instagram, en ligne d'info : c'est le compte a taguer pour
+  // gagner des points, donc une information de PRODUIT et pas seulement
+  // une coordonnee.
+  var ligneIg = c.ig
+    ? '<div class="club-info-ligne lien">' +
+        '<span class="club-info-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>' +
+        '<a class="club-info-txt club-info-principal" href="https://instagram.com/' + encodeURIComponent(c.ig) +
+          '" target="_blank" rel="noopener noreferrer" style="text-decoration:none">@' + escapeHtmlSupport(c.ig) + "</a>" +
+      "</div>"
+    : "";
+
   var html =
     heroClub(c) +
     blocPartenaire +
@@ -5613,7 +5759,8 @@ function ouvrirClub(c, src, id) {
       '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
     "</div>" +
-    ligneHoraires + lignePrix + ligneTel;
+    ligneHoraires + lignePrix + ligneTel + ligneIg +
+    blocSoirees + blocLieu + blocHistoire;
   // Retires (Julien) : la note "300 pts pour un cocktail offert, tu en as
   // 0" repetait la boutique en pointant un solde vide, et "Avis et photos
   // : voir sur Google" renvoyait chez Google depuis notre propre fiche.
