@@ -266,34 +266,84 @@
          des boutons ou "Commencer". Purement visuel, comme le reste de
          cette maquette : aucun des boutons n'authentifie reellement.
          ============================================================ */
-      /* ---- Ecran "ton profil Instagram", juste apres l'inscription ----
-         Il vivait DANS le formulaire "Poster ma story", donc on demandait
-         son pseudo et une capture d'ecran a quelqu'un qui venait de
-         sortir d'Instagram avec une story fraiche a declarer -- au pire
-         moment, et a chaque fois qu'il postait tant qu'il ne l'avait pas
-         donne. Julien : "ce serait plutot interessant que ca arrive
-         direct apres l'inscription, ensuite ca n'apparait plus jamais".
+      /* ---- Ecran "relie ton compte Instagram", a l'inscription ----
+         Il vivait DANS le formulaire "Poster ma story" : on reclamait le
+         pseudo et la capture a quelqu'un qui venait de poster, au pire
+         moment, et a chaque tentative. C'est devenu une etape
+         d'inscription -- une fois, puis plus jamais.
 
-         C'est maintenant une etape d'inscription : une fois, a la
-         creation du compte, et jamais revue -- profile_proof_path en
-         base fait foi. */
+         Premiere version de cet ecran : un champ pseudo nu en haut, une
+         zone de depot, un paragraphe d'explication. Julien : "elle est un
+         peu vierge, mettre direct le pseudo c'est stupide". Il a raison
+         deux fois.
+
+         Sur l'ORDRE : la capture d'ecran CONTIENT le pseudo. On la
+         demande donc en premier, et le pseudo se recopie dessus. Demander
+         le pseudo d'abord, c'est faire taper de memoire une information
+         qu'on va de toute facon voir en image.
+
+         Sur le VIDE : deux etapes numerotees dans deux cartes, sous le
+         logo Instagram, valent mieux qu'une liste de champs. On voit
+         combien il y a a faire, et que c'est court. */
       .vue-ig {
         position: absolute; inset: -3px; z-index: 33;
         display: flex; flex-direction: column; overflow-y: auto;
-        padding: 34px 26px 28px; text-align: left;
-        background: #ffffff;
+        padding: 30px 22px 24px;
+        background: #fbfbfc;
         --ink: #15181d; --ink2: #5b6472; --ink3: #8e97a4;
         --s1: #ffffff; --s2: #eef0f4; --line: rgba(16,18,22,.09); --line2: rgba(16,18,22,.15);
         color: var(--ink);
         transition: opacity .3s ease, visibility .3s ease;
       }
       .vue-ig.masque { opacity: 0; visibility: hidden; pointer-events: none; }
-      .vue-ig h2 {
-        margin: 0 0 6px; font-size: 22px; font-weight: 800; letter-spacing: -.03em; line-height: 1.2;
+
+      /* Le logo Instagram en grand, pose sur son degrade : il dit de quoi
+         parle l'ecran avant qu'on lise le titre. */
+      .ig-tuile {
+        width: 62px; height: 62px; border-radius: 18px; overflow: hidden;
+        align-self: center; margin-bottom: 16px;
+        box-shadow: 0 10px 26px -10px rgba(214,41,120,.55);
       }
-      .vue-ig .ig-sous { margin: 0 0 20px; font-size: 13.5px; font-weight: 500; color: var(--ink2); line-height: 1.45; }
-      .vue-ig .ps-identite { background: none; border: 0; padding: 0; }
-      .vue-ig .ig-bas { margin-top: auto; padding-top: 22px; display: grid; gap: 8px; }
+      .ig-tuile svg { display: block; width: 100%; height: 100%; }
+
+      .ig-titre {
+        margin: 0 0 5px; font-size: 23px; font-weight: 800;
+        letter-spacing: -.03em; line-height: 1.15; text-align: center;
+      }
+      .ig-sous {
+        margin: 0 0 22px; font-size: 13.5px; font-weight: 500;
+        color: var(--ink2); text-align: center;
+      }
+
+      /* Une etape = une carte numerotee. Le numero est dans le bord, pas
+         au-dessus : il compte l'etape sans prendre une ligne. */
+      .ig-etape {
+        position: relative; background: var(--s1);
+        border: 1px solid var(--line); border-radius: 18px;
+        padding: 16px 16px 15px; margin-bottom: 12px;
+        box-shadow: 0 1px 2px rgba(16,18,22,.03);
+      }
+      .ig-etape-tete { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+      .ig-num {
+        flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+        background: var(--ink); color: #fff;
+        display: grid; place-items: center;
+        font-size: 11.5px; font-weight: 800; font-family: var(--mono, inherit);
+      }
+      .ig-etape.faite .ig-num { background: #12874d; }
+      .ig-etape-tete strong { font-size: 14.5px; font-weight: 750; letter-spacing: -.01em; }
+      .ig-etape-aide { margin: 10px 0 0; font-size: 11.5px; color: var(--ink3); line-height: 1.4; }
+
+      /* La legende des exemples herite du style de la carte Story, ou
+         elle etait un titre. Ici c'est une legende sous un intitule
+         d'etape : elle doit s'effacer devant lui. */
+      .vue-ig .ps-modeles-titre { font-weight: 550; color: var(--ink3); }
+      .vue-ig .ps-modeles-vues img { border-color: var(--line2); }
+
+      /* Le bouton reste en bas -- c'est la zone du pouce -- et l'espace
+         au-dessus est assume : un ecran d'inscription se termine par une
+         seule action, pas par un formulaire qui remonte. */
+      .ig-bas { margin-top: auto; padding-top: 18px; display: grid; gap: 9px; }
       .ig-msg { margin: 0; font-size: 12.5px; text-align: center; }
 
       .vue-accueil {
@@ -2884,31 +2934,55 @@
 
         <!-- ================= PROFIL INSTAGRAM (inscription) =================
              Affiche une seule fois, juste apres la creation du compte,
-             tant que users.profile_proof_path est vide. -->
-        <div class="vue-ig masque" id="vue-ig" hidden>
-          <h2>Ton profil Instagram</h2>
-          <p class="ig-sous">Une seule fois, maintenant : sans ça, le club ne peut pas savoir que c'est toi derrière une mention — et tes points ne partent nulle part.</p>
+             tant que users.profile_proof_path est vide.
 
-          <div class="ps-identite">
-            <div class="ps-pseudo-champ" id="ig-pseudo-champ">
-              <span>@</span>
-              <input type="text" id="ig-pseudo" placeholder="ton.pseudo" autocapitalize="off" autocomplete="off" />
-              <span class="ps-pseudo-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+             La capture AVANT le pseudo : elle contient le pseudo, donc
+             c'est elle qui le donne. -->
+        <div class="vue-ig masque" id="vue-ig" hidden>
+          <span class="ig-tuile" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="0" y="0" width="24" height="24" fill="url(#ig-g)"/>
+              <rect x="5.1" y="5.1" width="13.8" height="13.8" rx="4.3" fill="none" stroke="#fff" stroke-width="1.7"/>
+              <circle cx="12" cy="12" r="3.6" fill="none" stroke="#fff" stroke-width="1.7"/>
+              <circle cx="16.9" cy="7.1" r="1.15" fill="#fff"/>
+            </svg>
+          </span>
+
+          <h2 class="ig-titre">Relie ton compte Instagram</h2>
+          <p class="ig-sous">Deux choses, une seule fois.</p>
+
+          <div class="ig-etape" id="ig-etape-capture">
+            <div class="ig-etape-tete">
+              <span class="ig-num">1</span>
+              <strong>La capture de ton profil</strong>
             </div>
 
             <label class="ps-capture" id="ig-capture-label" for="ig-capture-file">
               <input type="file" accept="image/*" id="ig-capture-file" hidden />
               <span class="ps-capture-ico"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2.5h6L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg></span>
-              <span class="ps-capture-txt" id="ig-capture-txt">Capture d'écran de ton profil</span>
+              <span class="ps-capture-txt" id="ig-capture-txt">Choisir une capture</span>
             </label>
 
             <div class="ps-modeles" id="ig-modeles">
-              <p class="ps-modeles-titre">Comme ça — on doit lire ton pseudo en haut.</p>
+              <p class="ps-modeles-titre">On doit lire ton pseudo en haut, comme ici.</p>
               <div class="ps-modeles-vues">
                 <img src="/story-exemples/exemple-profil-clair.webp" alt="Exemple de capture : profil Instagram, thème clair" loading="lazy" />
                 <img src="/story-exemples/exemple-profil-sombre.webp" alt="Exemple de capture : profil Instagram, thème sombre" loading="lazy" />
               </div>
             </div>
+          </div>
+
+          <div class="ig-etape" id="ig-etape-pseudo">
+            <div class="ig-etape-tete">
+              <span class="ig-num">2</span>
+              <strong>Ton pseudo</strong>
+            </div>
+            <div class="ps-pseudo-champ" id="ig-pseudo-champ">
+              <span>@</span>
+              <input type="text" id="ig-pseudo" placeholder="ton.pseudo" autocapitalize="off" autocomplete="off" />
+              <span class="ps-pseudo-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+            </div>
+            <p class="ig-etape-aide">Celui qu&rsquo;on lit sur ta capture. Tu peux aussi coller le lien de ton profil.</p>
           </div>
 
           <div class="ig-bas">
@@ -4212,7 +4286,11 @@ async function retenirCaptureIg(fichier) {
   captureIg = await compresserCapture(fichier);
   document.getElementById("ig-capture-label").classList.add("rempli");
   txt.textContent = "Capture ajoutée";
+  // Les exemples n'ont plus rien a montrer, et l'etape passe au vert :
+  // on voit ce qui reste a faire sans relire.
   document.getElementById("ig-modeles").hidden = true;
+  document.getElementById("ig-etape-capture").classList.add("faite");
+  document.getElementById("ig-pseudo").focus();
 }
 
 (function cablerIdentiteIg() {
@@ -4254,12 +4332,16 @@ async function retenirCaptureIg(fichier) {
   // Le pseudo n'est reecrit qu'a la sortie du champ : le nettoyer a
   // chaque frappe deplacerait le curseur.
   champPseudo.addEventListener("input", function () {
-    boite.classList.toggle("ok", PSEUDO_IG_RE.test(nettoyerPseudoIg(champPseudo.value)));
+    var valide = PSEUDO_IG_RE.test(nettoyerPseudoIg(champPseudo.value));
+    boite.classList.toggle("ok", valide);
+    document.getElementById("ig-etape-pseudo").classList.toggle("faite", valide);
   });
   champPseudo.addEventListener("blur", function () {
     var pseudo = nettoyerPseudoIg(champPseudo.value);
     if (pseudo !== champPseudo.value) champPseudo.value = pseudo;
-    boite.classList.toggle("ok", PSEUDO_IG_RE.test(pseudo));
+    var valide = PSEUDO_IG_RE.test(pseudo);
+    boite.classList.toggle("ok", valide);
+    document.getElementById("ig-etape-pseudo").classList.toggle("faite", valide);
   });
 
   document.getElementById("ig-continuer").addEventListener("click", enregistrerIdentiteIg);
@@ -4335,7 +4417,11 @@ async function verifierIdentiteIg(session) {
       .maybeSingle()).data;
     if (profil && profil.profile_proof_path) return;
 
-    if (profil && profil.handle) document.getElementById("ig-pseudo").value = profil.handle;
+    if (profil && profil.handle) {
+      document.getElementById("ig-pseudo").value = profil.handle;
+      document.getElementById("ig-pseudo-champ").classList.add("ok");
+      document.getElementById("ig-etape-pseudo").classList.add("faite");
+    }
     VUE_IG.hidden = false;
     // Un frame avant de retirer .masque : sans ca la transition ne part
     // pas, l'element venant d'apparaitre.
