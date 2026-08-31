@@ -1459,6 +1459,260 @@
          l'ancien header sticky, pour ne pas coller au bord de l'ecran. */
       .sec-premiere { padding-top: 22px; }
 
+      /* ============================================================
+         RESTAURE le 30/08/2026. Le commit "Boutique : on choisit son club
+         avant de la voir" avait supprime 61 regles d'un coup -- tout le
+         bloc de solde, TOUTES les cartes de recompense (.carte-reco) et
+         la banniere de l'offre du soir -- en remplacant une region de CSS
+         delimitee par deux commentaires, sans voir ce qu'il y avait entre
+         les deux. La boutique s'affichait donc sans aucun style.
+
+         Le bug n'a pas ete vu parce que la verification portait sur le
+         DOM (nombre de cartes, textes) et jamais sur le rendu.
+         ============================================================ */
+
+      /* ---- Bloc de solde ----
+         Avant : une pastille ronde avec un eclair et un nombre a 22px,
+         perdue en haut de l'ecran. Julien : "je n'aime pas trop le truc
+         avec l'eclair". C'est pourtant l'information qui commande tout
+         l'ecran -- combien j'ai, et ce que ca me permet d'atteindre.
+         Reference Starbucks Rewards : le solde se lit d'un coup d'oeil,
+         la progression vers le palier suivant est juste dessous. */
+      .solde-carte {
+        position: relative; overflow: hidden;
+        padding: 18px 18px 16px; border-radius: var(--r4);
+        border: 1px solid rgba(255,47,69,.22);
+        background:
+          radial-gradient(120% 140% at 100% 0%, rgba(255,47,69,.16), transparent 60%),
+          linear-gradient(160deg, rgba(255,47,69,.09), rgba(255,47,69,.02));
+      }
+      .solde-label {
+        margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .09em;
+        text-transform: uppercase; color: var(--ink3);
+      }
+      .solde-chiffre { margin: 4px 0 0; display: flex; align-items: baseline; gap: 7px; }
+      /* Le nombre porte tout le poids de l'ecran : 42px, chiffres a
+         chasse fixe pour qu'il ne saute pas quand le solde change. */
+      .carte-solde-num {
+        font-family: var(--mono); font-size: 42px; font-weight: 800;
+        letter-spacing: -.035em; line-height: 1; color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .solde-chiffre span {
+        font-family: var(--sans); font-size: 15px; font-weight: 750;
+        color: var(--ink3); letter-spacing: -.01em;
+      }
+      /* ---- Progression vers la prochaine recompense atteignable ---- */
+      .solde-prog { margin-top: 14px; }
+      .solde-prog-piste {
+        display: block; height: 7px; border-radius: var(--r-pill);
+        background: rgba(128,128,140,.22); overflow: hidden;
+      }
+      .solde-prog-barre {
+        display: block; height: 100%; width: 0; border-radius: var(--r-pill);
+        background: linear-gradient(90deg, var(--marque-2), var(--marque));
+        box-shadow: 0 0 12px rgba(255,47,69,.5);
+        transition: width .6s cubic-bezier(.2,.7,.3,1);
+      }
+      .solde-prog-txt {
+        margin: 9px 0 0; font-size: 12.5px; font-weight: 550;
+        color: var(--ink3); line-height: 1.35;
+      }
+      .solde-prog-txt strong { color: var(--ink2); font-weight: 750; }
+      /* Etat "tu peux echanger maintenant" : barre pleine, et le
+         message change de registre au lieu de disparaitre. */
+      .solde-prog.pleine .solde-prog-barre { background: linear-gradient(90deg, #35d07f, #21a86a); box-shadow: 0 0 12px rgba(53,208,127,.5); }
+      .solde-prog.pleine .solde-prog-txt strong { color: #1c9a5f; }
+      @media (prefers-reduced-motion: reduce) { .solde-prog-barre { transition: none; } }
+      @keyframes majSolde { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
+      .carte-solde-num.maj { display: inline-block; animation: majSolde .45s cubic-bezier(.2,.8,.3,1); transform-origin: left bottom; }
+
+      .jeton { display: block; }
+
+      /* ---------------- Grille de cartes (catalogue) ---------------- */
+
+      /* Le catalogue quitte la liste "tracklist" pour une grille de
+         cartes — c'est la structure que demandait Julien en reprenant
+         le prompt v2 (Airbnb/Spotify/Figma) : icone posee sur un aplat
+         de couleur par famille, prix en gros, bouton d'echange en
+         pleine largeur. Utilisee uniquement par la boutique
+         (.screen.boutique-pro) ; la fiche club de l'ecran carte ne
+         s'en sert pas. */
+      /* Carte "photo en haut, infos en dessous" — modele repris de la
+         reference que Julien a montree (Pad'up) : vraie photo pleine
+         largeur, prix en pilule blanche posee sur la photo (meme role
+         que la pilule note "5.0 (2)" de la reference), bouton
+         d'echange en pilule pleine largeur sous le texte. Remplace
+         l'ancienne carte a pastille d'icone dans le coin. */
+      .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+
+      /* ---- Carte de recompense ----
+         Photo en haut, puis le texte SOUS la photo. Aucun texte, aucun
+         badge, aucun degrade sur l'image : elle se voit en entier. */
+      .carte-reco {
+        position: relative; display: flex; flex-direction: column; text-align: left;
+        width: 100%; background: var(--s1); border: 1px solid var(--line);
+        border-radius: var(--r4); overflow: hidden; padding: 0; cursor: pointer;
+        font-family: inherit; color: var(--ink);
+        box-shadow: var(--ombre-1);
+        transition: transform var(--tr-court), box-shadow var(--tr-court), border-color var(--tr-court);
+      }
+      .carte-reco:hover { transform: translateY(-3px); box-shadow: var(--ombre-2); border-color: var(--line2); }
+      .carte-reco:active { transform: translateY(0) scale(.98); }
+      .carte-reco:focus-visible { outline: 3px solid var(--bouton); outline-offset: 3px; }
+
+      /* Carre : a largeur de grille egale, l'image gagne ~35% de hauteur
+         par rapport au 4/3 d'origine. C'est le "images trop petites". */
+      .carte-reco .photo {
+        position: relative; width: 100%; aspect-ratio: 1 / 1;
+        background: var(--tinte, #f0f0f2); overflow: hidden;
+      }
+      .carte-reco .photo img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        transition: transform .5s cubic-bezier(.2,.7,.3,1);
+      }
+      .carte-reco:hover .photo img { transform: scale(1.04); }
+      .carte-reco .photo svg {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        width: 54%; height: 54%;
+      }
+
+      /* ---- Tout le texte vit ici, sous la photo ---- */
+      .carte-reco .corps {
+        display: flex; flex-direction: column; flex: 1;
+        padding: 12px 13px 14px;
+      }
+      .carte-reco strong {
+        display: block; font-size: 14.5px; font-weight: 750; letter-spacing: -.02em;
+        line-height: 1.25; color: var(--ink);
+      }
+      /* Le prix devient la deuxieme information la plus lisible de la
+         carte, juste sous le nom -- il etait sur la photo avant. */
+      .carte-reco .prix {
+        display: block; margin-top: 5px;
+        font-family: var(--mono); font-size: 15px; font-weight: 800;
+        letter-spacing: -.02em; color: var(--accent);
+      }
+      .carte-reco .prix span {
+        font-family: var(--sans); font-size: 10.5px; font-weight: 700;
+        color: var(--ink3); margin-left: 3px;
+      }
+
+      /* ---- Etat, en bas de carte ---- */
+      .carte-reco .jauge {
+        display: block; height: 4px; margin: 11px 0 0;
+        border-radius: var(--r-pill); background: var(--s3); overflow: hidden;
+      }
+      .carte-reco .jauge-barre {
+        display: block; height: 100%; border-radius: var(--r-pill);
+        background: linear-gradient(90deg, var(--marque-2), var(--marque));
+        transition: width .5s cubic-bezier(.2,.7,.3,1);
+      }
+      .carte-reco .jauge-txt {
+        display: block; margin-top: 6px; font-size: 11px; font-weight: 650;
+        color: var(--ink3); letter-spacing: -.01em;
+      }
+      .carte-reco .dispo-txt {
+        display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
+        margin-top: 10px; padding: 5px 10px; border-radius: var(--r-pill);
+        background: rgba(53,208,127,.16); color: #1c9a5f;
+        font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em;
+      }
+      .carte-reco.dispo { border-color: rgba(53,208,127,.5); }
+
+      /* ---- Rarete : SOUS la photo elle aussi ----
+         Elle etait posee sur l'image ; c'est encore du texte sur une
+         photo. Elle vit maintenant dans le corps, a cote du prix, et
+         garde sa couleur d'urgence pour rester reperable. */
+      .carte-reco .ligne-etat { display: flex; align-items: center; gap: 7px; margin-top: 5px; flex-wrap: wrap; }
+      .carte-reco .badge-rarete {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 8px; border-radius: var(--r-pill);
+        background: var(--urgence-fond); color: var(--urgence-texte);
+        font-size: 10px; font-weight: 800; letter-spacing: .01em;
+        text-transform: uppercase; white-space: nowrap;
+      }
+      .carte-reco .badge-rarete::before {
+        content: ""; width: 4px; height: 4px; border-radius: 50%;
+        background: currentColor; animation: rarete-pouls 1.8s ease-out infinite;
+      }
+      @keyframes rarete-pouls {
+        0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.7); }
+        70%  { box-shadow: 0 0 0 5px rgba(255,255,255,0); }
+        100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+      }
+      .carte-reco .badge-epuise {
+        display: inline-flex; padding: 3px 8px; border-radius: var(--r-pill);
+        background: var(--s3); color: var(--ink3);
+        font-size: 10px; font-weight: 800; text-transform: uppercase;
+      }
+      .carte-reco.epuise { pointer-events: none; opacity: .62; }
+      .carte-reco.epuise .photo img { filter: saturate(.15) contrast(.98); }
+
+      /* Arrivee en cascade, retard pose en inline par le JS (--i). */
+      @keyframes reco-entre {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: none; }
+      }
+      .carte-reco { animation: reco-entre .4s cubic-bezier(.2,.7,.3,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .carte-reco, .carte-reco .badge-rarete::before { animation: none; }
+        .carte-reco .jauge-barre, .carte-reco .photo img { transition: none; }
+      }
+
+      /* ---------------- Offre du soir : banniere photo pleine largeur ---------------- */
+
+      /* L'offre du soir vivait dans la meme ligne plate que l'ancien
+         catalogue "tracklist" — depassee des que le catalogue est
+         devenu une grille de cartes a cote, jugee "pas fou" par
+         Julien. Meme famille que .carte-reco desormais : photo en
+         haut (texte blanc sur degrade sombre essaye puis abandonne —
+         la reference Pad'up garde ses photos "propres", texte en
+         dessous sur fond blanc), pilule "Offert" posee sur la photo
+         comme la pilule note "5.0 (2)" de la reference, contenu en
+         dessous avec bouton pilule noire pleine largeur. */
+      .offre-hero {
+        display: flex; flex-direction: column; width: 100%;
+        border: 1px solid var(--line); border-radius: 24px; overflow: hidden; padding: 0; cursor: pointer;
+        font-family: inherit; color: inherit; background: var(--s1);
+        box-shadow: 0 16px 32px -20px rgba(20,20,25,.3), 0 2px 5px rgba(20,20,25,.04);
+        transition: transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s ease;
+      }
+      .offre-hero:hover { box-shadow: 0 22px 40px -18px rgba(20,20,25,.3); transform: translateY(-3px); }
+      .offre-hero:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
+      .offre-hero .photo { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; }
+      .offre-hero .photo img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+      }
+      /* Plus de voile sombre en bas : il servait a decoller le badge
+         "OFFERT" d'une photo de bar sombre. Sur l'illustration en fond
+         clair, il ne laisse qu'une salissure grise -- et le badge, une
+         pastille blanche ombree, se lit tres bien sans lui. */
+      .offre-hero .badge-offert {
+        position: absolute; left: 12px; bottom: 12px;
+        font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+        color: var(--bouton); background: rgba(255,255,255,.95); border-radius: 999px; padding: 6px 13px;
+        box-shadow: 0 2px 6px rgba(20,20,25,.15);
+      }
+      .offre-hero .corps { padding: 17px 18px 18px; text-align: left; }
+      .offre-hero strong {
+        display: block; font-size: 21px; font-weight: 800; letter-spacing: -.025em;
+        color: var(--ink); margin-bottom: 4px;
+      }
+      .offre-hero p { margin: 0 0 14px; font-size: 13.5px; font-weight: 550; line-height: 1.4; color: var(--ink2); }
+      .offre-hero del { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink3); }
+      .offre-hero .cta-visuelle {
+        display: block; text-align: center; border-radius: 999px;
+        background: var(--bouton); color: #fff; font-size: 15px; font-weight: 700;
+        letter-spacing: -.01em; padding: 13px;
+        box-shadow: 0 10px 20px -8px rgba(20,20,25,.4);
+      }
+      .offre-hero.epuise { opacity: .55; pointer-events: none; }
+      .offre-hero.epuise .photo img { filter: grayscale(.6); }
+      .offre-hero.epuise .badge-offert { background: var(--s3); color: var(--ink3); }
+      .offre-hero.epuise .cta-visuelle { background: var(--s3); color: var(--ink3); }
+
       /* ---- Le club de la boutique ----
          Premiere version : une liste PLEIN ECRAN avant d'acceder a la
          boutique. Julien : "je t'ai dit de laisser la boutique comme
@@ -1469,26 +1723,25 @@
          Donc : la boutique s'ouvre directement sur le club le plus
          proche, et la liste n'est qu'un petit panneau qu'on deplie si ce
          n'est pas le bon. */
+      /* La ligne annoncait "Tu es chez X" juste au-dessus d'un titre qui
+         dit deja "Ce soir au X" : le nom du club apparaissait deux fois a
+         trois centimetres d'ecart. Il ne reste qu'un bouton discret,
+         aligne a droite, qui ouvre la liste. Le nom, lui, vit dans le
+         titre -- un seul endroit. */
       .bq-actuel {
-        display: flex; align-items: center; gap: 8px;
-        margin-bottom: var(--e3); font-size: 12.5px; color: var(--ink2);
+        position: relative; display: flex; justify-content: flex-end;
+        margin-bottom: var(--e3);
       }
-      .bq-actuel strong { color: var(--ink); font-weight: 750; }
-      /* Le premier bouton pousse les suivants a droite : la ligne garde
-         sa forme qu'il y ait un ou deux liens. */
-      .bq-actuel > span { flex: 1; min-width: 0; }
-      .bq-actuel button + button { margin-left: 12px; }
-      .bq-actuel button {
-        border: 0; background: none; padding: 0; cursor: pointer;
-        font: inherit; font-size: 12.5px; font-weight: 700; color: var(--accent);
-        text-decoration: underline; text-underline-offset: 3px;
+      .bq-changer {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 7px 12px; border-radius: 999px; cursor: pointer;
+        background: var(--s2); border: 1px solid var(--line);
+        font: inherit; font-size: 12px; font-weight: 700; color: var(--ink2);
       }
+      .bq-changer:hover { color: var(--ink); }
+      .bq-changer:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
+      .bq-changer svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-      /* La liste FLOTTE au-dessus de la boutique au lieu de la pousser :
-         Julien veut "choisir parmi la liste tout en voyant la boutique
-         derriere". Repliee, elle ne prend aucune place ; depliee, elle
-         recouvre le haut du catalogue sans le deplacer -- rien ne saute
-         a l'ouverture ni a la fermeture. */
       .bq-liste {
         position: absolute; left: 0; right: 0; top: 100%; z-index: 12;
         display: grid; gap: 7px; margin-top: 6px; padding: 8px;
@@ -7262,17 +7515,18 @@ function rendreChoixClub() {
   var liste = document.getElementById("bq-liste");
   if (!actuel || !liste) return;
 
-  var d = DISTANCES_CLUBS[CLUB_BOUTIQUE];
+  // Aucun nom de club ici : il est deja dans le titre juste en dessous.
   actuel.innerHTML =
-    "<span>Tu es chez <strong>" + escapeHtmlSupport(CLUBS[CLUB_BOUTIQUE].nom) + "</strong>" +
-    (d != null ? " · " + (d < 1 ? Math.round(d * 1000) + " m" : d.toFixed(d < 10 ? 1 : 0) + " km") : "") +
-    "</span>" +
-    (DISTANCES_CLUBS[CLUB_BOUTIQUE] == null && !positionRefusee
-      ? '<button type="button" id="bq-localiser">Utiliser ma position</button>'
-      : "") +
-    '<button type="button" id="bq-changer">' + (liste.hidden ? "Changer" : "Fermer") + "</button>";
+    '<button type="button" class="bq-changer" id="bq-changer" aria-expanded="' + (!liste.hidden) + '">' +
+      '<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>' +
+      (liste.hidden ? "Changer de club" : "Fermer") +
+    "</button>";
 
-  liste.innerHTML = Object.keys(CLUBS).map(function (k) {
+  var enTete = (DISTANCES_CLUBS[CLUB_BOUTIQUE] == null && !positionRefusee)
+    ? '<button type="button" class="bq-club" id="bq-localiser" style="justify-content:center;font-weight:700;color:var(--accent)">Utiliser ma position</button>'
+    : "";
+
+  liste.innerHTML = enTete + Object.keys(CLUBS).map(function (k) {
     var c = CLUBS[k];
     var dist = DISTANCES_CLUBS[k];
     return '<button type="button" class="bq-club" data-club="' + k + '" aria-current="' + (k === CLUB_BOUTIQUE) + '">' +
