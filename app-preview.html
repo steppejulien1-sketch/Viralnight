@@ -1070,9 +1070,12 @@
       .pf-fidelite-solde { display: flex; align-items: baseline; gap: 7px; margin: 7px 0 0; }
       .pf-fidelite-solde strong {
         font-family: var(--mono); font-size: 34px; font-weight: 800;
-        /* Le nombre en encre, pas en rouge : un grand chiffre rouge sur
-           fond rose etait exactement l'image "carte generee". */
-        letter-spacing: -.035em; line-height: 1; color: var(--ink);
+        /* Le chiffre porte le rouge, et il est le seul avec la barre a le
+           faire. C'etait deja le cas avant, mais sur un fond rose : le
+           rouge se noyait dans sa propre teinte. Sur une surface neutre il
+           redevient un accent (Julien : "ajoute un peu de couleur quand
+           meme, c'est un peu trop peu colore"). */
+        letter-spacing: -.035em; line-height: 1; color: var(--accent);
         font-variant-numeric: tabular-nums;
       }
       .pf-fidelite-solde span { font-size: 14px; font-weight: 750; color: var(--ink3); }
@@ -1636,7 +1639,9 @@
          chasse fixe pour qu'il ne saute pas quand le solde change. */
       .carte-solde-num {
         font-family: var(--mono); font-size: 42px; font-weight: 800;
-        letter-spacing: -.035em; line-height: 1; color: var(--ink);
+        /* Meme raison que .pf-fidelite-solde : le fond neutre rend le
+           rouge au chiffre, au lieu de le diluer dans un lavis rose. */
+        letter-spacing: -.035em; line-height: 1; color: var(--accent);
         font-variant-numeric: tabular-nums;
       }
       .solde-chiffre span {
@@ -2174,11 +2179,7 @@
         box-shadow: 0 0 0 2.5px rgba(255,255,255,.9);
       }
       .club-hero-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .club-avatar-mono {
-        width: 100%; height: 100%; display: grid; place-items: center;
-        font-size: 24px; font-weight: 800; color: #fff;
-      }
-      .club-hero-titre { min-width: 0; }
+      .club-hero-titre { display: block; min-width: 0; }
 
       /* Horaires depliables, facon fiche Google. */
       .club-horaires { width: 100%; text-align: left; background: none; border: 0; font-family: inherit; cursor: pointer; }
@@ -2191,12 +2192,11 @@
       @media (prefers-reduced-motion: reduce) { .club-horaires-chev { transition: none; } }
       .club-horaires-jours { padding: 2px 0 12px 40px; }
       .club-jour {
-        display: grid; grid-template-columns: 78px auto 1fr; gap: 10px; align-items: baseline;
+        display: grid; grid-template-columns: 78px 1fr; gap: 10px; align-items: baseline;
         padding: 5px 0; font-size: 13.5px; color: var(--ink2);
       }
       .club-jour-nom { font-weight: 650; }
       .club-jour-h { font-variant-numeric: tabular-nums; }
-      .club-jour-soiree { color: var(--ink3); font-size: 12.5px; text-align: right; }
       /* Le jour d'aujourd'hui ressort, comme sur Google. */
       .club-jour.auj { color: var(--ink); font-weight: 750; }
       .club-hero-scrim {
@@ -2312,19 +2312,6 @@
         width: 13px; height: 13px; fill: none; stroke: currentColor;
         stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
       }
-      /* ---- Statut ouvert/ferme, remonte sur la photo ----
-         C'est la premiere question d'un clubbeur ("c'est ouvert ?").
-         Elle etait noyee dans une ligne de liste au milieu de la fiche. */
-      .club-statut-chip {
-        display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
-        padding: 6px 11px; border-radius: var(--r-pill);
-        background: rgba(255,255,255,.16); color: #fff;
-        font-size: 12px; font-weight: 700; backdrop-filter: blur(6px);
-      }
-      .club-statut-chip::before {
-        content: ""; width: 6px; height: 6px; border-radius: 50%; background: #35d07f;
-      }
-      .club-statut-chip.ferme::before { background: #ff8577; }
 
       /* ---- Bloc partenaire : le point de conversion de la fiche ----
          Les recompenses et "Poster ma story" etaient deux lignes parmi
@@ -5557,10 +5544,16 @@ function fotoClub(c) {
    Sans fichier, un monogramme sur la couleur du club plutot qu'un rond
    vide ou une icone generique : ca se lit comme un choix, pas comme une
    image qui n'a pas charge. */
+/* La photo de profil du club, ronde, posee sur la banniere -- comme
+   l'entete d'un compte Instagram.
+
+   Le monogramme de repli (un "M" sur la couleur du club) a ete essaye
+   puis retire : Julien : "tu retires le M, tu mets juste une belle photo
+   de profil". Une initiale dans un rond ne remplace pas une photo, elle
+   signale juste qu'il en manque une. Sans fichier, pas de rond du tout.
+   Deposer la photo dans public/clubs/ et remplir `avatar` dans CLUBS. */
 function avatarClub(c) {
-  if (c.avatar) return '<img src="' + c.avatar + '" alt="" />';
-  return '<span class="club-avatar-mono" style="background:' + (c.c || "#ff2f45") + '">' +
-    escapeHtmlSupport(c.nom.charAt(0).toUpperCase()) + "</span>";
+  return c.avatar ? '<img src="' + c.avatar + '" alt="" />' : "";
 }
 
 // Grande photo d'entete avec nom + note incrustes dessus (scrim degrade),
@@ -5580,7 +5573,7 @@ function heroClub(c) {
       // que l'appli apporte dans ce club.
       '<div class="club-hero-scrim">' +
         '<div class="club-hero-ligne">' +
-          '<span class="club-hero-avatar">' + avatarClub(c) + "</span>" +
+          (c.avatar ? '<span class="club-hero-avatar">' + avatarClub(c) + "</span>" : "") +
           '<span class="club-hero-titre">' +
             '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
         // La note Google n'est pas toujours connue : sans elle, l'etoile
@@ -5597,11 +5590,12 @@ function heroClub(c) {
             "</p>" +
           "</span>" +
         "</div>" +
-        // "C'est ouvert ?" est la premiere question : la reponse monte
-        // sur la photo au lieu d'attendre une ligne de liste plus bas.
-        '<span class="club-statut-chip' + (c.shut ? " ferme" : "") + '">' +
-          c.statut + " · " + c.horaire +
-        "</span>" +
+        // La pastille "Ferme · Ouvre jeudi a 21h00" a quitte la banniere
+        // (Julien : "tu retires le ferme, ouvre jeudi a 21h"). L'entete
+        // ne porte plus que la photo et le nom ; la reponse a "c'est
+        // ouvert ?" reste sur la ligne d'horaires juste dessous, qui la
+        // donne deja et se deplie pour le detail.
+
       "</div>" +
     "</div>"
   );
@@ -5703,7 +5697,10 @@ function ouvrirClub(c, src, id) {
           return '<div class="club-jour' + (i === AUJ ? " auj" : "") + '">' +
             '<span class="club-jour-nom">' + escapeHtmlSupport(j.jour) + "</span>" +
             '<span class="club-jour-h">' + (j.ferme ? "Fermé" : escapeHtmlSupport(j.de + " – " + j.a)) + "</span>" +
-            '<span class="club-jour-soiree">' + (j.soiree ? escapeHtmlSupport(j.soiree) : "") + "</span>" +
+            // Le nom de la soiree ("Cafe Afro", "Hip-hop & R&B") ne
+            // s'affiche plus : Julien ne veut sur cette ligne que
+            // l'horaire. La donnee reste dans CLUBS.horaires.
+
           "</div>";
         }).join("") +
       "</div>";
