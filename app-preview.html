@@ -235,7 +235,7 @@
         display: block; height: 100%; width: 6%; border-radius: var(--r-pill);
         background: linear-gradient(135deg, var(--marque), var(--marque-2));
         box-shadow: 0 0 28px rgba(255,47,69,.45);
-        animation: splash-charge 1.1s cubic-bezier(.3,.6,.4,1) forwards;
+        animation: splash-charge .6s cubic-bezier(.3,.6,.4,1) forwards;
       }
       @keyframes splash-charge { from { width: 6%; } to { width: 88%; } }
       @media (prefers-reduced-motion: reduce) {
@@ -1842,41 +1842,20 @@
          trois centimetres d'ecart. Il ne reste qu'un bouton discret,
          aligne a droite, qui ouvre la liste. Le nom, lui, vit dans le
          titre -- un seul endroit. */
-      .bq-actuel {
-        position: relative; display: flex; align-items: center;
-        justify-content: flex-end; gap: 8px;
-        margin-bottom: var(--e3);
+      /* Le titre porte le chevron et ancre la liste. */
+      .sec-soir .sec-head { position: relative; }
+      #titre-soir { cursor: pointer; }
+      #titre-soir::after {
+        content: ""; display: inline-block; vertical-align: middle;
+        width: 7px; height: 7px; margin: -4px 0 0 8px;
+        border-right: 2.2px solid var(--ink3); border-bottom: 2.2px solid var(--ink3);
+        transform: rotate(45deg); transition: transform var(--tr-court);
       }
+      #titre-soir[aria-expanded="true"]::after { transform: rotate(225deg); }
+      #titre-soir:focus-visible { outline: 3px solid var(--bouton); outline-offset: 3px; border-radius: 6px; }
       /* Signale un club dont le catalogue n'existe pas encore en base :
          les deux clubs affichent alors la meme liste, et sans ce mot
          "changer de club" a l'air de ne rien faire. */
-      .bq-partage {
-        margin-right: auto; padding: 4px 9px; border-radius: 999px;
-        background: var(--s2); color: var(--ink3);
-        font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em;
-        text-transform: uppercase;
-      }
-
-      /* Signale un club dont le catalogue n'existe pas encore en base :
-         les deux clubs affichent alors la meme liste, et sans ce mot
-         "changer de club" a l'air de ne rien faire. */
-      .bq-partage {
-        margin-right: auto; padding: 4px 9px; border-radius: 999px;
-        background: var(--s2); color: var(--ink3);
-        font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em;
-        text-transform: uppercase; white-space: nowrap;
-      }
-
-      .bq-changer {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 7px 12px; border-radius: 999px; cursor: pointer;
-        background: var(--s2); border: 1px solid var(--line);
-        font: inherit; font-size: 12px; font-weight: 700; color: var(--ink2);
-      }
-      .bq-changer:hover { color: var(--ink); }
-      .bq-changer:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
-      .bq-changer svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
       .bq-liste {
         position: absolute; left: 0; right: 0; top: 100%; z-index: 12;
         display: grid; gap: 7px; margin-top: 6px; padding: 8px;
@@ -1885,7 +1864,6 @@
       }
       .bq-liste[hidden] { display: none; }
       /* Le conteneur du club sert d'ancrage a la liste. */
-      .bq-actuel { position: relative; }
       .bq-principale {
         flex: 0 0 auto; margin-left: 6px; padding: 2px 7px; border-radius: 999px;
         background: var(--s2); color: var(--ink3);
@@ -3445,8 +3423,8 @@
           <div class="app" id="app">
 
             <section class="sec sec-premiere">
-              <div class="bq-actuel" id="bq-actuel"></div>
-              <div class="bq-liste" id="bq-liste" hidden></div>
+
+
               <div class="solde-carte">
                 <p class="solde-label">Mes points</p>
                 <p class="solde-chiffre">
@@ -3461,8 +3439,16 @@
 
             <section class="sec sec-soir">
               <div class="sec-head">
-                <h2 id="titre-soir">Ce soir</h2>
+                <!-- Le titre EST le selecteur de club : un tap dessus
+                     ouvre la liste. Julien voulait "juste ce soir au
+                     Mirage" -- plus de pastille "catalogue de demo", plus
+                     de bouton "changer de club". Mais il faut bien un
+                     moyen d'en changer quand la geolocalisation se trompe
+                     ou est refusee : c'est le titre, comme dans les
+                     applis qui changent de contexte (Uber, Deliveroo). -->
+                <h2 id="titre-soir" role="button" tabindex="0">Ce soir</h2>
                 <span class="sub" id="o-fin"></span>
+                <div class="bq-liste" id="bq-liste" hidden></div>
               </div>
               <div id="liste-soir"></div>
             </section>
@@ -3616,17 +3602,20 @@ var supabaseClubbeur = createClient(URL_SUPABASE_CLUBBEUR, CLE_SUPABASE_CLUBBEUR
 // chargement (#splash, voir .splash plus haut) reste devant jusqu'a la
 // reponse -- avec un filet de securite si Supabase tarde a repondre.
 //
-// MIN_AFFICHAGE_MS : sans ca, getSession() repond en general en
-// quelques millisecondes (rien a interroger sur le reseau la plupart
-// du temps) et l'ecran de chargement n'etait qu'un flash trop bref
-// pour etre vu -- Julien n'arrivait pas a le voir passer. On force
-// donc un minimum visible, calee sur la duree de l'animation de la
-// barre de progression (.splash-charge, 1.1s).
+// MIN_AFFICHAGE_MS : sans ca, getSession() repond en quelques
+// millisecondes et l'ecran de chargement n'etait qu'un flash, trop bref
+// pour etre vu. On force donc un minimum visible.
+//
+// Ramene de 1,1 s a 600 ms : Julien veut "arriver sur la page d'accueil
+// directement". 600 ms laisse voir le logo et la barre partir, sans
+// faire attendre devant une animation qui n'attend rien -- la session
+// est deja connue bien avant. L'animation de la barre est raccourcie
+// d'autant, sinon elle serait coupee au milieu de sa course.
 (function () {
   var splash = document.getElementById("splash");
   var barre = document.getElementById("splash-barre");
   var cachee = false;
-  var MIN_AFFICHAGE_MS = 1100;
+  var MIN_AFFICHAGE_MS = 600;
   function attendre(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function cacherSplash() {
     if (cachee || !splash) return;
@@ -7713,22 +7702,15 @@ function detecterClubProche() {
 }
 
 function rendreChoixClub() {
-  var actuel = document.getElementById("bq-actuel");
+  var titre = document.getElementById("titre-soir");
   var liste = document.getElementById("bq-liste");
-  if (!actuel || !liste) return;
+  if (!titre || !liste) return;
 
-  // Aucun nom de club ici : il est deja dans le titre juste en dessous.
-  actuel.innerHTML =
-    // Le club n'a pas de catalogue a lui en base : le dire, sinon
-    // changer de club ne change que le titre et l'ecran passe pour
-    // casse. C'est clubbeur_deux_vrais_clubs.sql qui manque.
-    (!IDS_CLUBS[CLUB_BOUTIQUE]
-      ? '<span class="bq-partage">Catalogue de démonstration</span>'
-      : "") +
-    '<button type="button" class="bq-changer" id="bq-changer" aria-expanded="' + (!liste.hidden) + '">' +
-      '<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>' +
-      (liste.hidden ? "Changer de club" : "Fermer") +
-    "</button>";
+  // Le titre EST le selecteur : il porte le nom du club et l'etat de la
+  // liste. Plus de pastille "catalogue de demo" ni de bouton "changer de
+  // club" -- Julien : "tu mets juste ce soir au Mirage".
+  titre.textContent = "Ce soir " + auClub(CLUBS[CLUB_BOUTIQUE].nom);
+  titre.setAttribute("aria-expanded", String(!liste.hidden));
 
   var enTete = (DISTANCES_CLUBS[CLUB_BOUTIQUE] == null && !positionRefusee)
     ? '<button type="button" class="bq-club" id="bq-localiser" style="justify-content:center;font-weight:700;color:var(--accent)">Utiliser ma position</button>'
@@ -7750,8 +7732,6 @@ function rendreChoixClub() {
     "</button>";
   }).join("");
 
-  var titre = document.getElementById("titre-soir");
-  if (titre) titre.textContent = "Ce soir " + auClub(CLUBS[CLUB_BOUTIQUE].nom);
 }
 
 function brancherChoixClub() {
@@ -7764,7 +7744,7 @@ function brancherChoixClub() {
   document.addEventListener("click", function (ev) {
     var liste = document.getElementById("bq-liste");
     if (!liste || liste.hidden) return;
-    if (ev.target.closest("#bq-liste") || ev.target.closest("#bq-changer")) return;
+    if (ev.target.closest("#bq-liste") || ev.target.closest("#titre-soir")) return;
     liste.hidden = true;
     rendreChoixClub();
   });
@@ -7773,7 +7753,7 @@ function brancherChoixClub() {
       localiser();
       return;
     }
-    if (ev.target.closest("#bq-changer")) {
+    if (ev.target.closest("#titre-soir")) {
       var liste = document.getElementById("bq-liste");
       liste.hidden = !liste.hidden;
       rendreChoixClub();
@@ -7832,11 +7812,10 @@ var FOTOS = {
   artTicket:    "https://images.unsplash.com/photo-1515139372923-c923c9e9a18c?w=240&q=70&auto=format&fit=crop"
 };
 
-// Meme illustration que FOTOS.artShot, remontee en 16:9 : le cadrage
-// carre de la vignette serait trop serre a cette largeur. L'ancienne
-// photo de whisky ne tenait plus la comparaison une fois le reste du
-// catalogue passe au dessin.
-var FOTO_OFFRE_HERO = "/recompenses/art-shot-hero.webp";
+/* Le meme dessin que la vignette du catalogue, remonte en 16:9 : le
+   cadrage carre serait rogne haut et bas a cette largeur, et le pied du
+   verre disparaitrait. */
+var FOTO_OFFRE_HERO = "/recompenses/art-cocktail-hero.webp";
 
 /* Reconnait le type d'objet dans le TITRE tape par le gerant, pour lui
    donner un dessin precis (un cocktail plutot qu'un pictogramme
@@ -7960,19 +7939,19 @@ async function chargerRecompenses() {
 }
 
 var OFFRE = {
-  id: "o-shot", nom: "Shot offert", court: "Dès ta première story de la soirée",
+  id: "o-cocktail", nom: "Un cocktail offert", court: "À ta première story de la soirée",
   fam: "bar",
   // Cle du club concerne dans CLUBS : c'est ce qui allume la pastille
   // "ce soir" sur le bon badge, sous la carte.
   club: "cactus",
-  // Meme dessin/photo que la recompense "Shot maison" : c'est le meme
-  // produit, juste en plus grand pour la banniere (FOTO_OFFRE_HERO).
-  art: artShot, glow: "#fef2db", foto: FOTO_OFFRE_HERO,
+  // Le cocktail et non le shot (demande de Julien). Meme dessin que la
+  // recompense "Un cocktail offert" du catalogue : c'est le meme produit,
+  // il ne peut pas etre illustre de deux facons.
+  art: artCocktail, glow: "#fbe8ea", foto: FOTO_OFFRE_HERO,
   cout: 0, avant: 70, stock: 20,
-  desc: "Poste ta première story de la soirée avec le tag du Cactus Club, et le shot est offert.",
+  desc: "Offert à ta première story de la soirée, avec le tag du club.",
   regles: [
     "Story validée par le club", "Une seule fois par soirée", "Le bar peut demander ta carte d'identité",
-    "Bonus : tout ce que tu postes compte double en points jusqu'à 1 h",
   ]
 };
 
