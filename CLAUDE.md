@@ -189,6 +189,12 @@ npm run db:test    # verifie les migrations sans les appliquer
 - **Le formulaire de demande de demo ecrit dans la vraie base de production, meme en local** :
   `landing.js` bascule sur une insertion Supabase directe avec la cle anon si
   `/api/demo-request` echoue. Ne pas le soumettre "pour tester".
+- **Le CDN Vercel met le HTML en cache quelques minutes.** Constate le 31/08/2026 :
+  `X-Vercel-Cache: HIT` avec `Age: 242` sur `/app-preview.html`. Julien rafraichissait
+  juste apres un push et recevait la version precedente — d'ou plusieurs "ca ne se met
+  pas a jour" qui n'etaient pas des bugs de code. `vercel.json` force desormais
+  `s-maxage=0` sur les `.html` (les `/assets/*` gardent leur cache long, ils portent un
+  hash). Pour verifier une prod sans attendre : ajouter `?cb=$RANDOM` a l'URL.
 - **Ne jamais commit `.env.local`** (deja dans `.gitignore`).
 - `app.css` et `admin.css` peuvent redefinir des variables qui existent deja dans
   `theme.css`. En cas de couleur inattendue, chercher la collision.
