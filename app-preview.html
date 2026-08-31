@@ -987,98 +987,7 @@
       }
       .pf-avatar-edit svg { width: 13px; height: 13px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .pf-nom { margin: 0 0 3px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
-      /* Sous le pseudo : le rang, pas un mot generique. "Clubbeur" ne
-         distinguait pas celui qui vient toutes les semaines de celui
-         qui a scanne une fois. */
-      .pf-sub {
-        margin: 0; font-size: 12px; font-weight: 800;
-        letter-spacing: .12em; text-transform: uppercase; color: var(--rang);
-      }
-
-      /* ---- Statut clubbeur ----
-         Dans une boite de nuit, le statut EST le produit : carre,
-         coupe-file, VIP. Le profil n'en portait aucune trace -- rien
-         ne distinguait un habitue d'un compte ouvert la veille.
-
-         Le rang se calcule sur le CUMUL des points deja gagnes, jamais
-         sur le solde restant : depenser ses points ne fait donc pas
-         redescendre de rang. C'est toute la difference entre une
-         cagnotte (qui se vide) et un statut (qui se garde), et c'est
-         ce qui donne une raison de revenir meme cagnotte a zero.
-
-         Volontairement sobre, et pour une raison deja apprise ici : la
-         carte de fidelite juste en dessous a d'abord ete un aplat
-         degrade plein, juge "extremement moche". Un rang ne se signale
-         pas par un fond dore. La couleur du rang ne touche que le
-         trait, l'anneau et le mot -- jamais la surface.
-
-         Les trois variables de rang vivent sur .pf-contenu et non sur
-         la carte : le pseudo (.pf-sub) doit se teindre de la meme
-         couleur, et il est ailleurs dans l'arbre. */
-      .pf-contenu {
-        --rang:       #6b7484;
-        --rang-voile: rgba(107,116,132,.07);
-        --rang-trait: rgba(107,116,132,.26);
-      }
-      /* Habitue repete les valeurs par defaut ci-dessus : la classe
-         existe bel et bien cote JS, elle doit donc se trouver ici
-         comme les trois autres. */
-      .pf-contenu.st-habitue  { --rang: #6b7484; --rang-voile: rgba(107,116,132,.07); --rang-trait: rgba(107,116,132,.26); }
-      .pf-contenu.st-regulier { --rang: #a2662a; --rang-voile: rgba(162,102,42,.08); --rang-trait: rgba(162,102,42,.28); }
-      .pf-contenu.st-vip      { --rang: #97770f; --rang-voile: rgba(151,119,15,.09); --rang-trait: rgba(151,119,15,.30); }
-      .pf-contenu.st-legende  { --rang: #6d4fc4; --rang-voile: rgba(109,79,196,.08); --rang-trait: rgba(109,79,196,.28); }
-      /* Meme discipline que le reste du profil : les teintes choisies
-         pour le fond blanc virent illisibles sur fond sombre (l'or
-         surtout), donc une version eclaircie par rang. */
-      @media (prefers-color-scheme: dark) {
-        .pf-contenu             { --rang: #a3adbd; --rang-voile: rgba(163,173,189,.09); --rang-trait: rgba(163,173,189,.26); }
-        .pf-contenu.st-habitue  { --rang: #a3adbd; --rang-voile: rgba(163,173,189,.09); --rang-trait: rgba(163,173,189,.26); }
-        .pf-contenu.st-regulier { --rang: #d99a52; --rang-voile: rgba(217,154,82,.10); --rang-trait: rgba(217,154,82,.28); }
-        .pf-contenu.st-vip      { --rang: #e8c25a; --rang-voile: rgba(232,194,90,.11); --rang-trait: rgba(232,194,90,.30); }
-        .pf-contenu.st-legende  { --rang: #a48bf0; --rang-voile: rgba(164,139,240,.11); --rang-trait: rgba(164,139,240,.30); }
-      }
-
-      .pf-statut {
-        position: relative;
-        border: 1px solid var(--rang-trait); border-radius: var(--r4);
-        background: linear-gradient(180deg, var(--rang-voile), transparent), var(--s1);
-        padding: 17px 18px 16px; margin: 0 0 12px;
-      }
-      .pf-statut-ligne { display: flex; align-items: center; gap: 14px; }
-      /* Anneau FIN plutot qu'une pastille pleine : c'est le trait qui
-         porte le rang, pas un aplat. */
-      .pf-statut-anneau {
-        flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%;
-        border: 1.5px solid var(--rang); display: grid; place-items: center;
-      }
-      .pf-statut-anneau svg { width: 17px; height: 17px; stroke: var(--rang); fill: none; stroke-width: 1.9; stroke-linejoin: round; stroke-linecap: round; }
-      .pf-statut-txt { flex: 1; min-width: 0; }
-      .pf-statut-kicker {
-        display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .11em;
-        text-transform: uppercase; color: var(--ink3);
-      }
-      .pf-statut-nom { display: block; font-size: 17px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; }
-
-      /* L'echelle des rangs : un segment par rang, remplis jusqu'a
-         celui atteint, le segment courant se remplissant a la
-         proportion des points manquants. Un seul objet dit donc les
-         deux choses a la fois -- ou j'en suis dans l'echelle, et ce
-         qu'il reste avant la marche suivante. Une barre de progression
-         simple ne disait que la seconde, et ressemblait trait pour
-         trait a celle de la carte de fidelite juste dessous. */
-      .pf-statut-echelle { display: flex; gap: 4px; margin: 14px 0 0; }
-      .pf-statut-seg {
-        flex: 1; height: 4px; border-radius: var(--r-pill);
-        background: var(--rang-trait); overflow: hidden;
-      }
-      .pf-statut-seg i {
-        display: block; height: 100%; width: 0; border-radius: var(--r-pill);
-        background: var(--rang);
-        transition: width .55s cubic-bezier(.2,.7,.3,1);
-      }
-      @media (prefers-reduced-motion: reduce) { .pf-statut-seg i { transition: none; } }
-      .pf-statut-reste { margin: 9px 0 0; font-size: 12px; font-weight: 600; color: var(--ink3); }
-      .pf-statut-reste strong { color: var(--rang); font-weight: 800; }
+      .pf-sub { margin: 0; font-size: 13px; color: var(--ink3); font-weight: 650; }
 
       .pf-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 22px; }
       /* Etat presse : sur mobile le :hover n'existe pas, sans ca rien
@@ -3277,27 +3186,7 @@
               </button>
               <input type="file" accept="image/*" id="pf-avatar-file" hidden />
               <p class="pf-nom" id="pf-handle">@...</p>
-              <p class="pf-sub" id="pf-sub">Habitué</p>
-            </div>
-
-            <!-- ================= STATUT =================
-                 Le rang du clubbeur, calcule sur le cumul des points
-                 gagnes (voir .pf-statut dans la feuille de style). Le
-                 texte par defaut est celui d'un compte tout neuf : si
-                 la requete de cumul echoue, l'ecran reste juste, il ne
-                 se vide pas. -->
-            <div class="pf-statut" id="pf-statut">
-              <div class="pf-statut-ligne">
-                <span class="pf-statut-anneau" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M12 3.2 20 12l-8 8.8L4 12z"/></svg>
-                </span>
-                <span class="pf-statut-txt">
-                  <span class="pf-statut-kicker" id="pf-statut-kicker">Prochain statut</span>
-                  <strong class="pf-statut-nom" id="pf-statut-nom">Régulier</strong>
-                </span>
-              </div>
-              <div class="pf-statut-echelle" id="pf-statut-echelle" aria-hidden="true"></div>
-              <p class="pf-statut-reste" id="pf-statut-reste">Poste ta première story pour démarrer.</p>
+              <p class="pf-sub">Clubbeur</p>
             </div>
 
             <div class="pf-actions">
@@ -4032,85 +3921,6 @@ async function chargerSoldeReel(userId) {
   ETAT.solde = Math.max(0, (res.data && res.data.points_balance) || 0);
   majCagnotte(false);
   if (typeof rendreListe === "function") rendreListe();
-}
-
-/* ==========================================================
-   LE STATUT DU CLUBBEUR
-
-   Le rang se lit sur le CUMUL des points gagnes, jamais sur le
-   solde restant : echanger une recompense vide la cagnotte, ca
-   ne doit pas faire redescendre de rang. C'est la difference
-   entre une cagnotte (qui se vide) et un statut (qui se garde),
-   et c'est ce qui donne une raison de revenir meme a zero point.
-
-   Meme filtre "released" que chargerSoldeReel() juste au-dessus :
-   les points d'une story encore en attente de verification ne
-   comptent nulle part tant qu'ils ne sont pas acquis. Un rang
-   gagne puis retire parce que la story a ete supprimee serait
-   pire que pas de rang du tout.
-   ========================================================== */
-var STATUTS = [
-  { cle: "habitue",  nom: "Habitué",  seuil: 0 },
-  { cle: "regulier", nom: "Régulier", seuil: 1000 },
-  { cle: "vip",      nom: "VIP",      seuil: 3000 },
-  { cle: "legende",  nom: "Légende",  seuil: 8000 },
-];
-
-// Rang atteint pour un cumul donne, et celui d'apres (null au sommet).
-function statutPour(cumul) {
-  var i = 0;
-  for (var k = 0; k < STATUTS.length; k++) if (cumul >= STATUTS[k].seuil) i = k;
-  return { index: i, rang: STATUTS[i], suivant: STATUTS[i + 1] || null };
-}
-
-async function rendreStatut(userId) {
-  var contenu = $("#pf-contenu");
-  if (!contenu) return;
-
-  var lecture = await supabaseClubbeur
-    .from("point_grants").select("amount").eq("user_id", userId).eq("released", true);
-
-  // Une lecture ratee laisse l'ecran tel qu'il est (rang de depart pose
-  // dans le HTML) plutot que d'annoncer un cumul de 0 : afficher
-  // "Habitue, 0 point" a quelqu'un qui est VIP serait pire qu'un
-  // affichage qui n'a pas bouge.
-  if (lecture.error) return;
-
-  var cumul = 0;
-  (lecture.data || []).forEach(function (g) { cumul += g.amount || 0; });
-
-  var s = statutPour(cumul);
-  contenu.className = "pf-contenu st-" + s.rang.cle;
-  $("#pf-sub").textContent = s.rang.nom;
-
-  // L'echelle : un segment par rang. Ceux deja franchis sont pleins, le
-  // segment courant se remplit a la proportion du chemin parcouru vers
-  // le rang suivant, les suivants restent vides.
-  var pct = 0;
-  if (s.suivant) {
-    var bas = s.rang.seuil, haut = s.suivant.seuil;
-    // floor, pas round : a 999 pts sur 1000 le segment doit se lire
-    // "presque", pas "plein" -- un segment plein alors que le rang
-    // n est pas atteint est un mensonge visuel.
-    pct = Math.max(0, Math.min(100, Math.floor(((cumul - bas) / (haut - bas)) * 100)));
-  }
-  $("#pf-statut-echelle").innerHTML = STATUTS.map(function (_, k) {
-    var large = k < s.index ? 100 : (k === s.index ? (s.suivant ? pct : 100) : 0);
-    return '<span class="pf-statut-seg"><i style="width:' + large + '%"></i></span>';
-  }).join("");
-
-  if (s.suivant) {
-    $("#pf-statut-kicker").textContent = "Prochain statut";
-    $("#pf-statut-nom").textContent = s.suivant.nom;
-    $("#pf-statut-reste").innerHTML = cumul <= 0
-      ? "Poste ta première story pour démarrer."
-      : "Encore <strong>" + nb(s.suivant.seuil - cumul) + " pts</strong> à gagner.";
-  } else {
-    $("#pf-statut-kicker").textContent = "Statut";
-    $("#pf-statut-nom").textContent = s.rang.nom;
-    $("#pf-statut-reste").innerHTML =
-      "Le rang le plus haut. <strong>" + nb(cumul) + " pts</strong> gagnés depuis le début.";
-  }
 }
 
 function compteARebours(expireA) {
@@ -7209,10 +7019,6 @@ TAB_PROFIL?.addEventListener("click", async function () {
     avatarInit.hidden = false;
     avatarInit.textContent = (monHandle || nomRepli).charAt(0).toUpperCase();
   }
-
-  // Volontairement pas attendu : le profil s affiche tout de suite, le
-  // rang se remplit quand la somme des points revient.
-  rendreStatut(session.user.id);
 
   // Le solde quitte la sous-ligne pour le grand chiffre de la carte ;
   // la sous-ligne redevient ce qu'elle decrit vraiment (ou mene le tap).
