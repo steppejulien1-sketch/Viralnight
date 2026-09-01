@@ -2,7 +2,10 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover : sans lui env(safe-area-inset-*) vaut 0, et la
+         barre d'onglets passe sous la barre de geste de l'iPhone une fois
+         l'appli installee. Aucun effet sur la maquette au navigateur. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#120d0d" />
     <!-- Sans ca, le navigateur peint son fond BLANC par defaut le temps
          que ce fichier (CSS inclus) charge, avant que --page/--bg
@@ -16,6 +19,58 @@
     <meta name="color-scheme" content="dark" />
     <meta name="robots" content="noindex" />
     <title>Noctify — preview appli</title>
+
+    <!-- ============================================================
+         INSTALLATION SUR LE TELEPHONE (PWA)
+
+         Cette page a deux vies. Au navigateur elle reste la maquette de
+         demonstration que Julien montre en rendez-vous : titre, texte,
+         et l'appli dans un cadre de telephone. Installee sur l'ecran
+         d'accueil -- ou ouverte dans la coquille Capacitor -- elle
+         devient l'appli elle-meme, plein ecran, sans cet habillage.
+         C'est le meme fichier : le dupliquer voudrait dire maintenir
+         8500 lignes en double.
+
+         La bascule se fait par la classe .mode-appli sur <html>, posee
+         par le script juste en dessous.
+
+         status-bar-style "default" et pas "black-translucent" : avec
+         translucide le contenu passe SOUS l'heure et la batterie, et il
+         faudrait alors reprendre l'en-tete de chacun des cinq ecrans.
+         Avec "default" iOS reserve lui-meme la bande du haut. Le reglage
+         fin par ecran se fera cote Capacitor, avec le plugin StatusBar.
+         ============================================================ -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Noctify" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <script>
+      /* Pose .mode-appli AVANT la premiere peinture : dans le <head> et
+         non en bas de page, sinon l'habillage de demonstration apparait
+         un instant avant de disparaitre.
+
+         Quatre facons d'etre "en vrai" :
+         - PWA installee (Android, desktop)  -> display-mode
+         - "Ecran d'accueil" iOS             -> navigator.standalone
+         - coquille Capacitor                -> window.Capacitor
+         - ?app=1                            -> pour tester au navigateur
+
+         Sans JavaScript rien ne se pose, et la page reste la maquette
+         complete : lisible de bout en bout, jamais un ecran vide. */
+      (function () {
+        var enAppli =
+          (window.matchMedia &&
+            (matchMedia("(display-mode: standalone)").matches ||
+              matchMedia("(display-mode: fullscreen)").matches)) ||
+          window.navigator.standalone === true ||
+          typeof window.Capacitor !== "undefined" ||
+          location.search.indexOf("app=1") !== -1;
+        if (enAppli) document.documentElement.classList.add("mode-appli");
+      })();
+    </script>
     <style>
       /* ============================================================
          APPLI VIRALNIGHT — carte et boutique fusionnees en une seule
@@ -2806,6 +2861,52 @@
         .wrap { padding: 38px 12px 70px; }
         .phone { width: 100%; max-width: 360px; }
       }
+
+      /* ============================================================
+         MODE APPLI — classe posee par le script du <head> quand la page
+         tourne installee sur l'ecran d'accueil, ou dans la coquille
+         Capacitor. Au navigateur, rien de tout ceci ne s'applique et la
+         page reste la maquette de demonstration.
+
+         Tout l'habillage tombe (titre, texte, notes, pied de page) et le
+         cadre de telephone s'ouvre en plein ecran. `> *:not(.stage)`
+         plutot qu'une liste de classes : les notes ajoutees au fil des
+         versions disparaissent d'office, sans avoir a penser a les
+         inscrire ici.
+         ============================================================ */
+      html.mode-appli,
+      html.mode-appli body {
+        height: 100%;
+        /* Blanc et pas --page : le premier calque peint est .splash, qui
+           est blanc. Un fond sombre en dessous donnait un eclair noir au
+           lancement, juste avant que le splash se pose. */
+        background: #ffffff;
+        overflow: hidden;
+        /* Sans ca, tirer vers le bas decolle toute l'appli du haut de
+           l'ecran (le rebond de Safari). Une page web fait ca ; une
+           appli, non -- c'est un des details qui trahit une PWA. */
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html.mode-appli .wrap { max-width: none; margin: 0; padding: 0; }
+      html.mode-appli .wrap > *:not(.stage) { display: none; }
+      html.mode-appli .stage { display: block; padding: 0; }
+      html.mode-appli .phone {
+        width: 100%; max-width: none;
+        /* 100dvh et pas 100vh : sur mobile 100vh ignore la barre d'URL,
+           et le bas de l'appli se retrouve cache dessous. */
+        height: 100vh; height: 100dvh;
+        border-radius: 0; padding: 0; box-shadow: none; background: #ffffff;
+      }
+      html.mode-appli .screen { border-radius: 0; }
+      /* La barre d'onglets touche desormais le bas de l'ecran, donc la
+         barre de geste de l'iPhone passe par-dessus les libelles. env()
+         vaut 0 sur un telephone sans encoche et au navigateur : cette
+         regle n'y change rien. */
+      html.mode-appli .tabs {
+        height: calc(88px + env(safe-area-inset-bottom));
+        padding-bottom: calc(18px + env(safe-area-inset-bottom));
+      }
     </style>
   </head>
   <body>
@@ -3623,6 +3724,16 @@ var supabaseClubbeur = createClient(URL_SUPABASE_CLUBBEUR, CLE_SUPABASE_CLUBBEUR
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
 
+// Dans la coquille Capacitor, la page n'est pas servie par un serveur mais
+// depuis le telephone : l'origine vaut capacitor://localhost, et une URL
+// relative comme "/api/..." ne pointe alors sur rien du tout. Il faut viser
+// la prod explicitement. Au navigateur et en PWA installee, l'origine est
+// deja la bonne et la constante reste vide -- meme comportement qu'avant.
+// Attention : les routes api/ ne renvoient aujourd'hui aucun en-tete CORS,
+// donc cet appel restera bloque depuis l'appli iOS tant qu'on ne les aura
+// pas ouvertes explicitement (voir MOBILE.md).
+var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koif.vercel.app" : "";
+
 // getSession() est asynchrone : le temps qu'il reponde, on ne sait pas
 // encore si on doit montrer l'ecran de connexion ou entrer direct dans
 // l'appli (compte deja connecte). Plutot que de laisser voir cette
@@ -4106,46 +4217,69 @@ function afficherMessageAccueil(texte, estErreur) {
   MESSAGE_ACCUEIL.classList.toggle("err", Boolean(estErreur));
 }
 
-// Le SDK Supabase ne verifie JAMAIS si "google" est active cote tableau
-// de bord avant de rediriger : signInWithOAuth construit l'URL toute
-// seule, sans appeler le serveur. Si le fournisseur n'est pas configure,
-// le clic envoyait donc l'utilisateur sur une vraie page Supabase qui
-// affiche du JSON brut ("Unsupported provider"), sans bouton retour --
-// un cul-de-sac. /auth/v1/settings, lui, est un endpoint public qui
-// repond avec la liste des fournisseurs actives : on le consulte une
-// fois au chargement pour savoir si le bouton doit vraiment rediriger.
-var googleActif = null; // null = pas encore su, true/false une fois la reponse arrivee
+// Le SDK Supabase ne verifie JAMAIS si un fournisseur est active cote
+// tableau de bord avant de rediriger : signInWithOAuth construit l'URL
+// toute seule, sans appeler le serveur. Si le fournisseur n'est pas
+// configure, le clic envoyait donc l'utilisateur sur une vraie page
+// Supabase qui affiche du JSON brut ("Unsupported provider"), sans
+// bouton retour -- un cul-de-sac. /auth/v1/settings, lui, est un
+// endpoint public qui repond avec la liste des fournisseurs actives :
+// on le consulte une fois au chargement pour savoir si le bouton doit
+// vraiment rediriger.
+//
+// Les deux fournisseurs partagent la meme mecanique. Apple s'allume tout
+// seul le jour ou il est configure dans Supabase (voir MOBILE.md) : il
+// n'y a rien a rechanger ici. En attendant, le bouton dit pourquoi il ne
+// marche pas plutot que de renvoyer sur une page d'erreur.
+// null = pas encore su, true/false une fois la reponse arrivee.
+var fournisseursActifs = { google: null, apple: null };
 
 fetch(URL_SUPABASE_CLUBBEUR + "/auth/v1/settings", {
   headers: { apikey: CLE_SUPABASE_CLUBBEUR },
 })
   .then(function (r) { return r.json(); })
-  .then(function (r) { googleActif = Boolean(r && r.external && r.external.google); })
-  .catch(function () { googleActif = null; }); // reseau indisponible : on retente au clic
+  .then(function (r) {
+    var externes = (r && r.external) || {};
+    fournisseursActifs.google = Boolean(externes.google);
+    fournisseursActifs.apple = Boolean(externes.apple);
+  })
+  .catch(function () { /* reseau indisponible : on retente au clic */ });
 
-if (BOUTON_GOOGLE) {
-  BOUTON_GOOGLE.addEventListener("click", function () {
-    if (googleActif === false) {
-      afficherMessageAccueil("Connexion Google bientôt disponible. Utilise ton email en attendant.", true);
+function brancherConnexion(bouton, fournisseur, libelle, messageAbsent) {
+  if (!bouton) return;
+  bouton.addEventListener("click", function () {
+    if (fournisseursActifs[fournisseur] === false) {
+      afficherMessageAccueil(messageAbsent, true);
       return;
     }
+    var echec = "La connexion " + libelle + " n'a pas pu démarrer. Réessaie, ou utilise ton email.";
     supabaseClubbeur.auth
       .signInWithOAuth({
-        provider: "google",
+        provider: fournisseur,
+        // Dans la coquille Capacitor, window.location.origin vaut
+        // capacitor://localhost : cette URL de retour ne marchera pas
+        // telle quelle, il faudra passer par un lien profond declare
+        // cote iOS (voir MOBILE.md). Au navigateur et en PWA installee,
+        // c'est la bonne valeur.
         options: { redirectTo: window.location.origin + window.location.pathname },
       })
       .then(function (res) {
         // Sans ca, un echec ne produisait STRICTEMENT rien a l'ecran :
         // le bouton semblait mort, sans aucune piste pour comprendre.
-        if (res && res.error) {
-          afficherMessageAccueil("La connexion Google n'a pas pu démarrer. Réessaie, ou utilise ton email.", true);
-        }
+        if (res && res.error) afficherMessageAccueil(echec, true);
       })
       .catch(function () {
-        afficherMessageAccueil("La connexion Google n'a pas pu démarrer. Réessaie, ou utilise ton email.", true);
+        afficherMessageAccueil(echec, true);
       });
   });
 }
+
+brancherConnexion(
+  BOUTON_GOOGLE,
+  "google",
+  "Google",
+  "Connexion Google bientôt disponible. Utilise ton email en attendant."
+);
 
 /* Au retour de Google, Supabase peut renvoyer une erreur dans l'URL --
    en query (?error=) ou dans le fragment (#error=) selon l'etape qui a
@@ -4177,11 +4311,12 @@ if (BOUTON_GOOGLE) {
   history.replaceState(null, "", location.pathname);
 })();
 
-if (BOUTON_APPLE) {
-  BOUTON_APPLE.addEventListener("click", function () {
-    afficherMessageAccueil("Connexion Apple bientôt disponible (ça demande un compte Apple Developer payant). Utilise Google ou ton email en attendant.", true);
-  });
-}
+brancherConnexion(
+  BOUTON_APPLE,
+  "apple",
+  "Apple",
+  "Connexion Apple bientôt disponible. Utilise Google ou ton email en attendant."
+);
 
 if (BOUTON_EMAIL) {
   BOUTON_EMAIL.addEventListener("click", function () {
@@ -7300,7 +7435,7 @@ function ouvrirDevenirClub(src) {
     bouton.disabled = true;
     bouton.textContent = "Envoi...";
     try {
-      var res = await fetch("/api/demo-request", {
+      var res = await fetch(BASE_API + "/api/demo-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ club: club, phone: phone, email: email }),
@@ -8525,6 +8660,29 @@ rendreBons(null);
 majRebours();
 setInterval(majRebours, 30000);
 
+</script>
+
+<!-- Enregistrement du service worker (voir public/sw.js pour ce qu'il
+     fait, et surtout pour ce qu'il refuse de faire).
+
+     Apres 'load' et pas avant : la carte MapLibre et Supabase demarrent
+     en meme temps que la page, inutile de leur disputer la bande
+     passante pour un fichier qui ne sert qu'a la visite suivante.
+
+     Rien en local : les URL de modules de Vite changent a chaque
+     rechargement a chaud, un worker par-dessus n'apporte que de la
+     confusion. -->
+<script>
+  if ("serviceWorker" in navigator &&
+      location.hostname !== "127.0.0.1" &&
+      location.hostname !== "localhost") {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("/sw.js").catch(function () {
+        // Un enregistrement rate ne doit rien casser : l'appli marche
+        // sans, elle perd juste le secours hors ligne.
+      });
+    });
+  }
 </script>
 
   </body>

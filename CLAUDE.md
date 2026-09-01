@@ -70,7 +70,7 @@ gestionnaire d'etat : le projet est volontairement en HTML/CSS/JS lisibles.
 | `setup.html` | Configuration initiale d'un club. |
 | `chat.html` | Assistant. |
 | `viral-intelligence.html` / `demo.html` | Analyse des soirees. |
-| `app-preview.html` | Maquette autoportante de l'app mobile "clubbeur" (cote client final : scan QR, points, boutique, carte des clubs). Un seul gros fichier, branche sur les vraies fonctions RPC Supabase (`submit_story`, `redeem_reward`, `checkin_scan`...). |
+| `app-preview.html` | Maquette autoportante de l'app mobile "clubbeur" (cote client final : scan QR, points, boutique, carte des clubs). Un seul gros fichier, branche sur les vraies fonctions RPC Supabase (`submit_story`, `redeem_reward`, `checkin_scan`...). **Double vie** : au navigateur c'est la maquette de demonstration ; installee sur l'ecran d'accueil ou dans Capacitor, la classe `.mode-appli` fait tomber l'habillage et l'appli passe en plein ecran. Tester avec `?app=1`. Voir `MOBILE.md`. |
 | `admin-prospection.html` | Back-office de prospection commerciale (qualification de clubs). |
 | `carte-preview.html` | Maquette autoportante de la carte des clubs (maplibre-gl). |
 | `bienvenue.html` | Ecran d'accueil post-inscription. |
@@ -83,6 +83,15 @@ gestionnaire d'etat : le projet est volontairement en HTML/CSS/JS lisibles.
 - `theme.js` — runtime du design system : apparitions au scroll, spotlight des cartes.
 - `supabaseClient.js` — client Supabase cote navigateur (cle anon).
 - `dashboardData.js` — bareme de points par defaut. La landing ET le dashboard lisent d'ici. Changer une valeur la-bas la change partout.
+- `public/sw.js` — service worker de l'appli clubbeur. **Volontairement minimal** : le
+  HTML n'est jamais servi depuis le cache tant que le reseau repond, et seules
+  `/assets/` et `/icones/` (noms a hash) sont gardees. Les autres pages du site passent
+  en direct. Rien ne s'enregistre en local.
+- `public/manifest.webmanifest` + `public/icones/` — installation sur le telephone.
+  Les icones se regenerent avec `npm run icones` depuis `assets/favicon-vn.svg`.
+- `capacitor.config.json` + `vite.config.mobile.js` — coquille iOS/Android.
+  `npm run build:mobile` sort l'appli SEULE dans `dist-mobile/`. **Le build iOS exige
+  un Mac**, il ne se fait pas sous Windows.
 
 ### `lib/` — la logique qui compte
 
