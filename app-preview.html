@@ -4317,6 +4317,27 @@ fetch(URL_SUPABASE_CLUBBEUR + "/auth/v1/settings", {
   })
   .catch(function () { /* reseau indisponible : on retente au clic */ });
 
+/* Sommes-nous affiches dans le cadre d'apercu.html ?
+
+   ⚠️ CE N'EST PAS UN DETAIL D'AFFICHAGE, ca decide si la connexion peut
+   marcher. Google sert sa page de login avec `X-Frame-Options: DENY` :
+   le navigateur REFUSE de l'afficher dans une iframe, quelle qu'elle
+   soit. Dans le cadre d'apercu, cliquer sur "Continuer avec Google"
+   remplacait donc l'appli par une erreur 403 de Google. Apple applique
+   la meme protection, et pour la meme raison : empecher qu'un site
+   pose un ecran de connexion dans un cadre pour voler des identifiants.
+
+   Le try/catch protege d'un cas theorique : si un jour la page est
+   encadree par un autre domaine, lire window.top leve une exception.
+   On considere alors qu'on est encadre, c'est le choix prudent. */
+var DANS_UN_CADRE = (function () {
+  try {
+    return window.self !== window.top;
+  } catch (e) {
+    return true;
+  }
+})();
+
 function brancherConnexion(bouton, fournisseur, libelle, messageAbsent) {
   if (!bouton) return;
   bouton.addEventListener("click", function () {
@@ -4325,24 +4346,87 @@ function brancherConnexion(bouton, fournisseur, libelle, messageAbsent) {
       return;
     }
     var echec = "La connexion " + libelle + " n'a pas pu démarrer. Réessaie, ou utilise ton email.";
+
+    // ⚠️ L'onglet s'ouvre MAINTENANT, pas dans le .then().
+    // signInWithOAuth est asynchrone (il calcule un verrou PKCE). Une
+    // fois sa promesse resolue, le navigateur ne considere plus qu'on
+    // agit suite a un clic, et il bloque window.open comme une popup
+    // indesirable. On ouvre donc un onglet vide dans le geste du clic,
+    // et on l'envoie sur la bonne URL quand elle est prete.
+    var onglet = DANS_UN_CADRE ? window.open("", "_blank") : null;
+
     supabaseClubbeur.auth
       .signInWithOAuth({
         provider: fournisseur,
-        // Dans la coquille Capacitor, window.location.origin vaut
-        // capacitor://localhost : cette URL de retour ne marchera pas
-        // telle quelle, il faudra passer par un lien profond declare
-        // cote iOS (voir MOBILE.md). Au navigateur et en PWA installee,
-        // c'est la bonne valeur.
-        options: { redirectTo: window.location.origin + window.location.pathname },
+        options: {
+          // Dans la coquille Capacitor, window.location.origin vaut
+          // capacitor://localhost : cette URL de retour ne marchera pas
+          // telle quelle, il faudra passer par un lien profond declare
+          // cote iOS (voir MOBILE.md). Au navigateur et en PWA installee,
+          // c'est la bonne valeur.
+          redirectTo: window.location.origin + window.location.pathname,
+          // Dans un cadre, on demande l'URL au lieu de s'y rendre : c'est
+          // nous qui l'ouvrirons, dans un vrai onglet.
+          skipBrowserRedirect: DANS_UN_CADRE,
+        },
       })
       .then(function (res) {
         // Sans ca, un echec ne produisait STRICTEMENT rien a l'ecran :
         // le bouton semblait mort, sans aucune piste pour comprendre.
-        if (res && res.error) afficherMessageAccueil(echec, true);
+        if (res && res.error) {
+          if (onglet) onglet.close();
+          return afficherMessageAccueil(echec, true);
+        }
+        if (!DANS_UN_CADRE) return; // le navigateur a deja redirige
+
+        var url = res && res.data && res.data.url;
+        if (!url) {
+          if (onglet) onglet.close();
+          return afficherMessageAccueil(echec, true);
+        }
+        if (onglet) {
+          onglet.location.href = url;
+          afficherMessageAccueil(
+            "Connexion " + libelle + " ouverte dans un nouvel onglet. Reviens ici une fois terminé.",
+            false
+          );
+        } else {
+          // Popup bloquee malgre tout : on le dit, plutot que de laisser
+          // croire que le bouton ne fait rien.
+          afficherMessageAccueil(
+            "Autorise les fenêtres surgissantes pour te connecter depuis l'aperçu, ou ouvre l'appli à part.",
+            true
+          );
+        }
       })
       .catch(function () {
+        if (onglet) onglet.close();
         afficherMessageAccueil(echec, true);
       });
+  });
+}
+
+/* Retour de la connexion ouverte a part.
+
+   L'onglet qui vient de terminer la connexion ecrit la session dans le
+   localStorage. Comme il est sur le MEME domaine que ce cadre, le
+   navigateur nous previent par un evenement `storage` -- il n'est emis
+   que dans les autres documents, jamais dans celui qui a ecrit.
+
+   Sans ca, il fallait recharger le cadre a la main pour voir qu'on
+   etait connecte, ce que personne ne devine.
+
+   On recharge plutot que de bricoler l'etat en place : l'appli lit la
+   session au demarrage a une quinzaine d'endroits (solde, profil,
+   boutique). Repartir de zero est plus sur que d'essayer de tous les
+   reveiller un par un, et dans un cadre d'apercu ca ne coute rien. */
+if (DANS_UN_CADRE) {
+  window.addEventListener("storage", function (evenement) {
+    if (!evenement.key || evenement.key.indexOf("sb-") !== 0) return;
+    if (!evenement.newValue) return; // deconnexion ailleurs : on ne fait rien
+    supabaseClubbeur.auth.getSession().then(function (res) {
+      if (res && res.data && res.data.session) window.location.reload();
+    });
   });
 }
 
