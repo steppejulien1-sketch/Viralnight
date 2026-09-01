@@ -66,7 +66,11 @@ async function actionConnect(request, response) {
   if (auth.error) return json(response, { error: auth.error }, auth.status);
 
   try {
-    const state = signerState(auth.establishmentId);
+    // D'ou part la connexion, pour y ramener le gerant a la fin. Une cle
+    // inconnue est ignoree par cheminRetour() : rien a valider ici, la
+    // table figee cote callback fait deja ce travail.
+    const retour = new URL(request.url, "http://localhost").searchParams.get("retour");
+    const state = signerState(auth.establishmentId, retour);
     return json(response, { url: urlAutorisation(state) });
   } catch (error) {
     if (error instanceof MissingConfigError) {
@@ -79,11 +83,33 @@ async function actionConnect(request, response) {
 
 // ---------------- action=callback (GET, appele par Meta, sans session) ----------------
 
-const RETOUR_CALLBACK = "/app.html#instagram";
+/* Ou ramener le gerant a la fin de la connexion.
+ *
+ * ⚠️ TABLE FIGEE, ET C'EST VOLONTAIRE. Le state signe ne transporte
+ * qu'une CLE ("club", "dashboard"), jamais une URL. Si le serveur suivait
+ * une adresse fournie par le client, ce serait une redirection ouverte :
+ * un lien Noctify pourrait deposer la victime sur le site d'un tiers
+ * apres un passage credible par Facebook. Une cle inconnue retombe
+ * silencieusement sur le defaut.
+ *
+ * "club" a ete ajoute parce que la connexion lancee depuis l'appli club
+ * renvoyait quand meme sur /app.html : on partait sur Facebook et on
+ * revenait sur une autre page, l'appli club continuant d'afficher
+ * "non connecte". C'est ce qui donnait l'impression que rien ne marchait.
+ */
+const PAGES_RETOUR = {
+  dashboard: "/app.html#instagram",
+  club: "/club-app.html#reglages",
+};
+const RETOUR_DEFAUT = "dashboard";
 
-function redirigerCallback(response, statut) {
+function cheminRetour(cle) {
+  return PAGES_RETOUR[cle] || PAGES_RETOUR[RETOUR_DEFAUT];
+}
+
+function redirigerCallback(response, statut, retour) {
   response.statusCode = 302;
-  response.setHeader("Location", `${RETOUR_CALLBACK}?instagram=${statut}`);
+  response.setHeader("Location", `${cheminRetour(retour)}?instagram=${statut}`);
   response.end();
 }
 
@@ -93,25 +119,31 @@ async function actionCallback(request, response) {
   const state = url.searchParams.get("state");
   const erreurFacebook = url.searchParams.get("error");
 
+  // On lit le state AVANT de traiter les erreurs : Facebook nous le
+  // renvoie meme quand le gerant refuse l'autorisation. Sans ca, un refus
+  // depuis l'appli club ramenait quand meme sur le tableau de bord web --
+  // on se serait retrouve ailleurs pour avoir dit non.
+  const verifie = verifierState(state);
+  const retour = verifie.error ? null : verifie.retour;
+
   if (erreurFacebook) {
     // Le gerant a refuse l'autorisation, ou Facebook a bloque l'app : ce
     // n'est pas une panne, juste un retour negatif attendu.
-    return redirigerCallback(response, "refuse");
+    return redirigerCallback(response, "refuse", retour);
   }
 
-  const verifie = verifierState(state);
   if (verifie.error) {
     console.error("[instagram:callback] state invalide:", verifie.error);
-    return redirigerCallback(response, "session_expiree");
+    return redirigerCallback(response, "session_expiree", retour);
   }
-  if (!code) return redirigerCallback(response, "erreur");
+  if (!code) return redirigerCallback(response, "erreur", retour);
 
   let supabase;
   try {
     supabase = getSupabaseAdmin();
   } catch (error) {
     console.error("[instagram:callback] Supabase admin indisponible", error);
-    return redirigerCallback(response, "erreur");
+    return redirigerCallback(response, "erreur", retour);
   }
 
   try {
@@ -122,7 +154,7 @@ async function actionCallback(request, response) {
     if (!compte) {
       // Cas le plus probable en pratique : le compte Instagram n'est pas en
       // mode Business/Creator, ou n'est relie a aucune Page Facebook.
-      return redirigerCallback(response, "aucun_compte_pro");
+      return redirigerCallback(response, "aucun_compte_pro", retour);
     }
 
     let webhookInscrit = false;
@@ -155,21 +187,21 @@ async function actionCallback(request, response) {
 
     if (erreurEcriture) {
       console.error("[instagram:callback] ecriture Supabase echouee:", erreurEcriture.message);
-      return redirigerCallback(response, "erreur");
+      return redirigerCallback(response, "erreur", retour);
     }
 
-    return redirigerCallback(response, "connecte");
+    return redirigerCallback(response, "connecte", retour);
   } catch (error) {
     if (error instanceof MissingConfigError) {
       console.error("[instagram:callback]", error.message);
-      return redirigerCallback(response, "erreur");
+      return redirigerCallback(response, "erreur", retour);
     }
     if (error instanceof InstagramApiError) {
       console.error("[instagram:callback] Graph API:", error.message, JSON.stringify(error.details).slice(0, 300));
-      return redirigerCallback(response, "erreur");
+      return redirigerCallback(response, "erreur", retour);
     }
     console.error("[instagram:callback] erreur inattendue:", error);
-    return redirigerCallback(response, "erreur");
+    return redirigerCallback(response, "erreur", retour);
   }
 }
 

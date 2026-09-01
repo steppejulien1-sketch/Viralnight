@@ -1064,7 +1064,12 @@
         bouton.disabled = true;
         bouton.textContent = "Redirection…";
         try {
-          var r = await fetch("/api/instagram?action=connect", {
+          // retour=club : sans ce parametre, le callback ramenait sur
+          // /app.html -- l'ancien tableau de bord web. On partait sur
+          // Facebook depuis l'appli et on revenait sur une autre page,
+          // l'appli continuant d'afficher "non connecte". C'est ce qui
+          // donnait l'impression que la connexion ne marchait pas.
+          var r = await fetch("/api/instagram?action=connect&retour=club", {
             headers: { Authorization: "Bearer " + ETAT.session.access_token },
           });
           var corps = await r.json();
@@ -1076,7 +1081,15 @@
           // viendrait jamais.
           bouton.disabled = false;
           bouton.textContent = "Connecter Instagram";
-          alert("La connexion Instagram est indisponible pour le moment.");
+          // Le VRAI message du serveur, pas un texte passe-partout.
+          // "indisponible pour le moment" cachait la seule information
+          // utile -- par exemple que les cles Meta manquent sur le
+          // serveur, ce qui se corrige en deux minutes quand on le sait.
+          alert(
+            (erreur && erreur.message)
+              ? "Connexion Instagram impossible : " + erreur.message
+              : "La connexion Instagram est indisponible pour le moment."
+          );
         }
       }
 

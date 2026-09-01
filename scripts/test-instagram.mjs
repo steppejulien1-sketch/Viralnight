@@ -37,6 +37,32 @@ check("une signature d'un autre state ne colle pas", "error" in verifierState(`$
 check("un state vide est refuse", "error" in verifierState(""));
 check("un state sans point est refuse", "error" in verifierState("abcdef"));
 
+console.log("\nPage de retour transportee par le state");
+// Enjeu : la connexion lancee depuis l'appli club doit y revenir. Et la
+// cle de retour voyage chez Facebook, donc elle doit etre signee comme le
+// reste -- sinon on choisit la page d'arrivee de quelqu'un d'autre.
+const avecRetour = verifierState(signerState(ETABLISSEMENT, "club"));
+check("la cle de retour est rendue au callback", avecRetour.retour === "club", JSON.stringify(avecRetour));
+check("l'etablissement reste correct avec un retour", avecRetour.establishmentId === ETABLISSEMENT);
+check("sans retour, le champ vaut null", verifierState(signerState(ETABLISSEMENT)).retour === null);
+check("un retour vide vaut null", verifierState(signerState(ETABLISSEMENT, "")).retour === null);
+
+// Le point qui compte pour la securite : on ne peut pas changer la page
+// d'arrivee d'un state existant sans casser sa signature.
+const stateClub = signerState(ETABLISSEMENT, "club");
+const charge = JSON.parse(Buffer.from(stateClub.split(".")[0], "base64url").toString("utf8"));
+charge.r = "https://exemple-malveillant.test";
+const forge = Buffer.from(JSON.stringify(charge)).toString("base64url");
+check("un retour trafique invalide la signature",
+  "error" in verifierState(`${forge}.${stateClub.split(".")[1]}`));
+
+// Et meme signee, une valeur inconnue ne peut pas devenir une redirection :
+// le callback la traduit par une table figee (cheminRetour), qui retombe
+// sur le tableau de bord. On verifie ici que le state la laisse passer
+// telle quelle -- c'est la table, pas la signature, qui la neutralise.
+check("une cle inconnue ressort telle quelle, a charge du callback de la rejeter",
+  verifierState(signerState(ETABLISSEMENT, "site-externe")).retour === "site-externe");
+
 console.log("\nURL d'autorisation");
 const url = new URL(urlAutorisation(state));
 check("domaine Facebook", url.origin === "https://www.facebook.com");
