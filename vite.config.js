@@ -34,6 +34,9 @@ export default defineConfig({
         cartePreview: resolve(__dirname, "carte-preview.html"),
         appPreview: resolve(__dirname, "app-preview.html"),
         clubApp: resolve(__dirname, "club-app.html"),
+        // Outil de travail : le cadre de telephone sans l'habillage de
+        // demonstration, pour regarder l'appli depuis un PC.
+        apercu: resolve(__dirname, "apercu.html"),
       },
     },
   },

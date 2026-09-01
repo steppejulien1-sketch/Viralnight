@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex" />
+    <title>Noctify — aperçu téléphone</title>
+    <link rel="icon" href="/icones/icone-192.png" />
+    <style>
+      /* ============================================================
+         APERCU TELEPHONE — outil de travail, pas une page produit.
+
+         POURQUOI CETTE PAGE EXISTE.
+         Il y avait deja deux facons de voir l'appli, et aucune ne
+         convenait pour travailler depuis un PC :
+           - app-preview.html : la maquette de demonstration. Le cadre
+             de telephone y est, mais noye dans le titre, le texte
+             d'intro et les notes de version.
+           - app-preview.html?app=1 : l'appli en plein ecran. Sur un
+             ecran de PC elle s'etale sur 1900 px de large, ce qui ne
+             ressemble a rien de ce que verra un client.
+         Ici : le cadre, rien autour, et des tailles d'appareil reelles.
+
+         ⚠️ POURQUOI UNE IFRAME ET PAS UN SIMPLE DIV DE 390 px.
+         C'est la seule facon d'obtenir une vraie fidelite. Une iframe a
+         SON PROPRE viewport : `100dvh` y vaut la hauteur du telephone
+         simule, et une media query `max-width: 430px` s'y declenche
+         pour de bon. Dans un div pose sur une page de 1900 px, les deux
+         se trompent -- on croirait tester le mobile en testant le
+         bureau.
+
+         ⚠️ CETTE PAGE NE COPIE AUCUN CODE DE L'APPLI. Elle l'affiche.
+         Une maquette qui redessine l'appli ment des la premiere
+         modification qu'on oublie d'y reporter.
+         ============================================================ */
+
+      :root {
+        --void:      #08090b;
+        --surface-1: #101217;
+        --surface-2: #171a21;
+        --line:      rgba(255,255,255,.10);
+        --line-fort: rgba(255,255,255,.18);
+        --ink:       #edeff4;
+        --ink-2:     #99a1b0;
+        --ink-3:     #6a7280;
+        --coral:     #ff6363;
+        --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--void);
+        color: var(--ink);
+        font-family: var(--sans);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* ---------------- Barre d'outils ---------------- */
+
+      .barre {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--line);
+        background: var(--surface-1);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .marque {
+        display: flex; align-items: center; gap: 9px;
+        margin-right: auto;
+        font-size: 13px; font-weight: 700; letter-spacing: -.01em;
+      }
+      .marque img { width: 22px; height: 22px; border-radius: 6px; display: block; }
+      /* Le corail souligne, il ne crie pas : c'est une couleur de marque,
+         jamais un bouton d'action (regle de design du projet). */
+      .marque span { color: var(--ink-3); font-weight: 500; }
+
+      .groupe { display: flex; align-items: center; gap: 8px; }
+      .groupe-titre {
+        font-size: 11px; font-weight: 700; letter-spacing: .07em;
+        text-transform: uppercase; color: var(--ink-3);
+      }
+
+      .puce {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: var(--surface-2);
+        color: var(--ink-2);
+        font-family: var(--sans);
+        font-size: 12.5px; font-weight: 600;
+        padding: 7px 13px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background .15s ease, color .15s ease, border-color .15s ease;
+        white-space: nowrap;
+      }
+      .puce:hover { color: var(--ink); border-color: var(--line-fort); }
+      /* L'etat actif est un contraste de surface, pas une couleur vive. */
+      .puce[aria-pressed="true"] {
+        background: var(--ink);
+        color: #0b0d11;
+        border-color: var(--ink);
+      }
+      .puce:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+      .mesure {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--ink-3);
+        margin-left: auto;
+        white-space: nowrap;
+      }
+      .mesure b { color: var(--ink-2); font-weight: 600; }
+
+      /* ---------------- Scene ---------------- */
+
+      .scene {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        /* Serre volontairement : chaque pixel rendu ici agrandit d'autant
+           le telephone. Sur un portable en 900 px de haut, 20 px de marge
+           en trop coutent 2 % d'echelle. */
+        padding: 18px 20px 20px;
+      }
+
+      /* Le cadre est mis a l'echelle pour tenir dans la fenetre : un
+         iPhone 15 Pro Max fait 932 px de haut, ce qui ne rentre pas sous
+         la barre d'outils d'un portable. transform plutot que zoom :
+         l'iframe garde SES dimensions reelles, donc le viewport simule
+         reste juste -- seul l'affichage retrecit. */
+      .cadre-echelle {
+        transform-origin: top center;
+        transition: width .18s ease, height .18s ease;
+      }
+
+      .telephone {
+        background: #000;
+        border-radius: 46px;
+        padding: 6px;
+        box-shadow:
+          0 40px 90px -24px rgba(0,0,0,.9),
+          0 0 0 1px rgba(255,255,255,.09);
+      }
+
+      .telephone iframe {
+        display: block;
+        border: 0;
+        border-radius: 40px;
+        background: #fff;
+      }
+
+      .aide {
+        color: var(--ink-3);
+        font-size: 11.5px;
+        text-align: center;
+        padding: 0 20px 14px;
+        max-width: 720px;
+        line-height: 1.5;
+        margin: 0;
+      }
+      .aide code {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--ink-2);
+        background: var(--surface-2);
+        padding: 2px 6px;
+        border-radius: 5px;
+      }
+
+      @media (max-width: 720px) {
+        .marque, .mesure { margin: 0; }
+        .barre { justify-content: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="barre">
+      <p class="marque">
+        <img src="/icones/icone-192.png" alt="" width="22" height="22" />
+        Aperçu <span>&middot; appli clubbeur</span>
+      </p>
+
+      <div class="groupe" role="group" aria-label="Taille de l'appareil">
+        <span class="groupe-titre">Appareil</span>
+        <div id="appareils" class="groupe"></div>
+      </div>
+
+      <div class="groupe">
+        <button type="button" class="puce" id="recharger" title="Recharger l'appli dans le cadre">Recharger</button>
+        <button type="button" class="puce" id="ouvrir" title="Ouvrir l'appli seule, dans un nouvel onglet">Ouvrir à part</button>
+      </div>
+
+      <p class="mesure" id="mesure"></p>
+    </div>
+
+    <div class="scene">
+      <div class="cadre-echelle" id="cadre-echelle">
+        <div class="telephone" id="telephone">
+          <!-- allow : sans ca, le scan de QR et la carte ne peuvent pas
+               demander la camera ni la position depuis l'iframe, et
+               echouent en silence -- on croirait a un bug de l'appli. -->
+          <iframe
+            id="ecran"
+            src="/app-preview.html?app=1"
+            title="Aperçu de l'appli Noctify"
+            allow="camera; geolocation; clipboard-write"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+    <p class="aide">
+      La <b>vraie</b> appli, pas une copie : l'iframe a son propre viewport.
+      Sur ton téléphone → <code>/app-preview.html?app=1</code>
+    </p>
+
+    <script>
+      /* Tailles reelles, en pixels CSS (pas en pixels physiques : c'est
+         ce que voit la page). Les deux extremes comptent autant que le
+         milieu -- le 375 x 667 est le plus petit ecran encore repandu,
+         c'est lui qui casse en premier. */
+      var APPAREILS = [
+        { nom: "iPhone SE",     l: 375, h: 667 },
+        { nom: "iPhone 15",     l: 393, h: 852 },
+        { nom: "Pro Max",       l: 430, h: 932 },
+        { nom: "Pixel 8",       l: 412, h: 915 },
+      ];
+
+      var CLE_CHOIX = "noctify_apercu_appareil";
+      var conteneur = document.getElementById("appareils");
+      var echelle = document.getElementById("cadre-echelle");
+      var telephone = document.getElementById("telephone");
+      var ecran = document.getElementById("ecran");
+      var mesure = document.getElementById("mesure");
+      var choisi = 1;
+
+      var sauvegarde = parseInt(localStorage.getItem(CLE_CHOIX), 10);
+      if (sauvegarde >= 0 && sauvegarde < APPAREILS.length) choisi = sauvegarde;
+
+      APPAREILS.forEach(function (appareil, index) {
+        var bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = "puce";
+        bouton.textContent = appareil.nom;
+        bouton.setAttribute("aria-pressed", "false");
+        bouton.addEventListener("click", function () {
+          choisi = index;
+          localStorage.setItem(CLE_CHOIX, String(index));
+          appliquer();
+        });
+        conteneur.appendChild(bouton);
+      });
+
+      function appliquer() {
+        var appareil = APPAREILS[choisi];
+        ecran.style.width = appareil.l + "px";
+        ecran.style.height = appareil.h + "px";
+
+        [].forEach.call(conteneur.children, function (b, i) {
+          b.setAttribute("aria-pressed", String(i === choisi));
+        });
+
+        // Hauteur reellement disponible sous la barre d'outils, moins la
+        // marge de la scene et le texte d'aide.
+        var barre = document.querySelector(".barre").offsetHeight;
+        var aide = document.querySelector(".aide").offsetHeight;
+        var dispo = window.innerHeight - barre - aide - 38; // 18 + 20 de .scene
+        var cadreH = appareil.h + 12; // 6 px de bordure de chaque cote
+        var cadreL = appareil.l + 12;
+
+        // Jamais au-dessus de 1 : agrandir un ecran de telephone au-dela
+        // de sa taille reelle donnerait une fausse impression d'espace.
+        var facteur = Math.min(1, dispo / cadreH, (window.innerWidth - 60) / cadreL);
+        if (!isFinite(facteur) || facteur <= 0) facteur = 1;
+
+        echelle.style.transform = "scale(" + facteur + ")";
+        // Le parent doit reserver la place APRES mise a l'echelle, sinon
+        // il garde la hauteur d'origine et laisse un grand vide dessous.
+        echelle.style.width = cadreL * facteur + "px";
+        echelle.style.height = cadreH * facteur + "px";
+
+        mesure.innerHTML =
+          "<b>" + appareil.l + " × " + appareil.h + "</b>" +
+          (facteur < 0.999 ? " · affiché à " + Math.round(facteur * 100) + " %" : " · taille réelle");
+      }
+
+      document.getElementById("recharger").addEventListener("click", function () {
+        // On reassigne src plutot que d'appeler reload() sur le document
+        // interne : ca repart de l'ecran de chargement, comme une vraie
+        // ouverture d'appli.
+        ecran.src = ecran.src;
+      });
+
+      document.getElementById("ouvrir").addEventListener("click", function () {
+        window.open("/app-preview.html?app=1", "_blank", "noopener");
+      });
+
+      window.addEventListener("resize", appliquer);
+      appliquer();
+    </script>
+  </body>
+</html>

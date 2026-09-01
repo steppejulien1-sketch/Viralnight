@@ -81,6 +81,7 @@ gestionnaire d'etat : le projet est volontairement en HTML/CSS/JS lisibles.
 | `chat.html` | Assistant. |
 | `viral-intelligence.html` / `demo.html` | Analyse des soirees. |
 | `app-preview.html` | Maquette autoportante de l'app mobile "clubbeur" (cote client final : scan QR, points, boutique, carte des clubs). Un seul gros fichier, branche sur les vraies fonctions RPC Supabase (`submit_story`, `redeem_reward`, `checkin_scan`...). **Double vie** : au navigateur c'est la maquette de demonstration ; installee sur l'ecran d'accueil ou dans Capacitor, la classe `.mode-appli` fait tomber l'habillage et l'appli passe en plein ecran. Tester avec `?app=1`. Voir `MOBILE.md`. |
+| `apercu.html` | **Outil de travail, pas une page produit.** Le cadre de telephone seul, sans l'habillage de demonstration, pour regarder l'appli clubbeur depuis un PC. Selecteur d'appareil (375 a 430 px) et mise a l'echelle automatique. Charge `app-preview.html?app=1` dans une iframe : c'est le seul moyen d'avoir un VRAI viewport mobile (`100dvh` et les media queries y sont justes, ce qui n'est pas le cas d'un simple div de 390 px pose sur une page de 1900 px). Ne copie aucun code de l'appli. |
 | `admin-prospection.html` | Back-office de prospection commerciale (qualification de clubs). |
 | `carte-preview.html` | Maquette autoportante de la carte des clubs (maplibre-gl). |
 | `bienvenue.html` | Ecran d'accueil post-inscription. |
