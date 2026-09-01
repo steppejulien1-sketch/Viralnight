@@ -41,6 +41,10 @@
          fin par ecran se fera cote Capacitor, avec le plugin StatusBar.
          ============================================================ -->
     <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Sans ca, le navigateur reclame /favicon.ico tout seul et prend un
+         404 a chaque ouverture -- visible dans la console, et l'onglet
+         reste sans icone. -->
+    <link rel="icon" href="/icones/icone-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -1742,6 +1746,10 @@
         color: var(--ink3); line-height: 1.35;
       }
       .solde-prog-txt strong { color: var(--ink2); font-weight: 750; }
+      /* Tant que la jauge monte, la legende est vide (voir
+         majProgressionSolde). Sans ceci, son margin-top laissait un
+         blanc de 9 px sous la barre -- un espace que rien n'explique. */
+      .solde-prog-txt:empty { display: none; }
       /* Etat "tu peux echanger maintenant" : barre pleine, et le
          message change de registre au lieu de disparaitre. */
       .solde-prog.pleine .solde-prog-barre { background: #21a86a; }
@@ -2200,6 +2208,62 @@
       .tab .lbl { font-size: calc(10.5 * min(var(--u), 1px)); font-weight: 700; letter-spacing: -.01em; color: #9a9ea5; }
       .tab.on svg, .tab.on .lbl { stroke: var(--bouton); color: var(--bouton); }
       .tab .badge { position: absolute; top: -2px; right: 50%; margin-right: -17px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+
+      /* ---- Invitation aux notifications ----
+         Posee juste au-dessus de la barre d'onglets, sous elle en
+         z-index (26) : la navigation reste toujours cliquable, on n'est
+         jamais coince par cette carte.
+
+         Les couleurs viennent des variables de l'ecran (--s1, --ink,
+         --line) et non de valeurs en dur : la carte suit donc le theme
+         de l'ecran ou elle apparait -- clair sur la boutique, sombre
+         sur la carte -- sans qu'on ait a la decliner deux fois. */
+      .notif-invite {
+        position: absolute; left: 12px; right: 12px; z-index: 25;
+        bottom: calc(96px + env(safe-area-inset-bottom));
+        background: var(--s1); color: var(--ink);
+        border-radius: 18px; padding: 15px 16px 13px;
+        box-shadow: 0 18px 40px -16px rgba(0,0,0,.55), inset 0 0 0 1px var(--line);
+        animation: notifMonte .34s cubic-bezier(.2,.8,.3,1);
+      }
+      .notif-invite-titre {
+        margin: 0; font-size: calc(14.5 * var(--u)); font-weight: 750;
+        letter-spacing: -.01em; line-height: 1.3;
+      }
+      .notif-invite-txt {
+        margin: 5px 0 0; font-size: calc(12.5 * var(--u)); font-weight: 500;
+        color: var(--ink3); line-height: 1.4;
+      }
+      .notif-invite-actions {
+        display: flex; gap: 8px; margin-top: 13px;
+      }
+      .notif-invite-btn {
+        flex: 1 1 0; min-height: 40px; border: 0; border-radius: var(--r-pill);
+        font-family: var(--sans); font-size: calc(13.5 * var(--u)); font-weight: 700;
+        cursor: pointer; background: transparent; color: var(--ink2);
+        box-shadow: inset 0 0 0 1px var(--line2, var(--line));
+        transition: transform var(--tr-court), filter var(--tr-court);
+      }
+      /* Le rouge de marque ne sert pas de bouton d'action ailleurs dans
+         le produit, mais ici c'est LE geste propose : la carte n'existe
+         que pour lui. Un bouton fantome a cote suffit a dire qu'on peut
+         refuser sans consequence. */
+      .notif-invite-btn.oui {
+        background: var(--marque); color: #fff; box-shadow: none;
+      }
+      .notif-invite-btn:active { transform: scale(.97); }
+      .notif-invite-btn.oui:hover { filter: brightness(1.06); }
+      @keyframes notifMonte {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      @media (prefers-reduced-motion: reduce) { .notif-invite { animation: none; } }
+      /* Tant que la carte est la, le contenu gagne de quoi passer
+         dessous. Sans ca elle se pose sur le bouton "Récupérer" -- le
+         geste principal de l'appli -- et rien ne permet de le degager :
+         la carte est ancree au bas de l'ecran, defiler ne l'ecarte pas.
+         Classe posee par proposerNotifications(). */
+      .screen.invite-notif .app { padding-bottom: 208px; }
 
       .voile {
         position: absolute; inset: 0; z-index: 30; background: rgba(3,4,6,.7);
@@ -3692,6 +3756,24 @@
           <div id="sh-corps"></div>
         </div>
 
+        <!-- ================= INVITATION AUX NOTIFICATIONS =================
+             La demande DOUCE, avant la vraie. Voir proposerNotifications()
+             plus bas pour le pourquoi : la boite de dialogue d'iOS ne se
+             montre qu'une fois dans une vie, un refus est definitif, et on
+             ne la depense donc pas sans avoir demande d'abord.
+
+             Pas de voile sombre par-dessus l'appli : ce n'est pas une
+             question qui bloque, c'est une proposition. On peut l'ignorer
+             et continuer a se servir de l'appli. -->
+        <div class="notif-invite" id="notif-invite" hidden>
+          <p class="notif-invite-titre">Être prévenu quand tes points arrivent ?</p>
+          <p class="notif-invite-txt">Quand une de tes stories est validée. Rien d'autre.</p>
+          <div class="notif-invite-actions">
+            <button type="button" class="notif-invite-btn" id="notif-invite-non">Plus tard</button>
+            <button type="button" class="notif-invite-btn oui" id="notif-invite-oui">Activer</button>
+          </div>
+        </div>
+
         <nav class="tabs">
           <button class="tab on" id="tab-boutique" aria-label="Récompenses" aria-current="page">
             <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
@@ -4523,6 +4605,11 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
     // personne a bien autorise les notifications mais n'en recoit
     // aucune -- panne silencieuse, invisible depuis l'appli.
     synchroniserBasculeNotif();
+    // La proposition d'activer les notifications, quelques secondes plus
+    // tard : le temps que l'ecran d'accueil s'efface et que l'appli soit
+    // vraiment sous les yeux. Poser la question pendant l'animation
+    // d'ouverture, c'est la poser a quelqu'un qui ne regarde pas encore.
+    setTimeout(proposerNotifications, 6000);
     // Etape d'inscription : une fois, puis plus jamais.
     verifierIdentiteIg(session);
   }
@@ -4907,11 +4994,21 @@ function majProgressionSolde() {
   // Nommer la cible marche aussi bien a zero -- c'est la premiere
   // recompense a portee, l'information est utile des le premier ecran.
 
-  // Le nom seul, sans "Vers". La preposition transformait un libelle en
-  // debut de phrase, et "Vers Un cocktail offert" se lisait casse a cause
-  // de l'article capitalise au milieu. Une legende de jauge nomme sa
-  // cible, elle ne fait pas une phrase.
-  txt.innerHTML = "<strong>" + escapeHtmlSupport(cible.nom) + "</strong>";
+  // Plus de libelle du tout tant que la jauge se remplit (Julien,
+  // 01/09/2026 : "retire le 'Un cocktail offert', je trouve que c'est
+  // inutile"). C'est la derniere etape d'un elagage en trois temps :
+  // "X avant Y" -> "Un cocktail offert" -> rien.
+  //
+  // Et il a raison : la carte de la recompense est juste en dessous,
+  // avec son nom ET son prix. La legende ne faisait que repeter ce que
+  // l'oeil voit deja, un centimetre plus bas.
+  //
+  // La jauge reste, elle : une barre qui se remplit se comprend sans
+  // legende. Le seul moment ou du texte apparait est celui ou il
+  // APPREND quelque chose -- quand elle est pleine (voir plus haut :
+  // "2 récompenses à ta portée"). Une jauge qui se tait en montant et
+  // qui parle en arrivant, c'est une information, plus une decoration.
+  txt.textContent = "";
 }
 
 /* ==========================================================
@@ -7828,6 +7925,78 @@ async function synchroniserBasculeNotif() {
   // des mois est probablement mort, meme sans 410.
   if (abonnement) enregistrerAbonnement(abonnement);
 }
+
+/* ==========================================================
+   L'INVITATION AUX NOTIFICATIONS — la demande douce avant la vraie.
+
+   ⚠️ POURQUOI ON NE DECLENCHE PAS LA BOITE DU SYSTEME DIRECTEMENT.
+   La boite "Autoriser les notifications ?" appartient a iOS (ou a
+   Android, ou au navigateur) : ce n'est pas nous qui la dessinons. Mais
+   elle ne s'affiche QUE si notre code la demande, et elle ne se montre
+   QU'UNE FOIS. Un "Ne pas autoriser" est definitif -- ni l'appli ni le
+   site ne peuvent reposer la question, il faut aller la reactiver a la
+   main dans les reglages du telephone, ce que personne ne fait jamais.
+
+   On demande donc nous-memes d'abord, avec une carte qu'on refuse sans
+   rien perdre. "Plus tard" ne coute rien et revient dans une semaine.
+   "Activer" declenche la vraie boite -- au moment ou l'on sait deja que
+   la reponse sera oui.
+
+   ⚠️ ET PAS A L'OUVERTURE DE L'APPLI. Une demande qui surgit avant
+   qu'on ait rien vu du produit se fait refuser : on ne sait pas encore
+   ce qu'on accepte. On attend une session, puis quelques secondes.
+   ========================================================== */
+var INVITE_NOTIF = $("#notif-invite");
+var CLE_REPORT_NOTIF = "vn_notif_report";
+var REPORT_NOTIF_MS = 7 * 24 * 60 * 60 * 1000;
+
+function inviteNotifPossible() {
+  if (!INVITE_NOTIF || !pushDisponible() || !CLE_VAPID) return false;
+  // "granted" ou "denied" : le systeme a deja tranche, la carte n'a plus
+  // rien a apporter. Elle ne sert que dans l'etat "default".
+  if (Notification.permission !== "default") return false;
+  var report = Number(localStorage.getItem(CLE_REPORT_NOTIF) || 0);
+  return !(report && Date.now() < report);
+}
+
+// On ne pose pas la carte par-dessus l'ecran d'accueil ni par-dessus
+// l'etape Instagram de l'inscription : ces deux-la attendent une action
+// precise, et une proposition qui arrive au milieu ne fait que gener.
+function ecranPrincipalVisible() {
+  var accueil = $("#vue-accueil");
+  var ig = $("#vue-ig");
+  if (accueil && !accueil.classList.contains("masque")) return false;
+  if (ig && !ig.hidden) return false;
+  return true;
+}
+
+function afficherInviteNotif(visible) {
+  if (!INVITE_NOTIF) return;
+  INVITE_NOTIF.hidden = !visible;
+  // La classe sur .screen donne au contenu de quoi passer sous la carte
+  // (voir .screen.invite-notif .app). Sans elle, la carte reste posee sur
+  // le bouton "Récupérer" et rien ne permet de le degager.
+  var ecran = document.querySelector(".screen");
+  if (ecran) ecran.classList.toggle("invite-notif", visible);
+}
+
+function proposerNotifications() {
+  if (!inviteNotifPossible() || !ecranPrincipalVisible()) return;
+  afficherInviteNotif(true);
+}
+
+$("#notif-invite-non")?.addEventListener("click", function () {
+  // Un refus ici n'est PAS un refus systeme : on n'a jamais appele
+  // requestPermission, la cartouche est intacte. On repose la question
+  // dans une semaine.
+  localStorage.setItem(CLE_REPORT_NOTIF, String(Date.now() + REPORT_NOTIF_MS));
+  afficherInviteNotif(false);
+});
+
+$("#notif-invite-oui")?.addEventListener("click", async function () {
+  afficherInviteNotif(false);
+  peindreBasculeNotif(await activerNotifications());
+});
 
 if (BOUTON_NOTIF) {
   var notifEnCours = false;
