@@ -116,3 +116,69 @@ self.addEventListener("fetch", function (evenement) {
     })
   );
 });
+
+/* ============================================================
+   NOTIFICATIONS PUSH
+
+   Le contenu arrive chiffre : le service de push (Google, Apple,
+   Mozilla) transporte l'enveloppe sans pouvoir la lire, et c'est le
+   navigateur qui la dechiffre avant de nous la passer ici. On ne
+   recoit donc jamais que du texte deja pret a afficher.
+
+   Le texte est fabrique cote serveur par lib/notifications/push.js.
+   Ce fichier ne decide de rien : il affiche.
+   ============================================================ */
+
+self.addEventListener("push", function (evenement) {
+  // ⚠️ Il FAUT afficher une notification a chaque push recu. Un push
+  // silencieux est compte comme un abus par Chrome et Firefox, qui
+  // finissent par revoquer la permission de tout le site. D'ou le
+  // repli plus bas plutot qu'un `return` quand la charge est illisible.
+  var contenu = {};
+  try {
+    contenu = evenement.data ? evenement.data.json() : {};
+  } catch (e) {
+    contenu = {};
+  }
+
+  var titre = contenu.titre || "Noctify";
+  var options = {
+    body: contenu.corps || "Ouvre l'appli pour voir ce qui a changé.",
+    icon: "/icones/icone-192.png",
+    // Silhouette monochrome affichee dans la barre d'etat Android. Une
+    // icone en couleur y apparait comme une tache grise informe.
+    badge: "/icones/badge-96.png",
+    // Meme tag = la nouvelle notification remplace la precedente. Sans
+    // lui, trois stories validees d'affilee donnent trois lignes.
+    tag: contenu.tag || "noctify",
+    // ... mais on veut quand meme que le telephone vibre pour la
+    // remplacante, sinon un remplacement passe totalement inapercu.
+    renotify: Boolean(contenu.tag),
+    data: { url: contenu.url || "/app-preview.html" },
+  };
+
+  evenement.waitUntil(self.registration.showNotification(titre, options));
+});
+
+self.addEventListener("notificationclick", function (evenement) {
+  evenement.notification.close();
+  var cible = (evenement.notification.data && evenement.notification.data.url) || "/app-preview.html";
+
+  evenement.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then(function (fenetres) {
+        // Si l'appli est deja ouverte, on la remet devant au lieu d'en
+        // ouvrir une seconde. Deux instances de l'appli, c'est deux
+        // cartes MapLibre et deux sessions Supabase pour rien.
+        for (var i = 0; i < fenetres.length; i++) {
+          var f = fenetres[i];
+          if (f.url.indexOf("/app-preview.html") !== -1 && "focus" in f) {
+            if ("navigate" in f && cible) f.navigate(cible).catch(function () {});
+            return f.focus();
+          }
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(cible);
+      })
+  );
+});

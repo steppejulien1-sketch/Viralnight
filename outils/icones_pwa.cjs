@@ -39,16 +39,16 @@ const PATH_ETOILE = (function lireEtoile() {
 
 // L'etoile s'inscrit dans 2.4 -> 21.6 du viewBox 24, soit 80 % de large.
 // Pour qu'elle occupe PART du carre final, on met le svg a PART / 0.8.
-function page(cote, part, rayonPourcent) {
+function page(cote, part, rayonPourcent, fond, etoile) {
   const svgCote = (part / 0.8) * 100;
   return `<!doctype html><meta charset="utf-8"><style>
     html,body{margin:0;padding:0;background:transparent}
-    .i{width:${cote}px;height:${cote}px;background:${FOND};
+    .i{width:${cote}px;height:${cote}px;background:${fond || FOND};
        border-radius:${rayonPourcent}%;display:flex;
        align-items:center;justify-content:center;overflow:hidden}
     svg{width:${svgCote}%;height:${svgCote}%;display:block}
   </style><div class="i"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="${PATH_ETOILE}" fill="${ETOILE}"/></svg></div>`;
+    <path d="${PATH_ETOILE}" fill="${etoile || ETOILE}"/></svg></div>`;
 }
 
 const CIBLES = [
@@ -62,6 +62,21 @@ const CIBLES = [
   { fichier: "apple-touch-icon.png", cote: 180, part: 0.62, rayon: 0 },
   // Icone source de l'app iOS (App Store en exige une de 1024, sans alpha).
   { fichier: "icone-1024.png", cote: 1024, part: 0.62, rayon: 0 },
+  // Badge des notifications Android : affiche dans la barre d'etat, ou
+  // le systeme ne garde que la FORME et jette la couleur. Il faut donc
+  // une silhouette blanche sur fond transparent -- une icone en couleur
+  // y devient une tache grise informe. Plus grande (0.86) que les
+  // autres : reduite a ~24 px dans la barre, une etoile a 62 % devient
+  // illisible.
+  {
+    fichier: "badge-96.png",
+    cote: 96,
+    part: 0.86,
+    rayon: 0,
+    fond: "transparent",
+    etoile: "#ffffff",
+    transparent: true,
+  },
 ];
 
 (async function main() {
@@ -75,12 +90,16 @@ const CIBLES = [
     for (const c of CIBLES) {
       const onglet = await nav.newPage();
       await onglet.setViewport({ width: c.cote, height: c.cote, deviceScaleFactor: 1 });
-      await onglet.setContent(page(c.cote, c.part, c.rayon), { waitUntil: "load" });
+      await onglet.setContent(page(c.cote, c.part, c.rayon, c.fond, c.etoile), { waitUntil: "load" });
       const cible = await onglet.$(".i");
-      // omitBackground seulement pour les versions arrondies : les coins
-      // doivent etre transparents. Les carres pleins gardent un fond opaque,
-      // l'App Store refuse une icone avec couche alpha.
-      await cible.screenshot({ path: path.join(SORTIE, c.fichier), omitBackground: c.rayon > 0 });
+      // Fond transparent pour les versions arrondies (les coins doivent
+      // etre vides) et pour le badge (entierement transparent). Les
+      // carres pleins gardent un fond opaque : l'App Store refuse une
+      // icone avec couche alpha.
+      await cible.screenshot({
+        path: path.join(SORTIE, c.fichier),
+        omitBackground: c.rayon > 0 || Boolean(c.transparent),
+      });
       await onglet.close();
       const ko = Math.max(1, Math.round(fs.statSync(path.join(SORTIE, c.fichier)).size / 1024));
       console.log("  " + c.fichier + "  " + c.cote + "x" + c.cote + "  " + ko + " Ko");

@@ -104,6 +104,86 @@ Il n'y a aucune ligne de code à retoucher.** En attendant il dit pourquoi
 il ne marche pas, au lieu d'envoyer sur une page Supabase qui affiche du
 JSON brut sans bouton retour.
 
+### Notifications push
+
+La bascule « Activer les notifications » des Réglages existait depuis le
+début, mais elle écrivait `on`/`off` dans le localStorage du téléphone et
+rien ne partait nulle part. Elle est maintenant réelle.
+
+**Le chemin complet, du clic à la notification :**
+
+| Étape | Où | Quoi |
+|---|---|---|
+| 1. La personne active la bascule | `app-preview.html` | Demande la permission, crée un abonnement Web Push |
+| 2. L'abonnement est enregistré | table `push_subscriptions` (base clubbeur) | Une ligne **par appareil**, pas par personne |
+| 3. L'admin valide une story | back-office | `api/credit-clubbeur.js` crédite les points |
+| 4. La notification part | `lib/notifications/envoyer.js` | Signée VAPID, chiffrée, postée au service de push |
+| 5. Le téléphone l'affiche | `public/sw.js` | Le clic rouvre l'appli sur la boutique |
+
+**Le découpage suit la règle du projet** : `lib/notifications/push.js` est
+pur — il décide du texte et de quand se taire, sans réseau ni DOM, donc
+`npm test` le couvre (39 vérifications). `envoyer.js` à côté ne fait que
+du réseau.
+
+**Pas de 13ᵉ fonction serverless.** Le plan Vercel plafonne à 12 et `api/`
+y est déjà. L'envoi se greffe sur `credit-clubbeur.js`, qui est justement
+le moment où il y a quelque chose à annoncer.
+
+**Trois décisions à connaître :**
+
+- **La permission n'est demandée qu'au clic**, jamais au chargement. Une
+  demande qui surgit sans raison se fait refuser — et un refus est
+  définitif : le site ne peut plus jamais reposer la question, il faut
+  aller dans les réglages du navigateur. On ne dépense cette cartouche
+  qu'au moment où la personne appuie sur l'interrupteur.
+- **La bascule affiche l'état réel**, plus le localStorage. Avant, elle
+  pouvait afficher « on » alors que la permission avait été révoquée
+  depuis les réglages du téléphone.
+- **Un échec d'envoi ne fait jamais échouer le crédit.** Les points sont
+  acquis avant que la notification parte. Si le service de push est en
+  panne, l'admin ne doit pas voir une erreur qui l'inciterait à revalider,
+  donc à rejouer un crédit déjà fait.
+
+**Ce qu'il reste à faire pour que ça marche :**
+
+1. Générer la paire de clés VAPID — **c'est à toi de lancer la commande**,
+   pour que la clé privée ne transite par aucune conversation :
+
+   ```bash
+   npm run cles:vapid
+   ```
+
+   Puis coller `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` et
+   `VITE_VAPID_PUBLIC_KEY` dans les variables Vercel. ⚠️ **Une fois les
+   notifications en service, ne regénère jamais cette paire** : tous les
+   abonnements existants deviendraient muets sans que personne s'en
+   aperçoive.
+
+2. Appliquer la migration `0038_notifications_push.sql` sur la base
+   clubbeur. Elle vit dans l'autre dépôt (voir plus bas).
+
+Tant que les clés manquent, la bascule le dit franchement au lieu de
+faire semblant de s'allumer.
+
+**⚠️ Sur iPhone**, les notifications web n'existent que si l'appli a été
+**ajoutée à l'écran d'accueil** (iOS 16.4+). Dans Safari, l'API est
+purement absente — la bascule l'explique alors au lieu de rester morte.
+C'est une limite d'iOS, pas un défaut du code, et c'est le meilleur
+argument pour Capacitor : en natif, APNs marche sans que la personne ait
+à installer quoi que ce soit de particulier.
+
+### Le second dépôt : `06-pwa-clubbeurs`
+
+`CLAUDE.md` ne liste que 5 dossiers, mais il en existe un sixième, et il
+est **vivant** : `06-pwa-clubbeurs`, dépôt git séparé
+(`steppejulien1-sketch/-viralnight-pwa`). Il porte la base Supabase des
+clubbeurs, ses 38 migrations et 8 Edge Functions — dont `credit-story`,
+que `api/credit-clubbeur.js` appelle en production.
+
+La migration `0038_notifications_push.sql` y a été déposée mais **n'est ni
+commitée ni poussée** : c'est un autre dépôt que celui-ci, la décision
+t'appartient.
+
 ### Squelette Capacitor
 
 ```

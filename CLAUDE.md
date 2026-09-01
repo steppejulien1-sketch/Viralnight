@@ -13,8 +13,17 @@ analytique.
 
 ## 1. Ou travailler
 
-Le depot parent `Noctify-ClaudeCode-FULL/` contient 5 dossiers. **Un seul est vivant :
-celui-ci** (`01-base-fonctionnelle-vite-supabase-api/`). C'est lui qui est deploye.
+Le depot parent `Noctify-ClaudeCode-FULL/` contient 6 dossiers. **Celui-ci
+(`01-base-fonctionnelle-vite-supabase-api/`) porte tout le site** : landing,
+dashboard gerant, admin, et l'appli clubbeur (`app-preview.html`).
+
+⚠️ **`06-pwa-clubbeurs` est vivant lui aussi**, contrairement a ce que cette
+section a longtemps dit. C'est un depot git SEPARE
+(`steppejulien1-sketch/-viralnight-pwa`) qui porte la base Supabase des clubbeurs
+(`gcopwgmqjiufemapamek`), ses migrations numerotees et ses Edge Functions — dont
+`credit-story`, appelee en production par `api/credit-clubbeur.js`. Toute
+modification du schema clubbeur (points, amis, abonnements push) se fait la-bas,
+pas dans `supabase/migrations/` d'ici.
 
 | Dossier | Statut |
 |---|---|
@@ -23,6 +32,7 @@ celui-ci** (`01-base-fonctionnelle-vite-supabase-api/`). C'est lui qui est deplo
 | `03-ancien-mvp-client-rewards` | Archive historique. |
 | `04-liens-utiles-production` | Notes et liens. |
 | `05-refonte-wetransfer-julien` | Maquettes de reference pour le design. Source d'inspiration, jamais de code a copier tel quel. |
+| `06-pwa-clubbeurs` | **Vivant.** Depot git separe. Base Supabase des clubbeurs + Edge Functions. Voir l'avertissement ci-dessus. |
 
 ## 2. Deploiement — a lire avant de dire "c'est corrige"
 
@@ -106,6 +116,10 @@ lib/ai/           prompts et clients OpenAI
 lib/points/       aussi : mentionAutomatique.js (pont entre les deux bases)
                   et verificationStory.js (story supprimee avant l'echeance)
 lib/scheduling/   dates de soiree (une soiree du samedi soir finit le dimanche matin)
+lib/notifications/ push.js = QUOI dire et quand se taire (pur, teste).
+                  envoyer.js = l'envoi reel (reseau, VAPID, nettoyage des
+                  abonnements morts). L'envoi est greffe sur
+                  api/credit-clubbeur.js : pas de 13e fonction serverless.
 ```
 
 Tout ce qui est dans `lib/` est teste par `scripts/test-*.mjs`. **Si tu modifies

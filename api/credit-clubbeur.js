@@ -19,6 +19,7 @@
 // VARIABLES : PWA_FUNCTIONS_URL, PWA_BRIDGE_SECRET
 
 import { createClient } from "@supabase/supabase-js";
+import { notifierStory } from "../lib/notifications/envoyer.js";
 
 const ADMIN_EMAIL = "viralnight001@gmail.com";
 
@@ -115,5 +116,30 @@ export default async function handler(request, response) {
     return json(response, { error: "Credit refuse par la PWA", detail: sortie?.detail || sortie?.error }, 502);
   }
 
-  return json(response, { ok: true, awarded: sortie.awarded ?? 0, unlocks_at: sortie.unlocks_at ?? null });
+  const attribues = sortie.awarded ?? 0;
+
+  // Notification push — apres le credit, jamais avant : on n'annonce que
+  // ce qui est deja acquis.
+  //
+  // ⚠️ Le resultat n'est PAS remonte en erreur. notifierStory ne leve
+  // jamais et se contente de dire combien d'appareils ont ete touches. Un
+  // service de push en panne ne doit pas faire echouer cette requete :
+  // l'admin verrait une erreur alors que les points sont bien credites, et
+  // revaliderait -- donc rejouerait un credit deja fait. Le pire cas ici
+  // est un clubbeur qui n'est pas prevenu, pas un clubbeur mal credite.
+  const notif = await notifierStory({
+    storyId: contenu.external_story_id,
+    type: approve ? "story_validee" : "story_refusee",
+    points: attribues,
+  });
+
+  return json(response, {
+    ok: true,
+    awarded: attribues,
+    unlocks_at: sortie.unlocks_at ?? null,
+    // Visible dans la reponse pour que le back-office puisse afficher
+    // "prevenu" ou non, et surtout pour diagnostiquer sans deviner :
+    // `raison` dit pourquoi rien n'est parti.
+    notifications: notif,
+  });
 }

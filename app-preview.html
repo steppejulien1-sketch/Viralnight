@@ -3397,9 +3397,17 @@
           <div class="rg-carte">
             <div class="rg-carte-ligne">
               <span class="rg-label">Activer les notifications</span>
-              <button type="button" class="rg-switch on" id="rg-notif-actif" role="switch" aria-checked="true" aria-label="Activer les notifications"></button>
+              <button type="button" class="rg-switch" id="rg-notif-actif" role="switch" aria-checked="false" aria-label="Activer les notifications"></button>
             </div>
-            <p class="rg-carte-desc">Points gagnés, amis à proximité, nouveautés des clubs que tu suis.</p>
+            <!-- Le texte ne promet plus que ce qui existe. Il annoncait
+                 "amis a proximite" et "nouveautes des clubs", dont rien
+                 n'est branche : la seule notification qui part vraiment
+                 est celle du credit de points. -->
+            <p class="rg-carte-desc">Quand une de tes stories est validée et que tes points arrivent.</p>
+            <!-- Etat reel : permission refusee, appli pas installee sur
+                 iOS, service indisponible. Sans ca la bascule mentait en
+                 silence -- elle revenait sur "off" sans dire pourquoi. -->
+            <p class="rg-carte-desc" id="rg-notif-msg" hidden></p>
           </div>
         </div>
 
@@ -4362,6 +4370,11 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
     assurerProfil(session.user);
     chargerSoldeReel(session.user.id);
     creditScanUrl();
+    // Un abonnement push cree AVANT la connexion n'a pas de proprietaire
+    // en base. On le rattache des qu'une session existe, sinon la
+    // personne a bien autorise les notifications mais n'en recoit
+    // aucune -- panne silencieuse, invisible depuis l'appli.
+    synchroniserBasculeNotif();
     // Etape d'inscription : une fois, puis plus jamais.
     verifierIdentiteIg(session);
   }
@@ -7502,23 +7515,194 @@ function fermerReglages() { VUE_REGLAGES.hidden = true; }
 
 activerGlisserPourFermer(VUE_REGLAGES, $("#rg-poignee"), fermerReglages);
 
-var BASCULES_NOTIF = [
-  ["rg-notif-actif", "vn_notif_actif"],
-];
-BASCULES_NOTIF.forEach(function (paire) {
-  var bouton = $("#" + paire[0]);
-  if (!bouton) return;
-  var cle = paire[1];
-  var actif = localStorage.getItem(cle) !== "off"; // actif par defaut
-  bouton.classList.toggle("on", actif);
-  bouton.setAttribute("aria-checked", String(actif));
-  bouton.addEventListener("click", function () {
-    var nouveauEtat = !bouton.classList.contains("on");
-    bouton.classList.toggle("on", nouveauEtat);
-    bouton.setAttribute("aria-checked", String(nouveauEtat));
-    localStorage.setItem(cle, nouveauEtat ? "on" : "off");
+/* ==========================================================
+   NOTIFICATIONS PUSH — la bascule des Reglages, pour de vrai.
+
+   Avant, elle ecrivait "on"/"off" dans le localStorage et rien ne
+   partait nulle part (le commentaire d'origine l'assumait). Elle
+   demande maintenant la permission au systeme, cree un abonnement Web
+   Push et l'enregistre dans la base clubbeur (table push_subscriptions,
+   migration 0038 du depot PWA).
+
+   ⚠️ LA PERMISSION N'EST DEMANDEE QU'AU CLIC, jamais au chargement.
+   Une demande qui surgit sans raison se fait refuser, et un refus est
+   DEFINITIF : le site ne peut plus jamais reposer la question, il faut
+   aller dans les reglages du navigateur. On ne depense cette cartouche
+   que quand la personne vient d'appuyer sur l'interrupteur.
+
+   ⚠️ SUR iPHONE, les notifications web n'existent QUE si l'appli a ete
+   ajoutee a l'ecran d'accueil (iOS 16.4+). Dans Safari, PushManager est
+   simplement absent de la page. D'ou un message qui l'explique, plutot
+   qu'une bascule qui revient sur "off" sans rien dire.
+
+   ⚠️ L'ETAT AFFICHE EST L'ETAT REEL. On ne lit plus le localStorage :
+   il pouvait dire "on" alors que la permission avait ete revoquee
+   entre-temps depuis les reglages du telephone.
+   ========================================================== */
+var BOUTON_NOTIF = $("#rg-notif-actif");
+var MESSAGE_NOTIF = $("#rg-notif-msg");
+// Cle publique VAPID : publique par definition, elle voyage dans chaque
+// abonnement. La cle PRIVEE, elle, ne vit que sur Vercel.
+var CLE_VAPID = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
+
+function pushDisponible() {
+  return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+}
+
+function plateformeTelephone() {
+  var ua = navigator.userAgent || "";
+  if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return "autre";
+}
+
+// La cle VAPID arrive en base64url ; subscribe() veut des octets bruts.
+function base64UrlVersOctets(base64) {
+  var comble = "=".repeat((4 - (base64.length % 4)) % 4);
+  var normal = (base64 + comble).replace(/-/g, "+").replace(/_/g, "/");
+  var brut = atob(normal);
+  var octets = new Uint8Array(brut.length);
+  for (var i = 0; i < brut.length; i++) octets[i] = brut.charCodeAt(i);
+  return octets;
+}
+
+function direNotif(texte) {
+  if (!MESSAGE_NOTIF) return;
+  MESSAGE_NOTIF.textContent = texte || "";
+  MESSAGE_NOTIF.hidden = !texte;
+}
+
+function peindreBasculeNotif(actif) {
+  if (!BOUTON_NOTIF) return;
+  BOUTON_NOTIF.classList.toggle("on", actif);
+  BOUTON_NOTIF.setAttribute("aria-checked", String(actif));
+}
+
+async function abonnementCourant() {
+  if (!pushDisponible()) return null;
+  var reg = await navigator.serviceWorker.getRegistration();
+  if (!reg) return null;
+  return reg.pushManager.getSubscription();
+}
+
+// upsert sur endpoint : un navigateur qui se reabonne (ca arrive tout
+// seul quand le service de push fait tourner ses cles) doit MODIFIER sa
+// ligne. Sans ca la personne finirait avec deux lignes et recevrait
+// chaque notification en double.
+async function enregistrerAbonnement(abonnement) {
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session || !abonnement) return false;
+  var brut = abonnement.toJSON();
+  if (!brut.keys || !brut.keys.p256dh || !brut.keys.auth) return false;
+  var res = await supabaseClubbeur.from("push_subscriptions").upsert(
+    {
+      user_id: session.user.id,
+      endpoint: brut.endpoint,
+      p256dh: brut.keys.p256dh,
+      auth: brut.keys.auth,
+      plateforme: plateformeTelephone(),
+      last_seen_at: new Date().toISOString(),
+    },
+    { onConflict: "endpoint" }
+  );
+  return !res.error;
+}
+
+async function activerNotifications() {
+  if (!pushDisponible()) {
+    direNotif(
+      plateformeTelephone() === "ios"
+        ? "Sur iPhone, ajoute d'abord Noctify à ton écran d'accueil : les notifications n'existent que depuis là."
+        : "Ton navigateur ne gère pas les notifications."
+    );
+    return false;
+  }
+  if (!CLE_VAPID) {
+    direNotif("Les notifications ne sont pas encore configurées. On s'en occupe.");
+    return false;
+  }
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) {
+    direNotif("Connecte-toi d'abord pour recevoir tes notifications.");
+    return false;
+  }
+
+  var permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    direNotif(
+      permission === "denied"
+        ? "Notifications bloquées. Pour les réactiver, il faut passer par les réglages de ton navigateur."
+        : "Notifications non activées."
+    );
+    return false;
+  }
+
+  var reg = await navigator.serviceWorker.ready;
+  var abonnement = await reg.pushManager.getSubscription();
+  if (!abonnement) {
+    abonnement = await reg.pushManager.subscribe({
+      // Obligatoire, et vrai : chaque push que l'on envoie affiche bien
+      // quelque chose. Un push silencieux fait revoquer la permission.
+      userVisibleOnly: true,
+      applicationServerKey: base64UrlVersOctets(CLE_VAPID),
+    });
+  }
+
+  if (!(await enregistrerAbonnement(abonnement))) {
+    direNotif("Impossible d'enregistrer tes notifications. Réessaie dans un instant.");
+    return false;
+  }
+  direNotif("");
+  return true;
+}
+
+async function desactiverNotifications() {
+  var abonnement = await abonnementCourant();
+  if (!abonnement) return;
+  var endpoint = abonnement.endpoint;
+  // On se desabonne cote navigateur AVANT de supprimer la ligne : si la
+  // suppression echoue, l'abonnement est deja mort et le serveur
+  // recevra un 410 au prochain envoi, qui nettoiera la ligne tout seul.
+  await abonnement.unsubscribe().catch(function () {});
+  await supabaseClubbeur.from("push_subscriptions").delete().eq("endpoint", endpoint);
+  direNotif("");
+}
+
+async function synchroniserBasculeNotif() {
+  if (!BOUTON_NOTIF) return;
+  if (!pushDisponible() || Notification.permission !== "granted") {
+    peindreBasculeNotif(false);
+    return;
+  }
+  var abonnement = await abonnementCourant();
+  peindreBasculeNotif(Boolean(abonnement));
+  // Rafraichit last_seen_at : un abonnement qu'on ne revoit plus depuis
+  // des mois est probablement mort, meme sans 410.
+  if (abonnement) enregistrerAbonnement(abonnement);
+}
+
+if (BOUTON_NOTIF) {
+  var notifEnCours = false;
+  BOUTON_NOTIF.addEventListener("click", async function () {
+    // requestPermission() peut rester ouvert plusieurs secondes ; sans
+    // ce verrou, deux tapes impatientes lancent deux abonnements.
+    if (notifEnCours) return;
+    notifEnCours = true;
+    BOUTON_NOTIF.disabled = true;
+    try {
+      if (BOUTON_NOTIF.classList.contains("on")) {
+        await desactiverNotifications();
+        peindreBasculeNotif(false);
+      } else {
+        peindreBasculeNotif(await activerNotifications());
+      }
+    } finally {
+      notifEnCours = false;
+      BOUTON_NOTIF.disabled = false;
+    }
   });
-});
+  synchroniserBasculeNotif();
+}
 
 $("#rg-deconnexion")?.addEventListener("click", async function () {
   await supabaseClubbeur.auth.signOut();
