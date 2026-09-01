@@ -173,6 +173,16 @@ Pas de neon partout, pas de "boite de nuit cheap".
   **Ne jamais ecrire ces classes en dur dans le HTML** : si le JS ne tourne pas, la
   page doit rester entierement lisible.
 - Toujours verifier mobile (375px) autant que desktop. Zero debordement horizontal.
+- **Taille du texte dans `app-preview.html`** : les font-size s'ecrivent
+  `calc(13.5 * var(--u))`, jamais `13.5px`. `--u` vaut 1px partout, sauf en mode
+  appli ou il grandit avec la largeur de l'ecran (`clamp(1.06px, 0.30vw, 1.24px)`).
+  L'appli a ete dessinee dans un cadre de 360px sur un ecran de PC ; sur un vrai
+  iPhone 12+ le texte etait nettement trop petit. Tout le texte suit --u en bloc,
+  donc la hierarchie dessinee reste intacte. Aucune marge ni hauteur n'est en unite
+  relative dans ce fichier : faire varier `--u` ne touche QUE le texte.
+  **Exception : `.tab .lbl`** est bride a `min(var(--u), 1px)` — a pleine echelle
+  "Récompenses" n'a plus un pixel de marge sur un ecran de 375px, et iOS garde de
+  toute facon ses libelles d'onglet a 10 pt sur tous les iPhone.
 
 Vocabulaire a bannir dans l'interface : "Campagne", "Nouvelle campagne". Julien ne
 s'en sert pas. Eviter le jargon analytique non explique.
