@@ -1709,6 +1709,29 @@
          DOM (nombre de cartes, textes) et jamais sur le rendu.
          ============================================================ */
 
+      /* Le numero de serie du bon. Discret, en bas, comme sur un vrai
+         ticket -- il ne se lit pas, il se constate. C'est exactement le
+         genre de detail que personne ne remarque et que tout le monde
+         sent quand il manque. */
+      .carte-reco .serie {
+        display: block; margin-top: 9px; padding-top: 8px;
+        border-top: 1px solid var(--line);
+        font-family: var(--mono); font-size: calc(9 * var(--u)); font-weight: 600;
+        letter-spacing: .14em; color: var(--ink3); text-transform: uppercase;
+      }
+
+      /* La rarete devient un TAMPON, pas une pastille : encre corail,
+         contour fin, legerement de travers. C'est la seule fantaisie de
+         l'ecran -- une seule, et tout le reste reste sage. */
+      .badge-rarete {
+        font-family: var(--mono); font-size: calc(9 * var(--u)); font-weight: 700;
+        letter-spacing: .12em; text-transform: uppercase;
+        color: var(--accent); background: none;
+        border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+        border-radius: 3px; padding: 3px 7px;
+        transform: rotate(-1.5deg); display: inline-block;
+      }
+
       /* ---- Bloc de solde ----
          Avant : une pastille ronde avec un eclair et un nombre a 22px,
          perdue en haut de l'ecran. Julien : "je n'aime pas trop le truc
@@ -1798,8 +1821,10 @@
          badge, aucun degrade sur l'image : elle se voit en entier. */
       .carte-reco {
         position: relative; display: flex; flex-direction: column; text-align: left;
+        /* Un bon n'a pas 28 px de rayon. Le passage a 8 px fait a lui
+           seul la moitie du changement de registre. */
         width: 100%; background: var(--s1); border: 1px solid var(--line);
-        border-radius: var(--r4); overflow: hidden; padding: 0; cursor: pointer;
+        border-radius: 8px; overflow: hidden; padding: 0; cursor: pointer;
         font-family: inherit; color: var(--ink);
         box-shadow: var(--ombre-1);
         transition: transform var(--tr-court), box-shadow var(--tr-court), border-color var(--tr-court);
@@ -1826,10 +1851,23 @@
         width: 54%; height: 54%;
       }
 
-      /* ---- Tout le texte vit ici, sous la photo ---- */
+      /* ---- La souche du bon : tout le texte vit ici, sous la photo ----
+         Les deux encoches sont des disques de la couleur du fond,
+         peints en background aux coins hauts. Elles se placent donc
+         toutes seules a la jonction image/texte, quelle que soit la
+         hauteur de l'image -- aucune valeur en dur, rien a maintenir. */
       .carte-reco .corps {
+        position: relative;
         display: flex; flex-direction: column; flex: 1;
-        padding: 12px 13px 14px;
+        padding: 14px 13px 12px;
+        background:
+          radial-gradient(circle 7px at 0 0, var(--bg) 99%, transparent 100%) left top / 14px 14px no-repeat,
+          radial-gradient(circle 7px at 100% 0, var(--bg) 99%, transparent 100%) right top / 14px 14px no-repeat;
+      }
+      /* La perforation, entre les deux encoches. */
+      .carte-reco .corps::before {
+        content: ""; position: absolute; top: 0; left: 9px; right: 9px; height: 1px;
+        background: repeating-linear-gradient(to right, var(--line2) 0 3px, transparent 3px 7px);
       }
       .carte-reco strong {
         display: block; font-size: calc(14.5 * var(--u)); font-weight: 750; letter-spacing: -.02em;
@@ -1838,6 +1876,8 @@
       /* Le prix devient la deuxieme information la plus lisible de la
          carte, juste sous le nom -- il etait sur la photo avant. */
       .carte-reco .prix {
+        font-family: var(--mono); font-variant-numeric: tabular-nums;
+        letter-spacing: -.02em;
         display: block; margin-top: 5px;
         font-family: var(--mono); font-size: calc(15 * var(--u)); font-weight: 800;
         letter-spacing: -.02em; color: var(--accent);
@@ -8953,6 +8993,7 @@ function rendreListe() {
             ? '<span class="jauge" role="presentation"><span class="jauge-barre" style="width:' + pct + '%"></span></span>' +
               '<span class="jauge-txt">Encore ' + nb(r.cout - ETAT.solde) + " pts</span>"
             : '<span class="dispo-txt">À échanger</span>') +
+        '<span class="serie">' + r.code + "</span>" +
       "</span>";
 
     b.addEventListener("click", function () { ouvrirRecompense(r, b); });
