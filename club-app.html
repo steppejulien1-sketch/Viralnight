@@ -371,11 +371,13 @@
         .splash-barre { animation: none; width: 88%; }
       }
 
-      /* Boutons de connexion de l'accueil, repris de l'appli clubbeur :
-         un gerant retrouve les memes gestes que ses clients. */
+      /* Boutons et champs de l'accueil. La PILULE (border-radius: 99px)
+         etait le trait le plus reconnaissable de l'appli clubbeur : a
+         elle seule elle faisait lire les deux ecrans comme le meme. Ici
+         un rayon court, celui des outils de gestion. */
       .ac-btn {
         display: flex; align-items: center; justify-content: center; gap: 10px;
-        width: 100%; min-height: 50px; padding: 0 18px; border: 0; border-radius: 99px;
+        width: 100%; min-height: 48px; padding: 0 18px; border: 0; border-radius: 12px;
         font-family: inherit; font-size: 14.5px; font-weight: 700; letter-spacing: -.01em;
         cursor: pointer;
       }
@@ -383,8 +385,6 @@
       .ac-btn-google { background: #ffffff; color: #15181d; border: 1px solid rgba(16,18,22,.16); }
       .ac-btn-mail { background: #15181d; color: #ffffff; }
       .ac-btn[disabled] { opacity: .55; cursor: default; }
-      /* Separateur et champs repris tels quels de l'appli clubbeur : le
-         gerant doit reconnaitre l'ecran que voient ses clients. */
       .ac-sep {
         display: flex; align-items: center; gap: 10px; margin: 12px 0 4px;
         font-size: 11.5px; font-weight: 600; color: #8e97a4;
@@ -393,13 +393,17 @@
         content: ""; flex: 1 1 auto; height: 1px; background: rgba(16,18,22,.15);
       }
       .ac-input {
-        width: 100%; min-height: 48px; padding: 0 18px; border: 0; border-radius: 99px;
-        background: #eef0f4; color: #15181d;
+        width: 100%; min-height: 46px; padding: 0 14px; border: 1px solid rgba(16,18,22,.16);
+        border-radius: 10px; background: #ffffff; color: #15181d;
         font-family: inherit; font-size: 14.5px; font-weight: 600;
       }
       .ac-input::placeholder { color: #8e97a4; font-weight: 500; }
       .ac-input:focus { outline: 2px solid #15181d; outline-offset: 1px; }
-      .ac-btn-marque { background: #ff2f45; color: #ffffff; }
+      /* Bouton d'action NOIR, pas corail : le corail est une couleur de
+         marque, jamais un CTA (regle de design du projet). C'est aussi
+         ce qui separe le plus vite cet ecran de celui des clubbeurs, ou
+         le bouton principal est rouge. */
+      .ac-btn-marque { background: #15181d; color: #ffffff; }
       .ac-aide {
         margin: 2px 0 0; font-size: 11px; color: #8e97a4; line-height: 1.4; text-align: center;
       }
@@ -410,57 +414,76 @@
       }
 
       /* ---- Ecran d'accueil ----
-         Le meme que l'appli clubbeur (fond clair, logo au verre, texte a
-         gauche), mais le texte s'adresse au GERANT, pas a son client :
-         un club qui ouvre ca doit comprendre en une phrase ce que
-         l'outil lui apporte, pas ce que ses clients y gagnent.
+         VOLONTAIREMENT DIFFERENT de celui de l'appli clubbeur. Les deux
+         etaient le meme ecran a la lettre -- meme fond, meme logo au
+         verre au centre, meme titre centre, memes boutons en pilule --
+         seul le texte changeait. Julien : "c'est la meme page d'accueil
+         que pour l'autre, juste tu mets une autre description, mais tu
+         fais exactement la meme chose".
+
+         Le verre et la composition centree ont ete dessines pour un
+         client de boite de nuit. Le gerant qui paie un abonnement ouvre
+         un outil de travail : on garde le fond clair (sa demande), mais
+         la hierarchie devient celle d'une page B2B -- tout cale a
+         gauche, le titre porte le message, aucune illustration.
 
          Pose par-dessus tout, comme .vue-accueil dans app-preview.html :
          il ne fait pas partie des onglets, il disparait quand on entre. */
       .accueil {
         position: absolute; inset: 0; z-index: 34;
-        display: flex; flex-direction: column; justify-content: flex-start;
-        padding: 38px 26px 32px; text-align: left;
+        display: flex; flex-direction: column; align-items: stretch;
+        padding: 26px 24px 20px; text-align: left;
         background: #ffffff; color: #15181d;
+        /* Le clavier logiciel ampute l'ecran de moitie sur un telephone :
+           sans ca, le bouton de connexion devient inatteignable. */
+        overflow-y: auto;
         transition: opacity .35s ease, visibility .35s ease;
       }
       .accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
+
+      /* La marque tient en un mot. Le corail n'est ici qu'un point --
+         une couleur de marque, jamais un bouton. */
+      .accueil-marque { display: flex; align-items: baseline; gap: 9px; margin-bottom: 20px; }
+      .accueil-mot { font-size: 15px; font-weight: 800; letter-spacing: -.03em; }
+      .accueil-mot::after {
+        content: ""; display: inline-block; width: 5px; height: 5px; margin-left: 3px;
+        border-radius: 50%; background: #ff2f45; vertical-align: 2px;
+      }
+      .accueil-pro {
+        font-size: 10px; font-weight: 700; letter-spacing: .1em;
+        text-transform: uppercase; color: #9aa1ac;
+      }
+
+      /* Le titre EST l'illustration : c'est lui qui remplace le verre. */
       .accueil-titre {
-        margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.03em;
-        line-height: 1.2; text-align: center;
+        margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.035em;
+        line-height: 1.15; text-align: left;
       }
-      /* Le PNG du logo n'occupe que la bande verticale 22%-72%, le reste
-         est du fond vide : on ne montre que cette bande, sinon il prend
-         deux fois la hauteur necessaire. Meme rattrapage que dans
-         app-preview.html -- un PNG a fond transparent serait plus propre.
-         Ici le fond de l'ecran est deja blanc creme, aucun filtre n'est
-         necessaire. */
-      .accueil-logo {
-        width: min(280px, 100%); aspect-ratio: 1 / .53;
-        margin: auto auto 0; align-self: center; overflow: hidden;
-      }
-      /* Le PNG porte un fond creme qui se verrait comme un rectangle
-         beige sur le blanc : meme rattrapage que dans app-preview.html,
-         un leger gain par canal qui n'agit que sur les tons tres clairs
-         -- donc sur le fond, pas sur le verre. */
-      .accueil-logo img { display: block; width: 100%; height: auto; margin-top: -21%; filter: url(#logo-blanc-club); }
-      .accueil-texte { margin: auto 0 22px; }
       .accueil-lead {
-        margin: 0; font-size: 14.5px; font-weight: 500;
-        letter-spacing: -.01em; line-height: 1.45; color: #5b6472;
+        margin: 10px 0 0; font-size: 13.5px; font-weight: 500;
+        letter-spacing: -.01em; line-height: 1.5; color: #5b6472;
       }
-      .accueil-points { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+
+      /* Trois lignes numerotees separees par un filet, comme les entetes
+         de section du tableau de bord ("01 · Vue generale"). Les
+         pastilles rondes a coche rouge etaient la signature de l'appli
+         grand public : c'est exactement ce qu'il fallait quitter. */
+      .accueil-points { margin: 16px 0 0; padding: 0; list-style: none; }
       .accueil-points li {
-        display: flex; gap: 9px; align-items: flex-start;
-        font-size: 13px; font-weight: 550; line-height: 1.4; color: #5b6472;
+        display: flex; gap: 12px; align-items: baseline; padding: 8px 0;
+        border-top: 1px solid rgba(16,18,22,.10);
+        font-size: 12.5px; font-weight: 500; line-height: 1.4; color: #5b6472;
       }
-      .accueil-points b { color: #15181d; font-weight: 750; }
-      .accueil-puce {
-        flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%;
-        background: rgba(255,47,69,.12); display: grid; place-items: center;
+      .accueil-points li:last-child { border-bottom: 1px solid rgba(16,18,22,.10); }
+      .accueil-num {
+        flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: .06em;
+        color: #ff2f45; font-variant-numeric: tabular-nums;
       }
-      .accueil-puce svg { width: 10px; height: 10px; stroke: #ff2f45; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-      .accueil-actions { width: 100%; display: grid; gap: 10px; }
+      .accueil-points b { display: block; margin-bottom: 1px; color: #15181d; font-weight: 700; }
+
+      /* Colle en bas tant que la place le permet : les champs tombent
+         sous le pouce, pas au milieu de l'ecran. */
+      .accueil-actions { width: 100%; display: grid; gap: 9px; margin-top: auto; padding-top: 16px; }
 
       /* ---- Bandeau "mode demo" ----
          Hors session, TOUS les boutons d'ecriture partaient quand meme
@@ -670,25 +693,25 @@
                  Premier ecran d'un club qui ouvre l'appli. Il parle du
                  club, jamais de ses clients : c'est lui qui paie. -->
             <div class="accueil" id="accueil">
-              <h1 class="accueil-titre">Noctify, côté club.</h1>
-
-              <p class="accueil-logo">
-                <img src="/noctify-logo-verre.png" alt="Noctify" width="1254" height="1254" />
+              <p class="accueil-marque">
+                <span class="accueil-mot">Noctify</span>
+                <span class="accueil-pro">Espace club</span>
               </p>
 
-              <div class="accueil-texte">
-                <p class="accueil-lead">
-                  Vos clients publient vos soirées, vous voyez ce que ça rapporte.
-                </p>
-                <ul class="accueil-points">
-                  <li><span class="accueil-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
-                    <span><b>Les vues que vos soirées génèrent</b>, mesurées, pas estimées.</span></li>
-                  <li><span class="accueil-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
-                    <span><b>Vos récompenses</b>, que vous réglez vous-même.</span></li>
-                  <li><span class="accueil-puce"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
-                    <span><b>Votre affiche à imprimer</b>, avec votre QR code.</span></li>
-                </ul>
-              </div>
+              <h1 class="accueil-titre">Vos clients publient vos soirées.</h1>
+              <p class="accueil-lead">
+                Vous voyez ce que ça rapporte : vues générées, points distribués,
+                coût de chaque récompense.
+              </p>
+
+              <ul class="accueil-points">
+                <li><span class="accueil-num">01</span>
+                  <span><b>Les vues de vos soirées</b>Mesurées, pas estimées.</span></li>
+                <li><span class="accueil-num">02</span>
+                  <span><b>Vos récompenses</b>Le barème, c'est vous qui le fixez.</span></li>
+                <li><span class="accueil-num">03</span>
+                  <span><b>Votre affiche à imprimer</b>Avec le QR code de votre club.</span></li>
+              </ul>
 
               <div class="accueil-actions">
                 <button type="button" class="ac-btn ac-btn-google" id="accueil-google">
