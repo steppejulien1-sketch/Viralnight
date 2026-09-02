@@ -191,6 +191,23 @@
            defaut : la fiche club de la carte n'a jamais surcharge
            cette variable, son bouton "Poster ma story" reste corail. */
         --bouton: var(--accent);
+        /* L'ACTION PRINCIPALE N'EST PAS CORAIL.
+           Il y avait quatre pastilles rouge vif par ecran -- "Recuperer",
+           "Scanner le QR", "Ouvrir Instagram", "Continuer avec l'email".
+           Quand tout crie, plus rien ne ressort, et le corail cesse
+           d'etre une couleur de marque pour devenir une couleur de
+           bouton. Il reste sur les marqueurs : l'onglet actif, les prix,
+           les anneaux de focus.
+
+           Ces deux jetons suivent le theme tout seuls, puisqu'ils
+           pointent sur --ink et --bg : bouton encre en clair, bouton
+           clair en sombre, sans une seule regle dupliquee. */
+        --action: var(--ink);
+        --action-ink: var(--bg);
+        /* Une courbe qui part vite puis s'installe. Les easings natifs
+           sont mous : a duree egale, celle-ci donne une interface qui
+           repond au lieu de suivre. */
+        --sortie: cubic-bezier(.23, 1, .32, 1);
         /* Le meme ambre que le cadran d'un vieux mixeur de DJ ou le
            tube d'un compteur a lampes : chaque nombre de points se
            lit comme une mesure, pas comme une decoration. Distinct du
@@ -962,7 +979,6 @@
          illisibles une fois le fond de la feuille passe en blanc --
          corrige comme deja fait pour .screen.boutique-pro. */
       .sheet.clair .grab { background: rgba(0,0,0,.13); }
-      .sheet.clair .sheet-cta.sobre { background: var(--s2); color: var(--ink); }
       @media (prefers-color-scheme: dark) {
         .sheet.clair {
           --ink: #ffffff;
@@ -1791,6 +1807,8 @@
       .carte-reco:hover { transform: translateY(-3px); box-shadow: var(--ombre-2); border-color: var(--line2); }
       .carte-reco:active { transform: translateY(0) scale(.98); }
       .carte-reco:focus-visible { outline: 3px solid var(--bouton); outline-offset: 3px; }
+      .carte-reco { transition: transform .16s var(--sortie); }
+      .carte-reco:active { transform: scale(.985); }
 
       /* Carre : a largeur de grille egale, l'image gagne ~35% de hauteur
          par rapport au 4/3 d'origine. C'est le "images trop petites". */
@@ -1912,6 +1930,8 @@
       }
       .offre-hero:hover { box-shadow: 0 22px 40px -18px rgba(20,20,25,.3); transform: translateY(-3px); }
       .offre-hero:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
+      .offre-hero { transition: transform .16s var(--sortie); }
+      .offre-hero:active { transform: scale(.99); }
       .offre-hero .photo { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; }
       .offre-hero .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
@@ -1935,7 +1955,7 @@
       .offre-hero del { font-family: var(--mono); font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--ink3); }
       .offre-hero .cta-visuelle {
         display: block; text-align: center; border-radius: 999px;
-        background: var(--bouton); color: #fff; font-size: calc(15 * var(--u)); font-weight: 700;
+        background: var(--action); color: var(--action-ink); font-size: calc(15 * var(--u)); font-weight: 700;
         letter-spacing: -.01em; padding: 13px;
         box-shadow: 0 10px 20px -8px rgba(20,20,25,.4);
       }
@@ -1996,6 +2016,16 @@
       .bq-club[aria-current="true"] { border-color: var(--accent); }
       .bq-club:active { transform: scale(.99); }
       .bq-club:focus-visible { outline: 3px solid var(--bouton); outline-offset: 2px; }
+      .bq-club { transition: transform .16s var(--sortie); }
+      .bq-club:active { transform: scale(.97); }
+
+      /* Le deplacement gene, pas le fondu : on retire l'un, on garde
+         l'autre. */
+      @media (prefers-reduced-motion: reduce) {
+        .sheet-cta, .tab, .carte-reco, .offre-hero, .bq-club { transition: none; }
+        .sheet-cta:active, .tab:active, .carte-reco:active,
+        .offre-hero:active, .bq-club:active { transform: none; }
+      }
       .bq-pastille {
         flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
         background: var(--c, var(--accent)); color: #fff;
@@ -2207,6 +2237,8 @@
          banc d'essai, c'est un mot coupe en production. */
       .tab .lbl { font-size: calc(10.5 * min(var(--u), 1px)); font-weight: 700; letter-spacing: -.01em; color: #9a9ea5; }
       .tab.on svg, .tab.on .lbl { stroke: var(--bouton); color: var(--bouton); }
+      .tab { transition: transform .16s var(--sortie); }
+      .tab:active { transform: scale(.93); }
       .tab .badge { position: absolute; top: -2px; right: 50%; margin-right: -17px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
 
       /* ---- Invitation aux notifications ----
@@ -2743,14 +2775,23 @@
 
       .sheet-cta {
         display: flex; align-items: center; justify-content: center; gap: 9px;
-        width: 100%; background: var(--bouton); color: #fff; border: 0;
+        width: 100%; background: var(--action); color: var(--action-ink); border: 0;
         border-radius: 17px; padding: 17px; font-family: inherit; font-size: calc(16 * var(--u));
         font-weight: 700; letter-spacing: -.02em; cursor: pointer;
         box-shadow: 0 12px 24px -10px rgba(20,20,25,.4);
+        transition: transform .16s var(--sortie), opacity .16s ease;
       }
-      .sheet-cta:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-      .sheet-cta[disabled] { background: var(--s3); color: var(--ink3); cursor: not-allowed; }
-      .sheet-cta.sobre { background: var(--ink); color: #120d0d; }
+      /* Un bouton qui ne bouge pas sous le doigt, c'est le premier signe
+         qu'une interface n'a pas ete finie. */
+      .sheet-cta:active { transform: scale(.97); }
+      .sheet-cta:focus-visible { outline: 3px solid var(--action); outline-offset: 3px; }
+      .sheet-cta[disabled] { background: var(--s3); color: var(--ink3); cursor: not-allowed; transform: none; }
+      /* La variante secondaire : une surface, pas une seconde couleur.
+         Elle codait #120d0d en dur et devenait illisible en theme clair,
+         d'ou le rustine .sheet.clair plus haut -- qui n'a plus lieu
+         d'etre maintenant que les deux jetons suivent le theme. */
+      .sheet-cta.sobre { background: var(--s2); color: var(--ink); box-shadow: none; }
+      @media (hover: hover) and (pointer: fine) { .sheet-cta:hover { opacity: .9; } }
       .sheet-note { text-align: center; font-size: calc(13.5 * var(--u)); color: var(--ink2); margin: 13px 0 0; font-weight: 600; line-height: 1.45; }
       .sheet-note em {
         font-style: normal; color: var(--ambre); font-weight: 700; font-family: var(--mono);
