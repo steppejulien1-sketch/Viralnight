@@ -720,12 +720,27 @@
               </div>
             </div>
 
-            <!-- Ne sert plus qu'a un cas : une session existe mais les
-                 donnees ne chargent pas (aucun club rattache). Reproposer
-                 un formulaire n'aiderait pas, on affiche le message. -->
+            <!-- Une session existe mais aucune donnee derriere. Deux cas
+                 tres differents, d'ou le formulaire optionnel :
+
+                 - erreur de lecture : on affiche le message, point ;
+                 - AUCUN CLUB RATTACHE : le compte existe, l'etablissement
+                   n'a jamais ete cree. C'est le cas quand la confirmation
+                   par email est active a l'inscription -- il n'y a alors
+                   pas de session au moment du signUp, donc aucun jeton
+                   pour appeler /api/create-client, et personne ne
+                   rattrapait le coup a la premiere connexion. Le compte
+                   restait vivant mais vide : tableau de bord en donnees de
+                   demonstration, et toutes les routes API en 403
+                   "Aucun etablissement lie a ce compte". Sans sortie. -->
             <div class="porte" id="porte" hidden>
               <h1 class="ecran-titre" style="margin-bottom:14px">Noctify club</h1>
               <p id="porte-message">Connecte-toi avec ton compte club.</p>
+              <form id="porte-club-form" style="display:grid;gap:10px;margin-top:16px;width:100%" hidden>
+                <input type="text" class="ac-input" id="porte-club-manquant" placeholder="Nom de ton club" autocomplete="organization" required />
+                <button type="submit" class="ac-btn ac-btn-marque" id="porte-club-creer">Créer mon club</button>
+                <p class="ac-aide" id="porte-club-msg"></p>
+              </form>
             </div>
 
             <!-- ================= TABLEAU DE BORD ================= -->
@@ -1102,6 +1117,19 @@
           ? await fetchDashboardData(supabase, isSupabaseConfigured)
           : { ...fallbackDashboardData, session: null };
 
+        // Un compte sans club rattache : surtout ne pas le noyer dans des
+        // chiffres de demonstration. Il croirait que l'appli tourne, alors
+        // que la moindre route API lui repondra 403. On lui montre la
+        // seule action qui debloque la suite : nommer son club.
+        if (data.session && data.reason === "no_establishment") {
+          ETAT.session = data.session;
+          ETAT.data = data;
+          ACCUEIL.classList.add("masque");
+          afficherPorte("Ton compte existe, mais aucun club n'y est encore rattaché.", true);
+          $("#splash").classList.add("masque");
+          return;
+        }
+
         if (!data.establishment) {
           data = { ...fallbackDashboardData, session: data.session || null };
         }
@@ -1127,17 +1155,59 @@
       /* Le formulaire vit desormais sur l'accueil : "montrer la porte",
          c'est demasquer l'accueil. L'ecran #porte ne reste que pour le
          cas ou une session existe sans donnees derriere. */
-      function afficherPorte(message) {
+      function afficherPorte(message, demanderClub) {
         if (!ETAT.session) {
           ACCUEIL.classList.remove("masque");
           return;
         }
         if (message) $("#porte-message").textContent = message;
-        // Une session existe deja mais les donnees ne chargent pas (aucun
-        // club rattache, erreur de lecture...) : re-proposer un formulaire
-        // de connexion n'aiderait pas, on affiche juste le message.
+        // Re-proposer un formulaire de CONNEXION n'aiderait pas : la
+        // session est deja la. Demander le nom du club, si.
+        $("#porte-club-form").hidden = !demanderClub;
         PORTE.hidden = false;
       }
+
+      /* Sortie de secours : creer le club qui manque, sans repasser par
+         l'inscription. /api/create-client deduit le proprietaire du jeton
+         verifie, jamais du corps de la requete -- on n'envoie que le nom.
+         L'appel est idempotent cote serveur : un double clic renvoie le
+         club existant au lieu d'en creer un second. */
+      $("#porte-club-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var bouton = $("#porte-club-creer");
+        var msg = $("#porte-club-msg");
+        var nom = $("#porte-club-manquant").value.trim();
+        if (!nom || !ETAT.session) return;
+
+        bouton.disabled = true;
+        bouton.textContent = "Création…";
+        msg.style.display = "none";
+
+        try {
+          var reponse = await fetch("/api/create-client", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + ETAT.session.access_token,
+            },
+            body: JSON.stringify({ establishment_name: nom }),
+          });
+          var corps = await reponse.json();
+          if (!reponse.ok) throw new Error(corps && corps.error);
+
+          PORTE.hidden = true;
+          $("#porte-club-form").hidden = true;
+          await demarrer();
+        } catch (erreur) {
+          // Le vrai message du serveur : c'est lui qui dit si le blocage
+          // vient du compte admin, d'un nom refuse ou du reseau.
+          bouton.disabled = false;
+          bouton.textContent = "Créer mon club";
+          msg.style.display = "block";
+          msg.style.color = "var(--accent)";
+          msg.textContent = (erreur && erreur.message) || "Création impossible pour le moment.";
+        }
+      });
 
       // Traduction des erreurs Supabase les plus courantes -- meme logique
       // qu'auth.js (connexion.html), mais ce fichier n'exporte rien : copie
