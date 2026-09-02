@@ -85,30 +85,54 @@
          L'accueil, la porte et l'ecran de chargement restent clairs :
          ils encadrent l'appli, ils ne sont pas dedans. Meme partage que
          dans l'appli clubbeur. */
+      /* ---- La palette ----
+         CLAIRE, sur tous les ecrans, entree comprise. Ce qui faisait
+         "template" avant, ce n'etait pas le clair : c'etait le gris
+         bleute par defaut (#f6f7f9 + cartes blanches), les boutons
+         coraux delaves et les aplats degrades.
+
+         Le fond est un blanc casse CHAUD, pas un gris bleu -- c'est ce
+         qui separe un papier d'un fond de formulaire. Les cartes sont
+         blanc pur : la hierarchie vient de la, pas d'une bordure grise.
+
+         Le corail reste une couleur de MARQUE. Sur du blanc il ne passe
+         pas le contraste en petit texte (2,9:1), d'ou --accent-fort
+         pour tout ce qui se LIT ; --accent ne sert qu'aux formes, ou
+         seule la teinte compte. */
       .screen {
         position: relative; width: 100%; height: 100%; border-radius: 43px;
         overflow: hidden; user-select: none;
-        --ink:   #eef1f5;
-        --ink2:  #99a2b0;
-        --ink3:  #7d8694;
-        --bg:    #0a0c0f;
-        --s1:    #121519;
-        --s2:    #1a1e24;
-        --s3:    #272c34;
-        --line:  rgba(255,255,255,.07);
-        --line2: rgba(255,255,255,.12);
-        --accent: #ff6363;
-        --ambre: #f0b429;
-        --succes: #3ddc97;
-        /* L'action principale. Un bouton corail sur fond sombre fait
-           alerte, pas action. */
-        --action: #f2f5f8;
-        --action-ink: #0a0c0f;
-        /* Sans ca, les <select> et les <input> du bareme et de la fiche
-           restent blancs avec leur fleche noire : des rectangles clairs
-           poses au milieu d'un ecran sombre. */
-        color-scheme: dark;
-        accent-color: var(--accent);
+        --ink:   #16181d;
+        --ink2:  #5b626e;
+        --ink3:  #6f7681;
+        --bg:    #f7f7f5;
+        --s1:    #ffffff;
+        --s2:    #f1f1ef;
+        --s3:    #e4e4e1;
+        --line:  rgba(20,22,28,.08);
+        --line2: rgba(20,22,28,.14);
+        --accent:      #ff6363;
+        --accent-fort: #cf353c;
+        --ambre: #a86500;
+        --succes: #12874d;
+        /* L'action principale est encre, jamais corail : le corail est
+           une couleur de marque. */
+        --action: #16181d;
+        --action-ink: #ffffff;
+
+        /* Deux niveaux d'elevation, courts et serres. Sur du clair, une
+           grande ombre floue fait flotter les cartes ; ce sont les
+           ombres COURTES qui donnent du poids. */
+        --ombre-1: 0 1px 2px rgba(20,22,28,.05);
+        --ombre-2: 0 1px 2px rgba(20,22,28,.06), 0 10px 24px -14px rgba(20,22,28,.20);
+
+        /* Les courbes natives du navigateur sont molles. Celle-ci part
+           vite puis s'installe : c'est ce qui fait qu'une interface
+           repond au lieu de suivre. */
+        --sortie: cubic-bezier(.23, 1, .32, 1);
+
+        color-scheme: light;
+        accent-color: var(--accent-fort);
         background: var(--bg); color: var(--ink);
       }
 
@@ -117,7 +141,7 @@
          haut de l'ecran, la marge s'y ajoutait. */
       .vue {
         position: absolute; inset: 0; padding: 14px 20px 100px; overflow-y: auto;
-        opacity: 0; visibility: hidden; transition: opacity .18s ease;
+        opacity: 0; visibility: hidden; transition: opacity .14s var(--sortie);
       }
       .vue.actif { opacity: 1; visibility: visible; }
       @media (prefers-reduced-motion: reduce) { .vue { transition: none; } }
@@ -139,13 +163,7 @@
       .porte {
         position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 16px; padding: 30px;
-        text-align: center;
-        --ink: #15181d; --ink2: #5c6370; --ink3: #9aa1ac;
-        --s1: #ffffff; --s2: #eef0f4; --s3: #e3e7ed;
-        --line: rgba(16,18,22,.09); --line2: rgba(16,18,22,.15);
-        --action: #15181d; --action-ink: #ffffff;
-        color-scheme: light; accent-color: #15181d;
-        background: #ffffff; color: var(--ink);
+        text-align: center; background: var(--s1); color: var(--ink);
       }
       .porte[hidden] { display: none; }
       .porte p { margin: 0; color: var(--ink2); font-size: 13.5px; line-height: 1.5; }
@@ -157,9 +175,10 @@
         min-height: 46px; padding: 0 22px; border-radius: 12px; border: 0;
         background: var(--action); color: var(--action-ink); font-weight: 700; font-size: 14px;
         text-decoration: none; cursor: pointer; font-family: inherit;
-        transition: opacity .15s ease;
+        transition: transform .16s var(--sortie), opacity .16s ease;
       }
-      .bouton:hover { opacity: .88; }
+      .bouton:active { transform: scale(.97); }
+      @media (hover: hover) and (pointer: fine) { .bouton:hover { opacity: .88; } }
       .bouton.sobre { background: var(--s2); color: var(--ink); border: 1px solid var(--line2); }
       .bouton.pleine { width: 100%; }
       .bouton[disabled] { opacity: .55; cursor: default; }
@@ -241,7 +260,7 @@
         vertical-align: middle;
       }
       .hero-delta.hausse { background: color-mix(in srgb, var(--succes) 15%, transparent); color: var(--succes); }
-      .hero-delta.baisse { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+      .hero-delta.baisse { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent-fort); }
       .hero-delta.plat { background: var(--s2); color: var(--ink3); }
 
       /* Les barres : une par soiree, la derniere en corail. Elles disent
@@ -271,9 +290,7 @@
       .hero {
         background: var(--s1); border: 1px solid var(--line);
         border-radius: 20px; padding: 18px 18px 8px; margin-bottom: 12px;
-        /* Un filet clair sur l'arete haute, pas une ombre portee : sur
-           du sombre une ombre ne se voit pas, un reflet si. */
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+        box-shadow: var(--ombre-2);
       }
       .hero-label {
         font-family: var(--mono); font-size: 9.5px; font-weight: 600;
@@ -298,6 +315,7 @@
       .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 20px; }
       .kpi {
         background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 14px 15px;
+        box-shadow: var(--ombre-1);
       }
       .kpi-label {
         display: block; min-height: 24px;
@@ -320,6 +338,7 @@
         display: flex; align-items: center; gap: 12px;
         background: var(--s1); border: 1px solid var(--line);
         border-radius: 16px; padding: 14px 15px; margin-bottom: 20px;
+        box-shadow: var(--ombre-1);
       }
       /* display:flex bat la regle [hidden] du navigateur : sans cette
          ligne, la carte masquee laissait une bande vide sous le hero. */
@@ -346,7 +365,7 @@
       .affiche-apercu {
         width: 100%; border-radius: 12px; display: block;
         border: 1px solid var(--line2);
-        box-shadow: 0 12px 32px -20px #000;
+        box-shadow: var(--ombre-2);
         background: #fff;
       }
       .qr-actions { display: grid; gap: 8px; width: 100%; }
@@ -411,7 +430,7 @@
       }
       .splash-barre {
         display: block; height: 100%; width: 6%; border-radius: 999px;
-        background: linear-gradient(135deg, #ff2f45, #ff6b5b);
+        background: #ff6363;
         animation: splash-charge 1.1s cubic-bezier(.3,.6,.4,1) forwards;
       }
       @keyframes splash-charge { from { width: 6%; } to { width: 88%; } }
@@ -429,8 +448,9 @@
         display: flex; align-items: center; justify-content: center; gap: 10px;
         width: 100%; min-height: 48px; padding: 0 18px; border: 0; border-radius: 12px;
         font-family: inherit; font-size: 14.5px; font-weight: 700; letter-spacing: -.01em;
-        cursor: pointer;
+        cursor: pointer; transition: transform .16s var(--sortie);
       }
+      .ac-btn:active { transform: scale(.98); }
       .ac-btn svg { width: 19px; height: 19px; flex: 0 0 auto; }
       .ac-btn-google { background: #ffffff; color: #15181d; border: 1px solid rgba(16,18,22,.16); }
       .ac-btn-mail { background: #15181d; color: #ffffff; }
@@ -484,10 +504,6 @@
         display: flex; flex-direction: column; align-items: stretch;
         padding: 26px 24px 20px; text-align: left;
         background: #ffffff; color: #15181d;
-        /* Ces deux ecrans restent clairs dans une appli sombre : sans
-           cette ligne ils heritent du color-scheme de .screen et leurs
-           champs virent au noir sur du blanc. */
-        color-scheme: light; accent-color: #15181d;
         /* Le clavier logiciel ampute l'ecran de moitie sur un telephone :
            sans ca, le bouton de connexion devient inatteignable. */
         overflow-y: auto;
@@ -580,12 +596,19 @@
          encore pour dire si l'enregistrement a marche. */
       .fiche-msg { font-size: 12.5px; margin: 4px 0 0; display: none; }
 
+      /* Un seul anneau de focus pour toute l'appli. */
+      .bouton:focus-visible, .retour:focus-visible, .retirer:focus-visible,
+      .reglage-lien:focus-visible, .ajouter-recompense:focus-visible {
+        outline: 2px solid var(--ink); outline-offset: 2px;
+      }
+
       .section-titre {
         font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
         color: var(--ink3); margin: 22px 0 10px;
       }
       .carte {
         background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 14px 15px; margin: 0 0 10px;
+        box-shadow: var(--ombre-1);
       }
       .vide { text-align: center; padding: 30px 10px; color: var(--ink3); font-size: 13px; }
 
@@ -640,14 +663,20 @@
       .reco-chevron {
         flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none;
         stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-        transition: transform .18s ease;
+        transition: transform .2s var(--sortie);
       }
       .recompense-carte[open] .reco-chevron { transform: rotate(90deg); }
       .reco-detail {
         display: grid; gap: 9px; padding: 4px 15px 14px;
         border-top: 1px solid var(--line); margin-top: 2px;
       }
-      @media (prefers-reduced-motion: reduce) { .reco-chevron { transition: none; } }
+      @media (prefers-reduced-motion: reduce) {
+        .reco-chevron, .bouton, .tab, .retour, .retirer, .ajouter-recompense, .ac-btn { transition: none; }
+        /* On garde l'opacite, on retire le mouvement : c'est le
+           deplacement qui gene, pas le fondu. */
+        .bouton:active, .tab:active, .retour:active,
+        .retirer:active, .ajouter-recompense:active, .ac-btn:active { transform: none; }
+      }
       .recompense-carte .champ { display: grid; gap: 5px; }
       .recompense-carte label { font-size: 10.5px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; }
       .recompense-carte input, .recompense-carte select {
@@ -660,15 +689,23 @@
       /* Contour seul : un aplat rose pale sur une action destructrice
          la faisait passer pour un bouton desactive. */
       .retirer {
-        background: none; color: var(--accent);
-        border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+        background: none; color: var(--accent-fort);
+        border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
         border-radius: 8px; padding: 6px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
       }
-      .retirer:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+      .retirer { transition: transform .16s var(--sortie), background .15s ease; }
+      .retirer:active { transform: scale(.96); }
+      @media (hover: hover) and (pointer: fine) {
+        .retirer:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+      }
       .ajouter-recompense {
         width: 100%; min-height: 46px; border-radius: 14px; border: 1.5px dashed var(--line2);
         background: none; color: var(--ink2); font-weight: 700; font-size: 13.5px; cursor: pointer; font-family: inherit;
-        margin-top: 4px;
+        margin-top: 4px; transition: transform .16s var(--sortie), border-color .15s ease;
+      }
+      .ajouter-recompense:active { transform: scale(.99); }
+      @media (hover: hover) and (pointer: fine) {
+        .ajouter-recompense:hover { border-color: var(--ink3); color: var(--ink); }
       }
 
       /* Bascule connexion / inscription. Un lien discret, pas un second
@@ -730,11 +767,15 @@
         background: none; cursor: pointer; font-family: inherit; text-align: left; color: inherit;
       }
       .reglage-lien:last-child { border-bottom: 0; }
-      .reglage-lien:hover .reglage-fleche { transform: translateX(2px); }
+      .reglage-lien { transition: background .15s ease; border-radius: 10px; }
+      .reglage-lien:active { background: var(--s2); }
+      @media (hover: hover) and (pointer: fine) {
+        .reglage-lien:hover .reglage-fleche { transform: translateX(2px); }
+      }
       .reglage-fleche {
         flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3);
         fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-        transition: transform .15s ease;
+        transition: transform .15s var(--sortie);
       }
 
       /* Retour vers le sommaire. Sans lui, les trois sous-ecrans
@@ -745,7 +786,9 @@
         border: 1px solid var(--line2); background: var(--s1); color: var(--ink2);
         font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
       }
-      .retour:hover { color: var(--ink); }
+      .retour { transition: transform .16s var(--sortie), color .15s ease; }
+      .retour:active { transform: scale(.96); }
+      @media (hover: hover) and (pointer: fine) { .retour:hover { color: var(--ink); } }
       .retour svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
       /* ---- Barre d'onglets (5, meme habillage qu'app-preview.html) ----
@@ -755,7 +798,11 @@
          ne repose pas ce probleme. */
       .tabs {
         position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
-        background: rgba(10,12,15,.82); border-top: 1px solid var(--line2);
+        /* Le fond de page en translucide, pas du blanc pur : la barre
+           doit se poser SUR le contenu qui defile dessous, pas le
+           masquer d'un bandeau opaque. */
+        background: color-mix(in srgb, var(--bg) 86%, transparent);
+        border-top: 1px solid var(--line2);
         backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
         display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
         align-items: center; padding-bottom: 18px;
@@ -764,7 +811,7 @@
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
         background: none; border: 0; cursor: pointer; padding: 0; font-family: inherit;
       }
-      .tab:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; border-radius: 10px; }
+      .tab:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 10px; }
       .tab svg { width: 23px; height: 23px; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke: var(--ink3); }
       .tab .lbl { font-size: 10px; font-weight: 700; letter-spacing: -.01em; color: var(--ink3); }
       /* Le libelle sur 5 colonnes : "Récompenses" ne tient plus, il
@@ -773,7 +820,8 @@
       /* Onglet actif en clair, pas en corail : des libelles coraux en
          bas d'ecran, c'etait la couleur de marque diluee en decoration.
          Un trait corail suffit a marquer la position. */
-      .tab { position: relative; }
+      .tab { position: relative; transition: transform .16s var(--sortie); }
+      .tab:active { transform: scale(.94); }
       .tab.on svg { stroke: var(--ink); }
       .tab.on .lbl { color: var(--ink); }
       .tab.on::after {
@@ -1186,7 +1234,7 @@
           // n'expliquait pourquoi il ne se passait rien.
           bouton.disabled = false;
           msg.style.display = "block";
-          msg.style.color = "var(--accent)";
+          msg.style.color = "var(--accent-fort)";
           msg.textContent = "La connexion Google n'a pas pu démarrer. Utilise ton email.";
         }
       });
@@ -1375,7 +1423,7 @@
           bouton.disabled = false;
           bouton.textContent = "Créer mon club";
           msg.style.display = "block";
-          msg.style.color = "var(--accent)";
+          msg.style.color = "var(--accent-fort)";
           msg.textContent = (erreur && erreur.message) || "Création impossible pour le moment.";
         }
       });
@@ -1502,7 +1550,7 @@
 
         function dire(texte, erreur) {
           msg.style.display = "block";
-          msg.style.color = erreur ? "var(--accent)" : "var(--ink2)";
+          msg.style.color = erreur ? "var(--accent-fort)" : "var(--ink2)";
           msg.textContent = texte;
         }
 
@@ -1910,7 +1958,7 @@
 
         function dire(texte, erreur) {
           msg.style.display = "block";
-          msg.style.color = erreur ? "var(--accent)" : "var(--succes)";
+          msg.style.color = erreur ? "var(--accent-fort)" : "var(--succes)";
           msg.textContent = texte;
         }
 
@@ -2148,7 +2196,7 @@
           lien.hidden = true;
           $("#affiche-telecharger").hidden = true;
           msg.style.display = "block";
-          msg.style.color = "var(--accent)";
+          msg.style.color = "var(--accent-fort)";
           msg.textContent = "Ce club n'existe pas encore dans l'appli des clubbeurs : le QR ne donnerait aucun point. Contacte-nous.";
           return;
         }
@@ -2175,7 +2223,7 @@
           lien.hidden = true;
           $("#affiche-telecharger").hidden = true;
           msg.style.display = "block";
-          msg.style.color = "var(--accent)";
+          msg.style.color = "var(--accent-fort)";
           msg.textContent = "L'affiche n'a pas pu être générée. Recharge la page.";
         }
       }
