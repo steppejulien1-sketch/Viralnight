@@ -1057,7 +1057,7 @@
         bouton.disabled = true;
         var { error } = await supabase.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: window.location.href },
+          options: { redirectTo: urlDeRetour() },
         });
         if (error) {
           // Sans ce retour, le bouton restait desactive et rien
@@ -1213,10 +1213,11 @@
               "Content-Type": "application/json",
               Authorization: "Bearer " + ETAT.session.access_token,
             },
-            body: JSON.stringify({ establishment_name: nom }),
+            body: JSON.stringify({ establishment_name: nom, invitation: invitationCourante() }),
           });
           var corps = await reponse.json();
           if (!reponse.ok) throw new Error(corps && corps.error);
+          oublierInvitation();
 
           PORTE.hidden = true;
           $("#porte-club-form").hidden = true;
@@ -1255,7 +1256,57 @@
          le gerant se retrouve avec un compte sans club derriere. */
       var modeInscription = false;
 
+      /* ---- Invitation ----
+         L'inscription se fait sur invitation : le lien porte
+         ?invitation=<jeton>. On le range des l'ouverture de la page,
+         pour deux raisons concretes :
+         - le detour par Google ou par l'email de confirmation revient
+           sur une URL qui n'a plus forcement le parametre ;
+         - un gerant qui ouvre le lien puis installe l'appli sur son
+           ecran d'accueil la relance ensuite SANS aucun parametre.
+         Le jeton n'est qu'un laissez-passer : il ne donne acces a rien
+         tant que le serveur ne l'a pas verifie. */
+      var CLE_INVITATION = "noctify_invitation_club";
+
+      function invitationCourante() {
+        try {
+          var jeton = new URL(window.location.href).searchParams.get("invitation");
+          if (jeton) {
+            localStorage.setItem(CLE_INVITATION, jeton);
+            return jeton;
+          }
+          return localStorage.getItem(CLE_INVITATION) || "";
+        } catch (erreur) {
+          // Navigation privee, stockage refuse : l'invitation ne vaudra
+          // que pour cette page-ci, ce qui suffit dans la foulee du clic.
+          try {
+            return new URL(window.location.href).searchParams.get("invitation") || "";
+          } catch (autre) {
+            return "";
+          }
+        }
+      }
+
+      function oublierInvitation() {
+        try { localStorage.removeItem(CLE_INVITATION); } catch (erreur) { /* rien a nettoyer */ }
+      }
+
+      /* L'URL de retour doit REPORTER l'invitation : sans ca, le gerant
+         qui confirme son email depuis un autre appareil arrive sur une
+         appli qui ne sait plus de quelle invitation il vient. */
+      function urlDeRetour() {
+        try {
+          var retour = new URL(window.location.href);
+          var jeton = invitationCourante();
+          if (jeton) retour.searchParams.set("invitation", jeton);
+          return retour.toString();
+        } catch (erreur) {
+          return window.location.href;
+        }
+      }
+
       function majModePorte() {
+        var invite = !!invitationCourante();
         $("#porte-club").hidden = !modeInscription;
         $("#porte-club").required = modeInscription;
         $("#porte-aide-mdp").hidden = !modeInscription;
@@ -1267,7 +1318,19 @@
         $("#porte-message").textContent = modeInscription
           ? "Crée le compte de ton club."
           : "Connecte-toi avec ton compte club.";
-        $("#porte-form-msg").style.display = "none";
+
+        // Le dire AVANT de remplir trois champs pour rien. Le vrai
+        // verrou reste cote serveur : celui-ci n'est que de la
+        // politesse envers quelqu'un qui arrive sans lien.
+        $("#porte-submit").disabled = modeInscription && !invite;
+        if (modeInscription && !invite) {
+          $("#porte-form-msg").style.display = "block";
+          $("#porte-form-msg").style.color = "var(--ink2)";
+          $("#porte-form-msg").textContent =
+            "L'inscription à Noctify se fait sur invitation. Ouvre le lien qu'on t'a envoyé, ou contacte-nous.";
+        } else {
+          $("#porte-form-msg").style.display = "none";
+        }
       }
 
       $("#porte-bascule").addEventListener("click", function () {
@@ -1313,7 +1376,7 @@
               password: password,
               options: {
                 data: { club_name: club },
-                emailRedirectTo: window.location.href,
+                emailRedirectTo: urlDeRetour(),
               },
             });
             if (erreurInscription) throw erreurInscription;
@@ -1328,21 +1391,37 @@
               return;
             }
 
-            // Non bloquant : si la creation du club echoue (reseau), le
-            // compte existe quand meme et le gerant peut se connecter. Le
-            // faire echouer ici perdrait l'inscription entiere pour un
-            // appel secondaire.
             try {
-              await fetch("/api/create-client", {
+              var creation = await fetch("/api/create-client", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                   Authorization: "Bearer " + data.session.access_token,
                 },
-                body: JSON.stringify({ establishment_name: club }),
+                body: JSON.stringify({
+                  establishment_name: club,
+                  invitation: invitationCourante(),
+                }),
               });
+              var corpsCreation = await creation.json().catch(function () { return {}; });
+              if (!creation.ok) throw new Error(corpsCreation && corpsCreation.error);
+              // Le jeton a servi : le garder ferait echouer la prochaine
+              // tentative avec un message trompeur ("deja utilisee").
+              oublierInvitation();
             } catch (erreurClub) {
+              // Avant, cet appel etait volontairement silencieux : une
+              // panne reseau ne devait pas perdre l'inscription entiere.
+              // Depuis l'invitation, l'echec porte une information que le
+              // gerant DOIT lire -- lien expire, deja utilise, emis pour
+              // une autre adresse. Le compte, lui, existe bel et bien.
               console.error("[club-app] creation du club", erreurClub);
+              bouton.disabled = false;
+              bouton.textContent = libelle;
+              return dire(
+                (erreurClub && erreurClub.message)
+                  || "Compte créé, mais le club n'a pas pu l'être. Reconnecte-toi dans un instant.",
+                true,
+              );
             }
           } else {
             var { error: erreurConnexion } = await supabase.auth.signInWithPassword({

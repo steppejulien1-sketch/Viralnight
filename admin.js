@@ -99,6 +99,7 @@ const authStatus = document.querySelector("[data-admin-auth-status]");
 const clientDashboardForm = document.querySelector("[data-client-dashboard-form]");
 const createClientForm = document.querySelector("[data-create-client-form]");
 const clientAccessForm = document.querySelector("[data-client-access-form]");
+const inviteForm = document.querySelector("[data-invite-form]");
 const prospectForm = document.querySelector("[data-prospect-form]");
 const prospectTable = document.querySelector("[data-prospect-table]");
 const prospectStatus = document.querySelector("[data-prospect-status]");
@@ -1078,6 +1079,65 @@ clientDashboardForm?.addEventListener("submit", (event) => {
   }
 
   window.location.href = `./app.html?client_email=${encodeURIComponent(clientEmail)}`;
+});
+
+/* Fabrique un lien d'invitation. Sans lui, personne ne peut plus creer
+   de club : le chemin libre-service de api/create-client.js exige un
+   jeton valide. Le lien est a usage unique et expire.
+
+   Greffe sur /api/create-client via ?action=inviter : le plan Vercel
+   plafonne a 12 fonctions serverless et api/ y est deja. */
+inviteForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!supabase || !state.session?.access_token) {
+    setAuthStatus("Connecte-toi en admin avant de générer une invitation.");
+    return;
+  }
+
+  const formData = new FormData(inviteForm);
+  const bouton = inviteForm.querySelector('button[type="submit"]');
+  if (bouton) bouton.disabled = true;
+  setAuthStatus("Génération du lien...");
+
+  try {
+    const response = await fetch("/api/create-client?action=inviter", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${state.session.access_token}`,
+      },
+      body: JSON.stringify({
+        establishment_name: String(formData.get("establishment_name") || "").trim(),
+        owner_email: String(formData.get("owner_email") || "").trim().toLowerCase(),
+        jours: Number(formData.get("jours") || 30),
+      }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setAuthStatus(`Invitation impossible : ${result.error || response.statusText}`);
+      return;
+    }
+
+    // Le lien reste affiche, il ne se retrouve nulle part ailleurs : le
+    // jeton n'est pas relisible depuis le navigateur une fois la page
+    // fermee (la table est invisible avec la cle anon).
+    const zone = inviteForm.querySelector("[data-invite-result]");
+    const champ = inviteForm.querySelector("[data-invite-url]");
+    if (champ) champ.value = result.url || "";
+    if (zone) zone.hidden = false;
+
+    const expire = result.expires_at
+      ? new Date(result.expires_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+      : "";
+    setAuthStatus(`Lien généré. Copie-le et envoie-le au club${expire ? ` — valable jusqu'au ${expire}` : ""}.`);
+  } catch (erreur) {
+    setAuthStatus(`Invitation impossible : ${erreur.message}`);
+  } finally {
+    if (bouton) bouton.disabled = false;
+  }
 });
 
 createClientForm?.addEventListener("submit", async (event) => {

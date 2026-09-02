@@ -9,6 +9,7 @@
 // que d'afficher un espace vide sans explication.
 
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import { invitationCourante, oublierInvitation, avecInvitation } from "./invitationClub.js";
 
 /** Compte disposant du back-office complet. Doit rester aligne avec admin.js. */
 const ADMIN_EMAIL = "viralnight001@gmail.com";
@@ -165,7 +166,7 @@ async function inscription(email, password, club) {
       // Le nom du club sert a creer l'establishment cote admin,
       // sans redemander au gerant ce qu'il a deja saisi.
       data: { club_name: club },
-      emailRedirectTo: new URL("./connexion.html", window.location.href).href,
+      emailRedirectTo: avecInvitation(new URL("./connexion.html", window.location.href).href),
     },
   });
 
@@ -194,14 +195,26 @@ async function inscription(email, password, club) {
   // sur cet appel secondaire.
   if (club) {
     try {
-      await fetch("/api/create-client", {
+      const creation = await fetch("/api/create-client", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${data.session.access_token}`,
         },
-        body: JSON.stringify({ establishment_name: club }),
+        body: JSON.stringify({ establishment_name: club, invitation: invitationCourante() }),
       });
+      const corps = await creation.json().catch(() => ({}));
+
+      // Depuis que l'inscription se fait sur invitation, cet appel peut
+      // echouer pour une raison que le gerant DOIT lire -- lien absent,
+      // expire, deja utilise. Un echec reseau, lui, reste sans
+      // consequence : bienvenue.html redemandera le nom du club.
+      if (!creation.ok) {
+        message(corps?.error || "Votre compte est cree, mais le club n'a pas pu l'etre.", "error");
+        return;
+      }
+
+      oublierInvitation();
     } catch (erreurProvisionnement) {
       console.error("[inscription] creation du club", erreurProvisionnement);
     }
@@ -225,7 +238,7 @@ async function inscription(email, password, club) {
     } catch {
       // Navigation privee : tant pis, au pire l'ecran s'affiche une fois de trop.
     }
-    window.location.href = "./bienvenue.html";
+    window.location.href = avecInvitation("./bienvenue.html");
     return;
   }
   window.location.href = cible;

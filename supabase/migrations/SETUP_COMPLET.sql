@@ -938,3 +938,35 @@ alter table public.establishments
 
 comment on column public.establishments.phone is
   'Numero de contact du club, saisi a la creation dans l''admin. Facultatif.';
+
+-- ============================================================
+-- 202609020001_invitations_club.sql
+-- ------------------------------------------------------------
+-- L'inscription a Noctify se fait sur invitation. Sans cette table,
+-- n'importe qui pouvait creer un compte et se voir attribuer un club
+-- complet via le chemin libre-service de api/create-client.js.
+--
+-- Verifie uniquement cote serveur (service_role) : aucune policy n'est
+-- ouverte, la table est invisible depuis le navigateur.
+-- ============================================================
+
+create table if not exists public.club_invitations (
+  token text primary key,
+  email text,
+  establishment_name text,
+  city text,
+  created_by uuid,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz,
+  used_at timestamptz,
+  used_by uuid,
+  establishment_id uuid
+);
+
+comment on table public.club_invitations is
+  'Invitations a creer un club. Un jeton = un club. Verifie uniquement cote serveur (service_role).';
+
+create index if not exists club_invitations_email_idx
+  on public.club_invitations (lower(email));
+
+alter table public.club_invitations enable row level security;

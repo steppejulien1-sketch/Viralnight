@@ -8,6 +8,7 @@
 // tant qu'il n'est pas passe ici.
 
 import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
+import { invitationCourante, oublierInvitation } from "./invitationClub.js";
 
 const setupCard = document.querySelector("[data-bv-setup]");
 const stepsCard = document.querySelector("[data-bv-steps]");
@@ -78,16 +79,24 @@ async function init() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ establishment_name: nom, city: ville || "" }),
+        body: JSON.stringify({ establishment_name: nom, city: ville || "", invitation: invitationCourante() }),
       });
       const resultat = await reponse.json().catch(() => ({}));
 
       if (!reponse.ok) throw new Error(resultat?.error || "Erreur inconnue.");
 
+      oublierInvitation();
       afficherEtapes();
     } catch (erreur) {
       console.error("[bienvenue] creation du club", erreur);
-      if (setupStatus) setupStatus.textContent = "Impossible de créer votre espace pour l'instant. Réessayez dans un instant.";
+      // Le VRAI message du serveur : depuis l'invitation, il dit
+      // pourquoi -- lien absent, expire, emis pour une autre adresse.
+      // "Reessayez dans un instant" enverrait le gerant recliquer sans
+      // fin sur un lien qui ne marchera jamais.
+      if (setupStatus) {
+        setupStatus.textContent =
+          erreur?.message || "Impossible de créer votre espace pour l'instant. Réessayez dans un instant.";
+      }
       if (bouton) bouton.disabled = false;
     }
   });
