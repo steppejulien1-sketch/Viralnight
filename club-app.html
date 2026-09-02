@@ -1049,6 +1049,7 @@
               <div id="recompenses-liste"></div>
               <button type="button" class="ajouter-recompense" id="recompense-ajouter">+ Ajouter une récompense</button>
               <p class="fiche-msg" id="recompense-msg"></p>
+              <p class="ac-aide" id="recompense-sync" style="text-align:left"></p>
             </div>
 
             <!-- ================= MA FICHE ================= -->
@@ -2435,6 +2436,55 @@
         rendreRecompenses();
       }
 
+      /* Pousse la boutique vers l'appli des clubbeurs.
+         Les deux bases ne se parlaient pas : le gerant editait ses
+         recompenses ici, l'appli clubbeur en lisait d'autres, et rien ne
+         circulait. Un club changeait ses prix sans que personne le voie.
+
+         Appelee apres CHAQUE modification. Volontairement silencieuse en
+         cas d'echec reseau : l'enregistrement local a deja reussi, et
+         faire echouer l'ecran pour un pont indisponible ferait croire au
+         gerant qu'il a perdu sa saisie. L'etat de la derniere
+         synchronisation s'affiche a cote du bouton. */
+      var syncEnCours = null;
+      async function synchroniserBoutique() {
+        if (!ETAT.session) return;
+        var etat = $("#recompense-sync");
+        if (etat) { etat.textContent = "Envoi aux clubbeurs…"; etat.style.color = "var(--ink3)"; }
+
+        try {
+          var reponse = await fetch("/api/credit-clubbeur?action=sync-boutique", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + ETAT.session.access_token,
+            },
+            body: "{}",
+          });
+          var corps = await reponse.json().catch(function () { return {}; });
+          if (!reponse.ok) throw new Error(corps && corps.error);
+          if (etat) {
+            etat.style.color = "var(--succes)";
+            etat.textContent = "Visible par les clubbeurs ✓";
+          }
+        } catch (erreur) {
+          // Le VRAI motif : "ce club n'existe pas encore dans l'appli
+          // des clubbeurs" n'est pas une panne, c'est une information.
+          if (etat) {
+            etat.style.color = "var(--accent-fort)";
+            etat.textContent = (erreur && erreur.message) || "Synchronisation impossible pour l'instant.";
+          }
+        }
+      }
+
+      /* Regroupe les enregistrements rapprochés : le gerant qui corrige
+         un nom puis un prix declenche deux sauvegardes en trois
+         secondes, pas deux synchronisations. */
+      function planifierSynchro() {
+        clearTimeout(syncEnCours);
+        syncEnCours = setTimeout(synchroniserBoutique, 900);
+      }
+
       async function enregistrerRecompense(carte) {
         var rewardId = carte.dataset.rewardId;
         var etat = carte.querySelector("[data-etat]");
@@ -2447,7 +2497,7 @@
         etat.textContent = "Enregistrement…";
         var { error } = await supabase.from("rewards").update(payload).eq("id", rewardId);
         etat.textContent = error ? "Erreur : " + error.message : "Enregistré ✓";
-        if (!error) setTimeout(function () { etat.textContent = ""; }, 1800);
+        if (!error) { planifierSynchro(); setTimeout(function () { etat.textContent = ""; }, 1800); }
       }
 
       // Desactivation (active=false), jamais une suppression -- une
@@ -2458,6 +2508,7 @@
         var rewardId = carte.dataset.rewardId;
         var { error } = await supabase.from("rewards").update({ active: false }).eq("id", rewardId);
         if (error) { $("#recompense-msg").textContent = "Erreur : " + error.message; $("#recompense-msg").style.display = "block"; return; }
+        planifierSynchro();
         ETAT.data.rewards = (ETAT.data.rewards || []).map(function (r) { return r.id === rewardId ? { ...r, active: false } : r; });
         rendreRecompenses();
       }

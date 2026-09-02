@@ -20,8 +20,157 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { notifierStory } from "../lib/notifications/envoyer.js";
+import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
+import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 
 const ADMIN_EMAIL = "viralnight001@gmail.com";
+
+/* Les deux bases ne nomment pas les memes choses de la meme facon.
+   Cote gerants : bar / acces / vip, du texte libre.
+   Cote clubbeur : un enum reward_category (boisson, entree, vip,
+   exclusif). Sans cette table, tout tomberait dans la valeur par
+   defaut et la boutique clubbeur afficherait le mauvais pictogramme
+   pour chaque recompense. */
+const CATEGORIES = { bar: "boisson", acces: "entree", vip: "vip" };
+
+/* ============================================================
+   ?action=sync-boutique — la boutique du gerant pilote celle des
+   clubbeurs.
+   ------------------------------------------------------------
+   Le gerant editait `rewards` cote gerants, l'appli clubbeur lisait
+   `rewards` cote clubbeur, et RIEN ne circulait entre les deux. Un club
+   pouvait changer ses prix toute la nuit sans que personne le voie.
+
+   La jointure passe par le code public du club, seule cle commune et
+   deja peuplee des deux cotes a l'identique :
+       establishments.public_code  ==  clubs.b2b_public_code
+
+   Greffe sur cette route plutot qu'un fichier a part : le plan Vercel
+   plafonne a 12 fonctions et api/ y est deja. C'est de toute facon la
+   route "pont" du projet.
+
+   ⚠️ AUTHENTIFIE PAR requireEstablishment, pas par ADMIN_EMAIL comme le
+   reste du fichier : c'est le gerant qui declenche, pas l'admin. Et
+   l'establishment vient du jeton, jamais du corps -- sinon il suffirait
+   de deviner un UUID pour reecrire la boutique d'un autre club.
+   ============================================================ */
+async function actionSyncBoutique(request, response) {
+  const auth = await requireEstablishment(request);
+  if (auth.error) return json(response, { error: auth.error }, auth.status);
+
+  let clubbeur;
+  try {
+    clubbeur = getSupabaseClubbeurAdmin();
+  } catch (erreur) {
+    return json(response, { error: "Base clubbeur non configuree sur ce serveur." }, 500);
+  }
+
+  const { data: etab, error: erreurEtab } = await auth.supabase
+    .from("establishments")
+    .select("public_code, name")
+    .eq("id", auth.establishmentId)
+    .maybeSingle();
+
+  if (erreurEtab) return json(response, { error: erreurEtab.message }, 500);
+  if (!etab?.public_code) {
+    return json(response, { error: "Ce club n'a pas encore de code public." }, 409);
+  }
+
+  const { data: club, error: erreurClub } = await clubbeur
+    .from("clubs")
+    .select("id")
+    .eq("b2b_public_code", etab.public_code)
+    .maybeSingle();
+
+  if (erreurClub) return json(response, { error: erreurClub.message }, 500);
+  if (!club?.id) {
+    // Dit franchement pourquoi rien ne partira, au lieu de repondre
+    // "synchronise" sur une boutique qui n'a aucune destination.
+    return json(
+      response,
+      { error: "Ce club n'existe pas encore dans l'appli des clubbeurs. Contacte-nous pour l'ouvrir." },
+      409,
+    );
+  }
+
+  const { data: source, error: erreurSource } = await auth.supabase
+    .from("rewards")
+    .select("id, title, points_required, max_redemptions, category, active")
+    .eq("establishment_id", auth.establishmentId);
+
+  if (erreurSource) return json(response, { error: erreurSource.message }, 500);
+
+  const { data: existantes, error: erreurExistantes } = await clubbeur
+    .from("rewards")
+    .select("id, source_reward_id, stock_limit, stock_remaining")
+    .eq("club_id", club.id)
+    .not("source_reward_id", "is", null);
+
+  if (erreurExistantes) return json(response, { error: erreurExistantes.message }, 500);
+
+  const parSource = new Map((existantes || []).map((r) => [r.source_reward_id, r]));
+  let creees = 0;
+  let majes = 0;
+
+  for (const r of source || []) {
+    const commun = {
+      club_id: club.id,
+      source_reward_id: r.id,
+      title: r.title || "Récompense",
+      cost_points: Math.max(0, Math.round(Number(r.points_required) || 0)),
+      category: CATEGORIES[r.category] || "boisson",
+      stock_limit: r.max_redemptions === null || r.max_redemptions === undefined
+        ? null
+        : Math.max(0, Math.round(Number(r.max_redemptions))),
+      active: r.active !== false,
+    };
+
+    const deja = parSource.get(r.id);
+
+    if (!deja) {
+      // A la creation seulement, le stock restant part du plafond.
+      const insertion = await clubbeur
+        .from("rewards")
+        .insert({ ...commun, stock_remaining: commun.stock_limit });
+      if (insertion.error) return json(response, { error: insertion.error.message }, 500);
+      creees += 1;
+      continue;
+    }
+
+    /* ⚠️ stock_remaining N'EST PAS REECRIT sur une mise a jour.
+       C'est le stock deja consomme par les clubbeurs ce soir : le
+       remettre au plafond a chaque enregistrement du gerant rendrait
+       gratuitement disponible ce qui vient d'etre echange, et personne
+       ne s'en apercevrait. Seul le PLAFOND suit le gerant.
+
+       Un plafond qu'on baisse sous le restant est ramene au plafond :
+       sinon la boutique promettrait plus de pieces qu'il n'en existe. */
+    const majStock =
+      commun.stock_limit !== null && deja.stock_remaining !== null && deja.stock_remaining > commun.stock_limit
+        ? { stock_remaining: commun.stock_limit }
+        : {};
+
+    const maj = await clubbeur
+      .from("rewards")
+      .update({ ...commun, ...majStock })
+      .eq("id", deja.id);
+    if (maj.error) return json(response, { error: maj.error.message }, 500);
+    majes += 1;
+    parSource.delete(r.id);
+  }
+
+  /* Ce qui reste dans la table n'a plus de source : la recompense a ete
+     supprimee cote gerant. On la desactive, jamais on ne la supprime --
+     un bon deja echange la reference encore (meme raisonnement que
+     retirerRecompense cote gerant). */
+  let retirees = 0;
+  for (const orpheline of parSource.values()) {
+    const arret = await clubbeur.from("rewards").update({ active: false }).eq("id", orpheline.id);
+    if (!arret.error) retirees += 1;
+  }
+
+  return json(response, { club: etab.name, creees, majes, retirees });
+}
 
 function json(response, body, status = 200) {
   response.statusCode = status;
@@ -40,6 +189,9 @@ async function readBody(request) {
 
 export default async function handler(request, response) {
   if (request.method !== "POST") return json(response, { error: "Method not allowed" }, 405);
+
+  const action = new URL(request.url, "http://localhost").searchParams.get("action");
+  if (action === "sync-boutique") return actionSyncBoutique(request, response);
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
