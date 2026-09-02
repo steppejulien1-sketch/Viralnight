@@ -23,29 +23,10 @@ function getSiteUrl(request) {
   return process.env.SITE_URL || `https://${host}`;
 }
 
-function randomPassword() {
-  return `${randomUUID()}Aa1!`;
-}
-
-async function findUserByEmail(supabase, email) {
-  for (let page = 1; page <= 10; page += 1) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
-    if (error) throw error;
-
-    const user = data?.users?.find((item) => item.email?.toLowerCase() === email);
-    if (user) return user;
-    if (!data?.users || data.users.length < 1000) return null;
-  }
-
-  return null;
-}
-
 /**
  * Cree l'etablissement, le rattachement, le bareme par defaut et les
- * recompenses par defaut. Partage entre le chemin admin (creation pour un
- * tiers) et le chemin libre-service (creation pour soi-meme) : les deux
- * doivent finir avec exactement le meme etat, un club qui marche des la
- * premiere connexion, pas une coquille vide a completer plus tard.
+ * recompenses par defaut. Un club doit marcher des sa premiere connexion,
+ * pas etre une coquille vide a completer plus tard.
  */
 async function provisionnerEtablissement(supabase, { name, city, phone, category, subscriptionStatus, ownerId, ownerEmail }) {
   const establishmentResult = await supabase
@@ -330,85 +311,13 @@ export default async function handler(request, response) {
     return json(response, { establishment_id: resultat.establishmentId, already_existed: false });
   }
 
-  // ---------------- Admin : cree un club pour un tiers ----------------
-
-  const establishmentName = String(payload.establishment_name || "").trim();
-  const ownerEmail = String(payload.owner_email || "").trim().toLowerCase();
-  const city = String(payload.city || "").trim();
-  const phone = String(payload.phone || "").trim();
-  const category = String(payload.category || "club").trim();
-  const allowedStatuses = new Set(["actif", "essai", "suspendu"]);
-  const subscriptionStatus = allowedStatuses.has(payload.subscription_status) ? payload.subscription_status : "essai";
-
-  if (!establishmentName || !ownerEmail) {
-    return json(response, { error: "Club name and email are required" }, 400);
-  }
-
-  const existingOwner = await supabase
-    .from("establishment_owners")
-    .select("email, establishment_id")
-    .ilike("email", ownerEmail)
-    .maybeSingle();
-
-  if (existingOwner.data) {
-    return json(response, { error: "Client already exists" }, 409);
-  }
-
-  if (existingOwner.error) {
-    return json(response, { error: existingOwner.error.message }, 500);
-  }
-
-  let authUser = await findUserByEmail(supabase, ownerEmail);
-
-  if (!authUser) {
-    const created = await supabase.auth.admin.createUser({
-      email: ownerEmail,
-      password: randomPassword(),
-      email_confirm: true,
-      user_metadata: {
-        establishment_name: establishmentName,
-      },
-    });
-
-    if (created.error) {
-      return json(response, { error: created.error.message }, 500);
-    }
-
-    authUser = created.data.user;
-  }
-
-  const resultat = await provisionnerEtablissement(supabase, {
-    name: establishmentName,
-    city,
-    phone,
-    category,
-    subscriptionStatus,
-    ownerId: authUser.id,
-    ownerEmail,
-  });
-
-  if (resultat.error) {
-    return json(response, { error: resultat.error }, 500);
-  }
-
-  const establishmentId = resultat.establishmentId;
-
-  const resetResult = await supabase.auth.resetPasswordForEmail(ownerEmail, {
-    redirectTo: `${getSiteUrl(request)}/app.html`,
-  });
-
-  if (resetResult.error) {
-    return json(response, {
-      establishment_id: establishmentId,
-      owner_email: ownerEmail,
-      password_email_sent: false,
-      warning: resetResult.error.message,
-    });
-  }
-
-  return json(response, {
-    establishment_id: establishmentId,
-    owner_email: ownerEmail,
-    password_email_sent: true,
-  });
+  // Il n'existe plus de chemin pour creer un club sans invitation.
+  //
+  // L'admin avait le sien : "Creer un client" fabriquait le compte ET
+  // le club d'un coup, et envoyait un email de mot de passe. Julien ne
+  // veut qu'une seule porte -- un lien d'invitation qu'il envoie
+  // lui-meme -- et deux portes, c'est une de trop a surveiller. Pour
+  // ouvrir un club a quelqu'un : ?action=inviter, puis il cree son
+  // compte lui-meme avec le lien.
+  return json(response, { error: "Passe par une invitation : ?action=inviter." }, 400);
 }

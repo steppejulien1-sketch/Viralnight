@@ -97,7 +97,6 @@ const passwordSaveButton = document.querySelector("[data-admin-password-save]");
 const logoutButton = document.querySelector("[data-admin-logout]");
 const authStatus = document.querySelector("[data-admin-auth-status]");
 const clientDashboardForm = document.querySelector("[data-client-dashboard-form]");
-const createClientForm = document.querySelector("[data-create-client-form]");
 const clientAccessForm = document.querySelector("[data-client-access-form]");
 const inviteForm = document.querySelector("[data-invite-form]");
 const prospectForm = document.querySelector("[data-prospect-form]");
@@ -1138,55 +1137,6 @@ inviteForm?.addEventListener("submit", async (event) => {
   } finally {
     if (bouton) bouton.disabled = false;
   }
-});
-
-createClientForm?.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  if (!supabase || !state.session?.access_token) {
-    setAuthStatus("Connecte-toi en admin avant de créer un client.");
-    return;
-  }
-
-  const formData = new FormData(createClientForm);
-  const payload = {
-    establishment_name: String(formData.get("establishment_name") || "").trim(),
-    owner_email: String(formData.get("owner_email") || "").trim().toLowerCase(),
-    city: String(formData.get("city") || "").trim(),
-    phone: String(formData.get("phone") || "").trim(),
-    subscription_status: String(formData.get("subscription_status") || "essai").trim(),
-    category: "club",
-  };
-
-  if (!payload.establishment_name || !payload.owner_email) {
-    setAuthStatus("Ajoute au minimum le nom du club et son email.");
-    return;
-  }
-
-  setAuthStatus("Création du client en cours...");
-
-  const response = await fetch("/api/create-client", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${state.session.access_token}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const result = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    setAuthStatus(`Impossible de créer le client : ${result.error || response.statusText}`);
-    return;
-  }
-
-  createClientForm.reset();
-  setAuthStatus(
-    result.password_email_sent
-      ? `Client créé. Email de création du mot de passe envoyé à ${result.owner_email}.`
-      : `Client créé, mais l'email de mot de passe n'a pas été envoyé : ${result.warning || "à vérifier"}.`,
-  );
 });
 
 clientAccessForm?.addEventListener("submit", async (event) => {
