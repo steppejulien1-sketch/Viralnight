@@ -59,11 +59,51 @@ async function lireBody(request) {
 
 // ---------------- action=connect (GET, authentifie) ----------------
 
+/* Les quatre variables que la connexion exige, verifiees ENSEMBLE.
+ *
+ * Sans ce controle, un secret manquant remontait en "Impossible de
+ * demarrer la connexion Instagram" -- un message qui ne dit rien, et sur
+ * lequel Julien a perdu une soiree. La cause : signerState() lit
+ * INSTAGRAM_STATE_SECRET et echoue AVANT que urlAutorisation() ne
+ * verifie les trois cles Meta. Son erreur, banale, tombait dans le catch
+ * generique, tandis que MissingConfigError -- la seule a etre nommee --
+ * n'etait jamais atteinte. Le message masquait donc exactement
+ * l'information qu'on cherchait : laquelle des quatre manque.
+ *
+ * On nomme les variables absentes. La route est derriere
+ * requireEstablishment : seul un gerant deja authentifie voit ce
+ * message, et il n'expose aucune valeur. */
+const VARIABLES_INSTAGRAM = [
+  "INSTAGRAM_APP_ID",
+  "INSTAGRAM_APP_SECRET",
+  "INSTAGRAM_REDIRECT_URI",
+  "INSTAGRAM_STATE_SECRET",
+];
+
+function variablesInstagramManquantes() {
+  return VARIABLES_INSTAGRAM.filter((nom) => !process.env[nom]);
+}
+
 async function actionConnect(request, response) {
   if (request.method !== "GET") return json(response, { error: "Methode non supportee." }, 405);
 
   const auth = await requireEstablishment(request);
   if (auth.error) return json(response, { error: auth.error }, auth.status);
+
+  const manquantes = variablesInstagramManquantes();
+  if (manquantes.length) {
+    return json(
+      response,
+      {
+        error:
+          "Connexion Instagram non configuree sur ce serveur : " +
+          manquantes.join(", ") +
+          (manquantes.length > 1 ? " manquent" : " manque") +
+          " sur Vercel.",
+      },
+      500,
+    );
+  }
 
   try {
     // D'ou part la connexion, pour y ramener le gerant a la fin. Une cle
