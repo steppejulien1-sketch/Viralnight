@@ -576,6 +576,10 @@
         text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
       }
 
+      /* Reste de l'ecran "Ma fiche", supprime : le bareme s'en sert
+         encore pour dire si l'enregistrement a marche. */
+      .fiche-msg { font-size: 12.5px; margin: 4px 0 0; display: none; }
+
       .section-titre {
         font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
         color: var(--ink3); margin: 22px 0 10px;
@@ -667,17 +671,6 @@
         margin-top: 4px;
       }
 
-      /* ---- Ma fiche ---- */
-      .fiche-champ { display: grid; gap: 6px; margin-bottom: 14px; }
-      .fiche-champ label { font-size: 11.5px; font-weight: 700; color: var(--ink2); }
-      .fiche-champ input, .fiche-champ select {
-        min-height: 44px; padding: 0 13px; border-radius: 12px; border: 1px solid var(--line2);
-        background: var(--s2); color: var(--ink); font-family: inherit; font-size: 14px;
-      }
-      .fiche-champ input[type="color"] { padding: 4px; height: 44px; cursor: pointer; }
-      .fiche-msg { font-size: 12.5px; margin: 4px 0 0; display: none; }
-      .fiche-aide { display: block; margin-top: 5px; font-size: 11.5px; color: var(--ink3); line-height: 1.4; }
-
       /* Bascule connexion / inscription. Un lien discret, pas un second
          bouton plein : creer un compte est l'action rare, se connecter
          l'action de tous les jours. */
@@ -715,17 +708,6 @@
         font-family: var(--mono); font-size: 15px; letter-spacing: .08em; color: var(--ink);
       }
       .qr-carte .bouton { width: 100%; text-align: center; }
-      .apercu-fiche {
-        display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px;
-        background: var(--s1); border: 1px solid var(--line); margin-bottom: 18px;
-      }
-      .apercu-badge {
-        flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; background: var(--c, var(--accent));
-        display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 17px;
-      }
-      .apercu-nom { font-size: 15px; font-weight: 800; }
-      .apercu-sous { font-size: 11.5px; color: var(--ink3); margin-top: 2px; }
-
       /* ---- Reglages ---- */
       .reglage-ligne {
         display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line);
@@ -807,8 +789,8 @@
       <p class="lede">
         Même esprit que l'appli clubbeur juste au-dessus (mockup téléphone, onglets du
         bas) — mais pour le gérant : voir ce que génère son club, régler sa boutique de
-        récompenses, tenir sa fiche à jour, gérer Instagram. Données réelles dès
-        l'ouverture : connecte-toi avec ton compte club habituel.
+        récompenses, gérer Instagram. Données réelles dès l'ouverture :
+        connecte-toi avec ton compte club habituel.
       </p>
 
       <div class="stage">
@@ -1024,71 +1006,6 @@
             </div>
 
             <!-- ================= MA FICHE ================= -->
-            <div class="vue" id="vue-fiche">
-              <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
-              <h1 class="ecran-titre">Ma fiche</h1>
-              <p class="ecran-sous">Ce que voient vos clients sur la carte de l'appli.</p>
-
-              <div class="apercu-fiche" id="fiche-apercu">
-                <span class="apercu-badge" id="fiche-apercu-badge">—</span>
-                <div>
-                  <div class="apercu-nom" id="fiche-apercu-nom">—</div>
-                  <div class="apercu-sous" id="fiche-apercu-sous">—</div>
-                </div>
-              </div>
-
-              <div id="fiche-bandeau"></div>
-              <form id="fiche-form">
-                <div class="fiche-champ">
-                  <label for="fiche-nom">Nom du club</label>
-                  <input type="text" id="fiche-nom" maxlength="80" required />
-                </div>
-                <div class="fiche-champ">
-                  <label for="fiche-ville">Ville</label>
-                  <input type="text" id="fiche-ville" maxlength="60" />
-                </div>
-                <div class="fiche-champ">
-                  <label for="fiche-telephone">Téléphone</label>
-                  <input type="tel" id="fiche-telephone" maxlength="30" />
-                </div>
-                <div class="fiche-champ">
-                  <label for="fiche-categorie">Type d'établissement</label>
-                  <select id="fiche-categorie">
-                    <!-- Restaurant, salle evenementielle et "Autre" sont
-                         retires (Julien) : Noctify ne s'adresse qu'a des
-                         lieux de sortie nocturne, et proposer des
-                         categories qu'on ne saura pas exploiter donne un
-                         produit plus flou, pas plus large. -->
-                    <option value="club">Boîte de nuit</option>
-                    <option value="bar">Bar</option>
-                    <option value="discotheque">Discothèque</option>
-                  </select>
-                </div>
-                <div class="fiche-champ">
-                  <label for="fiche-adresse">Adresse</label>
-                  <input type="text" id="fiche-adresse" maxlength="140" placeholder="Rue et numéro" />
-                  <span class="fiche-aide">Affichée sur ta fiche dans l'appli, et utilisée pour te placer sur la carte.</span>
-                </div>
-                <div class="fiche-champ">
-                  <label for="fiche-instagram">Compte Instagram (sans @)</label>
-                  <input type="text" id="fiche-instagram" maxlength="60" placeholder="mirage.brussels" />
-                </div>
-                <div class="fiche-champ">
-                  <!-- "Couleur de la fiche" ne voulait rien dire (Julien :
-                       "je ne comprends pas ce que c'est"). C'est la
-                       couleur de la pastille du club sur la carte de
-                       l'appli clubbeur : on le dit, et l'apercu juste
-                       au-dessus la montre en direct. -->
-                  <label for="fiche-couleur">Couleur de ton point sur la carte</label>
-                  <input type="color" id="fiche-couleur" />
-                  <span class="fiche-aide">C'est la couleur de ta pastille sur la carte des clubs.</span>
-                </div>
-                <p class="fiche-msg" id="fiche-msg"></p>
-                <button type="submit" class="bouton pleine" id="fiche-enregistrer">Enregistrer</button>
-              </form>
-            </div>
-
-            <!-- ================= REGLAGES ================= -->
             <div class="vue" id="vue-reglages">
               <h1 class="ecran-titre">Réglages</h1>
               <p class="ecran-sous" id="reglages-compte">—</p>
@@ -1108,11 +1025,6 @@
                 <button type="button" class="reglage-lien" data-va="qr">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg></span>
                   <span class="reglage-txt"><strong>Affiche et QR code</strong><span>À imprimer et coller à l'entrée</span></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </button>
-                <button type="button" class="reglage-lien" data-va="fiche">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
-                  <span class="reglage-txt"><strong>Ma fiche</strong><span>Nom, ville, couleur, compte Instagram</span></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
               </div>
@@ -1284,7 +1196,7 @@
 
       // Les trois ecrans qui ont perdu leur onglet : ils vivent
       // maintenant sous Reglages, qui reste allume pendant qu'on y est.
-      var SOUS_ECRANS = ["bareme", "qr", "fiche"];
+      var SOUS_ECRANS = ["bareme", "qr"];
 
       function ouvrirVue(cible) {
         VUES.forEach(function (v) { v.classList.toggle("actif", v.id === "vue-" + cible); });
@@ -1399,7 +1311,6 @@
         await chargerInstagram();
         rendreDashboard();
         rendreRecompenses();
-        rendreFiche();
         rendreReglages();
         rendreQr();
         rendreBareme();
@@ -2243,7 +2154,11 @@
         }
 
         var url = urlScanClubbeur(slug);
-        var handle = (etab.ig_handle || "").replace(/^@/, "").trim();
+        // Le pseudo vient du compte Instagram relie, pas d'un champ a
+        // remplir : c'est le meme compte, en moins faillible. ig_handle
+        // reste lu en secours pour les clubs qui l'avaient saisi avant.
+        var handle = ((ETAT.instagram && ETAT.instagram.username) || etab.ig_handle || "")
+          .replace(/^@/, "").trim();
 
         try {
           var pngQr = await renderQrPngDataUrl(url, { width: 1200 });
@@ -2485,73 +2400,6 @@
       });
 
       /* ================= MA FICHE ================= */
-
-      function rendreFiche() {
-        var e = ETAT.data.establishment;
-        $("#fiche-bandeau").innerHTML = bandeauDemo("ta fiche");
-        $("#fiche-enregistrer").disabled = estDemo();
-        $("#fiche-form").querySelectorAll("input, select").forEach(function (champ) {
-          champ.disabled = estDemo();
-        });
-        $("#fiche-nom").value = e.name || "";
-        $("#fiche-ville").value = e.city || "";
-        $("#fiche-adresse").value = e.address || "";
-        $("#fiche-telephone").value = e.phone || "";
-        $("#fiche-categorie").value = e.category || "club";
-        $("#fiche-instagram").value = (e.ig_handle || "").replace(/^@/, "");
-        $("#fiche-couleur").value = e.primary_color || "#ff6363";
-        majApercuFiche();
-      }
-
-      function majApercuFiche() {
-        var couleur = $("#fiche-couleur").value || "#ff6363";
-        $("#fiche-apercu").style.setProperty("--c", couleur);
-        $("#fiche-apercu-badge").style.background = couleur;
-        var nom = $("#fiche-nom").value.trim() || "Votre club";
-        $("#fiche-apercu-badge").textContent = nom.charAt(0).toUpperCase();
-        $("#fiche-apercu-nom").textContent = nom;
-        var handle = $("#fiche-instagram").value.trim();
-        $("#fiche-apercu-sous").textContent = handle ? "@" + handle : "Aucun compte Instagram lié";
-      }
-
-      ["fiche-nom", "fiche-couleur", "fiche-instagram"].forEach(function (id) {
-        $("#" + id).addEventListener("input", majApercuFiche);
-      });
-
-      $("#fiche-form").addEventListener("submit", async function (e) {
-        e.preventDefault();
-        if (estDemo()) return;
-        var bouton = $("#fiche-enregistrer");
-        var msg = $("#fiche-msg");
-        bouton.disabled = true;
-        bouton.textContent = "Enregistrement…";
-
-        var handle = $("#fiche-instagram").value.trim().replace(/^@/, "");
-        var payload = {
-          name: $("#fiche-nom").value.trim(),
-          city: $("#fiche-ville").value.trim() || null,
-          phone: $("#fiche-telephone").value.trim() || null,
-          category: $("#fiche-categorie").value,
-          ig_handle: handle || null,
-          address: $("#fiche-adresse").value.trim() || null,
-          primary_color: $("#fiche-couleur").value,
-        };
-
-        var { error } = await supabase.from("establishments").update(payload).eq("id", ETAT.data.establishment.id);
-
-        bouton.disabled = false;
-        bouton.textContent = "Enregistrer";
-        msg.style.display = "block";
-        if (error) {
-          msg.style.color = "var(--accent)";
-          msg.textContent = "Erreur : " + error.message;
-          return;
-        }
-        msg.style.color = "var(--succes)";
-        msg.textContent = "Fiche enregistrée ✓";
-        ETAT.data.establishment = { ...ETAT.data.establishment, ...payload };
-        $("#dash-etablissement").textContent = payload.name || "—";
-      });
 
       /* ================= REGLAGES ================= */
 
