@@ -134,7 +134,7 @@ Tables : `establishments`, `establishment_owners`, `establishment_point_rules`,
 `establishment_point_rule_items`, `establishment_opening_hours`,
 `establishment_schedule`, `events`, `event_metrics`, `submissions`, `qr_scans`,
 `rewards`, `reward_redemptions`, `demo_requests`, `establishment_instagram_accounts`,
-`instagram_mentions`.
+`instagram_mentions`, `club_invitations`.
 
 ⚠️ `npm run db:apply` ne rejoue en realite que `supabase/migrations/SETUP_COMPLET.sql`,
 pas chaque fichier numerote individuellement — et ce fichier a deja pris du retard sur
@@ -155,6 +155,15 @@ Toute nouvelle route API qui touche a des donnees de club commence par :
 const auth = await requireEstablishment(request);
 if (auth.error) return response.status(auth.status).json({ error: auth.error });
 ```
+
+**L'inscription se fait sur invitation.** Le chemin libre-service de
+`api/create-client.js` exige un jeton valide de `club_invitations` : sans lui, aucun
+club n'est cree. Le verrou est cote serveur parce que `club-app.html` n'est pas la
+seule porte — `inscription.html` appelle la meme route. La table a RLS activee et
+**aucune policy** : elle est invisible avec la cle anon, seule la cle `service_role`
+la lit. Le jeton est brule avant la creation (update conditionne a `used_at IS NULL`),
+et rendu si la creation echoue. L'admin fabrique les liens depuis `admin.html`
+(« Inviter un club » → `POST /api/create-client?action=inviter`).
 
 Le compte admin est `viralnight001@gmail.com` (constante `ADMIN_EMAIL`, dupliquee
 dans `admin.js` et `auth.js` — les garder alignes).
