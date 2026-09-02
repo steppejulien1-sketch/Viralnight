@@ -502,6 +502,7 @@
       .accueil, .ecran-ig {
         position: absolute; inset: 0; z-index: 34;
         display: flex; flex-direction: column; align-items: stretch;
+        justify-content: center;
         padding: 26px 24px 20px; text-align: left;
         background: #ffffff; color: #15181d;
         /* Le clavier logiciel ampute l'ecran de moitie sur un telephone :
@@ -553,13 +554,16 @@
 
       /* Colle en bas tant que la place le permet : les champs tombent
          sous le pouce, pas au milieu de l'ecran. */
-      .accueil-actions { width: 100%; display: grid; gap: 9px; margin-top: auto; padding-top: 16px; }
+      .accueil-actions { width: 100%; display: grid; gap: 9px; margin-top: 24px; }
+      /* L'ecran Instagram garde ses actions en bas de l'ecran : lui a
+         du contenu au-dessus, et le pouce les y trouve. */
+      .ecran-ig .accueil-actions { margin-top: auto; padding-top: 16px; }
 
       /* ---- Ecran de connexion Instagram ----
          Le meme habillage que l'accueil, volontairement : c'est la suite
          du meme parcours d'arrivee, pas un autre endroit du produit.
          Au-dessus de l'accueil (34), sous la porte (40). */
-      .ecran-ig { z-index: 36; }
+      .ecran-ig { z-index: 36; justify-content: flex-start; }
       .ecran-ig[hidden] { display: none; }
       /* Le glyphe dans sa couleur de marque, comme le logo Google du
          bouton d'a cote. Pas le degrade neon : le projet s'en tient a
@@ -767,6 +771,12 @@
         background: none; cursor: pointer; font-family: inherit; text-align: left; color: inherit;
       }
       .reglage-lien:last-child { border-bottom: 0; }
+      a.reglage-lien { text-decoration: none; color: inherit; }
+      .reglages-pied {
+        margin: 18px 0 0; text-align: center;
+        font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--ink3);
+      }
       .reglage-lien { transition: background .15s ease; border-radius: 10px; }
       .reglage-lien:active { background: var(--s2); }
       @media (hover: hover) and (pointer: fine) {
@@ -882,20 +892,8 @@
                 <span class="accueil-pro">Espace club</span>
               </p>
 
-              <h1 class="accueil-titre">Vos clients publient vos soirées.</h1>
-              <p class="accueil-lead">
-                Vous voyez ce que ça rapporte : vues générées, points distribués,
-                coût de chaque récompense.
-              </p>
-
-              <ul class="accueil-points">
-                <li><span class="accueil-num">01</span>
-                  <span><b>Les vues de vos soirées</b>Mesurées, pas estimées.</span></li>
-                <li><span class="accueil-num">02</span>
-                  <span><b>Vos récompenses</b>Le barème, c'est vous qui le fixez.</span></li>
-                <li><span class="accueil-num">03</span>
-                  <span><b>Votre affiche à imprimer</b>Avec le QR code de votre club.</span></li>
-              </ul>
+              <h1 class="accueil-titre">Connectez-vous.</h1>
+              <p class="accueil-lead">L'espace de gestion de votre club.</p>
 
               <div class="accueil-actions">
                 <button type="button" class="ac-btn ac-btn-google" id="accueil-google">
@@ -1063,7 +1061,7 @@
                 <p class="vide" style="padding:14px 0">Vérification…</p>
               </div>
 
-              <p class="section-titre">Configuration</p>
+              <p class="section-titre">Votre club</p>
               <div class="carte" style="padding:2px 15px">
                 <button type="button" class="reglage-lien" data-va="bareme">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg></span>
@@ -1078,7 +1076,39 @@
               </div>
 
               <p class="section-titre">Compte</p>
+              <div class="carte" style="padding:2px 15px">
+                <div class="reglage-ligne">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M3.5 7.5h17v11h-17z"/><path d="M3.5 8l8.5 6 8.5-6"/></svg></span>
+                  <span class="reglage-txt"><strong id="reglages-email">—</strong><span>Votre identifiant de connexion</span></span>
+                </div>
+                <button type="button" class="reglage-lien" id="reglages-mdp">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span>
+                  <span class="reglage-txt"><strong>Changer le mot de passe</strong><span id="reglages-mdp-etat">On vous envoie un lien par email</span></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
               <button type="button" class="bouton sobre pleine" id="reglages-deconnexion">Déconnexion</button>
+
+              <p class="section-titre">À propos</p>
+              <div class="carte" style="padding:2px 15px">
+                <a class="reglage-lien" href="./confidentialite.html" target="_blank" rel="noopener">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.4c0 4.4-3.1 8.2-7.5 9.6-4.4-1.4-7.5-5.2-7.5-9.6V6z"/></svg></span>
+                  <span class="reglage-txt"><strong>Confidentialité</strong><span>Ce qu'on garde, et pourquoi</span></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a class="reglage-lien" href="./cgu.html" target="_blank" rel="noopener">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14.5 3v4.5H19M9 12h6M9 16h6"/></svg></span>
+                  <span class="reglage-txt"><strong>Conditions d'utilisation</strong><span>Le contrat entre nous</span></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a class="reglage-lien" href="mailto:viralnight001@gmail.com?subject=Noctify%20%E2%80%94%20aide">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.4"/><path d="M12 17h.01"/></svg></span>
+                  <span class="reglage-txt"><strong>Un problème, une question</strong><span>On répond vite</span></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+              </div>
+
+              <p class="reglages-pied">Noctify · appli club</p>
             </div>
 
             <!-- ================= BAREME ================= -->
@@ -2526,7 +2556,35 @@
       // connecte. Le bouton annonce ce qu'il fait vraiment.
       function majBoutonCompte() {
         $("#reglages-deconnexion").textContent = ETAT.session ? "Déconnexion" : "Se connecter";
+        var email = ETAT.session ? (ETAT.session.user.email || "—") : "Pas connecté";
+        $("#reglages-email").textContent = email;
+        $("#reglages-mdp").disabled = !ETAT.session;
       }
+
+      /* Changer le mot de passe : Supabase envoie un lien, on ne demande
+         jamais l'ancien. Le retour se fait sur connexion.html, la seule
+         page qui sait traiter un jeton de recuperation. */
+      $("#reglages-mdp").addEventListener("click", async function (ev) {
+        if (!ETAT.session) return;
+        var bouton = ev.currentTarget;
+        var etat = $("#reglages-mdp-etat");
+        var email = ETAT.session.user.email;
+        if (!email) return;
+
+        bouton.disabled = true;
+        etat.textContent = "Envoi…";
+
+        var { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: new URL("./connexion.html", window.location.href).href,
+        });
+
+        bouton.disabled = false;
+        // On ne dit pas "verifiez vos spams" a tout hasard : on dit a
+        // QUELLE adresse c'est parti, c'est la seule chose utile.
+        etat.textContent = error
+          ? "Envoi impossible : " + error.message
+          : "Lien envoyé à " + email;
+      });
 
       demarrer();
     </script>
