@@ -65,21 +65,50 @@
          --ambre et --succes sont assombris : #ffb020 et #57d98a etaient
          calibres pour du texte sur fond noir, ils deviennent illisibles
          sur blanc. */
+      /* ---- La palette ----
+         SOMBRE. L'appli etait en gris clair : des cartes blanches
+         arrondies sur du #f6f7f9, comme dix mille tableaux de bord.
+         Julien : "pour ce genre de produit, tu ne peux pas faire ca".
+         Le design system du projet disait deja sombre -- c'est ce
+         fichier qui ne l'appliquait pas.
+
+         Le relief vient du CONTRASTE DE SURFACES (--s1/2/3), jamais de
+         la couleur : sur fond sombre une ombre portee ne se voit pas,
+         l'ecart entre deux gris si.
+
+         Le corail redevient une couleur de MARQUE -- la courbe, la
+         derniere barre, le losange du kicker. Plus jamais un bouton :
+         l'action principale est claire, comme chez Stripe ou Linear.
+         C'est ce qui manquait le plus, le CTA rose pale avait l'air
+         desactive.
+
+         L'accueil, la porte et l'ecran de chargement restent clairs :
+         ils encadrent l'appli, ils ne sont pas dedans. Meme partage que
+         dans l'appli clubbeur. */
       .screen {
         position: relative; width: 100%; height: 100%; border-radius: 43px;
-        overflow: hidden; background: #ffffff; user-select: none;
-        --ink:   #14161a;
-        --ink2:  #5b6472;
-        --ink3:  #8e97a4;
-        --bg:    #f6f7f9;
-        --s1:    #ffffff;
-        --s2:    #eef0f4;
-        --s3:    #e3e7ed;
-        --line:  rgba(16,18,22,.09);
-        --line2: rgba(16,18,22,.15);
-        --accent: #ff2f45;
-        --ambre: #a86500;
-        --succes: #12874d;
+        overflow: hidden; user-select: none;
+        --ink:   #eef1f5;
+        --ink2:  #99a2b0;
+        --ink3:  #7d8694;
+        --bg:    #0a0c0f;
+        --s1:    #121519;
+        --s2:    #1a1e24;
+        --s3:    #272c34;
+        --line:  rgba(255,255,255,.07);
+        --line2: rgba(255,255,255,.12);
+        --accent: #ff6363;
+        --ambre: #f0b429;
+        --succes: #3ddc97;
+        /* L'action principale. Un bouton corail sur fond sombre fait
+           alerte, pas action. */
+        --action: #f2f5f8;
+        --action-ink: #0a0c0f;
+        /* Sans ca, les <select> et les <input> du bareme et de la fiche
+           restent blancs avec leur fleche noire : des rectangles clairs
+           poses au milieu d'un ecran sombre. */
+        color-scheme: dark;
+        accent-color: var(--accent);
         background: var(--bg); color: var(--ink);
       }
 
@@ -103,20 +132,35 @@
       .kicker-sec + .ecran-titre { margin-top: 0; }
 
       /* ---- Connexion requise ---- */
+      /* Clair comme l'accueil : c'est le meme moment du parcours, on
+         n'est pas encore entre dans l'appli. Les encres sont redefinies
+         localement plutot qu'en dur, pour que .bouton et les champs
+         suivent sans etre reecrits. */
       .porte {
         position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 16px; padding: 30px;
-        text-align: center; background: var(--bg);
+        text-align: center;
+        --ink: #15181d; --ink2: #5c6370; --ink3: #9aa1ac;
+        --s1: #ffffff; --s2: #eef0f4; --s3: #e3e7ed;
+        --line: rgba(16,18,22,.09); --line2: rgba(16,18,22,.15);
+        --action: #15181d; --action-ink: #ffffff;
+        color-scheme: light; accent-color: #15181d;
+        background: #ffffff; color: var(--ink);
       }
       .porte[hidden] { display: none; }
       .porte p { margin: 0; color: var(--ink2); font-size: 13.5px; line-height: 1.5; }
+      /* Rayon court plutot que pilule, et fond clair plutot que corail :
+         meme geste que sur l'accueil refait, et le corail retrouve son
+         role de marque. */
       .porte a.bouton, .bouton {
         display: inline-flex; align-items: center; justify-content: center;
-        min-height: 46px; padding: 0 22px; border-radius: 99px; border: 0;
-        background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+        min-height: 46px; padding: 0 22px; border-radius: 12px; border: 0;
+        background: var(--action); color: var(--action-ink); font-weight: 700; font-size: 14px;
         text-decoration: none; cursor: pointer; font-family: inherit;
+        transition: opacity .15s ease;
       }
-      .bouton.sobre { background: var(--s2); color: var(--ink); }
+      .bouton:hover { opacity: .88; }
+      .bouton.sobre { background: var(--s2); color: var(--ink); border: 1px solid var(--line2); }
       .bouton.pleine { width: 100%; }
       .bouton[disabled] { opacity: .55; cursor: default; }
 
@@ -144,7 +188,7 @@
         background: var(--s2); color: var(--ink);
         font-family: var(--mono); font-size: 14px; font-weight: 700;
       }
-      .bareme-champ input:focus { outline: 2px solid var(--bouton); outline-offset: 1px; }
+      .bareme-champ input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
       .bareme-champ input[disabled] { opacity: .55; }
       .bareme-unite { font-family: var(--mono); font-size: 10.5px; color: var(--ink3); width: 26px; }
 
@@ -196,8 +240,8 @@
         font-family: var(--mono); font-size: 11px; font-weight: 700;
         vertical-align: middle;
       }
-      .hero-delta.hausse { background: rgba(18,135,77,.12); color: var(--succes); }
-      .hero-delta.baisse { background: rgba(255,47,69,.1); color: var(--accent); }
+      .hero-delta.hausse { background: color-mix(in srgb, var(--succes) 15%, transparent); color: var(--succes); }
+      .hero-delta.baisse { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
       .hero-delta.plat { background: var(--s2); color: var(--ink3); }
 
       /* Les barres : une par soiree, la derniere en corail. Elles disent
@@ -227,7 +271,9 @@
       .hero {
         background: var(--s1); border: 1px solid var(--line);
         border-radius: 20px; padding: 18px 18px 8px; margin-bottom: 12px;
-        box-shadow: 0 1px 2px rgba(16,18,22,.04), 0 8px 24px -18px rgba(16,18,22,.35);
+        /* Un filet clair sur l'arete haute, pas une ombre portee : sur
+           du sombre une ombre ne se voit pas, un reflet si. */
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
       }
       .hero-label {
         font-family: var(--mono); font-size: 9.5px; font-weight: 600;
@@ -253,7 +299,11 @@
       .kpi {
         background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 14px 15px;
       }
-      .kpi-label { font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); }
+      .kpi-label {
+        display: block; min-height: 24px;
+        font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+        letter-spacing: .1em; line-height: 1.25; text-transform: uppercase; color: var(--ink3);
+      }
       .kpi-valeur { display: block; margin-top: 8px; font-size: 24px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
       .kpi-note { display: block; margin-top: 2px; font-size: 11px; color: var(--ink2); }
 
@@ -274,13 +324,13 @@
       /* display:flex bat la regle [hidden] du navigateur : sans cette
          ligne, la carte masquee laissait une bande vide sous le hero. */
       .insta-carte[hidden] { display: none; }
-      .insta-carte.a-faire { border-color: rgba(255,47,69,.35); }
+      .insta-carte.a-faire { border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
       .insta-ico {
         flex: 0 0 auto; width: 38px; height: 38px; border-radius: 12px;
         display: grid; place-items: center; background: var(--s2);
       }
       .insta-ico svg { width: 20px; height: 20px; fill: none; stroke: var(--ink2); stroke-width: 1.8; }
-      .insta-carte.ok .insta-ico { background: rgba(18,135,77,.12); }
+      .insta-carte.ok .insta-ico { background: color-mix(in srgb, var(--succes) 16%, transparent); }
       .insta-carte.ok .insta-ico svg { stroke: var(--succes); }
       .insta-txt { flex: 1; min-width: 0; }
       .insta-txt strong { display: block; font-size: 13.5px; font-weight: 750; }
@@ -296,7 +346,7 @@
       .affiche-apercu {
         width: 100%; border-radius: 12px; display: block;
         border: 1px solid var(--line2);
-        box-shadow: 0 10px 30px -18px rgba(16,18,22,.55);
+        box-shadow: 0 12px 32px -20px #000;
         background: #fff;
       }
       .qr-actions { display: grid; gap: 8px; width: 100%; }
@@ -322,7 +372,7 @@
       .reco-photo-actions { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
       .reco-photo-btn {
         border: 0; background: none; padding: 0; cursor: pointer; font: inherit;
-        font-size: 12px; font-weight: 700; color: var(--accent);
+        font-size: 12px; font-weight: 700; color: var(--ink);
         text-decoration: underline; text-underline-offset: 3px; text-align: left;
       }
       .reco-photo-btn.sobre { color: var(--ink3); }
@@ -434,6 +484,10 @@
         display: flex; flex-direction: column; align-items: stretch;
         padding: 26px 24px 20px; text-align: left;
         background: #ffffff; color: #15181d;
+        /* Ces deux ecrans restent clairs dans une appli sombre : sans
+           cette ligne ils heritent du color-scheme de .screen et leurs
+           champs virent au noir sur du blanc. */
+        color-scheme: light; accent-color: #15181d;
         /* Le clavier logiciel ampute l'ecran de moitie sur un telephone :
            sans ca, le bouton de connexion devient inatteignable. */
         overflow-y: auto;
@@ -518,7 +572,7 @@
       .bandeau-demo strong { color: var(--ink); font-weight: 750; }
       .bandeau-demo button {
         margin-left: auto; flex: 0 0 auto; border: 0; background: none; padding: 0;
-        font: inherit; font-weight: 700; color: var(--accent);
+        font: inherit; font-weight: 700; color: var(--ink);
         text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
       }
 
@@ -538,15 +592,58 @@
         flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; background: var(--s2);
         display: grid; place-items: center; font-size: 10px; font-weight: 800; color: var(--ink2);
       }
-      .act-ico.gain { background: rgba(18,135,77,.12); color: var(--succes); }
+      .act-ico.gain { background: color-mix(in srgb, var(--succes) 16%, transparent); color: var(--succes); }
       .act-txt { flex: 1 1 auto; min-width: 0; }
       .act-txt strong { display: block; font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .act-txt span { display: block; font-size: 11px; color: var(--ink3); }
       .act-pts { flex: 0 0 auto; font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--succes); }
       .act-pts.neutre { color: var(--ink3); }
 
-      /* ---- Recompenses ---- */
-      .recompense-carte { display: grid; gap: 9px; }
+      /* ---- Recompenses ----
+         Chaque recompense montrait ses cinq champs ouverts en meme
+         temps : photo, nom, seuil, stock, famille. Cinq recompenses,
+         c'etait vingt-cinq champs empiles, un mur de formulaire.
+         Julien : "il y a juste trop d'elements".
+
+         Repliee, une recompense tient sur une ligne qui dit ce qui
+         compte -- son nom, son prix en points, son stock. On l'ouvre
+         pour la modifier. <details> plutot qu'un etat en JS : le
+         navigateur gere l'ouverture, le clavier et l'accessibilite
+         mieux que ce qu'on ecrirait a la main. */
+      .recompense-carte { padding: 0; }
+      .reco-resume {
+        display: flex; align-items: center; gap: 11px;
+        padding: 12px 15px; cursor: pointer; list-style: none;
+      }
+      .reco-resume::-webkit-details-marker { display: none; }
+      .reco-resume:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 16px; }
+      .reco-vignette {
+        flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; overflow: hidden;
+        background: var(--s2); border: 1px solid var(--line);
+        display: grid; place-items: center;
+        font-size: 14px; font-weight: 800; color: var(--ink3);
+      }
+      .reco-vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .reco-resume-txt { flex: 1 1 auto; min-width: 0; }
+      .reco-resume-txt strong {
+        display: block; font-size: 13.5px; font-weight: 700;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .reco-resume-txt span {
+        display: block; margin-top: 2px; font-family: var(--mono);
+        font-size: 11px; color: var(--ink3);
+      }
+      .reco-chevron {
+        flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none;
+        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+        transition: transform .18s ease;
+      }
+      .recompense-carte[open] .reco-chevron { transform: rotate(90deg); }
+      .reco-detail {
+        display: grid; gap: 9px; padding: 4px 15px 14px;
+        border-top: 1px solid var(--line); margin-top: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) { .reco-chevron { transition: none; } }
       .recompense-carte .champ { display: grid; gap: 5px; }
       .recompense-carte label { font-size: 10.5px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; }
       .recompense-carte input, .recompense-carte select {
@@ -556,10 +653,14 @@
       .recompense-lignes { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
       .recompense-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
       .recompense-etat { font-size: 11px; color: var(--ink3); }
+      /* Contour seul : un aplat rose pale sur une action destructrice
+         la faisait passer pour un bouton desactive. */
       .retirer {
-        background: rgba(255,47,69,.12); color: var(--accent); border: 1px solid rgba(255,47,69,.3);
+        background: none; color: var(--accent);
+        border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
         border-radius: 8px; padding: 6px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
       }
+      .retirer:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
       .ajouter-recompense {
         width: 100%; min-height: 46px; border-radius: 14px; border: 1.5px dashed var(--line2);
         background: none; color: var(--ink2); font-weight: 700; font-size: 13.5px; cursor: pointer; font-family: inherit;
@@ -639,6 +740,32 @@
       .reglage-txt span { display: block; font-size: 11.5px; color: var(--ink3); margin-top: 1px; }
       .point-vert { width: 8px; height: 8px; border-radius: 50%; background: var(--succes); flex: 0 0 auto; }
 
+      /* Les entrees du sommaire des Reglages : la meme ligne que
+         .reglage-ligne, mais cliquable et avec un chevron. */
+      .reglage-lien {
+        display: flex; align-items: center; gap: 12px; width: 100%;
+        padding: 13px 0; border: 0; border-bottom: 1px solid var(--line);
+        background: none; cursor: pointer; font-family: inherit; text-align: left; color: inherit;
+      }
+      .reglage-lien:last-child { border-bottom: 0; }
+      .reglage-lien:hover .reglage-fleche { transform: translateX(2px); }
+      .reglage-fleche {
+        flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3);
+        fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+        transition: transform .15s ease;
+      }
+
+      /* Retour vers le sommaire. Sans lui, les trois sous-ecrans
+         n'auraient plus aucune sortie une fois leur onglet supprime. */
+      .retour {
+        display: inline-flex; align-items: center; gap: 6px; margin: 0 0 12px;
+        padding: 6px 12px 6px 8px; border-radius: 999px;
+        border: 1px solid var(--line2); background: var(--s1); color: var(--ink2);
+        font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+      }
+      .retour:hover { color: var(--ink); }
+      .retour svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
       /* ---- Barre d'onglets (5, meme habillage qu'app-preview.html) ----
          grid-template-columns suit le NOMBRE d'onglets : reste a 4 apres
          l'ajout du QR, le cinquieme debordait de la barre. auto-fit
@@ -646,7 +773,7 @@
          ne repose pas ce probleme. */
       .tabs {
         position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
-        background: rgba(255,255,255,.88); border-top: 1px solid rgba(16,18,22,.1);
+        background: rgba(10,12,15,.82); border-top: 1px solid var(--line2);
         backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
         display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
         align-items: center; padding-bottom: 18px;
@@ -661,7 +788,16 @@
       /* Le libelle sur 5 colonnes : "Récompenses" ne tient plus, il
          debordait sur ses voisins au lieu d'etre coupe. */
       .tab .lbl { max-width: 100%; padding: 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .tab.on svg, .tab.on .lbl { stroke: var(--accent); color: var(--accent); }
+      /* Onglet actif en clair, pas en corail : des libelles coraux en
+         bas d'ecran, c'etait la couleur de marque diluee en decoration.
+         Un trait corail suffit a marquer la position. */
+      .tab { position: relative; }
+      .tab.on svg { stroke: var(--ink); }
+      .tab.on .lbl { color: var(--ink); }
+      .tab.on::after {
+        content: ""; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+        width: 18px; height: 2px; border-radius: 0 0 2px 2px; background: var(--accent);
+      }
     </style>
   </head>
   <body>
@@ -849,15 +985,6 @@
                 <div class="hero-graphe" id="hero-graphe" hidden></div>
               </div>
 
-              <div class="panneau">
-                <p class="panneau-titre">Abonnés touchés par soirée</p>
-                <p class="panneau-sous">Ce que vos clients ont fait voir de vous.</p>
-                <div class="graphe" id="graphe-reach">
-                  <span class="graphe-max" id="graphe-max"></span>
-                </div>
-                <div class="graphe-x" id="graphe-x"></div>
-              </div>
-
               <div class="insta-carte" id="dash-instagram" hidden></div>
 
               <div class="kpis">
@@ -898,6 +1025,7 @@
 
             <!-- ================= MA FICHE ================= -->
             <div class="vue" id="vue-fiche">
+              <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
               <h1 class="ecran-titre">Ma fiche</h1>
               <p class="ecran-sous">Ce que voient vos clients sur la carte de l'appli.</p>
 
@@ -970,13 +1098,32 @@
                 <p class="vide" style="padding:14px 0">Vérification…</p>
               </div>
 
+              <p class="section-titre">Configuration</p>
+              <div class="carte" style="padding:2px 15px">
+                <button type="button" class="reglage-lien" data-va="bareme">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg></span>
+                  <span class="reglage-txt"><strong>Barème de points</strong><span>Ce que rapporte chaque publication</span></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+                <button type="button" class="reglage-lien" data-va="qr">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg></span>
+                  <span class="reglage-txt"><strong>Affiche et QR code</strong><span>À imprimer et coller à l'entrée</span></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+                <button type="button" class="reglage-lien" data-va="fiche">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+                  <span class="reglage-txt"><strong>Ma fiche</strong><span>Nom, ville, couleur, compte Instagram</span></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+
               <p class="section-titre">Compte</p>
               <button type="button" class="bouton sobre pleine" id="reglages-deconnexion">Déconnexion</button>
             </div>
 
             <!-- ================= BAREME ================= -->
             <div class="vue" id="vue-bareme">
-              <p class="kicker-sec">02 · Points</p>
+              <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
               <h1 class="ecran-titre">Votre barème</h1>
               <p class="ecran-sous">Ce que rapporte chaque publication de vos clients.</p>
 
@@ -994,6 +1141,7 @@
                  fonction que qr.html (lib/tracking/qrCode.js), donc les deux
                  pages ne peuvent pas encoder des URL differentes. -->
             <div class="vue" id="vue-qr">
+              <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
               <h1 class="ecran-titre">Mon QR code</h1>
               <p class="ecran-sous">À imprimer et coller à l'entrée, au bar, aux toilettes.</p>
 
@@ -1021,26 +1169,20 @@
               </div>
             </div>
 
+            <!-- TROIS onglets, il y en avait six. Points, QR et Ma fiche
+                 sont des reglages qu'on ouvre une fois puis plus jamais,
+                 pas des destinations quotidiennes. Julien : "il y a genre
+                 six onglets, c'est inutile, juste l'essentiel".
+                 Regarder / vendre / regler. Le reste vit dans Reglages,
+                 a un geste de la, et les ecrans n'ont pas bouge. -->
             <nav class="tabs">
               <button class="tab on" type="button" data-tab="dashboard" aria-current="page">
                 <svg viewBox="0 0 24 24"><path d="M3 13h4v7H3zM10 8h4v12h-4zM17 3h4v17h-4z"/></svg>
-                <span class="lbl">Dashboard</span>
+                <span class="lbl">Tableau de bord</span>
               </button>
               <button class="tab" type="button" data-tab="recompenses">
                 <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
                 <span class="lbl">Récompenses</span>
-              </button>
-              <button class="tab" type="button" data-tab="bareme">
-                <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg>
-                <span class="lbl">Points</span>
-              </button>
-              <button class="tab" type="button" data-tab="qr">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>
-                <span class="lbl">QR</span>
-              </button>
-              <button class="tab" type="button" data-tab="fiche">
-                <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
-                <span class="lbl">Ma fiche</span>
               </button>
               <button class="tab" type="button" data-tab="reglages">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l1.8-1.5-2-3.4-2.2.7a7.6 7.6 0 0 0-2.6-1.5L14 2.6h-4l-.4 2.2a7.6 7.6 0 0 0-2.6 1.5l-2.2-.7-2 3.4L4.6 10.5a7.6 7.6 0 0 0 0 3L2.8 15l2 3.4 2.2-.7c.76.65 1.64 1.16 2.6 1.5l.4 2.2h4l.4-2.2a7.6 7.6 0 0 0 2.6-1.5l2.2.7 2-3.4z"/></svg>
@@ -1140,12 +1282,33 @@
       var TABS = document.querySelectorAll(".tab");
       var VUES = document.querySelectorAll(".vue");
 
-      TABS.forEach(function (tab) {
-        tab.addEventListener("click", function () {
-          var cible = tab.dataset.tab;
-          TABS.forEach(function (t) { t.classList.toggle("on", t === tab); t.setAttribute("aria-current", t === tab ? "page" : "false"); });
-          VUES.forEach(function (v) { v.classList.toggle("actif", v.id === "vue-" + cible); });
+      // Les trois ecrans qui ont perdu leur onglet : ils vivent
+      // maintenant sous Reglages, qui reste allume pendant qu'on y est.
+      var SOUS_ECRANS = ["bareme", "qr", "fiche"];
+
+      function ouvrirVue(cible) {
+        VUES.forEach(function (v) { v.classList.toggle("actif", v.id === "vue-" + cible); });
+
+        var onglet = SOUS_ECRANS.indexOf(cible) >= 0 ? "reglages" : cible;
+        TABS.forEach(function (t) {
+          var actif = t.dataset.tab === onglet;
+          t.classList.toggle("on", actif);
+          t.setAttribute("aria-current", actif ? "page" : "false");
         });
+
+        // Un ecran qu'on ouvre commence en haut, pas la ou on avait
+        // laisse le precedent.
+        var vue = document.getElementById("vue-" + cible);
+        if (vue) vue.scrollTop = 0;
+      }
+
+      TABS.forEach(function (tab) {
+        tab.addEventListener("click", function () { ouvrirVue(tab.dataset.tab); });
+      });
+
+      // Sommaire des Reglages et boutons de retour : le meme chemin.
+      document.querySelectorAll("[data-va]").forEach(function (lien) {
+        lien.addEventListener("click", function () { ouvrirVue(lien.dataset.va); });
       });
 
       var ETAT = { data: null, session: null, instagram: null };
@@ -1647,86 +1810,6 @@
         }).join("");
       }
 
-      /* Le graphique "par soiree", repris du simulateur. Une soiree = un
-         jour ou il s'est passe quelque chose : on ne trace QUE ces jours,
-         pas les 14 cases du calendrier. Un club ouvert le vendredi et le
-         samedi n'a pas cinq soirees a zero dans la semaine, il en a deux
-         -- les afficher a plat ecraserait la courbe contre le bas et
-         donnerait l'impression d'une activite en chute. */
-      function rendreGraphe(validated) {
-        var parJour = {};
-        validated.forEach(function (sub) {
-          var t = Date.parse(sub.submitted_at || "");
-          if (!Number.isFinite(t)) return;
-          var d = new Date(t);
-          var cle = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-          parJour[cle] = (parJour[cle] || 0) + Number(sub.views_count || 0);
-        });
-
-        var jours = Object.keys(parJour).sort().slice(-10);
-        var zone = $("#graphe-reach");
-        var axeX = $("#graphe-x");
-        var maxEl = $("#graphe-max");
-
-        if (jours.length < 2) {
-          zone.querySelectorAll("svg").forEach(function (n) { n.remove(); });
-          maxEl.textContent = "";
-          axeX.innerHTML = "";
-          zone.insertAdjacentHTML("beforeend",
-            '<p class="hero-vide">Il faut au moins deux soirées pour tracer une courbe.</p>');
-          return;
-        }
-
-        var valeurs = jours.map(function (j) { return parJour[j]; });
-        var max = Math.max.apply(null, valeurs);
-        var L = 300, H = 120, hautMarge = 10;
-
-        var pts = valeurs.map(function (v, i) {
-          var x = (i / (valeurs.length - 1)) * L;
-          var y = H - (v / max) * (H - hautMarge);
-          return [x, y];
-        });
-        var ligne = pts.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ");
-
-        // Trois reperes horizontaux : sans eux on lit une forme, pas des
-        // valeurs.
-        var grille = [0.25, 0.5, 0.75].map(function (f) {
-          var y = (H - hautMarge) * f + hautMarge;
-          return '<line x1="0" y1="' + y.toFixed(1) + '" x2="' + L + '" y2="' + y.toFixed(1) +
-            '" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
-        }).join("");
-
-        zone.querySelectorAll("svg, .hero-vide").forEach(function (n) { n.remove(); });
-        zone.insertAdjacentHTML("beforeend",
-          '<svg viewBox="0 0 ' + L + " " + H + '" preserveAspectRatio="none" aria-hidden="true">' +
-            '<defs><linearGradient id="grad-reach" x1="0" y1="0" x2="0" y2="1">' +
-              '<stop offset="0%" stop-color="var(--accent)" stop-opacity=".18"/>' +
-              '<stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>' +
-            "</linearGradient></defs>" +
-            grille +
-            '<polygon points="0,' + H + " " + ligne + " " + L + "," + H + '" fill="url(#grad-reach)"/>' +
-            '<polyline points="' + ligne + '" fill="none" stroke="var(--accent)" stroke-width="2.4" ' +
-              'stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
-            pts.map(function (p) {
-              return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.2" ' +
-                'fill="var(--s1)" stroke="var(--accent)" stroke-width="2.2" vector-effect="non-scaling-stroke"/>';
-            }).join("") +
-          "</svg>");
-
-        maxEl.textContent = nb.format(max);
-
-        function jourCourt(cle) {
-          var d = new Date(cle + "T12:00:00");
-          return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
-        }
-        // Trois reperes seulement : dix dates sur la largeur d'un
-        // telephone se chevauchent et deviennent illisibles.
-        axeX.innerHTML =
-          "<span>" + jourCourt(jours[0]) + "</span>" +
-          "<span>" + jourCourt(jours[Math.floor((jours.length - 1) / 2)]) + "</span>" +
-          "<span>" + jourCourt(jours[jours.length - 1]) + "</span>";
-      }
-
       function rendreDashboard() {
         var stats = getDashboardStats(ETAT.data);
         $("#dash-etablissement").textContent = ETAT.data.establishment.name || "—";
@@ -1755,7 +1838,6 @@
         // n'ouvre que deux soirs par semaine : une courbe lisse les
         // trous, alors que ce sont eux, l'information. La courbe ne
         // reste que pour le cas ou il n'y a rien a montrer.
-        rendreGraphe(stats.validated);
 
         var vide = seaux.every(function (v) { return !v; });
         $("#hero-graphe").hidden = !vide;
@@ -2201,8 +2283,26 @@
         }
 
         zone.innerHTML = bandeauDemo("tes récompenses") + rewards.map(function (r) {
+          // Le stock est la seule information du resume qui puisse
+          // manquer : sans plafond, on ecrit "stock illimite" plutot
+          // que de laisser un blanc qui ressemble a une donnee perdue.
+          var stock = (r.max_redemptions === null || r.max_redemptions === undefined || r.max_redemptions === "")
+            ? "stock illimité"
+            : "stock " + nb.format(Number(r.max_redemptions));
+
           return (
-            '<div class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
+            '<details class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
+              '<summary class="reco-resume">' +
+                '<span class="reco-vignette">' +
+                  (r.image_url
+                    ? '<img src="' + escapeHtml(r.image_url) + '" alt="" />'
+                    : escapeHtml((r.title || "?").trim().charAt(0).toUpperCase())) +
+                "</span>" +
+                '<span class="reco-resume-txt"><strong>' + escapeHtml(r.title) + "</strong>" +
+                  "<span>" + nb.format(Number(r.points_required || 0)) + " pts · " + stock + "</span></span>" +
+                '<svg class="reco-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>' +
+              "</summary>" +
+              '<div class="reco-detail">' +
               '<div class="reco-photo">' +
                 '<span class="reco-photo-vue">' +
                   (r.image_url
@@ -2232,7 +2332,8 @@
                 '<span class="recompense-etat" data-etat></span>' +
                 '<button type="button" class="retirer" data-retirer' + inerte + ">Retirer</button>" +
               "</div>" +
-            "</div>"
+              "</div>" +
+            "</details>"
           );
         }).join("");
 
