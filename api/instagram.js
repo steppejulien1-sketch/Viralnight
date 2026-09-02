@@ -418,15 +418,50 @@ async function crediterMentions(mentions, etablissementParIgUserId, supabaseGera
 
     try {
       // 1. L'etablissement gerant -> le club clubbeur.
+      //
+      // ⚠️ LA JOINTURE PASSE PAR LE CODE PUBLIC, PAS PAR UN establishment_id.
+      //
+      // Ce code cherchait `clubs.establishment_id`. Cette colonne n'existe
+      // pas dans la vraie base clubbeur -- verifie le 02/09/2026, `clubs`
+      // porte : id, slug, name, city, primary_color, logo_url, ig_handle,
+      // created_at, leaderboard_enabled, b2b_public_code, points_lock_hours,
+      // lat, lng. La requete partait donc en erreur a chaque mention,
+      // clubId restait null, et AUCUN credit automatique n'a jamais pu
+      // aboutir. Le bug etait invisible : maybeSingle() sans lecture de
+      // l'erreur rend simplement `data: null`, exactement comme un club
+      // introuvable.
+      //
+      // La vraie cle commune est le code public du club, present des deux
+      // cotes et identique : establishments.public_code cote gerants,
+      // clubs.b2b_public_code cote clubbeur (Mirage = 6VAUMQB5 dans les
+      // deux bases).
       let clubId = null;
       let jeton = null;
       if (etablissementId) {
-        const { data: club } = await clubbeur
-          .from("clubs")
-          .select("id")
-          .eq("establishment_id", etablissementId)
+        const { data: etab, error: erreurEtab } = await supabaseGerants
+          .from("establishments")
+          .select("public_code")
+          .eq("id", etablissementId)
           .maybeSingle();
-        clubId = club?.id || null;
+
+        if (erreurEtab) {
+          console.error("[instagram:webhook] code public illisible:", erreurEtab.message);
+        }
+
+        if (etab?.public_code) {
+          // L'erreur est LUE cette fois : une jointure qui casse doit se
+          // voir dans les journaux, pas se confondre avec "pas de club".
+          const { data: club, error: erreurClub } = await clubbeur
+            .from("clubs")
+            .select("id")
+            .eq("b2b_public_code", etab.public_code)
+            .maybeSingle();
+
+          if (erreurClub) {
+            console.error("[instagram:webhook] club clubbeur introuvable:", erreurClub.message);
+          }
+          clubId = club?.id || null;
+        }
 
         const { data: compte } = await supabaseGerants
           .from("establishment_instagram_accounts")
