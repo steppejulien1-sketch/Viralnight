@@ -255,9 +255,18 @@
          l'opacite et les interactions, jamais le display : la carte
          garde ainsi une taille de conteneur stable, ce qui evite
          d'avoir a rappeler map.resize() a chaque changement d'onglet. */
+      /* Le fondu seul, et c'est deliberé.
+         Une montee de quelques pixels a l'arrivee a ete tentee le
+         03/09/2026, en transition puis en animation : les deux restent
+         bloquees sur leur image de depart et laissent l'ecran decale de
+         7 px en permanence. La cause tient au systeme de vues d'ici --
+         .actif n'est pose que sur la carte et la boutique, les autres
+         ecrans se montrent autrement -- et un decalage permanent sur
+         tous les ecrans coute plus cher que ce que la montee rapporte.
+         A reprendre en unifiant d'abord la bascule de vue. */
       .vue {
         position: absolute; inset: 0;
-        opacity: 0; visibility: hidden; transition: opacity .18s ease;
+        opacity: 0; visibility: hidden; transition: opacity .18s var(--sortie);
       }
       .vue.actif { opacity: 1; visibility: visible; }
       @media (prefers-reduced-motion: reduce) { .vue { transition: none; } }
@@ -1938,6 +1947,26 @@
       .carte-reco.epuise { pointer-events: none; opacity: .62; }
       .carte-reco.epuise .photo img { filter: saturate(.15) contrast(.98); }
 
+      /* ---- Le deblocage ----
+         Joue une seule fois, quand la carte devient accessible. */
+      @keyframes reco-debloque {
+        from { transform: translateX(-130%) skewX(-18deg); }
+        to   { transform: translateX(130%) skewX(-18deg); }
+      }
+      @keyframes reco-souleve {
+        0%   { transform: none; }
+        38%  { transform: translateY(-5px); }
+        100% { transform: none; }
+      }
+      .carte-reco.debloque { animation: reco-souleve .55s var(--sortie) both; }
+      .carte-reco.debloque::after {
+        content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+        /* Une bande claire et etroite, pas une nappe : elle passe, on la
+           sent, elle ne colore rien. */
+        background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.55) 50%, transparent 62%);
+        animation: reco-debloque .62s cubic-bezier(.3,.5,.2,1) both;
+      }
+
       /* Arrivee en cascade, retard pose en inline par le JS (--i). */
       @keyframes reco-entre {
         from { opacity: 0; transform: translateY(12px); }
@@ -1946,7 +1975,8 @@
       .carte-reco { animation: reco-entre .4s cubic-bezier(.2,.7,.3,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
 
       @media (prefers-reduced-motion: reduce) {
-        .carte-reco, .carte-reco .badge-rarete::before { animation: none; }
+        .carte-reco, .carte-reco .badge-rarete::before,
+        .carte-reco.debloque, .carte-reco.debloque::after { animation: none; }
         .carte-reco .jauge-barre, .carte-reco .photo img { transition: none; }
       }
 
@@ -5020,9 +5050,45 @@ function prochaine() {
     .sort(function (a, b) { return a.cout - b.cout; })[0] || null;
 }
 
+var compteurEnCours = null;
+var soldeAffiche = null;
+
+/* Fait monter le nombre au lieu de le remplacer.
+   Une seule animation a la fois : relancer pendant qu'elle tourne
+   repartirait du chiffre affiche, pas de zero. */
+function animerCompteur(el, depuis, vers) {
+  cancelAnimationFrame(compteurEnCours);
+  var debut = performance.now();
+  var duree = 900;
+
+  function trame(t) {
+    var p = Math.min(1, (t - debut) / duree);
+    // Ralentissement en fin de course : les derniers points comptent
+    // plus que les premiers.
+    var e = 1 - Math.pow(1 - p, 3);
+    el.textContent = nb(Math.round(depuis + (vers - depuis) * e));
+    if (p < 1) compteurEnCours = requestAnimationFrame(trame);
+  }
+  compteurEnCours = requestAnimationFrame(trame);
+}
+
 function majCagnotte(animer) {
   var el = $("#solde-num");
-  el.textContent = nb(ETAT.solde);
+  var reduit = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var avant = soldeAffiche;
+  soldeAffiche = ETAT.solde;
+
+  // On ne compte que vers le HAUT, et seulement si on sait d'ou on
+  // part. Un premier affichage ou une correction a la baisse se pose
+  // directement : faire defiler un solde qui descend serait une
+  // celebration a contretemps.
+  if (animer && !reduit && avant !== null && ETAT.solde > avant) {
+    animerCompteur(el, avant, ETAT.solde);
+  } else {
+    cancelAnimationFrame(compteurEnCours);
+    el.textContent = nb(ETAT.solde);
+  }
+
   if (animer) {
     el.classList.remove("maj");
     void el.offsetWidth;
@@ -8932,9 +8998,21 @@ function rendreOffre() {
 // gerant a laisse une famille inconnue.
 var TEINTES = { bar: "#ffece0", acces: "#fdeaf1", vip: "#eef0fe" };
 
+var horsDePorteeAvant = null;
+
 function rendreListe() {
   var z = $("#liste");
   z.innerHTML = "";
+
+  var horsDePortee = new Set(
+    RECOMPENSES.filter(function (r) { return r.cout > ETAT.solde; }).map(function (r) { return r.id; })
+  );
+  // null au tout premier rendu : sinon la boutique entiere s'allumerait
+  // a l'ouverture de l'appli, ce qui ne veut plus rien dire.
+  var vientDeDebloquer = horsDePorteeAvant
+    ? function (id) { return horsDePorteeAvant.has(id) && !horsDePortee.has(id); }
+    : function () { return false; };
+  horsDePorteeAvant = horsDePortee;
 
   // Les filtres Bar/Acces/VIP ont ete retires le 20 aout ("pas
   // utile") : le catalogue tient sur 4 recompenses aujourd'hui, une
@@ -8972,6 +9050,7 @@ function rendreListe() {
     // maintenant dans la jauge (loin) ou dans la pastille verte (dispo).
 
     b.style.setProperty("--i", index);
+    if (vientDeDebloquer(r.id)) b.classList.add("debloque");
     // Rien n'est pose sur la photo : ni prix, ni badge, ni degrade.
     // Tout ce qui est du texte vit dans .corps, sous l'image.
     b.innerHTML =
