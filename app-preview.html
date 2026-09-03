@@ -13,7 +13,7 @@
          graisse -- le corps de texte, lui, ne change pas. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap" />
     <!-- Sans ca, le navigateur peint son fond BLANC par defaut le temps
          que ce fichier (CSS inclus) charge, avant que --page/--bg
          prennent le relais -- l'appli nait blanche puis devient noire,
@@ -121,11 +121,28 @@
         --marque:     #ff2f45;
         --marque-2:   #ff6070;
         --marque-nuit:#0a0a0c;
+
+        /* Le socle des illustrations : LA surface, unique, sur laquelle
+           chaque dessin de recompense est pose -- vignette de la liste,
+           disque de la feuille, bandeau de l'offre. Une seule valeur pour
+           toutes les recompenses : ce qui distingue une pinte d'un
+           cocktail, c'est le dessin, pas la couleur derriere.
+
+           En SOMBRE il doit etre plus clair que la carte, sinon la
+           vignette disparait dans le fond ; en clair c'est l'inverse.
+           D'ou deux valeurs, et non une seule reprise partout. */
+        --socle: #1e1a1a;
         --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         /* Les titres, et eux seuls. Le repli est nomme : Inter d'abord,
            puis la pile systeme. */
         --titre: "Archivo", Inter, ui-sans-serif, system-ui, sans-serif;
-        --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+        /* La police des DONNEES. DICE, MUSE et Resident Advisor ecrivent
+           toutes leurs dates, leurs compteurs et leurs lieux dans un
+           monospace -- c'est ce qui les fait lire comme des objets
+           dessines plutot que comme des pages web. Le repli reste la
+           pile systeme : si Google Fonts ne repond pas, on garde un
+           monospace, jamais du sans-serif a la place. */
+        --mono: "DM Mono", ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
 
         /* ---- L'unite de texte ----
            Toutes les tailles de caracteres de ce fichier s'ecrivent
@@ -763,7 +780,7 @@
         margin: 0 0 8px;
       }
       .va-gain strong {
-        font-family: var(--mono); font-size: calc(32 * var(--u)); font-weight: 800;
+        font-family: var(--mono); font-size: calc(32 * var(--u)); font-weight: 500;
         letter-spacing: -.03em; line-height: 1; color: var(--marque-2);
       }
       .va-gain span {
@@ -1220,7 +1237,8 @@
          que le nombre ne saute pas quand il change. */
       .pf-fidelite-solde { display: flex; align-items: baseline; gap: 8px; margin: 8px 0 0; }
       .pf-fidelite-solde strong {
-        font-family: var(--mono); font-size: calc(34 * var(--u)); font-weight: 800;
+        font-family: var(--titre); font-variant-numeric: tabular-nums;
+        font-size: calc(34 * var(--u)); font-weight: 700;
         /* Le chiffre porte le rouge, et il est le seul avec la barre a le
            faire. C'etait deja le cas avant, mais sur un fond rose : le
            rouge se noyait dans sa propre teinte. Sur une surface neutre il
@@ -1776,7 +1794,7 @@
       .carte-reco .serie {
         display: block; margin-top: 8px; padding-top: 8px;
         border-top: 1px solid var(--line);
-        font-family: var(--mono); font-size: calc(9 * var(--u)); font-weight: 600;
+        font-family: var(--mono); font-size: calc(9 * var(--u)); font-weight: 500;
         letter-spacing: .14em; color: var(--ink3); text-transform: uppercase;
       }
 
@@ -1784,7 +1802,7 @@
          contour fin, legerement de travers. C'est la seule fantaisie de
          l'ecran -- une seule, et tout le reste reste sage. */
       .badge-rarete {
-        font-family: var(--mono); font-size: calc(9 * var(--u)); font-weight: 700;
+        font-family: var(--mono); font-size: calc(9 * var(--u)); font-weight: 500;
         letter-spacing: .12em; text-transform: uppercase;
         color: var(--accent); background: none;
         border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
@@ -1825,7 +1843,12 @@
       }
       .solde-chiffre { margin: 8px 0 0; display: flex; align-items: baseline; gap: 8px; }
       .carte-solde-num {
-        font-family: var(--mono); font-size: calc(68 * var(--u)); font-weight: 700;
+        /* Archivo, pas le mono : DM Mono barre ses zeros, ce qui donne un
+           panneau d'interdiction des que le solde en contient un. Les
+           chiffres tabulaires empechent la largeur de sauter pendant le
+           comptage. */
+        font-family: var(--titre); font-variant-numeric: tabular-nums;
+        font-size: calc(68 * var(--u)); font-weight: 700;
         /* Le corail reste : c'est l'emploi correct de la couleur de
            marque -- souligner LA valeur de l'ecran. Le fond neutre lui
            rend son eclat, au lieu de le diluer dans un lavis rose. */
@@ -1912,7 +1935,7 @@
          par rapport au 4/3 d'origine. C'est le "images trop petites". */
       .carte-reco .photo {
         position: relative; width: 100%; aspect-ratio: 1 / 1;
-        background: var(--tinte, #f0f0f2); overflow: hidden;
+        background: var(--socle); overflow: hidden;
       }
       .carte-reco .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
@@ -1953,7 +1976,7 @@
         font-family: var(--mono); font-variant-numeric: tabular-nums;
         letter-spacing: -.02em;
         display: block; margin-top: 4px;
-        font-family: var(--mono); font-size: calc(15 * var(--u)); font-weight: 800;
+        font-family: var(--mono); font-size: calc(15 * var(--u)); font-weight: 500;
         letter-spacing: -.02em; color: var(--accent);
       }
       .carte-reco .prix span {
@@ -2087,7 +2110,7 @@
         color: var(--ink); margin-bottom: 4px;
       }
       .offre-hero p { margin: 0 0 16px; font-size: calc(13.5 * var(--u)); font-weight: 500; line-height: 1.4; color: var(--ink2); }
-      .offre-hero del { font-family: var(--mono); font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--ink3); }
+      .offre-hero del { font-family: var(--mono); font-size: calc(12.5 * var(--u)); font-weight: 500; color: var(--ink3); }
       .offre-hero .cta-visuelle {
         display: block; text-align: center; border-radius: 999px;
         background: var(--bouton); color: #fff; font-size: calc(15 * var(--u)); font-weight: 700;
@@ -2299,7 +2322,7 @@
       }
       .bon-pret::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
       .bon-code {
-        font-family: var(--mono); font-size: calc(11.5 * var(--u)); font-weight: 600; letter-spacing: .07em;
+        font-family: var(--mono); font-size: calc(11.5 * var(--u)); font-weight: 500; letter-spacing: .07em;
         color: var(--ink3); flex: 0 0 auto;
       }
 
@@ -2322,7 +2345,7 @@
       .gain p { margin: 0; flex: 1; min-width: 0; font-size: calc(13.5 * var(--u)); font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
       .gain p span { display: block; font-size: calc(12 * var(--u)); font-weight: 500; color: var(--ink3); margin-top: 1px; }
       .gain .val {
-        font-family: var(--mono); font-size: calc(14 * var(--u)); font-weight: 700; white-space: nowrap;
+        font-family: var(--mono); font-size: calc(14 * var(--u)); font-weight: 500; white-space: nowrap;
         font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--ambre);
       }
 
@@ -2474,7 +2497,7 @@
       .sheet-visuel {
         position: relative; width: 132px; height: 132px; margin: 8px auto 20px;
         border-radius: 50%; overflow: hidden;
-        background: radial-gradient(120% 120% at 32% 24%, var(--glow), #14100e 72%);
+        background: var(--socle);
         box-shadow: var(--ombre-2);
         display: grid; place-items: center;
       }
@@ -2938,7 +2961,7 @@
       @media (hover: hover) and (pointer: fine) { .sheet-cta:hover { opacity: .9; } }
       .sheet-note { text-align: center; font-size: calc(13.5 * var(--u)); color: var(--ink2); margin: 12px 0 0; font-weight: 600; line-height: 1.45; }
       .sheet-note em {
-        font-style: normal; color: var(--ambre); font-weight: 700; font-family: var(--mono);
+        font-style: normal; color: var(--ambre); font-weight: 500; font-family: var(--mono);
       }
 
       /* Formulaire "Ajouter un ami" : meme famille que .ac-input, mais
@@ -3041,7 +3064,7 @@
       }
       .qr-carte svg { display: block; width: 100%; height: auto; }
       .qr-code-txt {
-        font-family: var(--mono); font-size: calc(14 * var(--u)); font-weight: 600; letter-spacing: .18em;
+        font-family: var(--mono); font-size: calc(14 * var(--u)); font-weight: 500; letter-spacing: .18em;
         color: var(--ink2); margin: 0 0 20px;
       }
 
@@ -3094,6 +3117,12 @@
       .screen.boutique-pro {
         --ink: #16171c; --ink2: #6b6f76; --ink3: #9a9ea5;
         --bg: #f5f5f7; --s1: #ffffff; --s2: #f0f0f2; --s3: #e7e7ea;
+        /* Le socle reste sombre alors que la boutique est claire, et c'est
+           voulu : c'est le geste de Starbucks, dont chaque produit est
+           detoure sur le meme disque vert fonce au milieu de cartes
+           blanches. Le dessin se detache, le rouge de marque garde son
+           eclat, et les quatre vignettes se lisent enfin comme une serie. */
+        --socle: #17181d;
         --line: #e9e9ec; --line2: #dedee2;
         --accent: #ff6b5b; --ambre: #ff6b5b; --bouton: #ff2f45;
         --jeton-fond: var(--bouton); --jeton-anneau: var(--accent);
@@ -3113,7 +3142,7 @@
       }
       .screen.boutique-pro .app { background: var(--bg); }
       .screen.boutique-pro .sheet-visuel {
-        background: radial-gradient(120% 120% at 32% 24%, var(--glow), var(--s2) 72%);
+        background: var(--socle);
         box-shadow: var(--ombre-2);
       }
       .screen.boutique-pro .sheet { background: #ffffff; border-top-color: var(--line2); box-shadow: var(--ombre-3); }
@@ -4336,15 +4365,16 @@ function artCordon() {
   );
 }
 
-/* Le halo derriere l'illustration : la teinte dominante du dessin,
-   tres attenuee. `taille` choisit entre le petit format des listes
-   et le grand bandeau de la feuille — meme dessin, meme halo. */
+/* Le fond derriere l'illustration ne vient plus du dessin : c'est
+   --socle, la meme surface pour toutes les recompenses (voir le jeton).
+   `taille` choisit entre le petit format des listes et le disque de la
+   feuille — meme dessin, meme socle. */
 function visuel(item, taille) {
   var cls = taille === "grand" ? "sheet-visuel" : "visuel";
   if (item.foto) {
-    return '<span class="' + cls + ' foto" style="--glow:' + item.glow + '"><img src="' + item.foto + '" alt="" loading="lazy"></span>';
+    return '<span class="' + cls + ' foto"><img src="' + item.foto + '" alt="" loading="lazy"></span>';
   }
-  return '<span class="' + cls + '" style="--glow:' + item.glow + '">' + item.art() + "</span>";
+  return '<span class="' + cls + '">' + item.art() + "</span>";
 }
 
 /* ==========================================================
@@ -9157,10 +9187,14 @@ function rendreOffre() {
   z.appendChild(b);
 }
 
-// Aplat pastel derriere chaque icone de carte, par famille — pas le
-// halo sombre du theme precedent. Repli sur la teinte "bar" si le
-// gerant a laisse une famille inconnue.
-var TEINTES = { bar: "#ffece0", acces: "#fdeaf1", vip: "#eef0fe" };
+// Plus d'aplat par famille. Les illustrations sont detourees depuis le
+// 03/09/2026 : le fond du bloc image vient donc du CSS, et il est le
+// MEME pour toutes les recompenses. Onze applis regardees ce jour-la
+// (Starbucks, Spotify, DICE, RA, Too Good To Go...) posent toutes leurs
+// produits sur une surface unique ; c'est le dessin qui distingue une
+// recompense d'une autre, jamais la couleur derriere. Quatre lavis
+// pastel cote a cote etaient le marqueur "vibecode" que Julien a fait
+// retirer partout ailleurs.
 
 var horsDePorteeAvant = null;
 
@@ -9221,7 +9255,7 @@ function rendreListe() {
     // Rien n'est pose sur la photo : ni prix, ni badge, ni degrade.
     // Tout ce qui est du texte vit dans .corps, sous l'image.
     b.innerHTML =
-      '<span class="photo" style="--tinte:' + (TEINTES[r.fam] || TEINTES.bar) + '">' +
+      '<span class="photo">' +
         visuelInterieur +
       "</span>" +
       '<span class="corps">' +
@@ -9351,8 +9385,13 @@ function ouvrirRecompense(item, src) {
   // reste 2" pousse vraiment a se decider. Le numero de catalogue
   // (absent sur l'offre du soir, qui n'en a pas) ouvre la ligne comme
   // une reference de disque.
-  var entete = (item.code ? item.code + " · " : "") + FAMILLES[item.fam] +
-    (item.stock > 0 && item.stock <= 5 ? " · plus que " + item.stock : "");
+  // Sans repli, une famille que le gerant a laissee vide affichait
+  // "MIR.001 . UNDEFINED" en toutes lettres dans la fiche (vu le
+  // 04/09/2026). Une famille inconnue ne s'ecrit pas du tout : mieux vaut
+  // une ligne plus courte qu'un mot anglais en majuscules.
+  var famille = FAMILLES[item.fam] || "";
+  var entete = [item.code, famille, (item.stock > 0 && item.stock <= 5 ? "plus que " + item.stock : "")]
+    .filter(Boolean).join(" · ");
 
   var cta, note;
   if (epuise) {
