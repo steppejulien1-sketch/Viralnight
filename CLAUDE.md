@@ -216,7 +216,7 @@ npm run db:test    # verifie les migrations sans les appliquer
   `NOTIFICATION_EMAIL`, `NOTIFICATION_FROM`, `SITE_URL`, `INSTAGRAM_APP_ID`,
   `INSTAGRAM_APP_SECRET`, `INSTAGRAM_REDIRECT_URI`, `INSTAGRAM_STATE_SECRET`,
   `INSTAGRAM_WEBHOOK_VERIFY_TOKEN`, `SUPABASE_CLUBBEUR_URL`,
-  `SUPABASE_CLUBBEUR_SERVICE_ROLE_KEY`, `INSTAGRAM_FORFAIT_STORY`) ne vivent que sur Vercel. En local, les routes qui en
+  `SUPABASE_CLUBBEUR_SERVICE_ROLE_KEY`, `INSTAGRAM_FORFAIT_STORY`, `CRON_SECRET`) ne vivent que sur Vercel. En local, les routes qui en
   dependent repondent `Configuration serveur incomplete`. C'est normal.
 - **La connexion Instagram (`api/instagram.js`, `lib/instagram/`) exige une app Meta for
   Developers** (produit "Facebook Login for Business") cote Julien : le compte Instagram du
@@ -238,6 +238,15 @@ npm run db:test    # verifie les migrations sans les appliquer
   pas a jour" qui n'etaient pas des bugs de code. `vercel.json` force desormais
   `s-maxage=0` sur les `.html` (les `/assets/*` gardent leur cache long, ils portent un
   hash). Pour verifier une prod sans attendre : ajouter `?cb=$RANDOM` a l'URL.
+- **`CRON_SECRET` conditionne les deux taches planifiees.** `vercel.json` declare deux
+  crons (`?action=collecter-abonnes` a 6 h, `?action=verifier-stories` a 18 h) et
+  `estAppelCron()` exige `Authorization: Bearer $CRON_SECRET`. **Si la variable est absente
+  du serveur, les deux repondent 401 tous les jours, en silence** : l'historique d'abonnes
+  ne se remplit jamais, les stories supprimees avant l'echeance ne sont jamais detectees,
+  et le projet Supabase gratuit perd ce qui le tenait eveille. Depuis le 03/09/2026 la
+  reponse distingue les deux cas -- "CRON_SECRET absent de ce serveur" plutot qu'un "Non
+  autorise" identique a celui d'un appel anonyme. Poser la meme valeur dans les variables
+  Vercel ET dans le champ prevu par Vercel pour les crons.
 - **Ne jamais commit `.env.local`** (deja dans `.gitignore`).
 - `app.css` et `admin.css` peuvent redefinir des variables qui existent deja dans
   `theme.css`. En cas de couleur inattendue, chercher la collision.

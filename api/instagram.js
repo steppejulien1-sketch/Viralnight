@@ -541,15 +541,26 @@ async function crediterMentions(mentions, etablissementParIgUserId, supabaseGera
 // clubbeur : proteges par CRON_SECRET, le mecanisme documente par Vercel
 // pour authentifier ses propres appels cron (jamais une session utilisateur).
 
-function estAppelCron(request) {
+/* Deux causes tres differentes, et il faut pouvoir les distinguer :
+   - le serveur n'a AUCUN secret configure -> aucun cron ne passera
+     jamais, c'est une panne de configuration ;
+   - le secret existe et l'appelant ne l'a pas -> c'est un refus normal.
+
+   Les deux rendaient "Non autorise" et un 401 identique. Vu de
+   l'exterieur, un cron casse depuis des semaines ressemblait exactement
+   a un curl anonyme. On ne revele jamais le secret, seulement son
+   ABSENCE -- ce qui est une information d'exploitation, pas un secret. */
+function verifierAppelCron(request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  return request.headers.authorization === `Bearer ${secret}`;
+  if (!secret) return { ok: false, motif: "CRON_SECRET absent de ce serveur : aucune tache planifiee ne peut s'executer." };
+  if (request.headers.authorization !== `Bearer ${secret}`) return { ok: false, motif: "Non autorise." };
+  return { ok: true };
 }
 
 async function actionCollecterAbonnes(request, response) {
   if (request.method !== "GET") return json(response, { error: "Methode non supportee." }, 405);
-  if (!estAppelCron(request)) return json(response, { error: "Non autorise." }, 401);
+  const cron = verifierAppelCron(request);
+  if (!cron.ok) return json(response, { error: cron.motif }, 401);
 
   let supabase;
   try {
@@ -621,7 +632,8 @@ async function actionCollecterAbonnes(request, response) {
  */
 async function actionVerifierStories(request, response) {
   if (request.method !== "GET") return json(response, { error: "Methode non supportee." }, 405);
-  if (!estAppelCron(request)) return json(response, { error: "Non autorise." }, 401);
+  const cron = verifierAppelCron(request);
+  if (!cron.ok) return json(response, { error: cron.motif }, 401);
 
   let clubbeur, gerants;
   try {
