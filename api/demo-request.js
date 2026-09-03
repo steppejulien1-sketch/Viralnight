@@ -37,11 +37,19 @@ async function readJsonBody(request) {
   return rawBody ? JSON.parse(rawBody) : {};
 }
 
+/* Plafonds de longueur.
+   Cette route est PUBLIQUE et non authentifiee : elle insere en base et
+   envoie un email a chaque appel. Sans plafond, un champ de plusieurs
+   dizaines de milliers de caracteres part en base et dans le mail. Aucun
+   nom de club ne fait 120 caracteres -- on coupe au lieu de refuser,
+   pour ne jamais perdre une vraie demande a cause d'un espace en trop. */
+const TAILLES = { club: 120, email: 160, phone: 40 };
+
 function getPayload(body) {
   const payload = {
-    club: cleanText(body.club),
-    email: cleanText(body.email).toLowerCase(),
-    phone: cleanText(body.phone),
+    club: cleanText(body.club).slice(0, TAILLES.club),
+    email: cleanText(body.email).toLowerCase().slice(0, TAILLES.email),
+    phone: cleanText(body.phone).slice(0, TAILLES.phone),
   };
 
   if (!payload.club) {
@@ -60,6 +68,37 @@ function getPayload(body) {
   }
 
   return payload;
+}
+
+/* Y a-t-il deja une demande de cette adresse dans les dix dernieres
+   minutes ? Une lecture, pas un compteur en memoire : les fonctions
+   serverless ne partagent rien entre deux appels, un compteur local ne
+   protegerait donc rien.
+
+   En cas d'echec de lecture on laisse PASSER : mieux vaut accepter une
+   demande en double que d'en perdre une vraie parce que la base a
+   hoquete. */
+async function demandeRecente(email) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return false;
+
+  const depuis = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const url =
+    `${supabaseUrl}/rest/v1/demo_requests?select=id&limit=1` +
+    `&email=eq.${encodeURIComponent(email)}&created_at=gte.${encodeURIComponent(depuis)}`;
+
+  try {
+    const reponse = await fetch(url, {
+      headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` },
+    });
+    if (!reponse.ok) return false;
+    const lignes = await reponse.json();
+    return Array.isArray(lignes) && lignes.length > 0;
+  } catch (erreur) {
+    console.error("[demo-request] controle de doublon impossible:", erreur.message);
+    return false;
+  }
 }
 
 async function insertDemoRequest(payload) {
@@ -143,6 +182,22 @@ export default async function handler(request, response) {
   try {
     const body = await readJsonBody(request);
     const payload = getPayload(body);
+
+    // Une meme adresse ne peut pas redemander une demo toutes les
+    // secondes. Sans ce delai, la route est un distributeur : elle
+    // insere en base ET envoie un email a chaque appel, ce qui suffit a
+    // remplir la table, saturer la boite de reception et bruler le quota
+    // Resend. Dix minutes ne genent personne de bonne foi -- quelqu'un
+    // qui corrige une faute dans son numero reessaie dans la minute et
+    // recoit un message clair, pas une erreur.
+    const recent = await demandeRecente(payload.email);
+    if (recent) {
+      sendJson(response, 429, {
+        ok: false,
+        message: "Une demande vient déjà d'être envoyée avec cette adresse. On vous répond très vite.",
+      });
+      return;
+    }
 
     await insertDemoRequest(payload);
     let emailSent = false;

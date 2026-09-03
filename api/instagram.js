@@ -480,11 +480,19 @@ async function crediterMentions(mentions, etablissementParIgUserId, supabaseGera
       //    username dans sa casse d'origine, le clubbeur a tape la sienne.
       let clubbeurId = null;
       if (handle) {
-        const { data: utilisateur } = await clubbeur
+        // L'erreur est LUE. Sans ca, une panne de lecture ressemble trait
+        // pour trait a "ce pseudo n'a pas de compte Noctify" : dans les
+        // deux cas la valeur est null et personne n'est credite. C'est
+        // exactement de cette facon que la jointure cassee sur les clubs
+        // est restee invisible pendant des semaines.
+        const { data: utilisateur, error: erreurUtilisateur } = await clubbeur
           .from("users")
           .select("id")
           .ilike("handle", handle)
           .maybeSingle();
+        if (erreurUtilisateur) {
+          console.error("[instagram:webhook] lecture du clubbeur impossible:", erreurUtilisateur.message);
+        }
         clubbeurId = utilisateur?.id || null;
       }
 
@@ -492,12 +500,27 @@ async function crediterMentions(mentions, etablissementParIgUserId, supabaseGera
       //    toute facon l'idempotence cote base.
       let dejaCredite = false;
       if (clubId) {
-        const { data: trace } = await clubbeur
+        const { data: trace, error: erreurTrace } = await clubbeur
           .from("instagram_mention_credits")
           .select("media_id")
           .eq("club_id", clubId)
           .eq("media_id", mention.mediaId)
           .maybeSingle();
+
+        // ⚠️ CELLE-CI COUTE DE L'ARGENT. Une erreur de lecture donnait
+        // dejaCredite = false, donc "jamais credite", donc un nouveau
+        // credit -- et Meta REDELIVRE ses evenements. Le meme clubbeur
+        // pouvait etre paye plusieurs fois pour une seule story, sans
+        // que rien ne l'indique. La table n'existait meme pas avant le
+        // 03/09/2026 : cette lecture echouait donc a tous les coups.
+        //
+        // En cas de doute, on s'abstient : mieux vaut ne pas crediter une
+        // fois que crediter deux fois. La cle primaire de la table reste
+        // le dernier garde-fou.
+        if (erreurTrace) {
+          console.error("[instagram:webhook] trace de credit illisible, on s'abstient:", erreurTrace.message);
+          continue;
+        }
         dejaCredite = !!trace;
       }
 
