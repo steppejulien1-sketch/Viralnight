@@ -78,6 +78,12 @@ async function ouvrirClubClubbeur(clubbeur, supabaseGerants, etab, establishment
     ig_handle: handle || base,
     primary_color: etab.primary_color || "#ff6363",
     b2b_public_code: etab.public_code,
+    // Les deux cles de jointure sont posees d'un coup. b2b_public_code
+    // sert a la synchro de boutique, establishment_id au credit
+    // automatique des mentions (clubbeur_pont_points_automatiques.sql).
+    // En remplir une seule laisserait l'autre chemin muet -- c'est
+    // exactement ce qui s'etait passe.
+    establishment_id: establishmentId,
   };
 
   let insertion = await clubbeur.from("clubs").insert(club).select("id").single();
