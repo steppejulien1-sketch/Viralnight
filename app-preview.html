@@ -1190,7 +1190,11 @@
       .pf-fid-barre {
         display: block; height: 100%; width: 0; border-radius: var(--r-pill);
         background: var(--accent);
-        transition: width .6s cubic-bezier(.2,.7,.3,1);
+        /* Cale sur la duree du compteur (900 ms) : le nombre et la
+           barre arrivent ensemble, comme les rouleaux d'une machine qui
+           s'immobilisent l'un apres l'autre puis d'un coup. Desynchronises,
+           les deux se contredisaient. */
+        transition: width .9s cubic-bezier(.2,.7,.3,1);
       }
       .pf-fid-txt { margin: 9px 0 0; font-size: calc(12 * var(--u)); font-weight: 600; color: var(--ink3); }
       @media (prefers-reduced-motion: reduce) { .pf-fid-barre { transition: none; } }
@@ -5050,6 +5054,33 @@ function prochaine() {
     .sort(function (a, b) { return a.cout - b.cout; })[0] || null;
 }
 
+/* ---- Le retour physique ----
+   Le code le plus fort d'Instagram et de TikTok, et il manquait
+   entierement : le telephone ne bougeait jamais. Une action qui compte
+   doit se SENTIR, pas seulement se voir -- c'est ce qui separe une page
+   web d'une application.
+
+   Deux chemins. Capacitor quand l'appli tourne en natif (le plugin est
+   deja installe), sinon l'API du navigateur. iOS Safari n'implemente pas
+   navigator.vibrate : sur iPhone au navigateur il ne se passera donc
+   rien, et c'est sans consequence -- le retour physique est un bonus,
+   jamais le porteur d'une information. */
+function vibrer(intensite) {
+  try {
+    var cap = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+    if (cap) {
+      if (intensite === "fort") cap.notification({ type: "SUCCESS" });
+      else cap.impact({ style: intensite === "moyen" ? "MEDIUM" : "LIGHT" });
+      return;
+    }
+    if (navigator.vibrate) {
+      navigator.vibrate(intensite === "fort" ? [14, 40, 26] : intensite === "moyen" ? 18 : 9);
+    }
+  } catch (erreur) {
+    // Un telephone qui refuse de vibrer n'est pas une panne.
+  }
+}
+
 var compteurEnCours = null;
 var soldeAffiche = null;
 
@@ -5068,6 +5099,9 @@ function animerCompteur(el, depuis, vers) {
     var e = 1 - Math.pow(1 - p, 3);
     el.textContent = nb(Math.round(depuis + (vers - depuis) * e));
     if (p < 1) compteurEnCours = requestAnimationFrame(trame);
+    // Le tic tombe a l'ARRIVEE, pas au depart : c'est le moment ou le
+    // chiffre se pose qui merite d'etre senti.
+    else vibrer("moyen");
   }
   compteurEnCours = requestAnimationFrame(trame);
 }
@@ -9050,7 +9084,10 @@ function rendreListe() {
     // maintenant dans la jauge (loin) ou dans la pastille verte (dispo).
 
     b.style.setProperty("--i", index);
-    if (vientDeDebloquer(r.id)) b.classList.add("debloque");
+    if (vientDeDebloquer(r.id)) {
+      b.classList.add("debloque");
+      vibrer("leger");
+    }
     // Rien n'est pose sur la photo : ni prix, ni badge, ni degrade.
     // Tout ce qui est du texte vit dans .corps, sous l'image.
     b.innerHTML =
@@ -9275,6 +9312,10 @@ async function echanger(item) {
   await chargerSoldeReel((await supabaseClubbeur.auth.getSession()).data.session.user.id);
 
   var svgQr = await qrBon(code);
+
+  // Le bon est obtenu : c'est le paiement de toute la boucle, le seul
+  // endroit qui merite la vibration longue.
+  vibrer("fort");
 
   corps.innerHTML =
     '<div class="sheet-ok">' +
