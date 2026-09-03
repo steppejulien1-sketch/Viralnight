@@ -95,7 +95,7 @@ async function actionSyncBoutique(request, response) {
 
   const { data: source, error: erreurSource } = await auth.supabase
     .from("rewards")
-    .select("id, title, points_required, max_redemptions, category, active")
+    .select("id, title, points_required, max_redemptions, category, active, image_url")
     .eq("establishment_id", auth.establishmentId);
 
   if (erreurSource) return json(response, { error: erreurSource.message }, 500);
@@ -122,6 +122,13 @@ async function actionSyncBoutique(request, response) {
       stock_limit: r.max_redemptions === null || r.max_redemptions === undefined
         ? null
         : Math.max(0, Math.round(Number(r.max_redemptions))),
+      /* La photo du club traverse enfin. Sans elle, la boutique clubbeur
+         affiche le pictogramme de famille -- le meme dessin de coupe
+         pour tous les cocktails de tous les clubs. On n'a pas envie
+         d'acheter un pictogramme.
+         Null quand le club n'a rien televerse : l'appli clubbeur retombe
+         alors sur choisirArt(), exactement comme avant. */
+      image_url: r.image_url || null,
       active: r.active !== false,
     };
 

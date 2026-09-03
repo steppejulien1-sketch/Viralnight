@@ -8976,7 +8976,12 @@ function completerRecompense(r, index, prefixe) {
   return {
     id: r.id, nom: r.title, cout: r.cost_points, fam: r.category,
     stock: r.stock_limit === null ? 999 : r.stock_remaining,
-    art: visuel.art, glow: visuel.glow, foto: visuel.foto,
+    /* LA PHOTO DU CLUB PASSE DEVANT LE PICTOGRAMME.
+       Le dessin par famille reste le repli -- il l'a toujours ete, et
+       c'est ce qui couvre les clubs qui n'ont rien televerse. Mais
+       quand le gerant a pris son Spritz en photo, c'est SA photo qui
+       s'affiche. La difference entre un catalogue et une boutique. */
+    art: visuel.art, glow: visuel.glow, foto: r.image_url || visuel.foto,
     code: prefixe + "·" + String(index + 1).padStart(3, "0"),
     desc: r.description || ("Échange tes points contre « " + r.title + " », proposé par le club."),
     regles: ["Valable ce soir", "Montre ce bon au bar ou à l'entrée"]
@@ -8993,7 +8998,7 @@ async function chargerRecompenses() {
   try {
     var res = await supabaseClubbeur
       .from("rewards")
-      .select("id, title, description, cost_points, category, stock_limit, stock_remaining")
+      .select("id, title, description, cost_points, category, stock_limit, stock_remaining, image_url")
       .eq("club_id", idClubBoutique())
       .eq("active", true)
       .order("cost_points", { ascending: true });
