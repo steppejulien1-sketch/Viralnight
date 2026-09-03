@@ -2465,7 +2465,19 @@
           if (!reponse.ok) throw new Error(corps && corps.error);
           if (etat) {
             etat.style.color = "var(--succes)";
-            etat.textContent = "Visible par les clubbeurs ✓";
+            if (corps && corps.ouvert) {
+              // Le club vient d'etre ouvert cote clubbeur. On dit avec
+              // QUEL pseudo Instagram : c'est lui qui sert a reconnaitre
+              // les mentions, et s'il est faux rien ne se creditera --
+              // autant que le gerant le voie tout de suite.
+              etat.textContent = corps.ouvert.devine
+                ? "Ton club vient d'être ouvert côté clubbeurs, avec « @" + corps.ouvert.handle +
+                  " » comme compte Instagram. Connecte Instagram pour le corriger."
+                : "Ton club vient d'être ouvert côté clubbeurs ✓";
+              if (corps.ouvert.devine) etat.style.color = "var(--ambre)";
+            } else {
+              etat.textContent = "Visible par les clubbeurs ✓";
+            }
           }
         } catch (erreur) {
           // Le VRAI motif : "ce club n'existe pas encore dans l'appli

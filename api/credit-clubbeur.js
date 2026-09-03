@@ -33,6 +33,66 @@ const ADMIN_EMAIL = "viralnight001@gmail.com";
    pour chaque recompense. */
 const CATEGORIES = { bar: "boisson", acces: "entree", vip: "vip" };
 
+/* Un slug lisible a partir du nom du club. Le slug est UNIQUE cote
+   clubbeur : en cas de collision on suffixe par le code public, qui est
+   lui-meme unique. Deux "Le Mirage" dans deux villes ne se marchent donc
+   jamais dessus. */
+function slugifier(nom) {
+  return String(nom || "club")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40) || "club";
+}
+
+/* Ouvre le club dans la base clubbeur.
+   ------------------------------------------------------------
+   Sans ca, la synchronisation refusait un club qui n'existait pas en
+   face -- et la creation etait manuelle, donc jamais faite. Sur trois
+   etablissements, un seul avait son pendant clubbeur.
+
+   ⚠️ ig_handle est NOT NULL cote clubbeur, et c'est LUI qui sert a
+   reconnaitre les mentions. On prend, dans l'ordre : le pseudo du
+   compte Instagram reellement relie, celui saisi sur la fiche, et en
+   dernier recours le slug -- qui ne correspondra a rien, mais qui
+   n'empeche pas le club d'exister. La reponse dit lequel a servi pour
+   que le gerant puisse corriger au lieu de se demander pourquoi rien
+   ne se credite. */
+async function ouvrirClubClubbeur(clubbeur, supabaseGerants, etab, establishmentId) {
+  const { data: compte } = await supabaseGerants
+    .from("establishment_instagram_accounts")
+    .select("ig_username")
+    .eq("establishment_id", establishmentId)
+    .maybeSingle();
+
+  const handle = (compte?.ig_username || etab.ig_handle || "").replace(/^@/, "").trim();
+  const base = etab.slug || slugifier(etab.name);
+
+  const club = {
+    name: etab.name || "Club",
+    // NOT NULL cote clubbeur, et souvent vide cote gerant : un tiret
+    // vaut mieux qu'un refus de creation.
+    city: etab.city || "—",
+    slug: base,
+    ig_handle: handle || base,
+    primary_color: etab.primary_color || "#ff6363",
+    b2b_public_code: etab.public_code,
+  };
+
+  let insertion = await clubbeur.from("clubs").insert(club).select("id").single();
+
+  // Slug deja pris : on suffixe par le code public, unique par
+  // construction. Une seule reprise, pas de boucle.
+  if (insertion.error && /slug/.test(insertion.error.message || "")) {
+    club.slug = base + "-" + String(etab.public_code || "").toLowerCase();
+    insertion = await clubbeur.from("clubs").insert(club).select("id").single();
+  }
+
+  if (insertion.error) return { error: insertion.error.message };
+  return { id: insertion.data.id, handle: club.ig_handle, handleDevine: !compte?.ig_username };
+}
+
 /* ============================================================
    ?action=sync-boutique — la boutique du gerant pilote celle des
    clubbeurs.
@@ -67,7 +127,7 @@ async function actionSyncBoutique(request, response) {
 
   const { data: etab, error: erreurEtab } = await auth.supabase
     .from("establishments")
-    .select("public_code, name")
+    .select("public_code, name, city, slug, ig_handle, primary_color")
     .eq("id", auth.establishmentId)
     .maybeSingle();
 
@@ -76,21 +136,31 @@ async function actionSyncBoutique(request, response) {
     return json(response, { error: "Ce club n'a pas encore de code public." }, 409);
   }
 
-  const { data: club, error: erreurClub } = await clubbeur
+  const recherche = await clubbeur
     .from("clubs")
     .select("id")
     .eq("b2b_public_code", etab.public_code)
     .maybeSingle();
 
+  const erreurClub = recherche.error;
+  // let et non const : reassigne juste en dessous quand il faut ouvrir
+  // le club. En const, l'affectation partait en TypeError a l'execution
+  // -- que `node --check` ne voit pas, il ne verifie que la syntaxe.
+  let club = recherche.data;
+
   if (erreurClub) return json(response, { error: erreurClub.message }, 500);
+
+  // Pas de club en face : on l'ouvre. La synchronisation refusait
+  // jusqu'ici, et l'ouverture manuelle n'etait jamais faite -- sur trois
+  // etablissements, un seul avait son pendant clubbeur.
+  let clubOuvert = null;
   if (!club?.id) {
-    // Dit franchement pourquoi rien ne partira, au lieu de repondre
-    // "synchronise" sur une boutique qui n'a aucune destination.
-    return json(
-      response,
-      { error: "Ce club n'existe pas encore dans l'appli des clubbeurs. Contacte-nous pour l'ouvrir." },
-      409,
-    );
+    const cree = await ouvrirClubClubbeur(clubbeur, auth.supabase, etab, auth.establishmentId);
+    if (cree.error) {
+      return json(response, { error: "Ouverture du club impossible : " + cree.error }, 500);
+    }
+    club = { id: cree.id };
+    clubOuvert = cree;
   }
 
   const { data: source, error: erreurSource } = await auth.supabase
@@ -176,7 +246,16 @@ async function actionSyncBoutique(request, response) {
     if (!arret.error) retirees += 1;
   }
 
-  return json(response, { club: etab.name, creees, majes, retirees });
+  return json(response, {
+    club: etab.name,
+    creees,
+    majes,
+    retirees,
+    // Le gerant doit savoir que son club vient d'etre ouvert, et avec
+    // quel pseudo Instagram -- c'est lui qui decide si les mentions
+    // seront reconnues.
+    ouvert: clubOuvert ? { handle: clubOuvert.handle, devine: clubOuvert.handleDevine } : null,
+  });
 }
 
 function json(response, body, status = 200) {
