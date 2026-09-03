@@ -2090,7 +2090,7 @@
       .offre-hero del { font-family: var(--mono); font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--ink3); }
       .offre-hero .cta-visuelle {
         display: block; text-align: center; border-radius: 999px;
-        background: var(--action); color: var(--action-ink); font-size: calc(15 * var(--u)); font-weight: 700;
+        background: var(--bouton); color: #fff; font-size: calc(15 * var(--u)); font-weight: 700;
         letter-spacing: -.01em; padding: 12px;
         box-shadow: var(--ombre-2);
       }
@@ -2178,28 +2178,16 @@
          en petit texte gris aligne a droite. C'est pourtant l'element le
          plus actionnable et le seul qui expire : il est maintenant pose
          sur son propre panneau, avec un rebours en badge d'urgence. */
-      /* ---- Le seul chevauchement de l'appli ----
-         Tout vivait sur un seul plan : une carte posee sur un fond, la
-         suivante en dessous, jamais rien devant rien. C'est ce qui donne
-         l'impression d'une PAGE plutot que d'un objet.
-
-         La carte "Ce soir" -- plus large que celle du solde -- remonte de
-         quatorze pixels et passe devant elle. Un seul endroit, en haut de
-         l'ecran, la ou l'oeil arrive : un chevauchement partout serait du
-         desordre, pas de la profondeur.
-
-         L'ombre est montee d'un cran sur cette carte-la uniquement.
-         C'est elle qui fait lire la superposition : sans elle, deux
-         rectangles qui se touchent restent deux rectangles. */
+      /* Chevauchement retire le 03/09/2026. Je l'avais pose pour casser
+         le "tout sur un seul plan" ; Julien : "je trouve ca moche, c'est
+         vraiment mal fait". Deux cartes qui se mordent sans raison
+         fonctionnelle, ca ne fait pas de la profondeur, ca fait un
+         accident de mise en page. Les cartes reprennent leur place. */
       .sec-soir {
-        position: relative; z-index: 1; margin-top: -14px;
         background: var(--s1); border: 1px solid var(--line);
         border-radius: var(--r4); padding: var(--e4) var(--e4) var(--e5);
-        box-shadow: var(--ombre-2);
+        box-shadow: var(--ombre-1);
       }
-      /* La carte du solde recule d'autant : son contenu n'est jamais
-         recouvert, c'est sa marge basse qui disparait sous l'autre. */
-      .sec-solde { padding-bottom: 20px; }
       .sec-soir .sec-head { margin-bottom: var(--e3); align-items: center; }
       .sec-soir .sec-head h2 { line-height: 1.15; }
       /* Le rebours quitte le gris des metadonnees pour la couleur
@@ -2359,6 +2347,7 @@
            "c'est un peu trop vers le bord de l'application"). */
         display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding: 0 8px 20px;
       }
+
       .tab {
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
         background: none; border: 0; cursor: pointer; position: relative; padding: 0;
@@ -2923,7 +2912,14 @@
 
       .sheet-cta {
         display: flex; align-items: center; justify-content: center; gap: 8px;
-        width: 100%; background: var(--action); color: var(--action-ink); border: 0;
+        /* Rouge, comme avant. Julien : "les boutons rouges, ca rendait
+           ca beaucoup mieux, remets-les au milieu du noir". Il a
+           raison pour CETTE appli-la : le clubbeur n'est pas un gerant
+           devant un tableau de bord, il est dans le noir avec un verre,
+           et un bouton qui claque se trouve plus vite qu'un bouton
+           sobre. La regle "le corail n'est pas un bouton" vaut pour
+           l'appli club, pas ici. */
+        width: 100%; background: var(--bouton); color: #fff; border: 0;
         border-radius: 17px; padding: 16px; font-family: inherit; font-size: calc(16 * var(--u));
         font-weight: 700; letter-spacing: -.02em; cursor: pointer;
         box-shadow: var(--ombre-2);
@@ -2932,7 +2928,7 @@
       /* Un bouton qui ne bouge pas sous le doigt, c'est le premier signe
          qu'une interface n'a pas ete finie. */
       .sheet-cta:active { transform: scale(.97); }
-      .sheet-cta:focus-visible { outline: 3px solid var(--action); outline-offset: 3px; }
+      .sheet-cta:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
       .sheet-cta[disabled] { background: var(--s3); color: var(--ink3); cursor: not-allowed; transform: none; }
       /* La variante secondaire : une surface, pas une seconde couleur.
          Elle codait #120d0d en dur et devenait illisible en theme clair,
@@ -3939,7 +3935,14 @@
               </div>
             </section>
 
-            <section class="sec sec-soir">
+            <!-- Retire le 03/09/2026. Julien : "retire le un cocktail
+                 offert en dessous des points, tu n'ecris rien en
+                 dessous". Le bloc reste dans le fichier, simplement
+                 masque : tout le code qui l'alimente (rendreOffre,
+                 l'offre a 0 point du catalogue, le rebours) continue de
+                 fonctionner. Retirer l'attribut hidden le fait revenir
+                 tel quel. -->
+            <section class="sec sec-soir" hidden>
               <div class="sec-head">
                 <!-- Le titre EST le selecteur de club : un tap dessus
                      ouvre la liste. Julien voulait "juste ce soir au
