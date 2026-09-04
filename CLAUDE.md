@@ -99,6 +99,11 @@ gestionnaire d'etat : le projet est volontairement en HTML/CSS/JS lisibles.
   HTML n'est jamais servi depuis le cache tant que le reseau repond, et seules
   `/assets/` et `/icones/` (noms a hash) sont gardees. Les autres pages du site passent
   en direct. Rien ne s'enregistre en local.
+- `public/mascotte/` — le verre Noctify, la mascotte de la marque. Une pose par ecran du
+  parcours d'installation : `pose-1.webp` a `pose-5.webp`. Un fichier absent n'est pas une
+  panne : l'ecran retombe sur `verre-salut.webp`, le verre du logo detoure. Les poses sont
+  generees par Julien puis detourees/recadrees ici — fond transparent, meme echelle d'une
+  pose a l'autre, sinon le personnage saute d'un ecran au suivant.
 - `public/manifest.webmanifest` + `public/icones/` — installation sur le telephone.
   Les icones se regenerent avec `npm run icones` depuis `assets/favicon-vn.svg`.
 - `capacitor.config.json` + `vite.config.mobile.js` — coquille iOS/Android.
