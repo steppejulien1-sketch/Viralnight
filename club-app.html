@@ -603,38 +603,48 @@
       /* ---- PARCOURS D'INSTALLATION ----
          Un club qui vient de creer son compte arrivait sur un tableau de
          bord vide et cinq recompenses generiques posees par
-         api/create-client (Vestiaire, Soft, Shot, Premium, VIP). Rien ne
-         lui disait d'aller les corriger, et l'onglet Recompenses les
-         cache derriere des accordeons : la boutique restait celle d'un
-         autre. Ce parcours prend la main une fois, a la premiere
-         ouverture, et ne revient plus.
+         api/create-client. Rien ne lui disait d'aller les corriger.
 
-         Il se pose PAR-DESSUS l'appli (les vues sont deja rendues
-         derriere) : on ne reconstruit ni le bareme ni le QR, on affiche
-         les memes donnees dans un cadre qui avance.
+         La premiere version etait un FORMULAIRE : deux champs, puis cinq
+         champs, puis un champ. Julien : "ca pue la merde, y a rien de
+         soigne". Il avait raison, et les onboarding qui marchent disent
+         pourquoi -- MyFitnessPal fait accepter six questions parce
+         qu'elles produisent un resultat visible, Notion evite la page
+         blanche en pre-remplissant, LinkedIn decoupe une corvee en
+         petites victoires qui se voient. Un champ vide ne produit rien.
 
-         C'est le SEUL endroit de l'appli qui s'autorise des animations
-         d'entree. La regle est la frequence : un ecran vu une fois dans
-         la vie d'un club peut se permettre ce qu'un tableau de bord
-         ouvert dix fois par jour ne peut pas. */
+         D'ou cette version : un bandeau illustre qui tient l'ecran, des
+         choix a toucher plutot que des cases a remplir, et un dernier
+         ecran qui montre ce qui vient d'etre construit. */
       .parcours {
         position: absolute; inset: 0; z-index: 38;
         display: flex; flex-direction: column;
-        background: var(--bg); color: var(--ink);
+        background: var(--s1); color: var(--ink);
         /* Un ease-out qui depasse legerement : reserve a la mascotte.
            Un personnage qui arrive sans elan n'a pas l'air vivant. */
         --rebond: cubic-bezier(.34, 1.42, .64, 1);
       }
       .parcours[hidden] { display: none; }
 
+      /* ---- La barre du haut ----
+         Retour a gauche, avancement au centre, sortie a droite : la
+         disposition que tout le monde reconnait sans avoir a la lire. */
       .pa-tete {
-        flex: 0 0 auto; display: flex; align-items: center; gap: 14px;
-        padding: 16px 20px 0;
+        flex: 0 0 auto; display: flex; align-items: center; gap: 12px;
+        padding: 14px 16px 12px;
       }
-      /* Cinq traits plutot qu'un pourcentage : le gerant voit combien
-         d'ecrans restent, pas une barre qui avance sans echelle.
-         Le remplissage est un enfant a part, en scaleX : animer une
-         largeur ferait travailler la mise en page a chaque etape. */
+      .pa-fleche {
+        flex: 0 0 auto; width: 30px; height: 30px; padding: 0;
+        display: grid; place-items: center;
+        border: 0; border-radius: 9px; background: none; cursor: pointer;
+        transition: background .15s ease, opacity .15s ease;
+      }
+      .pa-fleche svg { width: 18px; height: 18px; fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .pa-fleche:active { background: var(--s2); }
+      /* Invisible mais toujours la : la barre garderait sinon deux
+         geometries differentes selon l'etape. */
+      .pa-fleche[hidden] { display: grid; visibility: hidden; }
+
       .pa-jauge { flex: 1 1 auto; display: flex; gap: 4px; }
       .pa-jauge span {
         flex: 1; height: 3px; border-radius: 2px;
@@ -647,74 +657,74 @@
       }
       .pa-jauge span.faite i { transform: scaleX(1); }
       .pa-passer {
-        flex: 0 0 auto; border: 0; background: none; padding: 4px 0; cursor: pointer;
-        font-family: inherit; font-size: 12px; font-weight: 600; color: var(--ink3);
-        text-decoration: underline; text-underline-offset: 3px;
+        flex: 0 0 auto; border: 0; background: none; padding: 6px 2px; cursor: pointer;
+        font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink3);
       }
       .pa-passer[hidden] { display: none; }
 
-      .pa-corps { flex: 1 1 auto; overflow-y: auto; padding: 4px 20px 14px; }
+      .pa-corps { flex: 1 1 auto; overflow-y: auto; }
 
       /* Ce qui glisse d'une etape a l'autre. La barre du haut et le pied
-         restent : ce sont les reperes fixes, et les voir immobiles rend
-         le glissement du contenu plus lisible. */
-      /* La sortie est plus rapide que l'entree : c'est le temps ou
-         l'utilisateur attend, l'entree est le temps ou il regarde. */
+         ne bougent pas : les voir immobiles rend le glissement lisible. */
       .pa-scene {
         transition: transform .22s var(--sortie), opacity .22s var(--sortie);
       }
       .pa-scene.pa-vers-gauche { transform: translateX(-24px); opacity: 0; }
       .pa-scene.pa-vers-droite { transform: translateX(24px); opacity: 0; }
+      /* La sortie plus rapide que l'entree : c'est le temps ou
+         l'utilisateur attend, l'entree est le temps ou il regarde. */
       .pa-scene.pa-vers-gauche, .pa-scene.pa-vers-droite { transition-duration: .14s; }
-      /* Le temps de reposer la scene de l'autre cote sans que le
-         deplacement se voie. */
       .pa-scene.pa-fige { transition: none; }
 
-      .pa-entete {
-        display: flex; align-items: flex-end; justify-content: space-between;
-        gap: 12px; margin-bottom: 10px;
+      /* ---- Le bandeau illustre ----
+         La mascotte etait posee dans un coin de l'en-tete, a cote d'un
+         compteur qui flottait. Elle tient maintenant une bande a elle,
+         sur un fond plus chaud que la page : c'est ce qui donne un haut
+         et un bas a l'ecran, et ce qui empeche l'etape 1 -- deux champs
+         et rien d'autre -- de flotter dans du vide. */
+      .pa-bandeau {
+        position: relative; display: flex; align-items: flex-end;
+        height: 168px; padding: 0 20px;
+        background: var(--s2); border-bottom: 1px solid var(--line);
+        overflow: hidden;
       }
-      /* Hauteur fixe, largeur libre : les poses n'auront pas toutes les
-         memes proportions (il tient une affiche sur l'une, un shot sur
-         l'autre) et le personnage doit garder la meme taille d'un ecran
-         a l'autre. Cale en bas : quoi qu'il tienne, il reste pose sur la
-         meme ligne de sol. */
-      .pa-mascotte { flex: 0 0 auto; width: 172px; height: 134px; }
+      .pa-mascotte { flex: 0 0 auto; width: 214px; height: 156px; margin-bottom: -6px; }
       .pa-mascotte img {
         display: block; width: 100%; height: 100%;
         object-fit: contain; object-position: left bottom;
       }
-      .pa-mascotte.pa-entre { animation: paMascotte 360ms var(--rebond) both; }
+      .pa-mascotte.pa-entre { animation: paMascotte 380ms var(--rebond) both; }
 
-      /* Le compteur d'etape, aligne sur la ligne de base de la mascotte.
-         Chiffre en encre, jamais en corail : le corail est une couleur de
-         marque, il ne sert pas a rendre un nombre plus gros. */
+      /* Le compteur, cale dans l'angle du bandeau. Chiffre en encre,
+         jamais en corail : le corail est une couleur de marque, il ne
+         sert pas a rendre un nombre plus gros. */
       .pa-compteur {
-        flex: 0 0 auto; margin: 0 2px 6px 0; text-align: right;
-        font-family: var(--mono); line-height: 1;
+        position: absolute; right: 20px; bottom: 16px; margin: 0;
+        text-align: right; font-family: var(--mono); line-height: 1;
       }
       .pa-compteur i {
-        display: block; font-style: normal; font-size: 9.5px; font-weight: 600;
+        display: block; font-style: normal; font-size: 9px; font-weight: 600;
         letter-spacing: .18em; text-transform: uppercase; color: var(--ink3);
-        margin-bottom: 7px;
+        margin-bottom: 8px;
       }
       .pa-compteur b {
-        font-size: 30px; font-weight: 800; letter-spacing: -.04em; color: var(--ink);
+        font-size: 34px; font-weight: 800; letter-spacing: -.05em; color: var(--ink);
         font-variant-numeric: tabular-nums;
       }
       .pa-compteur b.pa-entre { animation: paChiffre 220ms var(--sortie) both; }
-      .pa-compteur span { font-size: 13px; font-weight: 600; color: var(--ink3); margin-left: 3px; }
+      .pa-compteur span { font-size: 13px; font-weight: 600; color: var(--ink3); margin-left: 2px; }
 
+      .pa-texte { padding: 22px 20px 20px; }
       .pa-etape[hidden] { display: none; }
-      .pa-titre { margin: 0 0 5px; font-size: 26px; font-weight: 800; letter-spacing: -.035em; line-height: 1.08; }
-      .pa-sous { margin: 0 0 18px; font-size: 13px; color: var(--ink2); line-height: 1.5; }
+      .pa-titre { margin: 0 0 6px; font-size: 27px; font-weight: 800; letter-spacing: -.04em; line-height: 1.05; }
+      .pa-sous { margin: 0 0 20px; font-size: 13.5px; color: var(--ink2); line-height: 1.5; max-width: 34ch; }
       .pa-aide { display: block; font-size: 11.5px; color: var(--ink3); line-height: 1.45; margin: 0; }
 
-      /* La cascade d'entree. Trois niveaux seulement -- titre, chapeau,
-         contenu : au-dela, l'ecran met plus de temps a se poser qu'a se
-         lire. Elle se rejoue toute seule a chaque etape parce qu'une
-         section masquee est en display:none, et qu'un element qui
-         revient au rendu relance ses animations. */
+      /* Trois niveaux de cascade -- titre, chapeau, contenu. Au-dela,
+         l'ecran met plus de temps a se poser qu'a se lire. Elle se
+         rejoue seule a chaque etape : une section masquee est en
+         display:none, et un element qui revient au rendu relance ses
+         animations. */
       .pa-etape .pa-titre { animation: paArrive 300ms var(--sortie) both; }
       .pa-etape .pa-sous { animation: paArrive 300ms var(--sortie) 45ms both; }
       .pa-etape .pa-arrive { animation: paArrive 300ms var(--sortie) 90ms both; }
@@ -723,10 +733,10 @@
         from { opacity: 0; transform: translateY(9px); }
         to { opacity: 1; transform: none; }
       }
-      /* Depart a .82 et pas a zero : rien, dans la vraie vie,
-         n'apparait a partir de rien. */
+      /* Depart a .84, pas a zero : rien, dans la vraie vie, n'apparait a
+         partir de rien. */
       @keyframes paMascotte {
-        from { opacity: 0; transform: scale(.82) translateY(6px); }
+        from { opacity: 0; transform: scale(.84) translateY(10px); }
         to { opacity: 1; transform: none; }
       }
       @keyframes paChiffre {
@@ -734,72 +744,73 @@
         to { opacity: 1; transform: none; }
       }
 
-      /* Le pied ne defile pas : sur un telephone, un bouton "Continuer"
-         qu'il faut aller chercher en bas d'une grille de douze tuiles
-         donne l'impression d'un ecran sans issue. */
+      /* Le pied ne defile pas : un bouton "Continuer" qu'il faut aller
+         chercher en bas d'une grille de douze tuiles donne l'impression
+         d'un ecran sans issue. Un seul bouton -- le retour est passe en
+         fleche dans la barre du haut. */
       .pa-pied {
         flex: 0 0 auto; display: grid; gap: 8px;
         padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
         background: var(--s1); border-top: 1px solid var(--line);
       }
-      .pa-retour {
-        border: 0; background: none; padding: 2px 0; cursor: pointer;
-        font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink3);
-      }
-      .pa-retour[hidden] { display: none; }
       .pa-msg { margin: 0; font-size: 12px; line-height: 1.4; text-align: center; color: var(--ink3); }
       .pa-msg[hidden] { display: none; }
 
       /* Meme piege qu'a la ligne 343 : un display explicite (grid, flex,
          block) bat la regle [hidden] du navigateur. Ces elements-la sont
-         masques depuis le JS -- sans ces lignes, "Connecter Instagram"
-         resterait affiche sous un compte deja connecte. */
+         masques depuis le JS. */
       .pa-champ[hidden], .pa-affiche[hidden],
       .parcours .ac-btn[hidden], .parcours .bouton[hidden],
       .reglage-lien[hidden] { display: none; }
 
-      .pa-champ { display: grid; gap: 6px; margin-bottom: 12px; }
-      .pa-champ label { font-size: 10.5px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; }
+      .pa-champ { display: grid; gap: 7px; margin-bottom: 14px; }
+      .pa-champ label { font-size: 10.5px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .05em; }
 
-      /* ---- Photo du club ---- */
-      .pa-photo { display: flex; align-items: center; gap: 13px; margin-bottom: 16px; }
+      /* ---- 1 · la photo du club ----
+         Une grande zone a toucher, pas un bouton a cote d'une vignette :
+         c'est le geste principal de l'ecran. */
+      .pa-photo {
+        display: flex; align-items: center; gap: 14px; width: 100%;
+        margin-bottom: 16px; padding: 12px; text-align: left;
+        border: 1.5px dashed var(--line2); border-radius: 16px;
+        background: none; color: inherit; font-family: inherit; cursor: pointer;
+        transition: border-color .15s ease, transform .16s var(--sortie);
+      }
+      .pa-photo:active { transform: scale(.99); }
+      .pa-photo.remplie { border-style: solid; border-color: var(--line); background: var(--s1); }
+      @media (hover: hover) and (pointer: fine) { .pa-photo:hover { border-color: var(--ink3); } }
       .pa-photo-vue {
-        flex: 0 0 auto; width: 62px; height: 62px; border-radius: 16px; overflow: hidden;
-        background: var(--s2); border: 1px solid var(--line);
-        display: grid; place-items: center;
-        font-size: 21px; font-weight: 800; color: var(--ink3);
+        flex: 0 0 auto; width: 58px; height: 58px; border-radius: 13px; overflow: hidden;
+        background: var(--s2); display: grid; place-items: center;
+        font-size: 20px; font-weight: 800; color: var(--ink3);
       }
       .pa-photo-vue img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .pa-photo-txt { flex: 1 1 auto; min-width: 0; display: grid; gap: 6px; }
-      .pa-photo-btn {
-        justify-self: start;
-        border: 1px solid var(--line2); background: var(--s2); color: var(--ink);
-        border-radius: 9px; padding: 8px 13px; font-family: inherit;
-        font-size: 12px; font-weight: 700; cursor: pointer;
-        transition: transform .16s var(--sortie);
-      }
-      .pa-photo-btn:active { transform: scale(.97); }
+      .pa-photo-txt { flex: 1 1 auto; min-width: 0; }
+      .pa-photo-txt strong { display: block; font-size: 13.5px; font-weight: 700; }
+      .pa-photo-txt span { display: block; margin-top: 2px; font-size: 11.5px; color: var(--ink3); }
 
-      /* ---- Catalogue de recompenses ----
-         Deux colonnes de vignettes plutot qu'une liste de champs : le
-         gerant choisit d'abord CE QU'IL DONNE, et le voit tel que son
-         client le verra dans la boutique. Le dessin affiche ici est
-         exactement celui que choisirArt() rendra cote clubbeur, puisque
+      /* ---- 2 · le catalogue ----
+         Deux colonnes de vignettes : le gerant choisit CE QU'IL DONNE, et
+         le voit tel que son client le verra dans la boutique. Le dessin
+         affiche est celui que choisirArt() rendra cote clubbeur, puisque
          les titres du catalogue sont ceux qu'elle reconnait. */
       .pa-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .pa-tuile {
         position: relative; display: block; text-align: left;
-        background: var(--s1); border: 1px solid var(--line); border-radius: 15px;
+        background: var(--s1); border: 1px solid var(--line2); border-radius: 15px;
         padding: 9px; cursor: pointer; font-family: inherit; color: inherit;
-        transition: border-color .15s ease, box-shadow .15s ease, transform .16s var(--sortie);
+        transition: border-color .15s ease, box-shadow .15s ease, transform .16s var(--sortie), opacity .15s ease;
         animation: paArrive 300ms var(--sortie) both;
       }
       .pa-tuile:active { transform: scale(.985); }
-      /* Le contour double (bordure + ombre interne) fait le trait epais
-         sans decaler la tuile d'un pixel a la selection. */
+      /* Le contour double (bordure + ombre interne) epaissit le trait
+         sans decaler la tuile d'un pixel a la selection. Les non
+         choisies reculent d'un cran d'opacite : c'est ce qui fait lire
+         la boutique d'un coup d'oeil. */
       .pa-tuile.prise { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+      .pa-tuile:not(.prise) { opacity: .62; }
       .pa-tuile:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-      /* La cascade s'arrete a douze : au-dela, l'attente devant une
+      /* La cascade s'arrete a huit : au-dela, l'attente devant une
          grille pleine coute plus que l'effet ne rapporte. */
       .pa-tuile:nth-child(1) { animation-delay: 90ms; }
       .pa-tuile:nth-child(2) { animation-delay: 116ms; }
@@ -808,8 +819,7 @@
       .pa-tuile:nth-child(5) { animation-delay: 194ms; }
       .pa-tuile:nth-child(6) { animation-delay: 220ms; }
       .pa-tuile:nth-child(7) { animation-delay: 246ms; }
-      .pa-tuile:nth-child(8) { animation-delay: 272ms; }
-      .pa-tuile:nth-child(n + 9) { animation-delay: 298ms; }
+      .pa-tuile:nth-child(n + 8) { animation-delay: 272ms; }
       .pa-tuile-img {
         width: 100%; aspect-ratio: 1 / 1; border-radius: 11px; overflow: hidden;
         background: var(--s2); display: grid; place-items: center;
@@ -827,7 +837,7 @@
         background: var(--s2); color: var(--ink);
         font-family: var(--mono); font-size: 13px; font-weight: 700; text-align: right;
       }
-      .pa-tuile-prix input:disabled { opacity: .45; }
+      .pa-tuile-prix input:disabled { opacity: .5; }
       .pa-tuile-prix span { font-family: var(--mono); font-size: 10.5px; color: var(--ink3); }
       .pa-coche {
         position: absolute; top: 7px; right: 7px; width: 21px; height: 21px;
@@ -844,20 +854,89 @@
       .pa-tuile.prise .pa-coche { background: var(--ink); border-color: var(--ink); }
       .pa-tuile.prise .pa-coche svg { opacity: 1; transform: none; }
 
-      /* Ajouter une recompense a soi. */
-      .pa-sienne { display: grid; gap: 8px; margin-top: 12px; }
+      .pa-sienne { display: grid; gap: 8px; margin-top: 14px; }
       .pa-sienne-lignes { display: grid; grid-template-columns: 1fr 82px; gap: 8px; }
       .pa-sienne-pts { text-align: right; font-family: var(--mono); }
       .pa-compte {
-        margin: 14px 0 0; font-family: var(--mono); font-size: 11px;
+        margin: 16px 0 0; font-family: var(--mono); font-size: 11px;
         color: var(--ink3); text-align: center;
       }
 
-      /* ---- Apercu de l'affiche, etape QR ---- */
+      /* ---- 3 · le bareme ----
+         Cinq champs numeriques nus ne disaient rien : personne ne sait si
+         80 points par millier de vues est beaucoup. Trois profils a
+         toucher, et sous chacun ce que ca donne en vrai. Le detail reste
+         accessible pour qui veut le regler ligne par ligne. */
+      .pa-profils { display: grid; gap: 10px; }
+      .pa-profil {
+        display: block; width: 100%; text-align: left; padding: 14px 15px;
+        border: 1px solid var(--line2); border-radius: 15px;
+        background: var(--s1); color: inherit; font-family: inherit; cursor: pointer;
+        transition: border-color .15s ease, box-shadow .15s ease, transform .16s var(--sortie);
+      }
+      .pa-profil:active { transform: scale(.99); }
+      .pa-profil.choisi { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+      .pa-profil:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .pa-profil-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .pa-profil-tete strong { font-size: 14.5px; font-weight: 800; letter-spacing: -.02em; }
+      .pa-profil-rond {
+        flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%;
+        border: 1.5px solid var(--line2); display: grid; place-items: center;
+        transition: border-color .15s ease;
+      }
+      .pa-profil-rond::after {
+        content: ""; width: 10px; height: 10px; border-radius: 50%;
+        background: var(--ink); transform: scale(0);
+        transition: transform .18s var(--rebond);
+      }
+      .pa-profil.choisi .pa-profil-rond { border-color: var(--ink); }
+      .pa-profil.choisi .pa-profil-rond::after { transform: scale(1); }
+      /* Le chiffre qui rend le choix comparable : sans lui, "genereux"
+         et "prudent" sont deux mots sans echelle. */
+      .pa-profil-exemple {
+        display: block; margin-top: 7px; font-size: 12px; color: var(--ink2); line-height: 1.45;
+      }
+      .pa-profil-exemple b { font-family: var(--mono); font-weight: 700; color: var(--ink); }
+
+      .pa-detail { margin-top: 16px; }
+      .pa-detail > summary {
+        list-style: none; cursor: pointer; padding: 10px 0;
+        font-size: 12.5px; font-weight: 600; color: var(--ink2);
+        display: flex; align-items: center; gap: 6px;
+      }
+      .pa-detail > summary::-webkit-details-marker { display: none; }
+      .pa-detail > summary::after {
+        content: ""; width: 7px; height: 7px; margin-top: -3px;
+        border-right: 1.6px solid var(--ink3); border-bottom: 1.6px solid var(--ink3);
+        transform: rotate(45deg); transition: transform .2s var(--sortie);
+      }
+      .pa-detail[open] > summary::after { transform: rotate(-135deg); margin-top: 2px; }
+
+      /* ---- 5 · ce qui a ete construit ----
+         Le dernier ecran ne demande plus rien : il montre. C'est la
+         petite victoire visible que LinkedIn met apres chaque section, et
+         la sortie personnalisee qui fait accepter les questions de
+         MyFitnessPal. */
       .pa-affiche {
-        display: block; width: 100%; max-width: 210px; margin: 0 auto 14px;
+        display: block; width: 100%; max-width: 188px; margin: 0 auto 16px;
         border-radius: 10px; border: 1px solid var(--line); background: var(--s1);
       }
+      .pa-bilan { display: grid; gap: 0; margin: 0 0 16px; padding: 0; list-style: none; }
+      .pa-bilan li {
+        display: flex; align-items: center; gap: 11px; padding: 11px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .pa-bilan li:last-child { border-bottom: 0; }
+      .pa-bilan-ok {
+        flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%;
+        background: var(--ink); display: grid; place-items: center;
+      }
+      .pa-bilan-ok svg { width: 11px; height: 11px; stroke: var(--s1); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pa-bilan-ok.attente { background: var(--s3); }
+      .pa-bilan-ok.attente svg { stroke: var(--ink3); }
+      .pa-bilan-txt { flex: 1 1 auto; min-width: 0; font-size: 13px; }
+      .pa-bilan-txt strong { display: block; font-weight: 700; }
+      .pa-bilan-txt span { display: block; margin-top: 1px; font-size: 11.5px; color: var(--ink3); }
 
       /* Le mouvement gene, le fondu non : on garde ce qui explique
          (l'apparition), on retire ce qui deplace. */
@@ -869,8 +948,9 @@
         .pa-mascotte.pa-entre, .pa-compteur b.pa-entre {
           animation-name: paFondu; animation-duration: 200ms; animation-delay: 0ms;
         }
-        .pa-tuile:active, .pa-photo-btn:active { transform: none; }
-        .pa-coche svg { transition: opacity .15s ease; transform: none; }
+        .pa-tuile:active, .pa-photo:active, .pa-profil:active { transform: none; }
+        .pa-coche svg, .pa-profil-rond::after { transition: opacity .15s ease; transform: none; }
+        .pa-tuile.prise .pa-coche svg, .pa-profil.choisi .pa-profil-rond::after { transform: none; }
       }
       @keyframes paFondu { from { opacity: 0; } to { opacity: 1; } }
 
@@ -1285,17 +1365,20 @@
                  Instagram tutoient : ils encadrent l'appli, ils ne sont
                  pas dedans. -->
             <div class="parcours" id="parcours" hidden>
+              <!-- Retour a gauche, avancement au centre, sortie a droite :
+                   la barre que tout le monde reconnait sans la lire. -->
               <div class="pa-tete">
+                <button type="button" class="pa-fleche" id="pa-retour" aria-label="Étape précédente" hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+                </button>
                 <div class="pa-jauge" id="pa-jauge" aria-hidden="true"></div>
                 <button type="button" class="pa-passer" id="pa-passer">Passer</button>
               </div>
 
               <div class="pa-corps" id="pa-corps">
-                <!-- Ce bloc-ci est ce qui glisse d'une etape a l'autre.
-                     La barre du haut et le pied ne bougent pas : ce sont
-                     les reperes fixes du parcours. -->
+                <!-- Ce bloc-ci est ce qui glisse d'une etape a l'autre. -->
                 <div class="pa-scene" id="pa-scene">
-                  <div class="pa-entete">
+                  <div class="pa-bandeau">
                     <div class="pa-mascotte" id="pa-mascotte" aria-hidden="true"></div>
                     <p class="pa-compteur">
                       <i>Étape</i>
@@ -1304,101 +1387,109 @@
                     </p>
                   </div>
 
-                  <!-- 1 · Le club -->
-                  <section class="pa-etape" data-pas="1" hidden>
-                    <h1 class="pa-titre">Ton club.</h1>
-                    <p class="pa-sous">Le nom et la ville que verront tes clients dans leur application.</p>
+                  <div class="pa-texte">
+                    <!-- 1 · Le club -->
+                    <section class="pa-etape" data-pas="1" hidden>
+                      <h1 class="pa-titre">Ton club.</h1>
+                      <p class="pa-sous">Le nom et la ville que verront tes clients dans leur application.</p>
 
-                    <div class="pa-photo pa-arrive">
-                      <span class="pa-photo-vue" id="pa-photo-vue"></span>
-                      <span class="pa-photo-txt">
-                        <button type="button" class="pa-photo-btn" id="pa-photo-btn">Ajouter une photo</button>
-                        <span class="pa-aide">Ta façade, ta salle. Facultatif.</span>
-                      </span>
-                    </div>
+                      <button type="button" class="pa-photo pa-arrive" id="pa-photo-btn">
+                        <span class="pa-photo-vue" id="pa-photo-vue"></span>
+                        <span class="pa-photo-txt">
+                          <strong id="pa-photo-titre">Ajouter une photo</strong>
+                          <span>Ta façade, ta salle. Facultatif.</span>
+                        </span>
+                      </button>
 
-                    <div class="pa-champ pa-arrive">
-                      <label for="pa-nom">Nom du club</label>
-                      <input class="ac-input" id="pa-nom" type="text" autocomplete="organization" placeholder="Le Mirage" />
-                    </div>
-                    <div class="pa-champ pa-arrive">
-                      <label for="pa-ville">Ville</label>
-                      <input class="ac-input" id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" />
-                    </div>
-                  </section>
-
-                  <!-- 2 · Les recompenses -->
-                  <section class="pa-etape" data-pas="2" hidden>
-                    <h1 class="pa-titre">Tes récompenses.</h1>
-                    <p class="pa-sous">
-                      Ce que tes clients échangent contre leurs points. Touche une carte pour
-                      la mettre dans ta boutique, et fixe son prix.
-                    </p>
-
-                    <div class="pa-grille" id="pa-grille"></div>
-
-                    <div class="pa-sienne pa-arrive">
-                      <div class="pa-sienne-lignes">
-                        <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Une autre récompense" />
-                        <input class="ac-input pa-sienne-pts" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" />
+                      <div class="pa-champ pa-arrive">
+                        <label for="pa-nom">Nom du club</label>
+                        <input class="ac-input" id="pa-nom" type="text" autocomplete="organization" placeholder="Le Mirage" />
                       </div>
-                      <button type="button" class="ajouter-recompense" id="pa-sienne-ajouter">Ajouter cette récompense</button>
-                    </div>
+                      <div class="pa-champ pa-arrive">
+                        <label for="pa-ville">Ville</label>
+                        <input class="ac-input" id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" />
+                      </div>
+                    </section>
 
-                    <p class="pa-compte" id="pa-compte"></p>
-                  </section>
+                    <!-- 2 · Les recompenses -->
+                    <section class="pa-etape" data-pas="2" hidden>
+                      <h1 class="pa-titre">Tes récompenses.</h1>
+                      <p class="pa-sous">
+                        Ce que tes clients échangent contre leurs points. Touche une carte
+                        pour la mettre dans ta boutique, et fixe son prix.
+                      </p>
 
-                  <!-- 3 · Le bareme -->
-                  <section class="pa-etape" data-pas="3" hidden>
-                    <h1 class="pa-titre">Ton barème.</h1>
-                    <p class="pa-sous">Ce que rapporte chaque publication de tes clients. Ces valeurs restent modifiables plus tard.</p>
-                    <div class="carte pa-arrive" id="pa-bareme"></div>
-                  </section>
+                      <div class="pa-grille" id="pa-grille"></div>
 
-                  <!-- 4 · Instagram -->
-                  <section class="pa-etape" data-pas="4" hidden>
-                    <h1 class="pa-titre">Ton Instagram.</h1>
-                    <p class="pa-sous">
-                      Noctify repère les stories qui mentionnent ton club et crédite ceux qui
-                      les publient. Sans compte connecté, chaque publication est à valider à la main.
-                    </p>
+                      <div class="pa-sienne pa-arrive">
+                        <div class="pa-sienne-lignes">
+                          <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Une autre récompense" />
+                          <input class="ac-input pa-sienne-pts" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" />
+                        </div>
+                        <button type="button" class="ajouter-recompense" id="pa-sienne-ajouter">Ajouter cette récompense</button>
+                      </div>
 
-                    <div class="pa-champ pa-arrive">
-                      <label for="pa-handle">Ton pseudo Instagram</label>
-                      <input class="ac-input" id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@leclub" />
-                      <span class="pa-aide">C'est ce que tes clients devront taguer dans leur story.</span>
-                    </div>
+                      <p class="pa-compte" id="pa-compte"></p>
+                    </section>
 
-                    <button type="button" class="ac-btn ac-btn-google pa-arrive" id="pa-ig-connecter">
-                      <svg viewBox="0 0 24 24" class="ig-glyphe" aria-hidden="true">
-                        <rect x="3" y="3" width="18" height="18" rx="5.4"/>
-                        <circle cx="12" cy="12" r="4.1"/>
-                        <circle cx="17.3" cy="6.7" r="1.15" fill="#e1306c" stroke="none"/>
-                      </svg>
-                      Connecter Instagram
-                    </button>
-                    <p class="pa-aide pa-arrive" id="pa-ig-aide">
-                      Le compte doit être en Business ou Créateur, et relié à une Page Facebook.
-                      La connexion peut se faire plus tard, depuis les Réglages.
-                    </p>
-                  </section>
+                    <!-- 3 · Le bareme -->
+                    <section class="pa-etape" data-pas="3" hidden>
+                      <h1 class="pa-titre">Ton barème.</h1>
+                      <p class="pa-sous">Ce qu'une publication rapporte à ton client. Modifiable à tout moment.</p>
 
-                  <!-- 5 · Le QR code -->
-                  <section class="pa-etape" data-pas="5" hidden>
-                    <h1 class="pa-titre">Ton QR code.</h1>
-                    <p class="pa-sous">À imprimer et coller à l'entrée, au bar, aux toilettes. C'est lui qui déclenche tout.</p>
+                      <div class="pa-profils pa-arrive" id="pa-profils" role="radiogroup" aria-label="Barème"></div>
 
-                    <img class="pa-affiche pa-arrive" id="pa-affiche" alt="Aperçu de l'affiche à imprimer" />
-                    <a class="bouton sobre pleine pa-arrive" id="pa-affiche-lien" download="affiche-noctify.png">Télécharger l'affiche (A4)</a>
-                    <p class="pa-aide pa-arrive">L'affiche reste disponible dans Réglages, avec le QR seul.</p>
-                  </section>
+                      <details class="pa-detail pa-arrive">
+                        <summary>Régler ligne par ligne</summary>
+                        <div class="carte" id="pa-bareme"></div>
+                      </details>
+                    </section>
+
+                    <!-- 4 · Instagram -->
+                    <section class="pa-etape" data-pas="4" hidden>
+                      <h1 class="pa-titre">Ton Instagram.</h1>
+                      <p class="pa-sous">
+                        Noctify repère les stories qui mentionnent ton club et crédite ceux qui
+                        les publient. Sans compte connecté, chaque publication est à valider à la main.
+                      </p>
+
+                      <div class="pa-champ pa-arrive">
+                        <label for="pa-handle">Ton pseudo Instagram</label>
+                        <input class="ac-input" id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@leclub" />
+                        <span class="pa-aide">C'est ce que tes clients devront taguer dans leur story.</span>
+                      </div>
+
+                      <button type="button" class="ac-btn ac-btn-google pa-arrive" id="pa-ig-connecter">
+                        <svg viewBox="0 0 24 24" class="ig-glyphe" aria-hidden="true">
+                          <rect x="3" y="3" width="18" height="18" rx="5.4"/>
+                          <circle cx="12" cy="12" r="4.1"/>
+                          <circle cx="17.3" cy="6.7" r="1.15" fill="#e1306c" stroke="none"/>
+                        </svg>
+                        Connecter Instagram
+                      </button>
+                      <p class="pa-aide pa-arrive" id="pa-ig-aide" style="margin-top:10px">
+                        Le compte doit être en Business ou Créateur, et relié à une Page Facebook.
+                        La connexion peut se faire plus tard, depuis les Réglages.
+                      </p>
+                    </section>
+
+                    <!-- 5 · Ce qui vient d'etre construit -->
+                    <section class="pa-etape" data-pas="5" hidden>
+                      <h1 class="pa-titre">Tout est prêt.</h1>
+                      <p class="pa-sous">Il ne reste qu'à coller ton affiche : à l'entrée, au bar, aux toilettes.</p>
+
+                      <img class="pa-affiche pa-arrive" id="pa-affiche" alt="Aperçu de l'affiche à imprimer" />
+                      <a class="bouton sobre pleine pa-arrive" id="pa-affiche-lien" download="affiche-noctify.png">Télécharger l'affiche (A4)</a>
+
+                      <ul class="pa-bilan pa-arrive" id="pa-bilan"></ul>
+                    </section>
+                  </div>
                 </div>
               </div>
 
               <div class="pa-pied">
                 <p class="pa-msg" id="pa-msg" hidden></p>
                 <button type="button" class="bouton pleine" id="pa-suivant">Continuer</button>
-                <button type="button" class="pa-retour" id="pa-retour" hidden>Retour</button>
               </div>
             </div>
 
@@ -3205,13 +3296,11 @@
 
          Le repli n'est pas une precaution de principe : les poses
          arrivent au fil de l'eau, et un ecran sans mascotte ferait un
-         trou la ou les autres en ont une. Le verre du logo, detoure,
-         bouche le trou en attendant. */
+         trou la ou les autres en ont une. */
       var MASCOTTE_REPLI = "/mascotte/verre-salut.webp";
       // Une pose qui manque manque pour toute la session : la redemander a
-      // chaque aller-retour dans le parcours ne ferait que rejouer le meme
-      // 404, et afficherait le repli apres un battement au lieu de tout de
-      // suite.
+      // chaque aller-retour ne ferait que rejouer le meme 404, et
+      // afficherait le repli apres un battement au lieu de tout de suite.
       var POSES_ABSENTES = {};
 
       function rendreMascotte(pas) {
@@ -3259,6 +3348,7 @@
         construireChoixRecompenses();
         rendreChoixRecompenses();
         rendreBaremeParcours();
+        rendreProfilsBareme();
 
         // Le detour par Instagram ramene ici : on reprend ou on en etait,
         // pas au debut. Et on se pose sans glisser -- il n'y a pas
@@ -3325,9 +3415,9 @@
         if (cible === 4) preparerPasInstagram();
         // L'affiche se dessine sur un canvas : le rejeu peut echouer
         // (pas de code public, image du logo illisible). Le dire, plutot
-        // que de laisser une promesse rejetee dans la console et un
-        // ecran vide.
+        // que de laisser une promesse rejetee dans la console.
         if (cible === 5) {
+          rendreBilan();
           preparerPasQr().catch(function () {
             direParcours("L'affiche n'a pas pu être générée. Elle reste disponible dans Réglages.", true);
           });
@@ -3389,6 +3479,41 @@
         return true;
       }
 
+      /* ---- Le bilan du dernier ecran ----
+         Le parcours a demande quatre fois quelque chose ; le dernier
+         ecran ne demande plus rien, il montre ce qui a ete construit.
+         C'est la petite victoire visible de LinkedIn et la sortie
+         personnalisee qui fait accepter les questions de MyFitnessPal --
+         sans elle, quatre ecrans de reglages n'ont produit, a l'oeil,
+         strictement rien. */
+      var COCHE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+      function rendreBilan() {
+        var boutique = PARCOURS.choix.filter(function (c) { return c.prise; }).length;
+        var regles = ETAT.data.pointRules || {};
+        var parStory = Math.round(Number(regles.storyViewsPerThousand || 0) * 3);
+        var ig = ETAT.instagram;
+        var etab = etablissementCourant() || {};
+        var igConnecte = !!(ig && ig.connecte);
+
+        var lignes = [
+          [true, boutique + (boutique > 1 ? " récompenses" : " récompense"), "Dans la boutique de tes clients"],
+          [true, "Barème réglé", "Une story à 3 000 vues : " + nb.format(parStory) + " pts"],
+          igConnecte
+            ? [true, "Instagram connecté", "Les mentions arrivent toutes seules"]
+            : [false, etab.ig_handle ? "Instagram à connecter" : "Instagram non renseigné",
+               "Dans Réglages, quand tu veux"],
+        ];
+
+        $("#pa-bilan").innerHTML = lignes.map(function (l) {
+          return "<li>" +
+            '<span class="pa-bilan-ok' + (l[0] ? "" : " attente") + '">' + COCHE_SVG + "</span>" +
+            '<span class="pa-bilan-txt"><strong>' + escapeHtml(l[1]) + "</strong>" +
+            "<span>" + escapeHtml(l[2]) + "</span></span>" +
+          "</li>";
+        }).join("");
+      }
+
       /* ---- 1 · La fiche du club ---- */
 
       function rendrePhotoParcours(url) {
@@ -3397,7 +3522,8 @@
         vue.innerHTML = url
           ? '<img src="' + escapeHtml(url) + '" alt="" />'
           : escapeHtml((etab.name || "?").trim().charAt(0).toUpperCase());
-        $("#pa-photo-btn").textContent = url ? "Changer la photo" : "Ajouter une photo";
+        $("#pa-photo-titre").textContent = url ? "Changer la photo" : "Ajouter une photo";
+        $("#pa-photo-btn").classList.toggle("remplie", !!url);
       }
 
       /* Meme bucket que les photos de recompense : sa policy ne verifie
@@ -3670,7 +3796,86 @@
 
 
       /* ---- 3 · Le bareme ----
-         Memes regles que l'onglet (REGLES_BAREME), rendues ici avec
+         Cinq champs numeriques nus ne disaient rien : personne ne sait si
+         80 points par millier de vues est beaucoup ou peu. Trois profils
+         a toucher, et sous chacun ce que ca donne en vrai -- c'est le
+         chiffre qui rend le choix comparable, pas l'adjectif.
+
+         Les valeurs ecrites restent les cinq memes colonnes : un profil
+         n'est pas une notion de plus en base, juste un jeu de valeurs
+         pose dans les champs. Qui veut regler ligne par ligne deplie le
+         detail, et aucun profil n'est alors marque -- il a fait le sien. */
+      var PROFILS_BAREME = [
+        { cle: "prudent", nom: "Prudent",
+          valeurs: { storyViewsPerThousand: 50, videoViewsPerThousand: 15, viralBonus: 60, qrCheckin: 10, monthlyAmbassador: 250 } },
+        { cle: "equilibre", nom: "Équilibré",
+          valeurs: { storyViewsPerThousand: 80, videoViewsPerThousand: 25, viralBonus: 90, qrCheckin: 15, monthlyAmbassador: 350 } },
+        { cle: "genereux", nom: "Généreux",
+          valeurs: { storyViewsPerThousand: 120, videoViewsPerThousand: 40, viralBonus: 140, qrCheckin: 25, monthlyAmbassador: 500 } },
+      ];
+
+      /* Trois mille vues : l'ordre de grandeur d'une story de club un
+         samedi soir. Un exemple trop rond (1 000) donnerait le tarif
+         affiche, pas une somme. */
+      var VUES_EXEMPLE = 3000;
+
+      function rendreProfilsBareme() {
+        var choisi = profilCorrespondant();
+
+        $("#pa-profils").innerHTML = PROFILS_BAREME.map(function (p) {
+          var pts = Math.round(p.valeurs.storyViewsPerThousand * (VUES_EXEMPLE / 1000));
+          return (
+            '<button type="button" class="pa-profil' + (choisi === p.cle ? " choisi" : "") + '"' +
+              ' data-profil="' + p.cle + '" role="radio" aria-checked="' + (choisi === p.cle ? "true" : "false") + '">' +
+              '<span class="pa-profil-tete"><strong>' + escapeHtml(p.nom) + "</strong>" +
+                '<span class="pa-profil-rond" aria-hidden="true"></span></span>' +
+              '<span class="pa-profil-exemple">Une story à ' + nb.format(VUES_EXEMPLE) +
+                " vues : <b>" + nb.format(pts) + " pts</b></span>" +
+            "</button>"
+          );
+        }).join("");
+
+        $("#pa-profils").querySelectorAll("[data-profil]").forEach(function (bouton) {
+          bouton.addEventListener("click", function () { appliquerProfil(bouton.dataset.profil); });
+        });
+      }
+
+      /* Lequel des trois profils decrit les valeurs actuellement dans les
+         champs ? Aucun, si le gerant les a reglees a la main. */
+      function profilCorrespondant() {
+        var champs = {};
+        REGLES_BAREME.forEach(function (r) {
+          var champ = $('[data-pa-regle="' + r[0] + '"]');
+          champs[r[0]] = champ ? Math.round(Number(champ.value)) : null;
+        });
+
+        var trouve = PROFILS_BAREME.find(function (p) {
+          return Object.keys(p.valeurs).every(function (cle) { return champs[cle] === p.valeurs[cle]; });
+        });
+        return trouve ? trouve.cle : null;
+      }
+
+      function appliquerProfil(cle) {
+        var profil = PROFILS_BAREME.find(function (p) { return p.cle === cle; });
+        if (!profil) return;
+
+        Object.keys(profil.valeurs).forEach(function (nom) {
+          var champ = $('[data-pa-regle="' + nom + '"]');
+          if (champ) champ.value = profil.valeurs[nom];
+        });
+        majProfilChoisi();
+      }
+
+      function majProfilChoisi() {
+        var choisi = profilCorrespondant();
+        $("#pa-profils").querySelectorAll("[data-profil]").forEach(function (bouton) {
+          var actif = bouton.dataset.profil === choisi;
+          bouton.classList.toggle("choisi", actif);
+          bouton.setAttribute("aria-checked", actif ? "true" : "false");
+        });
+      }
+
+      /* Memes regles que l'onglet (REGLES_BAREME), rendues ici avec
          data-pa-regle : les deux ecrans vivent en meme temps dans le
          DOM, et un querySelector sur data-regle aurait toujours trouve
          les champs de l'onglet, jamais ceux du parcours. */
@@ -3687,6 +3892,13 @@
             "</span>" +
           "</div>";
         }).join("");
+
+        // Regler une valeur a la main sort des trois profils : le dire
+        // tout de suite, sinon "Équilibré" reste coche sur un bareme qui
+        // ne l'est plus.
+        $("#pa-bareme").querySelectorAll("[data-pa-regle]").forEach(function (champ) {
+          champ.addEventListener("input", majProfilChoisi);
+        });
       }
 
       async function enregistrerBaremeParcours() {
