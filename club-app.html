@@ -594,7 +594,14 @@
 
       /* Colle en bas tant que la place le permet : les champs tombent
          sous le pouce, pas au milieu de l'ecran. */
-      .accueil-actions { width: 100%; display: grid; gap: 9px; margin-top: 24px; }
+      .accueil-actions { width: 100%; display: grid; gap: 10px; margin-top: 26px; }
+      /* Le separateur porte l'espace : sans lui, "ou par email" est colle
+         au bouton Google et le formulaire commence sans qu'on l'ait vu
+         commencer. */
+      .accueil-actions .ac-sep { margin: 6px 0; }
+      /* Detachee du formulaire : ce n'est pas une action de connexion de
+         plus, c'est l'autre chemin. */
+      .ac-bascule-bloc { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(16,18,22,.08); }
       /* L'ecran Instagram garde ses actions en bas de l'ecran : lui a
          du contenu au-dessus, et le pouce les y trouve. */
       .ecran-ig .accueil-actions { margin-top: auto; padding-top: 16px; }
@@ -1000,6 +1007,19 @@
         outline: 2px solid var(--ink); outline-offset: 2px;
       }
 
+      /* Le legal : present, jamais au premier plan. */
+      .reglages-legal {
+        display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px;
+        margin: 22px 0 6px; font-size: 11.5px;
+      }
+      .reglages-legal a {
+        color: var(--ink3); text-decoration: none;
+        border-bottom: 1px solid transparent; padding-bottom: 1px;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .reglages-legal a:hover { color: var(--ink2); border-bottom-color: var(--line2); }
+      }
+
       .section-titre {
         font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
         color: var(--ink3); margin: 22px 0 10px;
@@ -1226,12 +1246,10 @@
          Un trait corail suffit a marquer la position. */
       .tab { position: relative; transition: transform .16s var(--sortie); }
       .tab:active { transform: scale(.94); }
-      .tab.on svg { stroke: var(--ink); }
+      /* L'actif se lit a l'encre et a l'epaisseur du trait, pas a un
+         liseré corail rapporte au-dessus du bouton. */
+      .tab.on svg { stroke: var(--ink); stroke-width: 2.4; }
       .tab.on .lbl { color: var(--ink); }
-      .tab.on::after {
-        content: ""; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
-        width: 18px; height: 2px; border-radius: 0 0 2px 2px; background: var(--accent);
-      }
     </style>
   </head>
   <body>
@@ -1339,9 +1357,12 @@
                   <input type="password" class="ac-input" id="porte-password" placeholder="Mot de passe" autocomplete="current-password" required />
                   <p class="ac-aide" id="porte-aide-mdp" hidden>8 caractères minimum, dont un chiffre.</p>
                   <button type="submit" class="ac-btn ac-btn-marque" id="porte-submit">Se connecter</button>
-                  <button type="button" class="ac-bascule" id="porte-bascule">Pas encore de compte ? En créer un</button>
                   <p class="ac-aide" id="porte-form-msg"></p>
                 </form>
+
+                <p class="ac-bascule-bloc">
+                  <button type="button" class="ac-bascule" id="porte-bascule">Pas encore de compte ? En créer un</button>
+                </p>
                 <p class="ac-aide" id="accueil-msg"></p>
               </div>
             </div>
@@ -1562,9 +1583,8 @@
 
             <!-- ================= TABLEAU DE BORD ================= -->
             <div class="vue actif" id="vue-dashboard">
-              <p class="kicker-sec">01 · Vue générale</p>
-              <h1 class="ecran-titre">Tableau de bord</h1>
-              <p class="ecran-sous" id="dash-etablissement">—</p>
+              <h1 class="ecran-titre" id="dash-etablissement">—</h1>
+              <p class="ecran-sous" id="dash-periode">Les 14 derniers jours</p>
 
               <div class="hero">
                 <span class="hero-label">Abonnés touchés</span>
@@ -1645,36 +1665,23 @@
 
               <p class="section-titre">Compte</p>
               <div class="carte" style="padding:2px 15px">
-                <div class="reglage-ligne">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M3.5 7.5h17v11h-17z"/><path d="M3.5 8l8.5 6 8.5-6"/></svg></span>
-                  <span class="reglage-txt"><strong id="reglages-email">—</strong><span>Ton identifiant de connexion</span></span>
-                </div>
                 <button type="button" class="reglage-lien" id="reglages-mdp">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span>
                   <span class="reglage-txt"><strong>Changer le mot de passe</strong><span id="reglages-mdp-etat">On t’envoie un lien par email</span></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
+                <button type="button" class="reglage-lien" id="reglages-deconnexion">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M14.5 4.5H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 19.5h8.5"/><path d="M17.5 8.5L21 12l-3.5 3.5M21 12h-9"/></svg></span>
+                  <span class="reglage-txt"><strong id="reglages-deconnexion-txt">Déconnexion</strong><span>Sur cet appareil</span></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
               </div>
-              <button type="button" class="bouton sobre pleine" id="reglages-deconnexion">Déconnexion</button>
 
-              <p class="section-titre">À propos</p>
-              <div class="carte" style="padding:2px 15px">
-                <a class="reglage-lien" href="./confidentialite.html" target="_blank" rel="noopener">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.4c0 4.4-3.1 8.2-7.5 9.6-4.4-1.4-7.5-5.2-7.5-9.6V6z"/></svg></span>
-                  <span class="reglage-txt"><strong>Confidentialité</strong><span>Ce qu'on garde, et pourquoi</span></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <a class="reglage-lien" href="./cgu.html" target="_blank" rel="noopener">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14.5 3v4.5H19M9 12h6M9 16h6"/></svg></span>
-                  <span class="reglage-txt"><strong>Conditions d'utilisation</strong><span>Le contrat entre nous</span></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <a class="reglage-lien" href="mailto:viralnight001@gmail.com?subject=Noctify%20%E2%80%94%20aide">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.4"/><path d="M12 17h.01"/></svg></span>
-                  <span class="reglage-txt"><strong>Un problème, une question</strong><span>On répond vite</span></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </a>
-              </div>
+              <p class="reglages-legal">
+                <a href="./confidentialite.html" target="_blank" rel="noopener">Confidentialité</a>
+                <a href="./cgu.html" target="_blank" rel="noopener">Conditions</a>
+                <a href="mailto:viralnight001@gmail.com?subject=Noctify%20%E2%80%94%20aide">Une question&nbsp;?</a>
+              </p>
 
               <p class="reglages-pied">Noctify · appli club</p>
             </div>
@@ -3193,9 +3200,9 @@
       // En mode demo, "Deconnexion" n'a aucun sens : personne n'est
       // connecte. Le bouton annonce ce qu'il fait vraiment.
       function majBoutonCompte() {
-        $("#reglages-deconnexion").textContent = ETAT.session ? "Déconnexion" : "Se connecter";
-        var email = ETAT.session ? (ETAT.session.user.email || "—") : "Pas connecté";
-        $("#reglages-email").textContent = email;
+        // Le libelle interne, pas le bouton : un textContent sur le
+        // bouton emporterait l'icone et le chevron avec lui.
+        $("#reglages-deconnexion-txt").textContent = ETAT.session ? "Déconnexion" : "Se connecter";
         $("#reglages-mdp").disabled = !ETAT.session;
       }
 
