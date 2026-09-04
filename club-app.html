@@ -611,37 +611,128 @@
 
          Il se pose PAR-DESSUS l'appli (les vues sont deja rendues
          derriere) : on ne reconstruit ni le bareme ni le QR, on affiche
-         les memes donnees dans un cadre qui avance. */
+         les memes donnees dans un cadre qui avance.
+
+         C'est le SEUL endroit de l'appli qui s'autorise des animations
+         d'entree. La regle est la frequence : un ecran vu une fois dans
+         la vie d'un club peut se permettre ce qu'un tableau de bord
+         ouvert dix fois par jour ne peut pas. */
       .parcours {
         position: absolute; inset: 0; z-index: 38;
         display: flex; flex-direction: column;
         background: var(--bg); color: var(--ink);
+        /* Un ease-out qui depasse legerement : reserve a la mascotte.
+           Un personnage qui arrive sans elan n'a pas l'air vivant. */
+        --rebond: cubic-bezier(.34, 1.42, .64, 1);
       }
       .parcours[hidden] { display: none; }
 
-      .pa-tete { flex: 0 0 auto; padding: 16px 20px 0; }
-      /* Cinq traits plutot qu'un pourcentage : le gerant voit combien
-         d'ecrans restent, pas une barre qui avance sans echelle. */
-      .pa-jauge { display: flex; gap: 4px; }
-      .pa-jauge span { flex: 1; height: 3px; border-radius: 2px; background: var(--s3); }
-      .pa-jauge span.faite { background: var(--ink); }
-      .pa-rang {
-        display: flex; align-items: center; justify-content: space-between;
-        margin-top: 11px;
-        font-family: var(--mono); font-size: 9.5px; font-weight: 600;
-        letter-spacing: .16em; text-transform: uppercase; color: var(--ink3);
+      .pa-tete {
+        flex: 0 0 auto; display: flex; align-items: center; gap: 14px;
+        padding: 16px 20px 0;
       }
+      /* Cinq traits plutot qu'un pourcentage : le gerant voit combien
+         d'ecrans restent, pas une barre qui avance sans echelle.
+         Le remplissage est un enfant a part, en scaleX : animer une
+         largeur ferait travailler la mise en page a chaque etape. */
+      .pa-jauge { flex: 1 1 auto; display: flex; gap: 4px; }
+      .pa-jauge span {
+        flex: 1; height: 3px; border-radius: 2px;
+        background: var(--s3); overflow: hidden;
+      }
+      .pa-jauge i {
+        display: block; height: 100%; border-radius: 2px; background: var(--ink);
+        transform: scaleX(0); transform-origin: left center;
+        transition: transform .26s var(--sortie);
+      }
+      .pa-jauge span.faite i { transform: scaleX(1); }
       .pa-passer {
-        border: 0; background: none; padding: 4px 0; cursor: pointer;
-        font-family: var(--sans); font-size: 11.5px; font-weight: 600;
-        letter-spacing: normal; text-transform: none; color: var(--ink3);
+        flex: 0 0 auto; border: 0; background: none; padding: 4px 0; cursor: pointer;
+        font-family: inherit; font-size: 12px; font-weight: 600; color: var(--ink3);
         text-decoration: underline; text-underline-offset: 3px;
       }
+      .pa-passer[hidden] { display: none; }
 
-      .pa-corps { flex: 1 1 auto; overflow-y: auto; padding: 16px 20px 14px; }
+      .pa-corps { flex: 1 1 auto; overflow-y: auto; padding: 4px 20px 14px; }
+
+      /* Ce qui glisse d'une etape a l'autre. La barre du haut et le pied
+         restent : ce sont les reperes fixes, et les voir immobiles rend
+         le glissement du contenu plus lisible. */
+      /* La sortie est plus rapide que l'entree : c'est le temps ou
+         l'utilisateur attend, l'entree est le temps ou il regarde. */
+      .pa-scene {
+        transition: transform .22s var(--sortie), opacity .22s var(--sortie);
+      }
+      .pa-scene.pa-vers-gauche { transform: translateX(-24px); opacity: 0; }
+      .pa-scene.pa-vers-droite { transform: translateX(24px); opacity: 0; }
+      .pa-scene.pa-vers-gauche, .pa-scene.pa-vers-droite { transition-duration: .14s; }
+      /* Le temps de reposer la scene de l'autre cote sans que le
+         deplacement se voie. */
+      .pa-scene.pa-fige { transition: none; }
+
+      .pa-entete {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        gap: 12px; margin-bottom: 10px;
+      }
+      /* Hauteur fixe, largeur libre : les poses n'auront pas toutes les
+         memes proportions (il tient une affiche sur l'une, un shot sur
+         l'autre) et le personnage doit garder la meme taille d'un ecran
+         a l'autre. Cale en bas : quoi qu'il tienne, il reste pose sur la
+         meme ligne de sol. */
+      .pa-mascotte { flex: 0 0 auto; width: 132px; height: 104px; }
+      .pa-mascotte img {
+        display: block; width: 100%; height: 100%;
+        object-fit: contain; object-position: left bottom;
+      }
+      .pa-mascotte.pa-entre { animation: paMascotte 360ms var(--rebond) both; }
+
+      /* Le compteur d'etape, aligne sur la ligne de base de la mascotte.
+         Chiffre en encre, jamais en corail : le corail est une couleur de
+         marque, il ne sert pas a rendre un nombre plus gros. */
+      .pa-compteur {
+        flex: 0 0 auto; margin: 0 2px 6px 0; text-align: right;
+        font-family: var(--mono); line-height: 1;
+      }
+      .pa-compteur i {
+        display: block; font-style: normal; font-size: 9.5px; font-weight: 600;
+        letter-spacing: .18em; text-transform: uppercase; color: var(--ink3);
+        margin-bottom: 7px;
+      }
+      .pa-compteur b {
+        font-size: 30px; font-weight: 800; letter-spacing: -.04em; color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .pa-compteur b.pa-entre { animation: paChiffre 220ms var(--sortie) both; }
+      .pa-compteur span { font-size: 13px; font-weight: 600; color: var(--ink3); margin-left: 3px; }
+
       .pa-etape[hidden] { display: none; }
-      .pa-titre { margin: 0 0 5px; font-size: 25px; font-weight: 800; letter-spacing: -.035em; line-height: 1.1; }
+      .pa-titre { margin: 0 0 5px; font-size: 26px; font-weight: 800; letter-spacing: -.035em; line-height: 1.08; }
       .pa-sous { margin: 0 0 18px; font-size: 13px; color: var(--ink2); line-height: 1.5; }
+      .pa-aide { display: block; font-size: 11.5px; color: var(--ink3); line-height: 1.45; margin: 0; }
+
+      /* La cascade d'entree. Trois niveaux seulement -- titre, chapeau,
+         contenu : au-dela, l'ecran met plus de temps a se poser qu'a se
+         lire. Elle se rejoue toute seule a chaque etape parce qu'une
+         section masquee est en display:none, et qu'un element qui
+         revient au rendu relance ses animations. */
+      .pa-etape .pa-titre { animation: paArrive 300ms var(--sortie) both; }
+      .pa-etape .pa-sous { animation: paArrive 300ms var(--sortie) 45ms both; }
+      .pa-etape .pa-arrive { animation: paArrive 300ms var(--sortie) 90ms both; }
+
+      @keyframes paArrive {
+        from { opacity: 0; transform: translateY(9px); }
+        to { opacity: 1; transform: none; }
+      }
+      /* Depart a .82 et pas a zero : rien, dans la vraie vie,
+         n'apparait a partir de rien. */
+      @keyframes paMascotte {
+        from { opacity: 0; transform: scale(.82) translateY(6px); }
+        to { opacity: 1; transform: none; }
+      }
+      @keyframes paChiffre {
+        from { opacity: 0; transform: translateY(-7px); }
+        to { opacity: 1; transform: none; }
+      }
 
       /* Le pied ne defile pas : sur un telephone, un bouton "Continuer"
          qu'il faut aller chercher en bas d'une grille de douze tuiles
@@ -669,7 +760,6 @@
 
       .pa-champ { display: grid; gap: 6px; margin-bottom: 12px; }
       .pa-champ label { font-size: 10.5px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; }
-      .pa-champ .ac-aide { text-align: left; margin-top: 0; }
 
       /* ---- Photo du club ---- */
       .pa-photo { display: flex; align-items: center; gap: 13px; margin-bottom: 16px; }
@@ -680,12 +770,15 @@
         font-size: 21px; font-weight: 800; color: var(--ink3);
       }
       .pa-photo-vue img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .pa-photo-txt { flex: 1 1 auto; min-width: 0; }
+      .pa-photo-txt { flex: 1 1 auto; min-width: 0; display: grid; gap: 6px; }
       .pa-photo-btn {
+        justify-self: start;
         border: 1px solid var(--line2); background: var(--s2); color: var(--ink);
         border-radius: 9px; padding: 8px 13px; font-family: inherit;
         font-size: 12px; font-weight: 700; cursor: pointer;
+        transition: transform .16s var(--sortie);
       }
+      .pa-photo-btn:active { transform: scale(.97); }
 
       /* ---- Catalogue de recompenses ----
          Deux colonnes de vignettes plutot qu'une liste de champs : le
@@ -698,13 +791,25 @@
         position: relative; display: block; text-align: left;
         background: var(--s1); border: 1px solid var(--line); border-radius: 15px;
         padding: 9px; cursor: pointer; font-family: inherit; color: inherit;
-        transition: border-color .15s ease, transform .16s var(--sortie);
+        transition: border-color .15s ease, box-shadow .15s ease, transform .16s var(--sortie);
+        animation: paArrive 300ms var(--sortie) both;
       }
       .pa-tuile:active { transform: scale(.985); }
       /* Le contour double (bordure + ombre interne) fait le trait epais
          sans decaler la tuile d'un pixel a la selection. */
       .pa-tuile.prise { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
       .pa-tuile:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      /* La cascade s'arrete a douze : au-dela, l'attente devant une
+         grille pleine coute plus que l'effet ne rapporte. */
+      .pa-tuile:nth-child(1) { animation-delay: 90ms; }
+      .pa-tuile:nth-child(2) { animation-delay: 116ms; }
+      .pa-tuile:nth-child(3) { animation-delay: 142ms; }
+      .pa-tuile:nth-child(4) { animation-delay: 168ms; }
+      .pa-tuile:nth-child(5) { animation-delay: 194ms; }
+      .pa-tuile:nth-child(6) { animation-delay: 220ms; }
+      .pa-tuile:nth-child(7) { animation-delay: 246ms; }
+      .pa-tuile:nth-child(8) { animation-delay: 272ms; }
+      .pa-tuile:nth-child(n + 9) { animation-delay: 298ms; }
       .pa-tuile-img {
         width: 100%; aspect-ratio: 1 / 1; border-radius: 11px; overflow: hidden;
         background: var(--s2); display: grid; place-items: center;
@@ -728,15 +833,21 @@
         position: absolute; top: 7px; right: 7px; width: 21px; height: 21px;
         border-radius: 50%; border: 1px solid var(--line2); background: var(--s1);
         display: grid; place-items: center;
+        transition: background .15s ease, border-color .15s ease;
       }
-      .pa-coche svg { width: 12px; height: 12px; stroke: var(--s1); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+      .pa-coche svg {
+        width: 12px; height: 12px; stroke: var(--s1); fill: none;
+        stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+        opacity: 0; transform: scale(.6);
+        transition: opacity .15s ease, transform .18s var(--rebond);
+      }
       .pa-tuile.prise .pa-coche { background: var(--ink); border-color: var(--ink); }
-      .pa-tuile.prise .pa-coche svg { opacity: 1; }
+      .pa-tuile.prise .pa-coche svg { opacity: 1; transform: none; }
 
-      /* Ajouter une recompense a soi : replie tant qu'on ne s'en sert
-         pas, sinon deux champs vides ouvrent l'ecran avant le catalogue. */
+      /* Ajouter une recompense a soi. */
       .pa-sienne { display: grid; gap: 8px; margin-top: 12px; }
       .pa-sienne-lignes { display: grid; grid-template-columns: 1fr 82px; gap: 8px; }
+      .pa-sienne-pts { text-align: right; font-family: var(--mono); }
       .pa-compte {
         margin: 14px 0 0; font-family: var(--mono); font-size: 11px;
         color: var(--ink3); text-align: center;
@@ -747,6 +858,21 @@
         display: block; width: 100%; max-width: 210px; margin: 0 auto 14px;
         border-radius: 10px; border: 1px solid var(--line); background: var(--s1);
       }
+
+      /* Le mouvement gene, le fondu non : on garde ce qui explique
+         (l'apparition), on retire ce qui deplace. */
+      @media (prefers-reduced-motion: reduce) {
+        .pa-scene { transition: opacity .16s ease; }
+        .pa-scene.pa-vers-gauche, .pa-scene.pa-vers-droite { transform: none; }
+        .pa-jauge i { transition: none; }
+        .pa-tuile, .pa-etape .pa-titre, .pa-etape .pa-sous, .pa-etape .pa-arrive,
+        .pa-mascotte.pa-entre, .pa-compteur b.pa-entre {
+          animation-name: paFondu; animation-duration: 200ms; animation-delay: 0ms;
+        }
+        .pa-tuile:active, .pa-photo-btn:active { transform: none; }
+        .pa-coche svg { transition: opacity .15s ease; transform: none; }
+      }
+      @keyframes paFondu { from { opacity: 0; } to { opacity: 1; } }
 
       /* Un seul anneau de focus pour toute l'appli. */
       .bouton:focus-visible, .retour:focus-visible, .retirer:focus-visible,
@@ -1040,8 +1166,8 @@
                 <span class="accueil-pro">Espace club</span>
               </p>
 
-              <h1 class="accueil-titre">Connectez-vous.</h1>
-              <p class="accueil-lead">L'espace de gestion de votre club.</p>
+              <h1 class="accueil-titre">Connecte-toi.</h1>
+              <p class="accueil-lead">L'espace de gestion de ton club.</p>
 
               <div class="accueil-actions">
                 <button type="button" class="ac-btn ac-btn-google" id="accueil-google">
@@ -1161,103 +1287,112 @@
             <div class="parcours" id="parcours" hidden>
               <div class="pa-tete">
                 <div class="pa-jauge" id="pa-jauge" aria-hidden="true"></div>
-                <p class="pa-rang">
-                  <span id="pa-rang-txt">Installation</span>
-                  <button type="button" class="pa-passer" id="pa-passer">Passer</button>
-                </p>
+                <button type="button" class="pa-passer" id="pa-passer">Passer</button>
               </div>
 
               <div class="pa-corps" id="pa-corps">
-                <!-- 1 · Le club -->
-                <section class="pa-etape" data-pas="1" hidden>
-                  <h1 class="pa-titre">Votre club.</h1>
-                  <p class="pa-sous">Le nom et la ville que verront vos clients dans leur application.</p>
-
-                  <div class="pa-photo">
-                    <span class="pa-photo-vue" id="pa-photo-vue"></span>
-                    <span class="pa-photo-txt">
-                      <button type="button" class="pa-photo-btn" id="pa-photo-btn">Ajouter une photo</button>
-                      <p class="ac-aide" style="text-align:left;margin-top:6px">Votre façade, votre salle. Facultatif.</p>
-                    </span>
+                <!-- Ce bloc-ci est ce qui glisse d'une etape a l'autre.
+                     La barre du haut et le pied ne bougent pas : ce sont
+                     les reperes fixes du parcours. -->
+                <div class="pa-scene" id="pa-scene">
+                  <div class="pa-entete">
+                    <div class="pa-mascotte" id="pa-mascotte" aria-hidden="true"></div>
+                    <p class="pa-compteur">
+                      <i>Étape</i>
+                      <b id="pa-compteur-n">01</b>
+                      <span>/ 05</span>
+                    </p>
                   </div>
 
-                  <div class="pa-champ">
-                    <label for="pa-nom">Nom du club</label>
-                    <input class="ac-input" id="pa-nom" type="text" autocomplete="organization" placeholder="Le Mirage" />
-                  </div>
-                  <div class="pa-champ">
-                    <label for="pa-ville">Ville</label>
-                    <input class="ac-input" id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" />
-                  </div>
-                </section>
+                  <!-- 1 · Le club -->
+                  <section class="pa-etape" data-pas="1" hidden>
+                    <h1 class="pa-titre">Ton club.</h1>
+                    <p class="pa-sous">Le nom et la ville que verront tes clients dans leur application.</p>
 
-                <!-- 2 · Les recompenses -->
-                <section class="pa-etape" data-pas="2" hidden>
-                  <h1 class="pa-titre">Vos récompenses.</h1>
-                  <p class="pa-sous">
-                    Ce que vos clients échangent contre leurs points. Touchez une carte pour
-                    la mettre dans votre boutique, et fixez son prix.
-                  </p>
-
-                  <div class="pa-grille" id="pa-grille"></div>
-
-                  <div class="pa-sienne">
-                    <div class="pa-sienne-lignes">
-                      <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Une autre récompense" />
-                      <input class="ac-input" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" style="text-align:right;font-family:var(--mono)" />
+                    <div class="pa-photo pa-arrive">
+                      <span class="pa-photo-vue" id="pa-photo-vue"></span>
+                      <span class="pa-photo-txt">
+                        <button type="button" class="pa-photo-btn" id="pa-photo-btn">Ajouter une photo</button>
+                        <span class="pa-aide">Ta façade, ta salle. Facultatif.</span>
+                      </span>
                     </div>
-                    <button type="button" class="ajouter-recompense" id="pa-sienne-ajouter">Ajouter cette récompense</button>
-                  </div>
 
-                  <p class="pa-compte" id="pa-compte"></p>
-                </section>
+                    <div class="pa-champ pa-arrive">
+                      <label for="pa-nom">Nom du club</label>
+                      <input class="ac-input" id="pa-nom" type="text" autocomplete="organization" placeholder="Le Mirage" />
+                    </div>
+                    <div class="pa-champ pa-arrive">
+                      <label for="pa-ville">Ville</label>
+                      <input class="ac-input" id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" />
+                    </div>
+                  </section>
 
-                <!-- 3 · Le bareme -->
-                <section class="pa-etape" data-pas="3" hidden>
-                  <h1 class="pa-titre">Votre barème.</h1>
-                  <p class="pa-sous">Ce que rapporte chaque publication de vos clients. Ces valeurs sont modifiables plus tard.</p>
-                  <div class="carte" id="pa-bareme"></div>
-                </section>
+                  <!-- 2 · Les recompenses -->
+                  <section class="pa-etape" data-pas="2" hidden>
+                    <h1 class="pa-titre">Tes récompenses.</h1>
+                    <p class="pa-sous">
+                      Ce que tes clients échangent contre leurs points. Touche une carte pour
+                      la mettre dans ta boutique, et fixe son prix.
+                    </p>
 
-                <!-- 4 · Instagram -->
-                <section class="pa-etape" data-pas="4" hidden>
-                  <h1 class="pa-titre">Votre Instagram.</h1>
-                  <p class="pa-sous">
-                    Noctify repère les stories qui mentionnent votre club et crédite ceux qui
-                    les publient. Sans compte connecté, chaque publication est à valider à la main.
-                  </p>
+                    <div class="pa-grille" id="pa-grille"></div>
 
-                  <div class="pa-champ">
-                    <label for="pa-handle">Votre pseudo Instagram</label>
-                    <input class="ac-input" id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@leclub" />
-                    <p class="ac-aide">C'est ce que vos clients devront taguer dans leur story.</p>
-                  </div>
+                    <div class="pa-sienne pa-arrive">
+                      <div class="pa-sienne-lignes">
+                        <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Une autre récompense" />
+                        <input class="ac-input pa-sienne-pts" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" />
+                      </div>
+                      <button type="button" class="ajouter-recompense" id="pa-sienne-ajouter">Ajouter cette récompense</button>
+                    </div>
 
-                  <button type="button" class="ac-btn ac-btn-google" id="pa-ig-connecter" style="width:100%">
-                    <svg viewBox="0 0 24 24" class="ig-glyphe" aria-hidden="true">
-                      <rect x="3" y="3" width="18" height="18" rx="5.4"/>
-                      <circle cx="12" cy="12" r="4.1"/>
-                      <circle cx="17.3" cy="6.7" r="1.15" fill="#e1306c" stroke="none"/>
-                    </svg>
-                    Connecter Instagram
-                  </button>
-                  <p class="ac-aide" style="text-align:left;margin-top:8px" id="pa-ig-aide">
-                    Le compte doit être en Business ou Créateur, et relié à une Page Facebook.
-                    La connexion peut se faire plus tard, depuis les Réglages.
-                  </p>
-                </section>
+                    <p class="pa-compte" id="pa-compte"></p>
+                  </section>
 
-                <!-- 5 · Le QR code -->
-                <section class="pa-etape" data-pas="5" hidden>
-                  <h1 class="pa-titre">Votre QR code.</h1>
-                  <p class="pa-sous">À imprimer et coller à l'entrée, au bar, aux toilettes. C'est lui qui déclenche tout.</p>
+                  <!-- 3 · Le bareme -->
+                  <section class="pa-etape" data-pas="3" hidden>
+                    <h1 class="pa-titre">Ton barème.</h1>
+                    <p class="pa-sous">Ce que rapporte chaque publication de tes clients. Ces valeurs restent modifiables plus tard.</p>
+                    <div class="carte pa-arrive" id="pa-bareme"></div>
+                  </section>
 
-                  <img class="pa-affiche" id="pa-affiche" alt="Aperçu de l'affiche à imprimer" />
-                  <a class="bouton sobre pleine" id="pa-affiche-lien" download="affiche-noctify.png">Télécharger l'affiche (A4)</a>
-                  <p class="ac-aide" style="text-align:left;margin-top:10px">
-                    L'affiche reste disponible dans Réglages, avec le QR seul.
-                  </p>
-                </section>
+                  <!-- 4 · Instagram -->
+                  <section class="pa-etape" data-pas="4" hidden>
+                    <h1 class="pa-titre">Ton Instagram.</h1>
+                    <p class="pa-sous">
+                      Noctify repère les stories qui mentionnent ton club et crédite ceux qui
+                      les publient. Sans compte connecté, chaque publication est à valider à la main.
+                    </p>
+
+                    <div class="pa-champ pa-arrive">
+                      <label for="pa-handle">Ton pseudo Instagram</label>
+                      <input class="ac-input" id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@leclub" />
+                      <span class="pa-aide">C'est ce que tes clients devront taguer dans leur story.</span>
+                    </div>
+
+                    <button type="button" class="ac-btn ac-btn-google pa-arrive" id="pa-ig-connecter">
+                      <svg viewBox="0 0 24 24" class="ig-glyphe" aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="5.4"/>
+                        <circle cx="12" cy="12" r="4.1"/>
+                        <circle cx="17.3" cy="6.7" r="1.15" fill="#e1306c" stroke="none"/>
+                      </svg>
+                      Connecter Instagram
+                    </button>
+                    <p class="pa-aide pa-arrive" id="pa-ig-aide">
+                      Le compte doit être en Business ou Créateur, et relié à une Page Facebook.
+                      La connexion peut se faire plus tard, depuis les Réglages.
+                    </p>
+                  </section>
+
+                  <!-- 5 · Le QR code -->
+                  <section class="pa-etape" data-pas="5" hidden>
+                    <h1 class="pa-titre">Ton QR code.</h1>
+                    <p class="pa-sous">À imprimer et coller à l'entrée, au bar, aux toilettes. C'est lui qui déclenche tout.</p>
+
+                    <img class="pa-affiche pa-arrive" id="pa-affiche" alt="Aperçu de l'affiche à imprimer" />
+                    <a class="bouton sobre pleine pa-arrive" id="pa-affiche-lien" download="affiche-noctify.png">Télécharger l'affiche (A4)</a>
+                    <p class="pa-aide pa-arrive">L'affiche reste disponible dans Réglages, avec le QR seul.</p>
+                  </section>
+                </div>
               </div>
 
               <div class="pa-pied">
@@ -1288,7 +1423,7 @@
                 <div class="kpi">
                   <span class="kpi-label">Points attribués</span>
                   <span class="kpi-valeur" id="kpi-points">—</span>
-                  <span class="kpi-note">Selon votre barème</span>
+                  <span class="kpi-note">Selon ton barème</span>
                 </div>
                 <div class="kpi">
                   <span class="kpi-label">Récompenses utilisées</span>
@@ -1314,7 +1449,7 @@
             <!-- ================= RECOMPENSES ================= -->
             <div class="vue" id="vue-recompenses">
               <h1 class="ecran-titre">Boutique de récompenses</h1>
-              <p class="ecran-sous">Ce que vos clients peuvent échanger contre leurs points.</p>
+              <p class="ecran-sous">Ce que tes clients peuvent échanger contre leurs points.</p>
               <div id="recompenses-liste"></div>
               <button type="button" class="ajouter-recompense" id="recompense-ajouter">+ Ajouter une récompense</button>
               <p class="fiche-msg" id="recompense-msg"></p>
@@ -1331,7 +1466,7 @@
                 <p class="vide" style="padding:14px 0">Vérification…</p>
               </div>
 
-              <p class="section-titre">Votre club</p>
+              <p class="section-titre">Ton club</p>
               <div class="carte" style="padding:2px 15px">
                 <button type="button" class="reglage-lien" data-va="bareme">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg></span>
@@ -1354,11 +1489,11 @@
               <div class="carte" style="padding:2px 15px">
                 <div class="reglage-ligne">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M3.5 7.5h17v11h-17z"/><path d="M3.5 8l8.5 6 8.5-6"/></svg></span>
-                  <span class="reglage-txt"><strong id="reglages-email">—</strong><span>Votre identifiant de connexion</span></span>
+                  <span class="reglage-txt"><strong id="reglages-email">—</strong><span>Ton identifiant de connexion</span></span>
                 </div>
                 <button type="button" class="reglage-lien" id="reglages-mdp">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span>
-                  <span class="reglage-txt"><strong>Changer le mot de passe</strong><span id="reglages-mdp-etat">On vous envoie un lien par email</span></span>
+                  <span class="reglage-txt"><strong>Changer le mot de passe</strong><span id="reglages-mdp-etat">On t’envoie un lien par email</span></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
               </div>
@@ -1389,8 +1524,8 @@
             <!-- ================= BAREME ================= -->
             <div class="vue" id="vue-bareme">
               <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
-              <h1 class="ecran-titre">Votre barème</h1>
-              <p class="ecran-sous">Ce que rapporte chaque publication de vos clients.</p>
+              <h1 class="ecran-titre">Ton barème</h1>
+              <p class="ecran-sous">Ce que rapporte chaque publication de tes clients.</p>
 
               <div id="bareme-bandeau"></div>
 
@@ -2237,7 +2372,7 @@
         ["qrCheckin", "qr_checkin", "Scan du QR",
          "Bonus de présence, une fois toutes les 12 h", "pts"],
         ["monthlyAmbassador", "monthly_ambassador", "Ambassadeur du mois",
-         "Prime au client qui vous a le plus fait voir", "pts"],
+         "Prime au client qui t’a le plus fait voir", "pts"],
       ];
 
       function rendreBareme() {
@@ -3063,6 +3198,49 @@
       }
 
 
+      /* ---- La mascotte ----
+         Le verre Noctify : l'image de marque qui sert deja d'ecran de
+         chargement aux deux applis. Une pose par etape, deposees dans
+         public/mascotte/.
+
+         Le repli n'est pas une precaution de principe : les poses
+         arrivent au fil de l'eau, et un ecran sans mascotte ferait un
+         trou la ou les autres en ont une. Le verre du logo, detoure,
+         bouche le trou en attendant. */
+      var MASCOTTE_REPLI = "/mascotte/verre-salut.webp";
+      // Une pose qui manque manque pour toute la session : la redemander a
+      // chaque aller-retour dans le parcours ne ferait que rejouer le meme
+      // 404, et afficherait le repli apres un battement au lieu de tout de
+      // suite.
+      var POSES_ABSENTES = {};
+
+      function rendreMascotte(pas) {
+        var zone = $("#pa-mascotte");
+        var source = POSES_ABSENTES[pas] ? MASCOTTE_REPLI : "/mascotte/pose-" + pas + ".webp";
+        zone.innerHTML = '<img src="' + source + '" alt="" />';
+
+        var img = zone.firstElementChild;
+        img.addEventListener("error", function () {
+          // Le drapeau evite la boucle si le repli manque lui aussi.
+          if (img.dataset.repli) return;
+          POSES_ABSENTES[pas] = true;
+          img.dataset.repli = "1";
+          img.src = MASCOTTE_REPLI;
+        });
+
+        relancerAnimation(zone, "pa-entre");
+      }
+
+      /* Retirer puis remettre une classe d'animation ne suffit pas : le
+         navigateur groupe les deux changements dans le meme calcul et
+         l'animation ne repart jamais. Le reflow lu entre les deux est ce
+         qui la relance. */
+      function relancerAnimation(element, classe) {
+        element.classList.remove(classe);
+        void element.offsetWidth;
+        element.classList.add(classe);
+      }
+
       /* ---- Navigation ---- */
 
       function ouvrirParcours() {
@@ -3072,7 +3250,9 @@
         PARCOURS.ouvert = true;
         $("#parcours").hidden = false;
 
-        $("#pa-jauge").innerHTML = new Array(PAS_MAX + 1).join("<span></span>");
+        // Chaque trait porte son remplissage : c'est lui qui s'anime, la
+        // piste grise ne bouge pas.
+        $("#pa-jauge").innerHTML = new Array(PAS_MAX + 1).join("<span><i></i></span>");
         $("#pa-nom").value = etab.name || "";
         $("#pa-ville").value = etab.city || "";
         rendrePhotoParcours(etab.logo_url || null);
@@ -3081,36 +3261,73 @@
         rendreBaremeParcours();
 
         // Le detour par Instagram ramene ici : on reprend ou on en etait,
-        // pas au debut.
-        allerAuPas(retourInstagram() ? 4 : pasMemorise());
+        // pas au debut. Et on se pose sans glisser -- il n'y a pas
+        // d'ecran precedent d'ou venir.
+        PARCOURS.pas = retourInstagram() ? 4 : pasMemorise();
+        allerAuPas(PARCOURS.pas, true);
       }
 
-      function allerAuPas(pas) {
-        PARCOURS.pas = Math.min(PAS_MAX, Math.max(1, pas));
-        memoriserPas(PARCOURS.pas);
+      var basculeEnCours = null;
+
+      function allerAuPas(pas, immediat) {
+        var cible = Math.min(PAS_MAX, Math.max(1, pas));
+        var versAvant = cible >= PARCOURS.pas;
+        var scene = $("#pa-scene");
+
+        // Un double appui sur Continuer ne doit pas laisser la scene
+        // decalee : on solde la bascule en cours avant d'en lancer une.
+        clearTimeout(basculeEnCours);
+        scene.classList.remove("pa-fige", "pa-vers-gauche", "pa-vers-droite");
+
+        if (immediat) return poserPas(cible);
+
+        // 1. la scene sort du cote d'ou l'on vient
+        scene.classList.add(versAvant ? "pa-vers-gauche" : "pa-vers-droite");
+
+        basculeEnCours = setTimeout(function () {
+          poserPas(cible);
+
+          // 2. on la repose de l'autre cote SANS transition -- sinon le
+          //    saut se verrait -- puis on la laisse revenir.
+          scene.classList.add("pa-fige");
+          scene.classList.remove("pa-vers-gauche", "pa-vers-droite");
+          scene.classList.add(versAvant ? "pa-vers-droite" : "pa-vers-gauche");
+          void scene.offsetWidth;
+          scene.classList.remove("pa-fige", "pa-vers-gauche", "pa-vers-droite");
+        }, 140);
+      }
+
+      function poserPas(cible) {
+        PARCOURS.pas = cible;
+        memoriserPas(cible);
         direParcours("", false);
 
         document.querySelectorAll(".pa-etape").forEach(function (etape) {
-          etape.hidden = Number(etape.dataset.pas) !== PARCOURS.pas;
+          etape.hidden = Number(etape.dataset.pas) !== cible;
         });
         $("#pa-jauge").querySelectorAll("span").forEach(function (trait, i) {
-          trait.classList.toggle("faite", i < PARCOURS.pas);
+          trait.classList.toggle("faite", i < cible);
         });
 
-        $("#pa-rang-txt").textContent = "Installation · " + PARCOURS.pas + "/" + PAS_MAX;
-        $("#pa-suivant").textContent = PARCOURS.pas === PAS_MAX ? "Terminer" : "Continuer";
-        $("#pa-retour").hidden = PARCOURS.pas === 1;
+        rendreMascotte(cible);
+
+        var chiffre = $("#pa-compteur-n");
+        chiffre.textContent = cible < 10 ? "0" + cible : String(cible);
+        relancerAnimation(chiffre, "pa-entre");
+
+        $("#pa-suivant").textContent = cible === PAS_MAX ? "Terminer" : "Continuer";
+        $("#pa-retour").hidden = cible === 1;
         // Le dernier ecran n'a plus rien a passer : le bouton principal
         // fait deja sortir.
-        $("#pa-passer").hidden = PARCOURS.pas === PAS_MAX;
+        $("#pa-passer").hidden = cible === PAS_MAX;
         $("#pa-corps").scrollTop = 0;
 
-        if (PARCOURS.pas === 4) preparerPasInstagram();
+        if (cible === 4) preparerPasInstagram();
         // L'affiche se dessine sur un canvas : le rejeu peut echouer
         // (pas de code public, image du logo illisible). Le dire, plutot
         // que de laisser une promesse rejetee dans la console et un
         // ecran vide.
-        if (PARCOURS.pas === 5) {
+        if (cible === 5) {
           preparerPasQr().catch(function () {
             direParcours("L'affiche n'a pas pu être générée. Elle reste disponible dans Réglages.", true);
           });
@@ -3172,7 +3389,6 @@
         return true;
       }
 
-
       /* ---- 1 · La fiche du club ---- */
 
       function rendrePhotoParcours(url) {
@@ -3213,7 +3429,7 @@
           bouton.disabled = false;
           if (envoi.error) {
             rendrePhotoParcours(etab.logo_url || null);
-            direParcours("Photo non envoyée. Vous pourrez la reprendre plus tard.", true);
+            direParcours("Photo non envoyée. Tu pourras la reprendre plus tard.", true);
             return;
           }
 
@@ -3233,7 +3449,7 @@
 
         var nom = $("#pa-nom").value.trim();
         if (!nom) {
-          direParcours("Le nom du club est nécessaire : c'est lui que vos clients voient.", true);
+          direParcours("Le nom du club est nécessaire : c'est lui que tes clients voient.", true);
           return false;
         }
 
@@ -3362,7 +3578,7 @@
         var n = PARCOURS.choix.filter(function (c) { return c.prise; }).length;
         $("#pa-compte").textContent = n === 0
           ? "Boutique vide"
-          : n + (n > 1 ? " récompenses dans votre boutique" : " récompense dans votre boutique");
+          : n + (n > 1 ? " récompenses dans ta boutique" : " récompense dans ta boutique");
       }
 
       $("#pa-sienne-ajouter").addEventListener("click", function () {
@@ -3370,7 +3586,7 @@
         var pts = Math.max(0, Math.round(Number($("#pa-sienne-pts").value) || 0));
 
         if (!nom) {
-          direParcours("Donnez un nom à cette récompense.", true);
+          direParcours("Donne un nom à cette récompense.", true);
           return;
         }
 
@@ -3524,8 +3740,8 @@
           $("#pa-handle").closest(".pa-champ").hidden = true;
           $("#pa-ig-connecter").hidden = true;
           aide.textContent = ig.handle
-            ? "Compte connecté : @" + ig.handle + ". Les mentions de votre club sont détectées automatiquement."
-            : "Compte connecté. Les mentions de votre club sont détectées automatiquement.";
+            ? "Compte connecté : @" + ig.handle + ". Les mentions de ton club sont détectées automatiquement."
+            : "Compte connecté. Les mentions de ton club sont détectées automatiquement.";
           if (statut) oublierRetourInstagram();
           return;
         }
