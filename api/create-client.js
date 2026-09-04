@@ -209,58 +209,62 @@ export default async function handler(request, response) {
       });
     }
 
-    // ---- L'INVITATION EST LE VERROU ----
+    // ---- L'INSCRIPTION EST OUVERTE ----
     //
-    // Il est ici, cote serveur, et pas dans l'appli : club-app.html
-    // n'est pas la seule porte d'entree, inscription.html appelle la
-    // meme route. Un verrou dans une page en laisserait une autre
-    // grande ouverte. Ici, une seule verification les ferme toutes.
+    // Elle etait reservee aux porteurs d'un lien. Julien, le 05/09/2026 :
+    // "je vais ouvrir l'inscription a tout le monde pour le moment".
+    //
+    // L'invitation n'est plus EXIGEE, mais la mecanique reste entiere
+    // quand un lien est fourni : il est verifie, il porte le nom et la
+    // ville prepares par l'admin, et il est brule a l'usage. Les liens
+    // deja envoyes continuent donc de marcher.
+    //
+    // Ce qui protege encore : un compte ne peut avoir qu'UN club (le
+    // controle dejaProprietaire ci-dessus), et le proprietaire vient du
+    // jeton de session verifie, jamais du corps de la requete. Ce qui
+    // n'est plus protege : n'importe qui peut creer un club. Le jour ou
+    // il faudra refermer, c'est ici, en une condition.
     const jeton = String(payload.invitation || "").trim();
+    let invitation = null;
 
-    if (!jeton) {
-      return json(
-        response,
-        { error: "L'inscription a Noctify se fait sur invitation. Demande un lien a ton contact." },
-        403,
-      );
-    }
+    if (jeton) {
+      const invitationLue = await supabase
+        .from("club_invitations")
+        .select("token, email, establishment_name, city, expires_at, used_at")
+        .eq("token", jeton)
+        .maybeSingle();
 
-    const invitationLue = await supabase
-      .from("club_invitations")
-      .select("token, email, establishment_name, city, expires_at, used_at")
-      .eq("token", jeton)
-      .maybeSingle();
+      if (invitationLue.error) {
+        return json(response, { error: invitationLue.error.message }, 500);
+      }
 
-    if (invitationLue.error) {
-      return json(response, { error: invitationLue.error.message }, 500);
-    }
+      invitation = invitationLue.data;
 
-    const invitation = invitationLue.data;
+      // Un lien FOURNI mais invalide reste une erreur : le gerant a
+      // clique sur quelque chose, il doit savoir pourquoi ca n'a pas
+      // marche. On ne bascule pas silencieusement en inscription libre,
+      // sinon un lien expire creerait un club sans le nom prepare.
+      if (!invitation) {
+        return json(response, { error: "Ce lien d'invitation n'est pas valide." }, 403);
+      }
 
-    // Le meme message pour "n'existe pas" et pour "deja utilisee" serait
-    // plus discret, mais un gerant qui reclique sur son propre lien doit
-    // comprendre ce qui se passe. Le jeton etant indevinable, distinguer
-    // les deux cas n'apprend rien a un curieux.
-    if (!invitation) {
-      return json(response, { error: "Ce lien d'invitation n'est pas valide." }, 403);
-    }
+      if (invitation.used_at) {
+        return json(response, { error: "Ce lien d'invitation a deja servi a creer un club." }, 403);
+      }
 
-    if (invitation.used_at) {
-      return json(response, { error: "Ce lien d'invitation a deja servi a creer un club." }, 403);
-    }
+      if (invitation.expires_at && new Date(invitation.expires_at).getTime() < Date.now()) {
+        return json(response, { error: "Ce lien d'invitation a expire. Demande-en un nouveau." }, 403);
+      }
 
-    if (invitation.expires_at && new Date(invitation.expires_at).getTime() < Date.now()) {
-      return json(response, { error: "Ce lien d'invitation a expire. Demande-en un nouveau." }, 403);
-    }
-
-    if (invitation.email && invitation.email.toLowerCase() !== caller.email?.toLowerCase()) {
-      return json(response, { error: "Ce lien a ete emis pour une autre adresse email." }, 403);
+      if (invitation.email && invitation.email.toLowerCase() !== caller.email?.toLowerCase()) {
+        return json(response, { error: "Ce lien a ete emis pour une autre adresse email." }, 403);
+      }
     }
 
     // Le nom peut venir de l'invitation : l'admin qui prepare le lien
     // pour un club precis n'a pas a compter sur le gerant pour le saisir.
-    const establishmentName = String(payload.establishment_name || invitation.establishment_name || "").trim();
-    const city = String(payload.city || invitation.city || "").trim();
+    const establishmentName = String(payload.establishment_name || invitation?.establishment_name || "").trim();
+    const city = String(payload.city || invitation?.city || "").trim();
 
     if (!establishmentName) {
       return json(response, { error: "Le nom du club est requis." }, 400);
@@ -270,20 +274,22 @@ export default async function handler(request, response) {
     // a used_at IS NULL. Deux appels simultanes avec le meme lien : un
     // seul voit une ligne revenir, l'autre est refuse. Verifier puis
     // creer puis marquer aurait laisse passer les deux.
-    const reservation = await supabase
-      .from("club_invitations")
-      .update({ used_at: new Date().toISOString(), used_by: caller.id })
-      .eq("token", jeton)
-      .is("used_at", null)
-      .select("token")
-      .maybeSingle();
+    if (jeton) {
+      const reservation = await supabase
+        .from("club_invitations")
+        .update({ used_at: new Date().toISOString(), used_by: caller.id })
+        .eq("token", jeton)
+        .is("used_at", null)
+        .select("token")
+        .maybeSingle();
 
-    if (reservation.error) {
-      return json(response, { error: reservation.error.message }, 500);
-    }
+      if (reservation.error) {
+        return json(response, { error: reservation.error.message }, 500);
+      }
 
-    if (!reservation.data) {
-      return json(response, { error: "Ce lien d'invitation a deja servi a creer un club." }, 403);
+      if (!reservation.data) {
+        return json(response, { error: "Ce lien d'invitation a deja servi a creer un club." }, 403);
+      }
     }
 
     const resultat = await provisionnerEtablissement(supabase, {
@@ -299,11 +305,14 @@ export default async function handler(request, response) {
     if (resultat.error) {
       // La creation a echoue : on rend le jeton, sinon une panne
       // passagere de Supabase consommerait definitivement l'invitation
-      // d'un vrai client, sans club au bout.
-      await supabase
-        .from("club_invitations")
-        .update({ used_at: null, used_by: null })
-        .eq("token", jeton);
+      // d'un vrai client, sans club au bout. Rien a rendre quand
+      // l'inscription s'est faite sans lien.
+      if (jeton) {
+        await supabase
+          .from("club_invitations")
+          .update({ used_at: null, used_by: null })
+          .eq("token", jeton);
+      }
 
       return json(response, { error: resultat.error }, 500);
     }

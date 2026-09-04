@@ -162,9 +162,14 @@ const auth = await requireEstablishment(request);
 if (auth.error) return response.status(auth.status).json({ error: auth.error });
 ```
 
-**L'inscription se fait sur invitation.** Le chemin libre-service de
-`api/create-client.js` exige un jeton valide de `club_invitations` : sans lui, aucun
-club n'est cree. Le verrou est cote serveur parce que `club-app.html` n'est pas la
+**L'inscription est OUVERTE depuis le 05/09/2026** (decision de Julien : « je vais
+ouvrir l'inscription a tout le monde pour le moment »). N'importe quel compte peut
+creer SON club -- un seul, le controle `dejaProprietaire` tient toujours, et le
+proprietaire vient du jeton de session verifie, jamais du corps de la requete.
+Les liens d'invitation continuent de marcher quand il y en a un : ils portent le nom
+et la ville prepares par l'admin, et restent brules a l'usage. Ils ne sont plus
+exiges. Le jour ou il faudra refermer, c'est dans `api/create-client.js`, en une
+condition. Le verrou est cote serveur parce que `club-app.html` n'est pas la
 seule porte — `inscription.html` appelle la meme route. La table a RLS activee et
 **aucune policy** : elle est invisible avec la cle anon, seule la cle `service_role`
 la lit. Le jeton est brule avant la creation (update conditionne a `used_at IS NULL`),
