@@ -154,8 +154,13 @@
       /* padding-haut resserre (22 -> 14) : Julien trouvait "trop
          d'espace blanc au-dessus". Le mockup a deja son propre creux en
          haut de l'ecran, la marge s'y ajoutait. */
+      /* Une trame de points a 4 %, invisible de face. Elle ne se voit
+         pas, elle se sent : c'est ce qui separe un fond de page d'un
+         papier vide. Procede repris de Vercel, a la meme discretion. */
       .vue {
         position: absolute; inset: 0; padding: 14px 20px 100px; overflow-y: auto;
+        background-image: radial-gradient(circle, rgba(20,22,28,.055) 1px, transparent 1px);
+        background-size: 18px 18px;
         opacity: 0; visibility: hidden; transition: opacity .14s var(--sortie);
       }
       .vue.actif { opacity: 1; visibility: visible; }
@@ -285,23 +290,30 @@
         letter-spacing: 0;
         vertical-align: middle;
       }
-      .hero-delta.hausse { background: color-mix(in srgb, var(--succes) 15%, transparent); color: var(--succes); }
-      .hero-delta.baisse { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent-fort); }
-      .hero-delta.plat { background: var(--s2); color: var(--ink3); }
+      /* Sur le fond sombre, les teintes du theme clair deviennent
+         illisibles : on remonte la luminosite au lieu de baisser
+         l'opacite du fond. */
+      .hero-delta.hausse { background: rgba(45,200,120,.18); color: #5fe0a0; }
+      .hero-delta.baisse { background: rgba(255,99,99,.20); color: #ff8f8f; }
+      .hero-delta.plat { background: rgba(255,255,255,.12); color: rgba(255,255,255,.62); }
 
       /* Les barres : une par soiree, la derniere en corail. Elles disent
          la REGULARITE, ce qu'une courbe lissee cache. */
-      .hero-barres { display: flex; align-items: flex-end; gap: 4px; height: 46px; margin-top: 14px; }
+      .hero-barres {
+        position: relative; z-index: 1;
+        display: flex; align-items: flex-end; gap: 4px; height: 48px; margin-top: 16px;
+      }
       .hero-barre {
         flex: 1; min-width: 0; border-radius: 3px 3px 0 0;
-        background: var(--s3); min-height: 3px;
+        background: rgba(255,255,255,.17); min-height: 3px;
       }
-      .hero-barre.forte { background: var(--ink); }
+      .hero-barre.forte { background: rgba(255,255,255,.62); }
       .hero-barre.derniere { background: var(--accent); }
       .hero-legende {
-        display: flex; justify-content: space-between; margin-top: 7px;
-        font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
-        text-transform: uppercase; color: var(--ink3);
+        position: relative; z-index: 1;
+        display: flex; justify-content: space-between; margin-top: 8px;
+        font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
+        text-transform: uppercase; color: rgba(255,255,255,.42);
       }
 
       /* ---- Chiffre d'entete du tableau de bord ----
@@ -313,29 +325,46 @@
 
          Le corail sert ici de couleur de marque sur la courbe, pas de
          bouton d'action -- c'est son emploi correct. */
+      /* LA carte de l'ecran. Sombre, seule de son espece : c'est le
+         chiffre que le club achete, il doit se voir avant tout le reste.
+         Du contraste de surface, pas un aplat de couleur -- la regle du
+         projet, poussee jusqu'a son terme. */
       .hero {
-        background: var(--s1); border: 1px solid var(--line);
-        border-radius: 20px; padding: 18px 18px 8px; margin-bottom: 12px;
-        box-shadow: var(--ombre-2);
+        position: relative; overflow: hidden;
+        background: #16181d; border: 1px solid #16181d; color: #ffffff;
+        border-radius: 22px; padding: 20px 20px 12px; margin-bottom: 12px;
+        box-shadow: 0 1px 2px rgba(20,22,28,.10), 0 18px 40px -22px rgba(20,22,28,.65);
       }
+      /* La mascotte signe la carte, comme un tampon dans l'angle. C'est
+         le seul endroit du tableau de bord ou la marque se montre. */
+      .hero-signature {
+        /* z-index 0 : les barres, qui sont a 1, passent devant elle.
+           Une signature se met sous le contenu, pas dessus. */
+        position: absolute; right: -10px; bottom: 24px; z-index: 0;
+        width: 92px; height: 72px; opacity: .22; pointer-events: none;
+      }
+      .hero-signature img { width: 100%; height: 100%; object-fit: contain; object-position: right bottom; }
       .hero-label {
+        position: relative; z-index: 1;
         font-family: var(--mono); font-size: 9.5px; font-weight: 600;
-        letter-spacing: .1em; text-transform: uppercase; color: var(--ink3);
+        letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.62);
       }
       .hero-valeur {
+        position: relative; z-index: 1;
         display: block; margin-top: 8px; font-family: var(--chiffre);
-        font-size: 40px; font-weight: 800; letter-spacing: -.05em; line-height: 1;
+        font-size: 42px; font-weight: 800; letter-spacing: -.05em; line-height: 1;
         font-variant-numeric: tabular-nums;
       }
-      .hero-note { display: block; margin-top: 7px; font-size: 12px; color: var(--ink2); }
+      .hero-note { position: relative; z-index: 1; display: block; margin-top: 7px; font-size: 12px; color: rgba(255,255,255,.6); }
       .hero-graphe { margin-top: 14px; height: 56px; }
       .hero-graphe svg { display: block; width: 100%; height: 100%; overflow: visible; }
       /* Les jours sans publication valent 0, pas "pas de donnee" : une
          courbe qui saute les trous laisserait croire a une activite
          continue. */
       .hero-vide {
+        position: relative; z-index: 1;
         display: flex; align-items: center; height: 56px;
-        font-size: 12px; color: var(--ink3);
+        font-size: 12px; color: rgba(255,255,255,.5);
       }
 
       /* ---- KPI (tableau de bord) ---- */
@@ -1693,6 +1722,9 @@
               <p class="ecran-sous" id="dash-periode">Les 14 derniers jours</p>
 
               <div class="hero">
+                <span class="hero-signature" aria-hidden="true">
+                  <img src="/mascotte/pose-1.webp" alt="" />
+                </span>
                 <span class="hero-label">Abonnés touchés</span>
                 <span class="hero-valeur"><span id="kpi-vues">—</span><span class="hero-delta plat" id="kpi-delta"></span></span>
                 <span class="hero-note" id="kpi-vues-note"></span>
@@ -2073,15 +2105,6 @@
         ETAT.data = data;
         ACCUEIL.classList.add("masque");
 
-        // Personne n'est connecte : le parcours s'ouvre sur son premier
-        // ecran, la creation du compte. Il n'y a plus d'ecran d'accueil
-        // separe -- arriver, s'inscrire et regler son club sont un seul
-        // mouvement.
-        if (!ETAT.session) {
-          ouvrirParcours(1);
-          $("#splash").classList.add("masque");
-          return;
-        }
         await chargerInstagram();
         rendreDashboard();
         rendreRecompenses();
@@ -2091,7 +2114,14 @@
         // Le parcours d'installation passe AVANT l'ecran Instagram : sa
         // quatrieme etape EST cette connexion. Les afficher tous les deux
         // empilerait deux plein-ecrans sur le meme sujet.
-        if (parcoursAOuvrir()) ouvrirParcours();
+        // Personne n'est connecte : le parcours s'ouvre sur son premier
+        // ecran, la creation du compte. Il n'y a plus d'ecran d'accueil
+        // separe -- arriver, s'inscrire et regler son club sont un seul
+        // mouvement. Les vues restent rendues DERRIERE, avec les donnees
+        // de demonstration : quelqu'un qui passe le parcours doit tomber
+        // sur une appli qui montre quelque chose, pas sur des tirets.
+        if (!ETAT.session) ouvrirParcours(1);
+        else if (parcoursAOuvrir()) ouvrirParcours();
         else majEcranInstagram();
 
         // Le splash ne part qu'une fois les donnees en place : le faire
