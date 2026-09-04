@@ -3041,10 +3041,12 @@
         from { opacity: 0; transform: scale(.94); }
         to   { opacity: 1; transform: none; }
       }
-      .sheet-ok .qr-frame { animation: qr-pose .42s cubic-bezier(.2,.8,.3,1) both; animation-delay: 210ms; }
+      /* La souche se pose apres le haut du ticket, comme si le bon se
+         depliait : la recompense d'abord, le QR ensuite. */
+      .sheet-ok .bt-souche { animation: qr-pose .42s cubic-bezier(.2,.8,.3,1) both; animation-delay: 190ms; }
 
       @media (prefers-reduced-motion: reduce) {
-        .sheet-ok > *, .sheet-ok .qr-frame { animation: none; }
+        .sheet-ok > *, .sheet-ok .bt-souche { animation: none; }
       }
 
       .sheet-ok { text-align: center; padding: 4px 0 0; }
@@ -3072,23 +3074,82 @@
       }
       @media (prefers-reduced-motion: reduce) { .confettis { display: none; } }
 
-      /* Le module QR doit rester blanc pour scanner correctement — le
-         cadre --s2 (fonce depuis le passage au noir) cree la rupture
-         de contraste autour, sans toucher au blanc du QR lui-meme.
-         Avant le fond noir, ce cadre servait deja a eviter un blanc
-         sur blanc qui flashait en boite, ecran pousse a fond. */
-      .qr-frame {
-        display: inline-block; background: var(--s2); border: 1px solid var(--line2);
-        border-radius: 26px; padding: 16px; margin: 20px auto 12px;
+      /* ================= LE BON, EN TICKET =================
+         L'ecran qui suit un achat montrait une pastille verte de
+         confirmation, un paragraphe centre et un QR dans deux cadres
+         imbriques. Trois defauts, et le troisieme est le vrai :
+
+         1. La recompense qu'on venait de payer avait DISPARU de
+            l'ecran. Le paiement de toute la boucle ne montrait plus
+            l'objet gagne. DICE, Fever et Too Good To Go gardent tous
+            le produit sur leur confirmation ;
+         2. la pastille verte etait le badge de succes de n'importe
+            quel kit UI, dans un vert (#57d98a) qui n'existe nulle part
+            ailleurs dans l'appli -- une quatrieme couleur pour un seul
+            jeton ;
+         3. toute la boutique est dessinee en TICKET : souche perforee,
+            encoches, numero de serie. Au moment precis ou l'on recoit
+            enfin un ticket, l'appli cessait d'en etre un.
+
+         Donc le bon EST le ticket : la recompense en haut, la
+         perforation, le QR dans la souche. Meme technique d'encoches
+         que .carte-reco -- deux disques de la couleur de ce qui est
+         DERRIERE le ticket, peints en background aux coins. */
+      .bon-ticket {
+        --derriere: var(--s1);
+        position: relative; margin: 4px 0 20px; text-align: center;
+        background: var(--s2); border: 1px solid var(--line);
+        border-radius: 20px; overflow: hidden;
       }
-      .qr-carte {
-        width: 160px; margin: 0; padding: 16px; border-radius: 16px;
-        background: #fff; box-shadow: var(--ombre-2);
+      .bt-haut { position: relative; padding: 24px 20px 16px; }
+      /* La salve de confettis est calee EXACTEMENT sur l'illustration :
+         sans ca elle part du milieu de tout le haut du ticket, et ses
+         points se font rogner par l'overflow:hidden du ticket. */
+      .bt-haut > .confettis { inset: 24px 0 auto; height: 132px; }
+      .bt-visuel {
+        display: block; width: 132px; height: 132px; margin: 0 auto 12px;
       }
-      .qr-carte svg { display: block; width: 100%; height: auto; }
-      .qr-code-txt {
-        font-family: var(--mono); font-size: calc(14 * var(--u)); font-weight: 500; letter-spacing: .18em;
-        color: var(--ink2); margin: 0 0 20px;
+      .bt-visuel img, .bt-visuel svg {
+        width: 100%; height: 100%; object-fit: contain; display: block;
+      }
+      .bt-nom {
+        display: block; font-family: var(--titre);
+        font-size: calc(19 * var(--u)); font-weight: 700; letter-spacing: -.02em;
+        color: var(--ink);
+      }
+      .bt-serie {
+        display: block; margin-top: 8px;
+        font-family: var(--mono); font-size: calc(9 * var(--u)); font-weight: 500;
+        letter-spacing: .14em; color: var(--ink3); text-transform: uppercase;
+      }
+      /* La souche. Les encoches et le pointille se placent tout seuls a
+         la jonction, quelle que soit la hauteur du haut du ticket. */
+      .bt-souche {
+        position: relative; padding: 24px 20px 20px;
+        background:
+          radial-gradient(circle 8px at 0 0, var(--derriere) 99%, transparent 100%) left top / 16px 16px no-repeat,
+          radial-gradient(circle 8px at 100% 0, var(--derriere) 99%, transparent 100%) right top / 16px 16px no-repeat;
+      }
+      .bt-souche::before {
+        content: ""; position: absolute; top: 0; left: 10px; right: 10px; height: 1px;
+        background: repeating-linear-gradient(to right, var(--line2) 0 3px, transparent 3px 7px);
+      }
+      /* Le QR reste sur du blanc franc : c'est une contrainte de
+         lecture, pas un choix graphique. Plus de double cadre autour --
+         il en avait deux, plus une ombre, pour un carre de pixels. */
+      .bt-qr {
+        width: 168px; margin: 0 auto; padding: 12px; border-radius: 12px;
+        background: #fff;
+      }
+      .bt-qr svg { display: block; width: 100%; height: auto; }
+      .bt-code {
+        margin: 12px 0 0;
+        font-family: var(--mono); font-size: calc(15 * var(--u)); font-weight: 500;
+        letter-spacing: .08em; color: var(--ink); font-variant-numeric: tabular-nums;
+      }
+      .bt-validite {
+        margin: 6px 0 0;
+        font-size: calc(12 * var(--u)); font-weight: 500; color: var(--ink3);
       }
 
       /* ---------------- Notes de la page ---------------- */
@@ -3177,10 +3238,6 @@
          .screen tout court (voir plus haut) -- ce bloc dupliquait avant
          les memes valeurs (plus un etat "eteint" gris pour les onglets
          inactifs, retire a la demande de Julien). */
-      /* Le QR reste blanc (obligatoire pour scanner) ; sur un fond deja
-         clair, un simple cadre gris (--s2) suffit a le distinguer, pas
-         besoin d'ombre marquee. */
-      .screen.boutique-pro .qr-carte { box-shadow: var(--ombre-2); }
 
       /* ============================================================
          BOUTIQUE — VARIANTE SOMBRE AUTOMATIQUE
@@ -3214,12 +3271,6 @@
           box-shadow: var(--ombre-3);
         }
         .screen.boutique-pro .grab { background: rgba(255,255,255,.22); }
-        /* Le QR doit rester blanc pour rester scannable : on garde son
-           fond clair et on remplace juste l'ombre, invisible sur noir,
-           par un liseré. */
-        .screen.boutique-pro .qr-carte {
-          box-shadow: var(--ombre-1);
-        }
         /* Le vert de "Pret" vire au terne sur fond sombre : on le
            remonte en clarte plutot que de le laisser tel quel. */
         .screen.boutique-pro .bon-pret {
@@ -9423,12 +9474,34 @@ setInterval(function () { rendreBons(); }, 60000);
 async function ouvrirBon(bon, src) {
   rendeur = src || null;
   var svgQr = await qrBon(bon.code);
+
+  // Le meme ticket que celui recu a l'echange. Il etait dessine
+  // autrement -- titre nu, QR dans deux cadres -- et le bon change de
+  // forme entre le moment ou on le gagne et celui ou on le ressort au
+  // bar, deux minutes plus tard. C'est le meme objet, c'est le meme
+  // dessin.
+  //
+  // La base ne stocke que le titre et le code : l'illustration est
+  // retrouvee a partir du titre par choisirArt(), exactement comme la
+  // boutique le fait pour les recompenses du gerant. Pas de numero de
+  // serie ici -- il appartient au catalogue, pas au bon ; c'est le code
+  // du QR qui identifie celui-ci.
+  var art = choisirArt(bon.titre, "bar");
   var html =
     '<div class="sheet-ok">' +
-      '<h3 id="sh-titre">' + bon.titre + "</h3>" +
-      '<p class="desc">' + compteARebours(bon.expireA) + "</p>" +
-      '<div class="qr-frame"><div class="qr-carte">' + svgQr + "</div></div>" +
-      '<p class="qr-code-txt">' + bon.code + "</p>" +
+      '<div class="bon-ticket">' +
+        '<div class="bt-haut">' +
+          '<span class="bt-visuel">' +
+            (art.foto ? '<img src="' + art.foto + '" alt="">' : art.art()) +
+          "</span>" +
+          '<strong class="bt-nom" id="sh-titre">' + bon.titre + "</strong>" +
+        "</div>" +
+        '<div class="bt-souche">' +
+          '<div class="bt-qr">' + svgQr + "</div>" +
+          '<p class="bt-code">' + bon.code + "</p>" +
+          '<p class="bt-validite">' + compteARebours(bon.expireA) + "</p>" +
+        "</div>" +
+      "</div>" +
       '<button class="sheet-cta sobre" id="sh-ok" type="button">Fermer</button>' +
     "</div>";
   ouvrirFeuille(html, "#sh-ok");
@@ -9557,16 +9630,27 @@ async function echanger(item) {
   // endroit qui merite la vibration longue.
   vibrer("fort");
 
+  // Le bon EST le ticket : la recompense payee en haut, la perforation,
+  // le QR dans la souche. Voir .bon-ticket dans le CSS pour le pourquoi.
   corps.innerHTML =
     '<div class="sheet-ok">' +
-      '<span class="rond">' + picto("check") + confettis() + "</span>" +
-      '<h3 id="sh-titre">' + item.nom + "</h3>" +
-      '<p class="desc">Montre ce QR au ' + (item.fam === "bar" ? "bar" : "staff") +
-        ". Il le scanne sur sa tablette — ou tape le code à la main si le lecteur est en panne.</p>" +
-      '<div class="qr-frame"><div class="qr-carte">' + svgQr + "</div></div>" +
-      '<p class="qr-code-txt">' + code + "</p>" +
+      '<div class="bon-ticket">' +
+        '<div class="bt-haut">' +
+          confettis() +
+          '<span class="bt-visuel">' +
+            (item.foto ? '<img src="' + item.foto + '" alt="">' : item.art()) +
+          "</span>" +
+          '<strong class="bt-nom" id="sh-titre">' + item.nom + "</strong>" +
+          '<span class="bt-serie">' + item.code + "</span>" +
+        "</div>" +
+        '<div class="bt-souche">' +
+          '<div class="bt-qr">' + svgQr + "</div>" +
+          '<p class="bt-code">' + code + "</p>" +
+          '<p class="bt-validite">À montrer au ' + (item.fam === "bar" ? "bar" : "staff") + ", ce soir.</p>" +
+        "</div>" +
+      "</div>" +
       '<button class="sheet-cta sobre" id="sh-ok" type="button">Retour aux récompenses</button>' +
-      '<p class="sheet-note">Le bon est aussi rangé dans « Mes bons ».</p>' +
+      '<p class="sheet-note">Le bon est rangé dans « Mes bons ».</p>' +
     "</div>";
 
   $("#sh-ok").addEventListener("click", fermerFeuille);
