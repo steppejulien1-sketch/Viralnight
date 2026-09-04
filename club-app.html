@@ -600,6 +600,154 @@
          encore pour dire si l'enregistrement a marche. */
       .fiche-msg { font-size: 12.5px; margin: 4px 0 0; display: none; }
 
+      /* ---- PARCOURS D'INSTALLATION ----
+         Un club qui vient de creer son compte arrivait sur un tableau de
+         bord vide et cinq recompenses generiques posees par
+         api/create-client (Vestiaire, Soft, Shot, Premium, VIP). Rien ne
+         lui disait d'aller les corriger, et l'onglet Recompenses les
+         cache derriere des accordeons : la boutique restait celle d'un
+         autre. Ce parcours prend la main une fois, a la premiere
+         ouverture, et ne revient plus.
+
+         Il se pose PAR-DESSUS l'appli (les vues sont deja rendues
+         derriere) : on ne reconstruit ni le bareme ni le QR, on affiche
+         les memes donnees dans un cadre qui avance. */
+      .parcours {
+        position: absolute; inset: 0; z-index: 38;
+        display: flex; flex-direction: column;
+        background: var(--bg); color: var(--ink);
+      }
+      .parcours[hidden] { display: none; }
+
+      .pa-tete { flex: 0 0 auto; padding: 16px 20px 0; }
+      /* Cinq traits plutot qu'un pourcentage : le gerant voit combien
+         d'ecrans restent, pas une barre qui avance sans echelle. */
+      .pa-jauge { display: flex; gap: 4px; }
+      .pa-jauge span { flex: 1; height: 3px; border-radius: 2px; background: var(--s3); }
+      .pa-jauge span.faite { background: var(--ink); }
+      .pa-rang {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 11px;
+        font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+        letter-spacing: .16em; text-transform: uppercase; color: var(--ink3);
+      }
+      .pa-passer {
+        border: 0; background: none; padding: 4px 0; cursor: pointer;
+        font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+        letter-spacing: normal; text-transform: none; color: var(--ink3);
+        text-decoration: underline; text-underline-offset: 3px;
+      }
+
+      .pa-corps { flex: 1 1 auto; overflow-y: auto; padding: 16px 20px 14px; }
+      .pa-etape[hidden] { display: none; }
+      .pa-titre { margin: 0 0 5px; font-size: 25px; font-weight: 800; letter-spacing: -.035em; line-height: 1.1; }
+      .pa-sous { margin: 0 0 18px; font-size: 13px; color: var(--ink2); line-height: 1.5; }
+
+      /* Le pied ne defile pas : sur un telephone, un bouton "Continuer"
+         qu'il faut aller chercher en bas d'une grille de douze tuiles
+         donne l'impression d'un ecran sans issue. */
+      .pa-pied {
+        flex: 0 0 auto; display: grid; gap: 8px;
+        padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
+        background: var(--s1); border-top: 1px solid var(--line);
+      }
+      .pa-retour {
+        border: 0; background: none; padding: 2px 0; cursor: pointer;
+        font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink3);
+      }
+      .pa-retour[hidden] { display: none; }
+      .pa-msg { margin: 0; font-size: 12px; line-height: 1.4; text-align: center; color: var(--ink3); }
+      .pa-msg[hidden] { display: none; }
+
+      /* Meme piege qu'a la ligne 343 : un display explicite (grid, flex,
+         block) bat la regle [hidden] du navigateur. Ces elements-la sont
+         masques depuis le JS -- sans ces lignes, "Connecter Instagram"
+         resterait affiche sous un compte deja connecte. */
+      .pa-champ[hidden], .pa-affiche[hidden],
+      .parcours .ac-btn[hidden], .parcours .bouton[hidden],
+      .reglage-lien[hidden] { display: none; }
+
+      .pa-champ { display: grid; gap: 6px; margin-bottom: 12px; }
+      .pa-champ label { font-size: 10.5px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; }
+      .pa-champ .ac-aide { text-align: left; margin-top: 0; }
+
+      /* ---- Photo du club ---- */
+      .pa-photo { display: flex; align-items: center; gap: 13px; margin-bottom: 16px; }
+      .pa-photo-vue {
+        flex: 0 0 auto; width: 62px; height: 62px; border-radius: 16px; overflow: hidden;
+        background: var(--s2); border: 1px solid var(--line);
+        display: grid; place-items: center;
+        font-size: 21px; font-weight: 800; color: var(--ink3);
+      }
+      .pa-photo-vue img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .pa-photo-txt { flex: 1 1 auto; min-width: 0; }
+      .pa-photo-btn {
+        border: 1px solid var(--line2); background: var(--s2); color: var(--ink);
+        border-radius: 9px; padding: 8px 13px; font-family: inherit;
+        font-size: 12px; font-weight: 700; cursor: pointer;
+      }
+
+      /* ---- Catalogue de recompenses ----
+         Deux colonnes de vignettes plutot qu'une liste de champs : le
+         gerant choisit d'abord CE QU'IL DONNE, et le voit tel que son
+         client le verra dans la boutique. Le dessin affiche ici est
+         exactement celui que choisirArt() rendra cote clubbeur, puisque
+         les titres du catalogue sont ceux qu'elle reconnait. */
+      .pa-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .pa-tuile {
+        position: relative; display: block; text-align: left;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 15px;
+        padding: 9px; cursor: pointer; font-family: inherit; color: inherit;
+        transition: border-color .15s ease, transform .16s var(--sortie);
+      }
+      .pa-tuile:active { transform: scale(.985); }
+      /* Le contour double (bordure + ombre interne) fait le trait epais
+         sans decaler la tuile d'un pixel a la selection. */
+      .pa-tuile.prise { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+      .pa-tuile:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .pa-tuile-img {
+        width: 100%; aspect-ratio: 1 / 1; border-radius: 11px; overflow: hidden;
+        background: var(--s2); display: grid; place-items: center;
+        font-size: 20px; font-weight: 800; color: var(--ink3);
+      }
+      .pa-tuile-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .pa-tuile-nom {
+        display: block; margin: 8px 0 6px; font-size: 12.5px; font-weight: 700;
+        line-height: 1.25; min-height: 2.5em;
+      }
+      .pa-tuile-prix { display: flex; align-items: center; gap: 5px; }
+      .pa-tuile-prix input {
+        width: 100%; min-width: 0; min-height: 34px; padding: 0 8px;
+        border-radius: 9px; border: 1px solid var(--line2);
+        background: var(--s2); color: var(--ink);
+        font-family: var(--mono); font-size: 13px; font-weight: 700; text-align: right;
+      }
+      .pa-tuile-prix input:disabled { opacity: .45; }
+      .pa-tuile-prix span { font-family: var(--mono); font-size: 10.5px; color: var(--ink3); }
+      .pa-coche {
+        position: absolute; top: 7px; right: 7px; width: 21px; height: 21px;
+        border-radius: 50%; border: 1px solid var(--line2); background: var(--s1);
+        display: grid; place-items: center;
+      }
+      .pa-coche svg { width: 12px; height: 12px; stroke: var(--s1); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+      .pa-tuile.prise .pa-coche { background: var(--ink); border-color: var(--ink); }
+      .pa-tuile.prise .pa-coche svg { opacity: 1; }
+
+      /* Ajouter une recompense a soi : replie tant qu'on ne s'en sert
+         pas, sinon deux champs vides ouvrent l'ecran avant le catalogue. */
+      .pa-sienne { display: grid; gap: 8px; margin-top: 12px; }
+      .pa-sienne-lignes { display: grid; grid-template-columns: 1fr 82px; gap: 8px; }
+      .pa-compte {
+        margin: 14px 0 0; font-family: var(--mono); font-size: 11px;
+        color: var(--ink3); text-align: center;
+      }
+
+      /* ---- Apercu de l'affiche, etape QR ---- */
+      .pa-affiche {
+        display: block; width: 100%; max-width: 210px; margin: 0 auto 14px;
+        border-radius: 10px; border: 1px solid var(--line); background: var(--s1);
+      }
+
       /* Un seul anneau de focus pour toute l'appli. */
       .bouton:focus-visible, .retour:focus-visible, .retirer:focus-visible,
       .reglage-lien:focus-visible, .ajouter-recompense:focus-visible {
@@ -998,6 +1146,127 @@
               </div>
             </div>
 
+
+            <!-- ================= PARCOURS D'INSTALLATION =================
+                 Cinq ecrans, une fois, a la premiere ouverture du club.
+                 Il ne cree aucune notion nouvelle : chaque etape ecrit
+                 dans ce que les onglets montrent deja (fiche, rewards,
+                 establishment_point_rules, Instagram, QR). Passable a
+                 tout moment -- un gerant presse doit pouvoir entrer.
+
+                 Vouvoiement, comme les ecrans qu'il configure
+                 (Recompenses, Barème, Réglages). L'accueil et l'ecran
+                 Instagram tutoient : ils encadrent l'appli, ils ne sont
+                 pas dedans. -->
+            <div class="parcours" id="parcours" hidden>
+              <div class="pa-tete">
+                <div class="pa-jauge" id="pa-jauge" aria-hidden="true"></div>
+                <p class="pa-rang">
+                  <span id="pa-rang-txt">Installation</span>
+                  <button type="button" class="pa-passer" id="pa-passer">Passer</button>
+                </p>
+              </div>
+
+              <div class="pa-corps" id="pa-corps">
+                <!-- 1 · Le club -->
+                <section class="pa-etape" data-pas="1" hidden>
+                  <h1 class="pa-titre">Votre club.</h1>
+                  <p class="pa-sous">Le nom et la ville que verront vos clients dans leur application.</p>
+
+                  <div class="pa-photo">
+                    <span class="pa-photo-vue" id="pa-photo-vue"></span>
+                    <span class="pa-photo-txt">
+                      <button type="button" class="pa-photo-btn" id="pa-photo-btn">Ajouter une photo</button>
+                      <p class="ac-aide" style="text-align:left;margin-top:6px">Votre façade, votre salle. Facultatif.</p>
+                    </span>
+                  </div>
+
+                  <div class="pa-champ">
+                    <label for="pa-nom">Nom du club</label>
+                    <input class="ac-input" id="pa-nom" type="text" autocomplete="organization" placeholder="Le Mirage" />
+                  </div>
+                  <div class="pa-champ">
+                    <label for="pa-ville">Ville</label>
+                    <input class="ac-input" id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" />
+                  </div>
+                </section>
+
+                <!-- 2 · Les recompenses -->
+                <section class="pa-etape" data-pas="2" hidden>
+                  <h1 class="pa-titre">Vos récompenses.</h1>
+                  <p class="pa-sous">
+                    Ce que vos clients échangent contre leurs points. Touchez une carte pour
+                    la mettre dans votre boutique, et fixez son prix.
+                  </p>
+
+                  <div class="pa-grille" id="pa-grille"></div>
+
+                  <div class="pa-sienne">
+                    <div class="pa-sienne-lignes">
+                      <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Une autre récompense" />
+                      <input class="ac-input" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" style="text-align:right;font-family:var(--mono)" />
+                    </div>
+                    <button type="button" class="ajouter-recompense" id="pa-sienne-ajouter">Ajouter cette récompense</button>
+                  </div>
+
+                  <p class="pa-compte" id="pa-compte"></p>
+                </section>
+
+                <!-- 3 · Le bareme -->
+                <section class="pa-etape" data-pas="3" hidden>
+                  <h1 class="pa-titre">Votre barème.</h1>
+                  <p class="pa-sous">Ce que rapporte chaque publication de vos clients. Ces valeurs sont modifiables plus tard.</p>
+                  <div class="carte" id="pa-bareme"></div>
+                </section>
+
+                <!-- 4 · Instagram -->
+                <section class="pa-etape" data-pas="4" hidden>
+                  <h1 class="pa-titre">Votre Instagram.</h1>
+                  <p class="pa-sous">
+                    Noctify repère les stories qui mentionnent votre club et crédite ceux qui
+                    les publient. Sans compte connecté, chaque publication est à valider à la main.
+                  </p>
+
+                  <div class="pa-champ">
+                    <label for="pa-handle">Votre pseudo Instagram</label>
+                    <input class="ac-input" id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@leclub" />
+                    <p class="ac-aide">C'est ce que vos clients devront taguer dans leur story.</p>
+                  </div>
+
+                  <button type="button" class="ac-btn ac-btn-google" id="pa-ig-connecter" style="width:100%">
+                    <svg viewBox="0 0 24 24" class="ig-glyphe" aria-hidden="true">
+                      <rect x="3" y="3" width="18" height="18" rx="5.4"/>
+                      <circle cx="12" cy="12" r="4.1"/>
+                      <circle cx="17.3" cy="6.7" r="1.15" fill="#e1306c" stroke="none"/>
+                    </svg>
+                    Connecter Instagram
+                  </button>
+                  <p class="ac-aide" style="text-align:left;margin-top:8px" id="pa-ig-aide">
+                    Le compte doit être en Business ou Créateur, et relié à une Page Facebook.
+                    La connexion peut se faire plus tard, depuis les Réglages.
+                  </p>
+                </section>
+
+                <!-- 5 · Le QR code -->
+                <section class="pa-etape" data-pas="5" hidden>
+                  <h1 class="pa-titre">Votre QR code.</h1>
+                  <p class="pa-sous">À imprimer et coller à l'entrée, au bar, aux toilettes. C'est lui qui déclenche tout.</p>
+
+                  <img class="pa-affiche" id="pa-affiche" alt="Aperçu de l'affiche à imprimer" />
+                  <a class="bouton sobre pleine" id="pa-affiche-lien" download="affiche-noctify.png">Télécharger l'affiche (A4)</a>
+                  <p class="ac-aide" style="text-align:left;margin-top:10px">
+                    L'affiche reste disponible dans Réglages, avec le QR seul.
+                  </p>
+                </section>
+              </div>
+
+              <div class="pa-pied">
+                <p class="pa-msg" id="pa-msg" hidden></p>
+                <button type="button" class="bouton pleine" id="pa-suivant">Continuer</button>
+                <button type="button" class="pa-retour" id="pa-retour" hidden>Retour</button>
+              </div>
+            </div>
+
             <!-- ================= TABLEAU DE BORD ================= -->
             <div class="vue actif" id="vue-dashboard">
               <p class="kicker-sec">01 · Vue générale</p>
@@ -1072,6 +1341,11 @@
                 <button type="button" class="reglage-lien" data-va="qr">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg></span>
                   <span class="reglage-txt"><strong>Affiche et QR code</strong><span>À imprimer et coller à l'entrée</span></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+                <button type="button" class="reglage-lien" id="reglages-installation">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5v17M3.5 12h17"/><circle cx="12" cy="12" r="8.5"/></svg></span>
+                  <span class="reglage-txt"><strong>Refaire l'installation</strong><span>Les cinq écrans de réglage, depuis le début</span></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
               </div>
@@ -1393,7 +1667,11 @@
         rendreReglages();
         rendreQr();
         rendreBareme();
-        majEcranInstagram();
+        // Le parcours d'installation passe AVANT l'ecran Instagram : sa
+        // quatrieme etape EST cette connexion. Les afficher tous les deux
+        // empilerait deux plein-ecrans sur le meme sujet.
+        if (parcoursAOuvrir()) ouvrirParcours();
+        else majEcranInstagram();
 
         // Le splash ne part qu'une fois les donnees en place : le faire
         // disparaitre plus tot montrerait un tableau de bord vide qui se
@@ -2548,6 +2826,10 @@
         $("#reglages-compte").textContent = ETAT.session ? (ETAT.session.user.email || "—") : "Mode démo — pas connecté";
         majBoutonCompte();
 
+        // Rien a installer sur un club de demonstration : le lien serait
+        // un bouton qui ne fait rien.
+        $("#reglages-installation").hidden = !clubReelCharge();
+
         var zone = $("#reglages-instagram");
         if (!ETAT.session) {
           zone.innerHTML = '<p class="vide" style="padding:14px 0">Connecte-toi pour gérer Instagram.</p>';
@@ -2648,6 +2930,672 @@
           ? "Envoi impossible : " + error.message
           : "Lien envoyé à " + email;
       });
+
+      /* ================= PARCOURS D'INSTALLATION =================
+         Ce qui se passait avant : compte cree -> api/create-client pose
+         cinq recompenses generiques (Vestiaire, Soft, Shot, Premium,
+         VIP) -> le gerant arrive sur un tableau de bord vide, avec une
+         boutique que personne ne lui a demandee et rien qui lui dise
+         d'aller la corriger.
+
+         Cinq etapes, une seule fois. Chacune ecrit dans ce que les
+         onglets montrent deja -- aucune table, aucun ecran nouveau. */
+
+      var CLE_PARCOURS = "noctify_club_installation";
+      var CLE_PARCOURS_PAS = "noctify_club_installation_pas";
+      var PAS_MAX = 5;
+
+      var PARCOURS = { pas: 1, choix: [], ouvert: false };
+
+      /* Les vignettes servies a la boutique du clubbeur, aux memes URL.
+         Montrer autre chose ici serait une promesse fausse : le gerant
+         doit voir la carte que son client verra. */
+      var FOTOS_CATALOGUE = {
+        cintre:    "/recompenses/art-cintre.webp",
+        shot:      "/recompenses/art-shot.webp",
+        pinte:     "/recompenses/art-pinte.webp",
+        cocktail:  "/recompenses/art-cocktail.webp",
+        bouteille: "/recompenses/art-bouteille.webp",
+        cordon:    "https://images.unsplash.com/photo-1640292767657-3c817244f77b?w=240&q=70&auto=format&fit=crop",
+        ticket:    "https://images.unsplash.com/photo-1515139372923-c923c9e9a18c?w=240&q=70&auto=format&fit=crop",
+      };
+
+      /* Catalogue ferme plutot que huit champs libres, pour une raison
+         precise : cote clubbeur, choisirArt() (app-preview.html) deduit
+         le dessin du TITRE. "Boisson premium" tombe sur le pictogramme
+         generique de sa famille, "Cocktail offert" sur le verre. Chaque
+         titre ci-dessous est un de ceux qu'elle reconnait -- cocher, ce
+         n'est pas seulement gagner du temps, c'est obtenir la bonne
+         image dans la boutique.
+
+         Les prix sont un point de depart raisonnable, pas une regle :
+         chaque tuile a son champ. */
+      var CATALOGUE = [
+        { titre: "Vestiaire offert",       points: 40,  famille: "acces", foto: FOTOS_CATALOGUE.cintre },
+        { titre: "Shot offert",            points: 60,  famille: "bar",   foto: FOTOS_CATALOGUE.shot },
+        { titre: "Pinte offerte",          points: 90,  famille: "bar",   foto: FOTOS_CATALOGUE.pinte },
+        { titre: "Cocktail offert",        points: 130, famille: "bar",   foto: FOTOS_CATALOGUE.cocktail },
+        { titre: "Entrée offerte",         points: 160, famille: "acces", foto: null },
+        { titre: "Coupe-file",             points: 200, famille: "acces", foto: FOTOS_CATALOGUE.ticket },
+        { titre: "Carré VIP",              points: 450, famille: "vip",   foto: FOTOS_CATALOGUE.cordon },
+        { titre: "Bouteille de champagne", points: 800, famille: "vip",   foto: FOTOS_CATALOGUE.bouteille },
+      ];
+
+      /* Rapproche un titre du catalogue d'un titre deja en base :
+         "Acces VIP" et "Accès VIP" sont la meme recompense, et le club
+         ne doit pas se retrouver avec les deux. */
+      function normaliserTitre(v) {
+        return String(v || "")
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      }
+
+      function etablissementCourant() { return (ETAT.data && ETAT.data.establishment) || null; }
+
+      /* La base fait foi ; le localStorage n'est qu'un filet pour le cas
+         ou la colonne onboarded_at n'existe pas encore (migration
+         202609040001 non appliquee). Sans lui, un parcours termine
+         reviendrait a chaque ouverture. */
+      function parcoursDejaFait() {
+        var etab = etablissementCourant();
+        if (!etab) return true;
+        if (etab.onboarded_at) return true;
+        try { return localStorage.getItem(CLE_PARCOURS + "_" + etab.id) === "1"; } catch (erreur) { return false; }
+      }
+
+      function marquerParcoursFait() {
+        if (!clubReelCharge()) return;
+        var etab = etablissementCourant();
+        try { localStorage.setItem(CLE_PARCOURS + "_" + etab.id, "1"); } catch (erreur) { /* stockage refuse */ }
+        try { localStorage.removeItem(CLE_PARCOURS_PAS + "_" + etab.id); } catch (erreur) { /* rien a nettoyer */ }
+
+        // L'echec ne casse rien : le filet local a deja pris le relais
+        // sur CE telephone. On le trace quand meme, c'est le signe que
+        // la migration n'est pas passee.
+        supabase
+          .from("establishments")
+          .update({ onboarded_at: new Date().toISOString() })
+          .eq("id", etab.id)
+          .then(function (r) {
+            if (r && r.error) console.warn("[parcours] onboarded_at non enregistre :", r.error.message);
+          });
+      }
+
+      /* Reprise apres le detour par Instagram : la connexion quitte la
+         page et revient dessus. Sans memoire du pas, le gerant repartait
+         de l'etape 1 et refaisait tout. */
+      function memoriserPas(pas) {
+        var etab = etablissementCourant();
+        if (!etab) return;
+        try { localStorage.setItem(CLE_PARCOURS_PAS + "_" + etab.id, String(pas)); } catch (erreur) { /* stockage refuse */ }
+      }
+
+      function pasMemorise() {
+        var etab = etablissementCourant();
+        if (!etab) return 1;
+        try {
+          var v = Number(localStorage.getItem(CLE_PARCOURS_PAS + "_" + etab.id));
+          return v >= 1 && v <= PAS_MAX ? v : 1;
+        } catch (erreur) { return 1; }
+      }
+
+      /* `source` plutot que la seule presence d'une session : demarrer()
+         retombe sur les donnees de demonstration quand la lecture echoue
+         SANS deconnecter pour autant. On aurait alors ouvert le parcours
+         sur "Mirage Club Brussels" et tente d'ecrire sur l'id
+         "demo-establishment", que la RLS refuse -- cinq ecrans de
+         reglages qui finissent tous en message d'erreur. */
+      function clubReelCharge() {
+        if (!ETAT.session || estDemo()) return false;
+        if (!ETAT.data || ETAT.data.source !== "supabase") return false;
+        return !!etablissementCourant();
+      }
+
+      function parcoursAOuvrir() {
+        return clubReelCharge() && !parcoursDejaFait();
+      }
+
+      function direParcours(texte, erreur) {
+        var msg = $("#pa-msg");
+        msg.hidden = !texte;
+        msg.textContent = texte || "";
+        msg.style.color = erreur ? "var(--accent-fort)" : "var(--ink3)";
+      }
+
+
+      /* ---- Navigation ---- */
+
+      function ouvrirParcours() {
+        var etab = etablissementCourant();
+        if (!etab) return;
+
+        PARCOURS.ouvert = true;
+        $("#parcours").hidden = false;
+
+        $("#pa-jauge").innerHTML = new Array(PAS_MAX + 1).join("<span></span>");
+        $("#pa-nom").value = etab.name || "";
+        $("#pa-ville").value = etab.city || "";
+        rendrePhotoParcours(etab.logo_url || null);
+        construireChoixRecompenses();
+        rendreChoixRecompenses();
+        rendreBaremeParcours();
+
+        // Le detour par Instagram ramene ici : on reprend ou on en etait,
+        // pas au debut.
+        allerAuPas(retourInstagram() ? 4 : pasMemorise());
+      }
+
+      function allerAuPas(pas) {
+        PARCOURS.pas = Math.min(PAS_MAX, Math.max(1, pas));
+        memoriserPas(PARCOURS.pas);
+        direParcours("", false);
+
+        document.querySelectorAll(".pa-etape").forEach(function (etape) {
+          etape.hidden = Number(etape.dataset.pas) !== PARCOURS.pas;
+        });
+        $("#pa-jauge").querySelectorAll("span").forEach(function (trait, i) {
+          trait.classList.toggle("faite", i < PARCOURS.pas);
+        });
+
+        $("#pa-rang-txt").textContent = "Installation · " + PARCOURS.pas + "/" + PAS_MAX;
+        $("#pa-suivant").textContent = PARCOURS.pas === PAS_MAX ? "Terminer" : "Continuer";
+        $("#pa-retour").hidden = PARCOURS.pas === 1;
+        // Le dernier ecran n'a plus rien a passer : le bouton principal
+        // fait deja sortir.
+        $("#pa-passer").hidden = PARCOURS.pas === PAS_MAX;
+        $("#pa-corps").scrollTop = 0;
+
+        if (PARCOURS.pas === 4) preparerPasInstagram();
+        // L'affiche se dessine sur un canvas : le rejeu peut echouer
+        // (pas de code public, image du logo illisible). Le dire, plutot
+        // que de laisser une promesse rejetee dans la console et un
+        // ecran vide.
+        if (PARCOURS.pas === 5) {
+          preparerPasQr().catch(function () {
+            direParcours("L'affiche n'a pas pu être générée. Elle reste disponible dans Réglages.", true);
+          });
+        }
+      }
+
+      async function fermerParcours(termine) {
+        if (termine) marquerParcoursFait();
+        PARCOURS.ouvert = false;
+        $("#parcours").hidden = true;
+        ouvrirVue("dashboard");
+
+        // La boutique part vers l'appli des clubbeurs : sans cette
+        // synchro, le gerant vient de regler des recompenses que ses
+        // clients ne verraient qu'a sa prochaine modification.
+        if (termine) await synchroniserBoutique();
+      }
+
+      /* Rouvrir le parcours a la demande : "Passer" marque l'installation
+         comme faite pour ne pas revenir chaque matin, mais un gerant qui a
+         passe trop vite doit pouvoir y retourner. Le pas memorise est
+         remis a 1 -- on le rouvre en entier, pas la ou il l'avait laisse
+         il y a trois semaines. */
+      $("#reglages-installation").addEventListener("click", function () {
+        if (!clubReelCharge()) return;
+        var etab = etablissementCourant();
+        try { localStorage.removeItem(CLE_PARCOURS_PAS + "_" + etab.id); } catch (erreur) { /* stockage refuse */ }
+        ouvrirParcours();
+      });
+
+      $("#pa-retour").addEventListener("click", function () { allerAuPas(PARCOURS.pas - 1); });
+
+      $("#pa-passer").addEventListener("click", function () { fermerParcours(true); });
+
+      $("#pa-suivant").addEventListener("click", async function (ev) {
+        var bouton = ev.currentTarget;
+        var dernier = PARCOURS.pas === PAS_MAX;
+
+        bouton.disabled = true;
+        bouton.textContent = "Enregistrement…";
+        var ok = await enregistrerPas(PARCOURS.pas);
+        bouton.disabled = false;
+        bouton.textContent = dernier ? "Terminer" : "Continuer";
+
+        if (!ok) return;
+        if (dernier) return fermerParcours(true);
+        allerAuPas(PARCOURS.pas + 1);
+      });
+
+      /* Chaque etape enregistre en sortant, pas a la fin : un gerant
+         qui abandonne au 3e ecran garde son nom de club et sa boutique.
+         Renvoie false pour rester sur place -- uniquement quand la
+         saisie est refusee ou l'ecriture echouee. */
+      async function enregistrerPas(pas) {
+        if (pas === 1) return enregistrerFicheParcours();
+        if (pas === 2) return enregistrerRecompensesParcours();
+        if (pas === 3) return enregistrerBaremeParcours();
+        if (pas === 4) return enregistrerHandleParcours();
+        return true;
+      }
+
+
+      /* ---- 1 · La fiche du club ---- */
+
+      function rendrePhotoParcours(url) {
+        var vue = $("#pa-photo-vue");
+        var etab = etablissementCourant() || {};
+        vue.innerHTML = url
+          ? '<img src="' + escapeHtml(url) + '" alt="" />'
+          : escapeHtml((etab.name || "?").trim().charAt(0).toUpperCase());
+        $("#pa-photo-btn").textContent = url ? "Changer la photo" : "Ajouter une photo";
+      }
+
+      /* Meme bucket que les photos de recompense : sa policy ne verifie
+         que le PREMIER dossier du chemin (l'establishment_id), pas le
+         nom du fichier. Un bucket de plus aurait demande une migration
+         supplementaire pour ranger deux images au meme endroit. */
+      $("#pa-photo-btn").addEventListener("click", function () {
+        var etab = etablissementCourant();
+        if (!etab) return;
+
+        var champ = document.createElement("input");
+        champ.type = "file";
+        champ.accept = "image/*";
+        champ.addEventListener("change", async function () {
+          var fichier = champ.files && champ.files[0];
+          if (!fichier) return;
+
+          var bouton = $("#pa-photo-btn");
+          bouton.disabled = true;
+          bouton.textContent = "Envoi…";
+
+          var carree = await carrerImage(fichier);
+          var chemin = etab.id + "/club-" + Date.now() + ".jpg";
+          var envoi = await supabase.storage.from("reward-photos").upload(chemin, carree, {
+            contentType: "image/jpeg",
+            upsert: true,
+          });
+
+          bouton.disabled = false;
+          if (envoi.error) {
+            rendrePhotoParcours(etab.logo_url || null);
+            direParcours("Photo non envoyée. Vous pourrez la reprendre plus tard.", true);
+            return;
+          }
+
+          // Retenue dans l'etat local, ecrite en base avec le reste de la
+          // fiche : une photo enregistree seule laisserait un logo sans
+          // le nom qui va avec si le gerant ferme l'appli ici.
+          etab.logo_url = supabase.storage.from("reward-photos").getPublicUrl(chemin).data.publicUrl;
+          rendrePhotoParcours(etab.logo_url);
+          direParcours("", false);
+        });
+        champ.click();
+      });
+
+      async function enregistrerFicheParcours() {
+        var etab = etablissementCourant();
+        if (!etab) return false;
+
+        var nom = $("#pa-nom").value.trim();
+        if (!nom) {
+          direParcours("Le nom du club est nécessaire : c'est lui que vos clients voient.", true);
+          return false;
+        }
+
+        var ville = $("#pa-ville").value.trim();
+        var payload = { name: nom, city: ville || null, logo_url: etab.logo_url || null };
+
+        var { error } = await supabase.from("establishments").update(payload).eq("id", etab.id);
+        if (error) {
+          direParcours("Fiche non enregistrée : " + error.message, true);
+          return false;
+        }
+
+        etab.name = nom;
+        etab.city = ville || null;
+        rendreDashboard();
+        rendreQr();
+        return true;
+      }
+
+
+      /* ---- 2 · La boutique ---- */
+
+      /* Part de l'etat REEL du club, pas d'une page blanche : les cinq
+         recompenses posees par api/create-client arrivent deja cochees,
+         a leur prix. Le gerant decoche ce qu'il ne donne pas plutot que
+         de tout retaper -- et ce qui reste decoche sort de la boutique. */
+      function construireChoixRecompenses() {
+        var existantes = getActiveRewards(ETAT.data.rewards || []);
+        var choix = [];
+        var reprises = {};
+
+        CATALOGUE.forEach(function (item) {
+          var deja = existantes.find(function (r) {
+            return normaliserTitre(r.title) === normaliserTitre(item.titre);
+          });
+          if (deja) reprises[deja.id] = true;
+
+          choix.push({
+            titre: item.titre,
+            famille: item.famille,
+            foto: (deja && deja.image_url) || item.foto,
+            points: deja ? Number(deja.points_required || 0) : item.points,
+            rewardId: deja ? deja.id : null,
+            prise: !!deja,
+          });
+        });
+
+        // Ce que le club a deja et que le catalogue ne connait pas : ses
+        // recompenses a lui. Elles restent cochees -- le parcours ne
+        // doit rien faire disparaitre au passage.
+        existantes.forEach(function (r) {
+          if (reprises[r.id]) return;
+          choix.push({
+            titre: r.title,
+            famille: r.category || "bar",
+            foto: r.image_url || null,
+            points: Number(r.points_required || 0),
+            rewardId: r.id,
+            prise: true,
+          });
+        });
+
+        PARCOURS.choix = choix;
+      }
+
+      function rendreChoixRecompenses() {
+        $("#pa-grille").innerHTML = PARCOURS.choix.map(function (c, i) {
+          var vignette = c.foto
+            ? '<img src="' + escapeHtml(c.foto) + '" alt="" loading="lazy" />'
+            : escapeHtml((c.titre || "?").trim().charAt(0).toUpperCase());
+
+          return (
+            '<div class="pa-tuile' + (c.prise ? " prise" : "") + '" data-i="' + i + '"' +
+                 ' role="checkbox" tabindex="0" aria-checked="' + (c.prise ? "true" : "false") + '"' +
+                 ' aria-label="' + escapeHtml(c.titre) + '">' +
+              '<span class="pa-tuile-img">' + vignette + "</span>" +
+              '<span class="pa-coche" aria-hidden="true">' +
+                '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' +
+              "</span>" +
+              '<span class="pa-tuile-nom">' + escapeHtml(c.titre) + "</span>" +
+              '<span class="pa-tuile-prix">' +
+                '<input type="number" min="0" step="10" value="' + Number(c.points || 0) + '"' +
+                  ' data-prix="' + i + '" aria-label="Prix en points"' + (c.prise ? "" : " disabled") + " />" +
+                "<span>pts</span>" +
+              "</span>" +
+            "</div>"
+          );
+        }).join("");
+
+        $("#pa-grille").querySelectorAll(".pa-tuile").forEach(function (tuile) {
+          tuile.addEventListener("click", function (ev) {
+            // Regler le prix n'est pas decocher : sans ce garde, chaque
+            // clic dans le champ sortait la recompense de la boutique.
+            if (ev.target.closest("input")) return;
+            basculerChoix(Number(tuile.dataset.i));
+          });
+          tuile.addEventListener("keydown", function (ev) {
+            if (ev.key !== " " && ev.key !== "Enter") return;
+            ev.preventDefault();
+            basculerChoix(Number(tuile.dataset.i));
+          });
+        });
+
+        $("#pa-grille").querySelectorAll("[data-prix]").forEach(function (champ) {
+          champ.addEventListener("change", function () {
+            PARCOURS.choix[Number(champ.dataset.prix)].points = Math.max(0, Math.round(Number(champ.value) || 0));
+          });
+        });
+
+        majCompteChoix();
+      }
+
+      function basculerChoix(i) {
+        var c = PARCOURS.choix[i];
+        if (!c) return;
+        c.prise = !c.prise;
+
+        var tuile = $('.pa-tuile[data-i="' + i + '"]');
+        tuile.classList.toggle("prise", c.prise);
+        tuile.setAttribute("aria-checked", c.prise ? "true" : "false");
+        tuile.querySelector("[data-prix]").disabled = !c.prise;
+        majCompteChoix();
+      }
+
+      function majCompteChoix() {
+        var n = PARCOURS.choix.filter(function (c) { return c.prise; }).length;
+        $("#pa-compte").textContent = n === 0
+          ? "Boutique vide"
+          : n + (n > 1 ? " récompenses dans votre boutique" : " récompense dans votre boutique");
+      }
+
+      $("#pa-sienne-ajouter").addEventListener("click", function () {
+        var nom = $("#pa-sienne-nom").value.trim();
+        var pts = Math.max(0, Math.round(Number($("#pa-sienne-pts").value) || 0));
+
+        if (!nom) {
+          direParcours("Donnez un nom à cette récompense.", true);
+          return;
+        }
+
+        PARCOURS.choix.push({ titre: nom, famille: "bar", foto: null, points: pts || 100, rewardId: null, prise: true });
+        $("#pa-sienne-nom").value = "";
+        $("#pa-sienne-pts").value = "";
+        direParcours("", false);
+        rendreChoixRecompenses();
+        // La nouvelle carte arrive en bas d'une grille de douze : sans ce
+        // deplacement, rien a l'ecran ne dit qu'elle a ete ajoutee.
+        $("#pa-grille").lastElementChild.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
+
+      async function enregistrerRecompensesParcours() {
+        var etab = etablissementCourant();
+        if (!etab) return false;
+
+        var aCreer = [];
+        var aModifier = [];
+        var aRetirer = [];
+
+        PARCOURS.choix.forEach(function (c) {
+          var pts = Math.max(0, Math.round(Number(c.points) || 0));
+          if (c.prise && !c.rewardId) {
+            aCreer.push({
+              establishment_id: etab.id, title: c.titre, points_required: pts,
+              category: c.famille, max_redemptions: null, active: true,
+            });
+          } else if (c.prise) {
+            aModifier.push({ id: c.rewardId, title: c.titre, points_required: pts, category: c.famille });
+          } else if (c.rewardId) {
+            aRetirer.push(c.rewardId);
+          }
+        });
+
+        try {
+          if (aCreer.length) {
+            var creation = await supabase.from("rewards").insert(aCreer);
+            if (creation.error) throw creation.error;
+          }
+
+          // Une requete par ligne : un upsert ecraserait les colonnes non
+          // envoyees (image_url, max_redemptions) des recompenses que le
+          // club a deja reglees a la main.
+          var modifs = await Promise.all(aModifier.map(function (m) {
+            return supabase.from("rewards")
+              .update({ title: m.title, points_required: m.points_required, category: m.category })
+              .eq("id", m.id);
+          }));
+          var rate = modifs.find(function (r) { return r.error; });
+          if (rate) throw rate.error;
+
+          // Desactivation, jamais suppression : reward_redemptions
+          // reference encore les recompenses deja echangees.
+          if (aRetirer.length) {
+            var retrait = await supabase.from("rewards").update({ active: false }).in("id", aRetirer);
+            if (retrait.error) throw retrait.error;
+          }
+        } catch (erreur) {
+          direParcours("Boutique non enregistrée : " + ((erreur && erreur.message) || "erreur inconnue"), true);
+          return false;
+        }
+
+        // Relecture plutot que reconstruction locale : les lignes creees
+        // reviennent avec leur id, ce dont la suite du parcours et
+        // l'onglet Recompenses ont besoin pour les modifier ensuite.
+        var relecture = await supabase
+          .from("rewards").select("*")
+          .eq("establishment_id", etab.id)
+          .order("points_required", { ascending: true });
+
+        if (!relecture.error) {
+          ETAT.data.rewards = relecture.data || [];
+          construireChoixRecompenses();
+          rendreChoixRecompenses();
+          rendreRecompenses();
+          rendreDashboard();
+        }
+        return true;
+      }
+
+
+      /* ---- 3 · Le bareme ----
+         Memes regles que l'onglet (REGLES_BAREME), rendues ici avec
+         data-pa-regle : les deux ecrans vivent en meme temps dans le
+         DOM, et un querySelector sur data-regle aurait toujours trouve
+         les champs de l'onglet, jamais ceux du parcours. */
+      function rendreBaremeParcours() {
+        var regles = ETAT.data.pointRules || {};
+        $("#pa-bareme").innerHTML = REGLES_BAREME.map(function (r) {
+          return '<div class="bareme-ligne">' +
+            '<span class="bareme-txt"><strong>' + escapeHtml(r[2]) + "</strong>" +
+            "<span>" + escapeHtml(r[3]) + "</span></span>" +
+            '<span class="bareme-champ">' +
+              '<input type="number" min="0" max="9999" step="5" data-pa-regle="' + r[0] + '"' +
+                ' value="' + Number(regles[r[0]] ?? 0) + '" />' +
+              '<span class="bareme-unite">' + escapeHtml(r[4]) + "</span>" +
+            "</span>" +
+          "</div>";
+        }).join("");
+      }
+
+      async function enregistrerBaremeParcours() {
+        var etab = etablissementCourant();
+        if (!etab) return false;
+
+        var payload = { establishment_id: etab.id };
+        var invalide = false;
+
+        REGLES_BAREME.forEach(function (r) {
+          var champ = $('[data-pa-regle="' + r[0] + '"]');
+          var valeur = Math.round(Number(champ.value));
+          if (!Number.isFinite(valeur) || valeur < 0) { invalide = true; return; }
+          payload[r[1]] = valeur;
+        });
+
+        if (invalide) {
+          direParcours("Chaque valeur doit être un nombre positif.", true);
+          return false;
+        }
+
+        // upsert : la ligne de bareme existe des la creation du club
+        // (api/create-client), mais pas pour les clubs plus anciens.
+        var { error } = await supabase
+          .from("establishment_point_rules")
+          .upsert(payload, { onConflict: "establishment_id" });
+
+        if (error) {
+          direParcours("Barème non enregistré : " + error.message, true);
+          return false;
+        }
+
+        REGLES_BAREME.forEach(function (r) { ETAT.data.pointRules[r[0]] = payload[r[1]]; });
+        rendreBareme();
+        rendreDashboard();
+        return true;
+      }
+
+      /* ---- 4 · Instagram ---- */
+
+      function preparerPasInstagram() {
+        var etab = etablissementCourant() || {};
+        var ig = ETAT.instagram;
+        var aide = $("#pa-ig-aide");
+        var statut = retourInstagram();
+
+        // Un compte deja connecte n'a plus rien a demander : le pseudo
+        // vient d'Instagram lui-meme, le saisir a la main ne ferait que
+        // creer une seconde verite.
+        if (ig && ig.connecte) {
+          $("#pa-handle").closest(".pa-champ").hidden = true;
+          $("#pa-ig-connecter").hidden = true;
+          aide.textContent = ig.handle
+            ? "Compte connecté : @" + ig.handle + ". Les mentions de votre club sont détectées automatiquement."
+            : "Compte connecté. Les mentions de votre club sont détectées automatiquement.";
+          if (statut) oublierRetourInstagram();
+          return;
+        }
+
+        $("#pa-handle").closest(".pa-champ").hidden = false;
+        $("#pa-ig-connecter").hidden = false;
+        $("#pa-handle").value = etab.ig_handle ? "@" + etab.ig_handle : "";
+
+        // Le retour d'une tentative ratee arrive ici, pas sur l'ecran
+        // Instagram : c'est ce parcours qui a la main.
+        var texte = statut ? MESSAGES_IG[statut] : null;
+        aide.textContent = texte ||
+          "Le compte doit être en Business ou Créateur, et relié à une Page Facebook. " +
+          "La connexion peut se faire plus tard, depuis les Réglages.";
+        aide.style.color = texte ? "var(--accent-fort)" : "";
+        if (statut) oublierRetourInstagram();
+      }
+
+      $("#pa-ig-connecter").addEventListener("click", function (ev) {
+        // Le pas est deja memorise : au retour d'Instagram, ouvrirParcours()
+        // rouvre directement cette etape.
+        connecterInstagram(ev.currentTarget);
+      });
+
+      async function enregistrerHandleParcours() {
+        var etab = etablissementCourant();
+        if (!etab) return true;
+
+        var ig = ETAT.instagram;
+        if (ig && ig.connecte) return true;
+
+        // Ce que le clubbeur devra taguer : sans @, comme la colonne le
+        // stocke et comme api/credit-clubbeur le compare.
+        var handle = $("#pa-handle").value.trim().replace(/^@+/, "").replace(/\s+/g, "");
+        if (!handle || handle === etab.ig_handle) return true;
+
+        var { error } = await supabase.from("establishments").update({ ig_handle: handle }).eq("id", etab.id);
+        if (error) {
+          direParcours("Pseudo non enregistré : " + error.message, true);
+          return false;
+        }
+
+        etab.ig_handle = handle;
+        return true;
+      }
+
+      /* ---- 5 · Le QR code ---- */
+
+      async function preparerPasQr() {
+        // rendreQr() dessine l'affiche sur un canvas : elle n'est pas
+        // forcement prete quand on arrive ici (demarrer() ne l'attend
+        // pas). On la rejoue plutot que de copier un src encore vide.
+        await rendreQr();
+
+        var source = $("#affiche-apercu").getAttribute("src");
+        var lien = $("#affiche-telecharger").getAttribute("href");
+
+        if (!source) {
+          $("#pa-affiche").hidden = true;
+          $("#pa-affiche-lien").hidden = true;
+          direParcours("Ce club n'a pas encore de code public : l'affiche arrivera plus tard, dans Réglages.", false);
+          return;
+        }
+
+        $("#pa-affiche").hidden = false;
+        $("#pa-affiche-lien").hidden = false;
+        $("#pa-affiche").setAttribute("src", source);
+        if (lien) $("#pa-affiche-lien").setAttribute("href", lien);
+      }
+
 
       demarrer();
     </script>

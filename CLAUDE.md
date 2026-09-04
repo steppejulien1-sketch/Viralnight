@@ -81,6 +81,7 @@ gestionnaire d'etat : le projet est volontairement en HTML/CSS/JS lisibles.
 | `chat.html` | Assistant. |
 | `viral-intelligence.html` / `demo.html` | Analyse des soirees. |
 | `app-preview.html` | Maquette autoportante de l'app mobile "clubbeur" (cote client final : scan QR, points, boutique, carte des clubs). Un seul gros fichier, branche sur les vraies fonctions RPC Supabase (`submit_story`, `redeem_reward`, `checkin_scan`...). **Double vie** : au navigateur c'est la maquette de demonstration ; installee sur l'ecran d'accueil ou dans Capacitor, la classe `.mode-appli` fait tomber l'habillage et l'appli passe en plein ecran. Tester avec `?app=1`. Voir `MOBILE.md`. |
+| `club-app.html` | **L'appli des gerants**, cote club, dans le meme cadre de telephone qu'`app-preview.html`. Connexion, tableau de bord, boutique de recompenses, bareme, QR, reglages, Instagram. Un seul gros fichier, donnees reelles (`dashboardData.js`). Julien : « le truc que tu m'as fait [`app.html`], c'est un site, ce n'est pas fou ». Contient le **parcours d'installation** : cinq ecrans qui prennent la main a la premiere ouverture d'un club (fiche, catalogue de recompenses, bareme, Instagram, QR), puis plus jamais -- `establishments.onboarded_at` s'en souvient, le `localStorage` sert de filet. Rejouable depuis Reglages → « Refaire l'installation ». |
 | `apercu.html` | **Outil de travail, pas une page produit.** Le cadre de telephone seul, sans l'habillage de demonstration, pour regarder l'appli clubbeur depuis un PC. Selecteur d'appareil (375 a 430 px) et mise a l'echelle automatique. Charge `app-preview.html?app=1` dans une iframe : c'est le seul moyen d'avoir un VRAI viewport mobile (`100dvh` et les media queries y sont justes, ce qui n'est pas le cas d'un simple div de 390 px pose sur une page de 1900 px). Ne copie aucun code de l'appli. |
 | `admin-prospection.html` | Back-office de prospection commerciale (qualification de clubs). |
 | `carte-preview.html` | Maquette autoportante de la carte des clubs (maplibre-gl). |
@@ -247,6 +248,11 @@ npm run db:test    # verifie les migrations sans les appliquer
   reponse distingue les deux cas -- "CRON_SECRET absent de ce serveur" plutot qu'un "Non
   autorise" identique a celui d'un appel anonyme. Poser la meme valeur dans les variables
   Vercel ET dans le champ prevu par Vercel pour les crons.
+- **Le parcours d'installation de `club-app.html` marche sans sa migration, mais oublie.**
+  `202609040001_parcours_installation.sql` ajoute `establishments.onboarded_at`. Tant
+  qu'elle n'est pas passee, la fin du parcours n'est retenue que dans le `localStorage`
+  du telephone : le gerant qui ouvre l'appli sur la tablette du bar, ou qui vide son
+  navigateur, se retape les cinq ecrans. Aucune erreur visible, juste un `console.warn`.
 - **Ne jamais commit `.env.local`** (deja dans `.gitignore`).
 - `app.css` et `admin.css` peuvent redefinir des variables qui existent deja dans
   `theme.css`. En cas de couleur inattendue, chercher la collision.

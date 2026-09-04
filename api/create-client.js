@@ -3,12 +3,20 @@ import { randomUUID } from "node:crypto";
 
 const ADMIN_EMAIL = "viralnight001@gmail.com";
 
+// Les titres sont ceux du catalogue du parcours d'installation
+// (club-app.html) : le gerant les retrouve deja coches, avec leur
+// illustration, au lieu de trois tuiles anonymes a cote de huit
+// illustrees. Ils sont aussi ceux que choisirArt() (app-preview.html)
+// reconnait -- "Boisson premium" tombait sur le pictogramme generique de
+// sa famille, "Cocktail offert" tombe sur le verre.
 const defaultRewards = [
-  { title: "Vestiaire offert", points_required: 40, max_redemptions: 50 },
-  { title: "Boisson soft", points_required: 60, max_redemptions: 100 },
-  { title: "Shot offert", points_required: 80, max_redemptions: 50 },
-  { title: "Boisson premium", points_required: 110, max_redemptions: 25 },
-  { title: "Acces VIP", points_required: 220, max_redemptions: 5 },
+  { title: "Vestiaire offert", points_required: 40, max_redemptions: 50, category: "acces" },
+  { title: "Shot offert", points_required: 60, max_redemptions: 100, category: "bar" },
+  { title: "Pinte offerte", points_required: 90, max_redemptions: 50, category: "bar" },
+  { title: "Cocktail offert", points_required: 130, max_redemptions: 25, category: "bar" },
+  // Accentue : ces titres s'affichent tels quels dans la boutique du
+  // clubbeur. L'ancien "Acces VIP" y arrivait sans son accent.
+  { title: "Carré VIP", points_required: 450, max_redemptions: 5, category: "vip" },
 ];
 
 function json(response, body, status = 200) {
