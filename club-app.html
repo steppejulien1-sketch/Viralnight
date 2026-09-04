@@ -317,6 +317,25 @@
         background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 14px 15px;
         box-shadow: var(--ombre-1);
       }
+      /* Une couleur par chiffre. Quatre cartes grises identiques ne
+         disaient pas laquelle regarder ; la teinte les separe avant meme
+         qu'on lise le libelle. Elle vit dans la pastille, jamais en aplat
+         sur la carte -- c'est cette difference qui separe un code couleur
+         d'un lavis decoratif. */
+      .kpi-ico {
+        width: 30px; height: 30px; border-radius: 9px; margin-bottom: 10px;
+        display: grid; place-items: center;
+      }
+      .kpi-ico svg { width: 17px; height: 17px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .kpi-ico.points  { background: rgba(196,122,0,.14); }
+      .kpi-ico.points svg  { stroke: #a86500; }
+      .kpi-ico.recos   { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+      .kpi-ico.recos svg   { stroke: var(--accent-fort); }
+      .kpi-ico.membres { background: rgba(109,75,208,.13); }
+      .kpi-ico.membres svg { stroke: #6d4bd0; }
+      .kpi-ico.scans   { background: color-mix(in srgb, var(--succes) 14%, transparent); }
+      .kpi-ico.scans svg   { stroke: var(--succes); }
+
       .kpi-label {
         display: block; min-height: 24px;
         font-family: var(--mono); font-size: 9.5px; font-weight: 600;
@@ -732,7 +751,10 @@
       .pa-bandeau {
         position: relative; display: flex; align-items: flex-end;
         height: 168px; padding: 0 20px;
-        background: var(--s2); border-bottom: 1px solid var(--line);
+        /* Le creme du logo, pas le gris de surface : c'est le fond sur
+           lequel la mascotte a ete dessinee, et il rechauffe l'ecran
+           entier. */
+        background: #fbf1e7; border-bottom: 1px solid rgba(20,22,28,.07);
         overflow: hidden;
       }
       .pa-mascotte { flex: 0 0 auto; width: 214px; height: 156px; margin-bottom: -6px; }
@@ -868,11 +890,32 @@
       .pa-tuile:nth-child(7) { animation-delay: 246ms; }
       .pa-tuile:nth-child(n + 8) { animation-delay: 272ms; }
       .pa-tuile-img {
+        position: relative;
         width: 100%; aspect-ratio: 1 / 1; border-radius: 11px; overflow: hidden;
         background: var(--s2); display: grid; place-items: center;
         font-size: 20px; font-weight: 800; color: var(--ink3);
       }
       .pa-tuile-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      /* Le bouton photo, pose sur la vignette : changer l'image se fait
+         en la regardant, pas dans un ecran de reglages plus tard. */
+      .pa-tuile-photo {
+        position: absolute; left: 6px; bottom: 6px;
+        width: 30px; height: 30px; padding: 0;
+        display: grid; place-items: center;
+        border: 1.5px solid var(--s1); border-radius: 50%;
+        background: rgba(20,22,28,.72); cursor: pointer;
+        transition: transform .16s var(--sortie), background .15s ease;
+      }
+      .pa-tuile-photo svg {
+        width: 15px; height: 15px; fill: none; stroke: #fff;
+        stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+      }
+      .pa-tuile-photo:active { transform: scale(.9); }
+      .pa-tuile-photo.occupe { background: var(--accent-fort); }
+      @media (hover: hover) and (pointer: fine) {
+        .pa-tuile-photo:hover { background: rgba(20,22,28,.88); }
+      }
+
       .pa-tuile-nom {
         display: block; margin: 8px 0 6px; font-size: 12.5px; font-weight: 700;
         line-height: 1.25; min-height: 2.5em;
@@ -1485,7 +1528,7 @@
                         <span class="pa-photo-vue" id="pa-photo-vue"></span>
                         <span class="pa-photo-txt">
                           <strong id="pa-photo-titre">Ajouter une photo</strong>
-                          <span>Ta façade, ta salle. Facultatif.</span>
+                          <span>Ta façade, ta salle, ton logo.</span>
                         </span>
                       </button>
 
@@ -1599,21 +1642,25 @@
 
               <div class="kpis">
                 <div class="kpi">
+                  <span class="kpi-ico points" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.5 6 .9-4.3 4.3 1 6-5.3-2.9-5.3 2.9 1-6L3.4 9.9l6-.9z"/></svg></span>
                   <span class="kpi-label">Points attribués</span>
                   <span class="kpi-valeur" id="kpi-points">—</span>
                   <span class="kpi-note">Selon ton barème</span>
                 </div>
                 <div class="kpi">
+                  <span class="kpi-ico recos" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="8.5" width="17" height="12" rx="2"/><path d="M3.5 12.8h17M12 8.5V20.5"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg></span>
                   <span class="kpi-label">Récompenses utilisées</span>
                   <span class="kpi-valeur" id="kpi-recompenses">—</span>
                   <span class="kpi-note" id="kpi-recompenses-note"></span>
                 </div>
                 <div class="kpi">
+                  <span class="kpi-ico membres" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.6a3.4 3.4 0 0 1 0 5.8M17.5 14.6c2 .9 3.5 2.9 3.5 5.4"/></svg></span>
                   <span class="kpi-label">Membres</span>
                   <span class="kpi-valeur" id="kpi-membres">—</span>
                   <span class="kpi-note" id="kpi-membres-note"></span>
                 </div>
                 <div class="kpi">
+                  <span class="kpi-ico scans" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><path d="M13.5 13.5h3.5v3.5M20.5 13.5v3.5h-3.5M13.5 20.5h7"/></svg></span>
                   <span class="kpi-label">Scans QR</span>
                   <span class="kpi-valeur" id="kpi-scans">—</span>
                   <span class="kpi-note" id="kpi-scans-note"></span>
@@ -3062,7 +3109,12 @@
           // des clubbeurs" n'est pas une panne, c'est une information.
           if (etat) {
             etat.style.color = "var(--accent-fort)";
-            etat.textContent = (erreur && erreur.message) || "Synchronisation impossible pour l'instant.";
+            var motif = (erreur && erreur.message) || "";
+            // Traduit : le gerant n'a rien a faire de nos variables
+            // d'environnement, et il ne peut rien y corriger lui-meme.
+            etat.textContent = /non configur/i.test(motif)
+              ? "Le pont vers l'appli des clubbeurs n'est pas encore ouvert. Tes récompenses sont enregistrées, on s'occupe du reste."
+              : motif || "Synchronisation impossible pour l'instant.";
           }
         }
       }
@@ -3260,25 +3312,18 @@
         ticket:    "https://images.unsplash.com/photo-1515139372923-c923c9e9a18c?w=240&q=70&auto=format&fit=crop",
       };
 
-      /* Catalogue ferme plutot que huit champs libres, pour une raison
-         precise : cote clubbeur, choisirArt() (app-preview.html) deduit
-         le dessin du TITRE. "Boisson premium" tombe sur le pictogramme
-         generique de sa famille, "Cocktail offert" sur le verre. Chaque
-         titre ci-dessous est un de ceux qu'elle reconnait -- cocher, ce
-         n'est pas seulement gagner du temps, c'est obtenir la bonne
-         image dans la boutique.
+      /* Quatre entrees, pas huit. Julien : "il y en a trop". Ce sont les
+         quatre que tout club sert, et les quatre qui ont un vrai dessin
+         cote clubbeur -- le coupe-file et le carre VIP retombaient sur
+         des photos de banque d'images qui juraient a cote.
 
-         Les prix sont un point de depart raisonnable, pas une regle :
-         chaque tuile a son champ. */
+         Le reste se cree a la main, avec sa propre photo : c'est plus
+         juste qu'un catalogue qui devine ce que vend un club. */
       var CATALOGUE = [
-        { titre: "Vestiaire offert",       points: 40,  famille: "acces", foto: FOTOS_CATALOGUE.cintre },
-        { titre: "Shot offert",            points: 60,  famille: "bar",   foto: FOTOS_CATALOGUE.shot },
-        { titre: "Pinte offerte",          points: 90,  famille: "bar",   foto: FOTOS_CATALOGUE.pinte },
-        { titre: "Cocktail offert",        points: 130, famille: "bar",   foto: FOTOS_CATALOGUE.cocktail },
-        { titre: "Entrée offerte",         points: 160, famille: "acces", foto: null },
-        { titre: "Coupe-file",             points: 200, famille: "acces", foto: FOTOS_CATALOGUE.ticket },
-        { titre: "Carré VIP",              points: 450, famille: "vip",   foto: FOTOS_CATALOGUE.cordon },
-        { titre: "Bouteille de champagne", points: 800, famille: "vip",   foto: FOTOS_CATALOGUE.bouteille },
+        { titre: "Vestiaire offert", points: 40,  famille: "acces", foto: "/recompenses/art-cintre.webp" },
+        { titre: "Shot offert",      points: 60,  famille: "bar",   foto: "/recompenses/art-shot.webp" },
+        { titre: "Pinte offerte",    points: 90,  famille: "bar",   foto: "/recompenses/art-pinte.webp" },
+        { titre: "Cocktail offert",  points: 130, famille: "bar",   foto: "/recompenses/art-cocktail.webp" },
       ];
 
       /* Rapproche un titre du catalogue d'un titre deja en base :
@@ -3654,7 +3699,16 @@
         }
 
         var ville = $("#pa-ville").value.trim();
-        var payload = { name: nom, city: ville || null, logo_url: etab.logo_url || null };
+        if (!ville) {
+          direParcours("La ville aussi : c'est elle qui place ton club sur la carte des clubbeurs.", true);
+          return false;
+        }
+        if (!etab.logo_url) {
+          direParcours("Ajoute une photo : c'est la premiere chose que tes clients verront de ton club.", true);
+          return false;
+        }
+
+        var payload = { name: nom, city: ville, logo_url: etab.logo_url };
 
         var { error } = await supabase.from("establishments").update(payload).eq("id", etab.id);
         if (error) {
@@ -3691,6 +3745,10 @@
             titre: item.titre,
             famille: item.famille,
             foto: (deja && deja.image_url) || item.foto,
+            // Une photo televersee ici sera ecrite en base ; le dessin par
+            // defaut du catalogue, non -- il est deja choisi cote clubbeur
+            // a partir du titre.
+            photoPerso: !!(deja && deja.image_url),
             points: deja ? Number(deja.points_required || 0) : item.points,
             rewardId: deja ? deja.id : null,
             prise: !!deja,
@@ -3706,6 +3764,7 @@
             titre: r.title,
             famille: r.category || "bar",
             foto: r.image_url || null,
+            photoPerso: !!r.image_url,
             points: Number(r.points_required || 0),
             rewardId: r.id,
             prise: true,
@@ -3725,7 +3784,18 @@
             '<div class="pa-tuile' + (c.prise ? " prise" : "") + '" data-i="' + i + '"' +
                  ' role="checkbox" tabindex="0" aria-checked="' + (c.prise ? "true" : "false") + '"' +
                  ' aria-label="' + escapeHtml(c.titre) + '">' +
-              '<span class="pa-tuile-img">' + vignette + "</span>" +
+              '<span class="pa-tuile-img">' + vignette +
+                // La photo se change ICI, sur la vignette, pas dans un
+                // ecran de reglages plus tard : c'est ce que le client
+                // verra dans sa boutique, il faut pouvoir le corriger en
+                // le regardant.
+                '<button type="button" class="pa-tuile-photo" data-photo="' + i + '"' +
+                  ' aria-label="Changer la photo de ' + escapeHtml(c.titre) + '">' +
+                  '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+                    '<path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/>' +
+                  "</svg>" +
+                "</button>" +
+              "</span>" +
               '<span class="pa-coche" aria-hidden="true">' +
                 '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' +
               "</span>" +
@@ -3741,13 +3811,15 @@
 
         $("#pa-grille").querySelectorAll(".pa-tuile").forEach(function (tuile) {
           tuile.addEventListener("click", function (ev) {
-            // Regler le prix n'est pas decocher : sans ce garde, chaque
-            // clic dans le champ sortait la recompense de la boutique.
-            if (ev.target.closest("input")) return;
+            // Regler le prix ou changer la photo n'est pas decocher : sans
+            // ce garde, chaque clic dans le champ sortait la recompense de
+            // la boutique.
+            if (ev.target.closest("input") || ev.target.closest("[data-photo]")) return;
             basculerChoix(Number(tuile.dataset.i));
           });
           tuile.addEventListener("keydown", function (ev) {
             if (ev.key !== " " && ev.key !== "Enter") return;
+            if (ev.target.closest("[data-photo]")) return;
             ev.preventDefault();
             basculerChoix(Number(tuile.dataset.i));
           });
@@ -3759,7 +3831,56 @@
           });
         });
 
+        $("#pa-grille").querySelectorAll("[data-photo]").forEach(function (bouton) {
+          bouton.addEventListener("click", function () { choisirPhotoRecompense(Number(bouton.dataset.photo)); });
+        });
+
         majCompteChoix();
+      }
+
+      /* La photo d'une recompense, changee depuis le parcours.
+         Elle part tout de suite dans le bucket : la recompense, elle,
+         n'a pas encore d'id -- certaines seront creees a l'etape
+         suivante. On retient donc l'URL dans le choix, et
+         enregistrerRecompensesParcours l'ecrit avec le reste. */
+      function choisirPhotoRecompense(i) {
+        var etab = etablissementCourant();
+        var choix = PARCOURS.choix[i];
+        if (!etab || !choix) return;
+
+        var champ = document.createElement("input");
+        champ.type = "file";
+        champ.accept = "image/*";
+        champ.addEventListener("change", async function () {
+          var fichier = champ.files && champ.files[0];
+          if (!fichier) return;
+
+          var tuile = $('.pa-tuile[data-i="' + i + '"]');
+          var bouton = tuile ? tuile.querySelector("[data-photo]") : null;
+          if (bouton) bouton.classList.add("occupe");
+
+          try {
+            var carree = await carrerImage(fichier);
+            var chemin = etab.id + "/reco-" + i + "-" + Date.now() + ".jpg";
+            var envoi = await supabase.storage.from("reward-photos").upload(chemin, carree, {
+              contentType: "image/jpeg",
+              upsert: true,
+            });
+            if (envoi.error) throw envoi.error;
+
+            choix.foto = supabase.storage.from("reward-photos").getPublicUrl(chemin).data.publicUrl;
+            // Choisir une photo, c'est vouloir la recompense : on la met
+            // dans la boutique sans le demander deux fois.
+            choix.prise = true;
+            choix.photoPerso = true;
+            direParcours("", false);
+            rendreChoixRecompenses();
+          } catch (erreur) {
+            if (bouton) bouton.classList.remove("occupe");
+            direParcours("Photo non envoyée : " + ((erreur && erreur.message) || "réessaie dans un instant"), true);
+          }
+        });
+        champ.click();
       }
 
       function basculerChoix(i) {
@@ -3814,9 +3935,13 @@
             aCreer.push({
               establishment_id: etab.id, title: c.titre, points_required: pts,
               category: c.famille, max_redemptions: null, active: true,
+              image_url: c.photoPerso ? c.foto : null,
             });
           } else if (c.prise) {
-            aModifier.push({ id: c.rewardId, title: c.titre, points_required: pts, category: c.famille });
+            aModifier.push({
+              id: c.rewardId, title: c.titre, points_required: pts, category: c.famille,
+              image_url: c.photoPerso ? c.foto : null,
+            });
           } else if (c.rewardId) {
             aRetirer.push(c.rewardId);
           }
@@ -3832,9 +3957,12 @@
           // envoyees (image_url, max_redemptions) des recompenses que le
           // club a deja reglees a la main.
           var modifs = await Promise.all(aModifier.map(function (m) {
-            return supabase.from("rewards")
-              .update({ title: m.title, points_required: m.points_required, category: m.category })
-              .eq("id", m.id);
+            var champs = { title: m.title, points_required: m.points_required, category: m.category };
+            // On n'ecrase une photo existante que si le gerant en a pose
+            // une : sans ce garde, revenir sur l'etape effacerait la
+            // sienne au profit du dessin par defaut.
+            if (m.image_url) champs.image_url = m.image_url;
+            return supabase.from("rewards").update(champs).eq("id", m.id);
           }));
           var rate = modifs.find(function (r) { return r.error; });
           if (rate) throw rate.error;
@@ -4062,7 +4190,11 @@
         // Ce que le clubbeur devra taguer : sans @, comme la colonne le
         // stocke et comme api/credit-clubbeur le compare.
         var handle = $("#pa-handle").value.trim().replace(/^@+/, "").replace(/\s+/g, "");
-        if (!handle || handle === etab.ig_handle) return true;
+        if (!handle) {
+          direParcours("Ton pseudo Instagram est nécessaire : sans lui, tes clients ne savent pas qui taguer.", true);
+          return false;
+        }
+        if (handle === etab.ig_handle) return true;
 
         var { error } = await supabase.from("establishments").update({ ig_handle: handle }).eq("id", etab.id);
         if (error) {

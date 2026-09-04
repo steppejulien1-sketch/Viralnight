@@ -14,9 +14,6 @@ const defaultRewards = [
   { title: "Shot offert", points_required: 60, max_redemptions: 100, category: "bar" },
   { title: "Pinte offerte", points_required: 90, max_redemptions: 50, category: "bar" },
   { title: "Cocktail offert", points_required: 130, max_redemptions: 25, category: "bar" },
-  // Accentue : ces titres s'affichent tels quels dans la boutique du
-  // clubbeur. L'ancien "Acces VIP" y arrivait sans son accent.
-  { title: "Carré VIP", points_required: 450, max_redemptions: 5, category: "vip" },
 ];
 
 function json(response, body, status = 200) {
