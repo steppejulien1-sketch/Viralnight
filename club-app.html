@@ -2304,7 +2304,6 @@
         var msg = $("#porte-form-msg");
         var email = $("#porte-email").value.trim();
         var password = $("#porte-password").value;
-        var club = $("#porte-club").value.trim();
 
         function dire(texte, erreur) {
           msg.style.display = "block";
@@ -2312,7 +2311,8 @@
           msg.textContent = texte;
         }
 
-        if (modeInscription && !club) return dire("Indique le nom de ton club.", true);
+        // Le nom du club ne se demande plus ici : il se saisit a
+        // l'etape 2, avec la ville et la photo.
         if (modeInscription && !motDePasseValide(password)) {
           return dire("Mot de passe trop simple : 8 caractères minimum, dont un chiffre.", true);
         }
@@ -2327,10 +2327,7 @@
             var { data, error: erreurInscription } = await supabase.auth.signUp({
               email: email,
               password: password,
-              options: {
-                data: { club_name: club },
-                emailRedirectTo: urlDeRetour(),
-              },
+              options: { emailRedirectTo: urlDeRetour() },
             });
             if (erreurInscription) throw erreurInscription;
 
@@ -2344,38 +2341,9 @@
               return;
             }
 
-            try {
-              var creation = await fetch("/api/create-client", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: "Bearer " + data.session.access_token,
-                },
-                body: JSON.stringify({
-                  establishment_name: club,
-                  invitation: invitationCourante(),
-                }),
-              });
-              var corpsCreation = await creation.json().catch(function () { return {}; });
-              if (!creation.ok) throw new Error(corpsCreation && corpsCreation.error);
-              // Le jeton a servi : le garder ferait echouer la prochaine
-              // tentative avec un message trompeur ("deja utilisee").
-              oublierInvitation();
-            } catch (erreurClub) {
-              // Avant, cet appel etait volontairement silencieux : une
-              // panne reseau ne devait pas perdre l'inscription entiere.
-              // Depuis l'invitation, l'echec porte une information que le
-              // gerant DOIT lire -- lien expire, deja utilise, emis pour
-              // une autre adresse. Le compte, lui, existe bel et bien.
-              console.error("[club-app] creation du club", erreurClub);
-              bouton.disabled = false;
-              bouton.textContent = libelle;
-              return dire(
-                (erreurClub && erreurClub.message)
-                  || "Compte créé, mais le club n'a pas pu l'être. Reconnecte-toi dans un instant.",
-                true,
-              );
-            }
+            // Le club ne se cree plus ici. On vient d'obtenir un compte ;
+            // demarrer() enchaine sur l'etape 2, qui demande le nom, la
+            // ville et la photo, et cree le club avec les trois.
           } else {
             var { error: erreurConnexion } = await supabase.auth.signInWithPassword({
               email: email,
@@ -3564,9 +3532,9 @@
 
       function ouvrirParcours(pasForce) {
         var etab = etablissementCourant();
-        // Sans club, seul l'ecran du compte a un sens -- les cinq autres
-        // ecrivent tous quelque part.
-        if (!etab && pasForce !== 1) return;
+        // Sans club, deux ecrans ont un sens : celui du compte, et celui
+        // qui CREE le club. Les quatre autres ecrivent dedans, eux.
+        if (!etab && pasForce !== 1 && pasForce !== 2) return;
 
         PARCOURS.ouvert = true;
         $("#parcours").hidden = false;
@@ -3593,14 +3561,17 @@
         // Le detour par Instagram ramene ici : on reprend ou on en etait,
         // pas au debut. Et on se pose sans glisser -- il n'y a pas
         // d'ecran precedent d'ou venir.
-        PARCOURS.pas = retourInstagram() ? 5 : pasMemorise();
+        // Jamais l'ecran du compte quand on en a deja un : son bouton
+        // Continuer est masque, on y resterait enferme.
+        PARCOURS.pas = retourInstagram() ? 5 : Math.max(2, pasMemorise());
         allerAuPas(PARCOURS.pas, true);
       }
 
       var basculeEnCours = null;
 
       function allerAuPas(pas, immediat) {
-        var cible = Math.min(PAS_MAX, Math.max(1, pas));
+        var plancher = ETAT.session ? 2 : 1;
+        var cible = Math.min(PAS_MAX, Math.max(plancher, pas));
         var versAvant = cible >= PARCOURS.pas;
         var scene = $("#pa-scene");
 
