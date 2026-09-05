@@ -48,6 +48,32 @@ const APPS = [
   ["gerant", "qonto",      "com.qonto.app",                      "Banque pro francaise : lisibilite des chiffres"],
   ["gerant", "zettle",     "com.izettle.android",                "Caisse + rapports de vente"],
 
+  /* Julien, 05/09/2026 : "cherche trente applications où il y a des
+     dashboards, prends la data, copie leur style". Les plus utiles pour
+     Noctify sont les analytiques de CREATEUR -- YouTube Studio, Spotify
+     for Artists, TikTok Studio : elles affichent exactement notre
+     matiere, des vues et une audience qui monte ou descend. */
+  ["gerant", "yt-studio",  "com.google.android.apps.youtube.creator", "Vues, audience, retention -- notre matiere exacte"],
+  ["gerant", "spotify-art","com.spotify.s4a",                    "Ecoutes, auditeurs, villes : un artiste lit sa portee"],
+  ["gerant", "tiktok-studio","com.tiktok.mobile.studio",         "Analytique creation cote TikTok"],
+  ["gerant", "twitch-dash","tv.twitch.android.app.creator",      "Tableau de bord de diffusion en direct"],
+  ["gerant", "buffer",     "org.buffer.android",                 "Programmation + statistiques reseaux"],
+  ["gerant", "hootsuite",  "com.hootsuite.droid.full",           "Idem, plus dense"],
+  ["gerant", "semrush",    "com.semrush.app",                    "Analytique SEO : beaucoup de chiffres, peu de place"],
+  ["gerant", "search-console","com.google.android.apps.searchconsole","Courbes, comparaisons de periodes"],
+  ["gerant", "mixpanel",   "com.mixpanel.android.mpmetrics",     "Produit analytique pur"],
+  ["gerant", "amplitude",  "com.amplitude.mobile",               "Idem"],
+  ["gerant", "datadog",    "com.datadog.app",                    "Supervision : lecture d'un etat en un coup d'oeil"],
+  ["gerant", "grafana",    "com.grafana.mobile",                 "Le vocabulaire graphique de reference"],
+  ["gerant", "quickbooks", "com.intuit.quickbooks",              "Compta d'un petit commerce"],
+  ["gerant", "xero",       "com.xero.touch",                     "Idem, tres lisible"],
+  ["gerant", "pennylane",  "com.pennylane.app",                  "Compta francaise"],
+  ["gerant", "whoop",      "com.whoop.android",                  "Donnees personnelles rendues desirables"],
+  ["gerant", "oura",       "com.ouraring.oura",                  "Idem : un score, une courbe, une explication"],
+  ["gerant", "fitbit",     "com.fitbit.FitbitMobile",            "Grand public, beaucoup de metriques"],
+  ["gerant", "wise-biz",   "com.transferwise.android",           "Solde, mouvements, devises"],
+  ["gerant", "n26",        "de.number26.android",                "Banque : lisibilite des montants"],
+
   // ---- CLUBBEUR : donner envie de revenir ----
   ["clubbeur", "duolingo", "com.duolingo",                       "Le maitre etalon de l'accroche : serie, sons, celebrations"],
   ["clubbeur", "starbucks","com.starbucks.mobilecard",           "Solde de points + menu de recompenses"],

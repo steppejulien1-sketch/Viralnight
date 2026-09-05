@@ -198,16 +198,26 @@ function remplirGalerie() {
     await prendre(nom, titre);
 
     if (onglet === "dashboard") {
+      // La periode commande tout l'ecran : une capture par choix, sinon
+      // la planche ne montre qu'un des trois etats.
+      await page.evaluate(() => document.querySelector('.periode[data-jours="7"]').click());
+      await pause(900);
+      await prendre("07b-tableau-de-bord-7j", "Tableau de bord — sur 7 jours");
+      await page.evaluate(() => document.querySelector('.periode[data-jours="30"]').click());
+      await pause(900);
+
       await page.evaluate(() => { document.querySelector("#vue-dashboard").scrollTop = 460; });
       await pause(500);
       await prendre("08-tableau-de-bord-activite", "Tableau de bord — activité récente");
       await page.evaluate(() => { document.querySelector("#vue-dashboard").scrollTop = 0; });
     }
     if (onglet === "recompenses") {
-      await page.evaluate(() => { document.querySelector(".recompense-carte").open = true; });
-      await pause(600);
-      await prendre("10-recompense-ouverte", "Une récompense, dépliée");
-      await page.evaluate(() => { document.querySelector(".recompense-carte").open = false; });
+      // La tuile n'est plus un accordeon : elle ouvre un ecran a elle.
+      await page.evaluate(() => { document.querySelectorAll(".recompense-carte")[3].click(); });
+      await pause(900);
+      await prendre("10-recompense-fiche", "Une récompense, sa fiche");
+      await page.evaluate(() => document.querySelector('[data-va="recompenses"]').click());
+      await pause(500);
     }
   }
 
@@ -215,6 +225,8 @@ function remplirGalerie() {
   const SOUS = [
     ["bareme", "12-bareme", "Barème de points"],
     ["qr", "13-qr", "Affiche et QR code"],
+    ["conditions", "14-conditions", "Conditions d'utilisation"],
+    ["confidentialite", "15-confidentialite", "Confidentialité"],
   ];
   for (const [va, nom, titre] of SOUS) {
     await page.evaluate((v) => document.querySelector(`[data-va="${v}"]`).click(), va);
