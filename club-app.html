@@ -41,9 +41,15 @@
         --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         /* Les titres, et eux seuls. */
         --titre: "Archivo", Inter, ui-sans-serif, system-ui, sans-serif;
-        /* La police des DONNEES : chiffres, libelles de section, unites.
-           Un compteur en monospace se lit comme un objet dessine ; le
-           meme en police de texte se lit comme une phrase. */
+        /* ⚠️ DM MONO BARRE SES ZEROS, et Julien les refuse : "retire les
+           zéros barrés et tout, c'est dégueulasse, ça ne fait pas
+           qualité". Le zero barre est une convention de TERMINAL -- il
+           existe pour distinguer O de 0 dans du code, pas pour afficher
+           un stock ou un code de club.
+
+           Cette police ne porte donc plus AUCUN chiffre : elle est
+           reservee aux libelles de section et aux unites en lettres
+           ("pts"). Tout ce qui compte passe par --chiffre. */
         --mono: "DM Mono", ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
         /* Les NOMBRES. Jamais le monospace : son zero barre est fait pour
            un terminal, pas pour un compteur de points. */
@@ -413,8 +419,8 @@
       .hero-courbe svg { display: block; width: 100%; height: auto; }
       .hero-grille { stroke: rgba(255,255,255,.13); stroke-width: 1; }
       .hero-graduation {
-        fill: var(--encre-3); font-family: var(--mono); font-size: 8.5px;
-        letter-spacing: .02em;
+        fill: var(--encre-3); font-family: var(--chiffre); font-size: 9px;
+        font-weight: 600; letter-spacing: 0;
       }
       .hero-axe {
         fill: var(--encre-3); font-family: var(--sans); font-size: 9.5px;
@@ -1358,7 +1364,7 @@
 
       .pa-sienne { display: grid; gap: 8px; margin-top: 14px; }
       .pa-sienne-lignes { display: grid; grid-template-columns: 1fr 82px; gap: 8px; }
-      .pa-sienne-pts { text-align: right; font-family: var(--mono); }
+      .pa-sienne-pts { text-align: right; font-family: var(--chiffre); font-weight: 700; }
       .pa-compte {
         margin: 16px 0 0; font-family: var(--mono); font-size: 11px;
         color: var(--ink3); text-align: center;
@@ -1648,10 +1654,14 @@
          colle dans l'angle, qui mangeait un quart du dessin et se
          repetait cinq fois. Meme place et meme forme que le prix chez
          DICE : en bas a gauche, sur le visuel. */
+      /* Sur une tuile qui a deja une image, l'icone seule : ecrire "Ta
+         photo" sous un dessin qui n'est pas une photo etait faux, et le
+         repeter quatre fois faisait un bandeau. Le mot ne revient que sur
+         une tuile vide, ou il PORTE l'action. */
       .reco-vignette-cam {
         position: absolute; left: 8px; bottom: 8px; z-index: 1;
         display: inline-flex; align-items: center; gap: 5px;
-        padding: 4px 9px 4px 7px; border-radius: 999px;
+        padding: 6px; border-radius: 999px;
         background: rgba(20,22,28,.68); color: #fff;
         font-family: var(--sans); font-size: 10px; font-weight: 700;
         letter-spacing: -.01em;
@@ -1666,6 +1676,7 @@
         flex-direction: column; gap: 6px; text-align: center;
         font-size: 11px; padding: 0;
       }
+      .reco-vignette.sans-image .reco-vignette-cam { padding: 0; }
       .reco-vignette.sans-image .reco-vignette-cam svg { width: 20px; height: 20px; stroke-width: 1.6; }
       .reco-vignette-cam svg {
         width: 12px; height: 12px; fill: none; stroke: currentColor;
@@ -1674,7 +1685,17 @@
       /* Depliee, la vignette redevient petite : la pilule n'y tient plus,
          et le detail a deja ses propres boutons photo. */
       .recompense-carte[open] .reco-vignette-cam { display: none; }
-      .reco-vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      /* CONTAIN, pas cover. Les dessins sont detoures et cadres large :
+         un `cover` sur un carre dans un cadre 4/3 rogne le haut et le bas
+         -- Julien : "les photos sont coupées bizarrement, ce n'est pas
+         très esthétique". Un verre sans son pied n'est plus un verre.
+
+         Les VRAIES photos, elles, gardent le remplissage : une facade de
+         club se recadre sans dommage, et une photo en `contain` laisserait
+         deux bandes vides. La classe le dit. */
+      .reco-vignette img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 8px; }
+      .reco-vignette.photo-reelle img { object-fit: cover; padding: 0; }
+      .recompense-carte[open] .reco-vignette img { padding: 3px; }
       /* Le glyphe du dernier recours. Une INITIALE dans un carre gris,
          c'est un avatar casse : ca promet une image qui n'arrive pas.
          Un pictogramme dit "pas encore de photo" et se lit comme un
@@ -1701,11 +1722,17 @@
          mention de gestion, en encre sourde. */
       .reco-resume-txt span {
         display: flex; align-items: baseline; gap: 6px; margin-top: 3px;
-        font-family: var(--mono); font-size: 11px; color: var(--ink3);
+        font-family: var(--sans); font-size: 11.5px; color: var(--ink3);
+        font-variant-numeric: tabular-nums;
       }
+      /* --accent-fort et non --accent : sur du blanc, #ff6363 tombe a
+         2,9:1 et se lit gris rose. Julien : "c'est en rouge parfois,
+         c'est en noir parfois, c'est bizarre" -- deux tuiles avec une
+         photo sombre derriere faisaient paraitre le meme corail presque
+         noir. Une seule valeur, celle qui passe le contraste partout. */
       .reco-prix {
-        font-family: var(--chiffre); font-size: 13px; font-weight: 800;
-        letter-spacing: -.02em; color: var(--accent); font-variant-numeric: tabular-nums;
+        font-family: var(--chiffre); font-size: 14px; font-weight: 800;
+        letter-spacing: -.02em; color: var(--accent-fort); font-variant-numeric: tabular-nums;
       }
       /* Le chevron n'a de sens que sur une LIGNE. Sur une tuile, c'est
          la tuile entiere qui s'ouvre, et une fleche posee dans un coin
@@ -1794,7 +1821,8 @@
       .qr-image svg, .qr-image img { width: 100%; height: 100%; display: block; }
       .qr-code-txt { margin: 0; font-size: 13px; color: var(--ink2); }
       .qr-code-txt strong {
-        font-family: var(--mono); font-size: 15px; letter-spacing: .08em; color: var(--ink);
+        font-family: var(--chiffre); font-size: 15px; font-weight: 800;
+        letter-spacing: .04em; color: var(--ink);
       }
       .qr-carte .bouton { width: 100%; text-align: center; }
       /* ---- Reglages ---- */
@@ -1808,6 +1836,10 @@
         display: grid; place-items: center;
       }
       .reglage-ico svg { width: 16px; height: 16px; stroke: var(--ink2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      /* Le logo Instagram porte ses propres couleurs : il n'herite ni du
+         trait ni du fond des icones d'interface. */
+      .reglage-ico.ico-instagram { background: none; }
+      .reglage-ico.ico-instagram svg { width: 22px; height: 22px; stroke: none; }
       .reglage-txt { flex: 1 1 auto; min-width: 0; }
       .reglage-txt strong {
         font-family: var(--titre); display: block; font-size: 13.5px; font-weight: 700; }
@@ -1823,6 +1855,26 @@
       }
       .reglage-lien:last-child { border-bottom: 0; }
       a.reglage-lien { text-decoration: none; color: inherit; }
+      /* ---- Un texte legal qui se LIT ----
+         Un mur de paragraphes gris est ce qui fait qu'on ne lit jamais ces
+         pages. Trois choses suffisent : une mesure courte, des titres qui
+         decoupent, et de l'air entre les blocs. */
+      .legal { margin-top: 4px; }
+      .legal h2 {
+        margin: 22px 0 8px; font-family: var(--titre); font-size: 15px;
+        font-weight: 800; letter-spacing: -.025em; color: var(--ink);
+      }
+      .legal h2:first-child { margin-top: 8px; }
+      .legal p {
+        margin: 0 0 10px; font-size: 13.5px; line-height: 1.6; color: var(--ink2);
+        max-width: 44ch;
+      }
+      .legal a { color: var(--ink); text-decoration-color: var(--line2); text-underline-offset: 3px; }
+      .legal-date {
+        margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line);
+        font-size: 12px; color: var(--ink3);
+      }
+
       .reglages-pied {
         margin: 16px 0 0; text-align: center;
         font-size: 11.5px; color: var(--ink3);
@@ -2190,12 +2242,20 @@
                       <h1 class="pa-titre">Ton barème.</h1>
                       <p class="pa-sous">Ce qu'un Reel ou un TikTok rapporte à ton client, selon ses vues. Modifiable à tout moment.</p>
 
-                      <div class="pa-profils pa-arrive" id="pa-profils" role="radiogroup" aria-label="Barème"></div>
+                      <!-- Julien : "fais qu'on puisse régler ligne par ligne au
+                           lieu de mettre prudent, équilibré, généreux".
 
-                      <details class="pa-detail pa-arrive">
-                        <summary>Régler ligne par ligne</summary>
-                        <div class="carte" id="pa-bareme"></div>
-                      </details>
+                           Les trois profils posaient un jeu de valeurs d'un coup.
+                           C'etait cense eviter un formulaire ; ca ajoutait surtout
+                           un vocabulaire ("Prudent") a comprendre AVANT de voir
+                           les chiffres, et le vrai reglage restait cache sous un
+                           depliant. Les lignes sont maintenant a nu -- c'est ce
+                           qu'un gerant veut regler, pas un adjectif.
+
+                           Le bloc #pa-profils reste dans le DOM, vide : le JS y
+                           ecrit encore et le vider suffit a le faire disparaitre. -->
+                      <div class="pa-profils" id="pa-profils" hidden></div>
+                      <div class="carte pa-arrive" id="pa-bareme"></div>
                     </section>
 
                     <!-- 4 · Instagram -->
@@ -2394,27 +2454,154 @@
                    prennent la meme carte, les memes lignes, le meme
                    chevron. L'ecran se termine ou il finit. -->
               <div class="carte" style="padding:1px 14px">
-                <a class="reglage-lien" href="./confidentialite.html" target="_blank" rel="noopener">
+                <button type="button" class="reglage-lien" data-va="confidentialite">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5l7 3v5.2c0 4.2-2.9 7.6-7 8.8-4.1-1.2-7-4.6-7-8.8V6.5z"/></svg></span>
                   <span class="reglage-txt"><strong>Confidentialité</strong></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <a class="reglage-lien" href="./cgu.html" target="_blank" rel="noopener">
+                </button>
+                <button type="button" class="reglage-lien" data-va="conditions">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3.5h8l4 4v13h-12z"/><path d="M14.5 3.5v4h4M9 12h6M9 15.5h6"/></svg></span>
                   <span class="reglage-txt"><strong>Conditions d'utilisation</strong></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <a class="reglage-lien" href="mailto:viralnight001@gmail.com?subject=Noctify%20%E2%80%94%20aide">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.4M12 16.6v.01"/></svg></span>
-                  <span class="reglage-txt"><strong>Une question ?</strong></span>
-                  <span class="reglage-etat">Nous écrire</span>
-                </a>
+                </button>
               </div>
 
               <p class="reglages-pied">Noctify · appli club</p>
             </div>
 
             <!-- ================= BAREME ================= -->
+            <!-- ================= TEXTES LEGAUX =================
+                 Julien : "intègre les conditions d'utilisation et fais des
+                 conditions spécialement pour cette application [...] que ça
+                 ne me fasse pas aller sur un autre site après, c'est
+                 bizarre".
+
+                 Il a raison sur les deux points. Les liens ouvraient
+                 cgu.html et confidentialite.html : les pages du SITE, ecrites
+                 pour un visiteur de la landing, qui parlent de formulaires de
+                 demo et de cookies de navigation. Un gerant qui les ouvrait
+                 depuis son appli sortait de l'appli pour lire un texte qui ne
+                 le concernait pas.
+
+                 Ces deux ecrans-ci parlent de CE QUE FAIT L'APPLI : le compte
+                 du club, ses photos, le barème, le QR, la connexion
+                 Instagram. Ils sont courts parce que le produit l'est.
+
+                 ⚠️ Ce ne sont pas des conseils juridiques. Ils decrivent
+                 honnetement le fonctionnement reel ; une relecture par un
+                 juriste reste a faire avant le premier client payant. -->
+            <div class="vue" id="vue-conditions">
+              <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
+              <h1 class="ecran-titre">Conditions d'utilisation</h1>
+              <p class="ecran-sous">Ce à quoi tu t'engages, et ce à quoi on s'engage.</p>
+
+              <div class="legal">
+                <h2>Ce que fait Noctify</h2>
+                <p>
+                  Noctify donne des points à tes clients quand ils publient une story, un
+                  Reel ou un TikTok qui mentionne ton club. Tu fixes ce que rapporte chaque
+                  publication et ce que les points permettent d'obtenir. Tes clients
+                  échangent leurs points dans leur propre application.
+                </p>
+
+                <h2>Ton compte</h2>
+                <p>
+                  Un compte, un club. Tu es responsable de ce que tu publies dessus : le nom,
+                  la ville et les photos que tu déposes seront vus par tes clients. Ne dépose
+                  que des images dont tu as le droit de te servir.
+                </p>
+
+                <h2>Tes récompenses</h2>
+                <p>
+                  Une récompense affichée est une promesse faite à tes clients. Tu restes
+                  libre de la retirer ou d'en changer le prix à tout moment, mais un bon déjà
+                  obtenu doit être honoré : ton client a dépensé des points pour l'avoir.
+                </p>
+                <p>
+                  Les stocks que tu indiques sont les tiens. Noctify ne vérifie pas ce que tu
+                  sers au bar.
+                </p>
+
+                <h2>Ce que Noctify ne garantit pas</h2>
+                <p>
+                  Le nombre de vues d'une publication vient d'Instagram et de TikTok. Nous les
+                  lisons, nous ne les produisons pas : si une plateforme change ses règles ou
+                  cesse de nous les communiquer, certains points ne pourront plus être
+                  calculés. Nous te le dirons plutôt que d'inventer un chiffre.
+                </p>
+                <p>
+                  Une story supprimée avant l'échéance annoncée peut faire retirer les points
+                  qu'elle avait rapportés.
+                </p>
+
+                <h2>Arrêter</h2>
+                <p>
+                  Tu peux arrêter quand tu veux. Écris-nous et ton club est retiré de
+                  l'application de tes clients. Les bons déjà obtenus restent valables le
+                  temps que tu les honores.
+                </p>
+
+                <p class="legal-date">Dernière mise à jour : 5 septembre 2026</p>
+              </div>
+            </div>
+
+            <div class="vue" id="vue-confidentialite">
+              <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
+              <h1 class="ecran-titre">Confidentialité</h1>
+              <p class="ecran-sous">Ce qu'on garde, pourquoi, et ce qu'on ne fait pas.</p>
+
+              <div class="legal">
+                <h2>Ce qu'on garde sur toi</h2>
+                <p>
+                  Ton adresse e-mail, pour te connecter. Le nom, la ville et les photos de ton
+                  club, parce que tes clients les voient. Ton barème et tes récompenses,
+                  parce que c'est ton réglage.
+                </p>
+
+                <h2>Ce qu'on garde sur tes clients</h2>
+                <p>
+                  Les publications qui mentionnent ton club, leur nombre de vues, et les
+                  points qu'elles ont rapportés. Les scans de ton QR code. Les récompenses
+                  échangées.
+                </p>
+                <p>
+                  Tu vois des totaux et des tendances. Tu ne vois pas qui a publié quoi :
+                  l'application ne te donne aucun nom, aucun profil, aucune adresse.
+                </p>
+
+                <h2>Instagram</h2>
+                <p>
+                  Si tu connectes le compte Instagram de ton club, nous lisons les mentions
+                  qui te sont faites et ton nombre d'abonnés. Rien d'autre. Nous ne publions
+                  jamais à ta place et nous ne lisons pas tes messages. Tu peux couper la
+                  connexion depuis les Réglages, à tout moment.
+                </p>
+
+                <h2>Ce qu'on ne fait pas</h2>
+                <p>
+                  Nous ne vendons rien à personne. Aucune donnée de ton club ni de tes clients
+                  n'est cédée ou louée à un tiers.
+                </p>
+
+                <h2>Combien de temps</h2>
+                <p>
+                  Tant que ton club est actif. Quand tu arrêtes, les données de ton club sont
+                  supprimées sous trente jours, à l'exception de ce que la comptabilité oblige
+                  à conserver.
+                </p>
+
+                <h2>Tes droits</h2>
+                <p>
+                  Tu peux demander une copie de tes données, leur correction ou leur
+                  suppression&nbsp;: écris à
+                  <a href="mailto:viralnight001@gmail.com?subject=Mes%20donn%C3%A9es">viralnight001@gmail.com</a>.
+                  On répond sous trente jours.
+                </p>
+
+                <p class="legal-date">Dernière mise à jour : 5 septembre 2026</p>
+              </div>
+            </div>
+
             <div class="vue" id="vue-bareme">
               <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
               <h1 class="ecran-titre">Ton barème</h1>
@@ -2441,25 +2628,30 @@
               <div class="qr-carte" id="qr-carte">
                 <img class="affiche-apercu" id="affiche-apercu" alt="Aperçu de l'affiche à imprimer" />
                 <p class="qr-code-txt">Code du club <strong id="qr-code">—</strong></p>
+                <!-- Un seul bouton. Julien : "tu montres l'affiche, tu mets
+                     télécharger l'affiche, et ouais, c'est tout". Le QR nu
+                     ne sert a personne : ce qu'on colle au mur c'est
+                     l'affiche, et un gerant qui telecharge un carre noir
+                     sans mode d'emploi imprime quelque chose qui ne
+                     marche pas. Le lien reste dans le DOM, masque : le JS
+                     lui pose toujours son image. -->
                 <div class="qr-actions">
-                  <a class="bouton" id="affiche-telecharger" download="affiche-noctify.png">Télécharger l'affiche (A4)</a>
-                  <a class="bouton sobre" id="qr-telecharger" download="qr-noctify.png">Le QR seul</a>
+                  <a class="bouton pleine" id="affiche-telecharger" download="affiche-noctify.png">Télécharger l'affiche</a>
+                  <a class="bouton sobre" id="qr-telecharger" download="qr-noctify.png" hidden>Le QR seul</a>
                 </div>
                 <p class="fiche-msg" id="qr-msg"></p>
               </div>
 
-              <div class="kpis" style="margin-top:16px">
-                <div class="kpi">
-                  <span class="kpi-label">Scans</span>
-                  <span class="kpi-valeur" id="qr-kpi-scans">—</span>
-                  <span class="kpi-note">Depuis le début</span>
-                </div>
-                <div class="kpi">
-                  <span class="kpi-label">Personnes</span>
-                  <span class="kpi-valeur" id="qr-kpi-uniques">—</span>
-                  <span class="kpi-note">Scanners différents</span>
-                </div>
-              </div>
+              <!-- Les deux chiffres qui etaient ici ("Scans / Personnes")
+                   sont retires. Julien : "tu retires le zéro scan depuis le
+                   début, personne, c'est bizarre".
+
+                   Ils ne disparaissent pas du produit : le tableau de bord
+                   porte "Scans QR" avec sa courbe sur quatorze jours, et
+                   sa note dit le nombre de personnes distinctes. Les avoir
+                   aux deux endroits, c'etait la meme donnee lue deux fois
+                   -- et ici, sous une affiche a imprimer, elle ne repond a
+                   aucune question qu'on se pose a ce moment-la. -->
             </div>
 
             <!-- TROIS onglets, il y en avait six. Points, QR et Ma fiche
@@ -2617,7 +2809,7 @@
 
       // Les trois ecrans qui ont perdu leur onglet : ils vivent
       // maintenant sous Reglages, qui reste allume pendant qu'on y est.
-      var SOUS_ECRANS = ["bareme", "qr"];
+      var SOUS_ECRANS = ["bareme", "qr", "conditions", "confidentialite"];
 
       function ouvrirVue(cible) {
         VUES.forEach(function (v) { v.classList.toggle("actif", v.id === "vue-" + cible); });
@@ -3687,10 +3879,6 @@
         var msg = $("#qr-msg");
         var lien = $("#qr-telecharger");
 
-        var stats = getDashboardStats(ETAT.data);
-        $("#qr-kpi-scans").textContent = nb.format(stats.scanCount);
-        $("#qr-kpi-uniques").textContent = nb.format(stats.uniqueScanners);
-
         // Pas de code public : le club existe mais n'a jamais ete
         // provisionne. Le dire clairement plutot que d'afficher un QR vide
         // ou, pire, un QR qui encode "undefined" et que quelqu'un imprime.
@@ -3701,7 +3889,9 @@
           $("#affiche-telecharger").hidden = true;
           msg.style.display = "block";
           msg.style.color = "var(--ink2)";
-          msg.textContent = "Ce club n'a pas encore de code public. Contacte-nous, on le crée.";
+          // "Code public" est un mot de base de donnees. Ce que le gerant
+          // doit lire, c'est ce qui manque et ce qui arrive ensuite.
+          msg.textContent = "Ton affiche n'est pas encore prête. On la génère de notre côté, tu la trouveras ici.";
           return;
         }
 
@@ -3733,7 +3923,7 @@
           $("#affiche-telecharger").hidden = true;
           msg.style.display = "block";
           msg.style.color = "var(--accent-fort)";
-          msg.textContent = "Ce club n'existe pas encore dans l'appli des clubbeurs : le QR ne donnerait aucun point. Contacte-nous.";
+          msg.textContent = "Ton affiche n'est pas encore prête : ton club vient d'être créé, il apparaît dans l'appli de tes clients sous 24 h.";
           return;
         }
 
@@ -3790,6 +3980,8 @@
          geste que Julien voulait "au premier abord". Le trou devient
          l'invitation. */
       function imageRecompense(reward) {
+        // La photo du club remplit son cadre ; un dessin detoure s'y pose
+        // en entier. Voir .reco-vignette.photo-reelle dans le CSS.
         if (reward.image_url) return { html: '<img src="' + escapeHtml(reward.image_url) + '" alt="" />', propre: true };
         var titre = reward.title || "";
         for (var i = 0; i < ART_PAR_TITRE.length; i++) {
@@ -3827,12 +4019,13 @@
           return (
             '<details class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
               '<summary class="reco-resume">' +
-                '<span class="reco-vignette' + (visuel.vide ? " sans-image" : "") + '"' +
+                '<span class="reco-vignette' + (visuel.vide ? " sans-image" : "") +
+                  (visuel.propre ? " photo-reelle" : "") + '"' +
                   ' data-photo-vite role="button" tabindex="0"' +
                   ' aria-label="' + (visuel.vide ? "Ajouter une photo à " : "Changer la photo de ") + escapeHtml(r.title) + '">' +
                   visuel.html +
                   '<span class="reco-vignette-cam" aria-hidden="true">' + ICONE_APPAREIL +
-                    (visuel.vide ? "Ajouter une photo" : (visuel.propre ? "Changer" : "Ta photo")) + "</span>" +
+                    (visuel.vide ? "Ajouter une photo" : "") + "</span>" +
                 "</span>" +
                 '<span class="reco-resume-txt"><strong>' + escapeHtml(r.title) + "</strong>" +
                   '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts · " + stock + "</span></span>" +
@@ -4150,7 +4343,25 @@
 
       /* ================= REGLAGES ================= */
 
-      var GLYPHE_IG_LIGNE = '<span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>';
+      /* Le vrai logo, dans les couleurs de la marque. Julien : "mets le
+         vrai logo Instagram". Un glyphe au trait dans l'encre de
+         l'interface se confond avec les autres icones de reglage -- une
+         marque se reconnait a sa couleur avant sa forme.
+
+         Le degrade officiel est reproduit ici parce que c'est le logo
+         d'Instagram : c'est le seul endroit de l'appli ou un degrade est
+         legitime, et il ne teinte rien d'autre que ces 16 px. */
+      var GLYPHE_IG_LIGNE = '<span class="reglage-ico ico-instagram">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+          '<defs><linearGradient id="ig-deg" x1="0" y1="1" x2="1" y2="0">' +
+            '<stop offset="0" stop-color="#FEDA75"/><stop offset=".25" stop-color="#FA7E1E"/>' +
+            '<stop offset=".5" stop-color="#D62976"/><stop offset=".75" stop-color="#962FBF"/>' +
+            '<stop offset="1" stop-color="#4F5BD5"/>' +
+          '</linearGradient></defs>' +
+          '<rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.4" fill="url(#ig-deg)"/>' +
+          '<circle cx="12" cy="12" r="4.1" fill="none" stroke="#fff" stroke-width="1.8"/>' +
+          '<circle cx="17.1" cy="6.9" r="1.15" fill="#fff"/>' +
+        "</svg></span>";
       var GLYPHE_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>';
 
       function bandeauRien(titre, detail) {
@@ -4274,6 +4485,20 @@
         $("#reglages-deconnexion-txt").textContent = ETAT.session ? "Déconnexion" : "Se connecter";
         var glyphe = $("#reglages-deconnexion-ico");
         if (glyphe) glyphe.innerHTML = ETAT.session ? FLECHE_SORTIE : FLECHE_ENTREE;
+
+        /* "Changer le mot de passe" n'existe QUE pour un compte qui en a
+           un. Julien : "changer de mot de passe, il n'y a même pas de mot
+           de passe". Il a raison pour son compte : entre par Google, il
+           n'en a jamais choisi -- lui en proposer un changement envoie un
+           lien de reinitialisation pour un mot de passe inexistant.
+
+           Supabase liste les fournisseurs dans app_metadata.providers.
+           "email" = inscription par mot de passe ; sinon c'est Google, et
+           la ligne n'a rien a faire la. */
+        var u = ETAT.session && ETAT.session.user;
+        var fournisseurs = (u && u.app_metadata && u.app_metadata.providers) || [];
+        var aMotDePasse = fournisseurs.indexOf("email") >= 0;
+        $("#reglages-mdp").hidden = !aMotDePasse;
         $("#reglages-mdp").disabled = !ETAT.session;
       }
 
@@ -5299,10 +5524,16 @@
          La regle EST "x points par tranche de 1 000 vues" : c'est elle
          qu'on ecrit, avec le bonus de scan a cote pour que les trois
          profils se distinguent sur autre chose qu'un seul nombre. */
+      /* Les profils ne sont plus dessines (voir le markup de l'etape 4).
+         La fonction reste : elle est appelee a chaque rendu du bareme, et
+         PROFILS_BAREME sert encore de valeurs par defaut a la creation
+         d'un club. */
       function rendreProfilsBareme() {
+        var zone = $("#pa-profils");
+        if (!zone || zone.hidden) return;
         var choisi = profilCorrespondant();
 
-        $("#pa-profils").innerHTML = PROFILS_BAREME.map(function (p) {
+        zone.innerHTML = PROFILS_BAREME.map(function (p) {
           return (
             '<button type="button" class="pa-profil' + (choisi === p.cle ? " choisi" : "") + '"' +
               ' data-profil="' + p.cle + '" role="radio" aria-checked="' + (choisi === p.cle ? "true" : "false") + '">' +
@@ -5315,7 +5546,7 @@
           );
         }).join("");
 
-        $("#pa-profils").querySelectorAll("[data-profil]").forEach(function (bouton) {
+        zone.querySelectorAll("[data-profil]").forEach(function (bouton) {
           bouton.addEventListener("click", function () { appliquerProfil(bouton.dataset.profil); });
         });
       }
@@ -5347,6 +5578,7 @@
       }
 
       function majProfilChoisi() {
+        if ($("#pa-profils").hidden) return;
         var choisi = profilCorrespondant();
         $("#pa-profils").querySelectorAll("[data-profil]").forEach(function (bouton) {
           var actif = bouton.dataset.profil === choisi;

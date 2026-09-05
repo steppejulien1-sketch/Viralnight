@@ -9,12 +9,24 @@ export const DEFAULT_POINT_RULES = {
   monthlyAmbassador: 350,
 };
 
+/* Le catalogue de DEMONSTRATION. Julien, 05/09/2026 : "retire accès VIP,
+   boisson soft, boisson premium, et mets juste un truc pour qu'on puisse
+   ajouter les récompenses".
+
+   ⚠️ Ce n'etait deja plus ce qu'un vrai club recoit. api/create-client.js
+   pose Vestiaire / Shot / Pinte / Cocktail depuis le 03/09 -- ces quatre
+   la ont un dessin, les autres non, d'ou les tuiles au pictogramme gris.
+   Cette liste-ci etait restee sur l'ancienne, et c'est elle que la demo
+   affiche. Les deux sources avaient diverge ; elles disent maintenant la
+   meme chose.
+
+   Si l'une des deux bouge, l'autre doit bouger : un gerant qui a vu la
+   demo avant de creer son club doit retrouver sa boutique. */
 export const DEFAULT_REWARDS = [
   { key: "cloakroom", title: "Vestiaire offert", pointsRequired: 40, maxRedemptions: 100, category: "acces" },
-  { key: "softDrink", title: "Boisson soft ou shot", pointsRequired: 70, maxRedemptions: 50, category: "bar" },
-  { key: "premiumDrink", title: "Boisson premium", pointsRequired: 110, maxRedemptions: 30, category: "bar" },
-  { key: "fastPass", title: "Coupe-file", pointsRequired: 160, maxRedemptions: 20, category: "acces" },
-  { key: "freeEntry", title: "Entrée gratuite", pointsRequired: 240, maxRedemptions: 10, category: "acces" },
+  { key: "shot", title: "Shot offert", pointsRequired: 60, maxRedemptions: 100, category: "bar" },
+  { key: "pint", title: "Pinte offerte", pointsRequired: 90, maxRedemptions: 50, category: "bar" },
+  { key: "cocktail", title: "Cocktail offert", pointsRequired: 130, maxRedemptions: 25, category: "bar" },
 ];
 
 const now = new Date();
