@@ -1937,8 +1937,12 @@
       .reglage-ico svg { width: 16px; height: 16px; stroke: var(--ink2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       /* Le logo Instagram porte ses propres couleurs : il n'herite ni du
          trait ni du fond des icones d'interface. */
+      /* Le logo garde ses propres couleurs : ni le fond ni le trait des
+         icones d'interface ne s'appliquent a une marque. */
       .reglage-ico.ico-instagram { background: none; }
-      .reglage-ico.ico-instagram svg { width: 22px; height: 22px; stroke: none; }
+      .reglage-ico.ico-instagram .logo-ig { width: 24px; height: 24px; }
+      .insta-ico.marque { background: none; }
+      .insta-ico.marque .logo-ig { width: 34px; height: 34px; }
       .reglage-txt { flex: 1 1 auto; min-width: 0; }
       .reglage-txt strong {
         font-family: var(--titre); display: block; font-size: 13.5px; font-weight: 700; }
@@ -2069,6 +2073,22 @@
       </p>
 
       <div class="stage">
+        <!-- Le degrade du logo Instagram, declare une seule fois pour
+             toutes ses apparitions (Reglages, carte du tableau de bord).
+             Statique et jamais retire : un <defs> qui vit dans un bloc
+             reconstruit emporte avec lui le remplissage des autres. -->
+        <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+          <defs>
+            <radialGradient id="ig-deg" cx=".3" cy="1.05" r="1.2">
+              <stop offset="0" stop-color="#FFD776"/>
+              <stop offset=".22" stop-color="#F58529"/>
+              <stop offset=".45" stop-color="#DD2A7B"/>
+              <stop offset=".7" stop-color="#8134AF"/>
+              <stop offset="1" stop-color="#515BD4"/>
+            </radialGradient>
+          </defs>
+        </svg>
+
         <div class="phone">
           <div class="screen">
             <!-- Porte de connexion : formulaire integre, pas un lien vers
@@ -3502,15 +3522,30 @@
          verifier a la main. */
       var JOUR_MS = 86400000;
 
+      /* ⚠️ LE PAS N'EST PAS TOUJOURS LA JOURNEE.
+         Un club ouvre le vendredi et le samedi : sa courbe quotidienne
+         est une succession de pics et de zeros. Sur sept ou trente
+         points, c'est son rythme et ca se lit. Sur quatre-vingt-dix,
+         c'est un peigne -- et avec la periode precedente par-dessus, deux
+         peignes emmeles.
+
+         Google Analytics et Stripe regroupent tous deux par semaine des
+         que la periode s'allonge. Treize points pour trois mois : on voit
+         enfin la tendance, qui est la seule chose qu'on cherche a cette
+         echelle. Les TOTAUX ne bougent pas -- seul le dessin change. */
+      function pasDe(jours) { return jours > 45 ? 7 : 1; }
+
       function fenetres(jours) {
+        var pas = pasDe(jours);
         var f = new Date(); f.setHours(23, 59, 59, 999);
         var fin = f.getTime();
         var debut = fin - jours * JOUR_MS + 1;
-        return {
-          jours: jours,
-          debut: debut, fin: fin,
-          avant: { jours: jours, debut: debut - jours * JOUR_MS, fin: debut - 1 },
+        var creer = function (debut, fin) {
+          return { jours: jours, pas: pas, seaux: Math.round(jours / pas), debut: debut, fin: fin };
         };
+        var w = creer(debut, fin);
+        w.avant = creer(debut - jours * JOUR_MS, debut - 1);
+        return w;
       }
 
       /* Une valeur par jour de la fenetre, pour n'importe quelle liste
@@ -3519,12 +3554,13 @@
          redeemed_at), la valeur aussi -- compter une ligne ou sommer un
          montant. Les deux sont des parametres. */
       function seauxDe(lignes, champDate, f, valeurDe) {
-        var seaux = new Array(f.jours).fill(0);
+        var seaux = new Array(f.seaux).fill(0);
+        var largeur = f.pas * JOUR_MS;
         (lignes || []).forEach(function (ligne) {
           var t = Date.parse(ligne[champDate] || "");
           if (!Number.isFinite(t) || t < f.debut || t > f.fin) return;
-          var index = Math.floor((t - f.debut) / JOUR_MS);
-          if (index >= 0 && index < f.jours) {
+          var index = Math.floor((t - f.debut) / largeur);
+          if (index >= 0 && index < f.seaux) {
             seaux[index] += valeurDe ? Number(valeurDe(ligne)) || 0 : 1;
           }
         });
@@ -3540,14 +3576,15 @@
          la courbe, le Set global sert le total -- additionner les jours
          compterait deux fois celui qui revient le lendemain. */
       function personnesDe(lignes, champDate, f) {
-        var jours = new Array(f.jours).fill(null).map(function () { return new Set(); });
+        var jours = new Array(f.seaux).fill(null).map(function () { return new Set(); });
         var tous = new Set();
+        var largeur = f.pas * JOUR_MS;
         (lignes || []).forEach(function (ligne) {
           var qui = ligne.customer_id || ligne.user_id;
           var t = Date.parse(ligne[champDate] || "");
           if (!qui || !Number.isFinite(t) || t < f.debut || t > f.fin) return;
-          var index = Math.floor((t - f.debut) / JOUR_MS);
-          if (index < 0 || index >= f.jours) return;
+          var index = Math.floor((t - f.debut) / largeur);
+          if (index < 0 || index >= f.seaux) return;
           jours[index].add(qui);
           tous.add(qui);
         });
@@ -3685,7 +3722,8 @@
           }).join(" ");
         };
 
-        /* ⚠️ LE DERNIER JOUR N'EST PAS FINI.
+        /* ⚠️ LA DERNIERE TRANCHE N'EST PAS FINIE (le jour, ou la
+           semaine quand le pas est hebdomadaire).
            Sans distinction, la courbe PLONGE au sol chaque matin : a 9 h,
            "aujourd'hui" vaut presque zero et le trait tombe a la verticale
            contre le bord droit. Ca se lit comme un effondrement alors que
@@ -3721,7 +3759,7 @@
 
         zone.innerHTML =
           '<svg viewBox="0 0 ' + G.L + " " + G.H + '" role="img" aria-label="Abonnés touchés, ' +
-            seaux.length + ' derniers jours">' +
+            f.jours + " derniers jours, par " + (f.pas === 7 ? "semaine" : "jour") + '">' +
             grille +
             traceAvant +
             '<path class="hero-aire" d="' + aire + '"/>' +
@@ -3950,7 +3988,7 @@
          mentions sont detectees, oui ou non. */
       function rendreCarteInstagram() {
         var carte = $("#dash-instagram");
-        var ICONE = '<span class="insta-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>';
+        var ICONE = '<span class="insta-ico marque">' + MARQUE_IG + "</span>";
 
         // Hors session, la carte n'a rien de vrai a dire : on la cache
         // plutot que d'inviter a connecter un compte qui n'existe pas.
@@ -4457,9 +4495,18 @@
         $("#fiche-etat").textContent = "";
       }
 
-      function ouvrirFiche(rewardId) {
+      function ouvrirFiche(rewardId, nommer) {
         rendreFiche(rewardId);
         ouvrirVue("recompense");
+        if (!nommer) return;
+        /* Le nom est selectionne, pas seulement mis au point : le champ
+           porte "Nouvelle recompense", et taper doit le REMPLACER. Apres
+           le prochain rendu, sinon la vue qui s'ouvre reprend le focus. */
+        requestAnimationFrame(function () {
+          var champ = $("#fiche-nom");
+          champ.focus();
+          champ.select();
+        });
       }
 
       FICHE.querySelectorAll("[data-champ]").forEach(function (input) {
@@ -4718,38 +4765,60 @@
           establishment_id: ETAT.data.establishment.id,
           title: "Nouvelle récompense",
           points_required: 100,
-          max_redemptions: null,
+          /* ⚠️ PAS `null`. Julien : "quand on cree une nouvelle
+             recompense, ce n'est pas direct illimite".
+
+             Un stock illimite est une promesse qu'on ne peut plus
+             reprendre : la recompense part dans l'appli de tous les
+             clients du club et chaque bon obtenu doit etre honore. Le
+             gerant qui vient de toucher "Ajouter" n'a pas encore decide
+             de ca -- et c'est justement la valeur qu'on lui donnait par
+             defaut, sans lui demander.
+
+             Cinquante, c'est le stock median du catalogue de depart
+             (100 / 100 / 50 / 25). Un chiffre qu'on augmente d'un geste,
+             la ou l'illimite ne se rattrape pas. */
+          max_redemptions: 50,
           category: "bar",
           active: true,
         }).select().single();
         if (error) { $("#recompense-msg").textContent = "Erreur : " + error.message; $("#recompense-msg").style.display = "block"; return; }
         ETAT.data.rewards = [...(ETAT.data.rewards || []), data];
         rendreRecompenses();
+        // On entre directement dans la fiche, nom selectionne : ajouter
+        // une recompense, c'est la nommer. La deposer dans la grille sous
+        // le nom "Nouvelle recompense" et laisser le gerant la retrouver,
+        // c'est une etape de plus pour rien.
+        ouvrirFiche(data.id, true);
       });
 
       /* ================= MA FICHE ================= */
 
       /* ================= REGLAGES ================= */
 
-      /* Le vrai logo, dans les couleurs de la marque. Julien : "mets le
-         vrai logo Instagram". Un glyphe au trait dans l'encre de
-         l'interface se confond avec les autres icones de reglage -- une
-         marque se reconnait a sa couleur avant sa forme.
+      /* ---- LE LOGO INSTAGRAM, POUR DE VRAI ----
+         Julien, deux fois : "mets le vrai logo Instagram" puis "le logo
+         Instagram, ce n'est meme pas le vrai".
 
-         Le degrade officiel est reproduit ici parce que c'est le logo
-         d'Instagram : c'est le seul endroit de l'appli ou un degrade est
-         legitime, et il ne teinte rien d'autre que ces 16 px. */
-      var GLYPHE_IG_LIGNE = '<span class="reglage-ico ico-instagram">' +
-        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-          '<defs><linearGradient id="ig-deg" x1="0" y1="1" x2="1" y2="0">' +
-            '<stop offset="0" stop-color="#FEDA75"/><stop offset=".25" stop-color="#FA7E1E"/>' +
-            '<stop offset=".5" stop-color="#D62976"/><stop offset=".75" stop-color="#962FBF"/>' +
-            '<stop offset="1" stop-color="#4F5BD5"/>' +
-          '</linearGradient></defs>' +
-          '<rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.4" fill="url(#ig-deg)"/>' +
-          '<circle cx="12" cy="12" r="4.1" fill="none" stroke="#fff" stroke-width="1.8"/>' +
-          '<circle cx="17.1" cy="6.9" r="1.15" fill="#fff"/>' +
-        "</svg></span>";
+         La version d'avant avait le degrade et la bonne couleur, mais il
+         lui manquait LA piece qui fait qu'on reconnait ce logo : le
+         BOITIER, ce carre blanc arrondi trace a l'interieur du carre de
+         couleur. Sans lui, il ne restait qu'un rond et un point sur un
+         fond degrade -- ca ressemble a Instagram sans etre Instagram.
+
+         Le vrai mark, c'est trois traits blancs sur le degrade : le
+         boitier de l'appareil, l'objectif au centre, le flash en haut a
+         droite. Les trois, ou aucun.
+
+         Le degrade vit dans le <defs> partage en haut de la page. */
+      var MARQUE_IG =
+        '<svg viewBox="0 0 24 24" aria-hidden="true" class="logo-ig">' +
+          '<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="6.8" fill="url(#ig-deg)"/>' +
+          '<rect x="5.1" y="5.1" width="13.8" height="13.8" rx="4.1" fill="none" stroke="#fff" stroke-width="1.75"/>' +
+          '<circle cx="12" cy="12" r="3.35" fill="none" stroke="#fff" stroke-width="1.75"/>' +
+          '<circle cx="16.75" cy="7.25" r="1.05" fill="#fff"/>' +
+        "</svg>";
+      var GLYPHE_IG_LIGNE = '<span class="reglage-ico ico-instagram">' + MARQUE_IG + "</span>";
       var GLYPHE_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>';
 
       function bandeauRien(titre, detail) {

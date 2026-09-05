@@ -48,13 +48,164 @@ const fallbackRewards = DEFAULT_REWARDS.map(({ title, pointsRequired, maxRedempt
   created_at: daysAgo(index + 1),
 }));
 
-const fallbackRedemptions = Array.from({ length: 42 }, (_, index) => ({
-  id: `demo-redemption-${index + 1}`,
-  reward_id: fallbackRewards[index % fallbackRewards.length].id,
-  customer_id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
-  status: index % 5 === 0 ? "used" : "claimed",
-  redeemed_at: daysAgo(index % 14),
-}));
+/* ==========================================================
+   LE CLUB DE DEMONSTRATION
+   ==========================================================
+
+   Julien, 06/09/2026 : "montre un peu ce que ca donnerait, mettre la
+   data un peu pour voir les dashboards, ce que ca donnerait, si c'est
+   beau".
+
+   La demo montrait 21 jours d'activite REGULIERE et pas un seul scan.
+   Trois consequences, toutes visibles a l'ecran :
+
+   · le tableau de bord sur 30 jours ou 3 mois comparait a une periode
+     vide -- "nouveau" ecrit dans les quatre cases ;
+   · la courbe etait un PLATEAU, la seule forme qu'aucun club n'a jamais
+     eue ;
+   · "Scans QR : 0 / Aucun scan", alors que c'est le premier chiffre que
+     regarde un gerant : est-ce que l'affiche collee au mur sert ?
+
+   Ce club-ci ouvre le VENDREDI ET LE SAMEDI (le meme defaut que
+   establishment_schedule.opening_weekdays, '{5,6}'), il grandit sur six
+   mois, et il a des creux. C'est ce qui fait qu'un graphe ressemble a
+   une soiree plutot qu'a un remplissage de tableur.
+
+   ⚠️ SUITE DETERMINISTE, jamais Math.random : deux chargements de suite
+   doivent donner exactement le meme graphe. Des chiffres qui bougent a
+   chaque F5 ne se lisent pas comme une demo, ils se lisent comme un bug.
+   ⚠️ Et ca reste une DEMO : le garde-fou du haut de ce fichier tient
+   toujours -- des qu'un club est connecte, c'est le vide honnete. */
+
+const DEMO_JOURS = 182;
+
+// Bruit reproductible dans [0,1[. La partie fractionnaire d'un sinus
+// mis a l'echelle : sans dependance, sans etat, et stable d'un
+// navigateur a l'autre.
+const bruit = (n) => {
+  const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+/* Combien de contenus deposes il y a `recul` jours.
+   Vendredi et samedi portent la soiree ; le jeudi en garde un peu ; le
+   reste de la semaine vit sur la trainee des publications tardives. */
+function volumeDuJour(recul) {
+  const d = new Date(now);
+  d.setDate(d.getDate() - recul);
+  const jour = d.getDay(); // 0 dimanche ... 6 samedi
+
+  const socle = jour === 5 || jour === 6 ? 7 : jour === 4 ? 3 : jour === 0 ? 2 : 1;
+  // Le club grandit : deux fois moins d'activite il y a six mois
+  // qu'aujourd'hui. C'est ce qui donne son sens a la comparaison de
+  // periodes -- sans progression, tous les deltas valent zero.
+  const croissance = 0.5 + 0.5 * (1 - recul / DEMO_JOURS);
+  // Une soiree sur douze tombe a l'eau (meteo, concurrence, rien).
+  const creux = bruit(recul * 3.1) < 0.08 ? 0.15 : 1;
+  return Math.round(socle * croissance * creux * (0.7 + 0.7 * bruit(recul)));
+}
+
+// L'horaire d'une publication : la nuit du club, pas 9 h du matin.
+function heureDeNuit(recul, i) {
+  const d = new Date(now);
+  d.setDate(d.getDate() - recul);
+  d.setHours(22 + Math.floor(bruit(recul * 7 + i) * 6), Math.floor(bruit(recul + i * 3) * 60), 0, 0);
+  // setHours(24..27) bascule au lendemain, et c'est voulu : une soiree
+  // du samedi finit le dimanche matin (meme regle que lib/scheduling).
+  // Mais rien ne doit tomber dans le futur -- une demo datee de demain
+  // sortirait de toutes les fenetres et laisserait un trou a droite du
+  // graphe. On recule alors d'une semaine, meme jour, meme heure.
+  while (d > now) d.setDate(d.getDate() - 7);
+  return d.toISOString();
+}
+
+/* Un vivier de clients qui REVIENNENT. Tirer un identifiant neuf a
+   chaque publication ferait autant de membres que de contenus : le
+   chiffre "Membres" ne voudrait plus rien dire, et c'est justement
+   celui qui separe un club qui fidelise d'un club qui defile. */
+const DEMO_CLIENTS = 210;
+const clientDemo = (n) =>
+  `00000000-0000-4000-8000-${String((n % DEMO_CLIENTS) + 1).padStart(12, "0")}`;
+
+const PLATEFORMES = ["instagram", "instagram", "tiktok", "instagram", "youtube", "tiktok"];
+const FORMATS = ["story", "reel", "story", "post", "video", "story"];
+
+const fallbackSubmissions = (() => {
+  const out = [];
+  let n = 0;
+  for (let recul = DEMO_JOURS; recul >= 1; recul--) {
+    const combien = volumeDuJour(recul);
+    for (let i = 0; i < combien; i++) {
+      n++;
+      const alea = bruit(n * 1.7);
+      // Une story fait 800 a 9 000 vues, un Reel qui prend fait beaucoup
+      // plus. L'echelle est logarithmique, pas lineaire : c'est ce qui
+      // donne les pics qu'un club reconnait.
+      const vues = Math.round(700 + Math.pow(alea, 3) * 42000 + bruit(n) * 2600);
+      /* Les contenus recents sont encore en file d'attente ; les vieux
+         ont tous ete tries. Un club qui aurait 20 % de "en attente"
+         datant de trois mois aurait surtout un probleme de moderation. */
+      const statut = recul < 3 && alea > 0.55 ? "pending" : alea > 0.93 ? "rejected" : "validated";
+      out.push({
+        id: `demo-submission-${n}`,
+        customer_id: clientDemo(Math.floor(bruit(n * 4.3) * DEMO_CLIENTS)),
+        platform: PLATEFORMES[n % PLATEFORMES.length],
+        content_type: FORMATS[n % FORMATS.length],
+        url: `https://viralnight.example/contenu/${n}`,
+        views_count: vues,
+        // 15 pts pour 1 000 vues, le bareme par defaut du produit.
+        points_awarded: statut === "validated" ? Math.max(10, Math.round((vues / 1000) * 15)) : 0,
+        status: statut,
+        submitted_at: heureDeNuit(recul, i),
+      });
+    }
+  }
+  return out;
+})();
+
+/* Les scans du QR colle au mur. Toujours PLUS nombreux que les
+   publications -- on scanne pour regarder ses points, on ne publie pas
+   a chaque fois. Le rapport de l'un a l'autre est d'ailleurs le vrai
+   sujet du gerant : combien de scans finissent en story. */
+const fallbackScans = (() => {
+  const out = [];
+  let n = 0;
+  for (let recul = DEMO_JOURS; recul >= 1; recul--) {
+    const combien = Math.round(volumeDuJour(recul) * (2.4 + bruit(recul * 5) * 1.6));
+    for (let i = 0; i < combien; i++) {
+      n++;
+      out.push({
+        id: `demo-scan-${n}`,
+        customer_id: clientDemo(Math.floor(bruit(n * 2.9) * DEMO_CLIENTS)),
+        scanned_at: heureDeNuit(recul, i + 40),
+      });
+    }
+  }
+  return out;
+})();
+
+/* Un bon s'echange AU BAR, donc un soir d'ouverture : les caler sur le
+   meme rythme que les publications, plutot que sur "un par jour",
+   evite la ligne parfaitement plate que Julien voyait dans la case
+   Recompenses. */
+const fallbackRedemptions = (() => {
+  const out = [];
+  let n = 0;
+  for (let recul = DEMO_JOURS; recul >= 1; recul--) {
+    const combien = Math.round(volumeDuJour(recul) * 0.55 * bruit(recul * 1.3 + 2));
+    for (let i = 0; i < combien; i++) {
+      n++;
+      out.push({
+        id: `demo-redemption-${n}`,
+        reward_id: fallbackRewards[n % fallbackRewards.length].id,
+        customer_id: clientDemo(Math.floor(bruit(n * 6.1) * DEMO_CLIENTS)),
+        status: n % 5 === 0 ? "used" : "claimed",
+        redeemed_at: heureDeNuit(recul, i + 80),
+      });
+    }
+  }
+  return out;
+})();
 
 /**
  * Jeu de donnees VIDE, pour les cas ou l'on sait qu'on n'a rien a montrer.
@@ -98,56 +249,16 @@ export const fallbackDashboardData = {
     city: "Brussels",
     category: "club",
     subscription_status: "essai",
-    created_at: daysAgo(30),
+    // Six mois d'historique : le club ne peut pas etre plus jeune que
+    // ses propres donnees.
+    created_at: daysAgo(DEMO_JOURS + 20),
   },
-  submissions: [
-    {
-      id: "demo-submission-1",
-      customer_id: "00000000-0000-4000-8000-000000000001",
-      platform: "tiktok",
-      content_type: "video",
-      url: "https://tiktok.com/@demo/video/1",
-      views_count: 12800,
-      points_awarded: 320,
-      status: "pending",
-      submitted_at: daysAgo(1),
-    },
-    {
-      id: "demo-submission-2",
-      customer_id: "00000000-0000-4000-8000-000000000002",
-      platform: "instagram",
-      content_type: "story",
-      url: "https://instagram.com/stories/demo/2",
-      views_count: 7240,
-      points_awarded: 579,
-      status: "pending",
-      submitted_at: daysAgo(2),
-    },
-    {
-      id: "demo-submission-3",
-      customer_id: "00000000-0000-4000-8000-000000000003",
-      platform: "youtube",
-      content_type: "video",
-      url: "https://youtube.com/shorts/demo3",
-      views_count: 3910,
-      points_awarded: 128,
-      status: "rejected",
-      submitted_at: daysAgo(3),
-    },
-    ...Array.from({ length: 123 }, (_, index) => ({
-      id: `demo-submission-extra-${index + 1}`,
-      customer_id: `00000000-0000-4000-8000-${String(index + 4).padStart(12, "0")}`,
-      platform: index % 3 === 0 ? "instagram" : index % 3 === 1 ? "tiktok" : "youtube",
-      content_type: index % 4 === 0 ? "story" : index % 4 === 1 ? "reel" : index % 4 === 2 ? "post" : "video",
-      url: `https://viralnight.example/content/${index + 4}`,
-      views_count: 1200 + index * 47,
-      points_awarded: index < 81 ? 55 + (index % 9) * 8 : 0,
-      status: index < 81 ? "validated" : index < 98 ? "pending" : "rejected",
-      submitted_at: daysAgo((index % 21) + 1),
-    })),
-  ],
+  submissions: fallbackSubmissions,
   rewards: fallbackRewards,
   rewardRedemptions: fallbackRedemptions,
+  // Sans cette ligne, `ETAT.data.qrScans` valait undefined et le tableau
+  // de bord affichait "Scans QR : 0 / Aucun scan" -- dans une DEMO.
+  qrScans: fallbackScans,
 };
 
 function normalizePointRules(row) {
