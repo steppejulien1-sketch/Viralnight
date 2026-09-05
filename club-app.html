@@ -272,10 +272,33 @@
       }
       /* La periode n'est pas encore reglable : elle se lit comme une
          etiquette, pas comme un bouton, tant qu'elle ne fait rien. */
-      /* Sans cadre : la periode n'est pas reglable, une pilule bordee la
-         faisait passer pour un bouton desactive. */
-      .club-periode {
-        flex: 0 0 auto; font-size: 11.5px; color: var(--ink3); white-space: nowrap;
+      /* ---- Le choix de la periode ----
+         Des ONGLETS DE TEXTE souligne, pas des pilules : trois pilules
+         grises cote a cote se lisent comme trois boutons a presser, et
+         l'oeil ne voit plus lequel est actif. Stripe, Google Analytics et
+         YouTube Studio soulignent tous le choix courant et laissent les
+         autres en encre sourde. */
+      .periodes {
+        display: flex; gap: 4px; margin: 0 0 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .periode {
+        position: relative; padding: 7px 10px 9px; border: 0; background: none;
+        font-family: inherit; font-size: 12.5px; font-weight: 700;
+        color: var(--ink3); cursor: pointer;
+        transition: color .15s ease;
+      }
+      .periode::after {
+        content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px;
+        height: 2px; border-radius: 2px; background: var(--ink);
+        transform: scaleX(0); transform-origin: center;
+        transition: transform .2s var(--sortie);
+      }
+      .periode.on { color: var(--ink); }
+      .periode.on::after { transform: scaleX(1); }
+      @media (hover: hover) and (pointer: fine) { .periode:hover { color: var(--ink2); } }
+      @media (prefers-reduced-motion: reduce) {
+        .periode, .periode::after { transition: none; }
       }
 
       /* ---- Connexion requise ---- */
@@ -485,6 +508,8 @@
         /* Mouvement retire, lisibilite gardee : les elements sont a leur
            etat final, sans trajet. */
         .hero-trait { animation: none; stroke-dashoffset: 0; }
+        .hero-trait-jour { animation: none; opacity: .5; }
+        .hero-trait-avant { animation: none; opacity: 1; }
         .hero-aire { animation: none; opacity: .09; }
         .hero-point { animation: none; opacity: 1; }
         .hero-point-anneau { animation: none; opacity: .35; }
@@ -563,6 +588,48 @@
         font-size: 12px; color: var(--encre-3);
       }
 
+      /* ---- La legende des deux periodes ----
+         Chaque ligne dit trois choses dans l'ordre ou on les cherche :
+         de quel trait il s'agit, quand, combien. Le total est a droite,
+         aligne sur l'autre -- c'est la comparaison qui compte, et deux
+         nombres qui ne s'alignent pas ne se comparent pas. */
+      .hero-legende {
+        position: relative; z-index: 1; display: grid; gap: 5px; margin-top: 12px;
+        padding-top: 11px; border-top: 1px solid rgba(255,255,255,.10);
+      }
+      .hero-legende[hidden] { display: none; }
+      .hl-ligne { display: flex; align-items: center; gap: 8px; font-size: 11.5px; }
+      .hl-trait {
+        flex: 0 0 auto; width: 14px; height: 0;
+        border-top: 2px solid var(--accent); border-radius: 2px;
+      }
+      .hl-ligne.avant .hl-trait { border-top-style: dashed; border-top-color: rgba(255,255,255,.42); }
+      .hl-quand { flex: 1 1 auto; min-width: 0; color: var(--encre-2); }
+      .hl-ligne.avant .hl-quand { color: var(--encre-3); }
+      .hl-val {
+        flex: 0 0 auto; font-family: var(--chiffre); font-weight: 800;
+        letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: var(--encre);
+      }
+      .hl-ligne.avant .hl-val { color: var(--encre-3); font-weight: 700; }
+
+      /* Le segment du jour en cours : meme couleur, mais pointille et a
+         demi efface. Il apparait apres le trait plein, comme sa suite. */
+      .hero-trait-jour {
+        fill: none; stroke: var(--accent); stroke-width: 2;
+        stroke-linecap: round; stroke-dasharray: 2.5 3; opacity: 0;
+        animation: heroJour 400ms ease 900ms forwards;
+      }
+      @keyframes heroJour { to { opacity: .5; } }
+
+      /* La periode precedente passe DERRIERE : en pointille, sans aire,
+         sans point d'arrivee. Elle est un repere, pas un second sujet. */
+      .hero-trait-avant {
+        fill: none; stroke: rgba(255,255,255,.34); stroke-width: 1.5;
+        stroke-linejoin: round; stroke-linecap: round;
+        stroke-dasharray: 3 3;
+        opacity: 0; animation: heroFond 500ms ease 240ms forwards;
+      }
+
       /* ---- KPI (tableau de bord) ----
          UNE carte, quatre cases separees par des filets -- pas quatre
          cartes flottantes. Julien, 05/09/2026 : "c'est tout moche".
@@ -607,20 +674,26 @@
 
          Ici les quatre chiffres n'avaient rien : ni courbe, ni variation.
          Seul le grand chiffre du haut en avait une. */
+      /* Le chiffre et sa variation sur la meme ligne, la courbe dessous.
+         Reference : YouTube Studio, dont chaque case d'analytique porte sa
+         valeur et, juste a cote, la fleche de sa variation. Une courbe de
+         42 px coincee a droite du nombre ne portait qu'une silhouette ;
+         sur toute la largeur elle porte enfin une forme, et le pourcentage
+         dit ce que la forme vaut. */
       .kpi-ligne {
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 8px; margin-top: 7px;
+        display: flex; align-items: baseline; justify-content: space-between;
+        gap: 6px; margin-top: 7px;
       }
       .kpi-valeur {
         display: block;
         font-family: var(--chiffre); font-size: 25px; font-weight: 800;
         letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums;
       }
-      /* 42x18 : assez pour lire une forme, trop peu pour lire une valeur
-         -- c'est exactement ce qu'on lui demande. Elle n'a ni axe ni
-         graduation : le graphe du haut porte l'echelle, celle-ci ne
-         porte que le SENS. */
-      .kpi-courbe { flex: 0 0 auto; width: 42px; height: 18px; }
+      /* Assez pour lire une forme, trop peu pour lire une valeur -- c'est
+         exactement ce qu'on lui demande. Elle n'a ni axe ni graduation :
+         le graphe du haut porte l'echelle, celle-ci ne porte que le
+         SENS. */
+      .kpi-courbe { display: block; width: 100%; height: 16px; margin-top: 7px; }
       .kpi-courbe svg { display: block; width: 100%; height: 100%; overflow: visible; }
       .kpi-courbe path {
         fill: none; stroke: var(--ink3); stroke-width: 1.6;
@@ -636,8 +709,10 @@
       .kpi-courbe.plate path { stroke: var(--line2); }
 
       .kpi-delta {
+        flex: 0 0 auto;
         font-family: var(--chiffre); font-weight: 800; font-size: 11px;
-        letter-spacing: 0; font-variant-numeric: tabular-nums;
+        letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ink3);
+        white-space: nowrap;
       }
       .kpi-delta.hausse { color: var(--succes); }
       .kpi-delta.baisse { color: var(--accent-fort); }
@@ -2341,7 +2416,24 @@
                   <strong id="dash-etablissement">—</strong>
                   <span id="dash-ville"></span>
                 </span>
-                <span class="club-periode" id="dash-periode">14 jours</span>
+              </div>
+
+              <!-- LA PERIODE COMMANDE TOUT L'ECRAN.
+                   Avant, l'entete annoncait "14 jours", la courbe montrait
+                   14 jours... et les quatre chiffres etaient des totaux
+                   DEPUIS LE DEBUT. Le grand nombre et le graphe posé
+                   dessous racontaient donc deux choses differentes.
+
+                   Reference : Stripe, dont le tableau de bord ouvre sur une
+                   rangee de periodes (1 SEM. · 4 SEM. · 1 AN...) qui
+                   regle l'ecran entier. Google Analytics fait pareil, en
+                   ecrivant en plus la periode de comparaison sous la
+                   periode choisie. Trois choix ici, pas sept : un club lit
+                   sa semaine, son mois, sa saison. -->
+              <div class="periodes" role="tablist" aria-label="Période">
+                <button type="button" class="periode" role="tab" data-jours="7">7 jours</button>
+                <button type="button" class="periode" role="tab" data-jours="30">30 jours</button>
+                <button type="button" class="periode" role="tab" data-jours="90">3 mois</button>
               </div>
 
               <div class="hero">
@@ -2350,6 +2442,11 @@
                 <span class="hero-note" id="kpi-vues-note"></span>
                 <div class="hero-courbe" id="hero-courbe"></div>
                 <div class="hero-graphe" id="hero-graphe" hidden></div>
+                <!-- La legende porte les DEUX totaux et les DEUX dates.
+                     Google Analytics trace la periode precedente en
+                     pointille sous la courante et les nomme dessous : sans
+                     ca, une seconde ligne dans un graphe est un mystere. -->
+                <div class="hero-legende" id="hero-legende" hidden></div>
               </div>
 
               <div class="insta-carte" id="dash-instagram" hidden></div>
@@ -2363,32 +2460,36 @@
                   <span class="kpi-label"><span class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><path d="M13.5 13.5h3.5v3.5M20.5 13.5v3.5h-3.5M13.5 20.5h7"/></svg></span>Scans QR</span>
                   <span class="kpi-ligne">
                     <span class="kpi-valeur" id="kpi-scans">—</span>
-                    <span class="kpi-courbe" id="kpi-scans-courbe" aria-hidden="true"></span>
+                    <span class="kpi-delta" id="kpi-scans-delta"></span>
                   </span>
+                  <span class="kpi-courbe" id="kpi-scans-courbe" aria-hidden="true"></span>
                   <span class="kpi-note" id="kpi-scans-note"></span>
                 </div>
                 <div class="kpi">
                   <span class="kpi-label"><span class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.6a3.4 3.4 0 0 1 0 5.8M17.5 14.6c2 .9 3.5 2.9 3.5 5.4"/></svg></span>Membres</span>
                   <span class="kpi-ligne">
                     <span class="kpi-valeur" id="kpi-membres">—</span>
-                    <span class="kpi-courbe" id="kpi-membres-courbe" aria-hidden="true"></span>
+                    <span class="kpi-delta" id="kpi-membres-delta"></span>
                   </span>
+                  <span class="kpi-courbe" id="kpi-membres-courbe" aria-hidden="true"></span>
                   <span class="kpi-note" id="kpi-membres-note"></span>
                 </div>
                 <div class="kpi">
                   <span class="kpi-label"><span class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.5 6 .9-4.3 4.3 1 6-5.3-2.9-5.3 2.9 1-6L3.4 9.9l6-.9z"/></svg></span>Points donnés</span>
                   <span class="kpi-ligne">
                     <span class="kpi-valeur" id="kpi-points">—</span>
-                    <span class="kpi-courbe" id="kpi-points-courbe" aria-hidden="true"></span>
+                    <span class="kpi-delta" id="kpi-points-delta"></span>
                   </span>
+                  <span class="kpi-courbe" id="kpi-points-courbe" aria-hidden="true"></span>
                   <span class="kpi-note" id="kpi-points-note"></span>
                 </div>
                 <div class="kpi">
-                  <span class="kpi-label"><span class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="8.5" width="17" height="12" rx="2"/><path d="M3.5 12.8h17M12 8.5V20.5"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg></span>Récompenses</span>
+                  <span class="kpi-label"><span class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="8.5" width="17" height="12" rx="2"/><path d="M3.5 12.8h17M12 8.5V20.5"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg></span>Récompenses prises</span>
                   <span class="kpi-ligne">
                     <span class="kpi-valeur" id="kpi-recompenses">—</span>
-                    <span class="kpi-courbe" id="kpi-recompenses-courbe" aria-hidden="true"></span>
+                    <span class="kpi-delta" id="kpi-recompenses-delta"></span>
                   </span>
+                  <span class="kpi-courbe" id="kpi-recompenses-courbe" aria-hidden="true"></span>
                   <span class="kpi-note" id="kpi-recompenses-note"></span>
                 </div>
               </div>
@@ -2797,7 +2898,19 @@
       }
 
       var $ = function (s) { return document.querySelector(s); };
-      var nb = new Intl.NumberFormat("fr-FR");
+      /* Le francais separe les milliers par une ESPACE FINE INSECABLE
+         (U+202F). Archivo, qui compose tous les chiffres de l'appli, n'a
+         pas ce glyphe : la substitution retombe sur une fonte systeme et
+         l'espace se reduit a presque rien -- "249 480" tenait dans le
+         grand chiffre du hero, le meme nombre se recollait en "249480"
+         dans la legende juste dessous. Deux ecritures d'un meme chiffre a
+         trois centimetres d'ecart.
+
+         On la remplace par l'insecable ordinaire (U+00A0), presente dans
+         toutes les fontes du projet. Meme correctif que dans
+         app-preview.html, pour la meme raison. */
+      var FORMAT_NB = new Intl.NumberFormat("fr-FR");
+      var nb = { format: function (v) { return FORMAT_NB.format(v).replace(/\u202f/g, "\u00a0"); } };
 
       /* ---- Les chiffres montent ----
          Un compteur qui se pose d'un coup est une valeur ; le meme qui
@@ -2830,6 +2943,13 @@
         var duree = 700;
         var debut = performance.now();
         (function pas(t) {
+          /* Une AUTRE valeur a ete posee depuis : le compteur qui tourne
+             encore n'a plus d'objet, et sa prochaine image ecraserait le
+             nouveau chiffre. Constate en changeant de periode dans les
+             700 ms qui suivent l'ouverture du tableau de bord : la
+             legende affichait 67 152, le grand chiffre restait a 249 480,
+             le total de la periode d'avant. */
+          if (COMPTES.get(el) !== cible) return;
           var avance = Math.min(1, (t - debut) / duree);
           // Le meme ease-out que le reste de l'interface : vite, puis ca
           // s'installe. Un comptage lineaire a l'air d'un chargement.
@@ -2923,7 +3043,18 @@
         lien.addEventListener("click", function () { ouvrirVue(lien.dataset.va); });
       });
 
-      var ETAT = { data: null, session: null, instagram: null };
+      /* La periode choisie survit a la fermeture : un gerant qui lit son
+         mois ne veut pas rebasculer sur la semaine a chaque ouverture.
+         Le localStorage peut jeter (navigation privee, site data bloque)
+         -- 30 jours est alors le repli, jamais une panne. */
+      var CLE_PERIODE = "noctify.club.periode";
+      var PERIODES = [7, 30, 90];
+
+      var ETAT = { data: null, session: null, instagram: null, periode: 30 };
+      try {
+        var voulue = Number(localStorage.getItem(CLE_PERIODE));
+        if (PERIODES.indexOf(voulue) >= 0) ETAT.periode = voulue;
+      } catch (e) { /* pas de stockage : on garde le repli */ }
 
       /* Statut Instagram, lu une seule fois et partage entre le tableau
          de bord et les reglages -- deux appels pour la meme reponse, sur
@@ -3357,53 +3488,106 @@
       /* Vues par jour sur 14 jours. Sortie de la sparkline parce que les
          barres, la variation et la courbe lisent tous la meme serie : la
          calculer trois fois, c'est trois occasions de diverger. */
-      /* Le meme decoupage que seauxVues(), mais pour n'importe quelle
-         liste datee : scans, recompenses echangees, points. Le champ de
-         date change d'une table a l'autre (submitted_at, scanned_at,
-         redeemed_at), la valeur aussi -- compter une ligne ou sommer un
-         montant. Les deux sont des parametres. */
-      function seauxDe(lignes, champDate, jours, valeurDe) {
-        var JOURS = jours || 14;
-        var jour = 86400000;
+      /* ================= LA FENETRE =================
+         Toute comparaison du tableau de bord sort d'ici. Une seule
+         definition de "la periode" et de "celle d'avant", plutot qu'une
+         par chiffre -- c'est ce qui garantit que le grand nombre, les
+         quatre cases et le graphe parlent bien du meme intervalle.
+
+         "Celle d'avant" est la fenetre de MEME LONGUEUR qui precede
+         immediatement. C'est la convention de Google Analytics ("vs. Jan
+         31 – Feb 6") et de Stripe. L'ancienne variation comparait la
+         seconde moitie de la fenetre a la premiere : une mesure maison,
+         que personne d'autre n'utilise et qu'aucun gerant ne peut
+         verifier a la main. */
+      var JOUR_MS = 86400000;
+
+      function fenetres(jours) {
         var f = new Date(); f.setHours(23, 59, 59, 999);
         var fin = f.getTime();
-        var seaux = new Array(JOURS).fill(0);
+        var debut = fin - jours * JOUR_MS + 1;
+        return {
+          jours: jours,
+          debut: debut, fin: fin,
+          avant: { jours: jours, debut: debut - jours * JOUR_MS, fin: debut - 1 },
+        };
+      }
+
+      /* Une valeur par jour de la fenetre, pour n'importe quelle liste
+         datee : scans, recompenses echangees, points. Le champ de date
+         change d'une table a l'autre (submitted_at, scanned_at,
+         redeemed_at), la valeur aussi -- compter une ligne ou sommer un
+         montant. Les deux sont des parametres. */
+      function seauxDe(lignes, champDate, f, valeurDe) {
+        var seaux = new Array(f.jours).fill(0);
         (lignes || []).forEach(function (ligne) {
           var t = Date.parse(ligne[champDate] || "");
-          if (!Number.isFinite(t)) return;
-          var index = JOURS - 1 - Math.floor((fin - t) / jour);
-          if (index >= 0 && index < JOURS) {
+          if (!Number.isFinite(t) || t < f.debut || t > f.fin) return;
+          var index = Math.floor((t - f.debut) / JOUR_MS);
+          if (index >= 0 && index < f.jours) {
             seaux[index] += valeurDe ? Number(valeurDe(ligne)) || 0 : 1;
           }
         });
         return seaux;
       }
 
-      /* Le nombre de MEMBRES est cumulatif : une personne qui a publie
-         reste membre les jours suivants. Compter les nouveaux par jour
-         donnerait une courbe qui redescend a zero des qu'un jour est
-         creux, ce qui dirait le contraire de la verite. */
-      function seauxMembres(submissions, jours) {
-        var JOURS = jours || 14;
-        var jour = 86400000;
-        var f = new Date(); f.setHours(23, 59, 59, 999);
-        var fin = f.getTime();
-        var premierJour = {};
-        (submissions || []).forEach(function (sub) {
-          var qui = sub.customer_id || sub.user_id || sub.id;
-          var t = Date.parse(sub.submitted_at || "");
-          if (!qui || !Number.isFinite(t)) return;
-          var index = JOURS - 1 - Math.floor((fin - t) / jour);
-          // Anterieur a la fenetre : la personne compte des le jour 0.
-          var pose = index < 0 ? 0 : index;
-          if (pose >= JOURS) return;
-          if (premierJour[qui] === undefined || pose < premierJour[qui]) premierJour[qui] = pose;
-        });
+      function somme(seaux) {
+        return seaux.reduce(function (a, b) { return a + b; }, 0);
+      }
 
-        var nouveaux = new Array(JOURS).fill(0);
-        Object.keys(premierJour).forEach(function (qui) { nouveaux[premierJour[qui]]++; });
-        var cumul = 0;
-        return nouveaux.map(function (n) { cumul += n; return cumul; });
+      /* Des PERSONNES, pas des lignes : une personne qui publie cinq fois
+         dans la semaine est un membre, pas cinq. Le tableau par jour sert
+         la courbe, le Set global sert le total -- additionner les jours
+         compterait deux fois celui qui revient le lendemain. */
+      function personnesDe(lignes, champDate, f) {
+        var jours = new Array(f.jours).fill(null).map(function () { return new Set(); });
+        var tous = new Set();
+        (lignes || []).forEach(function (ligne) {
+          var qui = ligne.customer_id || ligne.user_id;
+          var t = Date.parse(ligne[champDate] || "");
+          if (!qui || !Number.isFinite(t) || t < f.debut || t > f.fin) return;
+          var index = Math.floor((t - f.debut) / JOUR_MS);
+          if (index < 0 || index >= f.jours) return;
+          jours[index].add(qui);
+          tous.add(qui);
+        });
+        return {
+          total: tous.size,
+          seaux: jours.map(function (s) { return s.size; }),
+        };
+      }
+
+      /* La variation d'une periode sur la precedente. null quand il n'y a
+         rien avant : "+∞ %" serait faux, "0 %" aussi. */
+      function variation(actuel, avant) {
+        if (!avant) return actuel ? null : 0;
+        return Math.round(((actuel - avant) / avant) * 100);
+      }
+
+      function poserDelta(el, actuel, avant) {
+        if (!el) return;
+        // Rien avant, rien maintenant : "0 %" a cote d'un zero est du
+        // bruit. La case dit deja qu'il ne s'est rien passe.
+        if (!actuel && !avant) { el.className = "kpi-delta"; el.textContent = ""; return; }
+        var v = variation(actuel, avant);
+        if (v === null) {
+          el.className = "kpi-delta";
+          el.textContent = actuel ? "nouveau" : "";
+          return;
+        }
+        el.className = "kpi-delta " + (v > 0 ? "hausse" : v < 0 ? "baisse" : "");
+        el.textContent = (v > 0 ? "↑ +" : v < 0 ? "↓ " : "") + v + " %";
+      }
+
+      /* "23 août – 5 sept." mais "9 – 22 août" : repeter le mois quand
+         c'est le meme fait lire deux fois la meme information. */
+      function plageTexte(debut, fin) {
+        var d = new Date(debut), f = new Date(fin);
+        var mois = { day: "numeric", month: "short" };
+        if (d.getMonth() === f.getMonth() && d.getFullYear() === f.getFullYear()) {
+          return d.getDate() + " – " + f.toLocaleDateString("fr-FR", mois);
+        }
+        return d.toLocaleDateString("fr-FR", mois) + " – " + f.toLocaleDateString("fr-FR", mois);
       }
 
       /* La courbe miniature : pas d'axe, pas de graduation, pas de point
@@ -3413,9 +3597,15 @@
          Une serie plate (tout a zero, ou toujours la meme valeur) est
          dessinee comme une ligne mediane grise : inventer une ondulation
          sur des donnees plates serait un mensonge de graphe. */
-      function rendreCourbeMini(zone, seaux) {
+      function rendreCourbeMini(zone, seaux, v) {
         if (!zone) return;
-        var L = 42, H = 18, m = 2.5;
+        /* preserveAspectRatio="none" plus vector-effect : la case fait
+           130 px de large sur 16 de haut, le dessin 100 sur 18. Sans les
+           deux, le SVG se contente de tenir dans la hauteur et se centre
+           -- la courbe occupait le tiers median de sa case, avec du vide
+           de chaque cote. La premiere ligne etire le dessin, la seconde
+           empeche le trait de s'etirer avec lui. */
+        var L = 100, H = 18, m = 2.5;
         var max = Math.max.apply(null, seaux);
         var min = Math.min.apply(null, seaux);
         var plate = max === min;
@@ -3426,36 +3616,18 @@
           return (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
         }).join(" ");
 
-        var sens = plate ? "plate" : (variationVues(seaux) > 0 ? "hausse" : variationVues(seaux) < 0 ? "baisse" : "plate");
+        /* Le sens vient du DELTA affiche a cote, pas d'un second calcul
+           sur la serie : deux mesures differentes du meme mouvement
+           finissaient par se contredire -- une fleche verte au-dessus
+           d'une courbe rouge. */
+        // Sans base de comparaison (v vaut null, la case affiche
+        // "nouveau"), la courbe garde son encre neutre : la grisailler
+        // comme une serie plate dirait qu'il ne s'est rien passe, alors
+        // qu'elle dessine justement quelque chose.
+        var sens = plate ? "plate" : (v > 0 ? "hausse" : v < 0 ? "baisse" : "");
         zone.className = "kpi-courbe " + sens;
-        zone.innerHTML = '<svg viewBox="0 0 ' + L + " " + H + '"><path d="' + trace + '"/></svg>';
-      }
-
-      function seauxVues(validated, jours) {
-        var JOURS = jours || 14;
-        var jour = 86400000;
-        var f = new Date(); f.setHours(23, 59, 59, 999);
-        var fin = f.getTime();
-        var seaux = new Array(JOURS).fill(0);
-        validated.forEach(function (sub) {
-          var t = Date.parse(sub.submitted_at || "");
-          if (!Number.isFinite(t)) return;
-          var index = JOURS - 1 - Math.floor((fin - t) / jour);
-          if (index >= 0 && index < JOURS) seaux[index] += Number(sub.views_count || 0);
-        });
-        return seaux;
-      }
-
-      /* La variation : la seconde moitie de la periode contre la
-         premiere. Pas "vs hier" -- une seule soiree ratee ferait
-         -100 % et ne dirait rien d'utile a un club qui ouvre deux
-         soirs par semaine. */
-      function variationVues(seaux) {
-        var moitie = Math.floor(seaux.length / 2);
-        var avant = seaux.slice(0, moitie).reduce(function (a, b) { return a + b; }, 0);
-        var apres = seaux.slice(moitie).reduce(function (a, b) { return a + b; }, 0);
-        if (!avant) return apres ? null : 0; // null = pas de base de comparaison
-        return Math.round(((apres - avant) / avant) * 100);
+        zone.innerHTML = '<svg viewBox="0 0 ' + L + " " + H + '" preserveAspectRatio="none">' +
+          '<path vector-effect="non-scaling-stroke" d="' + trace + '"/></svg>';
       }
 
       /* Le haut de l'axe, arrondi a une valeur RONDE au-dessus du
@@ -3483,9 +3655,15 @@
          peu plus large et l'ensemble se met a l'echelle tout seul. */
       var G = { l: 36, r: 4, h: 10, b: 20, L: 300, H: 112 };
 
-      function rendreCourbe(seaux) {
+      function rendreCourbe(seaux, avant, f) {
         var zone = $("#hero-courbe");
-        var haut = maxCalibre(Math.max.apply(null, seaux));
+        // L'echelle couvre les DEUX periodes : calibrer sur la seule
+        // courante ferait sortir la precedente du cadre, et une
+        // comparaison dont une moitie deborde ne compare rien.
+        var haut = maxCalibre(Math.max(
+          Math.max.apply(null, seaux),
+          Math.max.apply(null, avant || [0])
+        ));
         var x0 = G.l, x1 = G.L - G.r;
         var y0 = G.h, y1 = G.H - G.b;
         var pasX = (x1 - x0) / Math.max(1, seaux.length - 1);
@@ -3501,23 +3679,54 @@
             '" text-anchor="end">' + escapeHtml(chiffreCourt(v)) + "</text>";
         }).join("");
 
-        var trace = pts.map(function (pt, i) {
-          return (i ? "L" : "M") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
-        }).join(" ");
-        var aire = "M" + x0 + " " + y1 + " " + trace.slice(1) + " L" + x1 + " " + y1 + " Z";
-        var fin = pts[pts.length - 1];
+        var cheminDe = function (serie) {
+          return serie.map(function (v, i) {
+            return (i ? "L" : "M") + (x0 + i * pasX).toFixed(1) + " " + yDe(v).toFixed(1);
+          }).join(" ");
+        };
 
-        // La date du premier seau, pas "il y a 14 jours" : un axe porte
-        // des reperes, pas une duree relative.
-        var debut = new Date();
-        debut.setDate(debut.getDate() - (seaux.length - 1));
+        /* ⚠️ LE DERNIER JOUR N'EST PAS FINI.
+           Sans distinction, la courbe PLONGE au sol chaque matin : a 9 h,
+           "aujourd'hui" vaut presque zero et le trait tombe a la verticale
+           contre le bord droit. Ca se lit comme un effondrement alors que
+           c'est une journee qui commence -- et ca recommence tous les
+           jours.
+
+           Le trait plein s'arrete donc a hier, et le segment du jour
+           passe en pointille clair. Stripe, Plausible et Fathom estompent
+           tous la periode en cours pour la meme raison. Le point d'arrivee
+           reste sur aujourd'hui : c'est bien la qu'on en est. */
+        var complet = seaux.slice(0, -1);
+        var trace = cheminDe(complet);
+        var aire = "M" + x0 + " " + y1 + " " + trace.slice(1) +
+          " L" + pts[pts.length - 2][0].toFixed(1) + " " + y1 + " Z";
+        var fin = pts[pts.length - 1];
+        var veille = pts[pts.length - 2];
+        var traceJour =
+          '<path class="hero-trait-jour" d="M' + veille[0].toFixed(1) + " " + veille[1].toFixed(1) +
+          " L" + fin[0].toFixed(1) + " " + fin[1].toFixed(1) + '"/>';
+
+        /* La periode precedente, sous la courante et en pointille.
+           Google Analytics et Stripe font exactement ca : le trait plein
+           est ce qui se passe, le pointille est ce a quoi on le compare.
+           Elle est dessinee AVANT, donc dessous -- elle ne doit jamais
+           couvrir la courbe du jour. */
+        var traceAvant = avant && avant.some(function (v) { return v; })
+          ? '<path class="hero-trait-avant" d="' + cheminDe(avant) + '"/>'
+          : "";
+
+        // La date du premier jour de la fenetre, pas "il y a 14 jours" :
+        // un axe porte des reperes, pas une duree relative.
+        var debut = new Date(f.debut);
 
         zone.innerHTML =
           '<svg viewBox="0 0 ' + G.L + " " + G.H + '" role="img" aria-label="Abonnés touchés, ' +
             seaux.length + ' derniers jours">' +
             grille +
+            traceAvant +
             '<path class="hero-aire" d="' + aire + '"/>' +
             '<path class="hero-trait" pathLength="1" d="' + trace + '"/>' +
+            traceJour +
             '<circle class="hero-point-anneau" cx="' + fin[0].toFixed(1) + '" cy="' + fin[1].toFixed(1) + '" r="5"/>' +
             '<circle class="hero-point" cx="' + fin[0].toFixed(1) + '" cy="' + fin[1].toFixed(1) + '" r="2.6"/>' +
             '<text class="hero-axe" x="' + x0 + '" y="' + (G.H - 4) + '">' +
@@ -3550,63 +3759,115 @@
         $("#dash-ville").textContent = etab.city || "";
         rendreVignetteClub($("#dash-vignette"), etab);
 
-        poserChiffre($("#kpi-vues"), stats.reach);
-        $("#kpi-vues-note").textContent = nb.format(stats.validatedCount) + " contenu" + (stats.validatedCount > 1 ? "s" : "") + " validé" + (stats.validatedCount > 1 ? "s" : "");
-
         rendreCarteInstagram();
 
-        var seaux = seauxVues(stats.validated, 14);
-        rendreCourbe(seaux);
+        /* ---- TOUT L'ECRAN SUR LA MEME FENETRE ----
+           Le grand chiffre etait le total DEPUIS LE DEBUT, sous un
+           graphe de quatorze jours : deux mesures differentes empilees,
+           dont aucune ne repondait a "est-ce que ca marche en ce moment".
+           Chaque nombre est desormais celui de la periode choisie, et
+           chacun porte sa variation sur la periode qui la precede. */
+        var f = fenetres(ETAT.periode);
+        var vuesDe = function (sub) { return Number(sub.views_count || 0); };
 
-        var variation = variationVues(seaux);
+        var vues = seauxDe(stats.validated, "submitted_at", f, vuesDe);
+        var vuesAvant = seauxDe(stats.validated, "submitted_at", f.avant, vuesDe);
+        var totalVues = somme(vues), totalAvant = somme(vuesAvant);
+
+        poserChiffre($("#kpi-vues"), totalVues);
+        var contenus = somme(seauxDe(stats.validated, "submitted_at", f));
+        $("#kpi-vues-note").textContent = nb.format(contenus) + " contenu" +
+          (contenus > 1 ? "s" : "") + " validé" + (contenus > 1 ? "s" : "");
+
+        rendreCourbe(vues, vuesAvant, f);
+
+        var v = variation(totalVues, totalAvant);
         var delta = $("#kpi-delta");
-        if (variation === null) {
+        if (v === null) {
           // Rien avant : afficher "+∞ %" serait faux, et "0 %" aussi.
           delta.className = "hero-delta plat";
           delta.textContent = "nouveau";
         } else {
-          delta.className = "hero-delta " + (variation > 0 ? "hausse" : variation < 0 ? "baisse" : "plat");
-          delta.textContent = (variation > 0 ? "↑ +" : variation < 0 ? "↓ " : "→ ") + variation + " %";
+          delta.className = "hero-delta " + (v > 0 ? "hausse" : v < 0 ? "baisse" : "plat");
+          delta.textContent = (v > 0 ? "↑ +" : v < 0 ? "↓ " : "→ ") + v + " %";
         }
 
         // Une courbe a plat sur zero ressemble a un graphe casse : quand
         // il n'y a rien, on l'ecrit.
-        var vide = seaux.every(function (v) { return !v; });
+        var vide = vues.every(function (x) { return !x; });
         $("#hero-graphe").hidden = !vide;
         $("#hero-courbe").hidden = vide;
+        $("#hero-legende").hidden = vide;
         if (vide) {
-          $("#hero-graphe").innerHTML = '<p class="hero-vide">Pas encore de publication sur les 14 derniers jours.</p>';
+          $("#hero-graphe").innerHTML = '<p class="hero-vide">Pas encore de publication sur cette période.</p>';
+        } else {
+          $("#hero-legende").innerHTML =
+            '<span class="hl-ligne"><i class="hl-trait" aria-hidden="true"></i>' +
+              '<span class="hl-quand">' + escapeHtml(plageTexte(f.debut, f.fin)) + "</span>" +
+              '<b class="hl-val">' + nb.format(totalVues) + "</b></span>" +
+            '<span class="hl-ligne avant"><i class="hl-trait" aria-hidden="true"></i>' +
+              '<span class="hl-quand">' + escapeHtml(plageTexte(f.avant.debut, f.avant.fin)) + "</span>" +
+              '<b class="hl-val">' + nb.format(totalAvant) + "</b></span>";
         }
-        poserChiffre($("#kpi-points"), stats.points);
-        poserChiffre($("#kpi-scans"), stats.scanCount);
 
-        /* Les quatre tendances. Chaque serie vient de sa propre table,
-           avec son propre champ de date -- il n'y a pas de "date" commune
-           a inventer. */
-        rendreCourbeMini($("#kpi-scans-courbe"), seauxDe(stats.qrScans || ETAT.data.qrScans, "scanned_at", 14));
-        rendreCourbeMini($("#kpi-membres-courbe"), seauxMembres(stats.submissions, 14));
-        rendreCourbeMini($("#kpi-points-courbe"), seauxDe(stats.validated, "submitted_at", 14, function (sub) {
-          return sub.points_awarded;
-        }));
-        rendreCourbeMini($("#kpi-recompenses-courbe"), seauxDe(stats.redemptions, "redeemed_at", 14));
-        $("#kpi-scans-note").textContent = stats.scanCount
-          ? nb.format(stats.uniqueScanners) + " personnes"
+        /* Les quatre cases. Chaque serie vient de sa propre table, avec
+           son propre champ de date -- il n'y a pas de "date" commune a
+           inventer. */
+        var pointsDe = function (sub) { return Number(sub.points_awarded || 0); };
+        var scans = ETAT.data.qrScans || [];
+
+        var cases = [
+          {
+            cle: "scans",
+            serie: seauxDe(scans, "scanned_at", f),
+            avant: somme(seauxDe(scans, "scanned_at", f.avant)),
+          },
+          {
+            cle: "membres",
+            gens: personnesDe(stats.submissions, "submitted_at", f),
+            avant: personnesDe(stats.submissions, "submitted_at", f.avant).total,
+          },
+          {
+            cle: "points",
+            serie: seauxDe(stats.validated, "submitted_at", f, pointsDe),
+            avant: somme(seauxDe(stats.validated, "submitted_at", f.avant, pointsDe)),
+          },
+          {
+            cle: "recompenses",
+            serie: seauxDe(stats.redemptions, "redeemed_at", f),
+            avant: somme(seauxDe(stats.redemptions, "redeemed_at", f.avant)),
+          },
+        ];
+
+        var valeurs = {};
+        cases.forEach(function (c) {
+          var serie = c.gens ? c.gens.seaux : c.serie;
+          var total = c.gens ? c.gens.total : somme(serie);
+          valeurs[c.cle] = total;
+          poserChiffre($("#kpi-" + c.cle), total);
+          poserDelta($("#kpi-" + c.cle + "-delta"), total, c.avant);
+          rendreCourbeMini($("#kpi-" + c.cle + "-courbe"), serie, variation(total, c.avant));
+        });
+
+        // Chaque case porte une information qu'aucune autre ne donne :
+        // "42 recompenses prises" et "42 ont pris une recompense"
+        // disaient deux fois la meme chose a deux cases d'ecart.
+        var scanneurs = personnesDe(scans, "scanned_at", f).total;
+        $("#kpi-scans-note").textContent = valeurs.scans
+          ? nb.format(scanneurs) + " personne" + (scanneurs > 1 ? "s" : "")
           : "Aucun scan";
         // "Membres" = personnes distinctes ayant depose au moins un
-        // contenu. Volontairement different des scanners uniques affiches
-        // juste au-dessus : scanner le QR n'est pas rejoindre.
-        // "42 recompenses prises" et "42 ont pris une recompense"
-        // disaient deux fois la meme chose a deux cases d'ecart. Chaque
-        // carte porte maintenant une information qu'aucune autre ne
-        // donne.
-        poserChiffre($("#kpi-membres"), stats.activeCustomers);
-        $("#kpi-membres-note").textContent = stats.activeCustomers
-          ? "Ont déjà publié"
-          : "Personne encore";
-
-        poserChiffre($("#kpi-recompenses"), stats.redemptions.length);
-        $("#kpi-recompenses-note").textContent = nb.format(stats.activeRewards.length) +
-          " en boutique";
+        // contenu sur la periode. Volontairement different des scanneurs
+        // uniques affiches juste au-dessus : scanner le QR n'est pas
+        // rejoindre.
+        $("#kpi-membres-note").textContent = valeurs.membres ? "Ont publié" : "Personne encore";
+        // Le point moyen par membre : c'est lui qui dit si le bareme est
+        // bien regle. Un chiffre derive, comme le panier moyen d'une
+        // caisse -- il ne se lit nulle part ailleurs dans l'appli.
+        $("#kpi-points-note").textContent = valeurs.membres
+          ? "≈ " + nb.format(Math.round(valeurs.points / valeurs.membres)) + " par membre"
+          : "";
+        $("#kpi-recompenses-note").textContent = nb.format(stats.activeRewards.length) + " en boutique";
 
         var recentes = [...stats.submissions]
           .sort(function (a, b) { return new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0); })
@@ -3645,6 +3906,22 @@
           );
         }).join("");
       }
+
+      function choisirPeriode(jours) {
+        ETAT.periode = jours;
+        try { localStorage.setItem(CLE_PERIODE, String(jours)); } catch (e) { /* sans stockage, ca marche quand meme */ }
+        document.querySelectorAll(".periode").forEach(function (b) {
+          var on = Number(b.dataset.jours) === jours;
+          b.classList.toggle("on", on);
+          b.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        if (ETAT.data) rendreDashboard();
+      }
+
+      document.querySelectorAll(".periode").forEach(function (bouton) {
+        bouton.addEventListener("click", function () { choisirPeriode(Number(bouton.dataset.jours)); });
+      });
+      choisirPeriode(ETAT.periode);
 
       /* Hors session, l'ecran affiche la demo : rien de ce qu'on y tape
          ne peut etre enregistre. Un seul endroit pour le savoir, plutot
