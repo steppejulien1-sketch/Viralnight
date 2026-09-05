@@ -251,6 +251,10 @@
            partage avec l'ambre des chiffres. */
         --ambre: #ffb020;
         --papier: #f2e9d8;
+        /* Le chevron des lignes de reglage, en masque : il prend la
+           couleur de son element (currentColor) au lieu d'etre un SVG
+           en dur a recolorier partout. */
+        --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5l7 7-7 7'/%3E%3C/svg%3E");
 
         /* Echelle d'espacement / rayons / ombres. Ajoutee a la refonte :
            tout etait ecrit en dur ecran par ecran, ce qui expliquait les
@@ -1262,6 +1266,10 @@
         transition: width .9s cubic-bezier(.2,.7,.3,1);
       }
       .pf-fid-txt { margin: 8px 0 0; font-size: calc(12 * var(--u)); font-weight: 600; color: var(--ink3); }
+      /* Vide la plupart du temps : sans ceci, son margin-top laissait
+         8 px de blanc sous la barre, un espace que rien n'explique.
+         Meme correction que .solde-prog-txt dans la boutique. */
+      .pf-fid-txt:empty { display: none; }
       @media (prefers-reduced-motion: reduce) { .pf-fid-barre { transition: none; } }
       .pf-fidelite-chev { flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
@@ -1296,13 +1304,16 @@
          reutilise la classe), contenu propre : notifications (bascules)
          et un apercu du compte.
          ============================================================ */
+      /* Minuscules. "INFORMATIONS LEGALES" en capitales espacees, c'est
+         le meme tic que les neuf etiquettes retirees du tableau de bord
+         le matin : ca se lit lettre par lettre et ca sonne technique. */
       .rg-section-titre {
-        margin: 0 0 8px 2px; font-size: calc(11 * var(--u)); font-weight: 700; color: var(--ink3);
-        text-transform: uppercase; letter-spacing: .08em;
+        margin: 0 0 8px 2px; font-size: calc(12.5 * var(--u)); font-weight: 600;
+        color: var(--ink3); letter-spacing: -.005em;
       }
       .rg-toggle-row {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 16px 2px; border-top: 1px solid var(--line);
+        padding: 13px 2px; border-top: 1px solid var(--line);
       }
       .rg-toggle-row:first-of-type { border-top: 0; }
       .rg-toggle-row span:first-child { font-size: calc(15 * var(--u)); font-weight: 600; color: var(--ink); }
@@ -1352,17 +1363,44 @@
         background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
         padding: 2px 16px; margin: 0 0 16px;
       }
+      /* ⚠️ REFAIT LE 05/09/2026. Julien, l'ecran sous les yeux : "dans
+         les reglages la".
+
+         Ce qui n'allait pas, et c'est exactement ce qui avait ete
+         corrige cote gerant le matin meme :
+
+         · La valeur etait EMPILEE sous son libelle, et l'action flottait
+           a droite, centree sur les deux. Trois lignes de base
+           differentes par reglage, et une ligne de 170 px de haut : le
+           seul ecran de l'appli ou quatre champs remplissent le
+           telephone entier. Un ecran de reglages se PARCOURT, il ne se
+           lit pas.
+
+         · Le nom et la valeur se lisent ensemble. Sur la meme ligne --
+           nom a gauche, valeur a droite, comme dans les reglages d'un
+           telephone -- l'oeil descend la colonne des noms, s'arrete sur
+           celui qu'il cherche, et lit sa valeur au bout. Empiles, il
+           faut lire les deux a chaque fois. */
       .rg-ligne {
         display: flex; align-items: center; gap: 12px;
-        padding: 16px 0; border-bottom: 1px solid var(--line);
+        padding: 13px 0; border-bottom: 1px solid var(--line);
       }
       .rg-ligne:last-child { border-bottom: 0; }
-      .rg-ligne-txt { flex: 1; min-width: 0; }
-      .rg-ligne-txt strong {
-        display: block; font-size: calc(14 * var(--u)); font-weight: 700; color: var(--ink);
+      .rg-ligne-txt {
+        flex: 1; min-width: 0;
+        display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
       }
+      .rg-ligne-txt strong {
+        flex: 0 0 auto;
+        font-size: calc(14 * var(--u)); font-weight: 600; color: var(--ink);
+        letter-spacing: -.01em;
+      }
+      /* La valeur : a droite, en encre sourde, coupee si besoin. C'est
+         elle qui cede la place -- un nom tronque ne se reconnait plus,
+         une adresse tronquee reste une adresse. */
       .rg-ligne-txt span {
-        display: block; margin-top: 2px; font-size: calc(13 * var(--u)); font-weight: 500;
+        flex: 0 1 auto; min-width: 0; text-align: right;
+        font-size: calc(13.5 * var(--u)); font-weight: 500;
         color: var(--ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
       /* Une valeur absente s'ecrit avec un tiret, pas avec une phrase.
@@ -1370,10 +1408,35 @@
          donnees ; le tiret se lit comme un champ vide, ce qu'il est. */
       .rg-ligne-txt span.vide { color: var(--ink3); }
 
+      /* Trois "Modifier" rouges soulignes empiles, c'etait une page web
+         de 2005 -- et le corail est une couleur de MARQUE dans ce projet,
+         jamais une couleur de lien. Ils deviennent des chevrons : la
+         ligne entiere est la cible, le chevron dit qu'elle s'ouvre, et
+         plus rien ne se dispute l'attention avec le nom du reglage.
+
+         Le libelle reste dans le DOM pour les lecteurs d'ecran : c'est
+         lui qui dit "Modifier" ou "Ajouter", le chevron ne dit rien. */
       .rg-lien {
+        flex: 0 0 auto; position: relative;
         background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
-        font-size: calc(13.5 * var(--u)); font-weight: 700; color: var(--accent); text-decoration: underline;
+        width: 16px; height: 16px; overflow: hidden; text-indent: -999px;
+        color: var(--ink3);
       }
+      .rg-lien::after {
+        content: ""; position: absolute; inset: 0; text-indent: 0;
+        background: currentColor;
+        -webkit-mask: var(--chevron) center / 16px 16px no-repeat;
+        mask: var(--chevron) center / 16px 16px no-repeat;
+      }
+      .rg-lien:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+      /* Les liens legaux gardent un vrai libelle : "Consulter" ouvre un
+         onglet, ce n'est pas la meme promesse qu'un chevron. */
+      a.rg-lien {
+        width: auto; height: auto; overflow: visible; text-indent: 0;
+        font-size: calc(13.5 * var(--u)); font-weight: 600; color: var(--ink2);
+        text-decoration: none;
+      }
+      a.rg-lien::after { content: none; }
 
       /* Favoris : chaque ligne ouvre la fiche du club, avec un bouton
          dedie pour le retirer sans repasser par sa fiche. */
@@ -7993,18 +8056,27 @@ TAB_PROFIL?.addEventListener("click", async function () {
     if (cibleFid) {
       var pctFid = cibleFid.cout > 0 ? Math.min(100, Math.round((ETAT.solde / cibleFid.cout) * 100)) : 0;
       barreFid.style.width = pctFid + "%";
-      // Meme regle que la jauge de la boutique : on nomme la cible, on ne
-      // motive pas. Le profil etait reste sur l'ancienne formule ("250 pts
-      // avant Un cocktail offert") que Julien avait deja refusee la-bas --
-      // "on dirait de l'IA" -- et sur un "Poste ta premiere story pour
-      // demarrer" du meme registre.
-      txtFid.innerHTML = "<strong>" + escapeHtmlSupport(cibleFid.nom) + "</strong>";
+      /* RIEN SOUS LA BARRE. Julien, 05/09/2026 : "retire le un cocktail
+         offert [...] en dessous du compteur de points".
+
+         Cette ligne a porte trois formules en deux jours -- "250 pts
+         avant Un cocktail offert", puis le nom seul, et la meme chose
+         existait dans la boutique. Le probleme n'a jamais ete la
+         formule : le nom de la recompense est deja ecrit sur sa carte,
+         a un onglet de la, avec son prix et son dessin. Le repeter sous
+         une barre n'ajoute rien et fait parler un ecran qui n'a rien a
+         dire.
+
+         La barre suffit : elle montre ou l'on en est. */
+      txtFid.textContent = "";
     } else {
       barreFid.style.width = "100%";
+      // Le seul cas ou la barre ne se suffit pas : pleine, elle ne dit
+      // pas COMBIEN de recompenses sont devenues prenables.
       var dispoFid = RECOMPENSES.filter(function (rc) { return rc.cout <= ETAT.solde && rc.stock > 0; }).length;
       txtFid.innerHTML = dispoFid
         ? "<strong>" + dispoFid + (dispoFid > 1 ? " récompenses" : " récompense") + "</strong> à ta portée"
-        : "Aucune récompense disponible";
+        : "";
     }
   }
 
