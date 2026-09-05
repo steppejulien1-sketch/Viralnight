@@ -1999,6 +1999,69 @@
          Les capitales tres espacees etaient censees creer un contraste
          d'echelle avec le chiffre. Le contraste existait ; il donnait un
          libelle de tableau de bord, pas de carte de fidelite. */
+      /* ---- Le cadeau du jour ----
+         Une carte qui APPELLE : c'est la seule de l'ecran a porter la
+         couleur de marque en aplat, et elle n'est la qu'un instant par
+         jour. Le reste du temps elle n'existe pas, donc elle ne devient
+         jamais du decor. */
+      .cadeau {
+        display: flex; align-items: center; gap: calc(12 * var(--u));
+        width: 100%; margin-top: 12px; padding: 14px 15px;
+        border: 0; border-radius: 18px; cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 72%, #7b1f2a));
+        color: #fff; font-family: inherit; text-align: left;
+        box-shadow: 0 10px 26px -14px color-mix(in srgb, var(--accent) 80%, transparent);
+        transition: transform .16s cubic-bezier(.23,1,.32,1);
+      }
+      .cadeau[hidden] { display: none; }
+      .cadeau:active { transform: scale(.98); }
+      .cadeau-boite {
+        flex: 0 0 auto; width: 40px; height: 40px; border-radius: 13px;
+        display: grid; place-items: center; background: rgba(255,255,255,.18);
+      }
+      .cadeau-boite svg {
+        width: 22px; height: 22px; fill: none; stroke: #fff;
+        stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+      }
+      /* Le paquet respire, tres peu et sans fin : c'est ce qui dit
+         "touche-moi" sans ecrire "touche-moi". Deux degres de rotation,
+         pas dix -- au-dela ca gigote. */
+      .cadeau:not(.ouvert) .cadeau-boite { animation: cadeauRespire 2.4s ease-in-out infinite; }
+      @keyframes cadeauRespire {
+        0%, 62%, 100% { transform: rotate(0deg) scale(1); }
+        70% { transform: rotate(-6deg) scale(1.06); }
+        78% { transform: rotate(5deg) scale(1.06); }
+        86% { transform: rotate(-3deg) scale(1.03); }
+      }
+      .cadeau-txt { flex: 1 1 auto; min-width: 0; }
+      .cadeau-txt strong {
+        display: block; font-family: var(--titre);
+        font-size: calc(15 * var(--u)); font-weight: 800; letter-spacing: -.02em;
+      }
+      .cadeau-txt span { display: block; margin-top: 2px; font-size: calc(12.5 * var(--u)); color: rgba(255,255,255,.82); }
+      .cadeau-chevron { flex: 0 0 auto; }
+      .cadeau-chevron svg {
+        width: 18px; height: 18px; fill: none; stroke: rgba(255,255,255,.8);
+        stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+      }
+      /* Ouvert : le chevron n'a plus rien a promettre, le montant prend
+         toute la place. */
+      .cadeau.ouvert { pointer-events: none; }
+      .cadeau.ouvert .cadeau-chevron { display: none; }
+      .cadeau.ouvert .cadeau-txt strong { font-family: var(--chiffre); font-size: calc(26 * var(--u)); letter-spacing: -.04em; }
+      .cadeau.jackpot {
+        background: linear-gradient(135deg, #f7b733, #e0562b 62%, #b6234a);
+        box-shadow: 0 12px 30px -12px rgba(224,86,43,.7);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .cadeau { transition: none; }
+        .cadeau:active { transform: none; }
+        /* Le mouvement part, la carte reste : elle porte deja sa couleur
+           et son libelle, elle ne depend pas de l'animation pour se
+           faire remarquer. */
+        .cadeau:not(.ouvert) .cadeau-boite { animation: none; }
+      }
+
       .solde-label {
         margin: 0; font-size: calc(12.5 * var(--u)); font-weight: 600;
         letter-spacing: -.005em; color: var(--ink3);
@@ -4084,6 +4147,20 @@
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9.3a3 3 0 0 1 5.8 1c0 2-2.9 2.3-2.9 4.3"/><circle cx="12" cy="17.3" r="1" fill="var(--ink)" stroke="none"/></svg>
                 Aide &amp; Support
               </button>
+              <!-- Julien, 06/09/2026 : un bouton pour laisser son avis --
+                   sur l'APPLI, pas sur le club (il l'a tranché : « un avis
+                   sur l'appli Noctify »).
+
+                   Tant que Noctify n'est pas sur les stores, il n'y a pas
+                   de page où noter : le bouton ouvre donc un mail. C'est
+                   moins beau qu'une pluie d'étoiles, mais c'est la seule
+                   chose qui arrive VRAIMENT quelque part aujourd'hui -- et
+                   le jour où l'appli est sur l'App Store, seule cette
+                   adresse change. -->
+              <button type="button" class="pf-item" id="pf-avis">
+                <svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>
+                Donner mon avis
+              </button>
               <button type="button" class="pf-item" id="pf-apropos">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6.3"/><circle cx="12" cy="7.5" r="1" fill="var(--ink)" stroke="none"/></svg>
                 À propos
@@ -4358,6 +4435,40 @@
                   <p class="solde-prog-txt" id="solde-prog-txt"></p>
                 </div>
               </div>
+
+              <!-- ================= LE CADEAU DU JOUR =================
+                   Julien, 06/09/2026 : "chaque jour on se connecte, on
+                   recoit cinq points [...] et aleatoirement, 1 % de
+                   chance, on recoit une recompense jackpot, trente-cinq
+                   points. Ils ont juste de la chance, un peu comme sur
+                   Brawl Stars."
+
+                   La carte n'existe QUE quand il y a quelque chose a
+                   prendre : une carte "reviens demain" affichee tous les
+                   jours devient un meuble, et un meuble ne se touche
+                   plus. C'est le vide qui fait la valeur du plein.
+
+                   Le montant est tire PAR LE SERVEUR (daily_gift(),
+                   migration 0040 cote base clubbeur) et les points vont
+                   au dernier club frequente. Rien ici ne decide de
+                   quoi que ce soit -- l'appli ouvre le paquet, elle ne
+                   le remplit pas. -->
+              <button type="button" class="cadeau" id="cadeau" hidden>
+                <span class="cadeau-boite" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="9.5" width="18" height="11.5" rx="2"/>
+                    <path d="M2 6.5h20v3H2zM12 6.5V21"/>
+                    <path d="M12 6.5S9.2 1.4 7 3.2s5 3.3 5 3.3zM12 6.5s2.8-5.1 5-3.3-5 3.3-5 3.3z"/>
+                  </svg>
+                </span>
+                <span class="cadeau-txt">
+                  <strong id="cadeau-titre">Cadeau du jour</strong>
+                  <span id="cadeau-sous">Touche pour l'ouvrir</span>
+                </span>
+                <span class="cadeau-chevron" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </span>
+              </button>
             </section>
 
             <!-- Retire le 03/09/2026. Julien : "retire le un cocktail
@@ -5272,6 +5383,9 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
     // Une fois l'accueil passe, et une seule fois dans la vie de
     // l'appli : les deux autorisations dont elle a besoin, expliquees.
     setTimeout(proposerAutorisations, 700);
+    // Y a-t-il un cadeau a prendre ? Une lecture, pas une tentative :
+    // demander le cadeau pour savoir s'il existe le consommerait.
+    verifierCadeau();
     assurerProfil(session.user);
     chargerSoldeReel(session.user.id);
     creditScanUrl();
@@ -5712,6 +5826,15 @@ var SONS = {
   bon: [[523.25, 0, 0.14], [659.25, 0.08, 0.16], [783.99, 0.16, 0.3]],
   // Une recompense devient prenable : une seule note, discrete.
   debloque: [[880, 0, 0.1, 0.05]],
+  /* Le jackpot du cadeau du jour. Une fois sur cent : il a le droit de
+     durer, et c'est le seul endroit de l'appli ou le son monte sur cinq
+     notes. Une gamme qui grimpe, c'est ce qui fait "gagne" dans un jeu
+     -- et si ca ressemblait au son des points ordinaires, la rarete ne
+     s'entendrait pas. */
+  jackpot: [
+    [523.25, 0, 0.1], [659.25, 0.07, 0.1], [783.99, 0.14, 0.1],
+    [1046.5, 0.21, 0.12], [1318.5, 0.3, 0.34],
+  ],
 };
 
 function jouer(nom) {
@@ -9470,6 +9593,86 @@ $("#au-notif")?.addEventListener("click", async function () {
 });
 
 $("#au-fermer")?.addEventListener("click", fermerAutorisations);
+
+/* L'avis sur l'appli. Le sujet et le corps sont pre-remplis : un mail
+   vide devant lequel on doit trouver quoi ecrire ne part jamais. */
+$("#pf-avis")?.addEventListener("click", function () {
+  var corps = [
+    "Ce que j'aime :", "", "Ce qui manque :", "", "Ce qui ne marche pas :", "",
+  ].join("\n");
+  window.location.href = "mailto:viralnight001@gmail.com" +
+    "?subject=" + encodeURIComponent("Mon avis sur Noctify") +
+    "&body=" + encodeURIComponent(corps);
+});
+
+/* ================= LE CADEAU DU JOUR =================
+   Julien, 06/09/2026 : "chaque jour on se connecte, on recoit cinq
+   points [...] aleatoirement, 1 % de chance, on recoit une recompense
+   jackpot [...] comme sur Brawl Stars".
+
+   ⚠️ RIEN N'EST DECIDE ICI. Le montant est tire par daily_gift() en
+   base (migration 0040 cote clubbeur), l'unicite quotidienne est tenue
+   par la clef primaire de daily_gifts, et les points vont au dernier
+   club frequente. Cette moitie-ci ouvre le paquet, elle ne le remplit
+   pas -- un tirage cote navigateur, c'est un jackpot a volonte, et une
+   garde "un par jour" dans le localStorage se contourne en vidant son
+   navigateur. */
+var CADEAU = $("#cadeau");
+
+async function verifierCadeau() {
+  if (!CADEAU || !supabaseClubbeur) return;
+  var res = await supabaseClubbeur.rpc("daily_gift_status");
+  /* La fonction n'existe pas encore ? On se tait. La migration 0040 vit
+     dans l'autre depot et ne sera pas appliquee au meme moment que ce
+     fichier : entre les deux, l'appli doit marcher exactement comme
+     avant, sans carte et sans erreur rouge dans la console. */
+  if (res.error || !res.data) return;
+  CADEAU.hidden = res.data.etat !== "disponible";
+}
+
+CADEAU?.addEventListener("click", async function () {
+  if (CADEAU.classList.contains("ouvert")) return;
+  CADEAU.classList.add("ouvert");
+  $("#cadeau-titre").textContent = "…";
+  $("#cadeau-sous").textContent = "";
+
+  var res = await supabaseClubbeur.rpc("daily_gift");
+  var d = (!res.error && res.data) || { etat: "erreur" };
+
+  if (d.etat !== "ok") {
+    // Aucun de ces cas n'est une panne : on le dit en clair et la carte
+    // s'en va, plutot que de laisser un paquet qui ne s'ouvre pas.
+    $("#cadeau-titre").textContent = d.etat === "aucun_club"
+      ? "Scanne un club d'abord"
+      : d.etat === "deja_pris" ? "Déjà pris aujourd'hui" : "Réessaie plus tard";
+    $("#cadeau-sous").textContent = d.etat === "aucun_club"
+      ? "Le cadeau va dans la boutique de ton dernier club."
+      : "";
+    setTimeout(function () { CADEAU.hidden = true; CADEAU.classList.remove("ouvert"); }, 2600);
+    return;
+  }
+
+  CADEAU.classList.toggle("jackpot", !!d.jackpot);
+  $("#cadeau-titre").textContent = "+" + nb(d.points) + " pts";
+  $("#cadeau-sous").textContent = d.jackpot
+    ? "Jackpot ! " + (d.club ? "Chez " + d.club + "." : "")
+    : (d.club ? "Dans ta boutique " + d.club + "." : "");
+  jouer(d.jackpot ? "jackpot" : "points");
+
+  // Le solde suit tout de suite : voir "+35 pts" sans que le compteur
+  // juste au-dessus bouge, c'est un cadeau qui n'arrive nulle part.
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (session) await chargerSoldeReel(session.user.id);
+
+  // La carte reste le temps qu'on lise, puis disparait -- elle n'a plus
+  // rien a proposer avant demain.
+  setTimeout(function () {
+    CADEAU.hidden = true;
+    CADEAU.classList.remove("ouvert", "jackpot");
+    $("#cadeau-titre").textContent = "Cadeau du jour";
+    $("#cadeau-sous").textContent = "Touche pour l'ouvrir";
+  }, 4200);
+});
 
 function localiser() {
   if (!navigator.geolocation) return;
