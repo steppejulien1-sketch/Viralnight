@@ -45,7 +45,7 @@ const CADRER = `
    sans toucher a l'etat interne : la capture montre ce que le gerant
    verrait, pas un ecran a moitie monte. */
 function etapeVisible(n) {
-  const POSE = { 1: 1, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
+  const etape = document.querySelector('.pa-etape[data-pas="' + n + '"]');
   document.querySelectorAll(".pa-etape").forEach((s) => {
     s.hidden = Number(s.dataset.pas) !== n;
   });
@@ -53,8 +53,12 @@ function etapeVisible(n) {
   [...document.querySelectorAll("#pa-jauge span")].forEach((s, i) => {
     s.classList.toggle("faite", i < n);
   });
+  // La pose vient de l'attribut data-mascotte de l'etape, la meme source
+  // que rendreMascotte(). Cet outil en avait sa propre copie, et la
+  // planche a continue d'afficher les anciennes poses une fois l'appli
+  // corrigee.
   document.querySelector("#pa-mascotte").innerHTML =
-    '<img src="/mascotte/pose-' + POSE[n] + '.webp" alt="" />';
+    '<img src="' + etape.dataset.mascotte + '" alt="" />';
   document.querySelector("#pa-retour").hidden = n <= 1;
   document.querySelector("#pa-suivant").textContent = n === 6 ? "Terminer" : "Continuer";
   document.querySelector("#pa-corps").scrollTop = 0;
@@ -137,6 +141,11 @@ function remplirGalerie() {
     await prendre(`0${n}-installation-${n}`, `Étape ${n}/6 — ${titre}`);
     if (n === 2) {
       await page.evaluate(remplirGalerie);
+      // Descendu sur les photos : cette capture-la existe pour montrer la
+      // galerie remplie, pas pour remontrer le bandeau de l'ecran d'avant.
+      // Sans ce defilement, la planche affichait trois fois de suite la
+      // meme mascotte -- "y a 3 fois le meme perso, c'est bizarre".
+      await page.evaluate(() => { document.querySelector("#pa-corps").scrollTop = 250; });
       await pause(900);
       await prendre("02b-installation-2-remplie", "Étape 2/6 — une fois les photos posées");
       await page.evaluate(etapeVisible, 2);
