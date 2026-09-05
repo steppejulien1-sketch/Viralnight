@@ -127,10 +127,17 @@
         --ombre-1: 0 1px 2px rgba(20,22,28,.05);
         --ombre-2: 0 1px 2px rgba(20,22,28,.06), 0 10px 24px -14px rgba(20,22,28,.20);
 
-        /* Les courbes natives du navigateur sont molles. Celle-ci part
-           vite puis s'installe : c'est ce qui fait qu'une interface
-           repond au lieu de suivre. */
+        /* Les courbes natives du navigateur sont molles. Celles-ci
+           partent vite puis s'installent : c'est ce qui fait qu'une
+           interface repond au lieu de suivre.
+
+           JAMAIS d'ease-in sur de l'interface : il retarde le premier
+           mouvement, c'est-a-dire l'instant precis ou l'oeil regarde. A
+           duree egale, un ease-in de 200 ms est PERCU plus lent qu'un
+           ease-out de 200 ms. */
         --sortie: cubic-bezier(.23, 1, .32, 1);
+        /* Pour ce qui se deplace a l'ecran sans entrer ni sortir. */
+        --trajet: cubic-bezier(.77, 0, .175, 1);
 
         color-scheme: light;
         accent-color: var(--accent-fort);
@@ -151,6 +158,66 @@
         opacity: 0; visibility: hidden; transition: opacity .14s var(--sortie);
       }
       .vue.actif { opacity: 1; visibility: visible; }
+
+      /* ---- La cascade d'arrivee ----
+         Julien : "il faut que ca bouge, qu'on ressente l'application".
+
+         Tout ce qui apparait d'un bloc se lit comme une page ; les memes
+         elements decales de 40 ms se lisent comme un ecran qui se monte.
+         C'est le seul decor assume de l'appli, et il est court : 40 ms
+         entre deux blocs, 5 blocs, tout est pose en 300 ms. Au-dela,
+         une cascade cesse d'etre vivante et devient une attente.
+
+         Sur transform et opacity seulement : ces deux-la sautent la mise
+         en page et le dessin, ils tournent sur le GPU. */
+      .vue.entre > * {
+        animation: vueEntre 320ms var(--sortie) both;
+      }
+      .vue.entre > *:nth-child(1) { animation-delay: 0ms; }
+      .vue.entre > *:nth-child(2) { animation-delay: 40ms; }
+      .vue.entre > *:nth-child(3) { animation-delay: 80ms; }
+      .vue.entre > *:nth-child(4) { animation-delay: 120ms; }
+      .vue.entre > *:nth-child(n + 5) { animation-delay: 160ms; }
+      @keyframes vueEntre {
+        from { opacity: 0; transform: translateY(9px); }
+        to { opacity: 1; transform: none; }
+      }
+
+      /* Les cases de chiffres et les lignes d'activite ont leur propre
+         cascade, decalee derriere celle des blocs. */
+      .vue.entre .kpi { animation: vueEntre 300ms var(--sortie) both; }
+      .vue.entre .kpi:nth-child(1) { animation-delay: 90ms; }
+      .vue.entre .kpi:nth-child(2) { animation-delay: 125ms; }
+      .vue.entre .kpi:nth-child(3) { animation-delay: 160ms; }
+      .vue.entre .kpi:nth-child(4) { animation-delay: 195ms; }
+
+      .vue.entre .activite-ligne,
+      .vue.entre .recompense-carte,
+      .vue.entre .reglage-lien {
+        animation: vueEntre 300ms var(--sortie) both;
+      }
+      .vue.entre .activite-ligne:nth-child(1),
+      .vue.entre .recompense-carte:nth-child(1) { animation-delay: 150ms; }
+      .vue.entre .activite-ligne:nth-child(2),
+      .vue.entre .recompense-carte:nth-child(2) { animation-delay: 190ms; }
+      .vue.entre .activite-ligne:nth-child(3),
+      .vue.entre .recompense-carte:nth-child(3) { animation-delay: 230ms; }
+      .vue.entre .activite-ligne:nth-child(4),
+      .vue.entre .recompense-carte:nth-child(4) { animation-delay: 265ms; }
+      .vue.entre .activite-ligne:nth-child(n + 5),
+      .vue.entre .recompense-carte:nth-child(n + 5) { animation-delay: 300ms; }
+
+      @media (prefers-reduced-motion: reduce) {
+        /* Le fondu reste -- il aide a comprendre qu'un ecran a change --
+           le deplacement part. C'est ce que demande la regle : moins de
+           mouvement, pas zero animation. */
+        .vue.entre > *,
+        .vue.entre .kpi,
+        .vue.entre .activite-ligne,
+        .vue.entre .recompense-carte,
+        .vue.entre .reglage-lien { animation: vueEntreSage 200ms ease both; }
+        @keyframes vueEntreSage { from { opacity: 0; } to { opacity: 1; } }
+      }
       /* Aucune application native n'affiche de barre de defilement posee
          sur son contenu. Sur le mockup de bureau, celle du navigateur
          tombait sur le bord droit de l'ecran et trahissait la page web.
@@ -352,13 +419,71 @@
       .hero-axe {
         fill: var(--encre-3); font-family: var(--sans); font-size: 9.5px;
       }
-      .hero-aire { fill: var(--accent); opacity: .09; }
+      /* ---- Le trace ----
+         Julien, 05/09/2026 : "il faut des animations, il faut que ca
+         bouge, qu'on ressente l'application".
+
+         Une courbe qui APPARAIT ne dit rien ; une courbe qui se TRACE
+         dit "voila ce qui s'est passe, jour apres jour". C'est le seul
+         endroit de l'ecran ou le mouvement porte du sens plutot que du
+         decor -- il rejoue la lecture de gauche a droite.
+
+         pathLength="1" plutot que getTotalLength() : le navigateur
+         normalise la longueur du trace a 1, donc un dasharray de 1 le
+         couvre exactement, quelle que soit la forme reelle. Aucune
+         mesure a faire en JS, rien a recalculer au redimensionnement. */
       .hero-trait {
         fill: none; stroke: var(--accent); stroke-width: 2;
         stroke-linejoin: round; stroke-linecap: round;
+        stroke-dasharray: 1; stroke-dashoffset: 1;
+        animation: heroTrace 900ms var(--sortie) 120ms forwards;
+      }
+      @keyframes heroTrace { to { stroke-dashoffset: 0; } }
+
+      /* L'aire suit le trait avec un temps de retard : elle se remplit
+         derriere lui, elle ne l'annonce pas. */
+      .hero-aire {
+        fill: var(--accent); opacity: 0;
+        animation: heroAire 600ms ease 520ms forwards;
+      }
+      @keyframes heroAire { to { opacity: .09; } }
+
+      /* Le point d'arrivee ne surgit qu'une fois le trait rendu chez
+         lui. Depart a .4 et non a 0 : rien, dans la vraie vie,
+         n'apparait a partir de rien. */
+      .hero-point, .hero-point-anneau {
+        transform-box: fill-box; transform-origin: center;
+        opacity: 0; animation: heroPoint 320ms var(--sortie) 980ms forwards;
+      }
+      @keyframes heroPoint {
+        from { opacity: 0; transform: scale(.4); }
+        to { opacity: 1; transform: scale(1); }
       }
       .hero-point { fill: var(--accent); }
-      .hero-point-anneau { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: .35; }
+      .hero-point-anneau { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+      .hero-point-anneau { animation-delay: 1040ms; }
+      @keyframes heroPointAnneau {
+        from { opacity: 0; transform: scale(.4); }
+        to { opacity: .35; transform: scale(1); }
+      }
+      .hero-point-anneau { animation-name: heroPointAnneau; }
+
+      /* Les reperes et leurs valeurs se posent avant le trait : c'est le
+         papier millimetre, il est la avant qu'on dessine dessus. */
+      .hero-grille, .hero-graduation, .hero-axe {
+        opacity: 0; animation: heroFond 400ms ease forwards;
+      }
+      @keyframes heroFond { to { opacity: 1; } }
+
+      @media (prefers-reduced-motion: reduce) {
+        /* Mouvement retire, lisibilite gardee : les elements sont a leur
+           etat final, sans trajet. */
+        .hero-trait { animation: none; stroke-dashoffset: 0; }
+        .hero-aire { animation: none; opacity: .09; }
+        .hero-point { animation: none; opacity: 1; }
+        .hero-point-anneau { animation: none; opacity: .35; }
+        .hero-grille, .hero-graduation, .hero-axe { animation: none; opacity: 1; }
+      }
 
       /* ---- Chiffre d'entete du tableau de bord ----
          Cinq cartes de meme taille, c'etait une liste, pas un tableau de
@@ -2253,6 +2378,46 @@
       var $ = function (s) { return document.querySelector(s); };
       var nb = new Intl.NumberFormat("fr-FR");
 
+      /* ---- Les chiffres montent ----
+         Un compteur qui se pose d'un coup est une valeur ; le meme qui
+         monte est un RESULTAT. C'est la difference entre lire un
+         tableau et regarder son club tourner -- et ca ne coute qu'une
+         boucle de 700 ms.
+
+         Seulement a la PREMIERE valeur non nulle : rejouer le comptage a
+         chaque rendu (changement d'onglet, retour d'Instagram) ferait
+         clignoter l'ecran a chaque geste. */
+      var COMPTES = new WeakMap();
+      var MOINS_DE_MOUVEMENT = window.matchMedia
+        ? window.matchMedia("(prefers-reduced-motion: reduce)")
+        : { matches: false };
+
+      function poserChiffre(el, valeur, format) {
+        if (!el) return;
+        var ecrire = format || function (v) { return nb.format(v); };
+        var cible = Number(valeur) || 0;
+        var deja = COMPTES.get(el);
+
+        // Deja compte, ou rien a compter : on ecrit, point.
+        if (deja !== undefined || !cible || MOINS_DE_MOUVEMENT.matches) {
+          COMPTES.set(el, cible);
+          el.textContent = ecrire(cible);
+          return;
+        }
+        COMPTES.set(el, cible);
+
+        var duree = 700;
+        var debut = performance.now();
+        (function pas(t) {
+          var avance = Math.min(1, (t - debut) / duree);
+          // Le meme ease-out que le reste de l'interface : vite, puis ca
+          // s'installe. Un comptage lineaire a l'air d'un chargement.
+          var e = 1 - Math.pow(1 - avance, 3);
+          el.textContent = ecrire(Math.round(cible * e));
+          if (avance < 1) requestAnimationFrame(pas);
+        })(debut);
+      }
+
       function escapeHtml(v) {
         return String(v ?? "")
           .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
@@ -2296,6 +2461,20 @@
 
       function ouvrirVue(cible) {
         VUES.forEach(function (v) { v.classList.toggle("actif", v.id === "vue-" + cible); });
+
+        /* La cascade se rejoue a CHAQUE ouverture, pas seulement au
+           chargement. Une vue ici n'est jamais detruite -- elle passe en
+           visibility:hidden -- donc ses animations CSS ont deja tourne
+           une fois pour toutes au demarrage. Retirer puis remettre la
+           classe ne suffit pas : le navigateur groupe les deux
+           changements dans le meme calcul de style. Le reflow lu entre
+           les deux est ce qui les relance. */
+        var vueEntrante = document.getElementById("vue-" + cible);
+        if (vueEntrante) {
+          vueEntrante.classList.remove("entre");
+          void vueEntrante.offsetWidth;
+          vueEntrante.classList.add("entre");
+        }
 
         var onglet = SOUS_ECRANS.indexOf(cible) >= 0 ? "reglages" : cible;
         TABS.forEach(function (t) {
@@ -2839,7 +3018,7 @@
             seaux.length + ' derniers jours">' +
             grille +
             '<path class="hero-aire" d="' + aire + '"/>' +
-            '<path class="hero-trait" d="' + trace + '"/>' +
+            '<path class="hero-trait" pathLength="1" d="' + trace + '"/>' +
             '<circle class="hero-point-anneau" cx="' + fin[0].toFixed(1) + '" cy="' + fin[1].toFixed(1) + '" r="5"/>' +
             '<circle class="hero-point" cx="' + fin[0].toFixed(1) + '" cy="' + fin[1].toFixed(1) + '" r="2.6"/>' +
             '<text class="hero-axe" x="' + x0 + '" y="' + (G.H - 4) + '">' +
@@ -2872,7 +3051,7 @@
         $("#dash-ville").textContent = etab.city || "";
         rendreVignetteClub($("#dash-vignette"), etab);
 
-        $("#kpi-vues").textContent = nb.format(stats.reach);
+        poserChiffre($("#kpi-vues"), stats.reach);
         $("#kpi-vues-note").textContent = nb.format(stats.validatedCount) + " contenu" + (stats.validatedCount > 1 ? "s" : "") + " validé" + (stats.validatedCount > 1 ? "s" : "");
 
         rendreCarteInstagram();
@@ -2899,8 +3078,8 @@
         if (vide) {
           $("#hero-graphe").innerHTML = '<p class="hero-vide">Pas encore de publication sur les 14 derniers jours.</p>';
         }
-        $("#kpi-points").textContent = nb.format(stats.points);
-        $("#kpi-scans").textContent = nb.format(stats.scanCount);
+        poserChiffre($("#kpi-points"), stats.points);
+        poserChiffre($("#kpi-scans"), stats.scanCount);
         $("#kpi-scans-note").textContent = stats.scanCount
           ? nb.format(stats.uniqueScanners) + " personnes"
           : "Aucun scan";
@@ -2911,12 +3090,12 @@
         // disaient deux fois la meme chose a deux cases d'ecart. Chaque
         // carte porte maintenant une information qu'aucune autre ne
         // donne.
-        $("#kpi-membres").textContent = nb.format(stats.activeCustomers);
+        poserChiffre($("#kpi-membres"), stats.activeCustomers);
         $("#kpi-membres-note").textContent = stats.activeCustomers
           ? "Ont déjà publié"
           : "Personne encore";
 
-        $("#kpi-recompenses").textContent = nb.format(stats.redemptions.length);
+        poserChiffre($("#kpi-recompenses"), stats.redemptions.length);
         $("#kpi-recompenses-note").textContent = nb.format(stats.activeRewards.length) +
           " en boutique";
 
