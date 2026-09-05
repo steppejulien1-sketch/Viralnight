@@ -68,86 +68,69 @@
         padding: 5px; flex: 0 0 auto;
         box-shadow: 0 44px 100px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
       }
-      /* Theme CLAIR (demande de Julien : "mets en blanc"). L'appli
-         clubbeur est nocturne parce qu'on s'en sert en boite, a 2h du
-         matin ; celle-ci se lit dans un bureau, sur une compta, en
-         plein jour. Meme raisonnement que la boutique d'app-preview.html
-         (.screen.boutique-pro), passee au clair pour la meme raison.
-
-         Le relief vient du contraste de surfaces (s1 blanc sur bg gris
-         tres pale), pas de la couleur -- regle du design system.
-
-         --ambre et --succes sont assombris : #ffb020 et #57d98a etaient
-         calibres pour du texte sur fond noir, ils deviennent illisibles
-         sur blanc. */
       /* ---- La palette ----
-         SOMBRE. L'appli etait en gris clair : des cartes blanches
-         arrondies sur du #f6f7f9, comme dix mille tableaux de bord.
-         Julien : "pour ce genre de produit, tu ne peux pas faire ca".
-         Le design system du projet disait deja sombre -- c'est ce
-         fichier qui ne l'appliquait pas.
+         SOMBRE ET CHAUDE, la meme que l'appli clubbeur (app-preview.html).
+         Julien, 05/09/2026, devant l'appli finie : "c'est tout moche,
+         c'est blanc comme ca, il n'y a aucune emotion a ce truc".
+
+         Le clair n'etait pas une erreur de gout, c'etait une erreur de
+         produit : deux applis du meme nom, l'une nocturne et l'autre en
+         blanc de bureau, ca ne fait pas un produit, ca fait deux sites.
+         Un gerant qui ouvre les deux doit reconnaitre la meme maison.
+
+         Le noir penche vers le brun (#120d0d, surfaces #1c1512 ->
+         #30231c) : le gris bleute (#08090c, #101217) est celui de
+         n'importe quel kit UI par defaut, et c'est LUI qui faisait
+         "template", pas le sombre.
 
          Le relief vient du CONTRASTE DE SURFACES (--s1/2/3), jamais de
          la couleur : sur fond sombre une ombre portee ne se voit pas,
-         l'ecart entre deux gris si.
+         l'ecart entre deux surfaces si.
 
-         Le corail redevient une couleur de MARQUE -- la courbe, la
-         derniere barre, le losange du kicker. Plus jamais un bouton :
-         l'action principale est claire, comme chez Stripe ou Linear.
-         C'est ce qui manquait le plus, le CTA rose pale avait l'air
-         desactive.
-
-         L'accueil, la porte et l'ecran de chargement restent clairs :
-         ils encadrent l'appli, ils ne sont pas dedans. Meme partage que
-         dans l'appli clubbeur. */
-      /* ---- La palette ----
-         CLAIRE, sur tous les ecrans, entree comprise. Ce qui faisait
-         "template" avant, ce n'etait pas le clair : c'etait le gris
-         bleute par defaut (#f6f7f9 + cartes blanches), les boutons
-         coraux delaves et les aplats degrades.
-
-         Le fond est un blanc casse CHAUD, pas un gris bleu -- c'est ce
-         qui separe un papier d'un fond de formulaire. Les cartes sont
-         blanc pur : la hierarchie vient de la, pas d'une bordure grise.
-
-         Le corail reste une couleur de MARQUE. Sur du blanc il ne passe
-         pas le contraste en petit texte (2,9:1), d'ou --accent-fort
-         pour tout ce qui se LIT ; --accent ne sert qu'aux formes, ou
-         seule la teinte compte. */
+         Le corail est une couleur de MARQUE -- la derniere barre du
+         graphe, l'onglet actif, un chiffre cle. Jamais un bouton :
+         l'action principale est claire (--action = --ink). */
       .screen {
         position: relative; width: 100%; height: 100%; border-radius: 43px;
         overflow: hidden; user-select: none;
-        --ink:   #16181d;
-        --ink2:  #5b626e;
-        --ink3:  #6f7681;
-        --bg:    #f9f6f1;
-        --s1:    #ffffff;
-        --s2:    #f2ede5;
-        --s3:    #e5ded3;
-        --line:  rgba(20,22,28,.08);
-        --line2: rgba(20,22,28,.14);
-        --accent:      #ff6363;
-        --accent-fort: #cf353c;
-        --ambre: #a86500;
-        --succes: #12874d;
-        /* L'action principale est encre, jamais corail : le corail est
-           une couleur de marque. */
-        --action: #16181d;
-        --action-ink: #ffffff;
+        --ink:   #ffffff;
+        --ink2:  #b6a99e;
+        --ink3:  #8a7a6e;
+        --bg:    #120d0d;
+        --s1:    #1c1512;
+        --s2:    #261c17;
+        --s3:    #30231c;
+        --line:  rgba(255,235,220,.08);
+        --line2: rgba(255,235,220,.14);
+        --accent:      #ff2f45;
+        /* Sur fond sombre le corail passe le contraste : --accent-fort
+           n'existait que pour le blanc. Il reste, pointe sur --accent,
+           pour ne pas avoir a reecrire les trente regles qui s'en
+           servent. */
+        --accent-fort: #ff5a68;
+        --ambre: #ffb020;
+        --succes: #57d98a;
+        --papier: #f2e9d8;
+        /* L'action principale est claire, jamais corail. Les deux jetons
+           suivent l'encre et le fond : un seul endroit a changer si la
+           palette rebascule. */
+        --action: var(--ink);
+        --action-ink: var(--bg);
 
-        /* Deux niveaux d'elevation, courts et serres. Sur du clair, une
-           grande ombre floue fait flotter les cartes ; ce sont les
-           ombres COURTES qui donnent du poids. */
-        --ombre-1: 0 1px 2px rgba(20,22,28,.05);
-        --ombre-2: 0 1px 2px rgba(20,22,28,.06), 0 10px 24px -14px rgba(20,22,28,.20);
+        /* Sur du sombre, une ombre ne se voit pas -- ce qui donne du
+           relief, c'est le liseré clair sur l'arete haute, comme une
+           surface eclairee par le dessus. Les deux jetons gardent leur
+           nom : tout le fichier les appelle deja. */
+        --ombre-1: inset 0 1px 0 rgba(255,235,220,.05);
+        --ombre-2: inset 0 1px 0 rgba(255,235,220,.07), 0 12px 28px -18px rgba(0,0,0,.9);
 
         /* Les courbes natives du navigateur sont molles. Celle-ci part
            vite puis s'installe : c'est ce qui fait qu'une interface
            repond au lieu de suivre. */
         --sortie: cubic-bezier(.23, 1, .32, 1);
 
-        color-scheme: light;
-        accent-color: var(--accent-fort);
+        color-scheme: dark;
+        accent-color: var(--accent);
         background: var(--bg); color: var(--ink);
       }
 
@@ -159,11 +142,18 @@
          papier vide. Procede repris de Vercel, a la meme discretion. */
       .vue {
         position: absolute; inset: 0; padding: 14px 20px 100px; overflow-y: auto;
-        background-image: radial-gradient(circle, rgba(20,22,28,.055) 1px, transparent 1px);
+        background-image: radial-gradient(circle, rgba(255,235,220,.035) 1px, transparent 1px);
         background-size: 18px 18px;
         opacity: 0; visibility: hidden; transition: opacity .14s var(--sortie);
       }
       .vue.actif { opacity: 1; visibility: visible; }
+      /* Aucune application native n'affiche de barre de defilement posee
+         sur son contenu. Sur le mockup de bureau, celle du navigateur
+         tombait sur le bord droit de l'ecran et trahissait la page web.
+         Le contenu defile toujours. */
+      .vue, .pa-corps, .accueil, .ecran-ig { scrollbar-width: none; -ms-overflow-style: none; }
+      .vue::-webkit-scrollbar, .pa-corps::-webkit-scrollbar,
+      .accueil::-webkit-scrollbar, .ecran-ig::-webkit-scrollbar { width: 0; height: 0; }
       @media (prefers-reduced-motion: reduce) { .vue { transition: none; } }
 
       .ecran-titre {
@@ -175,8 +165,42 @@
          .ecran-sous : 42 px de vide entre le sous-titre et la premiere
          section. Un titre qui suit directement le chapeau n'en a pas
          besoin. */
-      .ecran-sous + .section-titre,
+      .ecran-sous + .section-titre { margin-top: 4px; }
       .kicker-sec + .ecran-titre { margin-top: 0; }
+
+      /* ---- L'entete du tableau de bord ----
+         La photo du club, son nom, sa ville, la periode. Un tableau de
+         bord qui commence par un titre nu pourrait etre celui de
+         n'importe quel club : c'est la premiere chose qui manquait. */
+      .club-tete {
+        display: flex; align-items: center; gap: 11px; margin: 2px 0 16px;
+      }
+      .club-vignette {
+        flex: 0 0 auto; width: 40px; height: 40px; border-radius: 13px;
+        background: var(--s2); border: 1px solid var(--line);
+        display: grid; place-items: center; overflow: hidden;
+        font-family: var(--titre); font-size: 16px; font-weight: 800;
+        letter-spacing: -.03em; color: var(--ink2);
+      }
+      .club-vignette img { width: 100%; height: 100%; object-fit: cover; }
+      .club-tete-txt { flex: 1 1 auto; min-width: 0; }
+      .club-tete-txt strong {
+        display: block; font-family: var(--titre); font-size: 17px; font-weight: 800;
+        letter-spacing: -.035em; line-height: 1.15;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .club-tete-txt span {
+        display: block; margin-top: 1px; font-size: 11.5px; color: var(--ink3);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      /* La periode n'est pas encore reglable : elle se lit comme une
+         etiquette, pas comme un bouton, tant qu'elle ne fait rien. */
+      .club-periode {
+        flex: 0 0 auto; padding: 5px 10px; border-radius: 999px;
+        border: 1px solid var(--line2); background: var(--s1);
+        font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+        text-transform: uppercase; color: var(--ink3); white-space: nowrap;
+      }
 
       /* ---- Connexion requise ---- */
       /* Clair comme l'accueil : c'est le meme moment du parcours, on
@@ -282,7 +306,8 @@
          vues, c'est beaucoup ou peu ? +18 % repond. */
       .hero-delta {
         display: inline-flex; align-items: center; gap: 4px;
-        margin-left: 10px; padding: 3px 10px; border-radius: 999px;
+        margin-left: 10px; padding: 3px 9px; border-radius: 999px;
+        border: 1px solid var(--line2);
         font-family: var(--chiffre); font-size: 11.5px; font-weight: 800;
         /* Archivo 800 est etroit : sans cette remise a zero, le
            letter-spacing negatif du contexte fait chevaucher la fleche
@@ -290,72 +315,69 @@
         letter-spacing: 0;
         vertical-align: middle;
       }
-      /* Sur le fond sombre, les teintes du theme clair deviennent
-         illisibles : on remonte la luminosite au lieu de baisser
-         l'opacite du fond. */
-      .hero-delta.hausse { background: rgba(45,200,120,.18); color: #5fe0a0; }
-      .hero-delta.baisse { background: rgba(255,99,99,.20); color: #ff8f8f; }
-      .hero-delta.plat { background: rgba(255,255,255,.12); color: rgba(255,255,255,.62); }
+      /* Un liseré et une encre, pas une pastille de couleur pleine : une
+         variation se LIT, elle n'a pas a s'allumer. */
+      .hero-delta.hausse { color: var(--succes); border-color: color-mix(in srgb, var(--succes) 34%, transparent); }
+      .hero-delta.baisse { color: var(--accent-fort); border-color: color-mix(in srgb, var(--accent) 34%, transparent); }
+      .hero-delta.plat   { color: var(--ink3); }
 
       /* Les barres : une par soiree, la derniere en corail. Elles disent
          la REGULARITE, ce qu'une courbe lissee cache. */
       .hero-barres {
         position: relative; z-index: 1;
-        display: flex; align-items: flex-end; gap: 4px; height: 48px; margin-top: 16px;
+        display: flex; align-items: flex-end; gap: 3px; height: 52px; margin-top: 18px;
       }
       .hero-barre {
-        flex: 1; min-width: 0; border-radius: 3px 3px 0 0;
-        background: rgba(255,255,255,.17); min-height: 3px;
+        flex: 1; min-width: 0; border-radius: 2px 2px 0 0;
+        background: var(--s3); min-height: 3px;
+        transition: background .2s ease;
       }
-      .hero-barre.forte { background: rgba(255,255,255,.62); }
+      /* Trois niveaux, pas deux : le socle donne la trame, les soirees
+         pleines ressortent, la derniere porte la marque. */
+      .hero-barre.forte { background: color-mix(in srgb, var(--ink) 42%, var(--s3)); }
       .hero-barre.derniere { background: var(--accent); }
       .hero-legende {
         position: relative; z-index: 1;
-        display: flex; justify-content: space-between; margin-top: 8px;
+        display: flex; justify-content: space-between; margin-top: 9px;
         font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
-        text-transform: uppercase; color: rgba(255,255,255,.42);
+        text-transform: uppercase; color: var(--ink3);
       }
 
       /* ---- Chiffre d'entete du tableau de bord ----
          Cinq cartes de meme taille, c'etait une liste, pas un tableau de
          bord : rien ne disait ce qu'il fallait regarder en premier. Les
-         vues generees sont LE chiffre que le club achete, il prend donc
-         la place et la taille qui vont avec, avec sa courbe dessous.
-         Le reste devient secondaire, en petites cartes.
+         abonnes touches sont LE chiffre que le club achete, il prend donc
+         la place et la taille qui vont avec, avec ses barres dessous.
+         Le reste devient secondaire, dans une seule grille compacte.
 
-         Le corail sert ici de couleur de marque sur la courbe, pas de
-         bouton d'action -- c'est son emploi correct. */
-      /* LA carte de l'ecran. Sombre, seule de son espece : c'est le
-         chiffre que le club achete, il doit se voir avant tout le reste.
-         Du contraste de surface, pas un aplat de couleur -- la regle du
-         projet, poussee jusqu'a son terme. */
+         Sur fond sombre, la carte ne se distingue plus par un aplat noir
+         (elle l'etait sur du blanc) : elle monte d'un cran de surface et
+         porte un liseré clair sur son arete haute. C'est de la lumiere,
+         pas de la couleur. */
       .hero {
         position: relative; overflow: hidden;
-        background: #16181d; border: 1px solid #16181d; color: #ffffff;
-        border-radius: 22px; padding: 20px 20px 12px; margin-bottom: 12px;
-        box-shadow: 0 1px 2px rgba(20,22,28,.10), 0 18px 40px -22px rgba(20,22,28,.65);
+        background: var(--s1); border: 1px solid var(--line);
+        border-radius: 20px; padding: 18px 18px 14px; margin-bottom: 10px;
+        box-shadow: var(--ombre-2);
       }
-      /* La mascotte signe la carte, comme un tampon dans l'angle. C'est
-         le seul endroit du tableau de bord ou la marque se montre. */
-      .hero-signature {
-        /* z-index 0 : les barres, qui sont a 1, passent devant elle.
-           Une signature se met sous le contenu, pas dessus. */
-        position: absolute; right: -10px; bottom: 24px; z-index: 0;
-        width: 92px; height: 72px; opacity: .22; pointer-events: none;
-      }
-      .hero-signature img { width: 100%; height: 100%; object-fit: contain; object-position: right bottom; }
+      /* La mascotte ne signe plus cette carte. Elle est dessinee au trait
+         NOIR sur fond creme : posee en filigrane sur une surface sombre,
+         son verre blanc faisait une tache claire au milieu du graphe, et
+         la baisser en opacite ne donnait qu'une tache plus sale. Elle
+         garde son fond partout ou elle en a un -- la carte du parcours,
+         l'ecran de chargement. */
       .hero-label {
         position: relative; z-index: 1;
         font-family: var(--mono); font-size: 9.5px; font-weight: 600;
-        letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.62);
+        letter-spacing: .14em; text-transform: uppercase; color: var(--ink3);
       }
       .hero-valeur {
         position: relative; z-index: 1;
         display: block; margin-top: 8px; font-family: var(--chiffre);
-        font-size: 42px; font-weight: 800; letter-spacing: -.05em; line-height: 1;
+        font-size: 44px; font-weight: 800; letter-spacing: -.05em; line-height: 1;
         font-variant-numeric: tabular-nums;
       }
-      .hero-note { position: relative; z-index: 1; display: block; margin-top: 7px; font-size: 12px; color: rgba(255,255,255,.6); }
+      .hero-note { position: relative; z-index: 1; display: block; margin-top: 7px; font-size: 12px; color: var(--ink2); }
       .hero-graphe { margin-top: 14px; height: 56px; }
       .hero-graphe svg { display: block; width: 100%; height: 100%; overflow: visible; }
       /* Les jours sans publication valent 0, pas "pas de donnee" : une
@@ -363,44 +385,49 @@
          continue. */
       .hero-vide {
         position: relative; z-index: 1;
-        display: flex; align-items: center; height: 56px;
-        font-size: 12px; color: rgba(255,255,255,.5);
+        display: flex; align-items: center; height: 52px;
+        font-size: 12px; color: var(--ink3);
       }
 
-      /* ---- KPI (tableau de bord) ---- */
-      .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 20px; }
-      .kpi {
-        background: var(--s1); border: 1px solid var(--line); border-radius: 18px; padding: 15px 15px 16px;
-        box-shadow: var(--ombre-1);
+      /* ---- KPI (tableau de bord) ----
+         UNE carte, quatre cases separees par des filets -- pas quatre
+         cartes flottantes. Julien, 05/09/2026 : "c'est tout moche".
+         Quatre boites identiques posees sur un fond, chacune avec sa
+         pastille de couleur pastel, c'est le tableau de bord par defaut
+         de n'importe quel kit ; et il fallait scroller pour voir la
+         deuxieme rangee.
+
+         Les pastilles pastel (menthe, lilas, rose) sont supprimees : une
+         teinte par chiffre, c'etait quatre couleurs qui ne veulent rien
+         dire. L'icone reste, en encre sourde, a cote du libelle -- elle
+         designe, elle ne decore pas. */
+      .kpis {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 1px; margin: 0 0 18px;
+        background: var(--line); /* les filets, vus au travers du gap */
+        border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
       }
-      /* Une couleur par chiffre. Quatre cartes grises identiques ne
-         disaient pas laquelle regarder ; la teinte les separe avant meme
-         qu'on lise le libelle. Elle vit dans la pastille, jamais en aplat
-         sur la carte -- c'est cette difference qui separe un code couleur
-         d'un lavis decoratif. */
+      .kpi { background: var(--s1); padding: 14px 14px 15px; min-width: 0; }
       .kpi-ico {
-        width: 30px; height: 30px; border-radius: 9px; margin-bottom: 10px;
-        display: grid; place-items: center;
+        display: inline-grid; place-items: center; vertical-align: -3px;
+        width: 15px; height: 15px; margin-right: 6px;
       }
-      .kpi-ico svg { width: 17px; height: 17px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-      .kpi-ico.points  { background: rgba(196,122,0,.14); }
-      .kpi-ico.points svg  { stroke: #a86500; }
-      .kpi-ico.recos   { background: color-mix(in srgb, var(--accent) 16%, transparent); }
-      .kpi-ico.recos svg   { stroke: var(--accent-fort); }
-      .kpi-ico.membres { background: rgba(109,75,208,.13); }
-      .kpi-ico.membres svg { stroke: #6d4bd0; }
-      .kpi-ico.scans   { background: color-mix(in srgb, var(--succes) 14%, transparent); }
-      .kpi-ico.scans svg   { stroke: var(--succes); }
-
+      .kpi-ico svg { width: 14px; height: 14px; fill: none; stroke: var(--ink3); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
       .kpi-label {
-        font-family: var(--mono); letter-spacing: .11em;
-        display: block; min-height: 24px;
-        font-family: var(--mono); font-size: 9.5px; font-weight: 600;
-        letter-spacing: .1em; line-height: 1.25; text-transform: uppercase; color: var(--ink3);
+        display: block; font-family: var(--mono); font-size: 9.5px; font-weight: 500;
+        letter-spacing: .09em; line-height: 1.3; text-transform: uppercase; color: var(--ink3);
+        /* Deux lignes possibles ("Recompenses utilisees"), reservees des
+           le depart : sans ca les quatre chiffres ne s'alignent pas. */
+        min-height: 25px;
       }
       .kpi-valeur {
-        font-family: var(--chiffre); font-weight: 800; letter-spacing: -.04em; display: block; margin-top: 8px; font-size: 24px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-      .kpi-note { display: block; margin-top: 2px; font-size: 11px; color: var(--ink2); }
+        display: block; margin-top: 6px;
+        font-family: var(--chiffre); font-size: 26px; font-weight: 800;
+        letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums;
+      }
+      .kpi-note {
+        display: block; margin-top: 5px; font-size: 11px; line-height: 1.35; color: var(--ink3);
+      }
 
       /* ---- Carte Instagram du tableau de bord ----
          La connexion Instagram etait enterree en bas des Reglages, alors
@@ -443,6 +470,7 @@
         width: 100%; border-radius: 12px; display: block;
         border: 1px solid var(--line2);
         box-shadow: var(--ombre-2);
+        /* Blanc en dur : c'est une feuille A4, pas une surface d'interface. */
         background: #fff;
       }
       .qr-actions { display: grid; gap: 8px; width: 100%; }
@@ -478,10 +506,10 @@
       /* ---- Ecran de chargement ----
          Le meme logo au verre que l'appli clubbeur et que l'accueil : la
          marque ne change plus entre le chargement et la premiere page.
-         Fond blanc en dur, jamais var(--bg) : ce calque est pose sur
-         .screen et doit garder son apparence quel que soit l'onglet. */
+         Fond en dur, jamais var(--bg) : ce calque est pose sur .screen
+         et doit garder son apparence quel que soit l'onglet. */
       .splash {
-        position: absolute; inset: 0; z-index: 40; background: #ffffff;
+        position: absolute; inset: 0; z-index: 40; background: #120d0d;
         display: flex; align-items: center; justify-content: center;
         transition: opacity .35s ease;
       }
@@ -490,9 +518,11 @@
         width: 190px; aspect-ratio: 1 / .53; display: block; overflow: hidden;
         animation: splash-respire 2.2s ease-in-out infinite;
       }
+      /* Le filtre ne servait qu'a blanchir le fond du PNG sur du clair.
+         Sur du sombre il ferait l'inverse : on l'inverse pour de bon. */
       .splash-logo img {
         display: block; width: 100%; height: auto; margin-top: -21%;
-        filter: url(#logo-blanc-club);
+        filter: invert(1) brightness(1.55) contrast(1.04);
       }
       /* Respiration d'opacite et non un halo colore : sur un dessin en
          couleur, une ombre portee rouge salit le trait. */
@@ -503,11 +533,11 @@
          elle donne une duree a l'attente au lieu d'un ecran fige. */
       .splash-piste {
         position: absolute; left: 40px; right: 40px; bottom: 54px;
-        height: 3px; border-radius: 999px; background: rgba(15,17,20,.12); overflow: hidden;
+        height: 3px; border-radius: 999px; background: rgba(255,235,220,.12); overflow: hidden;
       }
       .splash-barre {
         display: block; height: 100%; width: 6%; border-radius: 999px;
-        background: #ff6363;
+        background: var(--accent, #ff2f45);
         animation: splash-charge 1.1s cubic-bezier(.3,.6,.4,1) forwards;
       }
       @keyframes splash-charge { from { width: 6%; } to { width: 88%; } }
@@ -529,15 +559,15 @@
       }
       .ac-btn:active { transform: scale(.98); }
       .ac-btn svg { width: 19px; height: 19px; flex: 0 0 auto; }
-      .ac-btn-google { background: #ffffff; color: #15181d; border: 1px solid rgba(16,18,22,.16); }
-      .ac-btn-mail { background: #15181d; color: #ffffff; }
+      .ac-btn-google { background: var(--s2); color: var(--ink); border: 1px solid var(--line2); }
+      .ac-btn-mail { background: var(--action); color: var(--action-ink); }
       .ac-btn[disabled] { opacity: .55; cursor: default; }
       .ac-sep {
         display: flex; align-items: center; gap: 10px; margin: 12px 0 4px;
-        font-size: 11.5px; font-weight: 600; color: #8e97a4;
+        font-size: 11.5px; font-weight: 600; color: var(--ink3);
       }
       .ac-sep::before, .ac-sep::after {
-        content: ""; flex: 1 1 auto; height: 1px; background: rgba(16,18,22,.15);
+        content: ""; flex: 1 1 auto; height: 1px; background: var(--line2);
       }
       /* ---- La preuve, sur l'ecran d'arrivee ----
          L'ecran montrait un titre et deux boutons sur du blanc. On y pose
@@ -553,55 +583,56 @@
          qui faisait "vibecode" sur la carte de points du clubbeur). */
       .ac-preuve {
         margin-bottom: 22px; padding: 15px 16px 13px;
-        background: #ffffff; border: 1px solid rgba(16,18,22,.10); border-radius: 18px;
-        box-shadow: 0 1px 2px rgba(20,22,28,.05), 0 12px 26px -18px rgba(20,22,28,.28);
+        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        box-shadow: var(--ombre-2);
       }
       .ac-preuve-label {
         display: block; font-family: var(--mono); font-size: 9px; font-weight: 600;
-        letter-spacing: .13em; text-transform: uppercase; color: #9aa1ac;
+        letter-spacing: .13em; text-transform: uppercase; color: var(--ink3);
       }
-      .ac-preuve-label em { font-style: normal; color: #bcc2cb; }
+      .ac-preuve-label em { font-style: normal; color: var(--ink3); opacity: .7; }
       .ac-preuve-chiffre {
         display: flex; align-items: baseline; gap: 9px; margin-top: 8px;
         font-family: var(--chiffre); font-size: 35px; font-weight: 800;
         letter-spacing: -.05em; line-height: 1;
-        font-variant-numeric: tabular-nums; color: #15181d;
+        font-variant-numeric: tabular-nums; color: var(--ink);
       }
       .ac-preuve-delta {
         font-family: var(--chiffre); font-size: 11.5px; font-weight: 800;
         padding: 3px 8px; border-radius: 999px;
-        background: rgba(18,135,77,.12); color: #12874d;
+        border: 1px solid color-mix(in srgb, var(--succes) 34%, transparent); color: var(--succes);
       }
       /* Les barres disent la REGULARITE, ce qu'une courbe lissee cache :
          un club voit ses trous. */
       .ac-preuve-barres { display: flex; align-items: flex-end; gap: 3px; height: 38px; margin-top: 14px; }
-      .ac-preuve-barres span { flex: 1; min-height: 3px; border-radius: 2px 2px 0 0; background: #e7e7e4; }
-      .ac-preuve-barres span.forte { background: #15181d; }
-      .ac-preuve-barres span.derniere { background: #ff2f45; }
-      .ac-preuve-pied { display: block; margin-top: 10px; font-size: 11px; color: #8e97a4; }
+      .ac-preuve-barres span { flex: 1; min-height: 3px; border-radius: 2px 2px 0 0; background: var(--s3); }
+      .ac-preuve-barres span.forte { background: color-mix(in srgb, var(--ink) 42%, var(--s3)); }
+      .ac-preuve-barres span.derniere { background: var(--accent); }
+      .ac-preuve-pied { display: block; margin-top: 10px; font-size: 11px; color: var(--ink3); }
 
       /* Le champ suit le bouton : haut, arrondi, sans trait dur. Une
          bordure grise a 1 px sur fond blanc, c'est un formulaire ; un
          creux gris clair, c'est un champ d'application. */
       .ac-input {
         width: 100%; min-height: 54px; padding: 0 18px; border: 1px solid transparent;
-        border-radius: 16px; background: #f2ede5; color: #15181d;
+        border-radius: 16px; background: var(--s2); color: var(--ink);
         font-family: inherit; font-size: 15px; font-weight: 600;
+        transition: background .15s ease, border-color .15s ease;
       }
-      .ac-input:focus { background: #ffffff; border-color: rgba(16,18,22,.18); }
-      .ac-input::placeholder { color: #8e97a4; font-weight: 500; }
-      .ac-input:focus { outline: 2px solid #15181d; outline-offset: 1px; }
+      .ac-input:focus { background: var(--s3); border-color: var(--line2); }
+      .ac-input::placeholder { color: var(--ink3); font-weight: 500; }
+      .ac-input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
       /* Bouton d'action NOIR, pas corail : le corail est une couleur de
          marque, jamais un CTA (regle de design du projet). C'est aussi
          ce qui separe le plus vite cet ecran de celui des clubbeurs, ou
          le bouton principal est rouge. */
-      .ac-btn-marque { background: #15181d; color: #ffffff; }
+      .ac-btn-marque { background: var(--action); color: var(--action-ink); }
       .ac-aide {
-        margin: 2px 0 0; font-size: 11px; color: #8e97a4; line-height: 1.4; text-align: center;
+        margin: 2px 0 0; font-size: 11px; color: var(--ink3); line-height: 1.4; text-align: center;
       }
       .ac-bascule {
         border: 0; background: none; padding: 4px 0 0; cursor: pointer;
-        font: inherit; font-size: 12.5px; font-weight: 700; color: #5b6472;
+        font: inherit; font-size: 12.5px; font-weight: 700; color: var(--ink2);
         text-decoration: underline; text-underline-offset: 3px;
       }
 
@@ -626,7 +657,7 @@
         display: flex; flex-direction: column; align-items: stretch;
         justify-content: center;
         padding: 26px 24px 20px; text-align: left;
-        background: #ffffff; color: #15181d;
+        background: var(--bg); color: var(--ink);
         /* Le clavier logiciel ampute l'ecran de moitie sur un telephone :
            sans ca, le bouton de connexion devient inatteignable. */
         overflow-y: auto;
@@ -640,11 +671,11 @@
       .accueil-mot { font-size: 15px; font-weight: 800; letter-spacing: -.03em; }
       .accueil-mot::after {
         content: ""; display: inline-block; width: 5px; height: 5px; margin-left: 3px;
-        border-radius: 50%; background: #ff2f45; vertical-align: 2px;
+        border-radius: 50%; background: var(--accent); vertical-align: 2px;
       }
       .accueil-pro {
         font-size: 10px; font-weight: 700; letter-spacing: .1em;
-        text-transform: uppercase; color: #9aa1ac;
+        text-transform: uppercase; color: var(--ink3);
       }
 
       /* Le titre EST l'illustration : c'est lui qui remplace le verre. */
@@ -654,7 +685,7 @@
       }
       .accueil-lead {
         margin: 10px 0 0; font-size: 13.5px; font-weight: 500;
-        letter-spacing: -.01em; line-height: 1.5; color: #5b6472;
+        letter-spacing: -.01em; line-height: 1.5; color: var(--ink2);
       }
 
       /* Trois lignes numerotees separees par un filet, comme les entetes
@@ -664,15 +695,15 @@
       .accueil-points { margin: 16px 0 0; padding: 0; list-style: none; }
       .accueil-points li {
         display: flex; gap: 12px; align-items: baseline; padding: 8px 0;
-        border-top: 1px solid rgba(16,18,22,.10);
-        font-size: 12.5px; font-weight: 500; line-height: 1.4; color: #5b6472;
+        border-top: 1px solid var(--line);
+        font-size: 12.5px; font-weight: 500; line-height: 1.4; color: var(--ink2);
       }
-      .accueil-points li:last-child { border-bottom: 1px solid rgba(16,18,22,.10); }
+      .accueil-points li:last-child { border-bottom: 1px solid var(--line); }
       .accueil-num {
         flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: .06em;
-        color: #ff2f45; font-variant-numeric: tabular-nums;
+        color: var(--accent); font-variant-numeric: tabular-nums;
       }
-      .accueil-points b { display: block; margin-bottom: 1px; color: #15181d; font-weight: 700; }
+      .accueil-points b { display: block; margin-bottom: 1px; color: var(--ink); font-weight: 700; }
 
       /* Colle en bas tant que la place le permet : les champs tombent
          sous le pouce, pas au milieu de l'ecran. */
@@ -683,7 +714,7 @@
       .accueil-actions .ac-sep { margin: 6px 0; }
       /* Detachee du formulaire : ce n'est pas une action de connexion de
          plus, c'est l'autre chemin. */
-      .ac-bascule-bloc { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(16,18,22,.08); }
+      .ac-bascule-bloc { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
       /* L'ecran Instagram garde ses actions en bas de l'ecran : lui a
          du contenu au-dessus, et le pouce les y trouve. */
       .ecran-ig .accueil-actions { margin-top: auto; padding-top: 16px; }
@@ -701,8 +732,8 @@
       .ig-glyphe { stroke: #e1306c; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
       .ecran-ig-msg {
         margin: 14px 0 0; padding: 10px 12px; border-radius: 10px;
-        background: rgba(255,47,69,.07); border: 1px solid rgba(255,47,69,.22);
-        font-size: 12.5px; font-weight: 550; line-height: 1.45; color: #15181d;
+        background: color-mix(in srgb, var(--accent) 9%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+        font-size: 12.5px; font-weight: 550; line-height: 1.45; color: var(--ink);
       }
       .ecran-ig-msg[hidden] { display: none; }
 
@@ -748,7 +779,7 @@
       .parcours {
         position: absolute; inset: 0; z-index: 38;
         display: flex; flex-direction: column;
-        background: var(--s1); color: var(--ink);
+        background: var(--bg); color: var(--ink);
         /* Un ease-out qui depasse legerement : reserve a la mascotte.
            Un personnage qui arrive sans elan n'a pas l'air vivant. */
         --rebond: cubic-bezier(.34, 1.42, .64, 1);
@@ -790,6 +821,11 @@
         font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink3);
       }
       .pa-passer[hidden] { display: none; }
+      /* Ouvert sur une seule etape (la fiche, depuis les Reglages) : ni
+         avancement a montrer, ni etape precedente ou suivante. La barre
+         garde sa geometrie, elle perd ce qui mentirait. */
+      .pa-seule .pa-jauge, .pa-seule .pa-compteur { visibility: hidden; }
+      .pa-seule .pa-fleche { display: none; }
 
       .pa-corps { flex: 1 1 auto; overflow-y: auto; }
 
@@ -811,16 +847,24 @@
          sur un fond plus chaud que la page : c'est ce qui donne un haut
          et un bas a l'ecran, et ce qui empeche l'etape 1 -- deux champs
          et rien d'autre -- de flotter dans du vide. */
+      /* La mascotte est dessinee au TRAIT NOIR sur fond creme : posee
+         telle quelle sur l'ecran sombre, ses bras et ses jambes
+         disparaissent. Elle garde donc son fond -- mais en carte inseree,
+         pas en bandeau pleine largeur de 168 px.
+
+         La difference n'est pas cosmetique : un aplat creme qui touche
+         les quatre bords se lit comme le HAUT DE LA PAGE (et un cinquieme
+         du telephone qui ne dit rien) ; le meme creme dans un cadre
+         arrondi et detache se lit comme une ILLUSTRATION, un objet pose
+         sur l'ecran. C'est le meme geste que les cartes d'illustration
+         des onboarding sombres. */
       .pa-bandeau {
         position: relative; display: flex; align-items: flex-end;
-        height: 168px; padding: 0 20px;
-        /* Le creme du logo, pas le gris de surface : c'est le fond sur
-           lequel la mascotte a ete dessinee, et il rechauffe l'ecran
-           entier. */
-        background: #fbf1e7; border-bottom: 1px solid rgba(20,22,28,.07);
-        overflow: hidden;
+        height: 124px; margin: 2px 20px 0; padding: 0 4px;
+        background: var(--papier); border: 1px solid rgba(20,22,28,.10);
+        border-radius: 20px; overflow: hidden;
       }
-      .pa-mascotte { flex: 0 0 auto; width: 214px; height: 156px; margin-bottom: -6px; }
+      .pa-mascotte { flex: 0 0 auto; width: 166px; height: 120px; margin-bottom: -3px; }
       .pa-mascotte img {
         display: block; width: 100%; height: 100%;
         object-fit: contain; object-position: left bottom;
@@ -830,30 +874,35 @@
       /* Le compteur, cale dans l'angle du bandeau. Chiffre en encre,
          jamais en corail : le corail est une couleur de marque, il ne
          sert pas a rendre un nombre plus gros. */
+      /* Encres en dur : ce coin-la est sur le creme de la carte, pas sur
+         la page. Les jetons de la palette y seraient illisibles. */
       .pa-compteur {
-        position: absolute; right: 20px; bottom: 16px; margin: 0;
+        position: absolute; right: 16px; bottom: 13px; margin: 0;
         text-align: right; font-family: var(--mono); line-height: 1;
       }
       .pa-compteur i {
-        display: block; font-style: normal; font-size: 9px; font-weight: 600;
-        letter-spacing: .18em; text-transform: uppercase; color: var(--ink3);
-        margin-bottom: 8px;
+        display: block; font-style: normal; font-size: 8.5px; font-weight: 600;
+        letter-spacing: .18em; text-transform: uppercase; color: rgba(20,22,28,.5);
+        margin-bottom: 7px;
       }
+      /* 26 px et non 34 : le compteur accompagne, il n'annonce pas. A
+         cote d'un titre de 28 px, deux chiffres de 34 se disputaient
+         l'ecran avec lui. */
       .pa-compteur b {
-        font-family: var(--chiffre); font-size: 34px; font-weight: 800;
-        letter-spacing: -.05em; color: var(--ink);
+        font-family: var(--chiffre); font-size: 26px; font-weight: 800;
+        letter-spacing: -.05em; color: #14100e;
         font-variant-numeric: tabular-nums;
       }
       .pa-compteur b.pa-entre { animation: paChiffre 220ms var(--sortie) both; }
-      .pa-compteur span { font-family: var(--chiffre); font-size: 14px; font-weight: 700; color: var(--ink3); margin-left: 2px; }
+      .pa-compteur span { font-family: var(--chiffre); font-size: 14px; font-weight: 700; color: rgba(20,22,28,.45); margin-left: 2px; }
 
-      .pa-texte { padding: 22px 20px 20px; }
+      .pa-texte { padding: 20px 20px 22px; }
       .pa-etape[hidden] { display: none; }
       .pa-titre {
-        margin: 0 0 6px; font-family: var(--titre); font-size: 28px;
-        font-weight: 800; letter-spacing: -.045em; line-height: 1.02;
+        margin: 0 0 6px; font-family: var(--titre); font-size: 27px;
+        font-weight: 800; letter-spacing: -.045em; line-height: 1.04;
       }
-      .pa-sous { margin: 0 0 20px; font-size: 13.5px; color: var(--ink2); line-height: 1.5; max-width: 34ch; }
+      .pa-sous { margin: 0 0 18px; font-size: 13.5px; color: var(--ink2); line-height: 1.5; max-width: 34ch; }
       .pa-aide { display: block; font-size: 11.5px; color: var(--ink3); line-height: 1.45; margin: 0; }
 
       /* Trois niveaux de cascade -- titre, chapeau, contenu. Au-dela,
@@ -887,7 +936,7 @@
       .pa-pied {
         flex: 0 0 auto; display: grid; gap: 8px;
         padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
-        background: var(--s1); border-top: 1px solid var(--line);
+        background: var(--bg); border-top: 1px solid var(--line);
       }
       .pa-msg { margin: 0; font-size: 12px; line-height: 1.4; text-align: center; color: var(--ink3); }
       .pa-msg[hidden] { display: none; }
@@ -905,28 +954,92 @@
         text-transform: uppercase; letter-spacing: .14em;
       }
 
-      /* ---- 1 · la photo du club ----
-         Une grande zone a toucher, pas un bouton a cote d'une vignette :
-         c'est le geste principal de l'ecran. */
-      .pa-photo {
-        display: flex; align-items: center; gap: 14px; width: 100%;
-        margin-bottom: 16px; padding: 12px; text-align: left;
-        border: 1.5px dashed var(--line2); border-radius: 16px;
-        background: none; color: inherit; font-family: inherit; cursor: pointer;
+      /* ---- 2 · les photos du club ----
+         Julien, 05/09/2026 : "tu mets le nom de ta boite, puis tu mets des
+         PHOTOS de l'etablissement". Au pluriel. Il y en avait une, dans une
+         vignette de 58 px : la taille d'un avatar, pas celle d'une salle.
+
+         Une couverture pleine largeur (c'est l'image que le clubbeur voit
+         sur la carte et dans sa liste de clubs) puis une galerie de quatre.
+         Le format 16/10 est celui de la fiche club cote clubbeur : ce qui
+         est cadre ici est ce qui sera vu la-bas. */
+      .pa-couv {
+        position: relative; display: block; width: 100%; overflow: hidden;
+        margin-bottom: 7px; padding: 0; aspect-ratio: 16 / 9;
+        border: 1.5px dashed var(--line2); border-radius: 18px;
+        background: var(--s2); color: inherit; font-family: inherit; cursor: pointer;
         transition: border-color .15s ease, transform .16s var(--sortie);
       }
-      .pa-photo:active { transform: scale(.99); }
-      .pa-photo.remplie { border-style: solid; border-color: var(--line); background: var(--s1); }
-      @media (hover: hover) and (pointer: fine) { .pa-photo:hover { border-color: var(--ink3); } }
-      .pa-photo-vue {
-        flex: 0 0 auto; width: 58px; height: 58px; border-radius: 13px; overflow: hidden;
-        background: var(--s2); display: grid; place-items: center;
-        font-size: 20px; font-weight: 800; color: var(--ink3);
+      .pa-couv:active { transform: scale(.99); }
+      .pa-couv.remplie { border-style: solid; border-color: var(--line); }
+      @media (hover: hover) and (pointer: fine) { .pa-couv:hover { border-color: var(--ink3); } }
+      .pa-couv-vue {
+        position: absolute; inset: 0; display: grid; place-items: center;
+        background: var(--s2); color: var(--ink3);
       }
-      .pa-photo-vue img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .pa-photo-txt { flex: 1 1 auto; min-width: 0; }
-      .pa-photo-txt strong { display: block; font-size: 13.5px; font-weight: 700; }
-      .pa-photo-txt span { display: block; margin-top: 2px; font-size: 11.5px; color: var(--ink3); }
+      .pa-couv-vue img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .pa-couv-vue svg { width: 30px; height: 30px; fill: none; stroke: var(--ink3); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+      /* Un voile SOUS le texte seulement, pas sur toute l'image : un
+         degrade sur la photo entiere la salit, et c'est exactement le
+         lavis de couleur qu'on s'interdit ailleurs. */
+      .pa-couv-pied {
+        position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        padding: 22px 13px 11px;
+        background: linear-gradient(to top, rgba(10,7,7,.78), transparent);
+      }
+      .pa-couv:not(.remplie) .pa-couv-pied { background: none; }
+      .pa-couv-etiq {
+        font-family: var(--mono); font-size: 9px; font-weight: 600;
+        letter-spacing: .14em; text-transform: uppercase; color: var(--ink2);
+      }
+      .pa-couv.remplie .pa-couv-etiq { color: rgba(255,255,255,.72); }
+      .pa-couv-act {
+        font-family: var(--titre); font-size: 12.5px; font-weight: 700;
+        letter-spacing: -.01em; color: var(--ink);
+      }
+      .pa-couv.remplie .pa-couv-act { color: #fff; }
+
+      /* Quatre cases toujours dessinees, pleines ou vides : une galerie
+         qui grandit case par case fait sauter la mise en page a chaque
+         ajout, et ne dit pas combien on en attend. */
+      .pa-galerie { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 7px; }
+      /* Le libelle d'un GROUPE, pas d'un champ : meme graisse que les
+         etiquettes de .pa-champ, mais detache de ce qui precede. */
+      .pa-legende {
+        margin: 20px 0 8px; font-family: var(--mono); font-size: 10px; font-weight: 500;
+        letter-spacing: .14em; text-transform: uppercase; color: var(--ink3);
+      }
+      .pa-vign {
+        position: relative; aspect-ratio: 1; padding: 0; overflow: hidden;
+        border-radius: 12px; border: 1px solid var(--line);
+        background: var(--s2); cursor: pointer; font-family: inherit;
+        display: grid; place-items: center;
+        transition: border-color .15s ease, transform .16s var(--sortie);
+      }
+      .pa-vign:active { transform: scale(.94); }
+      .pa-vign img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .pa-vign.vide { border-style: dashed; border-color: var(--line2); background: none; }
+      .pa-vign.vide svg { width: 17px; height: 17px; fill: none; stroke: var(--ink2); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      @media (hover: hover) and (pointer: fine) { .pa-vign.vide:hover { border-color: var(--ink3); } }
+      /* Les cases suivantes sont des EMPLACEMENTS, pas des boutons : leur
+         "+" disparait, il n'y a qu'un seul endroit ou toucher. */
+      .pa-vign[disabled] { cursor: default; border-color: var(--line); }
+      .pa-vign[disabled] svg { display: none; }
+      /* La croix de suppression, posee sur la vignette. Un appui long ou
+         un menu cacherait le seul geste destructeur de l'ecran. */
+      .pa-vign-x {
+        position: absolute; top: 3px; right: 3px; z-index: 1;
+        width: 19px; height: 19px; padding: 0; display: grid; place-items: center;
+        border: 0; border-radius: 50%; background: rgba(10,7,7,.72); cursor: pointer;
+      }
+      .pa-vign-x svg { width: 10px; height: 10px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; }
+      /* Le compteur d'envoi : la vignette se remplit d'un voile au lieu
+         de disparaitre, sinon la grille sursaute pendant l'upload. */
+      .pa-vign.envoi::after {
+        content: ""; position: absolute; inset: 0; background: rgba(10,7,7,.55);
+        border-radius: inherit;
+      }
 
       /* ---- 2 · le catalogue ----
          Deux colonnes de vignettes : le gerant choisit CE QU'IL DONNE, et
@@ -1160,18 +1273,71 @@
       }
       .vide { text-align: center; padding: 30px 10px; color: var(--ink3); font-size: 13px; }
 
-      /* ---- Activite recente ---- */
-      .activite-ligne { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+      /* ---- La fiche du club, en tete des Reglages ----
+         Meme composition que l'entete du tableau de bord, mais cliquable.
+         Les Reglages s'ouvraient sur un titre et une adresse email : rien
+         qui dise de quel club il s'agit. */
+      .fiche-club {
+        display: flex; align-items: center; gap: 12px; width: 100%;
+        margin: 2px 0 4px; padding: 12px 14px; text-align: left;
+        background: var(--s1); border: 1px solid var(--line); border-radius: 18px;
+        box-shadow: var(--ombre-1); cursor: pointer;
+        font-family: inherit; color: inherit;
+        transition: border-color .15s ease, transform .16s var(--sortie);
+      }
+      .fiche-club:active { transform: scale(.99); }
+      .fiche-club[disabled] { opacity: .6; cursor: default; }
+      @media (hover: hover) and (pointer: fine) {
+        .fiche-club:not([disabled]):hover { border-color: var(--line2); }
+        .fiche-club:not([disabled]):hover .reglage-fleche { transform: translateX(2px); }
+      }
+      .fiche-club .club-vignette { width: 44px; height: 44px; border-radius: 14px; }
+
+      /* Un etat vide qui NOMME ce qui manque et donne le geste, plutot
+         qu'une phrase grise au centre d'une boite de 90 px de haut. Trois
+         ecrans en avaient une ; c'est ce qui faisait le plus "inacheve". */
+      .rien {
+        display: flex; align-items: center; gap: 12px; padding: 13px 0;
+      }
+      .rien-ico {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 11px;
+        background: var(--s2); border: 1px solid var(--line);
+        display: grid; place-items: center;
+      }
+      .rien-ico svg { width: 17px; height: 17px; fill: none; stroke: var(--ink3); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .rien-txt { flex: 1 1 auto; min-width: 0; }
+      .rien-txt strong { display: block; font-family: var(--titre); font-size: 13.5px; font-weight: 700; }
+      .rien-txt span { display: block; margin-top: 1px; font-size: 11.5px; line-height: 1.35; color: var(--ink3); }
+
+      /* ---- Activite recente ----
+         Les pastilles portaient l'INITIALE DU STATUT : un "V", un "E", un
+         "R" dans un rond. Personne ne lit ca -- huit lignes de suite
+         affichaient trois lettres qui ne veulent rien dire, et c'est le
+         meme tic que les avatars-lettres de la boutique.
+
+         L'icone dit maintenant la PLATEFORME (c'est elle qui change d'une
+         ligne a l'autre), et le statut passe en toutes lettres avec une
+         pastille de couleur devant. */
+      .activite-ligne { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--line); }
       .activite-ligne:last-child { border-bottom: 0; }
       .act-ico {
-        flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; background: var(--s2);
-        display: grid; place-items: center; font-size: 10px; font-weight: 800; color: var(--ink2);
+        flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px;
+        background: var(--s2); border: 1px solid var(--line);
+        display: grid; place-items: center;
       }
-      .act-ico.gain { background: color-mix(in srgb, var(--succes) 16%, transparent); color: var(--succes); }
+      .act-ico svg { width: 16px; height: 16px; fill: none; stroke: var(--ink2); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
       .act-txt { flex: 1 1 auto; min-width: 0; }
       .act-txt strong { display: block; font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .act-txt span { display: block; font-size: 11px; color: var(--ink3); }
-      .act-pts { flex: 0 0 auto; font-family: var(--chiffre); font-size: 13px; font-weight: 800; color: var(--succes); }
+      .act-txt span { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink3); }
+      /* Un point de 5 px : la couleur porte le statut, le mot le nomme.
+         Aucune ligne n'est teintee -- c'est ce qui separe un code couleur
+         d'un surlignage. */
+      .act-etat {
+        flex: 0 0 auto; width: 5px; height: 5px; border-radius: 50%; background: var(--ink3);
+      }
+      .act-etat.valide { background: var(--succes); }
+      .act-etat.rejete { background: var(--accent); }
+      .act-pts { flex: 0 0 auto; font-family: var(--chiffre); font-size: 13px; font-weight: 800; color: var(--succes); font-variant-numeric: tabular-nums; }
       .act-pts.neutre { color: var(--ink3); }
 
       /* ---- Recompenses ----
@@ -1193,20 +1359,34 @@
       .reco-resume::-webkit-details-marker { display: none; }
       .reco-resume:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 16px; }
       .reco-vignette {
-        flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; overflow: hidden;
+        flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px; overflow: hidden;
         background: var(--s2); border: 1px solid var(--line);
         display: grid; place-items: center;
-        font-size: 14px; font-weight: 800; color: var(--ink3);
       }
       .reco-vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      /* Le glyphe du dernier recours. Une INITIALE dans un carre gris,
+         c'est un avatar casse : ca promet une image qui n'arrive pas.
+         Un pictogramme dit "pas encore de photo" et se lit comme un
+         choix. */
+      .reco-vignette svg {
+        width: 19px; height: 19px; fill: none; stroke: var(--ink3);
+        stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+      }
       .reco-resume-txt { flex: 1 1 auto; min-width: 0; }
       .reco-resume-txt strong {
         display: block; font-family: var(--titre); font-size: 13.5px; font-weight: 700;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
+      /* Le PRIX porte l'accent, comme dans la boutique du clubbeur :
+         c'est le chiffre qui decide de l'echange. Le stock reste une
+         mention de gestion, en encre sourde. */
       .reco-resume-txt span {
-        display: block; margin-top: 2px; font-family: var(--mono);
-        font-size: 11px; color: var(--ink3);
+        display: flex; align-items: baseline; gap: 6px; margin-top: 3px;
+        font-family: var(--mono); font-size: 11px; color: var(--ink3);
+      }
+      .reco-prix {
+        font-family: var(--chiffre); font-size: 13px; font-weight: 800;
+        letter-spacing: -.02em; color: var(--accent); font-variant-numeric: tabular-nums;
       }
       .reco-chevron {
         flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none;
@@ -1611,18 +1791,10 @@
                       </div>
                     </section>
 
-                    <!-- 1 · Le club -->
+                    <!-- 2 · Le club et ses photos -->
                     <section class="pa-etape" data-pas="2" hidden>
                       <h1 class="pa-titre">Ton club.</h1>
-                      <p class="pa-sous">Le nom et la ville que verront tes clients dans leur application.</p>
-
-                      <button type="button" class="pa-photo pa-arrive" id="pa-photo-btn">
-                        <span class="pa-photo-vue" id="pa-photo-vue"></span>
-                        <span class="pa-photo-txt">
-                          <strong id="pa-photo-titre">Ajouter une photo</strong>
-                          <span>Ta façade, ta salle, ton logo.</span>
-                        </span>
-                      </button>
+                      <p class="pa-sous">Son nom, sa ville, et ce à quoi il ressemble.</p>
 
                       <div class="pa-champ pa-arrive">
                         <label for="pa-nom">Nom du club</label>
@@ -1632,6 +1804,22 @@
                         <label for="pa-ville">Ville</label>
                         <input class="ac-input" id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" />
                       </div>
+
+                      <!-- La couverture pleine largeur, la galerie dessous.
+                           Une vignette carrée de 58 px ne montrait rien d'une
+                           salle ; c'est pourtant la seule image que le
+                           clubbeur voit avant de venir. -->
+                      <p class="pa-legende pa-arrive">Tes photos</p>
+                      <button type="button" class="pa-couv pa-arrive" id="pa-photo-btn">
+                        <span class="pa-couv-vue" id="pa-photo-vue"></span>
+                        <span class="pa-couv-pied">
+                          <span class="pa-couv-etiq">Couverture</span>
+                          <span class="pa-couv-act" id="pa-photo-titre">Ajouter une photo</span>
+                        </span>
+                      </button>
+
+                      <div class="pa-galerie pa-arrive" id="pa-galerie"></div>
+                      <p class="pa-aide pa-arrive" id="pa-galerie-aide">La façade, la salle, le bar. Quatre suffisent.</p>
                     </section>
 
                     <!-- 2 · Les recompenses -->
@@ -1718,13 +1906,19 @@
 
             <!-- ================= TABLEAU DE BORD ================= -->
             <div class="vue actif" id="vue-dashboard">
-              <h1 class="ecran-titre" id="dash-etablissement">—</h1>
-              <p class="ecran-sous" id="dash-periode">Les 14 derniers jours</p>
+              <!-- Le club se reconnait avant de lire un chiffre : sa photo,
+                   son nom, sa ville. Un tableau de bord qui commence par un
+                   titre nu pourrait etre celui de n'importe qui. -->
+              <div class="club-tete">
+                <span class="club-vignette" id="dash-vignette" aria-hidden="true"></span>
+                <span class="club-tete-txt">
+                  <strong id="dash-etablissement">—</strong>
+                  <span id="dash-ville"></span>
+                </span>
+                <span class="club-periode" id="dash-periode">14 jours</span>
+              </div>
 
               <div class="hero">
-                <span class="hero-signature" aria-hidden="true">
-                  <img src="/mascotte/pose-1.webp" alt="" />
-                </span>
                 <span class="hero-label">Abonnés touchés</span>
                 <span class="hero-valeur"><span id="kpi-vues">—</span><span class="hero-delta plat" id="kpi-delta"></span></span>
                 <span class="hero-note" id="kpi-vues-note"></span>
@@ -1741,30 +1935,25 @@
                    collee au mur sert a quelque chose. -->
               <div class="kpis">
                 <div class="kpi">
-                  <span class="kpi-ico scans" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><path d="M13.5 13.5h3.5v3.5M20.5 13.5v3.5h-3.5M13.5 20.5h7"/></svg></span>
-                  <span class="kpi-label">Scans QR</span>
+                  <span class="kpi-label"><span class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><path d="M13.5 13.5h3.5v3.5M20.5 13.5v3.5h-3.5M13.5 20.5h7"/></svg></span>Scans QR</span>
                   <span class="kpi-valeur" id="kpi-scans">—</span>
                   <span class="kpi-note" id="kpi-scans-note"></span>
                 </div>
                 <div class="kpi">
-                  <span class="kpi-ico membres" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.6a3.4 3.4 0 0 1 0 5.8M17.5 14.6c2 .9 3.5 2.9 3.5 5.4"/></svg></span>
-                  <span class="kpi-label">Membres</span>
+                  <span class="kpi-label"><span class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.6a3.4 3.4 0 0 1 0 5.8M17.5 14.6c2 .9 3.5 2.9 3.5 5.4"/></svg></span>Membres</span>
                   <span class="kpi-valeur" id="kpi-membres">—</span>
                   <span class="kpi-note" id="kpi-membres-note"></span>
                 </div>
                 <div class="kpi">
-                  <span class="kpi-ico points" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.5 6 .9-4.3 4.3 1 6-5.3-2.9-5.3 2.9 1-6L3.4 9.9l6-.9z"/></svg></span>
-                  <span class="kpi-label">Points attribués</span>
+                  <span class="kpi-label"><span class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.5 6 .9-4.3 4.3 1 6-5.3-2.9-5.3 2.9 1-6L3.4 9.9l6-.9z"/></svg></span>Points attribués</span>
                   <span class="kpi-valeur" id="kpi-points">—</span>
                   <span class="kpi-note">Selon ton barème</span>
                 </div>
                 <div class="kpi">
-                  <span class="kpi-ico recos" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="8.5" width="17" height="12" rx="2"/><path d="M3.5 12.8h17M12 8.5V20.5"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg></span>
-                  <span class="kpi-label">Récompenses utilisées</span>
+                  <span class="kpi-label"><span class="kpi-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="8.5" width="17" height="12" rx="2"/><path d="M3.5 12.8h17M12 8.5V20.5"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg></span>Récompenses utilisées</span>
                   <span class="kpi-valeur" id="kpi-recompenses">—</span>
                   <span class="kpi-note" id="kpi-recompenses-note"></span>
                 </div>
-              </div>
               </div>
 
               <p class="section-titre">Activité récente</p>
@@ -1781,10 +1970,23 @@
               <p class="ac-aide" id="recompense-sync" style="text-align:left"></p>
             </div>
 
-            <!-- ================= MA FICHE ================= -->
+            <!-- ================= REGLAGES ================= -->
             <div class="vue" id="vue-reglages">
               <h1 class="ecran-titre">Réglages</h1>
               <p class="ecran-sous" id="reglages-compte">—</p>
+
+              <!-- La fiche du club n'etait modifiable NULLE PART apres le
+                   parcours : le nom, la ville et la photo se figeaient a la
+                   premiere ouverture. Elle rouvre l'ecran qui les regle
+                   deja, plutot que d'en ajouter un sixieme. -->
+              <button type="button" class="fiche-club" id="reglages-fiche">
+                <span class="club-vignette" id="reglages-vignette" aria-hidden="true"></span>
+                <span class="club-tete-txt">
+                  <strong id="reglages-nom">—</strong>
+                  <span id="reglages-ville">Nom, ville et photos</span>
+                </span>
+                <svg class="reglage-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+              </button>
 
               <p class="section-titre">Instagram</p>
               <div class="carte" id="reglages-instagram">
@@ -2495,9 +2697,29 @@
         }).join("");
       }
 
+      /* Le monogramme n'est pas un pis-aller : tant que le club n'a pas
+         mis sa photo, une initiale sur sa surface se lit comme un choix,
+         la ou une image d'ambiance piochee ailleurs se lit comme un
+         bouche-trou (meme regle que fotoClub() cote clubbeur). */
+      function rendreVignetteClub(zone, etab) {
+        if (!zone) return;
+        var nom = (etab && etab.name) || "";
+        if (etab && etab.logo_url) {
+          zone.innerHTML = '<img src="' + escapeHtml(etab.logo_url) + '" alt="" />';
+          zone.firstElementChild.addEventListener("error", function () {
+            zone.textContent = nom.trim().charAt(0).toUpperCase() || "?";
+          });
+          return;
+        }
+        zone.textContent = nom.trim().charAt(0).toUpperCase() || "?";
+      }
+
       function rendreDashboard() {
         var stats = getDashboardStats(ETAT.data);
-        $("#dash-etablissement").textContent = ETAT.data.establishment.name || "—";
+        var etab = ETAT.data.establishment;
+        $("#dash-etablissement").textContent = etab.name || "—";
+        $("#dash-ville").textContent = etab.city || "";
+        rendreVignetteClub($("#dash-vignette"), etab);
 
         $("#kpi-vues").textContent = nb.format(stats.reach);
         $("#kpi-vues-note").textContent = nb.format(stats.validatedCount) + " contenu" + (stats.validatedCount > 1 ? "s" : "") + " validé" + (stats.validatedCount > 1 ? "s" : "");
@@ -2560,15 +2782,26 @@
 
         var LABEL_STATUT = { validated: "Validé", pending: "En attente", rejected: "Rejeté" };
         var LABEL_PLATEFORME = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube" };
+        var CLASSE_STATUT = { validated: "valide", rejected: "rejete" };
+        // Des glyphes au trait, dans l'encre de l'interface : les logos de
+        // marque en couleur transformeraient une liste d'activite en mur
+        // de vignettes.
+        var GLYPHE = {
+          instagram: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.9"/><circle cx="17.1" cy="6.9" r="1.05" fill="currentColor" stroke="none"/></svg>',
+          tiktok: '<svg viewBox="0 0 24 24"><path d="M14.2 3.2v11.3a3.6 3.6 0 1 1-3-3.55"/><path d="M14.2 5.4c.7 1.9 2.3 3.2 4.4 3.4"/></svg>',
+          youtube: '<svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.3 9.6l4.7 2.9-4.7 2.9z"/></svg>',
+        };
+        var GLYPHE_AUTRE = '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M8 12h8"/></svg>';
 
         zone.innerHTML = recentes.map(function (s) {
           var gain = s.status === "validated";
           var date = s.submitted_at ? new Date(s.submitted_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }) : "—";
           return (
             '<div class="activite-ligne">' +
-              '<span class="act-ico' + (gain ? " gain" : "") + '">' + escapeHtml((LABEL_STATUT[s.status] || "?").charAt(0)) + "</span>" +
+              '<span class="act-ico" aria-hidden="true">' + (GLYPHE[s.platform] || GLYPHE_AUTRE) + "</span>" +
               '<span class="act-txt"><strong>' + escapeHtml(LABEL_PLATEFORME[s.platform] || s.platform || "—") + "</strong>" +
-              "<span>" + escapeHtml(LABEL_STATUT[s.status] || s.status || "—") + " · " + escapeHtml(date) + "</span></span>" +
+              '<span><i class="act-etat ' + (CLASSE_STATUT[s.status] || "") + '" aria-hidden="true"></i>' +
+              escapeHtml(LABEL_STATUT[s.status] || s.status || "—") + " · " + escapeHtml(date) + "</span></span>" +
               '<span class="act-pts' + (gain ? "" : " neutre") + '">' + (gain ? "+" + nb.format(s.points_awarded || 0) : "—") + "</span>" +
             "</div>"
           );
@@ -2960,6 +3193,32 @@
 
       /* ================= RECOMPENSES ================= */
 
+      /* Le meme choix d'illustration que la boutique du clubbeur
+         (choisirArt, app-preview.html) : le gerant doit voir la carte que
+         son client verra. Seuls les dessins LOCAUX sont utilises -- les
+         deux entrees Unsplash du catalogue sont des liens vers des photos
+         qui appartiennent a quelqu'un, elles n'ont rien a faire dans une
+         liste de gestion. */
+      var ART_PAR_TITRE = [
+        [/bouteille|champagne|magnum/i, "/recompenses/art-bouteille.webp"],
+        [/cocktail/i,                   "/recompenses/art-cocktail.webp"],
+        [/shot/i,                       "/recompenses/art-shot.webp"],
+        [/pinte|bi[eè]re/i,             "/recompenses/art-pinte.webp"],
+        [/vestiaire|manteau|cintre/i,   "/recompenses/art-cintre.webp"],
+      ];
+      var GLYPHE_RECOMPENSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8.5" width="17" height="12" rx="2"/><path d="M3.5 12.8h17M12 8.5V20.5"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>';
+
+      function vignetteRecompense(reward) {
+        if (reward.image_url) return '<img src="' + escapeHtml(reward.image_url) + '" alt="" />';
+        var titre = reward.title || "";
+        for (var i = 0; i < ART_PAR_TITRE.length; i++) {
+          if (ART_PAR_TITRE[i][0].test(titre)) {
+            return '<img src="' + ART_PAR_TITRE[i][1] + '" alt="" />';
+          }
+        }
+        return GLYPHE_RECOMPENSE;
+      }
+
       function rendreRecompenses() {
         var rewards = getActiveRewards(ETAT.data.rewards || []);
         var zone = $("#recompenses-liste");
@@ -2986,13 +3245,9 @@
           return (
             '<details class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
               '<summary class="reco-resume">' +
-                '<span class="reco-vignette">' +
-                  (r.image_url
-                    ? '<img src="' + escapeHtml(r.image_url) + '" alt="" />'
-                    : escapeHtml((r.title || "?").trim().charAt(0).toUpperCase())) +
-                "</span>" +
+                '<span class="reco-vignette">' + vignetteRecompense(r) + "</span>" +
                 '<span class="reco-resume-txt"><strong>' + escapeHtml(r.title) + "</strong>" +
-                  "<span>" + nb.format(Number(r.points_required || 0)) + " pts · " + stock + "</span></span>" +
+                  '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts · " + stock + "</span></span>" +
                 '<svg class="reco-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>' +
               "</summary>" +
               '<div class="reco-detail">' +
@@ -3080,6 +3335,43 @@
               var canvas = document.createElement("canvas");
               canvas.width = T; canvas.height = T;
               canvas.getContext("2d").drawImage(img, sx, sy, cote, cote, 0, 0, T, T);
+              canvas.toBlob(function (blob) {
+                URL.revokeObjectURL(url);
+                resolve(blob || fichier);
+              }, "image/jpeg", 0.85);
+            } catch (e) {
+              URL.revokeObjectURL(url);
+              resolve(fichier);
+            }
+          };
+          img.onerror = function () { URL.revokeObjectURL(url); resolve(fichier); };
+          img.src = url;
+        });
+      }
+
+      /* carrerImage() rogne au carre parce que la boutique du clubbeur
+         affiche des carres. La couverture d'un club, elle, est en 16/10
+         cote clubbeur : la rogner au carre puis l'etirer donnait une
+         facade ecrasee. Meme procede, ratio en parametre. */
+      function recadrerImage(fichier, ratio, largeurMax) {
+        return new Promise(function (resolve) {
+          var url = URL.createObjectURL(fichier);
+          var img = new Image();
+          img.onload = function () {
+            try {
+              var L = img.naturalWidth;
+              var H = img.naturalHeight;
+              // La plus grande fenetre au bon ratio qui tienne dans la
+              // photo, prise au centre.
+              var l = Math.min(L, H * ratio);
+              var h = l / ratio;
+              var sx = (L - l) / 2;
+              var sy = (H - h) / 2;
+              var T = Math.min(largeurMax, l);
+              var canvas = document.createElement("canvas");
+              canvas.width = Math.round(T);
+              canvas.height = Math.round(T / ratio);
+              canvas.getContext("2d").drawImage(img, sx, sy, l, h, 0, 0, canvas.width, canvas.height);
               canvas.toBlob(function (blob) {
                 URL.revokeObjectURL(url);
                 resolve(blob || fichier);
@@ -3248,9 +3540,26 @@
 
       /* ================= REGLAGES ================= */
 
+      var GLYPHE_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>';
+
+      function bandeauRien(titre, detail) {
+        return '<div class="rien">' +
+          '<span class="rien-ico">' + GLYPHE_INSTAGRAM + "</span>" +
+          '<span class="rien-txt"><strong>' + escapeHtml(titre) + "</strong><span>" + escapeHtml(detail) + "</span></span>" +
+        "</div>";
+      }
+
       async function rendreReglages() {
         $("#reglages-compte").textContent = ETAT.session ? (ETAT.session.user.email || "—") : "Mode démo — pas connecté";
         majBoutonCompte();
+
+        var etab = etablissementCourant();
+        $("#reglages-nom").textContent = (etab && etab.name) || "—";
+        $("#reglages-ville").textContent = (etab && etab.city) ? etab.city + " · Nom, ville et photos" : "Nom, ville et photos";
+        rendreVignetteClub($("#reglages-vignette"), etab);
+        // Sur le club de demonstration, l'ecran s'ouvrirait sur des champs
+        // dont aucune ecriture ne passerait la RLS.
+        $("#reglages-fiche").disabled = !clubReelCharge();
 
         // Rien a installer sur un club de demonstration : le lien serait
         // un bouton qui ne fait rien.
@@ -3258,14 +3567,14 @@
 
         var zone = $("#reglages-instagram");
         if (!ETAT.session) {
-          zone.innerHTML = '<p class="vide" style="padding:14px 0">Connecte-toi pour gérer Instagram.</p>';
+          zone.innerHTML = bandeauRien("Instagram", "Connecte-toi pour relier le compte de ton club.");
           return;
         }
         // Statut deja charge par chargerInstagram() : pas de second
         // appel pour la meme reponse.
         var statut = ETAT.instagram;
         if (!statut) {
-          zone.innerHTML = '<p class="vide" style="padding:14px 0">Statut Instagram indisponible pour le moment.</p>';
+          zone.innerHTML = bandeauRien("Instagram", "Statut indisponible pour le moment.");
           return;
         }
 
@@ -3325,6 +3634,11 @@
 
       // En mode demo, "Deconnexion" n'a aucun sens : personne n'est
       // connecte. Le bouton annonce ce qu'il fait vraiment.
+      $("#reglages-fiche").addEventListener("click", function () {
+        if (!clubReelCharge()) return;
+        ouvrirParcours(2, true);
+      });
+
       function majBoutonCompte() {
         // Le libelle interne, pas le bouton : un textContent sur le
         // bouton emporterait l'icone et le chevron avec lui.
@@ -3371,7 +3685,12 @@
       var CLE_PARCOURS_PAS = "noctify_club_installation_pas";
       var PAS_MAX = 6;
 
-      var PARCOURS = { pas: 1, choix: [], ouvert: false };
+      /* `seule` : le parcours est ouvert sur UNE etape, pas sur la
+         sequence. C'est ce qui permet aux Reglages de rouvrir la fiche du
+         club sans embarquer le gerant dans cinq ecrans qu'il a deja
+         remplis -- et sans dupliquer un ecran "Ma fiche" qui dirait
+         exactement la meme chose. */
+      var PARCOURS = { pas: 1, choix: [], ouvert: false, seule: false };
 
       /* Les vignettes servies a la boutique du clubbeur, aux memes URL.
          Montrer autre chose ici serait une promesse fausse : le gerant
@@ -3530,14 +3849,20 @@
 
       /* ---- Navigation ---- */
 
-      function ouvrirParcours(pasForce) {
+      function ouvrirParcours(pasForce, seule) {
         var etab = etablissementCourant();
         // Sans club, deux ecrans ont un sens : celui du compte, et celui
         // qui CREE le club. Les quatre autres ecrivent dedans, eux.
         if (!etab && pasForce !== 1 && pasForce !== 2) return;
 
         PARCOURS.ouvert = true;
+        // Pose ICI et nulle part ailleurs : toute ouverture sans le
+        // drapeau est une sequence complete, y compris "Refaire
+        // l'installation" qui rouvre juste apres une fiche modifiee.
+        PARCOURS.seule = !!seule;
         $("#parcours").hidden = false;
+        $("#parcours").classList.toggle("pa-seule", PARCOURS.seule);
+        $("#pa-passer").textContent = PARCOURS.seule ? "Fermer" : "Passer";
 
         // Chaque trait porte son remplissage : c'est lui qui s'anime, la
         // piste grise ne bouge pas.
@@ -3641,6 +3966,7 @@
       async function fermerParcours(termine) {
         if (termine) marquerParcoursFait();
         PARCOURS.ouvert = false;
+        PARCOURS.seule = false;
         $("#parcours").hidden = true;
         ouvrirVue("dashboard");
 
@@ -3668,16 +3994,19 @@
 
       $("#pa-suivant").addEventListener("click", async function (ev) {
         var bouton = ev.currentTarget;
-        var dernier = PARCOURS.pas === PAS_MAX;
+        var seule = PARCOURS.seule;
+        var dernier = seule || PARCOURS.pas === PAS_MAX;
 
         bouton.disabled = true;
         bouton.textContent = "Enregistrement…";
         var ok = await enregistrerPas(PARCOURS.pas);
         bouton.disabled = false;
-        bouton.textContent = dernier ? "Terminer" : "Continuer";
+        bouton.textContent = seule ? "Enregistrer" : (dernier ? "Terminer" : "Continuer");
 
         if (!ok) return;
-        if (dernier) return fermerParcours(true);
+        // Une etape ouverte seule ne "termine" pas l'installation : elle
+        // ne fait qu'enregistrer ce qu'elle porte.
+        if (dernier) return fermerParcours(!seule);
         allerAuPas(PARCOURS.pas + 1);
       });
 
@@ -3732,57 +4061,173 @@
 
       /* ---- 1 · La fiche du club ---- */
 
+      var ICONE_APPAREIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8.5h3.2l1.6-2.4h8.4l1.6 2.4H21v10.5H3z"/><circle cx="12" cy="13.2" r="3.6"/></svg>';
+      var ICONE_PLUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>';
+      var ICONE_CROIX = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+      /* Le nombre de cases est FIXE : quatre, pleines ou vides. Une
+         galerie qui grandit case par case fait sauter la mise en page a
+         chaque ajout, et ne dit pas combien de photos on attend. */
+      var GALERIE_MAX = 4;
+
+      function photosDuClub() {
+        var etab = etablissementCourant();
+        var v = etab && etab.photos;
+        return Array.isArray(v) ? v.slice(0, GALERIE_MAX) : [];
+      }
+
       function rendrePhotoParcours(url) {
         var vue = $("#pa-photo-vue");
-        var etab = etablissementCourant() || {};
-        vue.innerHTML = url
-          ? '<img src="' + escapeHtml(url) + '" alt="" />'
-          : escapeHtml((etab.name || "?").trim().charAt(0).toUpperCase());
-        $("#pa-photo-titre").textContent = url ? "Changer la photo" : "Ajouter une photo";
+        if (!vue) return;
+        vue.innerHTML = url ? '<img src="' + escapeHtml(url) + '" alt="" />' : ICONE_APPAREIL;
+        $("#pa-photo-titre").textContent = url ? "Remplacer" : "Ajouter une photo";
         $("#pa-photo-btn").classList.toggle("remplie", !!url);
+        rendreGalerieParcours();
+      }
+
+      function rendreGalerieParcours() {
+        var zone = $("#pa-galerie");
+        if (!zone) return;
+        var photos = photosDuClub();
+        var cases = [];
+
+        for (var i = 0; i < GALERIE_MAX; i++) {
+          if (photos[i]) {
+            cases.push(
+              '<button type="button" class="pa-vign" data-galerie-remplacer="' + i + '" aria-label="Remplacer la photo ' + (i + 1) + '">' +
+                '<img src="' + escapeHtml(photos[i]) + '" alt="" />' +
+                '<span class="pa-vign-x" role="button" tabindex="0" data-galerie-retirer="' + i + '" aria-label="Retirer la photo ' + (i + 1) + '">' + ICONE_CROIX + "</span>" +
+              "</button>"
+            );
+          } else {
+            // Une seule case vide est active a la fois : trois "+" cote a
+            // cote ne disent pas lequel toucher.
+            var active = i === photos.length;
+            cases.push(
+              '<button type="button" class="pa-vign vide" data-galerie-ajouter="1"' + (active ? "" : " disabled") +
+                ' aria-label="Ajouter une photo">' + ICONE_PLUS + "</button>"
+            );
+          }
+        }
+        zone.innerHTML = cases.join("");
+
+        var aide = $("#pa-galerie-aide");
+        if (aide) {
+          aide.textContent = photos.length
+            ? photos.length + " photo" + (photos.length > 1 ? "s" : "") + " sur " + GALERIE_MAX
+            : "La façade, la salle, le bar. Quatre suffisent.";
+        }
+      }
+
+      /* Le champ de fichier est fabrique a la demande plutot que pose dans
+         le HTML : un <input type="file"> reutilise garde son fichier
+         precedent, et choisir deux fois la meme image ne declenche alors
+         aucun evenement `change`. */
+      function demanderUneImage() {
+        return new Promise(function (resolve) {
+          var champ = document.createElement("input");
+          champ.type = "file";
+          champ.accept = "image/*";
+          champ.addEventListener("change", function () {
+            resolve((champ.files && champ.files[0]) || null);
+          });
+          champ.click();
+        });
+      }
+
+      async function televerserImage(etab, blob, prefixe) {
+        var chemin = etab.id + "/" + prefixe + "-" + Date.now() + ".jpg";
+        var envoi = await supabase.storage.from("reward-photos").upload(chemin, blob, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+        if (envoi.error) return null;
+        return supabase.storage.from("reward-photos").getPublicUrl(chemin).data.publicUrl;
       }
 
       /* Meme bucket que les photos de recompense : sa policy ne verifie
          que le PREMIER dossier du chemin (l'establishment_id), pas le
          nom du fichier. Un bucket de plus aurait demande une migration
          supplementaire pour ranger deux images au meme endroit. */
-      $("#pa-photo-btn").addEventListener("click", function () {
+      $("#pa-photo-btn").addEventListener("click", async function () {
         var etab = etablissementCourant();
         if (!etab) return;
 
-        var champ = document.createElement("input");
-        champ.type = "file";
-        champ.accept = "image/*";
-        champ.addEventListener("change", async function () {
-          var fichier = champ.files && champ.files[0];
-          if (!fichier) return;
+        var fichier = await demanderUneImage();
+        if (!fichier) return;
 
-          var bouton = $("#pa-photo-btn");
-          bouton.disabled = true;
-          bouton.textContent = "Envoi…";
+        var bouton = $("#pa-photo-btn");
+        // `disabled` seulement, jamais textContent : ecrire "Envoi…" dans
+        // le bouton effacait la vignette et le libelle qu'il contient, et
+        // le rendu suivant cherchait des elements qui n'existaient plus.
+        bouton.disabled = true;
+        $("#pa-photo-titre").textContent = "Envoi…";
 
-          var carree = await carrerImage(fichier);
-          var chemin = etab.id + "/club-" + Date.now() + ".jpg";
-          var envoi = await supabase.storage.from("reward-photos").upload(chemin, carree, {
-            contentType: "image/jpeg",
-            upsert: true,
-          });
+        var image = await recadrerImage(fichier, 16 / 10, 900);
+        var url = await televerserImage(etab, image, "couverture");
 
-          bouton.disabled = false;
-          if (envoi.error) {
-            rendrePhotoParcours(etab.logo_url || null);
-            direParcours("Photo non envoyée. Tu pourras la reprendre plus tard.", true);
-            return;
-          }
+        bouton.disabled = false;
+        if (!url) {
+          rendrePhotoParcours(etab.logo_url || null);
+          direParcours("Photo non envoyée. Tu pourras la reprendre plus tard.", true);
+          return;
+        }
 
-          // Retenue dans l'etat local, ecrite en base avec le reste de la
-          // fiche : une photo enregistree seule laisserait un logo sans
-          // le nom qui va avec si le gerant ferme l'appli ici.
-          etab.logo_url = supabase.storage.from("reward-photos").getPublicUrl(chemin).data.publicUrl;
-          rendrePhotoParcours(etab.logo_url);
-          direParcours("", false);
-        });
-        champ.click();
+        // Retenue dans l'etat local, ecrite en base avec le reste de la
+        // fiche : une photo enregistree seule laisserait une couverture
+        // sans le nom qui va avec si le gerant ferme l'appli ici.
+        etab.logo_url = url;
+        rendrePhotoParcours(url);
+        direParcours("", false);
+      });
+
+      /* Delegue sur la zone : les vignettes sont reecrites a chaque rendu,
+         un gestionnaire par bouton finirait par s'empiler. */
+      $("#pa-galerie").addEventListener("click", async function (ev) {
+        var etab = etablissementCourant();
+        if (!etab) return;
+
+        var retirer = ev.target.closest("[data-galerie-retirer]");
+        if (retirer) {
+          // Le retrait ne doit pas declencher le remplacement du bouton
+          // qui l'entoure.
+          ev.preventDefault();
+          ev.stopPropagation();
+          var i = Number(retirer.dataset.galerieRetirer);
+          var liste = photosDuClub();
+          liste.splice(i, 1);
+          etab.photos = liste;
+          rendreGalerieParcours();
+          return;
+        }
+
+        var cible = ev.target.closest("[data-galerie-ajouter], [data-galerie-remplacer]");
+        if (!cible || cible.disabled) return;
+
+        var fichier = await demanderUneImage();
+        if (!fichier) return;
+
+        cible.classList.add("envoi");
+        cible.disabled = true;
+        var image = await recadrerImage(fichier, 1, 640);
+        var url = await televerserImage(etab, image, "photo");
+        cible.classList.remove("envoi");
+        cible.disabled = false;
+
+        if (!url) {
+          direParcours("Photo non envoyée. Tu pourras la reprendre plus tard.", true);
+          return;
+        }
+
+        var photos = photosDuClub();
+        if (cible.dataset.galerieRemplacer !== undefined) {
+          photos[Number(cible.dataset.galerieRemplacer)] = url;
+        } else if (photos.length < GALERIE_MAX) {
+          photos.push(url);
+        }
+        etab.photos = photos;
+        rendreGalerieParcours();
+        direParcours("", false);
       });
 
       async function enregistrerFicheParcours() {
@@ -3806,16 +4251,34 @@
         if (!etab) return creerLeClub(nom, ville);
 
         if (!etab.logo_url) {
-          direParcours("Ajoute une photo : c'est la premiere chose que tes clients verront de ton club.", true);
+          direParcours("Ajoute une photo de couverture : c'est la première chose que tes clients verront de ton club.", true);
+          // Le message s'affiche dans le pied, la couverture est plus bas
+          // que le pli depuis que les champs sont passes au-dessus : sans
+          // ce cadrage, le gerant lit un refus sans voir quoi corriger.
+          $("#pa-photo-btn").scrollIntoView({ block: "center", behavior: "smooth" });
           return false;
         }
 
-        var payload = { name: nom, city: ville, logo_url: etab.logo_url };
+        var payload = { name: nom, city: ville, logo_url: etab.logo_url, photos: photosDuClub() };
 
         var { error } = await supabase.from("establishments").update(payload).eq("id", etab.id);
         if (error) {
-          direParcours("Fiche non enregistrée : " + error.message, true);
-          return false;
+          // La colonne `photos` arrive avec la migration 202609050001. Tant
+          // qu'elle n'est pas passee, l'ecriture entiere echoue -- nom et
+          // ville compris. On rejoue donc sans elle : le gerant garde sa
+          // fiche, il perd sa galerie, et la console dit pourquoi.
+          if (/photos/.test(error.message || "")) {
+            console.warn("[parcours] colonne establishments.photos absente, galerie non enregistrée :", error.message);
+            delete payload.photos;
+            var second = await supabase.from("establishments").update(payload).eq("id", etab.id);
+            if (second.error) {
+              direParcours("Fiche non enregistrée : " + second.error.message, true);
+              return false;
+            }
+          } else {
+            direParcours("Fiche non enregistrée : " + error.message, true);
+            return false;
+          }
         }
 
         etab.name = nom;
