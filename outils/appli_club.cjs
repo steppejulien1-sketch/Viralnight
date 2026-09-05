@@ -118,6 +118,41 @@ function remplirGalerie() {
     console.log(`  ${nom}  ${titre}`);
   }
 
+  /* Un DETAIL : une bande de l'ecran, sans le cadre du telephone.
+     Photographier deux fois l'ecran entier pour montrer un bloc qui
+     change, ca donne deux telephones presque identiques cote a cote --
+     et sur la planche, deux fois la meme mascotte en haut. Une bande
+     dit "regarde ici", et ne rejoue pas ce qu'on vient de voir. */
+  async function detail(nom, titre, selecteurs) {
+    const boite = await page.evaluate((sel) => {
+      // Le bloc vise deborde souvent sous le pli : on descend d'abord,
+      // sinon la decoupe emporte le fond de la page a la place de sa fin.
+      const corps = document.querySelector("#pa-corps");
+      corps.scrollTop = corps.scrollHeight;
+
+      const vus = sel.map((s) => document.querySelector(s)).filter(Boolean);
+      if (!vus.length) return null;
+      const r = vus.map((e) => e.getBoundingClientRect());
+      const haut = Math.min(...r.map((b) => b.top));
+      const bas = Math.max(...r.map((b) => b.bottom));
+
+      // Bornee a l'ecran : sans ca la decoupe attrape les coins arrondis
+      // du mockup et le noir qui les entoure.
+      const ec = document.querySelector(".screen").getBoundingClientRect();
+      const y = Math.max(ec.top + 6, haut - 12);
+      const y2 = Math.min(ec.bottom - 6, bas + 12);
+      return { x: ec.left + 8, y: y, width: ec.width - 16, height: y2 - y };
+    }, selecteurs);
+    if (!boite) return console.log(`  (detail ${nom} introuvable)`);
+
+    await page.screenshot({ path: `${DOSSIER}/${nom}.png`, clip: boite });
+    await page.setViewport({ width: 520, height: 900, deviceScaleFactor: 1 });
+    await page.screenshot({ path: `${DOSSIER}/${nom}.jpg`, type: "jpeg", quality: 82, clip: boite });
+    await page.setViewport({ width: 520, height: 900, deviceScaleFactor: 2 });
+    faites.push({ nom, titre, detail: Math.round(boite.width) + "x" + Math.round(boite.height) });
+    console.log(`  ${nom}  ${titre}  (detail)`);
+  }
+
   console.log(`\nAppli club — ${SITE}\n`);
 
   await page.goto(`${SITE}/club-app.html?cb=${Date.now()}`, { waitUntil: "networkidle2" });
@@ -141,13 +176,9 @@ function remplirGalerie() {
     await prendre(`0${n}-installation-${n}`, `Étape ${n}/6 — ${titre}`);
     if (n === 2) {
       await page.evaluate(remplirGalerie);
-      // Descendu sur les photos : cette capture-la existe pour montrer la
-      // galerie remplie, pas pour remontrer le bandeau de l'ecran d'avant.
-      // Sans ce defilement, la planche affichait trois fois de suite la
-      // meme mascotte -- "y a 3 fois le meme perso, c'est bizarre".
-      await page.evaluate(() => { document.querySelector("#pa-corps").scrollTop = 250; });
       await pause(900);
-      await prendre("02b-installation-2-remplie", "Étape 2/6 — une fois les photos posées");
+      await detail("02b-galerie-remplie", "Les photos, une fois posées",
+        [".pa-legende", "#pa-photo-btn", "#pa-galerie", "#pa-galerie-aide"]);
       await page.evaluate(etapeVisible, 2);
     }
   }

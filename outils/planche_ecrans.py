@@ -22,6 +22,7 @@ que chacun porte une legende qui dit quoi regarder.
 import base64
 import io
 import os
+import struct
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 CLUB = os.path.join(ICI, "pages-club")
@@ -31,10 +32,10 @@ OUT = os.path.join(ICI, "noctify-ecrans.html")
 # (dossier, fichier, eyebrow, titre, note, marque)
 INSTALLATION = [
     (CLUB, "01-installation-1", "Étape 01", "Ton compte",
-     "Le parcours est sombre, l\u2019appli ne l\u2019est pas : on traverse l\u2019un une fois, on travaille dans l\u2019autre tous les jours. La mascotte garde sa carte cr\u00e8me \u2014 elle est dessin\u00e9e au trait noir.", ""),
+     "Six \u00e9crans, six dessins. Il y en avait cinq pour six \u00e9crans : le compte et le club se partageaient le m\u00eame verre. Celui-ci est attabl\u00e9, celui d\u2019\u00e0 c\u00f4t\u00e9 est debout.", ""),
     (CLUB, "02-installation-2", "Étape 02", "Ton club",
      "Le nom, la ville, puis les photos \u2014 dans cet ordre. Les deux champs obligatoires tiennent au-dessus du pli.", ""),
-    (CLUB, "02b-installation-2-remplie", "Étape 02", "Ton club, rempli",
+    (CLUB, "02b-galerie-remplie", "Étape 02 · détail", "Les photos, une fois posées",
      "La couverture en 16/9 : c\u2019est l\u2019image que le clubbeur verra sur la carte. Quatre cases fixes dessous, pleines ou vides.", "photos d\u2019exemple"),
     (CLUB, "03-installation-3", "Étape 03", "Tes r\u00e9compenses",
      "Le dessin affich\u00e9 est celui que verra le client dans sa boutique. Le prix porte le corail, une seule fois par carte.", ""),
@@ -83,6 +84,23 @@ CLUBBEUR_APPLI = [
 ]
 
 
+def mesurer(dossier, nom):
+    """Les dimensions reelles du JPEG, pour que la figure reserve la bonne
+    place avant que l'image arrive."""
+    with open(os.path.join(dossier, nom + ".jpg"), "rb") as f:
+        d = f.read()
+    i = 2
+    while i < len(d):
+        if d[i] != 0xFF:
+            i += 1
+            continue
+        if d[i + 1] in (0xC0, 0xC2):
+            h, w = struct.unpack(">HH", d[i + 5:i + 9])
+            return 'width="%d" height="%d"' % (w, h)
+        i += 2 + struct.unpack(">H", d[i + 2:i + 4])[0]
+    return ""
+
+
 def img(dossier, nom):
     with open(os.path.join(dossier, nom + ".jpg"), "rb") as f:
         return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
@@ -92,10 +110,15 @@ def figures(liste, ratio):
     out = []
     for dossier, nom, eyebrow, titre, note, marque in liste:
         tag = ('<span class="marque">' + marque + "</span>") if marque else ""
+        # Un detail est une bande decoupee dans l'ecran : il garde ses
+        # propres proportions et perd le rayon d'un cadre de telephone.
+        est_detail = "-galerie-" in nom or "-detail" in nom
+        dim = mesurer(dossier, nom) if est_detail else ratio
+        classe = "cadre bande" if est_detail else "cadre"
         out.append(
             '        <figure class="ecran">\n'
-            '          <button type="button" class="cadre" data-titre="' + titre + '">\n'
-            '            <img src="' + img(dossier, nom) + '" alt="' + titre + '" ' + ratio + ' loading="lazy" />\n'
+            '          <button type="button" class="' + classe + '" data-titre="' + titre + '">\n'
+            '            <img src="' + img(dossier, nom) + '" alt="' + titre + '" ' + dim + ' loading="lazy" />\n'
             "          </button>\n"
             "          <figcaption>\n"
             '            <p class="eyebrow">' + eyebrow + tag + "</p>\n"
@@ -224,6 +247,9 @@ PAGE = u"""<title>Noctify, \u00e9cran par \u00e9cran</title>
     transition: transform .18s cubic-bezier(.23,1,.32,1), box-shadow .18s ease;
   }
   .cadre img { display: block; width: 100%; height: auto; }
+  /* Une bande decoupee dans l'ecran, pas un telephone : rayon court, et
+     elle se cale en haut de sa case au lieu de l'occuper. */
+  .cadre.bande { border-radius: 12px; align-self: start; }
   .cadre:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px var(--ligne-2), 0 28px 50px -26px rgba(0,0,0,.85); }
   .cadre:focus-visible { outline: 2px solid var(--corail); outline-offset: 3px; }
 
@@ -309,8 +335,8 @@ PAGE = u"""<title>Noctify, \u00e9cran par \u00e9cran</title>
       <h2>C\u00f4t\u00e9 g\u00e9rant</h2>
       <p>
         Ce que voit le patron du club : ce que son affiche g\u00e9n\u00e8re, ce qu\u2019il donne en
-        \u00e9change, ce qu\u2019il r\u00e8gle. Refaite le 5 septembre. Deux palettes : le parcours
-        d\u2019installation est sombre, l\u2019appli quotidienne est claire.
+        \u00e9change, ce qu\u2019il r\u00e8gle. Refaite le 5 septembre. Une seule palette, claire \u2014
+        le contraste vient des objets, pas du fond.
       </p>
     </div>
 
@@ -367,7 +393,7 @@ __CLUBBEUR__
       <li><b>L\u2019\u00e9cran 06 de l\u2019installation est vide.</b> L\u2019affiche A4 et le bilan se fabriquent \u00e0 partir du club connect\u00e9.</li>
       <li><b>Les photos de l\u2019\u00e9tape 02 sont des exemples.</b> Ce sont les deux images d\u2019ambiance du d\u00e9p\u00f4t, pos\u00e9es l\u00e0 pour montrer la forme de l\u2019\u00e9cran une fois rempli.</li>
       <li><b>La galerie attend sa migration.</b> <code>supabase/migrations/202609050001_photos_du_club.sql</code>, \u00e0 passer \u00e0 la main dans l\u2019\u00e9diteur SQL Supabase : <code>npm run db:apply</code> ne rejoue que <code>SETUP_COMPLET.sql</code>. Sans elle, la fiche s\u2019enregistre sans les photos plut\u00f4t que d\u2019\u00e9chouer.</li>
-      <li><b>Les deux applis suivent la m\u00eame r\u00e8gle, en miroir.</b> C\u00f4t\u00e9 clubbeur : sombre partout, sauf l\u2019onglet principal, blanc \u00e0 ta demande du 04/09. C\u00f4t\u00e9 g\u00e9rant : clair partout, sauf le parcours d\u2019arriv\u00e9e, sombre. Dans les deux cas, l\u2019\u00e9cran o\u00f9 l\u2019on travaille est clair, celui qu\u2019on traverse est sombre.</li>
+      <li><b>C\u00f4t\u00e9 g\u00e9rant, tout est clair.</b> Le sombre a \u00e9t\u00e9 essay\u00e9 deux fois dans la journ\u00e9e \u2014 sur toute l\u2019appli, puis sur le seul parcours \u2014 et les deux fois tu es revenu au blanc. Ce qui porte le contraste maintenant, c\u2019est un objet sombre par \u00e9cran : la carte du chiffre principal, le bouton d\u2019action. Jamais deux. C\u00f4t\u00e9 clubbeur, c\u2019est encore l\u2019inverse : sombre partout sauf l\u2019onglet principal.</li>
     </ul>
   </div>
 </div>
