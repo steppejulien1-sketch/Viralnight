@@ -2434,6 +2434,28 @@
       .tab:active { transform: scale(.93); }
       .tab .badge { position: absolute; top: -2px; right: 50%; margin-right: -17px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
 
+      /* La barre suit le TELEPHONE, pas l'ecran affiche.
+         Elle est volontairement independante du theme de l'ecran (voir
+         plus haut : sinon elle clignotait en passant de Boutique a
+         Carte). Mais "independante de l'ecran" ne veut pas dire
+         "toujours blanche" : sur un telephone en mode sombre, une barre
+         blanche sous une boutique noire est la derniere chose claire de
+         l'ecran, et c'est elle qu'on voit.
+
+         La regle est donc au niveau du SYSTEME, pas de la vue : sombre
+         partout ou claire partout, jamais un melange. La demande de
+         Julien -- qu'elle ne change pas d'un ecran a l'autre -- tient
+         toujours. */
+      @media (prefers-color-scheme: dark) {
+        .tabs {
+          background: rgba(16,12,11,.92);
+          border-top-color: rgba(255,238,225,.14);
+        }
+        .tab svg { stroke: #96887c; }
+        .tab .lbl { color: #96887c; }
+        .tab:focus-visible { outline-color: #fff; }
+      }
+
       /* ---- Invitation aux notifications ----
          Posee juste au-dessus de la barre d'onglets, sous elle en
          z-index (26) : la navigation reste toujours cliquable, on n'est
@@ -3266,11 +3288,40 @@
 
          L'ecran carte, lui, est nocturne en permanence et n'a rien a
          voir avec ce bloc. ============================================================ */
+      /* ⚠️ DEUX FAUTES CORRIGEES ICI LE 05/09/2026.
+         Julien, devant l'appli sur son telephone (en mode sombre) :
+         "l'application clubbeur, elle est devenue noire, je n'ai pas
+         compris pourquoi [...] rien que les photos noires la,
+         degueulasses". L'adaptation au mode sombre, elle, vient bien de
+         lui (04/09) : ce n'est pas elle qu'on retire, c'est sa mise en
+         oeuvre qu'on repare.
+
+         1. LE NOIR ETAIT GRIS-BLEU. #0d0e11 / #16181d / #1e2128, c'est
+            exactement le noir par defaut des kits UI -- celui que tout
+            le reste du projet s'interdit, et qui explique le "je n'ai
+            pas compris pourquoi" : l'ecran ne ressemblait plus a l'appli
+            d'a cote. On reprend le noir brun de la maison (#120d0d et
+            ses surfaces), le meme qu'en haut de ce fichier.
+
+         2. LE SOCLE DES ILLUSTRATIONS RESTAIT BLANC PUR. --socle n'etait
+            pas redefini : chaque recompense montrait donc un rectangle
+            #ffffff decoupe dans une carte noire. C'est ca, les "photos
+            degueulasses".
+
+            On ne peut pas le passer en sombre pour autant : les dessins
+            sont cernes d'un TRAIT NOIR, ils perdraient leur contour --
+            exactement le probleme de la mascotte cote gerant. Le socle
+            devient donc un creme chaud, celui du papier de la marque.
+            L'illustration garde son trait, et le rectangle blanc devient
+            une vignette imprimee. */
       @media (prefers-color-scheme: dark) {
         .screen.boutique-pro {
-          --ink: #f3f4f7; --ink2: #9ca2ad; --ink3: #6c7280;
-          --bg: #0d0e11; --s1: #16181d; --s2: #1e2128; --s3: #272b33;
-          --line: rgba(255,255,255,.09); --line2: rgba(255,255,255,.15);
+          --ink: #ffffff; --ink2: #cabeb4; --ink3: #96887c;
+          --bg: #100c0b; --s1: #1e1815; --s2: #2a221d; --s3: #362c25;
+          --line: rgba(255,238,225,.09); --line2: rgba(255,238,225,.17);
+          /* Le socle des illustrations : creme, jamais blanc pur ni
+             sombre. Voir le commentaire ci-dessus. */
+          --socle: #efe6d6;
           /* Meme repartition des roles qu'en clair : --accent porte les
              points et les prix, --bouton le rouge de marque des CTA.
              Le corail est juste eclairci pour tenir sur du sombre. */
@@ -3281,14 +3332,17 @@
           background: var(--s1); border-top-color: var(--line2);
           box-shadow: var(--ombre-3);
         }
-        .screen.boutique-pro .grab { background: rgba(255,255,255,.22); }
+        .screen.boutique-pro .grab { background: rgba(255,238,225,.22); }
+        /* La vignette est claire dans une carte sombre : un filet chaud
+           l'assoit au lieu de la laisser flotter comme un trou. */
+        .screen.boutique-pro .carte-reco .photo { border-bottom: 1px solid rgba(20,16,14,.10); }
         /* Le vert de "Pret" vire au terne sur fond sombre : on le
            remonte en clarte plutot que de le laisser tel quel. */
         .screen.boutique-pro .bon-pret {
           background: rgba(48,190,120,.18); color: #4fd493;
         }
         .screen.boutique-pro .solde-prog.pleine .solde-prog-txt strong { color: #4fd493; }
-        .screen.boutique-pro .solde-prog-piste { background: rgba(255,255,255,.14); }
+        .screen.boutique-pro .solde-prog-piste { background: rgba(255,238,225,.14); }
         /* L'ambre fonce est illisible sur du sombre : on remonte en
            clarte plutot que de garder la meme valeur. */
         .screen.boutique-pro .sec-soir .sub,
