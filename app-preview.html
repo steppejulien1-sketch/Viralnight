@@ -1787,23 +1787,14 @@
          Ils ne portaient qu'un point de statut de 13px, identique d'un
          club a l'autre. Deux familles de signaux, volontairement
          distinctes pour ne pas se confondre :
-           - PERMANENT (le club est partenaire) : liseré rouge de marque
-             et petit ecusson, il ne bouge jamais ;
+           - PERMANENT (le club est partenaire) : liseré rouge de marque.
+             L'ecusson qui l'accompagnait est parti -- voir le
+             commentaire a l'endroit ou il etait pose ;
            - TEMPOREL (offre en cours ce soir) : pastille orange qui
              pulse, la meme couleur d'urgence que la boutique.
          Sans cette separation, tout se valait et rien ne ressortait. */
       .fr .bub-club.partenaire {
         box-shadow: none;
-      }
-      .fr-ecusson {
-        position: absolute; left: -2px; bottom: -2px; z-index: 2;
-        width: 17px; height: 17px; border-radius: 50%;
-        background: var(--marque); border: 2px solid #fff;
-        display: grid; place-items: center;
-      }
-      .fr-ecusson svg {
-        width: 9px; height: 9px; fill: none; stroke: #fff;
-        stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
       }
       /* Signal temporel : il doit attirer l'oeil, donc il pulse -- mais
          un seul badge par club, jamais plusieurs animations empilees. */
@@ -6879,11 +6870,34 @@ map.on("style.load", function () {
    Le jour ou un club depose ses photos (colonne establishments.photos,
    migration 202609050001), elles arrivent dans c.photo et ce dessin
    disparait tout seul. */
-var VERRE_DEFAUT = "/recompenses/art-bouteille.webp";
+/* Julien, 06/09/2026 : "fais des badges differents, parfois cote
+   champagne, parfois biere, parfois... enfin tu comprends".
+
+   Il a raison, et pour une raison plus forte que la variete : sur la
+   carte, tous les clubs sans photo portaient LA MEME bouteille. Un
+   badge qui ne distingue pas deux clubs n'est plus un badge, c'est un
+   motif -- et c'est exactement ce qu'on reprochait aux deux images
+   d'ambiance qu'il vient de faire retirer.
+
+   Le tirage est DETERMINISTE sur le nom : un club garde son verre d'un
+   ecran a l'autre et d'une session a l'autre. Un tirage au hasard
+   donnerait a un meme club une biere sur la carte et un cocktail dans
+   sa fiche -- on ne le reconnaitrait plus. */
+var VERRES_CLUB = [
+  "/recompenses/art-bouteille.webp",
+  "/recompenses/art-pinte.webp",
+  "/recompenses/art-cocktail.webp",
+  "/recompenses/art-shot.webp",
+];
 
 function visuelClub(c) {
   if (c.photo) return { src: c.photo, substitut: false };
-  return { src: VERRE_DEFAUT, substitut: true };
+  var nom = c.nom || "";
+  // La somme des codes, pas la longueur : deux clubs de meme longueur de
+  // nom -- ils sont nombreux -- tomberaient sinon sur le meme verre.
+  var somme = 0;
+  for (var i = 0; i < nom.length; i++) somme += nom.charCodeAt(i);
+  return { src: VERRES_CLUB[somme % VERRES_CLUB.length], substitut: true };
 }
 
 // Garde son nom : quatre endroits l'appellent, et une photo reste une
@@ -8280,9 +8294,19 @@ function creerClubChip(c, key, index) {
       (c.partenaire ? " partenaire" : "") + '" style="--c:' + c.c + '">' +
       '<img src="' + fotoClub(c) + '" alt="" />' +
       '<span class="club-badge-dot"></span>' +
-      (c.partenaire
-        ? '<span class="fr-ecusson" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>'
-        : "") +
+      /* L'ecusson "partenaire" est retire. Julien, 06/09/2026 : "on
+         voit un petit v a cote sur la photo, ca ne rend pas bien".
+
+         C'etait une coche blanche dans un rond rouge, collee en bas a
+         gauche du badge : a 17 px sur une photo de 47, elle ne se lisait
+         pas comme une coche mais comme une tache. Et le mot qu'elle
+         portait, Julien l'avait DEJA fait retirer de la fiche du club --
+         "le partenaire, c'est inutile", il ne parle qu'a nous. Il
+         revenait ici en pictogramme.
+
+         Ce qui distingue vraiment un club partenaire, c'est qu'on y
+         gagne des points : le bloc "Tu gagnes des points ici" de la
+         fiche le dit en toutes lettres. */
       (offreIci ? '<span class="fr-urgence" aria-hidden="true">ce soir</span>' : "") +
     "</span><b>" + escapeHtmlSupport(c.nom) + "</b>";
   b.addEventListener("click", function () {
