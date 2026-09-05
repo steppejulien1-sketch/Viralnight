@@ -1748,8 +1748,8 @@
       }
       .app::-webkit-scrollbar { display: none; }
 
-      .sec { padding: 0 20px; margin-top: 40px; }
-      .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; padding: 0 2px; }
+      .sec { padding: 0 20px; margin-top: 28px; }
+      .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; padding: 0 2px; }
       /* Amplifie le 19 aout (skill Impeccable, commande "bolder"), puis
          encore le 20 aout : la premiere passe visait les titres de
          section et le solde isolement, mais Julien a fini par juger
@@ -1773,7 +1773,7 @@
          plus aucun compteur de points flottant nulle part. La
          premiere section reprend juste le padding haut que portait
          l'ancien header sticky, pour ne pas coller au bord de l'ecran. */
-      .sec-premiere { padding-top: 24px; }
+      .sec-premiere { padding-top: 16px; }
 
       /* ============================================================
          RESTAURE le 30/08/2026. Le commit "Boutique : on choisit son club
@@ -1787,16 +1787,18 @@
          DOM (nombre de cartes, textes) et jamais sur le rendu.
          ============================================================ */
 
-      /* Le numero de serie du bon. Discret, en bas, comme sur un vrai
-         ticket -- il ne se lit pas, il se constate. C'est exactement le
-         genre de detail que personne ne remarque et que tout le monde
-         sent quand il manque. */
-      .carte-reco .serie {
-        display: block; margin-top: 8px; padding-top: 8px;
-        border-top: 1px solid var(--line);
-        font-family: var(--mono); font-size: calc(9 * var(--u)); font-weight: 500;
-        letter-spacing: .14em; color: var(--ink3); text-transform: uppercase;
-      }
+      /* Le numero de serie du bon (MIR·001, MIR·002...) : retire.
+         Julien, 05/09/2026 : "MIR zero zero un en dessous, c'est moche".
+         Il etait la pour faire "vrai ticket" -- mais un client ne
+         reference pas un cocktail offert, et aucune des applications de
+         fidelite qu'on regarde n'affiche de code catalogue. C'etait un
+         detail de decor qui occupait une ligne, un filet et 16 px de
+         hauteur sur chaque carte.
+
+         La regle reste, vide : le rendu ecrit encore l'element, et le
+         masquer ici evite de defaire la fabrique du numero (prefixeClub)
+         dont d'autres ecrans se servent. */
+      .carte-reco .serie { display: none; }
 
       /* La rarete devient un TAMPON, pas une pastille : encre corail,
          contour fin, legerement de travers. C'est la seule fantaisie de
@@ -1819,7 +1821,7 @@
          la progression vers le palier suivant est juste dessous. */
       .solde-carte {
         position: relative; overflow: hidden;
-        padding: 24px 20px 20px; border-radius: var(--r4);
+        padding: 18px 18px 17px; border-radius: var(--r4);
         /* Meme correction que .pf-fidelite : surface neutre. Les deux
            degrades rouges superposes donnaient un lavis rose qui faisait
            "carte generee" plus que "carte de fidelite". */
@@ -1837,49 +1839,61 @@
          Le libelle descend en meme temps, et s'ecarte : minuscule et
          tres espace contre enorme et serre, c'est ce contraste-la qui
          fait qu'une carte se regarde au lieu de se lire. */
+      /* Julien, 05/09/2026 : "le compteur de points la, c'est moche".
+         Regarde a cote (Menu Recompenses de Starbucks, capture du Play
+         Store), trois choses le separaient d'une vraie appli :
+
+         · leur solde tient dans UNE PHRASE de 12 px, pas dans un chiffre
+           de 68 px en couleur de marque ;
+         · aucune regle graduee : une seule barre, une seule cible ;
+         · le libelle est en minuscules.
+
+         Les capitales tres espacees etaient censees creer un contraste
+         d'echelle avec le chiffre. Le contraste existait ; il donnait un
+         libelle de tableau de bord, pas de carte de fidelite. */
       .solde-label {
-        margin: 0; font-size: calc(10 * var(--u)); font-weight: 600; letter-spacing: .18em;
-        text-transform: uppercase; color: var(--ink3);
+        margin: 0; font-size: calc(12.5 * var(--u)); font-weight: 600;
+        letter-spacing: -.005em; color: var(--ink3);
       }
-      .solde-chiffre { margin: 8px 0 0; display: flex; align-items: baseline; gap: 8px; }
+      .solde-chiffre { margin: 4px 0 0; display: flex; align-items: baseline; gap: 7px; }
       .carte-solde-num {
         /* Archivo, pas le mono : DM Mono barre ses zeros, ce qui donne un
            panneau d'interdiction des que le solde en contient un. Les
            chiffres tabulaires empechent la largeur de sauter pendant le
            comptage. */
         font-family: var(--titre); font-variant-numeric: tabular-nums;
-        font-size: calc(68 * var(--u)); font-weight: 700;
-        /* Le corail reste : c'est l'emploi correct de la couleur de
-           marque -- souligner LA valeur de l'ecran. Le fond neutre lui
-           rend son eclat, au lieu de le diluer dans un lavis rose. */
-        letter-spacing: -.055em; line-height: .92; color: var(--accent);
-        font-variant-numeric: tabular-nums;
+        font-size: calc(52 * var(--u)); font-weight: 700;
+        /* ENCRE, plus corail. Un grand chiffre en couleur de marque est
+           exactement ce que Julien avait deja fait retirer de la carte du
+           profil ("BCP TROP L'AIR D'ETRE VIBECODE") ; il etait reste ici.
+           Le corail garde les prix et la barre : la ou il porte une
+           information, pas la ou il decore la plus grosse chose de
+           l'ecran. */
+        letter-spacing: -.05em; line-height: .95; color: var(--ink);
       }
       .solde-chiffre span {
         font-family: var(--sans); font-size: calc(14 * var(--u)); font-weight: 600;
-        color: var(--ink3); letter-spacing: .02em; text-transform: uppercase;
+        color: var(--ink3); letter-spacing: -.01em;
       }
       /* ---- Progression vers la prochaine recompense atteignable ---- */
-      .solde-prog { margin-top: 20px; }
-      /* Un trait, pas une barre. A cote d'un chiffre de 68 px, sept
-         pixels de haut font lourd -- trois suffisent a se lire, et
-         laissent le chiffre seul au premier plan. */
-      /* La piste est CRANTEE aux prix des recompenses, pas continue.
-         C'est le geste de Starbucks : leur jauge est coupee a 300, 400,
-         500, 600, 700, 1k -- chaque cran est une recompense achetable, et
-         les chiffres sont ecrits dessous. Une barre continue ne dit que
-         "tu avances" ; une barre crantee dit "tu as passe le cocktail, il
-         te reste un cran avant la bouteille".
+      .solde-prog { margin-top: 18px; }
+      /* UNE barre, UNE cible.
+         Elle etait crantee aux prix des recompenses, avec les chiffres
+         ecrits dessous -- 300 / 600 / 1,2k / 3k. Julien : "le compteur de
+         points la, trois cents, six cents, mille deux cents, trois mille,
+         c'est moche". Il a raison, et la reference invoquee pour la
+         defendre ne la soutient pas : le Menu Recompenses de Starbucks
+         n'affiche AUCUNE regle graduee. Quatre traits gris surmontes de
+         quatre nombres, ca ne se lit pas comme une progression, ca se lit
+         comme une regle d'ecolier -- et a zero point, comme un composant
+         casse.
 
-         Les crans ont tous la MEME largeur, quel que soit l'ecart de prix
-         qu'ils couvrent : sinon un palier a 3000 pts ecrase les trois
-         premiers contre le bord gauche et on ne lit plus rien. */
+         Ce qu'il faut savoir tient en deux choses : ou j'en suis, et
+         qu'est-ce que j'atteins ensuite. Une barre le montre, sa legende
+         le nomme. */
       .solde-prog-piste {
-        display: flex; gap: 3px; align-items: stretch;
-      }
-      .solde-prog-cran {
-        flex: 1; height: 3px; border-radius: var(--r-pill);
-        background: rgba(128,128,140,.20); overflow: hidden;
+        display: block; height: 5px; border-radius: var(--r-pill);
+        background: rgba(128,128,140,.18); overflow: hidden;
       }
       .solde-prog-barre {
         display: block; height: 100%; width: 0; border-radius: var(--r-pill);
@@ -1889,25 +1903,12 @@
         background: var(--marque);
         transition: width .6s cubic-bezier(.2,.7,.3,1);
       }
-      /* Les prix sous les crans. En mono, comme toutes les donnees
-         chiffrees de l'appli depuis le 03/09/2026. Ce ne sont pas des
-         phrases : la jauge se tait toujours, elle est juste graduee. */
-      /* Meme structure que la piste -- autant de colonnes que de crans,
-         meme gouttiere -- et chaque prix cale a DROITE de sa colonne. Il
-         se lit donc a la FIN du cran qu'il ferme, la ou on l'atteint. Un
-         space-between les aurait poses au debut : "300" serait apparu
-         sous le point zero, et aurait dit le contraire de la verite. */
-      .solde-prog-paliers {
-        display: flex; gap: 3px; margin-top: 8px;
-      }
-      .solde-prog-paliers span {
-        flex: 1; text-align: right;
-        font-family: var(--mono); font-size: calc(10 * var(--u)); font-weight: 400;
-        color: var(--ink3); letter-spacing: .02em; font-variant-numeric: tabular-nums;
-      }
-      .solde-prog-paliers .passe { color: var(--marque); }
+      /* Les paliers chiffres ne sont plus dessines : le bloc reste, vide,
+         parce que majProgressionSolde() ecrit encore dedans. Le vider
+         suffit a le faire disparaitre. */
+      .solde-prog-paliers { display: none; }
       .solde-prog-txt {
-        margin: 8px 0 0; font-size: calc(12.5 * var(--u)); font-weight: 500;
+        margin: 9px 0 0; font-size: calc(12.5 * var(--u)); font-weight: 500;
         color: var(--ink3); line-height: 1.35;
       }
       .solde-prog-txt strong { color: var(--ink2); font-weight: 700; }
@@ -1961,10 +1962,13 @@
       .carte-reco { transition: transform .16s var(--sortie); }
       .carte-reco:active { transform: scale(.985); }
 
-      /* Carre : a largeur de grille egale, l'image gagne ~35% de hauteur
-         par rapport au 4/3 d'origine. C'est le "images trop petites". */
+      /* 4/3, plus 1/1. Le carre avait ete choisi pour repondre a "images
+         trop petites" -- il repond surtout a "on ne voit que deux
+         recompenses". Les illustrations sont detourees et cadrees large :
+         elles perdent du vide, pas du dessin, et le club montre quatre
+         bons au lieu de deux. */
       .carte-reco .photo {
-        position: relative; width: 100%; aspect-ratio: 1 / 1;
+        position: relative; width: 100%; aspect-ratio: 4 / 3;
         background: var(--socle); overflow: hidden;
       }
       .carte-reco .photo img {
@@ -1982,18 +1986,18 @@
          peints en background aux coins hauts. Elles se placent donc
          toutes seules a la jonction image/texte, quelle que soit la
          hauteur de l'image -- aucune valeur en dur, rien a maintenir. */
+      /* La perforation du ticket -- deux encoches et un trait pointille
+         entre l'image et le texte -- est retiree. Julien : "les hauts
+         barres, c'est moche".
+
+         C'etait un dessin qui ne portait rien : la carte se lit
+         exactement pareil sans lui, et le pointille a 1 px passait son
+         temps a couper l'illustration en deux. Ce qui separe l'image du
+         texte, c'est le blanc, pas un trait. */
       .carte-reco .corps {
         position: relative;
         display: flex; flex-direction: column; flex: 1;
-        padding: 16px 12px 12px;
-        background:
-          radial-gradient(circle 7px at 0 0, var(--bg) 99%, transparent 100%) left top / 14px 14px no-repeat,
-          radial-gradient(circle 7px at 100% 0, var(--bg) 99%, transparent 100%) right top / 14px 14px no-repeat;
-      }
-      /* La perforation, entre les deux encoches. */
-      .carte-reco .corps::before {
-        content: ""; position: absolute; top: 0; left: 9px; right: 9px; height: 1px;
-        background: repeating-linear-gradient(to right, var(--line2) 0 3px, transparent 3px 7px);
+        padding: 12px 12px 13px;
       }
       .carte-reco strong {
         font-family: var(--titre);
@@ -2003,11 +2007,10 @@
       /* Le prix devient la deuxieme information la plus lisible de la
          carte, juste sous le nom -- il etait sur la photo avant. */
       .carte-reco .prix {
-        font-family: var(--mono); font-variant-numeric: tabular-nums;
-        letter-spacing: -.02em;
-        display: block; margin-top: 4px;
-        font-family: var(--mono); font-size: calc(15 * var(--u)); font-weight: 500;
-        letter-spacing: -.02em; color: var(--accent);
+        display: block; margin-top: 5px;
+        font-family: var(--titre); font-variant-numeric: tabular-nums;
+        font-size: calc(16 * var(--u)); font-weight: 700;
+        letter-spacing: -.03em; color: var(--accent);
       }
       .carte-reco .prix span {
         font-family: var(--sans); font-size: calc(10.5 * var(--u)); font-weight: 700;
@@ -4284,7 +4287,13 @@ var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koi
 maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 
 var $ = function (s) { return document.querySelector(s); };
-var nb = function (n) { return n.toLocaleString("fr-FR"); };
+/* toLocaleString("fr-FR") separe les milliers par une ESPACE FINE
+   INSECABLE (U+202F). Archivo n'a pas ce glyphe : "1 200 pts"
+   s'affichait "1200 pts" sur les prix de la boutique, et le meme
+   nombre gardait son espace ailleurs, en DM Mono. On la remplace
+   par l'insecable ordinaire (U+00A0), presente partout.
+   Typographiquement moins fine, mais visible -- et c'est le point. */
+var nb = function (n) { return n.toLocaleString("fr-FR").replace(/ /g, " "); };
 
 /* ==========================================================
    LE JETON ET LES ICONES D'INTERFACE
@@ -5389,46 +5398,41 @@ function majProgressionSolde() {
   }
   bloc.hidden = false;
 
-  // Bornes des crans : 0, puis chaque prix. N prix font N crans.
-  var bornes = [0].concat(seuils);
   var atteint = 0;
   while (atteint < seuils.length && ETAT.solde >= seuils[atteint]) atteint++;
-
-  var crans = "";
-  for (var i = 0; i < seuils.length; i++) {
-    var rempli = 0;
-    if (i < atteint) {
-      rempli = 100;
-    } else if (i === atteint) {
-      var large = bornes[i + 1] - bornes[i];
-      rempli = large > 0 ? Math.max(0, Math.min(100, ((ETAT.solde - bornes[i]) / large) * 100)) : 0;
-    }
-    crans += '<span class="solde-prog-cran"><span class="solde-prog-barre" style="width:' +
-      Math.round(rempli) + '%"></span></span>';
-  }
-  piste.innerHTML = crans;
-
-  // Les prix sous les crans. Le 0 de depart n'est pas ecrit : le solde
-  // est deja en gros juste au-dessus, et Starbucks lui-meme n'ecrit son
-  // "0" que parce que sa jauge n'a pas le chiffre a cote.
-  paliersZone.innerHTML = seuils.map(function (v, i) {
-    return '<span class="' + (i < atteint ? "passe" : "") + '">' + court(v) + "</span>";
-  }).join("");
-
   var pleine = atteint >= seuils.length;
+
+  /* UNE barre, du solde vers la PROCHAINE recompense -- pas une regle
+     graduee sur les quatre prix du club. La progression se compte depuis
+     le palier deja franchi, sinon la barre repart de tres haut a chaque
+     cran passe et ne bouge presque plus ensuite. */
+  var depart = atteint > 0 ? seuils[atteint - 1] : 0;
+  var cible = pleine ? seuils[seuils.length - 1] : seuils[atteint];
+  var large = cible - depart;
+  var part = pleine ? 100
+    : large > 0 ? Math.max(0, Math.min(100, ((ETAT.solde - depart) / large) * 100))
+    : 0;
+
+  piste.innerHTML = '<span class="solde-prog-barre" style="width:' + Math.round(part) + '%"></span>';
+  paliersZone.innerHTML = "";
   bloc.classList.toggle("pleine", pleine);
 
-  // La jauge se tait toujours en montant : les crans portent desormais
-  // l'information que le texte portait avant, et mieux. Elle ne parle
-  // qu'une fois pleine -- quand il n'y a plus rien a graduer.
+  /* La legende NOMME la cible, elle n'encourage pas. "Vers <cible>", la
+     formule retenue partout depuis que "250 pts avant Un cocktail
+     offert" s'est fait renvoyer ("on dirait de l'IA"). Le prix suit,
+     parce que c'est lui qu'on compare a son solde. */
   if (pleine) {
     var dispo = RECOMPENSES.filter(function (r) { return r.cout <= ETAT.solde && r.stock > 0; }).length;
     txt.innerHTML = dispo
       ? "<strong>" + dispo + (dispo > 1 ? " récompenses" : " récompense") + "</strong> à ta portée"
       : "Aucune récompense disponible";
-  } else {
-    txt.textContent = "";
+    return;
   }
+
+  var suivante = RECOMPENSES.find(function (r) { return r.cout === cible && r.stock > 0; });
+  txt.innerHTML = suivante
+    ? "Vers <strong>" + escapeHtmlSupport(suivante.nom) + "</strong> · " + court(cible) + " pts"
+    : "Vers " + court(cible) + " pts";
 }
 
 /* Les prix qui graduent la jauge : ceux des recompenses du club, sans

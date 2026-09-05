@@ -323,35 +323,42 @@
       .hero-delta.baisse { color: #ff8f8f; border-color: rgba(255,143,143,.38); }
       .hero-delta.plat   { color: var(--encre-3); border-color: rgba(255,255,255,.20); }
 
-      /* Les barres : une par soiree, la derniere en corail. Elles disent
-         la REGULARITE, ce qu'une courbe lissee cache -- un club voit ses
-         trous, et c'est pour ca qu'on ne passe pas a une courbe.
+      /* ---- La courbe ----
+         Julien, 05/09/2026 : "le dashboard il est eclate, fais un vrai
+         truc comme un graphique de trading, rends ca plus calibre".
 
-         Ce qui n'allait pas : 3 px d'ecart sur quatorze barres, ca fait
-         un aplat, pas un graphe. Et une soiree a zero disparaissait au
-         lieu de se voir. Chaque barre a maintenant sa PISTE -- la
-         colonne creuse qu'elle remplit -- donc un trou se lit comme un
-         trou. Procede des graphes de contribution de GitHub. */
-      .hero-barres {
-        position: relative; z-index: 1;
-        display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-        gap: 6px; height: 58px; margin-top: 16px;
+         Il y a eu deux tentatives avant : quatorze barres collees (un
+         code-barres), puis les memes avec une piste creuse (mieux, mais
+         toujours une rangee de batons sans echelle). Le mot juste etait
+         CALIBRE : ce qui manquait n'etait pas la forme, c'etait l'AXE.
+         Un graphe sans graduation ne dit pas si 249 480 est haut ou bas,
+         il dessine juste une silhouette.
+
+         D'ou : trois lignes de repere, leurs valeurs ecrites a gauche, un
+         maximum arrondi a une valeur ronde (maxCalibre), et le dernier
+         point marque. C'est la convention d'un graphe boursier, et c'est
+         ce qui la rend lisible sans legende.
+
+         Le trait fait tout le travail ; le remplissage sous la courbe est
+         a 9 %, juste assez pour donner un volume. Au-dela ce serait le
+         lavis de couleur qu'on s'interdit partout ailleurs. */
+      .hero-courbe { position: relative; z-index: 1; margin-top: 14px; }
+      .hero-courbe svg { display: block; width: 100%; height: auto; }
+      .hero-grille { stroke: rgba(255,255,255,.13); stroke-width: 1; }
+      .hero-graduation {
+        fill: var(--encre-3); font-family: var(--mono); font-size: 8.5px;
+        letter-spacing: .02em;
       }
-      .hero-piste {
-        display: flex; align-items: flex-end; height: 100%;
-        border-radius: 3px; background: var(--piste);
+      .hero-axe {
+        fill: var(--encre-3); font-family: var(--sans); font-size: 9.5px;
       }
-      .hero-barre {
-        width: 100%; border-radius: 3px; min-height: 2px;
-        background: var(--barre);
+      .hero-aire { fill: var(--accent); opacity: .09; }
+      .hero-trait {
+        fill: none; stroke: var(--accent); stroke-width: 2;
+        stroke-linejoin: round; stroke-linecap: round;
       }
-      .hero-barre.forte { background: var(--barre-forte); }
-      .hero-barre.derniere { background: var(--accent); }
-      .hero-legende {
-        position: relative; z-index: 1;
-        display: flex; justify-content: space-between; margin-top: 8px;
-        font-size: 10.5px; color: var(--encre-3);
-      }
+      .hero-point { fill: var(--accent); }
+      .hero-point-anneau { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: .35; }
 
       /* ---- Chiffre d'entete du tableau de bord ----
          Cinq cartes de meme taille, c'etait une liste, pas un tableau de
@@ -1406,9 +1413,25 @@
       .reco-resume::-webkit-details-marker { display: none; }
       .reco-resume:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 16px; }
       .reco-vignette {
-        flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px; overflow: hidden;
+        position: relative; flex: 0 0 auto; width: 46px; height: 46px;
+        border-radius: 12px; overflow: hidden;
         background: var(--s2); border: 1px solid var(--line);
-        display: grid; place-items: center;
+        display: grid; place-items: center; cursor: pointer;
+        transition: transform .16s var(--sortie);
+      }
+      .reco-vignette:active { transform: scale(.94); }
+      .reco-vignette:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      /* Le badge appareil, pose dans l'angle. Sans lui, rien ne dit que
+         la vignette se touche -- et c'est justement le geste que Julien
+         voulait "au premier abord". */
+      .reco-vignette-cam {
+        position: absolute; right: -1px; bottom: -1px;
+        width: 19px; height: 19px; display: grid; place-items: center;
+        border-radius: 10px 0 10px 0; background: var(--action);
+      }
+      .reco-vignette-cam svg {
+        width: 11px; height: 11px; fill: none; stroke: var(--action-ink);
+        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
       }
       .reco-vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
       /* Le glyphe du dernier recours. Une INITIALE dans un carre gris,
@@ -1556,6 +1579,19 @@
       @media (hover: hover) and (pointer: fine) {
         .reglage-lien:hover .reglage-fleche { transform: translateX(2px); }
       }
+      /* La valeur d'un reglage, a droite de son nom. C'est la colonne
+         qui manquait : sans elle, "Instagram" et "Barème de points" sont
+         deux portes fermees, et il faut les ouvrir pour savoir ou on en
+         est. */
+      .reglage-etat {
+        flex: 0 0 auto; max-width: 46%; margin-left: auto; padding-left: 10px;
+        font-size: 12px; color: var(--ink3); text-align: right;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .reglage-etat.actif { color: var(--succes); }
+      .reglage-etat.absent { color: var(--ink2); }
+      .reglage-txt:has(+ .reglage-etat) { flex: 0 1 auto; }
+
       .reglage-fleche {
         flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3);
         fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
@@ -1971,8 +2007,7 @@
                 <span class="hero-label">Abonnés touchés</span>
                 <span class="hero-valeur"><span id="kpi-vues">—</span><span class="hero-delta plat" id="kpi-delta"></span></span>
                 <span class="hero-note" id="kpi-vues-note"></span>
-                <div class="hero-barres" id="hero-barres"></div>
-                <div class="hero-legende"><span>14 derniers jours</span><span id="hero-legende-fin">Aujourd'hui</span></div>
+                <div class="hero-courbe" id="hero-courbe"></div>
                 <div class="hero-graphe" id="hero-graphe" hidden></div>
               </div>
 
@@ -2037,40 +2072,45 @@
                 <svg class="reglage-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
               </button>
 
-              <p class="section-titre">Instagram</p>
-              <div class="carte" id="reglages-instagram">
-                <p class="vide" style="padding:14px 0">Vérification…</p>
-              </div>
-
-              <p class="section-titre">Ton club</p>
+              <!-- UNE carte pour le club, une pour le compte. Trois titres
+                   de section pour cinq lignes, c'etait de l'echafaudage :
+                   les lignes se suffisent, elles portent deja leur nom.
+                   Instagram redevient une ligne parmi les autres, avec son
+                   etat a droite -- il n'avait pas besoin d'une carte a lui
+                   seul. -->
               <div class="carte" style="padding:1px 14px">
+                <div id="reglages-instagram">
+                  <div class="reglage-ligne"><span class="reglage-txt"><strong>Instagram</strong><span>Vérification…</span></span></div>
+                </div>
                 <button type="button" class="reglage-lien" data-va="bareme">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg></span>
-                  <span class="reglage-txt"><strong>Barème de points</strong><span>Ce que rapporte chaque publication</span></span>
+                  <span class="reglage-txt"><strong>Barème de points</strong></span>
+                  <span class="reglage-etat" id="reglages-bareme-etat"></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
                 <button type="button" class="reglage-lien" data-va="qr">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg></span>
-                  <span class="reglage-txt"><strong>Affiche et QR code</strong><span>À imprimer et coller à l'entrée</span></span>
+                  <span class="reglage-txt"><strong>Affiche et QR code</strong></span>
+                  <span class="reglage-etat">À imprimer</span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
                 <button type="button" class="reglage-lien" id="reglages-installation">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5v17M3.5 12h17"/><circle cx="12" cy="12" r="8.5"/></svg></span>
-                  <span class="reglage-txt"><strong>Refaire l'installation</strong><span>Les cinq écrans de réglage, depuis le début</span></span>
+                  <span class="reglage-txt"><strong>Refaire l'installation</strong></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
               </div>
 
-              <p class="section-titre">Compte</p>
               <div class="carte" style="padding:1px 14px">
                 <button type="button" class="reglage-lien" id="reglages-mdp">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span>
-                  <span class="reglage-txt"><strong>Changer le mot de passe</strong><span id="reglages-mdp-etat">On t’envoie un lien par email</span></span>
+                  <span class="reglage-txt"><strong>Changer le mot de passe</strong></span>
+                  <span class="reglage-etat" id="reglages-mdp-etat">Par email</span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
                 <button type="button" class="reglage-lien" id="reglages-deconnexion">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24" id="reglages-deconnexion-ico"><path d="M15 4H6a1.6 1.6 0 0 0-1.6 1.6v12.8A1.6 1.6 0 0 0 6 20h9"/><path d="M14.5 12H21M18 8.6 21.4 12 18 15.4"/></svg></span>
-                  <span class="reglage-txt"><strong id="reglages-deconnexion-txt">Déconnexion</strong><span>Sur cet appareil</span></span>
+                  <span class="reglage-txt"><strong id="reglages-deconnexion-txt">Déconnexion</strong></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
               </div>
@@ -2735,18 +2775,72 @@
         return Math.round(((apres - avant) / avant) * 100);
       }
 
-      function rendreBarres(seaux) {
-        var max = Math.max.apply(null, seaux);
-        var zone = $("#hero-barres");
-        if (!max) { zone.innerHTML = ""; return; }
-        // En pourcentage et non en pixels : la hauteur du graphe se
-        // regle desormais en CSS, et une piste vide reste une piste.
-        zone.innerHTML = seaux.map(function (v, i) {
-          var part = Math.round((v / max) * 100);
-          var cls = i === seaux.length - 1 ? " derniere" : (v >= max * 0.88 ? " forte" : "");
-          return '<span class="hero-piste"><span class="hero-barre' + cls +
-            '" style="height:' + part + '%"></span></span>';
+      /* Le haut de l'axe, arrondi a une valeur RONDE au-dessus du
+         maximum reel : 249 480 donne 250 000, pas 249 480. Un axe qui
+         s'arrete sur le chiffre exact du jour le plus fort n'est pas une
+         graduation, c'est une coincidence. */
+      function maxCalibre(valeur) {
+        if (!(valeur > 0)) return 10;
+        var ordre = Math.pow(10, Math.floor(Math.log10(valeur)));
+        var tete = valeur / ordre;
+        var pas = tete <= 1 ? 1 : tete <= 2 ? 2 : tete <= 2.5 ? 2.5 : tete <= 5 ? 5 : 10;
+        return pas * ordre;
+      }
+
+      /* Une graduation se lit d'un coup d'oeil ou ne se lit pas :
+         250 000 tient sur l'axe en "250 k", pas en toutes lettres. */
+      function chiffreCourt(v) {
+        if (v >= 1000000) return nb.format(Math.round(v / 100000) / 10) + " M";
+        if (v >= 1000) return nb.format(Math.round(v / 100) / 10) + " k";
+        return nb.format(Math.round(v));
+      }
+
+      /* Le repere du dessin. Les valeurs sont en unites SVG : la carte
+         fait 292 px de large sur un telephone de 360, le viewBox est un
+         peu plus large et l'ensemble se met a l'echelle tout seul. */
+      var G = { l: 36, r: 4, h: 10, b: 20, L: 300, H: 112 };
+
+      function rendreCourbe(seaux) {
+        var zone = $("#hero-courbe");
+        var haut = maxCalibre(Math.max.apply(null, seaux));
+        var x0 = G.l, x1 = G.L - G.r;
+        var y0 = G.h, y1 = G.H - G.b;
+        var pasX = (x1 - x0) / Math.max(1, seaux.length - 1);
+        var yDe = function (v) { return y1 - (v / haut) * (y1 - y0); };
+        var pts = seaux.map(function (v, i) { return [x0 + i * pasX, yDe(v)]; });
+
+        // Trois reperes : le sol, la moitie, le plafond. Deux ne
+        // donneraient pas d'echelle, quatre encombreraient 92 px.
+        var grille = [0, haut / 2, haut].map(function (v) {
+          var y = yDe(v).toFixed(1);
+          return '<line class="hero-grille" x1="' + x0 + '" y1="' + y + '" x2="' + x1 + '" y2="' + y + '"/>' +
+            '<text class="hero-graduation" x="' + (x0 - 7) + '" y="' + (Number(y) + 3).toFixed(1) +
+            '" text-anchor="end">' + escapeHtml(chiffreCourt(v)) + "</text>";
         }).join("");
+
+        var trace = pts.map(function (pt, i) {
+          return (i ? "L" : "M") + pt[0].toFixed(1) + " " + pt[1].toFixed(1);
+        }).join(" ");
+        var aire = "M" + x0 + " " + y1 + " " + trace.slice(1) + " L" + x1 + " " + y1 + " Z";
+        var fin = pts[pts.length - 1];
+
+        // La date du premier seau, pas "il y a 14 jours" : un axe porte
+        // des reperes, pas une duree relative.
+        var debut = new Date();
+        debut.setDate(debut.getDate() - (seaux.length - 1));
+
+        zone.innerHTML =
+          '<svg viewBox="0 0 ' + G.L + " " + G.H + '" role="img" aria-label="Abonnés touchés, ' +
+            seaux.length + ' derniers jours">' +
+            grille +
+            '<path class="hero-aire" d="' + aire + '"/>' +
+            '<path class="hero-trait" d="' + trace + '"/>' +
+            '<circle class="hero-point-anneau" cx="' + fin[0].toFixed(1) + '" cy="' + fin[1].toFixed(1) + '" r="5"/>' +
+            '<circle class="hero-point" cx="' + fin[0].toFixed(1) + '" cy="' + fin[1].toFixed(1) + '" r="2.6"/>' +
+            '<text class="hero-axe" x="' + x0 + '" y="' + (G.H - 4) + '">' +
+              escapeHtml(debut.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })) + "</text>" +
+            '<text class="hero-axe" x="' + x1 + '" y="' + (G.H - 4) + '" text-anchor="end">Aujourd\'hui</text>' +
+          "</svg>";
       }
 
       /* Le monogramme n'est pas un pis-aller : tant que le club n'a pas
@@ -2779,7 +2873,7 @@
         rendreCarteInstagram();
 
         var seaux = seauxVues(stats.validated, 14);
-        rendreBarres(seaux);
+        rendreCourbe(seaux);
 
         var variation = variationVues(seaux);
         var delta = $("#kpi-delta");
@@ -2792,15 +2886,11 @@
           delta.textContent = (variation > 0 ? "↑ +" : variation < 0 ? "↓ " : "→ ") + variation + " %";
         }
 
-        // La courbe et les barres dessinaient la MEME serie l'une sous
-        // l'autre. Les barres disent mieux la regularite d'un club qui
-        // n'ouvre que deux soirs par semaine : une courbe lisse les
-        // trous, alors que ce sont eux, l'information. La courbe ne
-        // reste que pour le cas ou il n'y a rien a montrer.
-
+        // Une courbe a plat sur zero ressemble a un graphe casse : quand
+        // il n'y a rien, on l'ecrit.
         var vide = seaux.every(function (v) { return !v; });
         $("#hero-graphe").hidden = !vide;
-        $("#hero-barres").hidden = vide;
+        $("#hero-courbe").hidden = vide;
         if (vide) {
           $("#hero-graphe").innerHTML = '<p class="hero-vide">Pas encore de publication sur les 14 derniers jours.</p>';
         }
@@ -3300,7 +3390,11 @@
           return (
             '<details class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
               '<summary class="reco-resume">' +
-                '<span class="reco-vignette">' + vignetteRecompense(r) + "</span>" +
+                '<span class="reco-vignette" data-photo-vite role="button" tabindex="0"' +
+                  ' aria-label="Changer la photo de ' + escapeHtml(r.title) + '">' +
+                  vignetteRecompense(r) +
+                  '<span class="reco-vignette-cam" aria-hidden="true">' + ICONE_APPAREIL + "</span>" +
+                "</span>" +
                 '<span class="reco-resume-txt"><strong>' + escapeHtml(r.title) + "</strong>" +
                   '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts · " + stock + "</span></span>" +
                 '<svg class="reco-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>' +
@@ -3326,11 +3420,6 @@
                 '<div class="champ"><label>Seuil (pts)</label><input type="number" min="0" step="10" data-champ="points_required" value="' + Number(r.points_required || 0) + '"' + inerte + " /></div>" +
                 '<div class="champ"><label>Stock max</label><input type="number" min="0" step="1" placeholder="Illimité" data-champ="max_redemptions" value="' + (r.max_redemptions ?? "") + '"' + inerte + " /></div>" +
               "</div>" +
-              '<div class="champ"><label>Famille</label><select data-champ="category"' + inerte + ">" +
-                ["bar", "acces", "vip"].map(function (c) {
-                  return '<option value="' + c + '"' + (r.category === c ? " selected" : "") + ">" + ({ bar: "Bar", acces: "Accès", vip: "VIP" })[c] + "</option>";
-                }).join("") +
-              "</select></div>" +
               '<div class="recompense-actions">' +
                 '<span class="recompense-etat" data-etat></span>' +
                 '<button type="button" class="retirer" data-retirer' + inerte + ">Retirer</button>" +
@@ -3348,6 +3437,25 @@
         });
         zone.querySelectorAll("[data-photo]").forEach(function (bouton) {
           bouton.addEventListener("click", function () { choisirPhoto(bouton.closest("[data-reward-id]")); });
+        });
+        /* La vignette du resume ouvre le selecteur de fichier sans
+           deplier la carte. Julien : "permets-leur de modifier la photo
+           des recompenses, surtout, et qu'on puisse modifier au premier
+           abord" -- elle etait enterree sous un chevron.
+
+           preventDefault() est indispensable : la vignette vit dans un
+           <summary>, et un clic dedans bascule le <details> avant tout
+           gestionnaire. */
+        zone.querySelectorAll("[data-photo-vite]").forEach(function (vignette) {
+          function ouvrir(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            choisirPhoto(vignette.closest("[data-reward-id]"));
+          }
+          vignette.addEventListener("click", ouvrir);
+          vignette.addEventListener("keydown", function (ev) {
+            if (ev.key === "Enter" || ev.key === " ") ouvrir(ev);
+          });
         });
         zone.querySelectorAll("[data-photo-retirer]").forEach(function (bouton) {
           bouton.addEventListener("click", function () { majPhotoRecompense(bouton.closest("[data-reward-id]"), null); });
@@ -3555,8 +3663,16 @@
           title: carte.querySelector('[data-champ="title"]').value || "Récompense",
           points_required: Number(carte.querySelector('[data-champ="points_required"]').value || 0),
           max_redemptions: carte.querySelector('[data-champ="max_redemptions"]').value === "" ? null : Math.max(0, Math.round(Number(carte.querySelector('[data-champ="max_redemptions"]').value))),
-          category: carte.querySelector('[data-champ="category"]').value,
         };
+        /* `category` n'est plus demandee. Julien : "c'est quoi famille ?
+           Accès et tout, c'est inutile, retire ça." Il a raison cote
+           gerant : elle ne change rien a ce que le client paie ni a ce
+           qu'il recoit.
+
+           La colonne n'est pas touchee pour autant, et elle n'est PAS
+           dans ce payload : cote clubbeur, choisirArt() s'en sert comme
+           dernier recours quand le titre ne ressemble a rien de connu.
+           L'ecraser a chaque enregistrement ferait perdre ce repli. */
         etat.textContent = "Enregistrement…";
         var { error } = await supabase.from("rewards").update(payload).eq("id", rewardId);
         etat.textContent = error ? "Erreur : " + error.message : "Enregistré ✓";
@@ -3595,12 +3711,14 @@
 
       /* ================= REGLAGES ================= */
 
+      var GLYPHE_IG_LIGNE = '<span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>';
       var GLYPHE_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>';
 
       function bandeauRien(titre, detail) {
-        return '<div class="rien">' +
-          '<span class="rien-ico">' + GLYPHE_INSTAGRAM + "</span>" +
-          '<span class="rien-txt"><strong>' + escapeHtml(titre) + "</strong><span>" + escapeHtml(detail) + "</span></span>" +
+        return '<div class="reglage-ligne">' +
+          GLYPHE_IG_LIGNE +
+          '<span class="reglage-txt"><strong>' + escapeHtml(titre) + "</strong></span>" +
+          '<span class="reglage-etat">' + escapeHtml(detail) + "</span>" +
         "</div>";
       }
 
@@ -3620,26 +3738,37 @@
         // un bouton qui ne fait rien.
         $("#reglages-installation").hidden = !clubReelCharge();
 
+        // Le tarif, sur la ligne : "Barème de points" tout seul est une
+        // porte fermee, il faut l'ouvrir pour savoir ou on en est.
+        var regles = ETAT.data.pointRules || {};
+        $("#reglages-bareme-etat").textContent =
+          nb.format(Math.round(Number(regles.videoViewsPerThousand || 0))) + " pts / 1 000 vues";
+
         var zone = $("#reglages-instagram");
         if (!ETAT.session) {
-          zone.innerHTML = bandeauRien("Instagram", "Connecte-toi pour relier le compte de ton club.");
+          zone.innerHTML = bandeauRien("Instagram", "Hors session");
           return;
         }
         // Statut deja charge par chargerInstagram() : pas de second
         // appel pour la meme reponse.
         var statut = ETAT.instagram;
         if (!statut) {
-          zone.innerHTML = bandeauRien("Instagram", "Statut indisponible pour le moment.");
+          zone.innerHTML = bandeauRien("Instagram", "Indisponible");
           return;
         }
 
         if (!statut.connecte) {
+          // Une LIGNE, comme les quatre autres, avec son etat a droite et
+          // le geste au bout. Une carte a part avec son titre de section
+          // et un bouton pleine largeur, c'etait trois niveaux
+          // d'echafaudage pour une seule information : connecte ou pas.
           zone.innerHTML =
-            '<div class="reglage-ligne" style="border-bottom:0">' +
-              '<span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>' +
-              '<span class="reglage-txt"><strong>Pas encore connecté</strong><span>Les mentions de ton club ne sont pas détectées</span></span>' +
-            "</div>" +
-            '<button type="button" class="bouton pleine" id="instagram-connecter">Connecter Instagram</button>';
+            '<button type="button" class="reglage-lien" id="instagram-connecter">' +
+              GLYPHE_IG_LIGNE +
+              '<span class="reglage-txt"><strong>Instagram</strong></span>' +
+              '<span class="reglage-etat absent">Connecter</span>' +
+              '<svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>' +
+            "</button>";
           $("#instagram-connecter").addEventListener("click", function (ev) {
             connecterInstagram(ev.currentTarget);
           });
@@ -3650,23 +3779,24 @@
         var mentions = statut.mentions || 0;
         zone.innerHTML =
           '<div class="reglage-ligne">' +
-            '<span class="point-vert"></span>' +
-            '<span class="reglage-txt"><strong>Connecté à @' + escapeHtml(statut.username) + "</strong>" +
-            "<span>" + nb.format(mentions) + " mention" + (mentions > 1 ? "s" : "") + " reçue" + (mentions > 1 ? "s" : "") + "</span></span>" +
+            GLYPHE_IG_LIGNE +
+            '<span class="reglage-txt"><strong>Instagram</strong>' +
+            "<span>" + nb.format(mentions) + " mention" + (mentions > 1 ? "s" : "") + " reçue" + (mentions > 1 ? "s" : "") +
+            (gain === null || gain === undefined ? "" : " · " + (gain >= 0 ? "+" : "") + nb.format(gain) + " abonnés") +
+            "</span></span>" +
+            '<span class="reglage-etat actif">@' + escapeHtml(statut.username) + "</span>" +
           "</div>" +
           // Un compte relie dont l'abonnement au webhook a echoue ne
           // remontera jamais une mention : le dire, plutot que de laisser
-          // croire que tout tourne parce que le compte est vert.
-          '<div class="reglage-ligne">' +
-            '<span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
-            '<span class="reglage-txt"><strong>Détection automatique</strong><span>' +
-            (statut.webhookActif ? "Active — les mentions arrivent toutes seules" : "Inactive — reconnecte le compte pour l'activer") +
-            "</span></span>" +
-          "</div>" +
-          (gain !== null && gain !== undefined
-            ? '<div class="reglage-ligne" style="border-bottom:0"><span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 20V4M5 11l7-7 7 7"/></svg></span>' +
-              '<span class="reglage-txt"><strong>' + (gain >= 0 ? "+" : "") + nb.format(gain) + ' abonnés</strong><span>Depuis que ce club est sur Noctify</span></span></div>'
-            : "");
+          // croire que tout tourne parce que le compte est vert. Ligne
+          // affichee UNIQUEMENT quand ca ne marche pas -- une ligne qui
+          // dit "tout va bien" est une ligne de plus a lire pour rien.
+          (statut.webhookActif ? "" :
+            '<div class="reglage-ligne">' +
+              '<span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="8.5"/></svg></span>' +
+              '<span class="reglage-txt"><strong>Détection en panne</strong>' +
+              "<span>Reconnecte le compte pour la réactiver</span></span>" +
+            "</div>");
       }
 
       $("#reglages-deconnexion").addEventListener("click", async function (ev) {
@@ -4111,14 +4241,14 @@
       function rendreBilan() {
         var boutique = PARCOURS.choix.filter(function (c) { return c.prise; }).length;
         var regles = ETAT.data.pointRules || {};
-        var parVideo = Math.round(Number(regles.videoViewsPerThousand || 0) * 3);
+        var parVideo = Math.round(Number(regles.videoViewsPerThousand || 0));
         var ig = ETAT.instagram;
         var etab = etablissementCourant() || {};
         var igConnecte = !!(ig && ig.connecte);
 
         var lignes = [
           [true, boutique + (boutique > 1 ? " récompenses" : " récompense"), "Dans la boutique de tes clients"],
-          [true, "Barème réglé", "Une vidéo à 3 000 vues : " + nb.format(parVideo) + " pts"],
+          [true, "Barème réglé", nb.format(parVideo) + " pts pour 1 000 vues"],
           igConnecte
             ? [true, "Instagram connecté", "Les mentions arrivent toutes seules"]
             : [false, etab.ig_handle ? "Instagram à connecter" : "Instagram non renseigné",
@@ -4713,23 +4843,29 @@
           valeurs: { storyViewsPerThousand: 0, videoViewsPerThousand: 40, viralBonus: 140, qrCheckin: 25, monthlyAmbassador: 500 } },
       ];
 
-      /* Trois mille vues : l'ordre de grandeur d'un Reel de club un
-         samedi soir. Un exemple trop rond (1 000) donnerait le tarif
-         affiche, pas une somme. */
-      var VUES_EXEMPLE = 3000;
+      /* Le profil annonce LE TARIF, plus un exemple.
+         Julien, 05/09/2026 : "le bareme, pourquoi c'est 3 000 vues
+         direct, c'est bizarre". Il a raison : 3 000 etait un nombre
+         invente pour rendre le tarif concret, et il faisait exactement
+         l'inverse -- le gerant lisait un chiffre qui ne correspond a
+         aucun de ses reglages, et devait diviser par trois de tete pour
+         retrouver la regle.
 
+         La regle EST "x points par tranche de 1 000 vues" : c'est elle
+         qu'on ecrit, avec le bonus de scan a cote pour que les trois
+         profils se distinguent sur autre chose qu'un seul nombre. */
       function rendreProfilsBareme() {
         var choisi = profilCorrespondant();
 
         $("#pa-profils").innerHTML = PROFILS_BAREME.map(function (p) {
-          var pts = Math.round(p.valeurs.videoViewsPerThousand * (VUES_EXEMPLE / 1000));
           return (
             '<button type="button" class="pa-profil' + (choisi === p.cle ? " choisi" : "") + '"' +
               ' data-profil="' + p.cle + '" role="radio" aria-checked="' + (choisi === p.cle ? "true" : "false") + '">' +
               '<span class="pa-profil-tete"><strong>' + escapeHtml(p.nom) + "</strong>" +
                 '<span class="pa-profil-rond" aria-hidden="true"></span></span>' +
-              '<span class="pa-profil-exemple">Une vidéo à ' + nb.format(VUES_EXEMPLE) +
-                " vues : <b>" + nb.format(pts) + " pts</b></span>" +
+              '<span class="pa-profil-exemple"><b>' + nb.format(p.valeurs.videoViewsPerThousand) +
+                " pts</b> pour 1 000 vues · <b>" + nb.format(p.valeurs.qrCheckin) +
+                " pts</b> au scan</span>" +
             "</button>"
           );
         }).join("");
