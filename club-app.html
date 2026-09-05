@@ -1576,17 +1576,6 @@
       .act-pts { flex: 0 0 auto; font-family: var(--chiffre); font-size: 13px; font-weight: 800; color: var(--succes); font-variant-numeric: tabular-nums; }
       .act-pts.neutre { color: var(--ink3); }
 
-      /* ---- Recompenses ----
-         Chaque recompense montrait ses cinq champs ouverts en meme
-         temps : photo, nom, seuil, stock, famille. Cinq recompenses,
-         c'etait vingt-cinq champs empiles, un mur de formulaire.
-         Julien : "il y a juste trop d'elements".
-
-         Repliee, une recompense tient sur une ligne qui dit ce qui
-         compte -- son nom, son prix en points, son stock. On l'ouvre
-         pour la modifier. <details> plutot qu'un etat en JS : le
-         navigateur gere l'ouverture, le clavier et l'accessibilite
-         mieux que ce qu'on ecrirait a la main. */
       /* ---- LA BOUTIQUE, EN GRILLE ----
          Julien, 05/09/2026 : "le premier onglet est bien mais les deux
          autres sont degueus [...] regarde une application ou ils peuvent
@@ -1608,8 +1597,8 @@
             vue, c'est ce qui evite les mauvaises surprises -- une photo
             mal cadree se remarque ici, pas apres.
 
-         La carte depliee reprend toute la largeur : un formulaire dans
-         une colonne de 160 px serait illisible. */
+         Une tuile n'est plus qu'un raccourci vers la fiche : le
+         formulaire vit dans son propre ecran, pas dans la grille. */
       #recompenses-liste {
         display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
       }
@@ -1618,37 +1607,25 @@
       #recompenses-liste > .bandeau-demo,
       #recompenses-liste > .vide { grid-column: 1 / -1; }
 
-      .recompense-carte { padding: 0; margin: 0; overflow: hidden; }
-      .recompense-carte[open] { grid-column: 1 / -1; }
-
-      .reco-resume {
-        display: block; padding: 0; cursor: pointer; list-style: none;
+      /* La tuile est un BOUTON : il faut lui reprendre ce que le
+         navigateur impose a un bouton (police, alignement, couleur). */
+      .recompense-carte {
+        display: block; width: 100%; padding: 0; margin: 0; overflow: hidden;
+        text-align: left; font: inherit; color: inherit; cursor: pointer;
+        transition: transform .16s var(--sortie);
       }
-      /* Depliee, la carte redevient une ligne : la photo reprend sa
-         taille de vignette a cote du titre, et le formulaire occupe la
-         largeur. */
-      .recompense-carte[open] .reco-resume {
-        display: flex; align-items: center; gap: 11px; padding: 12px 15px;
-      }
-      .reco-resume::-webkit-details-marker { display: none; }
-      .reco-resume:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 16px; }
+      .recompense-carte:active { transform: scale(.98); }
+      .recompense-carte:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
       /* En tuile : l'image occupe toute la largeur, en 4/3 -- le meme
          cadrage que la boutique du clubbeur. */
       .reco-vignette {
         position: relative; display: block; width: 100%; aspect-ratio: 4 / 3;
         overflow: hidden; background: var(--s2);
         border: 0; border-bottom: 1px solid var(--line);
-        cursor: pointer; transition: transform .16s var(--sortie);
       }
       .reco-vignette > svg {
         position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
       }
-      .recompense-carte[open] .reco-vignette {
-        flex: 0 0 auto; width: 46px; height: 46px; aspect-ratio: auto;
-        border: 1px solid var(--line); border-radius: 12px;
-      }
-      .reco-vignette:active { transform: scale(.97); }
-      .reco-vignette:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
       /* Le badge appareil, pose dans l'angle. Sans lui, rien ne dit que
          la vignette se touche -- et c'est justement le geste que Julien
          voulait "au premier abord". */
@@ -1695,9 +1672,6 @@
         width: 12px; height: 12px; fill: none; stroke: currentColor;
         stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
       }
-      /* Depliee, la vignette redevient petite : la pilule n'y tient plus,
-         et le detail a deja ses propres boutons photo. */
-      .recompense-carte[open] .reco-vignette-cam { display: none; }
       /* CONTAIN, pas cover. Les dessins sont detoures et cadres large :
          un `cover` sur un carre dans un cadre 4/3 rogne le haut et le bas
          -- Julien : "les photos sont coupées bizarrement, ce n'est pas
@@ -1708,7 +1682,6 @@
          deux bandes vides. La classe le dit. */
       .reco-vignette img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 8px; }
       .reco-vignette.photo-reelle img { object-fit: cover; padding: 0; }
-      .recompense-carte[open] .reco-vignette img { padding: 3px; }
       /* Le glyphe du dernier recours. Une INITIALE dans un carre gris,
          c'est un avatar casse : ca promet une image qui n'arrive pas.
          Un pictogramme dit "pas encore de photo" et se lit comme un
@@ -1718,18 +1691,13 @@
         stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
       }
       .reco-resume-txt { display: block; padding: 10px 11px 11px; min-width: 0; }
-      .recompense-carte[open] .reco-resume-txt { flex: 1 1 auto; padding: 0; }
       .reco-resume-txt strong {
         display: block; font-family: var(--titre); font-size: 13.5px; font-weight: 700;
         line-height: 1.25; min-height: 2.5em;
         overflow: hidden; text-overflow: ellipsis;
       }
       /* Deux lignes reservees dans la tuile pour que les prix s'alignent
-         d'une colonne a l'autre ; une seule ligne, coupee, une fois
-         depliee. */
-      .recompense-carte[open] .reco-resume-txt strong {
-        min-height: 0; white-space: nowrap;
-      }
+         d'une colonne a l'autre, quel que soit le nom. */
       /* Le PRIX porte l'accent, comme dans la boutique du clubbeur :
          c'est le chiffre qui decide de l'echange. Le stock reste une
          mention de gestion, en encre sourde. */
@@ -1747,37 +1715,80 @@
         font-family: var(--chiffre); font-size: 14px; font-weight: 800;
         letter-spacing: -.02em; color: var(--accent-fort); font-variant-numeric: tabular-nums;
       }
-      /* Le chevron n'a de sens que sur une LIGNE. Sur une tuile, c'est
-         la tuile entiere qui s'ouvre, et une fleche posee dans un coin
-         ne designerait rien. */
-      .reco-chevron { display: none; }
-      .recompense-carte[open] .reco-chevron {
-        display: block;
-        flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none;
-        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-        transition: transform .2s var(--sortie);
-      }
-      .recompense-carte[open] .reco-chevron { transform: rotate(90deg); }
-      .reco-detail {
-        display: grid; gap: 9px; padding: 4px 15px 14px;
-        border-top: 1px solid var(--line); margin-top: 2px;
-      }
       @media (prefers-reduced-motion: reduce) {
-        .reco-chevron, .bouton, .tab, .retour, .retirer, .ajouter-recompense, .ac-btn { transition: none; }
+        .recompense-carte, .bouton, .tab, .retour, .retirer, .ajouter-recompense, .ac-btn { transition: none; }
         /* On garde l'opacite, on retire le mouvement : c'est le
            deplacement qui gene, pas le fondu. */
-        .bouton:active, .tab:active, .retour:active,
+        .bouton:active, .tab:active, .retour:active, .recompense-carte:active,
         .retirer:active, .ajouter-recompense:active, .ac-btn:active { transform: none; }
       }
-      .recompense-carte .champ { display: grid; gap: 5px; }
-      .recompense-carte label { font-size: 10.5px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; }
-      .recompense-carte input, .recompense-carte select {
-        width: 100%; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line2);
-        background: var(--s2); color: var(--ink); font-family: inherit; font-size: 13.5px;
+
+      /* ---- La fiche d'une recompense ----
+         Zettle, Square et Shopify ouvrent un produit dans son propre
+         ecran : la photo en grand d'abord, parce que c'est ce qu'on vient
+         changer, puis le nom, puis le prix. On y entre, on en sort. Le
+         formulaire n'ecrase plus la grille. */
+      #vue-recompense .champ { display: grid; gap: 6px; margin-top: 14px; }
+      #vue-recompense label {
+        font-size: 11px; font-weight: 700; color: var(--ink3);
+        text-transform: uppercase; letter-spacing: .04em;
       }
-      .recompense-lignes { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-      .recompense-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
-      .recompense-etat { font-size: 11px; color: var(--ink3); }
+      /* Le chiffre du prix se lit comme un chiffre : meme fonte que les
+         compteurs du tableau de bord, chasse fixe pour que les colonnes
+         s'alignent. */
+      #fiche-points, #fiche-stock {
+        font-family: var(--chiffre); font-weight: 800; letter-spacing: -.01em;
+        font-variant-numeric: tabular-nums;
+      }
+      .recompense-lignes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+      .recompense-lignes .champ { margin-top: 0; }
+      .fiche-aide { margin: 8px 0 0; font-size: 11.5px; color: var(--ink3); line-height: 1.45; }
+      .recompense-etat { font-size: 11.5px; color: var(--ink3); min-height: 1.2em; margin: 14px 0 0; }
+
+      /* La photo est le sujet de l'ecran : 4/3 pleine largeur, le meme
+         cadrage que la tuile et que la boutique du clubbeur -- on voit
+         exactement ce que le client verra. Le geste est ecrit dessous,
+         pas cache dans un coin. */
+      .fiche-photo {
+        display: block; width: 100%; padding: 0; margin: 2px 0 0;
+        border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+        background: var(--s1); box-shadow: var(--ombre-1);
+        font: inherit; color: inherit; text-align: left; cursor: pointer;
+        transition: transform .16s var(--sortie);
+      }
+      .fiche-photo:active { transform: scale(.99); }
+      .fiche-photo:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .fiche-photo:disabled { cursor: default; }
+      .fiche-photo-vue {
+        position: relative; display: block; width: 100%; aspect-ratio: 4 / 3;
+        overflow: hidden; background: var(--s2); border-bottom: 1px solid var(--line);
+      }
+      .fiche-photo-vue img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 14px; }
+      .fiche-photo-vue.photo-reelle img { object-fit: cover; padding: 0; }
+      /* Pas de photo : le creux hachure de la tuile, en grand. Il demande
+         son image au lieu d'afficher un pictogramme de panne. */
+      .fiche-photo-vue.sans-image { border-bottom-style: dashed; border-bottom-color: var(--line2); }
+      .fiche-photo-vue.sans-image::before {
+        content: ""; position: absolute; inset: 12px;
+        border: 1.5px dashed var(--line2); border-radius: 14px;
+      }
+      .fiche-photo-act {
+        display: block; padding: 13px 16px;
+        font-family: var(--titre); font-size: 13.5px; font-weight: 700; color: var(--ink);
+      }
+      .fiche-photo-aide { margin: 8px 2px 0; font-size: 11.5px; color: var(--ink3); line-height: 1.45; }
+      .fiche-photo-sup {
+        margin-top: 8px; padding: 0; border: 0; background: none;
+        font: inherit; font-size: 11.5px; font-weight: 700; color: var(--ink2);
+        text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+      }
+      .fiche-photo-sup:hover { color: var(--ink); }
+      /* Retirer une recompense est l'action rare et lourde de l'ecran :
+         en bas, detachee du reste, jamais a cote d'un champ. */
+      .retirer.pleine {
+        display: block; width: 100%; min-height: 46px; margin-top: 22px;
+        border-radius: 12px; font-size: 13px;
+      }
       /* Contour seul : un aplat rose pale sur une action destructrice
          la faisait passer pour un bouton desactive. */
       .retirer {
@@ -2443,12 +2454,18 @@
               </div>
 
               <div class="carte" style="padding:1px 14px">
-                <button type="button" class="reglage-lien" id="reglages-mdp">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span>
-                  <span class="reglage-txt"><strong>Changer le mot de passe</strong></span>
-                  <span class="reglage-etat" id="reglages-mdp-etat"></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </button>
+                <!-- "Changer le mot de passe" est retire. Julien : "changer
+                     le mot de passe, du coup ça tu peux supprimer".
+
+                     Ce n'est pas une perte de fonction : Supabase envoie le
+                     lien de reinitialisation depuis l'ecran de connexion,
+                     qui est l'endroit ou l'on en a besoin -- on cherche a
+                     changer son mot de passe quand on n'arrive PLUS a
+                     entrer, pas quand on est deja dedans. La ligne occupait
+                     une place dans un ecran que Julien trouvait deja trop
+                     charge, et elle ne concernait qu'une partie des comptes
+                     (ceux crees par email ; les comptes Google n'ont pas de
+                     mot de passe du tout). -->
                 <button type="button" class="reglage-lien" id="reglages-deconnexion">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24" id="reglages-deconnexion-ico"><path d="M15 4H6a1.6 1.6 0 0 0-1.6 1.6v12.8A1.6 1.6 0 0 0 6 20h9"/><path d="M14.5 12H21M18 8.6 21.4 12 18 15.4"/></svg></span>
                   <span class="reglage-txt"><strong id="reglages-deconnexion-txt">Déconnexion</strong></span>
@@ -2503,6 +2520,45 @@
                  ⚠️ Ce ne sont pas des conseils juridiques. Ils decrivent
                  honnetement le fonctionnement reel ; une relecture par un
                  juriste reste a faire avant le premier client payant. -->
+            <!-- ================= UNE RECOMPENSE =================
+                 La fiche d'une recompense. Ouverte depuis une tuile de la
+                 boutique, fermee par le retour. Un ecran, une recompense.
+                 -->
+            <div class="vue" id="vue-recompense">
+              <button type="button" class="retour" data-va="recompenses"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Boutique</button>
+
+              <!-- La photo EN GRAND, et le geste ecrit dessus. C'est la
+                   premiere chose qu'on voit et la premiere qu'on veut
+                   changer. -->
+              <button type="button" class="fiche-photo" id="fiche-photo">
+                <span class="fiche-photo-vue" id="fiche-photo-vue"></span>
+                <span class="fiche-photo-act" id="fiche-photo-act">Ajouter une photo</span>
+              </button>
+              <p class="fiche-photo-aide" id="fiche-photo-aide"></p>
+              <button type="button" class="fiche-photo-sup" id="fiche-photo-sup" hidden>Retirer la photo</button>
+
+              <div class="champ">
+                <label for="fiche-nom">Nom</label>
+                <input class="ac-input" id="fiche-nom" type="text" data-champ="title" placeholder="Cocktail offert" />
+              </div>
+
+              <div class="recompense-lignes">
+                <div class="champ">
+                  <label for="fiche-points">Prix en points</label>
+                  <input class="ac-input" id="fiche-points" type="number" min="0" step="10" data-champ="points_required" />
+                </div>
+                <div class="champ">
+                  <label for="fiche-stock">Stock</label>
+                  <input class="ac-input" id="fiche-stock" type="number" min="0" step="1" placeholder="Illimité" data-champ="max_redemptions" />
+                </div>
+              </div>
+              <p class="fiche-aide">Laisse le stock vide si la récompense n'a pas de limite.</p>
+
+              <p class="recompense-etat" id="fiche-etat" data-etat></p>
+
+              <button type="button" class="retirer pleine" id="fiche-retirer">Retirer de la boutique</button>
+            </div>
+
             <div class="vue" id="vue-conditions">
               <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
               <h1 class="ecran-titre">Conditions d'utilisation</h1>
@@ -2822,7 +2878,11 @@
 
       // Les trois ecrans qui ont perdu leur onglet : ils vivent
       // maintenant sous Reglages, qui reste allume pendant qu'on y est.
-      var SOUS_ECRANS = ["bareme", "qr", "conditions", "confidentialite"];
+      var SOUS_ECRANS = {
+        bareme: "reglages", qr: "reglages",
+        conditions: "reglages", confidentialite: "reglages",
+        recompense: "recompenses",
+      };
 
       function ouvrirVue(cible) {
         VUES.forEach(function (v) { v.classList.toggle("actif", v.id === "vue-" + cible); });
@@ -2841,7 +2901,7 @@
           vueEntrante.classList.add("entre");
         }
 
-        var onglet = SOUS_ECRANS.indexOf(cible) >= 0 ? "reglages" : cible;
+        var onglet = SOUS_ECRANS[cible] || cible;
         TABS.forEach(function (t) {
           var actif = t.dataset.tab === onglet;
           t.classList.toggle("on", actif);
@@ -4028,84 +4088,109 @@
             ? "stock illimité"
             : "stock " + nb.format(Number(r.max_redemptions));
 
+          /* ⚠️ PLUS D'ACCORDEON. Julien : "quand on veut configurer une
+             récompense, c'est bizarre, ce n'est même pas logique, les gens
+             ne vont pas comprendre tout de suite".
+
+             Il avait raison sur trois points a la fois :
+
+             · Une tuile est une PHOTO. Toucher une photo, on s'attend a la
+               voir en grand ou a la changer -- pas a deplier un
+               formulaire.
+             · Le formulaire s'ouvrait DANS la grille : la tuile prenait
+               soudain toute la largeur, les autres sautaient de place. On
+               perdait ce qu'on regardait.
+             · La meme tuile avait DEUX cibles (la pilule photo ouvrait le
+               selecteur de fichier, le reste depliait le formulaire), sans
+               que rien ne les distingue vraiment.
+
+             Zettle, Square et Shopify font tous la meme chose : toucher un
+             produit ouvre un ECRAN a lui, avec un retour. C'est ce qui
+             rend le geste evident -- on entre dans la fiche, on en sort.
+
+             La tuile n'a donc plus qu'une seule cible et une seule
+             promesse : elle ouvre la fiche. */
           var visuel = imageRecompense(r);
           return (
-            '<details class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
-              '<summary class="reco-resume">' +
-                '<span class="reco-vignette' + (visuel.vide ? " sans-image" : "") +
-                  (visuel.propre ? " photo-reelle" : "") + '"' +
-                  ' data-photo-vite role="button" tabindex="0"' +
-                  ' aria-label="' + (visuel.vide ? "Ajouter une photo à " : "Changer la photo de ") + escapeHtml(r.title) + '">' +
-                  visuel.html +
-                  '<span class="reco-vignette-cam" aria-hidden="true">' + ICONE_APPAREIL +
-                    (visuel.vide ? "Ajouter une photo" : "") + "</span>" +
-                "</span>" +
-                '<span class="reco-resume-txt"><strong>' + escapeHtml(r.title) + "</strong>" +
-                  '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts · " + stock + "</span></span>" +
-                '<svg class="reco-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>' +
-              "</summary>" +
-              '<div class="reco-detail">' +
-              '<div class="reco-photo">' +
-                '<span class="reco-photo-vue">' +
-                  (r.image_url
-                    ? '<img src="' + escapeHtml(r.image_url) + '" alt="" />'
-                    : (visuel.vide ? "<span>Aucune photo</span>" : "<span>Illustration auto</span>")) +
-                "</span>" +
-                '<span class="reco-photo-actions">' +
-                  '<button type="button" class="reco-photo-btn" data-photo' + inerte + ">" +
-                    (r.image_url ? "Changer la photo" : "Ajouter une photo") +
-                  "</button>" +
-                  (r.image_url
-                    ? '<button type="button" class="reco-photo-btn sobre" data-photo-retirer' + inerte + ">Retirer la photo</button>"
-                    : '<span class="reco-photo-aide">Sinon, un dessin est choisi selon le nom.</span>') +
-                "</span>" +
-              "</div>" +
-              '<div class="champ"><label>Nom</label><input type="text" data-champ="title" value="' + escapeHtml(r.title) + '"' + inerte + " /></div>" +
-              '<div class="recompense-lignes">' +
-                '<div class="champ"><label>Seuil (pts)</label><input type="number" min="0" step="10" data-champ="points_required" value="' + Number(r.points_required || 0) + '"' + inerte + " /></div>" +
-                '<div class="champ"><label>Stock max</label><input type="number" min="0" step="1" placeholder="Illimité" data-champ="max_redemptions" value="' + (r.max_redemptions ?? "") + '"' + inerte + " /></div>" +
-              "</div>" +
-              '<div class="recompense-actions">' +
-                '<span class="recompense-etat" data-etat></span>' +
-                '<button type="button" class="retirer" data-retirer' + inerte + ">Retirer</button>" +
-              "</div>" +
-              "</div>" +
-            "</details>"
+            '<button type="button" class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '"' +
+              ' aria-label="Configurer ' + escapeHtml(r.title) + '">' +
+              '<span class="reco-vignette' + (visuel.vide ? " sans-image" : "") +
+                (visuel.propre ? " photo-reelle" : "") + '">' +
+                visuel.html +
+                (visuel.vide
+                  ? '<span class="reco-vignette-cam" aria-hidden="true">' + ICONE_APPAREIL + "Ajouter une photo</span>"
+                  : "") +
+              "</span>" +
+              '<span class="reco-resume-txt"><strong>' + escapeHtml(r.title) + "</strong>" +
+                '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts · " + stock + "</span></span>" +
+            "</button>"
           );
         }).join("");
 
-        zone.querySelectorAll("[data-champ]").forEach(function (input) {
-          input.addEventListener("change", function () { enregistrerRecompense(input.closest("[data-reward-id]")); });
-        });
-        zone.querySelectorAll("[data-retirer]").forEach(function (bouton) {
-          bouton.addEventListener("click", function () { retirerRecompense(bouton.closest("[data-reward-id]")); });
-        });
-        zone.querySelectorAll("[data-photo]").forEach(function (bouton) {
-          bouton.addEventListener("click", function () { choisirPhoto(bouton.closest("[data-reward-id]")); });
-        });
-        /* La vignette du resume ouvre le selecteur de fichier sans
-           deplier la carte. Julien : "permets-leur de modifier la photo
-           des recompenses, surtout, et qu'on puisse modifier au premier
-           abord" -- elle etait enterree sous un chevron.
-
-           preventDefault() est indispensable : la vignette vit dans un
-           <summary>, et un clic dedans bascule le <details> avant tout
-           gestionnaire. */
-        zone.querySelectorAll("[data-photo-vite]").forEach(function (vignette) {
-          function ouvrir(ev) {
-            ev.preventDefault();
-            ev.stopPropagation();
-            choisirPhoto(vignette.closest("[data-reward-id]"));
-          }
-          vignette.addEventListener("click", ouvrir);
-          vignette.addEventListener("keydown", function (ev) {
-            if (ev.key === "Enter" || ev.key === " ") ouvrir(ev);
-          });
-        });
-        zone.querySelectorAll("[data-photo-retirer]").forEach(function (bouton) {
-          bouton.addEventListener("click", function () { majPhotoRecompense(bouton.closest("[data-reward-id]"), null); });
+        // Une tuile, une cible, une promesse : elle ouvre la fiche.
+        zone.querySelectorAll("[data-reward-id]").forEach(function (tuile) {
+          tuile.addEventListener("click", function () { ouvrirFiche(tuile.dataset.rewardId); });
         });
       }
+
+      /* ---- LA FICHE D'UNE RECOMPENSE ----
+         Un ecran, une recompense. L'ecran porte data-reward-id et un
+         [data-etat] : les fonctions d'enregistrement, de photo et de
+         retrait recoivent "la carte" en parametre et marchent telles
+         quelles, c'est maintenant l'ecran qu'on leur passe.
+
+         L'ecran n'est jamais reconstruit, seulement rempli -- ses
+         gestionnaires se posent donc UNE fois, au demarrage. Les reposer
+         a chaque ouverture en empilerait un de plus a chaque passage, et
+         un enregistrement partirait cinq fois. */
+      var FICHE = $("#vue-recompense");
+
+      // La photo seule : elle change sans qu'on retouche aux champs, et
+      // reecrire les champs pendant qu'on tape effacerait la saisie.
+      function rendreFichePhoto(r) {
+        var visuel = imageRecompense(r);
+        var vue = $("#fiche-photo-vue");
+        vue.innerHTML = visuel.html;
+        vue.className = "fiche-photo-vue" + (visuel.vide ? " sans-image" : "") + (visuel.propre ? " photo-reelle" : "");
+        $("#fiche-photo-act").textContent = r.image_url ? "Changer la photo" : "Ajouter une photo";
+        $("#fiche-photo-aide").textContent = r.image_url
+          ? "C'est cette photo que tes clients voient dans leur application."
+          : (visuel.vide
+            ? "Sans photo, la récompense s'affiche sans image chez tes clients."
+            : "Un dessin est choisi d'après le nom. Ta photo le remplacera.");
+        $("#fiche-photo-sup").hidden = !r.image_url || estDemo();
+      }
+
+      function rendreFiche(rewardId) {
+        var r = (ETAT.data.rewards || []).find(function (x) { return String(x.id) === String(rewardId); });
+        if (!r) return;
+
+        FICHE.dataset.rewardId = r.id;
+        $("#fiche-nom").value = r.title || "";
+        $("#fiche-points").value = Number(r.points_required || 0);
+        $("#fiche-stock").value = r.max_redemptions === null || r.max_redemptions === undefined ? "" : r.max_redemptions;
+        rendreFichePhoto(r);
+
+        // Hors session, tout est en lecture seule : les champs partaient
+        // sinon vers Supabase avec un id de demo.
+        var demo = estDemo();
+        FICHE.querySelectorAll("[data-champ]").forEach(function (i) { i.disabled = demo; });
+        $("#fiche-photo").disabled = demo;
+        $("#fiche-retirer").disabled = demo;
+        $("#fiche-etat").textContent = "";
+      }
+
+      function ouvrirFiche(rewardId) {
+        rendreFiche(rewardId);
+        ouvrirVue("recompense");
+      }
+
+      FICHE.querySelectorAll("[data-champ]").forEach(function (input) {
+        input.addEventListener("change", function () { enregistrerRecompense(FICHE); });
+      });
+      $("#fiche-photo").addEventListener("click", function () { choisirPhoto(FICHE); });
+      $("#fiche-photo-sup").addEventListener("click", function () { majPhotoRecompense(FICHE, null); });
+      $("#fiche-retirer").addEventListener("click", function () { retirerRecompense(FICHE); });
 
       /* ---- Photo d'une recompense ----
          Un seul <input type=file> cree a la volee, pas un par carte : dix
@@ -4233,6 +4318,9 @@
         var reward = (ETAT.data.rewards || []).find(function (r) { return String(r.id) === String(carte.dataset.rewardId); });
         if (reward) reward.image_url = url;
         rendreRecompenses();
+        if (reward) rendreFichePhoto(reward);
+        etat.textContent = url ? "Photo enregistrée" : "Photo retirée";
+        setTimeout(function () { etat.textContent = ""; }, 1800);
       }
 
       /* Pousse la boutique vers l'appli des clubbeurs.
@@ -4320,8 +4408,15 @@
            L'ecraser a chaque enregistrement ferait perdre ce repli. */
         etat.textContent = "Enregistrement…";
         var { error } = await supabase.from("rewards").update(payload).eq("id", rewardId);
-        etat.textContent = error ? "Erreur : " + error.message : "Enregistré ✓";
-        if (!error) { planifierSynchro(); setTimeout(function () { etat.textContent = ""; }, 1800); }
+        if (error) { etat.textContent = "Erreur : " + error.message; return; }
+
+        var reward = (ETAT.data.rewards || []).find(function (r) { return String(r.id) === String(rewardId); });
+        if (reward) Object.assign(reward, payload);
+        rendreRecompenses();
+
+        planifierSynchro();
+        etat.textContent = "Enregistré ✓";
+        setTimeout(function () { etat.textContent = ""; }, 1800);
       }
 
       // Desactivation (active=false), jamais une suppression -- une
@@ -4335,6 +4430,9 @@
         planifierSynchro();
         ETAT.data.rewards = (ETAT.data.rewards || []).map(function (r) { return r.id === rewardId ? { ...r, active: false } : r; });
         rendreRecompenses();
+        // On ressort de la fiche : elle porterait sinon une recompense
+        // qui n'est plus dans la boutique.
+        if (carte === FICHE) { delete FICHE.dataset.rewardId; ouvrirVue("recompenses"); }
       }
 
       $("#recompense-ajouter").addEventListener("click", async function () {
@@ -4499,52 +4597,8 @@
         var glyphe = $("#reglages-deconnexion-ico");
         if (glyphe) glyphe.innerHTML = ETAT.session ? FLECHE_SORTIE : FLECHE_ENTREE;
 
-        /* "Changer le mot de passe" n'existe QUE pour un compte qui en a
-           un. Julien : "changer de mot de passe, il n'y a même pas de mot
-           de passe". Il a raison pour son compte : entre par Google, il
-           n'en a jamais choisi -- lui en proposer un changement envoie un
-           lien de reinitialisation pour un mot de passe inexistant.
-
-           Supabase liste les fournisseurs dans app_metadata.providers.
-           "email" = inscription par mot de passe ; sinon c'est Google, et
-           la ligne n'a rien a faire la. */
-        var u = ETAT.session && ETAT.session.user;
-        var fournisseurs = (u && u.app_metadata && u.app_metadata.providers) || [];
-        var aMotDePasse = fournisseurs.indexOf("email") >= 0;
-        $("#reglages-mdp").hidden = !aMotDePasse;
-        $("#reglages-mdp").disabled = !ETAT.session;
       }
 
-      /* Changer le mot de passe : Supabase envoie un lien, on ne demande
-         jamais l'ancien. Le retour se fait sur connexion.html, la seule
-         page qui sait traiter un jeton de recuperation. */
-      $("#reglages-mdp").addEventListener("click", async function (ev) {
-        if (!ETAT.session) return;
-        var bouton = ev.currentTarget;
-        var etat = $("#reglages-mdp-etat");
-        var email = ETAT.session.user.email;
-        if (!email) return;
-
-        bouton.disabled = true;
-        etat.textContent = "Envoi…";
-
-        var { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: new URL("./connexion.html", window.location.href).href,
-        });
-
-        bouton.disabled = false;
-        // On ne dit pas "verifiez vos spams" a tout hasard : on dit a
-        // QUELLE adresse c'est parti, c'est la seule chose utile.
-        // La colonne d'etat est etroite : elle dit l'issue en un mot, et
-        // la phrase complete va sous la carte. On ne dit pas "verifiez
-        // vos spams" a tout hasard : on dit a QUELLE adresse c'est parti.
-        etat.textContent = error ? "Échec" : "Envoyé";
-        var msg = $("#reglages-msg");
-        msg.style.display = "block";
-        msg.textContent = error
-          ? "Envoi impossible : " + error.message
-          : "Lien envoyé à " + email;
-      });
 
       /* ================= PARCOURS D'INSTALLATION =================
          Ce qui se passait avant : compte cree -> api/create-client pose
