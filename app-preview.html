@@ -349,9 +349,10 @@
         width: 190px; aspect-ratio: 1 / .53; display: block; overflow: hidden;
         animation: splash-pouls 2.2s ease-in-out infinite;
       }
+      /* Le PNG est detoure : ni filtre ni mode de fusion. Voir le
+         commentaire de .ac-mascot plus bas. */
       .splash-mark img {
         display: block; width: 100%; height: auto; margin-top: -21%;
-        filter: url(#logo-blanc);
       }
       /* .splash-mot retire : le logo au verre PORTE deja le mot
          "Noctify". Ecrit une seconde fois juste en dessous, le nom
@@ -548,14 +549,30 @@
          sur le fond. L'ombre sous le verre s'eclaircit aussi, mais reste
          une ombre.
          Ce n'est qu'un rattrapage : un PNG a fond TRANSPARENT serait
-         plus propre et marcherait sur n'importe quelle couleur. */
+         plus propre et marcherait sur n'importe quelle couleur.
+
+         ⚠️ 05/09/2026 : C'EST FAIT. Le PNG est detoure une fois pour
+         toutes par outils/detourer_logo.py, et les deux applis pointent
+         sur noctify-logo-verre-detoure.png.
+
+         Ce qui a rendu la correction necessaire : cote gerant, le fond est
+         passe d'un blanc pur a un blanc casse chaud (#f9f6f1), et le
+         filtre -- calibre pour amener le creme a 255 -- posait alors un
+         rectangle plus clair et plus froid au milieu de l'ecran. Julien :
+         "le logo n'est pas bien intégré dans le truc".
+
+         `mix-blend-mode: multiply` a ete essaye d'abord : il ASSOMBRIT le
+         rectangle au lieu de l'effacer, creme x creme donnant plus fonce
+         que creme. Le detourage, lui, ne vise aucune couleur.
+
+         Le filtre #logo-blanc reste defini dans le SVG : plus rien ne s'en
+         sert, mais le retirer sort du perimetre de ce retour. */
       .ac-mascot {
         width: min(292px, 100%); aspect-ratio: 1 / .53;
         margin: auto auto 0; align-self: center; overflow: hidden;
       }
       .ac-mascot img {
         display: block; width: 100%; height: auto; margin-top: -21%;
-        filter: url(#logo-blanc);
       }
 
       /* ---- Bloc de texte, cale a gauche comme la reference ---- */
@@ -3586,7 +3603,7 @@
         <div class="splash" id="splash" aria-hidden="true">
           <div class="splash-brand">
             <span class="splash-mark" aria-hidden="true">
-              <img src="/noctify-logo-verre.png" alt="" width="1254" height="1254" />
+              <img src="/noctify-logo-verre-detoure.webp" alt="" width="640" height="640" />
             </span>
           </div>
           <div class="splash-piste"><span class="splash-barre" id="splash-barre"></span></div>
@@ -3631,7 +3648,7 @@
                Le fond creme du PNG est repris par .vue-accueil, sinon
                l'image se verrait comme un rectangle beige. -->
           <p class="ac-mascot">
-            <img src="/noctify-logo-verre.png" alt="Noctify" width="1254" height="1254">
+            <img src="/noctify-logo-verre-detoure.webp" alt="Noctify" width="640" height="640">
           </p>
 
           <div class="ac-hero">

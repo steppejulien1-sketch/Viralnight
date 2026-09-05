@@ -735,13 +735,26 @@
         width: 190px; aspect-ratio: 1 / .53; display: block; overflow: hidden;
         animation: splash-respire 2.2s ease-in-out infinite;
       }
-      /* Le filtre blanchit le fond creme du PNG pour qu'il se fonde dans
-         l'ecran. color-interpolation-filters="sRGB" sur le filtre lui-meme
-         est indispensable, sinon les gains sont calcules en lineaire et
-         faux. */
+      /* ⚠️ LE LOGO GARDAIT SON RECTANGLE. Julien : "le logo n'est pas
+         bien intégré dans le truc".
+
+         Le PNG a un fond creme, et le filtre #logo-blanc-club le poussait
+         vers #ffffff. Tant que l'ecran etait blanc pur, ca se fondait.
+         Depuis que le fond est un blanc casse CHAUD (#f9f6f1), le logo
+         posait un rectangle plus clair et plus froid au milieu -- visible
+         d'autant plus qu'il est au centre d'un ecran vide.
+
+         `mix-blend-mode: multiply` a ete essaye : il ASSOMBRIT le
+         rectangle au lieu de l'effacer, parce que creme x creme donne plus
+         fonce que creme.
+
+         Le PNG est donc DETOURE une fois pour toutes
+         (outils/detourer_logo.py, remplissage depuis les bords pour ne pas
+         trouer l'interieur blanc du verre). Plus de filtre, plus de mode
+         de fusion, plus de couleur a re-calibrer : le logo se pose sur
+         n'importe quel fond. */
       .splash-logo img {
         display: block; width: 100%; height: auto; margin-top: -21%;
-        filter: url(#logo-blanc-club);
       }
       /* Respiration d'opacite et non un halo colore : sur un dessin en
          couleur, une ombre portee rouge salit le trait. */
@@ -1981,7 +1994,7 @@
                  le formulaire vit dans cette page. -->
             <div class="splash" id="splash" aria-hidden="true">
               <span class="splash-logo">
-                <img src="/noctify-logo-verre.png" alt="" width="1254" height="1254" />
+                <img src="/noctify-logo-verre-detoure.webp" alt="" width="640" height="640" />
               </span>
               <div class="splash-piste"><span class="splash-barre"></span></div>
             </div>
