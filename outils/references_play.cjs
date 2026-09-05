@@ -26,22 +26,45 @@ const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const DOSSIER = `${__dirname}/references`;
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Choisies pour ce qu'elles ont en commun avec Noctify : un solde de
-// points, un catalogue a echanger, ou une sortie a reserver.
+/* DEUX FAMILLES, parce que les deux applis n'ont pas le meme metier.
+   Julien, 05/09/2026 : "cherche-moi des applications specifiques [...]
+   pour les gerants, plutot des applications qui traquent les donnees
+   avec dashboard ; pour l'autre, des trucs faits pour les
+   consommateurs, pour les rendre accros".
+
+   `famille` sert au tri du dossier de sortie ET a la lecture : une
+   capture de Stripe et une capture de Duolingo ne se jugent pas sur les
+   memes criteres. */
 const APPS = [
-  ["starbucks", "com.starbucks.mobilecard", "Solde de points + menu de recompenses"],
-  ["mcdo", "com.mcdonalds.mobileapp", "Fidelite, catalogue, commande"],
-  ["sephora", "com.sephora.digital", "Programme a paliers, cartes produit"],
-  ["fidme", "com.fidme", "Portefeuille de cartes de fidelite"],
-  ["dice", "fm.dice", "Sorties, billets, decouverte de soirees"],
-  ["revolut", "com.revolut.revolut", "Carte de solde, chiffres, graphes"],
-  ["shopmium", "com.shopmium", "Cashback, offres a debloquer"],
-  ["deliveroo", "com.deliveroo.orderapp", "Catalogue dense + fidelite"],
+  // ---- GERANT : lire des chiffres, suivre une activite ----
+  ["gerant", "stripe",     "com.stripe.android.dashboard",       "Le dashboard de reference : chiffres, courbes, periodes"],
+  ["gerant", "shopify",    "com.shopify.mobile",                 "Ventes du jour, comparaison, listes de commandes"],
+  ["gerant", "square",     "com.squareup",                       "Encaissement + rapports pour un commerce physique"],
+  ["gerant", "sumup",      "com.sumup.merchant",                 "Meme metier que Square, marche francais"],
+  ["gerant", "ga",         "com.google.android.apps.giant",      "Analytics pur : courbes, segments, comparaisons"],
+  ["gerant", "meta-business","com.facebook.pages.app",           "Portee, abonnes, mentions -- le plus proche de Noctify"],
+  ["gerant", "later",      "com.later.android",                  "Programmation et statistiques Instagram"],
+  ["gerant", "revolut-biz","com.revolut.business",               "Solde, mouvements, graphes, pour un pro"],
+  ["gerant", "qonto",      "com.qonto.app",                      "Banque pro francaise : lisibilite des chiffres"],
+  ["gerant", "zettle",     "com.izettle.android",                "Caisse + rapports de vente"],
+
+  // ---- CLUBBEUR : donner envie de revenir ----
+  ["clubbeur", "duolingo", "com.duolingo",                       "Le maitre etalon de l'accroche : serie, sons, celebrations"],
+  ["clubbeur", "starbucks","com.starbucks.mobilecard",           "Solde de points + menu de recompenses"],
+  ["clubbeur", "dice",     "fm.dice",                            "Sorties et billets -- le monde de Julien"],
+  ["clubbeur", "ra",       "com.residentadvisor.raGuide",        "Soirees electro, agenda, clubs"],
+  ["clubbeur", "shazam",   "com.shazam.android",                 "Un seul geste, une animation qui le porte"],
+  ["clubbeur", "strava",   "com.strava",                         "Badges, series, comparaison entre amis"],
+  ["clubbeur", "toogoodtogo","com.app.tgtg",                     "Panier a recuperer, urgence, carte"],
+  ["clubbeur", "mcdo",     "com.mcdonalds.mobileapp",            "Fidelite grand public, illustrations"],
+  ["clubbeur", "sephora",  "com.sephora.digital",                "Programme a paliers, cartes produit"],
+  ["clubbeur", "deliveroo","com.deliveroo.orderapp",             "Catalogue dense + fidelite"],
 ];
 
 (async () => {
   fs.rmSync(DOSSIER, { recursive: true, force: true });
-  fs.mkdirSync(DOSSIER, { recursive: true });
+  fs.mkdirSync(`${DOSSIER}/gerant`, { recursive: true });
+  fs.mkdirSync(`${DOSSIER}/clubbeur`, { recursive: true });
 
   const navigateur = await puppeteer.launch({
     executablePath: CHROME,
@@ -51,7 +74,7 @@ const APPS = [
   const page = await navigateur.newPage();
   await page.setViewport({ width: 1280, height: 900 });
 
-  for (const [nom, id, pourquoi] of APPS) {
+  for (const [famille, nom, id, pourquoi] of APPS) {
     try {
       await page.goto(`https://play.google.com/store/apps/details?id=${id}&hl=fr&gl=FR`,
         { waitUntil: "networkidle2", timeout: 45000 });
@@ -82,15 +105,15 @@ const APPS = [
             h: document.images[0] ? document.images[0].naturalHeight : 0,
           }));
           if (dim.h > dim.l * 1.3 && dim.l >= 300) {
-            fs.writeFileSync(`${DOSSIER}/${nom}-${gardees + 1}.jpg`, buf);
+            fs.writeFileSync(`${DOSSIER}/${famille}/${nom}-${gardees + 1}.jpg`, buf);
             gardees++;
           }
         } catch (e) { /* une image qui ne vient pas n'arrete pas le reste */ }
         await vue.close();
       }
-      console.log(`  ${nom.padEnd(11)} ${String(gardees).padStart(2)} captures  — ${pourquoi}`);
+      console.log(`  ${famille.padEnd(8)} ${nom.padEnd(13)} ${String(gardees).padStart(2)} captures  — ${pourquoi}`);
     } catch (e) {
-      console.log(`  ${nom.padEnd(11)}  0 captures  — ${e.message.slice(0, 60)}`);
+      console.log(`  ${famille.padEnd(8)} ${nom.padEnd(13)}  0 captures  — ${e.message.slice(0, 50)}`);
     }
   }
 

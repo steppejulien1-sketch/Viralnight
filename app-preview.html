@@ -1416,6 +1416,9 @@
 
          Le libelle reste dans le DOM pour les lecteurs d'ecran : c'est
          lui qui dit "Modifier" ou "Ajouter", le chevron ne dit rien. */
+      /* L'interrupteur se pose au bout de la ligne, comme le chevron :
+         c'est une commande, pas une valeur. */
+      .rg-ligne > .rg-switch { flex: 0 0 auto; }
       .rg-lien {
         flex: 0 0 auto; position: relative;
         background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit;
@@ -3964,6 +3967,15 @@
           </div>
 
           <div class="rg-liste">
+            <!-- Le son se coupe ICI et nulle part ailleurs : le web ne sait
+                 pas si le telephone est en silencieux, donc c'est la seule
+                 sortie possible pour quelqu'un que ca derange. Actif par
+                 defaut -- un son qu'il faut aller chercher n'est jamais
+                 entendu. -->
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Sons</strong><span>Points et récompenses</span></span>
+              <button type="button" class="rg-switch" id="rg-son" role="switch" aria-checked="true" aria-label="Activer les sons"></button>
+            </div>
             <div class="rg-ligne">
               <span class="rg-ligne-txt"><strong>Langue</strong><span id="rg-langue">Français</span></span>
             </div>
@@ -5464,6 +5476,120 @@ function vibrer(intensite) {
   }
 }
 
+/* ============================================================
+   LE SON
+   ============================================================
+   Julien, 05/09/2026 : "tu mets des bruitages, tu mets des petits
+   trucs [...] pour les rendre accros a l'application". Reference :
+   Duolingo, qui repond a chaque bonne reponse avant meme d'afficher
+   quoi que ce soit.
+
+   SYNTHETISE, PAS DE FICHIERS. Trois notes de sinus tiennent en
+   quarante lignes ; trois MP3, c'est 60 Ko a telecharger sur le wifi
+   d'un club, un dossier d'assets a maintenir et des droits a verifier.
+   Le resultat est le meme a l'oreille pour des sons aussi courts.
+
+   TROIS REGLES, et elles ne sont pas negociables :
+
+   1. Le navigateur REFUSE le son avant un geste de l'utilisateur.
+      Le contexte audio ne se cree donc qu'au premier tap, jamais au
+      chargement -- sinon il naitrait "suspended" et resterait muet
+      sans que rien ne le signale.
+
+   2. Le telephone en silencieux ne se detecte pas sur le web. C'est
+      pour ca que le son est une PREFERENCE, memorisee, et que le
+      reglage existe. Par defaut il est actif : Julien le demande, et
+      un son qu'il faut aller chercher n'est jamais entendu.
+
+   3. Le son ne remplace jamais la vibration, il l'accompagne. Sur un
+      telephone en silencieux, c'est elle qui reste. */
+
+var CLE_SON = "noctify_son";
+var sonActif = (function () {
+  try { return localStorage.getItem(CLE_SON) !== "0"; } catch (e) { return true; }
+})();
+var audioCtx = null;
+
+function contexteAudio() {
+  if (audioCtx) return audioCtx;
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  try { audioCtx = new AC(); } catch (e) { return null; }
+  return audioCtx;
+}
+
+/* Une note : sinus, attaque immediate, extinction exponentielle. Le
+   volume plafonne a .07 -- un bruitage d'interface qu'on entend est un
+   bruitage trop fort, et celui-la se joue plusieurs fois par soiree. */
+function note(freq, depart, duree, volume) {
+  var ctx = contexteAudio();
+  if (!ctx) return;
+  var t = ctx.currentTime + depart;
+  var osc = ctx.createOscillator();
+  var gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, t);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(volume === undefined ? 0.07 : volume, t + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + duree + 0.02);
+}
+
+/* Les trois moments de la boucle, et rien d'autre. Un son par geste
+   banal (changer d'onglet, faire defiler) fatigue en deux minutes. */
+var SONS = {
+  // Des points tombent : deux notes qui montent, courtes.
+  points: [[660, 0, 0.12], [880, 0.07, 0.16]],
+  // Un bon obtenu : c'est le paiement de toute la boucle. Trois notes,
+  // un accord majeur, la derniere tenue plus longtemps.
+  bon: [[523.25, 0, 0.14], [659.25, 0.08, 0.16], [783.99, 0.16, 0.3]],
+  // Une recompense devient prenable : une seule note, discrete.
+  debloque: [[880, 0, 0.1, 0.05]],
+};
+
+function jouer(nom) {
+  if (!sonActif) return;
+  var suite = SONS[nom];
+  if (!suite) return;
+  var ctx = contexteAudio();
+  if (!ctx) return;
+  // Un contexte suspendu (onglet revenu au premier plan, politique du
+  // navigateur) se reprend en silence : sans ca, le premier son apres
+  // un retour d'arriere-plan est perdu.
+  if (ctx.state === "suspended") { try { ctx.resume(); } catch (e) { /* refuse */ } }
+  suite.forEach(function (n) { note(n[0], n[1], n[2], n[3]); });
+}
+
+/* Le contexte audio se cree au PREMIER tap, une seule fois. Pose sur
+   pointerdown et non sur click : un bouton qui declenche un son doit
+   pouvoir le jouer des SON propre clic, pas au suivant. */
+document.addEventListener("pointerdown", function amorcer() {
+  contexteAudio();
+  document.removeEventListener("pointerdown", amorcer);
+}, { once: true, passive: true });
+
+/* Le reglage se peint a l'ouverture de l'ecran et bascule au tap. Pose
+   une seule fois : ouvrirReglages() peut revenir sur les memes noeuds. */
+document.addEventListener("DOMContentLoaded", function () {
+  var bouton = document.getElementById("rg-son");
+  if (!bouton) return;
+  var peindre = function () {
+    bouton.classList.toggle("on", sonActif);
+    bouton.setAttribute("aria-checked", sonActif ? "true" : "false");
+  };
+  peindre();
+  bouton.addEventListener("click", function () { basculerSon(!sonActif); peindre(); });
+});
+
+function basculerSon(actif) {
+  sonActif = !!actif;
+  try { localStorage.setItem(CLE_SON, sonActif ? "1" : "0"); } catch (e) { /* stockage refuse */ }
+  // Un retour immediat : on n'active pas un son sans l'entendre.
+  if (sonActif) jouer("debloque");
+}
+
 var compteurEnCours = null;
 var soldeAffiche = null;
 
@@ -5484,7 +5610,7 @@ function animerCompteur(el, depuis, vers) {
     if (p < 1) compteurEnCours = requestAnimationFrame(trame);
     // Le tic tombe a l'ARRIVEE, pas au depart : c'est le moment ou le
     // chiffre se pose qui merite d'etre senti.
-    else vibrer("moyen");
+    else { vibrer("moyen"); jouer("points"); }
   }
   compteurEnCours = requestAnimationFrame(trame);
 }
@@ -9562,6 +9688,7 @@ function rendreListe() {
     if (vientDeDebloquer(r.id)) {
       b.classList.add("debloque");
       vibrer("leger");
+      jouer("debloque");
     }
     // Rien n'est pose sur la photo : ni prix, ni badge, ni degrade.
     // Tout ce qui est du texte vit dans .corps, sous l'image.
@@ -9817,8 +9944,9 @@ async function echanger(item) {
   var svgQr = await qrBon(code);
 
   // Le bon est obtenu : c'est le paiement de toute la boucle, le seul
-  // endroit qui merite la vibration longue.
+  // endroit qui merite la vibration longue -- et le seul accord.
   vibrer("fort");
+  jouer("bon");
 
   // Le bon EST le ticket : la recompense payee en haut, la perforation,
   // le QR dans la souche. Voir .bon-ticket dans le CSS pour le pourquoi.
