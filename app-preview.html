@@ -144,6 +144,21 @@
            monospace, jamais du sans-serif a la place. */
         --mono: "DM Mono", ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
 
+        /* ⚠️ LA POLICE DES CHIFFRES N'EST PAS LE MONO.
+           Julien, deux fois -- cote gerant ("retire les zeros barres,
+           c'est degueulasse") puis ici ("sur cinquante points, c'est
+           bizarre, le zero il est barre").
+
+           DM Mono BARRE ses zeros. C'est une convention de terminal :
+           elle sert a distinguer O de 0 dans du code, elle n'a rien a
+           faire dans "50 pts". Et le meme zero s'ecrivait des deux
+           facons sur un meme ecran, selon la fonte du bloc.
+
+           Le mono garde ce a quoi il sert vraiment ici : les libelles en
+           capitales espacees, les codes de bon. Tout ce qui est un
+           NOMBRE passe par --chiffre. */
+        --chiffre: "Archivo", Inter, ui-sans-serif, system-ui, sans-serif;
+
         /* ---- L'unite de texte ----
            Toutes les tailles de caracteres de ce fichier s'ecrivent
            `calc(13.5 * var(--u))` plutot que `13.5px`. Ici --u vaut 1px,
@@ -478,7 +493,7 @@
         flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
         background: var(--ink); color: #fff;
         display: grid; place-items: center;
-        font-size: calc(11.5 * var(--u)); font-weight: 800; font-family: var(--mono, inherit);
+        font-size: calc(11.5 * var(--u)); font-weight: 800; font-family: var(--chiffre, inherit);
       }
       .ig-etape.faite .ig-num { background: #12874d; }
       .ig-etape-tete strong { font-size: calc(14.5 * var(--u)); font-weight: 700; letter-spacing: -.01em; }
@@ -519,6 +534,56 @@
         transition: opacity .35s ease, visibility .35s ease;
       }
       .vue-accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
+      .vue-accueil[hidden] { display: none; }
+
+      /* ---- L'ecran des autorisations ----
+         Meme carcasse que l'accueil (plein ecran, blanc, encres locales),
+         mais centre verticalement : deux lignes ne remplissent pas une
+         page, et les caler en haut laisserait un grand vide sous elles. */
+      .vue-autos { justify-content: center; z-index: 31; }
+      .au-titre {
+        margin: 0 0 8px; font-family: var(--titre);
+        font-size: calc(27 * var(--u)); font-weight: 800; letter-spacing: -.035em; line-height: 1.1;
+      }
+      .au-sous { margin: 0 0 28px; font-size: calc(14 * var(--u)); color: var(--ink2); line-height: 1.45; }
+      .au-liste { display: grid; gap: 14px; }
+      .au-ligne {
+        display: flex; align-items: flex-start; gap: 12px;
+        padding: 16px; border-radius: 18px; border: 1px solid var(--line2);
+      }
+      .au-ico {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 12px;
+        display: grid; place-items: center; background: rgba(15,17,20,.05);
+      }
+      .au-ico svg { width: 19px; height: 19px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .au-txt { flex: 1 1 auto; min-width: 0; }
+      .au-txt strong { display: block; font-size: calc(14.5 * var(--u)); font-weight: 800; letter-spacing: -.01em; }
+      .au-txt span { display: block; margin-top: 3px; font-size: calc(12.5 * var(--u)); color: var(--ink2); line-height: 1.4; }
+      .au-btn {
+        flex: 0 0 auto; align-self: center;
+        min-height: 34px; padding: 0 14px; border-radius: 999px; border: 0;
+        background: var(--ink); color: #fff; font-family: inherit;
+        font-size: calc(12.5 * var(--u)); font-weight: 800; cursor: pointer;
+        transition: transform .16s cubic-bezier(.23,1,.32,1), opacity .15s ease;
+      }
+      .au-btn:active { transform: scale(.96); }
+      /* Une fois repondu, le bouton n'est plus un bouton : il dit ce qui
+         s'est passe. Vert quand c'est accorde, sourd quand c'est refuse
+         -- et dans les deux cas on ne redemande pas. */
+      .au-ligne.faite .au-btn { background: none; color: #12874d; font-weight: 700; pointer-events: none; }
+      .au-ligne.refusee .au-btn { background: none; color: var(--ink3); font-weight: 700; pointer-events: none; }
+      .au-ligne.faite { border-color: rgba(18,135,77,.35); }
+      .au-plus-tard {
+        margin-top: 26px; width: 100%; min-height: 52px; border: 0; border-radius: 16px;
+        background: var(--ink); color: #fff; font-family: inherit;
+        font-size: calc(15 * var(--u)); font-weight: 800; cursor: pointer;
+        transition: transform .16s cubic-bezier(.23,1,.32,1);
+      }
+      .au-plus-tard:active { transform: scale(.985); }
+      @media (prefers-reduced-motion: reduce) {
+        .au-btn, .au-plus-tard { transition: none; }
+        .au-btn:active, .au-plus-tard:active { transform: none; }
+      }
 
       /* ---- Logo Noctify (le verre), envoye par Julien le 30/08/2026.
          Il remplace le paresseux, que Julien a lui-meme juge sans
@@ -801,7 +866,7 @@
         margin: 0 0 8px;
       }
       .va-gain strong {
-        font-family: var(--mono); font-size: calc(32 * var(--u)); font-weight: 500;
+        font-family: var(--chiffre); font-size: calc(32 * var(--u)); font-weight: 800; letter-spacing: -.03em;
         letter-spacing: -.03em; line-height: 1; color: var(--marque-2);
       }
       .va-gain span {
@@ -2240,7 +2305,7 @@
         color: var(--ink); margin-bottom: 4px;
       }
       .offre-hero p { margin: 0 0 16px; font-size: calc(13.5 * var(--u)); font-weight: 500; line-height: 1.4; color: var(--ink2); }
-      .offre-hero del { font-family: var(--mono); font-size: calc(12.5 * var(--u)); font-weight: 500; color: var(--ink3); }
+      .offre-hero del { font-family: var(--chiffre); font-size: calc(12.5 * var(--u)); font-weight: 700; color: var(--ink3); }
       .offre-hero .cta-visuelle {
         display: block; text-align: center; border-radius: 999px;
         background: var(--bouton); color: #fff; font-size: calc(15 * var(--u)); font-weight: 700;
@@ -2323,7 +2388,7 @@
       .bq-club-nom { display: block; font-size: calc(13.5 * var(--u)); font-weight: 700; letter-spacing: -.01em; }
       .bq-club-sous { display: block; font-size: calc(11 * var(--u)); color: var(--ink2); margin-top: 1px; }
       .bq-club-loin {
-        flex: 0 0 auto; font-family: var(--mono); font-size: calc(10.5 * var(--u)); color: var(--ink3);
+        flex: 0 0 auto; font-family: var(--chiffre); font-weight: 700; font-size: calc(10.5 * var(--u)); color: var(--ink3);
       }
 
       /* ---- "Ce soir au ..." traite comme LE moment fort de l'ecran ----
@@ -2452,7 +2517,7 @@
       }
       .bon-pret::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
       .bon-code {
-        font-family: var(--mono); font-size: calc(11.5 * var(--u)); font-weight: 500; letter-spacing: .07em;
+        font-family: var(--chiffre); font-size: calc(11.5 * var(--u)); font-weight: 700; letter-spacing: .07em;
         color: var(--ink3); flex: 0 0 auto;
       }
 
@@ -2475,7 +2540,7 @@
       .gain p { margin: 0; flex: 1; min-width: 0; font-size: calc(13.5 * var(--u)); font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
       .gain p span { display: block; font-size: calc(12 * var(--u)); font-weight: 500; color: var(--ink3); margin-top: 1px; }
       .gain .val {
-        font-family: var(--mono); font-size: calc(14 * var(--u)); font-weight: 500; white-space: nowrap;
+        font-family: var(--chiffre); font-size: calc(14 * var(--u)); font-weight: 800; white-space: nowrap;
         font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--ambre);
       }
 
@@ -2720,11 +2785,37 @@
       .club-etoile { width: 15px; height: 15px; fill: var(--ambre); flex: 0 0 auto; }
       .club-meta strong { color: #fff; font-weight: 800; }
 
-      /* Deux vignettes de rappel sous la grande photo -- meme esprit
-         que le carrousel secondaire d'une fiche Maps, en plus discret. */
-      .club-photos { display: flex; gap: 8px; margin: 0 0 16px; }
-      .club-photo { flex: 1 1 0; height: 64px; border-radius: 12px; overflow: hidden; }
-      .club-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      /* ---- UN CLUB QUI N'A PAS ENCORE DEPOSE SA PHOTO ----
+         Le dessin remplace la photo, comme dans la boutique. Trois
+         consequences, et il faut les trois ou aucune :
+
+         · `contain`, jamais `cover` : un dessin detoure se rogne mal
+           (meme regle que .reco-vignette cote gerant) ;
+         · un fond CLAIR : ces illustrations sont au trait noir, elles
+           disparaissent sur du sombre -- la meme raison qui interdit de
+           poser la mascotte en filigrane sur un fond noir ;
+         · donc le nom du club repasse en ENCRE. Le blanc du scrim sur
+           une surface creme serait illisible, et c'est le genre de
+           detail qu'on ne voit qu'une fois le fond change. */
+      /* ⚠️ UNE VALEUR EN DUR, PAS var(--s2).
+         Ces dessins sont au trait NOIR : sur la carte, --s2 vaut une
+         surface sombre, et la bouteille disparaissait dans son badge --
+         exactement le piege deja rencontre avec la mascotte. Le creme est
+         donc ecrit en clair, pour que le fond du substitut ne suive
+         jamais le theme de l'ecran qui l'entoure. */
+      .club-hero-photo.sans-photo { background: #f2ede5; }
+      .club-hero-photo.sans-photo img { object-fit: contain; padding: 18px 0 34px; }
+      .club-hero-photo.sans-photo .club-hero-scrim { background: none; }
+      .club-hero-photo.sans-photo .club-hero-nom,
+      .club-hero-photo.sans-photo .club-meta strong { color: var(--ink); }
+      .club-hero-photo.sans-photo .club-meta { color: var(--ink2); }
+
+      /* Sur les petits ronds (badge de la carte, bulle, ligne de
+         favori), le dessin respire un peu moins : a 42 px, une marge de
+         plus ne laisserait qu'un point. */
+      .club-badge.sans-photo img,
+      .fr .bub-club.sans-photo img,
+      .fv-foto.sans-photo img { object-fit: contain; padding: 4px; background: #f2ede5; }
 
       .club-statut { margin: 0 0 16px; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
       .club-statut .ouvert { color: var(--succes-texte, #57d98a); font-weight: 700; }
@@ -2909,7 +3000,7 @@
       .reseau-pts {
         position: absolute; top: -7px; right: -6px;
         background: var(--succes-texte, #57d98a); color: #0a1f13;
-        font-size: calc(10.5 * var(--u)); font-weight: 800; font-family: var(--mono, inherit);
+        font-size: calc(10.5 * var(--u)); font-weight: 800; font-family: var(--chiffre, inherit);
         padding: 2px 8px; border-radius: 99px; border: 2px solid var(--s2);
       }
       .ps-steps { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; text-align: left; }
@@ -3118,7 +3209,7 @@
       @media (hover: hover) and (pointer: fine) { .sheet-cta:hover { opacity: .9; } }
       .sheet-note { text-align: center; font-size: calc(13.5 * var(--u)); color: var(--ink2); margin: 12px 0 0; font-weight: 600; line-height: 1.45; }
       .sheet-note em {
-        font-style: normal; color: var(--ambre); font-weight: 500; font-family: var(--mono);
+        font-style: normal; color: var(--ambre); font-weight: 800; font-family: var(--chiffre);
       }
 
       /* Formulaire "Ajouter un ami" : meme famille que .ac-input, mais
@@ -3253,7 +3344,7 @@
       }
       .bt-serie {
         display: block; margin-top: 8px;
-        font-family: var(--mono); font-size: calc(9 * var(--u)); font-weight: 500;
+        font-family: var(--chiffre); font-size: calc(9 * var(--u)); font-weight: 700;
         letter-spacing: .14em; color: var(--ink3); text-transform: uppercase;
       }
       /* La souche. Les encoches et le pointille se placent tout seuls a
@@ -3278,7 +3369,7 @@
       .bt-qr svg { display: block; width: 100%; height: auto; }
       .bt-code {
         margin: 12px 0 0;
-        font-family: var(--mono); font-size: calc(15 * var(--u)); font-weight: 500;
+        font-family: var(--chiffre); font-size: calc(15 * var(--u)); font-weight: 800;
         letter-spacing: .08em; color: var(--ink); font-variant-numeric: tabular-nums;
       }
       .bt-validite {
@@ -3638,6 +3729,60 @@
              Google/Apple/Email. Recouvre tout au chargement, disparait au
              tap sur "Commencer" -- pas integre au switcher carte/boutique
              (activerVue), qui gere la navigation APRES l'accueil. -->
+        <!-- ================= LES DEUX AUTORISATIONS =================
+             Julien, 06/09/2026 : "mets un bouton pour qu'on puisse
+             utiliser la localisation du mec [...] et fais un bouton
+             direct des qu'on arrive qu'il puisse accepter la
+             localisation, parce qu'on en a besoin aussi, et accepter les
+             notifications".
+
+             ⚠️ CET ECRAN NE DEMANDE RIEN AU SYSTEME. Il l'EXPLIQUE, et
+             c'est le doigt du clubbeur qui declenche la vraie fenetre.
+             La distinction n'est pas theorique : une fenetre de
+             permission qui surgit a la seconde ou l'appli s'ouvre se
+             fait refuser, et un refus de geolocalisation est DEFINITIF
+             -- on ne repose plus jamais la question, ni ce soir ni
+             jamais. C'est la raison pour laquelle detecterClubProche()
+             ne demandait rien tout seul.
+
+             Un ecran a soi qui dit a quoi ca sert, puis un bouton : c'est
+             le "pre-permission" que font toutes les applis qui tiennent a
+             leur taux d'acceptation. On ne perd rien a etre refuse ICI,
+             la vraie cartouche reste intacte.
+
+             Il ne s'affiche qu'UNE fois (CLE_AUTORISATIONS), et jamais
+             avant que l'accueil soit passe. -->
+        <div class="vue-accueil vue-autos masque" id="vue-autos" hidden>
+          <h1 class="au-titre">Deux choses, et c'est parti.</h1>
+          <p class="au-sous">Tu peux refuser : l'appli marche quand même, juste un peu moins bien.</p>
+
+          <div class="au-liste">
+            <div class="au-ligne" id="au-ligne-pos">
+              <span class="au-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+              </span>
+              <span class="au-txt">
+                <strong>Ta position</strong>
+                <span>Pour ouvrir sur le club où tu es, sans le chercher.</span>
+              </span>
+              <button type="button" class="au-btn" id="au-pos">Autoriser</button>
+            </div>
+
+            <div class="au-ligne" id="au-ligne-notif">
+              <span class="au-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M18 16V11a6 6 0 1 0-12 0v5l-1.6 2.4h15.2z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+              </span>
+              <span class="au-txt">
+                <strong>Les notifications</strong>
+                <span>Pour te prévenir quand tes points arrivent.</span>
+              </span>
+              <button type="button" class="au-btn" id="au-notif">Activer</button>
+            </div>
+          </div>
+
+          <button type="button" class="au-plus-tard" id="au-fermer">Continuer</button>
+        </div>
+
         <div class="vue-accueil" id="vue-accueil">
           <h2 class="ac-title">Bienvenue sur Noctify !</h2>
 
@@ -5124,6 +5269,9 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
        connecte, l'ecran Instagram prend le relais, puis les
        recompenses. */
     VUE_ACCUEIL.classList.add("masque");
+    // Une fois l'accueil passe, et une seule fois dans la vie de
+    // l'appli : les deux autorisations dont elle a besoin, expliquees.
+    setTimeout(proposerAutorisations, 700);
     assurerProfil(session.user);
     chargerSoldeReel(session.user.id);
     creditScanUrl();
@@ -6693,13 +6841,37 @@ map.on("style.load", function () {
 // sert assets/ tel quel). Deplace dans public/ambiance/, servi sans
 // transformation ni hash en dev comme en prod, meme convention que
 // public/recompenses/ pour les photos de recompenses.
-var PHOTOS_AMBIANCE = ["/ambiance/hero-nightclub.webp", "/ambiance/hero-auth.jpg"];
-function fotoClub(c) {
-  // La vraie photo du club si elle a ete deposee ; sinon une image
-  // d'ambiance, qui reste un pis-aller assume -- elle ne montre pas ce
-  // club-la, et ca se voit (voir photo/avatar dans CLUBS).
-  return c.photo || PHOTOS_AMBIANCE[c.nom.length % PHOTOS_AMBIANCE.length];
+/* ⚠️ LES DEUX IMAGES D'AMBIANCE SONT PARTIES.
+   Julien, 06/09/2026 : "la photo de profil de la carte, je n'aime
+   vraiment pas, c'est une image par IA qu'on avait faite, qui n'etait
+   pas ouf [...] va chercher des photos de l'etablissement, et s'ils ne
+   mettent pas de photo, mets un petit verre de champagne".
+
+   Il a raison sur le fond, et pas seulement sur le gout : ces deux
+   fichiers sont le hero de la landing et le fond de la page de
+   connexion. Les servir comme "la photo de ce club" faisait passer une
+   image de stock pour une photo du lieu -- exactement le marqueur
+   "vibecode" qu'on s'interdit partout ailleurs. Deux clubs finissaient
+   d'ailleurs avec la meme image.
+
+   Sans photo deposee, on montre donc un DESSIN, comme la boutique fait
+   deja pour une recompense sans photo : ca se lit comme un choix, la ou
+   une photo d'ailleurs se lit comme un mensonge.
+
+   Le jour ou un club depose ses photos (colonne establishments.photos,
+   migration 202609050001), elles arrivent dans c.photo et ce dessin
+   disparait tout seul. */
+var VERRE_DEFAUT = "/recompenses/art-bouteille.webp";
+
+function visuelClub(c) {
+  if (c.photo) return { src: c.photo, substitut: false };
+  return { src: VERRE_DEFAUT, substitut: true };
 }
+
+// Garde son nom : quatre endroits l'appellent, et une photo reste une
+// photo. Le substitut se reconnait a la classe posee a cote.
+function fotoClub(c) { return visuelClub(c).src; }
+function classeFoto(c) { return visuelClub(c).substitut ? " sans-photo" : ""; }
 
 /* La photo de profil du club, ronde, posee sur la banniere -- comme
    l'entete d'un compte Instagram ou d'une fiche d'etablissement Google
@@ -6726,7 +6898,7 @@ function avatarClub(c) {
 // faisait plus "liste" que "fiche".
 function heroClub(c) {
   return (
-    '<div class="club-hero-photo">' +
+    '<div class="club-hero-photo' + classeFoto(c) + '">' +
       '<img src="' + fotoClub(c) + '" alt="" />' +
       '<button class="club-fav" id="sh-fav" type="button">' +
         '<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9A4.9 4.9 0 0 1 12 5.7a4.9 4.9 0 0 1 8.5 3.2C20.5 15 12 20.5 12 20.5z"/></svg>' +
@@ -6763,22 +6935,6 @@ function heroClub(c) {
       "</div>" +
     "</div>"
   );
-}
-
-// PLUS APPELE. PHOTOS_AMBIANCE ne contient que deux visuels, et ce sont
-// ceux du site (hero de la landing, fond de la page de connexion) : la
-// rangee de vignettes rejouait donc forcement la photo d'entete, deux
-// clubs differents se retrouvant avec les memes images -- Julien : "les
-// images c'est les memes, elles sont moches". Mieux vaut une seule photo
-// que trois qui se repetent en pretendant montrer le club. A retablir le
-// jour ou chaque club aura ses vraies photos.
-function miniaturesClub(c) {
-  var vignettes = "";
-  for (var i = 1; i <= 2; i++) {
-    var src = PHOTOS_AMBIANCE[(c.nom.length + i) % PHOTOS_AMBIANCE.length];
-    vignettes += '<span class="club-photo"><img src="' + src + '" alt="" loading="lazy" /></span>';
-  }
-  return '<div class="club-photos">' + vignettes + "</div>";
 }
 
 function ouvrirClub(c, src, id) {
@@ -7600,6 +7756,7 @@ map.on("load", function () {
     // confus que clair, un peu comme une heure affichee au hasard
     // (demande de Julien) -- la photo + le point de statut suffisent,
     // le detail (horaires precis, avis...) reste dans la fiche.
+    el.classList.toggle("sans-photo", !c.photo);
     el.innerHTML = '<img src="' + fotoClub(c) + '" alt="" /><span class="club-badge-dot"></span>';
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     // Retour a notre propre fiche (pas l'iframe Google directement) :
@@ -8101,7 +8258,7 @@ function creerClubChip(c, key, index) {
   b.setAttribute("aria-label", libelle);
 
   b.innerHTML =
-    '<span class="bub bub-club' + (c.shut ? " shut" : "") +
+    '<span class="bub bub-club' + (c.shut ? " shut" : "") + classeFoto(c) +
       (c.partenaire ? " partenaire" : "") + '" style="--c:' + c.c + '">' +
       '<img src="' + fotoClub(c) + '" alt="" />' +
       '<span class="club-badge-dot"></span>' +
@@ -8374,7 +8531,7 @@ function chargerFavoris() {
     var sous = c ? [c.statut, c.horaire].filter(Boolean).join(" · ") : "";
     return '<div class="fv-item' + (c && c.shut ? " shut" : "") + '"' +
         (c ? ' style="--c:' + c.c + '"' : "") + ">" +
-      (c ? '<span class="fv-foto"><img src="' + fotoClub(c) + '" alt="" /></span>' : "") +
+      (c ? '<span class="fv-foto' + classeFoto(c) + '"><img src="' + fotoClub(c) + '" alt="" /></span>' : "") +
       '<button type="button" class="fv-nom" data-id="' + escapeHtmlSupport(f.id) + '">' +
         "<strong>" + escapeHtmlSupport(nom) + "</strong>" +
         (sous ? "<span>" + escapeHtmlSupport(sous) + "</span>" : "") +
@@ -9227,6 +9384,92 @@ function clubPrincipal() {
 function memoriserClubPrincipal(cle) {
   try { localStorage.setItem(CLE_CLUB_PRINCIPAL, cle); } catch (e) {}
 }
+
+/* ================= LES DEUX AUTORISATIONS =================
+   L'ecran ne demande rien tout seul : chaque bouton declenche la vraie
+   fenetre du systeme, et c'est le doigt du clubbeur qui l'ouvre. Voir la
+   note devant #vue-autos dans le marquage. */
+var CLE_AUTORISATIONS = "vn_autorisations_vues";
+var VUE_AUTOS = $("#vue-autos");
+
+function autorisationsDejaVues() {
+  try { return localStorage.getItem(CLE_AUTORISATIONS) === "1"; } catch (e) { return false; }
+}
+
+function marquerAutorisationsVues() {
+  try { localStorage.setItem(CLE_AUTORISATIONS, "1"); } catch (e) { /* navigation privee */ }
+}
+
+function peindreLigneAuto(id, etat, mot) {
+  var ligne = document.getElementById(id);
+  if (!ligne) return;
+  ligne.classList.toggle("faite", etat === "ok");
+  ligne.classList.toggle("refusee", etat === "non");
+  ligne.querySelector(".au-btn").textContent = mot;
+}
+
+async function proposerAutorisations() {
+  if (!VUE_AUTOS || autorisationsDejaVues()) return;
+
+  /* Ce qui est DEJA accorde ne se redemande pas : proposer "Autoriser"
+     a quelqu'un qui a deja dit oui la fois d'avant, c'est une case a
+     cocher qui ne fait rien. Chaque ligne qui n'a plus rien a demander
+     s'affiche accordee ; si les deux le sont, l'ecran ne s'ouvre pas. */
+  var posOk = false;
+  if (navigator.permissions && navigator.permissions.query) {
+    try {
+      var horloge = new Promise(function (r) { setTimeout(function () { r({ state: "prompt" }); }, 1200); });
+      var etat = await Promise.race([navigator.permissions.query({ name: "geolocation" }), horloge]);
+      posOk = !!etat && etat.state === "granted";
+    } catch (e) { /* pas de Permissions API : on proposera */ }
+  }
+  var notifOk = typeof Notification !== "undefined" && Notification.permission === "granted";
+  if (posOk && notifOk) { marquerAutorisationsVues(); return; }
+
+  if (posOk) peindreLigneAuto("au-ligne-pos", "ok", "Autorisé");
+  if (notifOk) peindreLigneAuto("au-ligne-notif", "ok", "Activé");
+
+  VUE_AUTOS.hidden = false;
+  // Un reflow entre les deux, sinon le navigateur groupe l'affichage et
+  // le retrait de .masque dans le meme calcul de style : la transition
+  // ne joue pas et l'ecran apparait d'un coup.
+  void VUE_AUTOS.offsetWidth;
+  VUE_AUTOS.classList.remove("masque");
+}
+
+function fermerAutorisations() {
+  if (!VUE_AUTOS) return;
+  marquerAutorisationsVues();
+  VUE_AUTOS.classList.add("masque");
+  setTimeout(function () { VUE_AUTOS.hidden = true; }, 400);
+}
+
+$("#au-pos")?.addEventListener("click", function () {
+  if (!navigator.geolocation) { peindreLigneAuto("au-ligne-pos", "non", "Indisponible"); return; }
+  var bouton = $("#au-pos");
+  bouton.textContent = "…";
+  navigator.geolocation.getCurrentPosition(function () {
+    peindreLigneAuto("au-ligne-pos", "ok", "Autorisé");
+    // La permission vient d'etre donnee : la boutique peut enfin ouvrir
+    // sur le bon club, sans attendre le prochain lancement.
+    localiser();
+  }, function () {
+    peindreLigneAuto("au-ligne-pos", "non", "Refusé");
+  }, { timeout: 8000, maximumAge: 600000 });
+});
+
+$("#au-notif")?.addEventListener("click", async function () {
+  var bouton = $("#au-notif");
+  if (bouton.dataset.enCours) return; // requestPermission peut durer
+  bouton.dataset.enCours = "1";
+  bouton.textContent = "…";
+  var ok = await activerNotifications();
+  peindreLigneAuto("au-ligne-notif", ok ? "ok" : "non", ok ? "Activé" : "Refusé");
+  peindreBasculeNotif(ok);
+  delete bouton.dataset.enCours;
+});
+
+$("#au-fermer")?.addEventListener("click", fermerAutorisations);
 
 function localiser() {
   if (!navigator.geolocation) return;
