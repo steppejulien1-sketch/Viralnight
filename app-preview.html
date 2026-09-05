@@ -1764,7 +1764,7 @@
         margin: 0; font-size: calc(22 * var(--u)); font-weight: 800; letter-spacing: -.025em;
         color: var(--ink);
       }
-      .sec-head .sub { font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink3); margin-left: auto; white-space: nowrap; }
+      .sec-head .sub { font-size: calc(13 * var(--u)); font-weight: 500; color: var(--ink3); margin-left: auto; white-space: nowrap; }
 
       /* Le solde de points a ete tente en six formes differentes cote
          boutique (dial, texte nu, pilule+jeton, compteur plein, ticket
@@ -1981,9 +1981,13 @@
       }
       .carte-reco .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        /* Le dessin est cadre large dans son fichier : sans ce leger
+           agrandissement, il reste une vignette posee au centre d'un
+           cadre, la ou une photo de DICE remplit le sien. */
+        transform: scale(1.08);
         transition: transform .5s cubic-bezier(.2,.7,.3,1);
       }
-      .carte-reco:hover .photo img { transform: scale(1.04); }
+      .carte-reco:hover .photo img { transform: scale(1.13); }
       .carte-reco .photo svg {
         position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
         width: 54%; height: 54%;
@@ -2015,14 +2019,19 @@
       /* Le prix devient la deuxieme information la plus lisible de la
          carte, juste sous le nom -- il etait sur la photo avant. */
       .carte-reco .prix {
-        display: block; margin-top: 5px;
+        display: inline-flex; align-items: baseline; gap: 3px; align-self: flex-start;
+        margin-top: 7px; padding: 4px 10px; border-radius: var(--r-pill);
+        background: color-mix(in srgb, var(--accent) 13%, transparent);
         font-family: var(--titre); font-variant-numeric: tabular-nums;
-        font-size: calc(16 * var(--u)); font-weight: 700;
-        letter-spacing: -.03em; color: var(--accent);
+        font-size: calc(14 * var(--u)); font-weight: 700;
+        letter-spacing: -.02em; color: var(--prix-encre, var(--accent));
       }
+      /* "pts" dans la meme encre que le nombre : c'est son unite, pas une
+         deuxieme information. Deux couleurs pour un seul prix, c'etait la
+         moitie du bruit de la carte. */
       .carte-reco .prix span {
-        font-family: var(--sans); font-size: calc(10.5 * var(--u)); font-weight: 700;
-        color: var(--ink3); margin-left: 3px;
+        font-family: var(--sans); font-size: calc(10 * var(--u)); font-weight: 700;
+        color: inherit; opacity: .72;
       }
 
       /* ---- Etat, en bas de carte ---- */
@@ -2030,7 +2039,7 @@
         display: inline-flex; align-items: center; gap: 4px; align-self: flex-start;
         margin-top: 12px; padding: 4px 12px; border-radius: var(--r-pill);
         background: rgba(53,208,127,.16); color: #1c9a5f;
-        font-size: calc(11 * var(--u)); font-weight: 800; text-transform: uppercase; letter-spacing: .02em;
+        font-size: calc(11 * var(--u)); font-weight: 700; letter-spacing: -.005em;
       }
       .carte-reco.dispo { border-color: rgba(53,208,127,.5); }
 
@@ -2040,12 +2049,21 @@
          garde sa couleur d'urgence pour rester reperable. */
       .carte-reco .ligne-etat { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
       .carte-reco .badge-rarete {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: 3px 8px; border-radius: var(--r-pill);
-        background: var(--urgence-fond); color: var(--urgence-texte);
-        font-size: calc(10 * var(--u)); font-weight: 800; letter-spacing: .01em;
-        text-transform: uppercase; white-space: nowrap;
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 3px 9px; border-radius: var(--r-pill);
+        background: var(--s2); color: var(--ink2); border: 0;
+        /* Redeclares explicitement : la regle `.badge-rarete` d'au-dessus
+           (moins specifique) posait le mono, les capitales espacees et
+           une rotation de -1,5 deg. Ne pas les nommer ici les laissait
+           passer -- "PLUS QUE 3" restait un tampon de travers. */
+        font-family: var(--sans); text-transform: none; transform: none;
+        font-size: calc(10.5 * var(--u)); font-weight: 600; letter-spacing: -.005em;
+        white-space: nowrap;
       }
+      /* Le point garde l'ambre : c'est LUI le signal d'urgence, pas le
+         mot. Une pastille de 4 px suffit a le porter, un badge entier
+         teinte volait la place du prix. */
+      .carte-reco .badge-rarete::before { background: var(--urgence-texte); }
       .carte-reco .badge-rarete::before {
         content: ""; width: 4px; height: 4px; border-radius: 50%;
         background: currentColor; animation: rarete-pouls 1.8s ease-out infinite;
@@ -2056,9 +2074,9 @@
         100% { box-shadow: var(--ombre-1); }
       }
       .carte-reco .badge-epuise {
-        display: inline-flex; padding: 3px 8px; border-radius: var(--r-pill);
+        display: inline-flex; padding: 3px 9px; border-radius: var(--r-pill);
         background: var(--s3); color: var(--ink3);
-        font-size: calc(10 * var(--u)); font-weight: 800; text-transform: uppercase;
+        font-size: calc(10.5 * var(--u)); font-weight: 600;
       }
       .carte-reco.epuise { pointer-events: none; opacity: .62; }
       .carte-reco.epuise .photo img { filter: saturate(.15) contrast(.98); }
@@ -3242,6 +3260,10 @@
            carte elle-meme ; ce sont les encoches du ticket qui marquent la
            jonction image/texte, plus un aplat de couleur. */
         --socle: #ffffff;
+        /* Le corail des prix ASSOMBRI. Sur la pilule pale de la carte,
+           #ff6b5b tombe a 2,4:1 -- illisible en petit. Jeton a part
+           plutot qu'une valeur en dur : le bloc sombre le remonte. */
+        --prix-encre: #c32f34;
         --line: #e9e9ec; --line2: #dedee2;
         --accent: #ff6b5b; --ambre: #ff6b5b; --bouton: #ff2f45;
         --jeton-fond: var(--bouton); --jeton-anneau: var(--accent);
@@ -3326,6 +3348,8 @@
              points et les prix, --bouton le rouge de marque des CTA.
              Le corail est juste eclairci pour tenir sur du sombre. */
           --accent: #ff8577; --ambre: #ff8577; --bouton: #ff2f45;
+          /* Sur du sombre, le corail clair passe : il reprend sa valeur. */
+          --prix-encre: #ff8577;
         }
         .screen.boutique-pro .wallet { background: var(--s1); }
         .screen.boutique-pro .sheet {
@@ -9471,7 +9495,7 @@ function rendreListe() {
         (epuise || rare
           ? '<span class="ligne-etat">' +
               (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
-              (rare ? '<span class="badge-rarete">plus que ' + r.stock + "</span>" : "") +
+              (rare ? '<span class="badge-rarete">Plus que ' + r.stock + "</span>" : "") +
             "</span>"
           : "") +
         // Plus de jauge ni de "Encore X pts" par carte : depuis que la
