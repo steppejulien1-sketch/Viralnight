@@ -4852,15 +4852,27 @@
           nb.format(Math.round(Number(regles.videoViewsPerThousand || 0))) + " pts";
 
         var zone = $("#reglages-instagram");
-        if (!ETAT.session) {
-          zone.innerHTML = bandeauRien("Instagram", "Hors session");
-          return;
-        }
+
+        /* Hors session, la ligne DISPARAIT. Julien, 06/09/2026 : "le truc
+           Instagram, il est bizarre, cote club".
+
+           Elle affichait "Hors session" -- du jargon de developpeur, pose
+           en tete d'une carte de reglages, sur une ligne morte coincee
+           entre quatre lignes qui, elles, font quelque chose. Et le
+           tableau de bord cachait deja sa carte Instagram dans ce cas
+           exact, avec le bon argument : "la carte n'a rien de vrai a
+           dire". Les deux ecrans racontaient donc deux choses
+           differentes du meme etat.
+
+           Une seule regle desormais, aux deux endroits : pas de compte,
+           pas de ligne. */
+        if (!ETAT.session) { zone.innerHTML = ""; return; }
+
         // Statut deja charge par chargerInstagram() : pas de second
         // appel pour la meme reponse.
         var statut = ETAT.instagram;
         if (!statut) {
-          zone.innerHTML = bandeauRien("Instagram", "Indisponible");
+          zone.innerHTML = bandeauRien("Instagram", "Statut indisponible");
           return;
         }
 

@@ -534,56 +534,6 @@
         transition: opacity .35s ease, visibility .35s ease;
       }
       .vue-accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
-      .vue-accueil[hidden] { display: none; }
-
-      /* ---- L'ecran des autorisations ----
-         Meme carcasse que l'accueil (plein ecran, blanc, encres locales),
-         mais centre verticalement : deux lignes ne remplissent pas une
-         page, et les caler en haut laisserait un grand vide sous elles. */
-      .vue-autos { justify-content: center; z-index: 31; }
-      .au-titre {
-        margin: 0 0 8px; font-family: var(--titre);
-        font-size: calc(27 * var(--u)); font-weight: 800; letter-spacing: -.035em; line-height: 1.1;
-      }
-      .au-sous { margin: 0 0 28px; font-size: calc(14 * var(--u)); color: var(--ink2); line-height: 1.45; }
-      .au-liste { display: grid; gap: 14px; }
-      .au-ligne {
-        display: flex; align-items: flex-start; gap: 12px;
-        padding: 16px; border-radius: 18px; border: 1px solid var(--line2);
-      }
-      .au-ico {
-        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 12px;
-        display: grid; place-items: center; background: rgba(15,17,20,.05);
-      }
-      .au-ico svg { width: 19px; height: 19px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-      .au-txt { flex: 1 1 auto; min-width: 0; }
-      .au-txt strong { display: block; font-size: calc(14.5 * var(--u)); font-weight: 800; letter-spacing: -.01em; }
-      .au-txt span { display: block; margin-top: 3px; font-size: calc(12.5 * var(--u)); color: var(--ink2); line-height: 1.4; }
-      .au-btn {
-        flex: 0 0 auto; align-self: center;
-        min-height: 34px; padding: 0 14px; border-radius: 999px; border: 0;
-        background: var(--ink); color: #fff; font-family: inherit;
-        font-size: calc(12.5 * var(--u)); font-weight: 800; cursor: pointer;
-        transition: transform .16s cubic-bezier(.23,1,.32,1), opacity .15s ease;
-      }
-      .au-btn:active { transform: scale(.96); }
-      /* Une fois repondu, le bouton n'est plus un bouton : il dit ce qui
-         s'est passe. Vert quand c'est accorde, sourd quand c'est refuse
-         -- et dans les deux cas on ne redemande pas. */
-      .au-ligne.faite .au-btn { background: none; color: #12874d; font-weight: 700; pointer-events: none; }
-      .au-ligne.refusee .au-btn { background: none; color: var(--ink3); font-weight: 700; pointer-events: none; }
-      .au-ligne.faite { border-color: rgba(18,135,77,.35); }
-      .au-plus-tard {
-        margin-top: 26px; width: 100%; min-height: 52px; border: 0; border-radius: 16px;
-        background: var(--ink); color: #fff; font-family: inherit;
-        font-size: calc(15 * var(--u)); font-weight: 800; cursor: pointer;
-        transition: transform .16s cubic-bezier(.23,1,.32,1);
-      }
-      .au-plus-tard:active { transform: scale(.985); }
-      @media (prefers-reduced-motion: reduce) {
-        .au-btn, .au-plus-tard { transition: none; }
-        .au-btn:active, .au-plus-tard:active { transform: none; }
-      }
 
       /* ---- Logo Noctify (le verre), envoye par Julien le 30/08/2026.
          Il remplace le paresseux, que Julien a lui-meme juge sans
@@ -3792,60 +3742,6 @@
              Google/Apple/Email. Recouvre tout au chargement, disparait au
              tap sur "Commencer" -- pas integre au switcher carte/boutique
              (activerVue), qui gere la navigation APRES l'accueil. -->
-        <!-- ================= LES DEUX AUTORISATIONS =================
-             Julien, 06/09/2026 : "mets un bouton pour qu'on puisse
-             utiliser la localisation du mec [...] et fais un bouton
-             direct des qu'on arrive qu'il puisse accepter la
-             localisation, parce qu'on en a besoin aussi, et accepter les
-             notifications".
-
-             ⚠️ CET ECRAN NE DEMANDE RIEN AU SYSTEME. Il l'EXPLIQUE, et
-             c'est le doigt du clubbeur qui declenche la vraie fenetre.
-             La distinction n'est pas theorique : une fenetre de
-             permission qui surgit a la seconde ou l'appli s'ouvre se
-             fait refuser, et un refus de geolocalisation est DEFINITIF
-             -- on ne repose plus jamais la question, ni ce soir ni
-             jamais. C'est la raison pour laquelle detecterClubProche()
-             ne demandait rien tout seul.
-
-             Un ecran a soi qui dit a quoi ca sert, puis un bouton : c'est
-             le "pre-permission" que font toutes les applis qui tiennent a
-             leur taux d'acceptation. On ne perd rien a etre refuse ICI,
-             la vraie cartouche reste intacte.
-
-             Il ne s'affiche qu'UNE fois (CLE_AUTORISATIONS), et jamais
-             avant que l'accueil soit passe. -->
-        <div class="vue-accueil vue-autos masque" id="vue-autos" hidden>
-          <h1 class="au-titre">Deux choses, et c'est parti.</h1>
-          <p class="au-sous">Tu peux refuser : l'appli marche quand même, juste un peu moins bien.</p>
-
-          <div class="au-liste">
-            <div class="au-ligne" id="au-ligne-pos">
-              <span class="au-ico" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
-              </span>
-              <span class="au-txt">
-                <strong>Ta position</strong>
-                <span>Pour ouvrir sur le club où tu es, sans le chercher.</span>
-              </span>
-              <button type="button" class="au-btn" id="au-pos">Autoriser</button>
-            </div>
-
-            <div class="au-ligne" id="au-ligne-notif">
-              <span class="au-ico" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M18 16V11a6 6 0 1 0-12 0v5l-1.6 2.4h15.2z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
-              </span>
-              <span class="au-txt">
-                <strong>Les notifications</strong>
-                <span>Pour te prévenir quand tes points arrivent.</span>
-              </span>
-              <button type="button" class="au-btn" id="au-notif">Activer</button>
-            </div>
-          </div>
-
-          <button type="button" class="au-plus-tard" id="au-fermer">Continuer</button>
-        </div>
-
         <div class="vue-accueil" id="vue-accueil">
           <h2 class="ac-title">Bienvenue sur Noctify !</h2>
 
@@ -5382,7 +5278,6 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
     VUE_ACCUEIL.classList.add("masque");
     // Une fois l'accueil passe, et une seule fois dans la vie de
     // l'appli : les deux autorisations dont elle a besoin, expliquees.
-    setTimeout(proposerAutorisations, 700);
     // Y a-t-il un cadeau a prendre ? Une lecture, pas une tentative :
     // demander le cadeau pour savoir s'il existe le consommerait.
     verifierCadeau();
@@ -9508,92 +9403,6 @@ function memoriserClubPrincipal(cle) {
   try { localStorage.setItem(CLE_CLUB_PRINCIPAL, cle); } catch (e) {}
 }
 
-/* ================= LES DEUX AUTORISATIONS =================
-   L'ecran ne demande rien tout seul : chaque bouton declenche la vraie
-   fenetre du systeme, et c'est le doigt du clubbeur qui l'ouvre. Voir la
-   note devant #vue-autos dans le marquage. */
-var CLE_AUTORISATIONS = "vn_autorisations_vues";
-var VUE_AUTOS = $("#vue-autos");
-
-function autorisationsDejaVues() {
-  try { return localStorage.getItem(CLE_AUTORISATIONS) === "1"; } catch (e) { return false; }
-}
-
-function marquerAutorisationsVues() {
-  try { localStorage.setItem(CLE_AUTORISATIONS, "1"); } catch (e) { /* navigation privee */ }
-}
-
-function peindreLigneAuto(id, etat, mot) {
-  var ligne = document.getElementById(id);
-  if (!ligne) return;
-  ligne.classList.toggle("faite", etat === "ok");
-  ligne.classList.toggle("refusee", etat === "non");
-  ligne.querySelector(".au-btn").textContent = mot;
-}
-
-async function proposerAutorisations() {
-  if (!VUE_AUTOS || autorisationsDejaVues()) return;
-
-  /* Ce qui est DEJA accorde ne se redemande pas : proposer "Autoriser"
-     a quelqu'un qui a deja dit oui la fois d'avant, c'est une case a
-     cocher qui ne fait rien. Chaque ligne qui n'a plus rien a demander
-     s'affiche accordee ; si les deux le sont, l'ecran ne s'ouvre pas. */
-  var posOk = false;
-  if (navigator.permissions && navigator.permissions.query) {
-    try {
-      var horloge = new Promise(function (r) { setTimeout(function () { r({ state: "prompt" }); }, 1200); });
-      var etat = await Promise.race([navigator.permissions.query({ name: "geolocation" }), horloge]);
-      posOk = !!etat && etat.state === "granted";
-    } catch (e) { /* pas de Permissions API : on proposera */ }
-  }
-  var notifOk = typeof Notification !== "undefined" && Notification.permission === "granted";
-  if (posOk && notifOk) { marquerAutorisationsVues(); return; }
-
-  if (posOk) peindreLigneAuto("au-ligne-pos", "ok", "Autorisé");
-  if (notifOk) peindreLigneAuto("au-ligne-notif", "ok", "Activé");
-
-  VUE_AUTOS.hidden = false;
-  // Un reflow entre les deux, sinon le navigateur groupe l'affichage et
-  // le retrait de .masque dans le meme calcul de style : la transition
-  // ne joue pas et l'ecran apparait d'un coup.
-  void VUE_AUTOS.offsetWidth;
-  VUE_AUTOS.classList.remove("masque");
-}
-
-function fermerAutorisations() {
-  if (!VUE_AUTOS) return;
-  marquerAutorisationsVues();
-  VUE_AUTOS.classList.add("masque");
-  setTimeout(function () { VUE_AUTOS.hidden = true; }, 400);
-}
-
-$("#au-pos")?.addEventListener("click", function () {
-  if (!navigator.geolocation) { peindreLigneAuto("au-ligne-pos", "non", "Indisponible"); return; }
-  var bouton = $("#au-pos");
-  bouton.textContent = "…";
-  navigator.geolocation.getCurrentPosition(function () {
-    peindreLigneAuto("au-ligne-pos", "ok", "Autorisé");
-    // La permission vient d'etre donnee : la boutique peut enfin ouvrir
-    // sur le bon club, sans attendre le prochain lancement.
-    localiser();
-  }, function () {
-    peindreLigneAuto("au-ligne-pos", "non", "Refusé");
-  }, { timeout: 8000, maximumAge: 600000 });
-});
-
-$("#au-notif")?.addEventListener("click", async function () {
-  var bouton = $("#au-notif");
-  if (bouton.dataset.enCours) return; // requestPermission peut durer
-  bouton.dataset.enCours = "1";
-  bouton.textContent = "…";
-  var ok = await activerNotifications();
-  peindreLigneAuto("au-ligne-notif", ok ? "ok" : "non", ok ? "Activé" : "Refusé");
-  peindreBasculeNotif(ok);
-  delete bouton.dataset.enCours;
-});
-
-$("#au-fermer")?.addEventListener("click", fermerAutorisations);
-
 /* L'avis sur l'appli. Le sujet et le corps sont pre-remplis : un mail
    vide devant lequel on doit trouver quoi ecrire ne part jamais. */
 $("#pf-avis")?.addEventListener("click", function () {
@@ -9699,6 +9508,19 @@ function localiser() {
 var positionRefusee = false;
 
 /* On ne DEMANDE pas la position au chargement.
+
+   ⚠️ ESSAYE PUIS RETIRE, LE 06/09/2026. Julien avait demande "un bouton
+   des qu'on arrive pour accepter la localisation et les notifications",
+   je l'ai construit, il l'a vu : "je n'aime pas notre truc la, ca fait
+   un peu forceur". Deux ecrans a nous pour demander ce qui appartient au
+   telephone, avant meme d'avoir montre quoi que ce soit -- il a raison,
+   et ca rejoint ce que cette note disait deja.
+
+   La position se demande donc toujours la ou elle sert : "Utiliser ma
+   position" sur la ligne du club, dans la boutique. Les notifications
+   gardent leur cartouche, quelques minutes apres la connexion, et leur
+   bascule dans les Reglages.
+
    Deux raisons. La bonne : une fenetre de permission qui surgit a la
    seconde ou on ouvre la boutique, avant meme d'avoir vu quoi que ce
    soit, se fait refuser -- et un refus est definitif, on ne repose plus
