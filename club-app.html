@@ -721,6 +721,80 @@
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
 
+      /* Le titre de section et son lien sur la meme ligne : "Tout
+         voir" a droite, comme partout ou une liste est tronquee. */
+      .section-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .section-lien {
+        flex: 0 0 auto; border: 0; background: none; padding: 0; cursor: pointer;
+        font-family: inherit; font-size: 12px; font-weight: 700; color: var(--ink2);
+        text-decoration: underline; text-underline-offset: 3px;
+      }
+      .section-lien:hover { color: var(--ink); }
+
+      /* ---- Les filtres ----
+         Reference : YouTube Studio. Des onglets de texte souligne, comme
+         les periodes du tableau de bord -- deux rangees de filtres qui ne
+         se ressemblent pas dans une meme appli, c'est deux langages a
+         apprendre. */
+      .filtres {
+        display: flex; gap: 2px; margin: 0 0 14px;
+        border-bottom: 1px solid var(--line); overflow-x: auto;
+      }
+      .filtre {
+        position: relative; flex: 0 0 auto; padding: 7px 9px 9px;
+        border: 0; background: none; cursor: pointer; font-family: inherit;
+        font-size: 12.5px; font-weight: 700; color: var(--ink3); white-space: nowrap;
+        transition: color .15s ease;
+      }
+      .filtre::after {
+        content: ""; position: absolute; left: 9px; right: 9px; bottom: -1px;
+        height: 2px; border-radius: 2px; background: var(--ink);
+        transform: scaleX(0); transition: transform .2s var(--sortie);
+      }
+      .filtre.on { color: var(--ink); }
+      .filtre.on::after { transform: scaleX(1); }
+
+      /* ---- Une ligne de contenu ----
+         Elle porte ce qu'on vient verifier, dans cet ordre : d'ou ca
+         vient, quand, combien de vues, combien de points. Le chevron dit
+         qu'elle s'ouvre -- et elle s'ouvre AILLEURS, sur Instagram ou
+         TikTok, d'ou la fleche sortante plutot qu'un chevron. */
+      .contenu-ligne {
+        display: flex; align-items: center; gap: 11px; width: 100%;
+        padding: 12px 2px; border: 0; border-bottom: 1px solid var(--line);
+        background: none; font-family: inherit; text-align: left; color: inherit;
+        cursor: pointer; text-decoration: none;
+      }
+      .contenu-ligne:last-child { border-bottom: 0; }
+      .contenu-ico {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 11px;
+        background: var(--s2); display: grid; place-items: center;
+      }
+      .contenu-ico svg { width: 17px; height: 17px; fill: none; stroke: var(--ink2); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .contenu-txt { flex: 1 1 auto; min-width: 0; }
+      .contenu-txt strong {
+        display: block; font-family: var(--titre); font-size: 13.5px; font-weight: 700;
+      }
+      .contenu-txt span {
+        display: flex; align-items: center; gap: 5px; margin-top: 2px;
+        font-size: 11.5px; color: var(--ink3);
+      }
+      .contenu-pts {
+        flex: 0 0 auto; font-family: var(--chiffre); font-size: 14px; font-weight: 800;
+        letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--succes);
+      }
+      .contenu-pts.neutre { color: var(--ink3); }
+      .contenu-sortir {
+        flex: 0 0 auto; width: 15px; height: 15px; fill: none; stroke: var(--ink3);
+        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      }
+      /* Une ligne sans lien ne s'ouvre pas : pas de fleche, pas de
+         curseur qui promet un geste. Ca arrive -- un contenu depose
+         avant qu'on enregistre l'URL. */
+      .contenu-ligne.sans-lien { cursor: default; }
+      .contenu-ligne.sans-lien .contenu-sortir { display: none; }
+      @media (prefers-reduced-motion: reduce) { .filtre, .filtre::after { transition: none; } }
+
       /* ---- Voir un exemple ----
          Une invitation, pas une alerte : un club neuf n'a rien fait de
          mal. Trait pointille et encre sourde, comme le bouton "Ajouter
@@ -2603,7 +2677,10 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
               </button>
 
-              <p class="section-titre">Activité récente</p>
+              <div class="section-tete">
+                <p class="section-titre">Activité récente</p>
+                <button type="button" class="section-lien" data-va="contenus">Tout voir</button>
+              </div>
               <div id="dash-activite"></div>
             </div>
 
@@ -2730,6 +2807,41 @@
                  ⚠️ Ce ne sont pas des conseils juridiques. Ils decrivent
                  honnetement le fonctionnement reel ; une relecture par un
                  juriste reste a faire avant le premier client payant. -->
+            <!-- ================= LES CONTENUS =================
+                 Julien, 06/09/2026 : "j'aimerais bien pouvoir gerer tout
+                 ca depuis mon compte a moi, voir les gens quand ils
+                 envoient leur TikTok, leur Instagram, que je puisse aller
+                 checker le contenu, checker la mention, au cas ou".
+
+                 Le tableau de bord montrait huit lignes d'activite
+                 recente, sans lien : on voyait QU'IL s'etait passe
+                 quelque chose, jamais QUOI. Ici, chaque ligne ouvre la
+                 publication.
+
+                 ⚠️ ON REGARDE, ON NE TRANCHE PAS. La validation est
+                 centralisee (migration 0029 cote clubbeur) : un gerant
+                 qui pourrait rejeter les contenus de ses propres clients
+                 deviendrait juge et partie sur les points qu'il doit.
+                 Cet ecran repond a "au cas ou" -- verifier -- pas a
+                 "je decide". -->
+            <div class="vue" id="vue-contenus">
+              <button type="button" class="retour" data-va="dashboard"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Tableau de bord</button>
+              <h1 class="ecran-titre">Contenus reçus</h1>
+              <p class="ecran-sous">Touche une ligne pour ouvrir la publication et vérifier la mention.</p>
+
+              <!-- Les filtres de YouTube Studio : quatre onglets de
+                   texte, jamais un menu deroulant. On filtre en un tap,
+                   et on voit d'un coup d'oeil combien il y en a. -->
+              <div class="filtres" id="contenus-filtres" role="tablist" aria-label="Filtrer les contenus">
+                <button type="button" class="filtre on" role="tab" data-statut="">Tous</button>
+                <button type="button" class="filtre" role="tab" data-statut="pending">En attente</button>
+                <button type="button" class="filtre" role="tab" data-statut="validated">Validés</button>
+                <button type="button" class="filtre" role="tab" data-statut="rejected">Rejetés</button>
+              </div>
+
+              <div id="contenus-liste"></div>
+            </div>
+
             <!-- ================= UNE RECOMPENSE =================
                  La fiche d'une recompense. Ouverte depuis une tuile de la
                  boutique, fermee par le retour. Un ecran, une recompense.
@@ -3111,6 +3223,7 @@
         bareme: "reglages", qr: "reglages",
         conditions: "reglages", confidentialite: "reglages",
         recompense: "recompenses",
+        contenus: "dashboard",
       };
 
       function ouvrirVue(cible) {
@@ -3905,6 +4018,23 @@
       $("#dash-voir-exemple").addEventListener("click", function () { afficherExemple(true); });
       $("#dash-quitter-exemple").addEventListener("click", function () { afficherExemple(false); });
 
+      var LABEL_STATUT_C = { validated: "Validé", pending: "En attente", rejected: "Rejeté" };
+      var LABEL_PLATEFORME_C = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube" };
+      var CLASSE_STATUT_C = { validated: "valide", rejected: "rejete" };
+      // Des glyphes au trait, dans l'encre de l'interface : les logos de
+      // marque en couleur transformeraient une liste en mur de vignettes.
+      var GLYPHE_C = {
+        instagram: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.9"/><circle cx="17.1" cy="6.9" r="1.05" fill="currentColor" stroke="none"/></svg>',
+        tiktok: '<svg viewBox="0 0 24 24"><path d="M14.2 3.2v11.3a3.6 3.6 0 1 1-3-3.55"/><path d="M14.2 5.4c.7 1.9 2.3 3.2 4.4 3.4"/></svg>',
+        youtube: '<svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.3 9.6l4.7 2.9-4.7 2.9z"/></svg>',
+      };
+      var GLYPHE_C_AUTRE = '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M8 12h8"/></svg>';
+
+      /* ⚠️ DECLAREES AVANT rendreDashboard, pas apres.
+         `var` hoiste la declaration mais pas l'affectation : posees plus
+         bas, elles valaient undefined le temps que le module finisse de
+         s'evaluer, et le premier rendu jetait "LABEL_STATUT_C is not
+         defined". Partagees avec l'ecran des contenus. */
       function rendreDashboard() {
         var source = donneesDashboard();
         var stats = getDashboardStats(source);
@@ -3914,6 +4044,13 @@
            rien a apprendre d'un exemple. */
         var vraiesLignes = (ETAT.data.submissions || []).length + (ETAT.data.qrScans || []).length;
         $("#dash-voir-exemple").hidden = !ETAT.session || EXEMPLE || vraiesLignes > 0;
+
+        /* L'ecran des contenus lit la MEME source et suit le meme cycle :
+           le rendre ici, c'est la garantie qu'il ne montre jamais autre
+           chose que ce que le tableau de bord vient de resumer -- exemple
+           compris. rendreDashboard() sort tot quand il n'y a rien, d'ou
+           l'appel place avant. */
+        rendreContenus();
         var etab = source.establishment;
         $("#dash-etablissement").textContent = etab.name || "—";
         $("#dash-ville").textContent = etab.city || "";
@@ -4039,18 +4176,11 @@
           return;
         }
 
-        var LABEL_STATUT = { validated: "Validé", pending: "En attente", rejected: "Rejeté" };
-        var LABEL_PLATEFORME = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube" };
-        var CLASSE_STATUT = { validated: "valide", rejected: "rejete" };
-        // Des glyphes au trait, dans l'encre de l'interface : les logos de
-        // marque en couleur transformeraient une liste d'activite en mur
-        // de vignettes.
-        var GLYPHE = {
-          instagram: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.9"/><circle cx="17.1" cy="6.9" r="1.05" fill="currentColor" stroke="none"/></svg>',
-          tiktok: '<svg viewBox="0 0 24 24"><path d="M14.2 3.2v11.3a3.6 3.6 0 1 1-3-3.55"/><path d="M14.2 5.4c.7 1.9 2.3 3.2 4.4 3.4"/></svg>',
-          youtube: '<svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.3 9.6l4.7 2.9-4.7 2.9z"/></svg>',
-        };
-        var GLYPHE_AUTRE = '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M8 12h8"/></svg>';
+        /* Les memes tables que l'ecran des contenus, definies une fois
+           plus bas : deux vocabulaires pour une meme matiere feraient
+           croire a deux choses differentes. */
+        var LABEL_STATUT = LABEL_STATUT_C, LABEL_PLATEFORME = LABEL_PLATEFORME_C;
+        var CLASSE_STATUT = CLASSE_STATUT_C, GLYPHE = GLYPHE_C, GLYPHE_AUTRE = GLYPHE_C_AUTRE;
 
         zone.innerHTML = recentes.map(function (s) {
           var gain = s.status === "validated";
@@ -4082,6 +4212,88 @@
         bouton.addEventListener("click", function () { choisirPeriode(Number(bouton.dataset.jours)); });
       });
       choisirPeriode(ETAT.periode);
+
+      /* ================= LES CONTENUS RECUS =================
+         Les memes glyphes et les memes libelles que l'activite recente du
+         tableau de bord : c'est la meme matiere, vue en entier. Deux
+         vocabulaires pour une meme chose feraient croire a deux choses
+         differentes. */
+      var FILTRE_CONTENUS = "";
+
+      function rendreContenus() {
+        var zone = $("#contenus-liste");
+        var source = donneesDashboard();
+        var toutes = [...(source.submissions || [])].sort(function (a, b) {
+          return new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0);
+        });
+        var lignes = FILTRE_CONTENUS
+          ? toutes.filter(function (x) { return x.status === FILTRE_CONTENUS; })
+          : toutes;
+
+        // Le compte par filtre, sur l'onglet : savoir qu'il y a trois
+        // contenus en attente sans avoir a ouvrir l'onglet, c'est la
+        // moitie de ce qu'on vient chercher ici.
+        document.querySelectorAll("#contenus-filtres .filtre").forEach(function (b) {
+          var st = b.dataset.statut;
+          var n = st ? toutes.filter(function (x) { return x.status === st; }).length : toutes.length;
+          var nom = b.dataset.nom || (b.dataset.nom = b.textContent);
+          b.textContent = nom + (n ? " " + nb.format(n) : "");
+        });
+
+        if (!lignes.length) {
+          zone.innerHTML = '<p class="vide">' +
+            (toutes.length ? "Aucun contenu dans ce filtre." : "Aucun contenu déposé pour l'instant.") +
+            "</p>";
+          return;
+        }
+
+        var FLECHE = '<svg class="contenu-sortir" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H10"/></svg>';
+
+        zone.innerHTML = lignes.map(function (x) {
+          var valide = x.status === "validated";
+          var date = x.submitted_at
+            ? new Date(x.submitted_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })
+            : "—";
+          var vues = Number(x.views_count || 0);
+          var detail = [
+            LABEL_STATUT_C[x.status] || x.status || "—",
+            date,
+            vues ? nb.format(vues) + " vues" : null,
+          ].filter(Boolean).join(" · ");
+
+          /* Une ancre quand il y a une URL, un <div> sinon : un lien vide
+             se comporte comme un lien -- il se survole, il se tape, et il
+             ne fait rien. rel="noopener" parce que la cible est une page
+             qu'un client a soumise, pas une page a nous. */
+          var lien = x.url ? escapeHtml(x.url) : "";
+          var ouvre = lien
+            ? '<a class="contenu-ligne" href="' + lien + '" target="_blank" rel="noopener noreferrer">'
+            : '<div class="contenu-ligne sans-lien">';
+          return (
+            ouvre +
+              '<span class="contenu-ico" aria-hidden="true">' + (GLYPHE_C[x.platform] || GLYPHE_C_AUTRE) + "</span>" +
+              '<span class="contenu-txt"><strong>' + escapeHtml(LABEL_PLATEFORME_C[x.platform] || x.platform || "—") + "</strong>" +
+                '<span><i class="act-etat ' + (CLASSE_STATUT_C[x.status] || "") + '" aria-hidden="true"></i>' +
+                escapeHtml(detail) + "</span></span>" +
+              '<span class="contenu-pts' + (valide ? "" : " neutre") + '">' +
+                (valide ? "+" + nb.format(x.points_awarded || 0) : "—") + "</span>" +
+              FLECHE +
+            (lien ? "</a>" : "</div>")
+          );
+        }).join("");
+      }
+
+      document.querySelectorAll("#contenus-filtres .filtre").forEach(function (bouton) {
+        bouton.addEventListener("click", function () {
+          FILTRE_CONTENUS = bouton.dataset.statut;
+          document.querySelectorAll("#contenus-filtres .filtre").forEach(function (b) {
+            var on = b === bouton;
+            b.classList.toggle("on", on);
+            b.setAttribute("aria-selected", on ? "true" : "false");
+          });
+          rendreContenus();
+        });
+      });
 
       /* Hors session, l'ecran affiche la demo : rien de ce qu'on y tape
          ne peut etre enregistre. Un seul endroit pour le savoir, plutot
