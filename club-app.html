@@ -1426,12 +1426,12 @@
          voulait "au premier abord". */
       .reco-vignette-cam {
         position: absolute; right: -1px; bottom: -1px;
-        width: 19px; height: 19px; display: grid; place-items: center;
-        border-radius: 10px 0 10px 0; background: var(--action);
+        width: 16px; height: 16px; display: grid; place-items: center;
+        border-radius: 8px 0 10px 0; background: var(--action);
       }
       .reco-vignette-cam svg {
-        width: 11px; height: 11px; fill: none; stroke: var(--action-ink);
-        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+        width: 9px; height: 9px; fill: none; stroke: var(--action-ink);
+        stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
       }
       .reco-vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
       /* Le glyphe du dernier recours. Une INITIALE dans un carre gris,
@@ -1584,13 +1584,17 @@
          deux portes fermees, et il faut les ouvrir pour savoir ou on en
          est. */
       .reglage-etat {
-        flex: 0 0 auto; max-width: 46%; margin-left: auto; padding-left: 10px;
-        font-size: 12px; color: var(--ink3); text-align: right;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        flex: 0 0 auto; margin-left: auto; padding-left: 10px;
+        font-size: 12px; color: var(--ink3); text-align: right; white-space: nowrap;
       }
       .reglage-etat.actif { color: var(--succes); }
       .reglage-etat.absent { color: var(--ink2); }
-      .reglage-txt:has(+ .reglage-etat) { flex: 0 1 auto; }
+      /* Le NOM du reglage ne passe pas a la ligne : c'est lui qu'on
+         cherche du regard. S'il manque de place, il se coupe -- une
+         valeur coupee ne veut plus rien dire, un nom coupe reste
+         reconnaissable. */
+      .reglage-txt { min-width: 0; }
+      .reglage-txt strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
       .reglage-fleche {
         flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3);
@@ -2091,7 +2095,6 @@
                 <button type="button" class="reglage-lien" data-va="qr">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg></span>
                   <span class="reglage-txt"><strong>Affiche et QR code</strong></span>
-                  <span class="reglage-etat">À imprimer</span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
                 <button type="button" class="reglage-lien" id="reglages-installation">
@@ -2105,7 +2108,7 @@
                 <button type="button" class="reglage-lien" id="reglages-mdp">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span>
                   <span class="reglage-txt"><strong>Changer le mot de passe</strong></span>
-                  <span class="reglage-etat" id="reglages-mdp-etat">Par email</span>
+                  <span class="reglage-etat" id="reglages-mdp-etat"></span>
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
                 <button type="button" class="reglage-lien" id="reglages-deconnexion">
@@ -2114,6 +2117,8 @@
                   <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
                 </button>
               </div>
+
+              <p class="fiche-msg" id="reglages-msg"></p>
 
               <p class="reglages-legal">
                 <a href="./confidentialite.html" target="_blank" rel="noopener">Confidentialité</a>
@@ -3742,7 +3747,7 @@
         // porte fermee, il faut l'ouvrir pour savoir ou on en est.
         var regles = ETAT.data.pointRules || {};
         $("#reglages-bareme-etat").textContent =
-          nb.format(Math.round(Number(regles.videoViewsPerThousand || 0))) + " pts / 1 000 vues";
+          nb.format(Math.round(Number(regles.videoViewsPerThousand || 0))) + " pts";
 
         var zone = $("#reglages-instagram");
         if (!ETAT.session) {
@@ -3858,7 +3863,13 @@
         bouton.disabled = false;
         // On ne dit pas "verifiez vos spams" a tout hasard : on dit a
         // QUELLE adresse c'est parti, c'est la seule chose utile.
-        etat.textContent = error
+        // La colonne d'etat est etroite : elle dit l'issue en un mot, et
+        // la phrase complete va sous la carte. On ne dit pas "verifiez
+        // vos spams" a tout hasard : on dit a QUELLE adresse c'est parti.
+        etat.textContent = error ? "Échec" : "Envoyé";
+        var msg = $("#reglages-msg");
+        msg.style.display = "block";
+        msg.textContent = error
           ? "Envoi impossible : " + error.message
           : "Lien envoyé à " + email;
       });
