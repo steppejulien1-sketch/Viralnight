@@ -1568,34 +1568,112 @@
          pour la modifier. <details> plutot qu'un etat en JS : le
          navigateur gere l'ouverture, le clavier et l'accessibilite
          mieux que ce qu'on ecrirait a la main. */
-      .recompense-carte { padding: 0; }
+      /* ---- LA BOUTIQUE, EN GRILLE ----
+         Julien, 05/09/2026 : "le premier onglet est bien mais les deux
+         autres sont degueus [...] regarde une application ou ils peuvent
+         configurer une boutique de recompenses".
+
+         Reference : le catalogue de Zettle (PayPal). Leurs produits sont
+         une GRILLE de tuiles -- photo en haut, nom et prix dessous -- et
+         non une pile de lignes. Square fait pareil, Shopify aussi.
+
+         Deux raisons, et la seconde vaut plus que la premiere :
+
+         1. Cinq cartes blanches empilees avec 10 px entre elles, c'etait
+            un mur de blocs. Une grille tient six recompenses la ou la
+            pile en montrait cinq, et se lit d'un coup.
+
+         2. LE GERANT VOIT SA BOUTIQUE COMME SON CLIENT LA VOIT. La
+            grille cote clubbeur est deja exactement celle-la : photo
+            4/3, nom, prix. Regler sa boutique dans la forme ou elle sera
+            vue, c'est ce qui evite les mauvaises surprises -- une photo
+            mal cadree se remarque ici, pas apres.
+
+         La carte depliee reprend toute la largeur : un formulaire dans
+         une colonne de 160 px serait illisible. */
+      #recompenses-liste {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      }
+      /* Le bandeau de demonstration et les messages ne sont pas des
+         recompenses : ils traversent la grille. */
+      #recompenses-liste > .bandeau-demo,
+      #recompenses-liste > .vide { grid-column: 1 / -1; }
+
+      .recompense-carte { padding: 0; margin: 0; overflow: hidden; }
+      .recompense-carte[open] { grid-column: 1 / -1; }
+
       .reco-resume {
-        display: flex; align-items: center; gap: 11px;
-        padding: 12px 15px; cursor: pointer; list-style: none;
+        display: block; padding: 0; cursor: pointer; list-style: none;
+      }
+      /* Depliee, la carte redevient une ligne : la photo reprend sa
+         taille de vignette a cote du titre, et le formulaire occupe la
+         largeur. */
+      .recompense-carte[open] .reco-resume {
+        display: flex; align-items: center; gap: 11px; padding: 12px 15px;
       }
       .reco-resume::-webkit-details-marker { display: none; }
       .reco-resume:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 16px; }
+      /* En tuile : l'image occupe toute la largeur, en 4/3 -- le meme
+         cadrage que la boutique du clubbeur. */
       .reco-vignette {
-        position: relative; flex: 0 0 auto; width: 46px; height: 46px;
-        border-radius: 12px; overflow: hidden;
-        background: var(--s2); border: 1px solid var(--line);
-        display: grid; place-items: center; cursor: pointer;
-        transition: transform .16s var(--sortie);
+        position: relative; display: block; width: 100%; aspect-ratio: 4 / 3;
+        overflow: hidden; background: var(--s2);
+        border: 0; border-bottom: 1px solid var(--line);
+        cursor: pointer; transition: transform .16s var(--sortie);
       }
-      .reco-vignette:active { transform: scale(.94); }
+      .reco-vignette > svg {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      }
+      .recompense-carte[open] .reco-vignette {
+        flex: 0 0 auto; width: 46px; height: 46px; aspect-ratio: auto;
+        border: 1px solid var(--line); border-radius: 12px;
+      }
+      .reco-vignette:active { transform: scale(.97); }
       .reco-vignette:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
       /* Le badge appareil, pose dans l'angle. Sans lui, rien ne dit que
          la vignette se touche -- et c'est justement le geste que Julien
          voulait "au premier abord". */
+      /* Une tuile sans image : un creux hachure qui demande sa photo,
+         pas un pictogramme gris. */
+      .reco-vignette.sans-image {
+        background: var(--s2);
+        border-bottom-style: dashed; border-bottom-color: var(--line2);
+      }
+      .reco-vignette.sans-image::before {
+        content: ""; position: absolute; inset: 8px;
+        border: 1.5px dashed var(--line2); border-radius: 10px;
+      }
+
+      /* Le geste photo, en PILULE sur l'image -- plus le carre noir
+         colle dans l'angle, qui mangeait un quart du dessin et se
+         repetait cinq fois. Meme place et meme forme que le prix chez
+         DICE : en bas a gauche, sur le visuel. */
       .reco-vignette-cam {
-        position: absolute; right: -1px; bottom: -1px;
-        width: 16px; height: 16px; display: grid; place-items: center;
-        border-radius: 8px 0 10px 0; background: var(--action);
+        position: absolute; left: 8px; bottom: 8px; z-index: 1;
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 9px 4px 7px; border-radius: 999px;
+        background: rgba(20,22,28,.68); color: #fff;
+        font-family: var(--sans); font-size: 10px; font-weight: 700;
+        letter-spacing: -.01em;
+        -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
       }
+      /* Sur un creux vide, la pilule n'a pas d'image a survoler : elle se
+         pose au centre, en encre, et devient le sujet de la tuile. */
+      .reco-vignette.sans-image .reco-vignette-cam {
+        left: 50%; bottom: 50%; transform: translate(-50%, 50%);
+        background: none; color: var(--ink2);
+        -webkit-backdrop-filter: none; backdrop-filter: none;
+        flex-direction: column; gap: 6px; text-align: center;
+        font-size: 11px; padding: 0;
+      }
+      .reco-vignette.sans-image .reco-vignette-cam svg { width: 20px; height: 20px; stroke-width: 1.6; }
       .reco-vignette-cam svg {
-        width: 9px; height: 9px; fill: none; stroke: var(--action-ink);
-        stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+        width: 12px; height: 12px; fill: none; stroke: currentColor;
+        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
       }
+      /* Depliee, la vignette redevient petite : la pilule n'y tient plus,
+         et le detail a deja ses propres boutons photo. */
+      .recompense-carte[open] .reco-vignette-cam { display: none; }
       .reco-vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
       /* Le glyphe du dernier recours. Une INITIALE dans un carre gris,
          c'est un avatar casse : ca promet une image qui n'arrive pas.
@@ -1605,10 +1683,18 @@
         width: 19px; height: 19px; fill: none; stroke: var(--ink3);
         stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
       }
-      .reco-resume-txt { flex: 1 1 auto; min-width: 0; }
+      .reco-resume-txt { display: block; padding: 10px 11px 11px; min-width: 0; }
+      .recompense-carte[open] .reco-resume-txt { flex: 1 1 auto; padding: 0; }
       .reco-resume-txt strong {
         display: block; font-family: var(--titre); font-size: 13.5px; font-weight: 700;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        line-height: 1.25; min-height: 2.5em;
+        overflow: hidden; text-overflow: ellipsis;
+      }
+      /* Deux lignes reservees dans la tuile pour que les prix s'alignent
+         d'une colonne a l'autre ; une seule ligne, coupee, une fois
+         depliee. */
+      .recompense-carte[open] .reco-resume-txt strong {
+        min-height: 0; white-space: nowrap;
       }
       /* Le PRIX porte l'accent, comme dans la boutique du clubbeur :
          c'est le chiffre qui decide de l'echange. Le stock reste une
@@ -1621,7 +1707,12 @@
         font-family: var(--chiffre); font-size: 13px; font-weight: 800;
         letter-spacing: -.02em; color: var(--accent); font-variant-numeric: tabular-nums;
       }
-      .reco-chevron {
+      /* Le chevron n'a de sens que sur une LIGNE. Sur une tuile, c'est
+         la tuile entiere qui s'ouvre, et une fleche posee dans un coin
+         ne designerait rien. */
+      .reco-chevron { display: none; }
+      .recompense-carte[open] .reco-chevron {
+        display: block;
         flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none;
         stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
         transition: transform .2s var(--sortie);
@@ -1733,9 +1824,8 @@
       .reglage-lien:last-child { border-bottom: 0; }
       a.reglage-lien { text-decoration: none; color: inherit; }
       .reglages-pied {
-        margin: 18px 0 0; text-align: center;
-        font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
-        text-transform: uppercase; color: var(--ink3);
+        margin: 16px 0 0; text-align: center;
+        font-size: 11.5px; color: var(--ink3);
       }
       .reglage-lien { transition: background .15s ease; border-radius: 10px; }
       .reglage-lien:active { background: var(--s2); }
@@ -2228,7 +2318,7 @@
               <h1 class="ecran-titre">Boutique de récompenses</h1>
               <p class="ecran-sous">Ce que tes clients peuvent échanger contre leurs points.</p>
               <div id="recompenses-liste"></div>
-              <button type="button" class="ajouter-recompense" id="recompense-ajouter">+ Ajouter une récompense</button>
+              <button type="button" class="bouton pleine" id="recompense-ajouter" style="margin-top:14px">Ajouter une récompense</button>
               <p class="fiche-msg" id="recompense-msg"></p>
               <p class="ac-aide" id="recompense-sync" style="text-align:left"></p>
             </div>
@@ -2295,11 +2385,31 @@
 
               <p class="fiche-msg" id="reglages-msg"></p>
 
-              <p class="reglages-legal">
-                <a href="./confidentialite.html" target="_blank" rel="noopener">Confidentialité</a>
-                <a href="./cgu.html" target="_blank" rel="noopener">Conditions</a>
-                <a href="mailto:viralnight001@gmail.com?subject=Noctify%20%E2%80%94%20aide">Une question&nbsp;?</a>
-              </p>
+              <!-- Les liens legaux etaient trois mots gris flottant sous les
+                   cartes, suivis d'un "NOCTIFY · APPLI CLUB" en capitales
+                   mono. Resultat : l'ecran s'arretait a mi-hauteur et le
+                   bas etait vide.
+
+                   Ce sont des destinations comme les autres : elles
+                   prennent la meme carte, les memes lignes, le meme
+                   chevron. L'ecran se termine ou il finit. -->
+              <div class="carte" style="padding:1px 14px">
+                <a class="reglage-lien" href="./confidentialite.html" target="_blank" rel="noopener">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5l7 3v5.2c0 4.2-2.9 7.6-7 8.8-4.1-1.2-7-4.6-7-8.8V6.5z"/></svg></span>
+                  <span class="reglage-txt"><strong>Confidentialité</strong></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a class="reglage-lien" href="./cgu.html" target="_blank" rel="noopener">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3.5h8l4 4v13h-12z"/><path d="M14.5 3.5v4h4M9 12h6M9 15.5h6"/></svg></span>
+                  <span class="reglage-txt"><strong>Conditions d'utilisation</strong></span>
+                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a class="reglage-lien" href="mailto:viralnight001@gmail.com?subject=Noctify%20%E2%80%94%20aide">
+                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.4M12 16.6v.01"/></svg></span>
+                  <span class="reglage-txt"><strong>Une question ?</strong></span>
+                  <span class="reglage-etat">Nous écrire</span>
+                </a>
+              </div>
 
               <p class="reglages-pied">Noctify · appli club</p>
             </div>
@@ -3671,15 +3781,23 @@
       ];
       var GLYPHE_RECOMPENSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8.5" width="17" height="12" rx="2"/><path d="M3.5 12.8h17M12 8.5V20.5"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>';
 
-      function vignetteRecompense(reward) {
-        if (reward.image_url) return '<img src="' + escapeHtml(reward.image_url) + '" alt="" />';
+      /* L'image d'une recompense, dans l'ordre : la photo du club, puis
+         le dessin qui correspond a son nom, puis RIEN.
+
+         "Rien" n'est pas un pictogramme gris au centre d'un cadre : trois
+         tuiles portant le meme paquet-cadeau, ca se lit comme une panne.
+         C'est une tuile VIDE qui demande sa photo -- et c'est justement le
+         geste que Julien voulait "au premier abord". Le trou devient
+         l'invitation. */
+      function imageRecompense(reward) {
+        if (reward.image_url) return { html: '<img src="' + escapeHtml(reward.image_url) + '" alt="" />', propre: true };
         var titre = reward.title || "";
         for (var i = 0; i < ART_PAR_TITRE.length; i++) {
           if (ART_PAR_TITRE[i][0].test(titre)) {
-            return '<img src="' + ART_PAR_TITRE[i][1] + '" alt="" />';
+            return { html: '<img src="' + ART_PAR_TITRE[i][1] + '" alt="" />', propre: false };
           }
         }
-        return GLYPHE_RECOMPENSE;
+        return { html: "", propre: false, vide: true };
       }
 
       function rendreRecompenses() {
@@ -3705,13 +3823,16 @@
             ? "stock illimité"
             : "stock " + nb.format(Number(r.max_redemptions));
 
+          var visuel = imageRecompense(r);
           return (
             '<details class="carte recompense-carte" data-reward-id="' + escapeHtml(r.id) + '">' +
               '<summary class="reco-resume">' +
-                '<span class="reco-vignette" data-photo-vite role="button" tabindex="0"' +
-                  ' aria-label="Changer la photo de ' + escapeHtml(r.title) + '">' +
-                  vignetteRecompense(r) +
-                  '<span class="reco-vignette-cam" aria-hidden="true">' + ICONE_APPAREIL + "</span>" +
+                '<span class="reco-vignette' + (visuel.vide ? " sans-image" : "") + '"' +
+                  ' data-photo-vite role="button" tabindex="0"' +
+                  ' aria-label="' + (visuel.vide ? "Ajouter une photo à " : "Changer la photo de ") + escapeHtml(r.title) + '">' +
+                  visuel.html +
+                  '<span class="reco-vignette-cam" aria-hidden="true">' + ICONE_APPAREIL +
+                    (visuel.vide ? "Ajouter une photo" : (visuel.propre ? "Changer" : "Ta photo")) + "</span>" +
                 "</span>" +
                 '<span class="reco-resume-txt"><strong>' + escapeHtml(r.title) + "</strong>" +
                   '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts · " + stock + "</span></span>" +
@@ -3722,7 +3843,7 @@
                 '<span class="reco-photo-vue">' +
                   (r.image_url
                     ? '<img src="' + escapeHtml(r.image_url) + '" alt="" />'
-                    : "<span>Illustration auto</span>") +
+                    : (visuel.vide ? "<span>Aucune photo</span>" : "<span>Illustration auto</span>")) +
                 "</span>" +
                 '<span class="reco-photo-actions">' +
                   '<button type="button" class="reco-photo-btn" data-photo' + inerte + ">" +
