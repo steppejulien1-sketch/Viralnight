@@ -40,7 +40,7 @@ INSTALLATION = [
     (CLUB, "03-installation-3", "Étape 03", "Tes r\u00e9compenses",
      "Le dessin affich\u00e9 est celui que verra le client dans sa boutique. Le prix porte le corail, une seule fois par carte.", ""),
     (CLUB, "04-installation-4", "Étape 04", "Ton bar\u00e8me",
-     "Trois profils \u00e0 toucher plut\u00f4t qu\u2019un tableau de chiffres. Le r\u00e9glage ligne par ligne reste, repli\u00e9.", ""),
+     "Le profil annonce le tarif r\u00e9el \u2014 \u00ab 15 pts pour 1 000 vues \u00bb \u2014 au lieu d\u2019un exemple invent\u00e9 \u00e0 3 000 vues que le g\u00e9rant devait diviser de t\u00eate.", ""),
     (CLUB, "05-installation-5", "Étape 05", "Ton Instagram",
      "Le pseudo d\u2019abord \u2014 c\u2019est ce que les clients taguent. La connexion Meta peut attendre les R\u00e9glages.", ""),
     (CLUB, "06-installation-6", "Étape 06", "Tout est pr\u00eat",
@@ -49,15 +49,15 @@ INSTALLATION = [
 
 CLUB_APPLI = [
     (CLUB, "07-tableau-de-bord", "Onglet 1", "Tableau de bord",
-     "Un seul objet sombre sur l\u2019\u00e9cran clair : le chiffre que le club ach\u00e8te. C\u2019est lui qui dit quoi regarder d\u2019abord. Les quatre autres tiennent dans une grille \u00e0 filets, visibles sans d\u00e9filer.", ""),
+     "Un vrai graphe, avec son axe : trois rep\u00e8res, leurs valeurs \u00e0 gauche, un maximum arrondi (250 k, pas 249 480). Sans graduation, une courbe ne dit pas si un chiffre est haut ou bas.", ""),
     (CLUB, "08-tableau-de-bord-activite", "Onglet 1", "Activit\u00e9 r\u00e9cente",
      "Le glyphe dit la plateforme, le point de couleur dit l\u2019\u00e9tat. Avant : l\u2019initiale du statut (\u00ab V \u00bb, \u00ab E \u00bb, \u00ab R \u00bb) dans un rond gris.", ""),
     (CLUB, "09-recompenses", "Onglet 2", "Boutique de r\u00e9compenses",
-     "Chaque r\u00e9compense prend son dessin. Sans correspondance, un pictogramme \u2014 jamais une initiale dans un carr\u00e9 gris.", ""),
+     "La vignette ouvre le s\u00e9lecteur de photo, badge \u00e0 l\u2019appui : c\u2019\u00e9tait le geste le plus important et il \u00e9tait enterr\u00e9 sous le chevron.", ""),
     (CLUB, "10-recompense-ouverte", "Onglet 2", "Une r\u00e9compense, d\u00e9pli\u00e9e",
-     "Repli\u00e9e elle tient sur une ligne. On l\u2019ouvre pour la modifier, pas avant.", ""),
+     "\u00ab Famille \u00bb (Bar / Acc\u00e8s / VIP) est retir\u00e9e : elle ne changeait ni ce que le client paie ni ce qu\u2019il re\u00e7oit.", ""),
     (CLUB, "11-reglages", "Onglet 3", "R\u00e9glages",
-     "La fiche du club en t\u00eate, cliquable : nom, ville et photos n\u2019\u00e9taient modifiables nulle part apr\u00e8s l\u2019installation. Lignes descendues de 62 \u00e0 52 px, carr\u00e9s gris devenus ronds.", ""),
+     "Deux cartes, plus de titres de section, et une colonne d\u2019\u00e9tat \u00e0 droite \u2014 mais seulement l\u00e0 o\u00f9 il y a un \u00e9tat. Trois titres pour cinq lignes, c\u2019\u00e9tait de l\u2019\u00e9chafaudage.", ""),
     (CLUB, "12-bareme", "R\u00e9glages", "Bar\u00e8me de points",
      "Une ligne par r\u00e8gle, le champ \u00e0 droite, sous le pouce.", ""),
     (CLUB, "13-qr", "R\u00e9glages", "Affiche et QR code",
@@ -68,9 +68,9 @@ CLUBBEUR_APPLI = [
     (CLUBBEUR, "01-accueil", "Arriv\u00e9e", "L\u2019accueil",
      "Ce que voit quelqu\u2019un qui vient de scanner le QR coll\u00e9 au mur du club.", ""),
     (CLUBBEUR, "02-recompenses", "Onglet 1", "R\u00e9compenses \u2014 le solde",
-     "Le solde et la jauge crant\u00e9e aux prix r\u00e9els du club. Fond blanc, demand\u00e9 le 04/09.", ""),
+     "Le solde en encre, plus en corail. La r\u00e8gle gradu\u00e9e 300 / 600 / 1,2k / 3k devient une barre vers une seule cible, nomm\u00e9e dessous. R\u00e9f\u00e9rence : le Menu R\u00e9compenses de Starbucks.", ""),
     (CLUBBEUR, "03-recompenses-cartes", "Onglet 1", "Le catalogue",
-     "Les quatre r\u00e9compenses du club, chacune avec son num\u00e9ro de catalogue. Les illustrations sont d\u00e9tour\u00e9es, elles flottent sur la carte.", ""),
+     "Plus de num\u00e9ro de catalogue, plus de perforation. Images en 4/3 : quatre bons visibles au lieu de deux.", ""),
     (CLUBBEUR, "04-recompense-fiche", "Onglet 1", "Une r\u00e9compense, ouverte",
      "La feuille qui d\u00e9cide de l\u2019\u00e9change. \u00c0 z\u00e9ro point, le bouton nomme ce qu\u2019il manque.", ""),
     (CLUBBEUR, "05-carte", "Onglet 3", "La carte des clubs",
@@ -369,7 +369,7 @@ __CLUB_APPLI__
       <h2>C\u00f4t\u00e9 clubbeur</h2>
       <p>
         Ce que voit le client du club : il scanne, il poste, il cumule, il \u00e9change.
-        Non touch\u00e9e aujourd\u2019hui \u2014 elle est ici pour la comparaison.
+        Le compteur de points et les cartes de la boutique ont \u00e9t\u00e9 repris le 5 septembre.
       </p>
     </div>
 
