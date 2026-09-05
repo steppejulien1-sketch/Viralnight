@@ -3007,6 +3007,12 @@
         font-size: calc(10.5 * var(--u)); font-weight: 800; font-family: var(--chiffre, inherit);
         padding: 2px 8px; border-radius: 99px; border: 2px solid var(--s2);
       }
+      /* La regle du jeu : sous le bouton, en encre sourde. Elle ne
+         doit pas concurrencer l'action -- elle l'encadre. */
+      .ps-regle {
+        margin: 12px 0 0; text-align: center;
+        font-size: calc(12 * var(--u)); line-height: 1.45; color: var(--ink3);
+      }
       .ps-steps { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; text-align: left; }
       /* Les trois etapes arrivent l'une apres l'autre : on lit "1 puis 2
          puis 3" au lieu de recevoir le bloc entier d'un coup. Court
@@ -7400,6 +7406,20 @@ function ouvrirChoixReseau(nomClub) {
           // page s'appelle "Poster ma story" et l'etape 2 dit "Poste une
           // story", le bouton final doit parler la meme langue.
           '<button type="submit" class="sheet-cta" id="story-envoyer">J&rsquo;ai posté</button>' +
+          /* La regle du jeu, ecrite la ou on la joue. Julien, 06/09/2026 :
+             "il faut qu'on mette maximum une story par soiree, tu
+             l'ecris tout en dessous de quand ils veulent poster".
+
+             Une regle qu'on ne decouvre qu'au refus est une regle
+             injuste : quelqu'un qui poste trois stories en pensant
+             tripler ses points a perdu sa soiree. Elle se lit AVANT le
+             geste, pas apres.
+
+             ⚠️ C'est un TEXTE, pas encore un verrou. Le plafond doit
+             etre tenu par submit_story() cote base clubbeur, sinon il
+             suffit de renvoyer le formulaire. A poser dans la meme
+             migration que le reste, cote 06-pwa-clubbeurs. */
+          '<p class="ps-regle">Une seule story compte par soirée. Les suivantes ne rapportent rien de plus.</p>' +
         "</div>" +
       "</form>" +
     "</div>";

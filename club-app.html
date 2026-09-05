@@ -721,6 +721,51 @@
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
 
+      /* ---- Voir un exemple ----
+         Une invitation, pas une alerte : un club neuf n'a rien fait de
+         mal. Trait pointille et encre sourde, comme le bouton "Ajouter
+         une recompense" -- c'est la meme famille de geste, une place
+         encore vide qu'on propose de remplir. */
+      .dash-exemple {
+        display: flex; align-items: center; gap: 12px; width: 100%;
+        margin: 0 0 18px; padding: 14px 15px;
+        border: 1.5px dashed var(--line2); border-radius: 16px;
+        background: none; color: inherit; font-family: inherit; text-align: left;
+        cursor: pointer; transition: transform .16s var(--sortie), border-color .15s ease;
+      }
+      .dash-exemple[hidden] { display: none; }
+      .dash-exemple:active { transform: scale(.99); }
+      @media (hover: hover) and (pointer: fine) {
+        .dash-exemple:hover { border-color: var(--ink3); }
+      }
+      .dash-exemple-txt { flex: 1 1 auto; min-width: 0; }
+      .dash-exemple-txt strong { display: block; font-family: var(--titre); font-size: 13.5px; font-weight: 700; }
+      .dash-exemple-txt span { display: block; margin-top: 2px; font-size: 11.5px; color: var(--ink3); line-height: 1.35; }
+      .dash-exemple svg {
+        flex: 0 0 auto; width: 16px; height: 16px; fill: none; stroke: var(--ink3);
+        stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+      }
+
+      /* Le bandeau de l'exemple : la seule bande coloree du tableau de
+         bord, et elle ne sert qu'a dire "ce n'est pas toi". */
+      .bandeau-exemple {
+        display: flex; align-items: center; gap: 10px;
+        margin: 0 0 12px; padding: 10px 12px; border-radius: 12px;
+        background: color-mix(in srgb, var(--accent) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+        font-size: 12px; color: var(--ink2); line-height: 1.35;
+      }
+      .bandeau-exemple[hidden] { display: none; }
+      .bandeau-exemple strong { color: var(--accent-fort); }
+      .bandeau-exemple span { flex: 1 1 auto; }
+      .bandeau-exemple button {
+        flex: 0 0 auto; border: 0; background: var(--ink); color: var(--action-ink);
+        border-radius: 999px; padding: 5px 12px; font-family: inherit;
+        font-size: 11.5px; font-weight: 700; cursor: pointer;
+      }
+      @media (prefers-reduced-motion: reduce) { .dash-exemple { transition: none; } }
+      @media (prefers-reduced-motion: reduce) { .dash-exemple:active { transform: none; } }
+
       /* ---- Carte Instagram du tableau de bord ----
          La connexion Instagram etait enterree en bas des Reglages, alors
          que c'est elle qui fait tout le travail : sans elle, aucune
@@ -1943,6 +1988,12 @@
       .reglage-ico.ico-instagram .logo-ig { width: 24px; height: 24px; }
       .insta-ico.marque { background: none; }
       .insta-ico.marque .logo-ig { width: 34px; height: 34px; }
+      /* Deux classes par selecteur : ca bat `.reglage-ico svg` et
+         `.insta-ico svg` (une classe + un element) sans dependre de
+         l'ordre des regles. Voir la note devant MARQUE_IG. */
+      .logo-ig .ig-fond { fill: url(#ig-deg); stroke: none; }
+      .logo-ig .ig-trait { fill: none; stroke: #fff; stroke-width: 1.75; }
+      .logo-ig .ig-flash { fill: #fff; stroke: none; }
       .reglage-txt { flex: 1 1 auto; min-width: 0; }
       .reglage-txt strong {
         font-family: var(--titre); display: block; font-size: 13.5px; font-weight: 700; }
@@ -2430,6 +2481,14 @@
               <!-- Le club se reconnait avant de lire un chiffre : sa photo,
                    son nom, sa ville. Un tableau de bord qui commence par un
                    titre nu pourrait etre celui de n'importe qui. -->
+              <!-- Le bandeau de l'exemple. Il ne quitte pas l'ecran tant
+                   que l'exemple est affiche : c'est ce qui empeche de
+                   confondre ces chiffres avec les siens. -->
+              <div class="bandeau-exemple" id="dash-bandeau-exemple" hidden>
+                <span><strong>Exemple.</strong> Ce ne sont pas les chiffres de ton club.</span>
+                <button type="button" id="dash-quitter-exemple">Revenir</button>
+              </div>
+
               <div class="club-tete">
                 <span class="club-vignette" id="dash-vignette" aria-hidden="true"></span>
                 <span class="club-tete-txt">
@@ -2513,6 +2572,36 @@
                   <span class="kpi-note" id="kpi-recompenses-note"></span>
                 </div>
               </div>
+
+              <!-- ================= VOIR UN EXEMPLE =================
+                   Julien, 06/09/2026 : "je t'avais demande de mettre de
+                   la data pour qu'on voie a quoi ca ressemble, on n'a pas
+                   mis".
+
+                   Elle y etait -- mais seulement DECONNECTE. Connecte
+                   avec son compte, il voit SON club, qui n'a pas encore
+                   d'activite : quatre zeros et une courbe plate. Il ne
+                   pouvait donc pas voir plein ce qu'il venait de
+                   demander.
+
+                   ⚠️ ET ON NE PEUT PAS SIMPLEMENT LUI SERVIR LA DEMO.
+                   Montrer 773 510 vues sous le nom de son club, avec
+                   "Chiffres mesures sur tes contenus valides" ecrit
+                   au-dessus, ce serait lui presenter les chiffres d'un
+                   autre comme les siens. C'est explicitement ce que le
+                   commentaire de fallbackDashboardData interdit.
+
+                   D'ou : un exemple qu'on OUVRE, qui garde son nom de
+                   club de demonstration, et qui porte un bandeau tant
+                   qu'il est affiche. Aucun moment ou l'on puisse se
+                   tromper sur ce qu'on regarde. -->
+              <button type="button" class="dash-exemple" id="dash-voir-exemple" hidden>
+                <span class="dash-exemple-txt">
+                  <strong>Ton club n'a pas encore d'activité</strong>
+                  <span>Voir à quoi ressemble ce tableau de bord une fois rempli</span>
+                </span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+              </button>
 
               <p class="section-titre">Activité récente</p>
               <div id="dash-activite"></div>
@@ -3790,9 +3879,42 @@
         zone.textContent = nom.trim().charAt(0).toUpperCase() || "?";
       }
 
+      /* ---- L'exemple ----
+         ⚠️ IL NE TOUCHE QUE LE TABLEAU DE BORD, et c'est deliberé.
+
+         Remplacer ETAT.data en bloc etait tentant -- une ligne, tout
+         suit. Mais la Boutique deviendrait alors modifiable sur les
+         recompenses de la DEMO, avec une session bien reelle : estDemo()
+         ne regarde que la session, les champs resteraient actifs, et
+         chaque enregistrement partirait vers Supabase avec un id
+         "demo-reward-1" pour en revenir avec une erreur Postgres. Un
+         exemple ne doit rien pouvoir casser.
+
+         Le reste de l'appli continue donc de voir le vrai club ; seul
+         le tableau de bord lit ailleurs. */
+      var EXEMPLE = false;
+
+      function donneesDashboard() { return EXEMPLE ? fallbackDashboardData : ETAT.data; }
+
+      function afficherExemple(oui) {
+        EXEMPLE = !!oui;
+        $("#dash-bandeau-exemple").hidden = !EXEMPLE;
+        rendreDashboard();
+      }
+
+      $("#dash-voir-exemple").addEventListener("click", function () { afficherExemple(true); });
+      $("#dash-quitter-exemple").addEventListener("click", function () { afficherExemple(false); });
+
       function rendreDashboard() {
-        var stats = getDashboardStats(ETAT.data);
-        var etab = ETAT.data.establishment;
+        var source = donneesDashboard();
+        var stats = getDashboardStats(source);
+
+        /* L'invitation n'a de sens que pour un club CONNECTE et VIDE :
+           hors session on regarde deja la demo, et un club qui tourne n'a
+           rien a apprendre d'un exemple. */
+        var vraiesLignes = (ETAT.data.submissions || []).length + (ETAT.data.qrScans || []).length;
+        $("#dash-voir-exemple").hidden = !ETAT.session || EXEMPLE || vraiesLignes > 0;
+        var etab = source.establishment;
         $("#dash-etablissement").textContent = etab.name || "—";
         $("#dash-ville").textContent = etab.city || "";
         rendreVignetteClub($("#dash-vignette"), etab);
@@ -3852,7 +3974,7 @@
            son propre champ de date -- il n'y a pas de "date" commune a
            inventer. */
         var pointsDe = function (sub) { return Number(sub.points_awarded || 0); };
-        var scans = ETAT.data.qrScans || [];
+        var scans = source.qrScans || [];
 
         var cases = [
           {
@@ -4811,12 +4933,28 @@
          droite. Les trois, ou aucun.
 
          Le degrade vit dans le <defs> partage en haut de la page. */
+      /* ⚠️ LES FORMES PORTENT DES CLASSES, PAS SEULEMENT DES ATTRIBUTS.
+         Julien, 06/09/2026 : "le logo Instagram est bizarre, il y a un
+         point noir au-dessus".
+
+         Il regardait un vrai bug, pas un dessin rate. Ce logo vit dans
+         .reglage-ico et dans .insta-ico, qui appliquent tous deux
+         `svg { fill: none; stroke: var(--ink2) }` a leurs icones
+         d'interface. Une regle CSS bat un attribut de presentation :
+         le degrade disparaissait (fill: none), les traits blancs
+         viraient au gris, et le flash -- un simple disque blanc --
+         devenait un petit anneau fonce en haut a droite. Le point noir.
+
+         Des classes sur les formes, et des selecteurs a deux classes
+         dans la feuille de style : ils gagnent sur `.reglage-ico svg`
+         quel que soit l'ordre, et le logo devient insensible a l'endroit
+         ou on le pose. */
       var MARQUE_IG =
         '<svg viewBox="0 0 24 24" aria-hidden="true" class="logo-ig">' +
-          '<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="6.8" fill="url(#ig-deg)"/>' +
-          '<rect x="5.1" y="5.1" width="13.8" height="13.8" rx="4.1" fill="none" stroke="#fff" stroke-width="1.75"/>' +
-          '<circle cx="12" cy="12" r="3.35" fill="none" stroke="#fff" stroke-width="1.75"/>' +
-          '<circle cx="16.75" cy="7.25" r="1.05" fill="#fff"/>' +
+          '<rect class="ig-fond" x="0.6" y="0.6" width="22.8" height="22.8" rx="6.8"/>' +
+          '<rect class="ig-trait" x="5.1" y="5.1" width="13.8" height="13.8" rx="4.1"/>' +
+          '<circle class="ig-trait" cx="12" cy="12" r="3.35"/>' +
+          '<circle class="ig-flash" cx="16.75" cy="7.25" r="1.05"/>' +
         "</svg>";
       var GLYPHE_IG_LIGNE = '<span class="reglage-ico ico-instagram">' + MARQUE_IG + "</span>";
       var GLYPHE_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>';
