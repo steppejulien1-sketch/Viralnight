@@ -31,7 +31,7 @@ OUT = os.path.join(ICI, "noctify-ecrans.html")
 # (dossier, fichier, eyebrow, titre, note, marque)
 INSTALLATION = [
     (CLUB, "01-installation-1", "Étape 01", "Ton compte",
-     "Le compte se cr\u00e9e ici, plus sur une page \u00e0 part. La mascotte garde sa carte cr\u00e8me : elle est dessin\u00e9e au trait noir, sur du sombre elle perdrait ses bras.", ""),
+     "Le parcours est sombre, l\u2019appli ne l\u2019est pas : on traverse l\u2019un une fois, on travaille dans l\u2019autre tous les jours. La mascotte garde sa carte cr\u00e8me \u2014 elle est dessin\u00e9e au trait noir.", ""),
     (CLUB, "02-installation-2", "Étape 02", "Ton club",
      "Le nom, la ville, puis les photos \u2014 dans cet ordre. Les deux champs obligatoires tiennent au-dessus du pli.", ""),
     (CLUB, "02b-installation-2-remplie", "Étape 02", "Ton club, rempli",
@@ -48,15 +48,15 @@ INSTALLATION = [
 
 CLUB_APPLI = [
     (CLUB, "07-tableau-de-bord", "Onglet 1", "Tableau de bord",
-     "L\u2019ent\u00eate porte la photo, le nom et la ville. Les quatre chiffres sont une grille \u00e0 filets, plus quatre cartes flottantes.", ""),
+     "Un seul objet sombre sur l\u2019\u00e9cran clair : le chiffre que le club ach\u00e8te. C\u2019est lui qui dit quoi regarder d\u2019abord. Les quatre autres tiennent dans une grille \u00e0 filets, visibles sans d\u00e9filer.", ""),
     (CLUB, "08-tableau-de-bord-activite", "Onglet 1", "Activit\u00e9 r\u00e9cente",
-     "Le glyphe dit la plateforme, le point de couleur dit l\u2019\u00e9tat. Avant : l\u2019initiale du statut dans un rond gris.", ""),
+     "Le glyphe dit la plateforme, le point de couleur dit l\u2019\u00e9tat. Avant : l\u2019initiale du statut (\u00ab V \u00bb, \u00ab E \u00bb, \u00ab R \u00bb) dans un rond gris.", ""),
     (CLUB, "09-recompenses", "Onglet 2", "Boutique de r\u00e9compenses",
      "Chaque r\u00e9compense prend son dessin. Sans correspondance, un pictogramme \u2014 jamais une initiale dans un carr\u00e9 gris.", ""),
     (CLUB, "10-recompense-ouverte", "Onglet 2", "Une r\u00e9compense, d\u00e9pli\u00e9e",
      "Repli\u00e9e elle tient sur une ligne. On l\u2019ouvre pour la modifier, pas avant.", ""),
     (CLUB, "11-reglages", "Onglet 3", "R\u00e9glages",
-     "La fiche du club en t\u00eate, cliquable : nom, ville et photos n\u2019\u00e9taient modifiables nulle part apr\u00e8s l\u2019installation.", ""),
+     "La fiche du club en t\u00eate, cliquable : nom, ville et photos n\u2019\u00e9taient modifiables nulle part apr\u00e8s l\u2019installation. Lignes descendues de 62 \u00e0 52 px, carr\u00e9s gris devenus ronds.", ""),
     (CLUB, "12-bareme", "R\u00e9glages", "Bar\u00e8me de points",
      "Une ligne par r\u00e8gle, le champ \u00e0 droite, sous le pouce.", ""),
     (CLUB, "13-qr", "R\u00e9glages", "Affiche et QR code",
@@ -309,8 +309,8 @@ PAGE = u"""<title>Noctify, \u00e9cran par \u00e9cran</title>
       <h2>C\u00f4t\u00e9 g\u00e9rant</h2>
       <p>
         Ce que voit le patron du club : ce que son affiche g\u00e9n\u00e8re, ce qu\u2019il donne en
-        \u00e9change, ce qu\u2019il r\u00e8gle. Refaite le 5 septembre \u2014 fond sombre, densit\u00e9,
-        photos de l\u2019\u00e9tablissement.
+        \u00e9change, ce qu\u2019il r\u00e8gle. Refaite le 5 septembre. Deux palettes : le parcours
+        d\u2019installation est sombre, l\u2019appli quotidienne est claire.
       </p>
     </div>
 
@@ -367,7 +367,7 @@ __CLUBBEUR__
       <li><b>L\u2019\u00e9cran 06 de l\u2019installation est vide.</b> L\u2019affiche A4 et le bilan se fabriquent \u00e0 partir du club connect\u00e9.</li>
       <li><b>Les photos de l\u2019\u00e9tape 02 sont des exemples.</b> Ce sont les deux images d\u2019ambiance du d\u00e9p\u00f4t, pos\u00e9es l\u00e0 pour montrer la forme de l\u2019\u00e9cran une fois rempli.</li>
       <li><b>La galerie attend sa migration.</b> <code>supabase/migrations/202609050001_photos_du_club.sql</code>, \u00e0 passer \u00e0 la main dans l\u2019\u00e9diteur SQL Supabase : <code>npm run db:apply</code> ne rejoue que <code>SETUP_COMPLET.sql</code>. Sans elle, la fiche s\u2019enregistre sans les photos plut\u00f4t que d\u2019\u00e9chouer.</li>
-      <li><b>Une chose que la planche rend visible :</b> l\u2019appli clubbeur est sombre partout sauf son onglet principal, blanc \u00e0 ta demande du 04/09. C\u00f4t\u00e9 g\u00e9rant, tout est sombre. Les deux applis ne se ressemblent donc pas encore \u00e0 100 % \u2014 c\u2019est un constat, pas une proposition.</li>
+      <li><b>Les deux applis suivent la m\u00eame r\u00e8gle, en miroir.</b> C\u00f4t\u00e9 clubbeur : sombre partout, sauf l\u2019onglet principal, blanc \u00e0 ta demande du 04/09. C\u00f4t\u00e9 g\u00e9rant : clair partout, sauf le parcours d\u2019arriv\u00e9e, sombre. Dans les deux cas, l\u2019\u00e9cran o\u00f9 l\u2019on travaille est clair, celui qu\u2019on traverse est sombre.</li>
     </ul>
   </div>
 </div>
