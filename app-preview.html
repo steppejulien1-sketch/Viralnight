@@ -687,6 +687,20 @@
         padding: 20px 24px 112px; text-align: center;
         transition: opacity .3s ease, visibility .3s ease;
       }
+      /* Une liste de noms se lit alignee a gauche, comme dans toutes les
+         applications de messagerie ou de contacts. Le centrage herite de
+         .vue-story faisait flotter les titres et les libelles au milieu du
+         vide : c'est ce qui donnait l'impression d'une page de demonstration
+         plutot que d'un ecran d'application. Les deux blocs qui restent
+         legitimement centres (la porte "connecte-toi" et la carte du code
+         perso) le redemandent explicitement. */
+      .vue-amis { text-align: left; }
+      .vue-amis > .va-title { font-size: calc(25 * var(--u)); margin: 2px 0 18px; }
+      /* Sur "Mon code", le grand titre "Amis" s'efface : la fleche retour
+         et le nom de la sous-page suffisent, comme dans n'importe quelle
+         application. On lisait sinon deux en-tetes empiles pour une page. */
+      .vue-amis.sur-code > .va-title { display: none; }
+
       .vue-amis[hidden], .vue-story[hidden] { display: flex; opacity: 0; visibility: hidden; pointer-events: none; }
       @media (prefers-reduced-motion: reduce) { .vue-amis, .vue-story { transition: none; } }
 
@@ -741,13 +755,17 @@
          place dans le flux normal, plus besoin de cette grande marge. */
       .va-title { margin: 4px 0 24px; font-size: calc(20 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
 
+      /* Capitales + interlettrage large : c'est un intertitre de tableau
+         de bord, pas d'application. Sur cet ecran il hurlait "SUGGESTIONS"
+         et "MES AMIS" plus fort que les pseudos eux-memes. Casse normale,
+         encre secondaire, il redevient ce qu'il est : une etiquette. */
       .va-kicker {
-        text-align: left; font-size: calc(11 * var(--u)); font-weight: 700; color: var(--ink3);
-        text-transform: uppercase; letter-spacing: .1em; margin: 0 0 12px;
+        text-align: left; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2);
+        letter-spacing: -.01em; margin: 0 0 6px;
       }
       .va-code + .va-kicker { margin-top: 28px; }
 
-      .va-connecte-toi { padding: 32px 8px 0; }
+      .va-connecte-toi { padding: 32px 8px 0; text-align: center; }
       .va-connecte-ico {
         width: 60px; height: 60px; margin: 0 auto 20px; border-radius: 50%;
         background: var(--s1); display: grid; place-items: center;
@@ -757,7 +775,7 @@
 
       .va-code {
         background: var(--s1); border: 1px solid var(--line2); border-radius: 24px;
-        padding: 28px 20px 24px; margin: 0 0 24px;
+        padding: 28px 20px 24px; margin: 0 0 24px; text-align: center;
       }
       /* overflow:hidden retire du bouton (etait dessus, meme piege que
          .pf-avatar corrige plus haut) : le crayon (.va-avatar-edit) est
@@ -768,20 +786,24 @@
          coupe en rond. */
       .va-avatar {
         position: relative; width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%;
-        background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
+        background: var(--s2); box-shadow: inset 0 0 0 1px var(--line);
         border: 0; padding: 0; cursor: pointer; display: block;
       }
       .va-avatar-init {
         position: absolute; inset: 0; display: grid; place-items: center;
-        font-size: calc(22 * var(--u)); font-weight: 800; color: #fff;
+        font-size: calc(22 * var(--u)); font-weight: 700; color: var(--ink2);
       }
       .va-avatar-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; overflow: hidden; }
       /* Le crayon reste visible en permanence (pas seulement au survol) :
          sur mobile il n'y a pas de hover, et sans lui rien n'indique que
          la photo est modifiable. */
+      /* L'avatar n'est plus un rond rouge vif : un crayon en --s1 dessus
+         se voyait par contraste, sur du gris neutre il disparaissait (en
+         sombre surtout). Une teinte de surface au-dessus, plus un lisere. */
       .va-avatar-edit {
         position: absolute; right: 1px; bottom: 1px; width: 22px; height: 22px; border-radius: 50%;
-        background: var(--s1); box-shadow: var(--ombre-1); display: grid; place-items: center;
+        background: var(--s3); box-shadow: inset 0 0 0 1px var(--line2), var(--ombre-1);
+        display: grid; place-items: center;
       }
       .va-avatar-edit svg { width: 11px; height: 11px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .va-handle { margin: 0 0 20px; font-size: calc(15 * var(--u)); font-weight: 700; color: var(--ink); }
@@ -811,18 +833,11 @@
          "Tu gagnes 150 points" etait noye dans un paragraphe gris de
          12,5px. C'est l'argument de l'ecran : il se lit maintenant
          avant le reste. */
-      .va-gain {
-        display: flex; align-items: baseline; justify-content: center; gap: 8px;
-        margin: 0 0 8px;
-      }
-      .va-gain strong {
-        font-family: var(--chiffre); font-size: calc(32 * var(--u)); font-weight: 800; letter-spacing: -.03em;
-        letter-spacing: -.03em; line-height: 1; color: var(--marque-2);
-      }
-      .va-gain span {
-        font-size: calc(13.5 * var(--u)); font-weight: 700; color: var(--ink); letter-spacing: -.01em;
-      }
-      .va-hint { margin: 0 0 16px; font-size: calc(12.5 * var(--u)); color: var(--ink3); line-height: 1.5; }
+      /* Le "150" faisait 32px, en gras, dans le rouge de la marque, pose
+         sous un QR code : exactement le grand chiffre colore deja refuse sur
+         la carte des points. Un chiffre n'a pas besoin d'etre gros pour etre
+         vrai. La phrase le porte, en encre normale. */
+      .va-gain { margin: 0 0 18px; font-size: calc(13.5 * var(--u)); color: var(--ink2); line-height: 1.5; }
 
       /* Action secondaire sous "Partager mon code". */
       /* Action secondaire : suit le theme au lieu d'un blanc fige, qui
@@ -846,29 +861,33 @@
            lisible partout -- c'est ce que les couleurs figees en dur
            cherchaient a garantir, en moins fragile. */
         width: 100%; min-height: 46px; border: 0; border-radius: var(--r-pill);
-        background: var(--marque); color: #ffffff;
+        background: var(--ink); color: var(--bg);
         font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 700;
         cursor: pointer; transition: filter var(--tr-court), transform var(--tr-court);
       }
-      .va-share:hover { filter: brightness(1.07); }
+      .va-share:hover { opacity: .88; }
       .va-share:active { transform: scale(.98); }
 
       .va-sep { font-size: calc(11 * var(--u)); font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 16px; }
 
-      .va-search { display: flex; gap: 8px; }
+      /* Une loupe DANS le champ, et plus de bouton "Ajouter" a cote :
+         chercher et ajouter ne sont pas la meme action, et le bouton ne
+         pouvait rien ajouter tant que le champ etait vide -- il ne
+         remplissait que la ligne. On tape, la liste filtre, on tape sur un
+         resultat : le geste de toutes les applications. */
+      .va-search { position: relative; }
+      .va-search-ico {
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        width: 17px; height: 17px; stroke: var(--ink3); fill: none;
+        stroke-width: 2; stroke-linecap: round; pointer-events: none;
+      }
       .va-input {
-        flex: 1; min-height: 46px; padding: 0 16px; border: 0; border-radius: 14px;
+        width: 100%; min-height: 46px; padding: 0 16px 0 40px; border: 0; border-radius: 14px;
         background: var(--s2); box-shadow: inset 0 0 0 1px var(--line2);
         color: var(--ink); font-size: calc(14.5 * var(--u)); font-family: inherit;
       }
       .va-input::placeholder { color: var(--ink3); }
       .va-input:focus { outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
-      .va-add {
-        flex: 0 0 auto; min-height: 46px; padding: 0 20px; border-radius: 14px;
-        background: transparent; box-shadow: inset 0 0 0 1.5px var(--line2); color: var(--ink);
-        font-family: inherit; font-size: calc(14 * var(--u)); font-weight: 700; cursor: pointer;
-      }
-      .va-add:disabled { color: var(--ink3); cursor: not-allowed; }
       .va-msg { margin: 16px 0 0; font-size: calc(12.5 * var(--u)); color: var(--ink2); }
       .va-msg.err { color: var(--erreur-texte, #ff8290); }
       .va-msg.ok { color: var(--succes-texte, #7fe0a3); }
@@ -888,10 +907,15 @@
          confirme le tap sur une ligne d'ami. */
       .va-sugg:active { background: var(--s3); transform: scale(.985); }
       .va-row-add:active { transform: scale(.95); }
+      /* Fond neutre, pas un degrade rouge avec un faux reflet en haut a
+         gauche. Quatre amis sans photo faisaient quatre taches vives
+         alignees, plus voyantes que les pseudos qu'elles accompagnent --
+         le meme lavis de couleur deja refuse sur la carte des points. La
+         couleur, ici, viendra des vraies photos. */
       .va-sugg-av {
         flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; overflow: hidden;
-        background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
-        display: grid; place-items: center; font-size: calc(13 * var(--u)); font-weight: 800; color: #fff;
+        background: var(--s2); box-shadow: inset 0 0 0 1px var(--line);
+        display: grid; place-items: center; font-size: calc(13 * var(--u)); font-weight: 700; color: var(--ink2);
       }
       .va-sugg-av img { width: 100%; height: 100%; object-fit: cover; }
       .va-sugg-handle { font-size: calc(14 * var(--u)); font-weight: 600; color: var(--ink); }
@@ -906,22 +930,30 @@
          exactement la meme ligne sans ce bouton. */
       .va-row-add {
         margin-left: auto; flex: 0 0 auto; min-height: 30px; padding: 0 12px; border-radius: 999px;
-        background: transparent; box-shadow: inset 0 0 0 1.5px var(--line2); color: var(--ink);
+        background: transparent; box-shadow: inset 0 0 0 1px var(--line2); color: var(--ink);
         font-family: inherit; font-size: calc(12.5 * var(--u)); font-weight: 700; cursor: pointer;
       }
       .va-row-add[disabled] { opacity: .5; cursor: default; }
 
+      /* Etait une pilule centree, avec un eclair ambre et la phrase
+         "Gagner des points en invitant un ami". L'eclair est le tic le plus
+         reconnaissable d'une interface generee, et un bouton qui promet un
+         gain se lit comme une publicite. Devenue une ligne de reglage
+         ordinaire : ce qu'elle fait a gauche, ce qu'elle rapporte a droite,
+         un chevron. Le fait est toujours la, la promesse n'y est plus. */
       .va-invite-cta {
-        width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
-        min-height: 48px; margin: 28px 0 4px; border: 0; border-radius: 999px;
-        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line2); color: var(--ink);
-        font-family: inherit; font-size: calc(13.5 * var(--u)); font-weight: 700; cursor: pointer;
+        width: 100%; display: flex; align-items: center; gap: 10px;
+        min-height: 52px; margin: 16px 0 4px; padding: 0 14px; border: 0; border-radius: 14px;
+        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink);
+        font-family: inherit; font-size: calc(14 * var(--u)); font-weight: 600;
+        text-align: left; cursor: pointer;
       }
-      .va-invite-cta svg { width: 16px; height: 16px; fill: var(--ambre); flex: none; }
-      .va-invite-cta:active { transform: scale(.98); }
+      .va-invite-val { margin-left: auto; font-size: calc(13 * var(--u)); font-weight: 500; color: var(--ink2); }
+      .va-invite-cta > svg { width: 16px; height: 16px; flex: none; stroke: var(--ink3); fill: none; stroke-width: 2; stroke-linecap: round; }
+      .va-invite-cta:active { transform: scale(.99); }
 
-      .va-invite-head { display: flex; align-items: center; gap: 12px; margin: 4px 0 16px; }
-      .va-invite-head .va-kicker { margin: 0; }
+      .va-invite-head { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; }
+      .va-invite-titre { margin: 0; font-size: calc(18 * var(--u)); font-weight: 700; letter-spacing: -.02em; color: var(--ink); }
       .va-back {
         flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--s2); border: 0;
         cursor: pointer; display: grid; place-items: center;
@@ -3877,7 +3909,7 @@
         </div>
 
         <div class="vue-amis" id="vue-amis" hidden>
-          <h1 class="va-title">Amis</h1>
+          <h1 class="va-title" id="va-titre">Amis</h1>
 
           <!-- Repli "pas connecte" : avant, ce cas renvoyait EN SILENCE
                vers l'accueil (VUE_ACCUEIL.classList.remove("masque")) --
@@ -3903,8 +3935,8 @@
                  "Gagner des points" plus bas (#va-invite). -->
             <div class="va-liste" id="va-liste">
               <div class="va-search">
-                <input type="text" class="va-input" id="va-pseudo" placeholder="Rechercher un ami" autocomplete="off" autocapitalize="off" />
-                <button type="button" class="va-add" id="va-envoyer">Ajouter</button>
+                <svg class="va-search-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.4 16.4 21 21"/></svg>
+                <input type="text" class="va-input" id="va-pseudo" placeholder="Rechercher un pseudo" enterkeyhint="done" autocomplete="off" autocapitalize="off" />
               </div>
               <!-- Suggestions au fil de la frappe (demande de Julien,
                    "comme sur toutes les applications") : une ligne par
@@ -3912,6 +3944,14 @@
                    avoir a finir de taper ni a toucher "Ajouter". -->
               <ul class="va-suggestions" id="va-suggestions" hidden></ul>
               <p class="va-msg" id="va-msg" hidden></p>
+
+              <!-- Sous la recherche, et plus tout en bas : une liste d'amis
+                   qui s'allonge finissait par la pousser hors de l'ecran. -->
+              <button type="button" class="va-invite-cta" id="va-ouvrir-invite">
+                Inviter des amis
+                <span class="va-invite-val">150 points</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
 
               <!-- "Suggestions de qui ajouter" (demande de Julien) :
                    amis d'amis (connaissances en commun), voir
@@ -3927,13 +3967,9 @@
               <div class="va-section">
                 <p class="va-kicker" id="va-mesamis-kicker">Mes amis</p>
                 <ul class="va-liste-amis" id="va-liste-amis"></ul>
-                <p class="va-vide" id="va-liste-vide" hidden>Encore aucun ami. Cherche un pseudo, ou invite quelqu'un.</p>
+                <p class="va-vide" id="va-liste-vide" hidden>Aucun ami pour l'instant.</p>
               </div>
 
-              <button type="button" class="va-invite-cta" id="va-ouvrir-invite">
-                <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
-                Gagner des points en invitant un ami
-              </button>
             </div>
 
             <!-- ===== Etat invitation : code perso, QR, lien ===== -->
@@ -3942,7 +3978,7 @@
                 <button type="button" class="va-back" id="va-back" aria-label="Retour à mes amis">
                   <svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg>
                 </button>
-                <p class="va-kicker">Mon code</p>
+                <h2 class="va-invite-titre">Mon code</h2>
               </div>
               <div class="va-code">
                 <button type="button" class="va-avatar" id="va-avatar" aria-label="Changer ma photo de profil">
@@ -3957,8 +3993,7 @@
                 <div class="va-qr-cadre">
                   <div class="va-qr" id="va-qr" aria-hidden="true"></div>
                 </div>
-                <p class="va-gain"><strong>150</strong><span>points par ami qui rejoint</span></p>
-                <p class="va-hint">Fais scanner ton code, ou envoie ton lien.</p>
+                <p class="va-gain">150 points quand un ami s'inscrit.</p>
                 <button type="button" class="va-share" id="va-share">Partager mon code</button>
                 <button type="button" class="va-copier" id="va-copier">Copier le lien</button>
               </div>
@@ -7959,12 +7994,18 @@ async function ouvrirPageAmis(session) {
   // la remettre en avant sans rien reecrire, une fois qu'il y aura du
   // monde a ajouter.
   var vueListe = $("#va-liste"), vueInvite = $("#va-invite");
-  vueListe.hidden = true;
-  vueInvite.hidden = false;
-  $("#va-ouvrir-invite").onclick = function () { vueListe.hidden = true; vueInvite.hidden = false; };
-  $("#va-back").onclick = function () { vueInvite.hidden = true; vueListe.hidden = false; };
+  // .sur-code efface le grand titre "Amis" tant qu'on est sur le code
+  // perso : cet ecran porte deja le sien, a cote de la fleche retour.
+  function montrerCode(oui) {
+    vueListe.hidden = oui;
+    vueInvite.hidden = !oui;
+    VUE_AMIS.classList.toggle("sur-code", oui);
+  }
+  montrerCode(true);
+  $("#va-ouvrir-invite").onclick = function () { montrerCode(true); };
+  $("#va-back").onclick = function () { montrerCode(false); };
 
-  var champ = $("#va-pseudo"), bouton = $("#va-envoyer"), msg = $("#va-msg"), boutonPartager = $("#va-share");
+  var champ = $("#va-pseudo"), msg = $("#va-msg"), boutonPartager = $("#va-share");
   var avatarBtn = $("#va-avatar"), avatarInit = $("#va-avatar-init"), avatarImg = $("#va-avatar-img"), avatarFile = $("#va-avatar-file");
   var handleEl = $("#va-handle"), qrEl = $("#va-qr");
 
@@ -8001,7 +8042,7 @@ async function ouvrirPageAmis(session) {
     var res = await supabaseClubbeur.rpc("list_friends");
     var amis = res.data || [];
 
-    kickerAmisEl.textContent = "Mes amis" + (amis.length ? " (" + amis.length + ")" : "");
+    kickerAmisEl.hidden = amis.length === 0;
     listeVideEl.hidden = amis.length > 0;
 
     listeAmisEl.innerHTML = amis.map(function (a) {
@@ -8166,7 +8207,7 @@ async function ouvrirPageAmis(session) {
     var textes = {
       handle_manquant: "Entre un pseudo.",
       introuvable: "Personne n'a ce pseudo. Vérifie l'orthographe.",
-      soi_meme: "C'est ton propre pseudo -- inutile de t'ajouter toi-même.",
+      soi_meme: "C'est ton propre pseudo.",
       not_authenticated: "Ta session a expiré, reconnecte-toi.",
     };
     montrer(textes[code] || "Ça n'a pas marché. Réessaie dans un instant.", "err");
@@ -8181,13 +8222,13 @@ async function ouvrirPageAmis(session) {
 
     suggestions.hidden = true;
     msg.hidden = true;
-    bouton.disabled = true;
-    bouton.textContent = "...";
+    // Le bouton "Ajouter" a disparu du champ de recherche : c'est lui qui
+    // portait l'etat d'attente. Le champ le prend a sa place.
+    champ.disabled = true;
 
     var res = await supabaseClubbeur.rpc("add_friend", { p_handle: pseudo });
 
-    bouton.disabled = false;
-    bouton.textContent = "Ajouter";
+    champ.disabled = false;
 
     if (res.error) {
       // Le message Postgres est du genre "introuvable" tout court
@@ -8201,7 +8242,7 @@ async function ouvrirPageAmis(session) {
     if (!ami) { direErreur(""); return; }
 
     champ.value = "";
-    montrer("@" + ami.friend_handle + " ajouté !", "ok");
+    montrer("@" + ami.friend_handle + " ajouté.", "ok");
 
     // Rafraichit "Mes amis" (le nouvel ami y apparait tout de suite)
     // et "Suggestions" (il en disparait -- suggerer quelqu'un deja
@@ -8210,7 +8251,6 @@ async function ouvrirPageAmis(session) {
     chargerSuggestions();
   }
 
-  bouton.onclick = function () { envoyer(); };
   champ.onkeydown = function (e) { if (e.key === "Enter") envoyer(); };
 
   // --- Suggestions au fil de la frappe ----------------------------
