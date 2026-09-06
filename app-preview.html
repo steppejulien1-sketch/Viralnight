@@ -2033,16 +2033,26 @@
          teinte de surface au-dessus suffit a ce qu'il pose sur quelque
          chose. Et le cadre reste bas (2,2/1) tant qu'il n'y a qu'un
          pictogramme dedans : un grand cadre a moitie vide se voit. */
+      /* Hauteur FERME, pas un aspect-ratio : le ratio cede devant le
+         contenu, donc le dessin (carre, 512 px) etirait le socle en
+         hauteur au lieu d'entrer dedans. Une hauteur en pixels est ici la
+         bonne reponse -- dans ce fichier, seules les tailles de texte
+         suivent --u, jamais les hauteurs. */
       .cadeau-scene {
         position: relative; display: grid; place-items: center;
-        width: 100%; aspect-ratio: 2.2 / 1; margin: 0 0 16px;
+        width: 100%; height: 156px; margin: 0 0 16px;
         border-radius: 16px; background: var(--s2);
       }
-      .cadeau-art { max-width: 76%; max-height: 90%; object-fit: contain; }
+      .cadeau-art { max-width: 60%; max-height: 84%; object-fit: contain; }
       .cadeau-boite {
         position: relative; width: 84px; height: 84px; border-radius: 26px;
         display: grid; place-items: center; background: var(--bouton);
       }
+      /* `display: grid` bat le `display: none` que le navigateur pose sur
+         [hidden] : sans cette ligne, cacher le pictogramme une fois le
+         dessin charge ne le cachait pas, et les deux s'empilaient. Meme
+         piege que .cadeau[hidden] et .cadeau-sous[hidden] plus haut. */
+      .cadeau-art[hidden], .cadeau-boite[hidden] { display: none; }
       .cadeau-boite svg {
         width: 42px; height: 42px; fill: none; stroke: #fff;
         stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
@@ -9612,16 +9622,24 @@ $("#pf-avis")?.addEventListener("click", function () {
 var CADEAU = $("#cadeau"), CADEAU_SCENE = $("#cadeau-scene"), CADEAU_BTN = $("#cadeau-btn");
 
 /* Le dessin du cadeau prend la place du pictogramme -- mais SEULEMENT
-   s'il existe. art-cadeau.webp n'est pas encore dessine ; tant qu'il
-   manque, l'evenement load ne part jamais, le pictogramme reste, et
-   personne ne voit d'image cassee. */
+   s'il existe. Si le fichier manque, l'evenement load ne part jamais, le
+   pictogramme reste, et personne ne voit d'image cassee.
+
+   ⚠️ Le test `complete` n'est pas une precaution, c'est LE cas courant :
+   le src est dans le HTML, donc l'image est souvent deja chargee (cache,
+   ou simplement plus rapide que le script) quand ce code s'execute --
+   `load` est alors DEJA passe et l'ecouteur seul ne se declenche jamais.
+   naturalWidth en plus de complete : une image cassee est "complete"
+   elle aussi, avec une largeur nulle. */
 (function () {
   var art = $("#cadeau-art"), pictogramme = $("#cadeau-boite");
   if (!art || !pictogramme) return;
-  art.addEventListener("load", function () {
+  function poser() {
     art.hidden = false;
     pictogramme.hidden = true;
-  });
+  }
+  if (art.complete && art.naturalWidth > 0) poser();
+  else art.addEventListener("load", poser);
 })();
 
 /* Le jeton d'appareil, pour le bonus de bienvenue.
