@@ -1977,62 +1977,65 @@
          couleur de marque en aplat, et elle n'est la qu'un instant par
          jour. Le reste du temps elle n'existe pas, donc elle ne devient
          jamais du decor. */
+      /* Surface neutre et lisere neutre, comme .solde-carte juste
+         au-dessus -- qui a fait exactement ce chemin : "les deux degrades
+         rouges donnaient un lavis rose qui faisait carte generee". Une
+         carte cadeau posee en aplat rouge avec une ombre rouge dessous
+         aurait refait la meme faute, en plus voyant. Le seul rouge de
+         cette carte est le contour de la marche du jour : une couleur,
+         une information. */
       .cadeau {
-        display: flex; align-items: center; gap: calc(12 * var(--u));
-        width: 100%; margin-top: 12px; padding: 14px 15px;
+        display: block; width: 100%; margin-top: 12px; padding: 14px 15px;
         border: 0; border-radius: 18px; cursor: pointer;
-        background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 72%, #7b1f2a));
-        color: #fff; font-family: inherit; text-align: left;
-        box-shadow: 0 10px 26px -14px color-mix(in srgb, var(--accent) 80%, transparent);
+        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
+        color: var(--ink); font-family: inherit; text-align: left;
         transition: transform .16s cubic-bezier(.23,1,.32,1);
       }
+      .cadeau-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+
+      /* ---- Les sept marches ----
+         Les jours passes sont pleins, le jour du moment est cercle de
+         rouge, les suivants attendent en gris. On lit d'un coup ou on en
+         est, et surtout ce que vaut la fin de la semaine : c'est le
+         montant du septieme jour qui fait revenir le quatrieme. */
+      .cadeau-jours {
+        display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;
+        list-style: none; margin: 12px 0 0; padding: 0;
+      }
+      .cadeau-jour {
+        display: grid; place-items: center; min-height: 34px; border-radius: 9px;
+        background: var(--s2); color: var(--ink3);
+        font-family: var(--chiffre); font-size: calc(12 * var(--u)); font-weight: 700;
+        font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+      }
+      .cadeau-jour.fait { background: var(--s3); color: var(--ink2); }
+      .cadeau-jour.aujourdhui {
+        background: transparent; box-shadow: inset 0 0 0 1.5px var(--bouton); color: var(--ink);
+      }
+      /* Mode bienvenue : une seule fois dans la vie du compte, il n'y a
+         pas de semaine a montrer. */
+      .cadeau.bienvenue .cadeau-jours { display: none; }
       .cadeau[hidden] { display: none; }
       .cadeau:active { transform: scale(.98); }
-      .cadeau-boite {
-        flex: 0 0 auto; width: 40px; height: 40px; border-radius: 13px;
-        display: grid; place-items: center; background: rgba(255,255,255,.18);
-      }
-      .cadeau-boite svg {
-        width: 22px; height: 22px; fill: none; stroke: #fff;
-        stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
-      }
-      /* Le paquet respire, tres peu et sans fin : c'est ce qui dit
-         "touche-moi" sans ecrire "touche-moi". Deux degres de rotation,
-         pas dix -- au-dela ca gigote. */
-      .cadeau:not(.ouvert) .cadeau-boite { animation: cadeauRespire 2.4s ease-in-out infinite; }
-      @keyframes cadeauRespire {
-        0%, 62%, 100% { transform: rotate(0deg) scale(1); }
-        70% { transform: rotate(-6deg) scale(1.06); }
-        78% { transform: rotate(5deg) scale(1.06); }
-        86% { transform: rotate(-3deg) scale(1.03); }
-      }
-      .cadeau-txt { flex: 1 1 auto; min-width: 0; }
-      .cadeau-txt strong {
+      .cadeau-tete strong {
         display: block; font-family: var(--titre);
         font-size: calc(15 * var(--u)); font-weight: 800; letter-spacing: -.02em;
       }
-      .cadeau-txt span { display: block; margin-top: 2px; font-size: calc(12.5 * var(--u)); color: rgba(255,255,255,.82); }
-      .cadeau-chevron { flex: 0 0 auto; }
-      .cadeau-chevron svg {
-        width: 18px; height: 18px; fill: none; stroke: rgba(255,255,255,.8);
-        stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
-      }
-      /* Ouvert : le chevron n'a plus rien a promettre, le montant prend
-         toute la place. */
+      .cadeau-tete > span { flex: 0 0 auto; font-size: calc(12.5 * var(--u)); color: var(--ink2); }
       .cadeau.ouvert { pointer-events: none; }
-      .cadeau.ouvert .cadeau-chevron { display: none; }
-      .cadeau.ouvert .cadeau-txt strong { font-family: var(--chiffre); font-size: calc(26 * var(--u)); letter-spacing: -.04em; }
-      .cadeau.jackpot {
-        background: linear-gradient(135deg, #f7b733, #e0562b 62%, #b6234a);
-        box-shadow: 0 12px 30px -12px rgba(224,86,43,.7);
+      /* Ouvert, le montant prend la place du titre -- en encre normale.
+         Un grand chiffre en couleur de marque est precisement ce qui a
+         ete retire de la carte des points juste au-dessus. */
+      .cadeau.ouvert .cadeau-tete strong {
+        font-family: var(--chiffre); font-size: calc(26 * var(--u)); letter-spacing: -.04em;
       }
+      /* Le jackpot ne repeint pas la carte, il change UN mot. Un degrade
+         orange pose pour une fois sur cent, c'est porter un effet toute
+         l'annee pour trois secondes par trimestre. */
+      .cadeau.jackpot .cadeau-tete > span { color: var(--prix-encre, var(--bouton)); font-weight: 700; }
       @media (prefers-reduced-motion: reduce) {
         .cadeau { transition: none; }
         .cadeau:active { transform: none; }
-        /* Le mouvement part, la carte reste : elle porte deja sa couleur
-           et son libelle, elle ne depend pas de l'animation pour se
-           faire remarquer. */
-        .cadeau:not(.ouvert) .cadeau-boite { animation: none; }
       }
 
       .solde-label {
@@ -4382,20 +4385,14 @@
                    quoi que ce soit -- l'appli ouvre le paquet, elle ne
                    le remplit pas. -->
               <button type="button" class="cadeau" id="cadeau" hidden>
-                <span class="cadeau-boite" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <rect x="3" y="9.5" width="18" height="11.5" rx="2"/>
-                    <path d="M2 6.5h20v3H2zM12 6.5V21"/>
-                    <path d="M12 6.5S9.2 1.4 7 3.2s5 3.3 5 3.3zM12 6.5s2.8-5.1 5-3.3-5 3.3-5 3.3z"/>
-                  </svg>
-                </span>
-                <span class="cadeau-txt">
+                <span class="cadeau-tete">
                   <strong id="cadeau-titre">Cadeau du jour</strong>
                   <span id="cadeau-sous">Touche pour l'ouvrir</span>
                 </span>
-                <span class="cadeau-chevron" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </span>
+                <!-- Les sept marches. C'est ELLE qui fait revenir : sans
+                     voir la marche suivante et ce qu'elle vaut, un cadeau
+                     quotidien n'est qu'un montant de plus. -->
+                <ol class="cadeau-jours" id="cadeau-jours" aria-hidden="true"></ol>
               </button>
             </section>
 
@@ -9510,37 +9507,106 @@ $("#pf-avis")?.addEventListener("click", function () {
    pas -- un tirage cote navigateur, c'est un jackpot a volonte, et une
    garde "un par jour" dans le localStorage se contourne en vidant son
    navigateur. */
-var CADEAU = $("#cadeau");
+var CADEAU = $("#cadeau"), CADEAU_JOURS = $("#cadeau-jours");
+
+/* Le jeton d'appareil, pour le bonus de bienvenue.
+   Julien : "que ca ne lui redonne pas cinquante points [...] parce que
+   sinon il y en a qui vont essayer de tricher."
+
+   Ce jeton est un nombre TIRE AU HASARD, pas une empreinte : il ne dit
+   rien du telephone, il ne sert qu'ici, et vider son navigateur en
+   fabrique un neuf. C'est assume -- il arrete celui qui se recree un
+   compte sans y penser, pas celui qui cherche a tricher. Le vrai verrou
+   est cote base : pas de bonus sans avoir scanne le QR d'un club, donc
+   recommencer veut dire retourner physiquement dans le club (voir
+   migration 0041). */
+function jetonAppareil() {
+  try {
+    var j = localStorage.getItem("vn_appareil");
+    if (!j) {
+      j = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : String(Date.now()) + Math.random().toString(36).slice(2);
+      localStorage.setItem("vn_appareil", j);
+    }
+    return j;
+  } catch (e) {
+    // Navigation privee, stockage refuse : on envoie null plutot que de
+    // bloquer quelqu'un qui n'a rien fait de mal.
+    return null;
+  }
+}
+
+// Ce que la carte propose en ce moment : "bienvenue" ou "jour".
+var modeCadeau = null;
+
+/* Les sept marches. Les jours passes pleins, celui du moment cercle, les
+   suivants en attente -- c'est de voir la marche a venir qui fait
+   revenir, pas le montant d'aujourd'hui. */
+function dessinerEchelle(echelle, jour) {
+  if (!CADEAU_JOURS) return;
+  var marches = Array.isArray(echelle) ? echelle : [];
+  var courant = jour || 1;
+  CADEAU_JOURS.innerHTML = marches.map(function (m) {
+    var classe = m.jour < courant ? " fait" : (m.jour === courant ? " aujourdhui" : "");
+    return '<li class="cadeau-jour' + classe + '">' + nb(m.points) + "</li>";
+  }).join("");
+}
 
 async function verifierCadeau() {
   if (!CADEAU || !supabaseClubbeur) return;
+
+  /* Le bonus de bienvenue passe devant : il ne se propose qu'une fois
+     dans la vie du compte, et il vaut plus qu'une semaine entiere de
+     cadeaux quotidiens. */
+  var bv = await supabaseClubbeur.rpc("welcome_bonus_status", { p_device: jetonAppareil() });
+  if (!bv.error && bv.data && bv.data.etat === "disponible") {
+    modeCadeau = "bienvenue";
+    CADEAU.classList.add("bienvenue");
+    $("#cadeau-titre").textContent = "Bienvenue";
+    $("#cadeau-sous").textContent = nb(bv.data.points) + " points";
+    CADEAU.hidden = false;
+    return;
+  }
+
   var res = await supabaseClubbeur.rpc("daily_gift_status");
-  /* La fonction n'existe pas encore ? On se tait. La migration 0040 vit
-     dans l'autre depot et ne sera pas appliquee au meme moment que ce
-     fichier : entre les deux, l'appli doit marcher exactement comme
-     avant, sans carte et sans erreur rouge dans la console. */
+  /* La fonction n'existe pas encore ? On se tait. Les migrations 0040 et
+     0041 vivent dans l'autre depot et ne seront pas appliquees au meme
+     moment que ce fichier : entre les deux, l'appli doit marcher
+     exactement comme avant, sans carte et sans erreur rouge en console. */
   if (res.error || !res.data) return;
+
+  modeCadeau = "jour";
+  CADEAU.classList.remove("bienvenue");
+  dessinerEchelle(res.data.echelle, res.data.jour);
+  $("#cadeau-titre").textContent = "Cadeau du jour";
+  $("#cadeau-sous").textContent = "Jour " + (res.data.jour || 1);
   CADEAU.hidden = res.data.etat !== "disponible";
 }
 
 CADEAU?.addEventListener("click", async function () {
   if (CADEAU.classList.contains("ouvert")) return;
+  var bienvenue = modeCadeau === "bienvenue";
   CADEAU.classList.add("ouvert");
   $("#cadeau-titre").textContent = "…";
   $("#cadeau-sous").textContent = "";
 
-  var res = await supabaseClubbeur.rpc("daily_gift");
+  var res = bienvenue
+    ? await supabaseClubbeur.rpc("welcome_bonus", { p_device: jetonAppareil() })
+    : await supabaseClubbeur.rpc("daily_gift");
   var d = (!res.error && res.data) || { etat: "erreur" };
 
   if (d.etat !== "ok") {
     // Aucun de ces cas n'est une panne : on le dit en clair et la carte
     // s'en va, plutot que de laisser un paquet qui ne s'ouvre pas.
-    $("#cadeau-titre").textContent = d.etat === "aucun_club"
-      ? "Scanne un club d'abord"
-      : d.etat === "deja_pris" ? "Déjà pris aujourd'hui" : "Réessaie plus tard";
-    $("#cadeau-sous").textContent = d.etat === "aucun_club"
-      ? "Le cadeau va dans la boutique de ton dernier club."
-      : "";
+    var phrases = {
+      aucun_club: ["Scanne un club d'abord", "Les points vont dans la boutique de ton dernier club."],
+      deja_pris: ["Déjà pris", ""],
+      appareil_deja_servi: ["Bonus déjà utilisé", "Un seul bonus de bienvenue par téléphone."],
+    };
+    var dit = phrases[d.etat] || ["Réessaie plus tard", ""];
+    $("#cadeau-titre").textContent = dit[0];
+    $("#cadeau-sous").textContent = dit[1];
     setTimeout(function () { CADEAU.hidden = true; CADEAU.classList.remove("ouvert"); }, 2600);
     return;
   }
@@ -9548,11 +9614,18 @@ CADEAU?.addEventListener("click", async function () {
   CADEAU.classList.toggle("jackpot", !!d.jackpot);
   $("#cadeau-titre").textContent = "+" + nb(d.points) + " pts";
   $("#cadeau-sous").textContent = d.jackpot
-    ? "Jackpot ! " + (d.club ? "Chez " + d.club + "." : "")
-    : (d.club ? "Dans ta boutique " + d.club + "." : "");
+    ? "Jackpot" + (d.club ? ", chez " + d.club : "")
+    : (d.club ? "Dans ta boutique " + d.club : "");
+
+  // La marche du jour vient d'etre prise : elle rejoint les pleines.
+  if (!bienvenue && CADEAU_JOURS) {
+    var pastille = CADEAU_JOURS.querySelector(".aujourdhui");
+    if (pastille) pastille.className = "cadeau-jour fait";
+  }
+
   jouer(d.jackpot ? "jackpot" : "points");
 
-  // Le solde suit tout de suite : voir "+35 pts" sans que le compteur
+  // Le solde suit tout de suite : voir "+40 pts" sans que le compteur
   // juste au-dessus bouge, c'est un cadeau qui n'arrive nulle part.
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (session) await chargerSoldeReel(session.user.id);
@@ -9561,7 +9634,7 @@ CADEAU?.addEventListener("click", async function () {
   // rien a proposer avant demain.
   setTimeout(function () {
     CADEAU.hidden = true;
-    CADEAU.classList.remove("ouvert", "jackpot");
+    CADEAU.classList.remove("ouvert", "jackpot", "bienvenue");
     $("#cadeau-titre").textContent = "Cadeau du jour";
     $("#cadeau-sous").textContent = "Touche pour l'ouvrir";
   }, 4200);
