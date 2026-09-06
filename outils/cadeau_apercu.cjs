@@ -181,6 +181,20 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   });
   await prendre("06-aucun-club", "Sans club scanne — rien a payer, on le dit");
 
+  // ---- 7. La boutique, pour verifier le cadrage des dessins ----
+  // Les illustrations sont carrees dans un cadre 4/3 : avec `cover` elles
+  // etaient rognees en haut et en bas. Cette capture est la pour que ca
+  // se revoie d'un coup d'oeil.
+  await page.evaluate(() => {
+    document.querySelector("#cadeau").hidden = true;
+    const v = document.querySelector("#vue-boutique");
+    (v.querySelector(".app") || v).scrollTop = 380;
+    v.scrollTop = 380;
+    window.scrollTo(0, 380);
+  });
+  await pause(900);
+  await prendre("07-boutique", "Les quatre recompenses — rien de coupe");
+
   await navigateur.close();
   console.log(`\n-> ${DOSSIER}\n`);
 })();
