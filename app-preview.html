@@ -2008,17 +2008,41 @@
          sur toute la carte comme la premiere version. Et il ne bouge
          pas : c'est l'ouverture qui doit etre agreable, pas l'attente --
          un paquet qui gigote toute la journee devient un meuble. */
+      /* Le socle, comme .carte-reco .photo : c'est ce qui manquait pour
+         que la carte appartienne a la boutique au lieu de flotter juste
+         au-dessus. Un pictogramme pose sur du blanc n'a pas de place ou
+         etre ; une illustration posee sur un socle, si. */
+      /* --s2 et non --socle : dans la boutique --socle vaut #ffffff, soit
+         exactement le fond de la carte -- le socle etait donc invisible
+         et le paquet flottait au milieu d'un grand vide blanc. Une
+         teinte de surface au-dessus suffit a ce qu'il pose sur quelque
+         chose. Et le cadre reste bas (2,2/1) tant qu'il n'y a qu'un
+         pictogramme dedans : un grand cadre a moitie vide se voit. */
+      .cadeau-scene {
+        position: relative; display: grid; place-items: center;
+        width: 100%; aspect-ratio: 2.2 / 1; margin: 0 0 16px;
+        border-radius: 16px; background: var(--s2);
+      }
+      .cadeau-art { max-width: 76%; max-height: 90%; object-fit: contain; }
       .cadeau-boite {
-        position: relative; width: 76px; height: 76px; border-radius: 24px;
-        margin: 0 auto 14px; display: grid; place-items: center; background: var(--bouton);
+        position: relative; width: 84px; height: 84px; border-radius: 26px;
+        display: grid; place-items: center; background: var(--bouton);
       }
       .cadeau-boite svg {
-        width: 38px; height: 38px; fill: none; stroke: #fff;
+        width: 42px; height: 42px; fill: none; stroke: #fff;
         stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
       }
-      .cadeau-titre { margin: 0; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2); }
+      /* Meme famille typographique que le nom d'une recompense
+         (.carte-reco strong) : les deux se lisent l'un sous l'autre. */
+      .cadeau-titre {
+        margin: 0; font-family: var(--titre); font-size: calc(14.5 * var(--u));
+        font-weight: 700; letter-spacing: -.02em; color: var(--ink);
+      }
+      /* Le montant reste en encre normale : un grand chiffre en couleur
+         de marque est precisement ce qui a ete retire de la carte des
+         points. La couleur de la carte vit dans le socle et le paquet. */
       .cadeau-montant {
-        margin: 2px 0 0; font-family: var(--chiffre); font-size: calc(33 * var(--u));
+        margin: 3px 0 0; font-family: var(--chiffre); font-size: calc(33 * var(--u));
         font-weight: 800; letter-spacing: -.03em; line-height: 1.12; color: var(--ink);
       }
       .cadeau-sous { margin: 3px 0 0; font-size: calc(12.5 * var(--u)); color: var(--ink2); }
@@ -2051,8 +2075,8 @@
          Meme dessin et memes couleurs, geste un peu plus ample et plus
          long -- c est le moment que Julien veut voir. Surcharge locale :
          la salve de la boutique ne bouge pas. */
-      .cadeau-boite .confettis { inset: -30px; }
-      .cadeau-boite .confettis i {
+      .cadeau-scene .confettis { inset: 22%; }
+      .cadeau-scene .confettis i {
         width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
         animation-duration: .9s;
       }
@@ -4426,12 +4450,25 @@
                    quoi que ce soit -- l'appli ouvre le paquet, elle ne
                    le remplit pas. -->
               <section class="cadeau" id="cadeau" hidden>
-                <span class="cadeau-boite" id="cadeau-boite" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <rect x="3" y="9.5" width="18" height="11.5" rx="2"/>
-                    <path d="M2 6.5h20v3H2zM12 6.5V21"/>
-                    <path d="M12 6.5S9.2 1.4 7 3.2s5 3.3 5 3.3zM12 6.5s2.8-5.1 5-3.3-5 3.3-5 3.3z"/>
-                  </svg>
+                <!-- Le meme socle que la photo d'une tuile de la boutique
+                     (.carte-reco .photo) : la carte cadeau appartient a la
+                     meme famille que les recompenses juste dessous, au
+                     lieu de flotter a cote d'elles avec un pictogramme.
+
+                     art-cadeau.webp n'existe PAS encore : tant qu'il
+                     manque, le pictogramme rouge tient la place et rien
+                     ne casse. Des que le dessin est la (meme trait noir
+                     que art-cocktail / art-pinte), il prend le dessus
+                     tout seul -- voir l'ecouteur load plus bas. -->
+                <span class="cadeau-scene" id="cadeau-scene">
+                  <img class="cadeau-art" id="cadeau-art" src="/recompenses/art-cadeau.webp" alt="" hidden />
+                  <span class="cadeau-boite" id="cadeau-boite" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="9.5" width="18" height="11.5" rx="2"/>
+                      <path d="M2 6.5h20v3H2zM12 6.5V21"/>
+                      <path d="M12 6.5S9.2 1.4 7 3.2s5 3.3 5 3.3zM12 6.5s2.8-5.1 5-3.3-5 3.3-5 3.3z"/>
+                    </svg>
+                  </span>
                 </span>
                 <p class="cadeau-titre" id="cadeau-titre">Cadeau du jour</p>
                 <!-- Le montant est ANNONCE, pas devoile au clic. C'est ce
@@ -5956,12 +5993,22 @@ function majProgressionSolde() {
     : large > 0 ? Math.max(0, Math.min(100, ((ETAT.solde - depart) / large) * 100))
     : 0;
 
+  /* Julien : "au plus on a de points, la barre elle ne se remplit pas,
+     c'est bizarre. Il faut que ca se remplisse un peu."
+     Avec un premier palier a 300 points, cinq points de cadeau font 1,7 %
+     -- six pixels sur une barre de 330, arrondis a rien. La barre restait
+     visuellement a zero pendant les premiers jours, ceux ou justement il
+     faut voir que ca avance. Plancher a 4 % des qu'il y a le moindre
+     point : ce n'est plus tout a fait proportionnel, mais une barre qui
+     ne bouge jamais ne mesure rien du tout. */
+  var affichee = part > 0 ? Math.max(part, 4) : 0;
+
   /* Pose a 0 puis relachee au cadre suivant : une largeur ecrite
      directement dans le HTML n'a pas d'etat de depart, donc pas de
      transition -- la barre apparaitrait deja pleine. */
   piste.innerHTML = '<span class="solde-prog-barre"></span>';
   var barre = piste.firstElementChild;
-  requestAnimationFrame(function () { barre.style.width = Math.round(part) + "%"; });
+  requestAnimationFrame(function () { barre.style.width = Math.round(affichee) + "%"; });
   paliersZone.innerHTML = "";
   bloc.classList.toggle("pleine", pleine);
 
@@ -9555,7 +9602,20 @@ $("#pf-avis")?.addEventListener("click", function () {
    pas -- un tirage cote navigateur, c'est un jackpot a volonte, et une
    garde "un par jour" dans le localStorage se contourne en vidant son
    navigateur. */
-var CADEAU = $("#cadeau"), CADEAU_BOITE = $("#cadeau-boite"), CADEAU_BTN = $("#cadeau-btn");
+var CADEAU = $("#cadeau"), CADEAU_SCENE = $("#cadeau-scene"), CADEAU_BTN = $("#cadeau-btn");
+
+/* Le dessin du cadeau prend la place du pictogramme -- mais SEULEMENT
+   s'il existe. art-cadeau.webp n'est pas encore dessine ; tant qu'il
+   manque, l'evenement load ne part jamais, le pictogramme reste, et
+   personne ne voit d'image cassee. */
+(function () {
+  var art = $("#cadeau-art"), pictogramme = $("#cadeau-boite");
+  if (!art || !pictogramme) return;
+  art.addEventListener("load", function () {
+    art.hidden = false;
+    pictogramme.hidden = true;
+  });
+})();
 
 /* Le jeton d'appareil, pour le bonus de bienvenue.
    Julien : "que ca ne lui redonne pas cinquante points [...] parce que
@@ -9638,7 +9698,7 @@ async function verifierCadeau() {
 function rangerCadeau() {
   CADEAU.hidden = true;
   CADEAU.classList.remove("ouvert", "jackpot", "bienvenue", "message");
-  CADEAU_BOITE?.querySelector(".confettis")?.remove();
+  CADEAU_SCENE?.querySelector(".confettis")?.remove();
   $("#cadeau-titre").textContent = "Cadeau du jour";
   $("#cadeau-montant").textContent = "";
   $("#cadeau-sous").hidden = true;
@@ -9685,10 +9745,10 @@ CADEAU_BTN?.addEventListener("click", async function () {
      pour la confirmation d'un echange -- et pas une seconde famille
      d'animation : six eclats, une seule fois, jamais en boucle, et
      coupee par prefers-reduced-motion via sa propre regle CSS. */
-  if (CADEAU_BOITE) {
-    var ancienne = CADEAU_BOITE.querySelector(".confettis");
+  if (CADEAU_SCENE) {
+    var ancienne = CADEAU_SCENE.querySelector(".confettis");
     if (ancienne) ancienne.remove();
-    CADEAU_BOITE.insertAdjacentHTML("beforeend", confettis());
+    CADEAU_SCENE.insertAdjacentHTML("beforeend", confettis());
   }
 
   jouer(d.jackpot ? "jackpot" : "points");

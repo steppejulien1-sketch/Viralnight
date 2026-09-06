@@ -73,6 +73,15 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
       const num = document.querySelector("#solde-num");
       if (num) num.textContent = String(e.solde);
 
+      /* La barre suit le nombre pose ci-dessus. Sans ca elle reste vide
+         sur toutes les captures -- majProgressionSolde() lit ETAT.solde,
+         que ce script ne touche pas. Premier palier a 300 points. */
+      const piste = document.querySelector("#solde-prog-piste");
+      if (piste) {
+        const part = Math.max(e.solde > 0 ? 4 : 0, Math.min(100, (e.solde / 300) * 100));
+        piste.innerHTML = `<span class="solde-prog-barre" style="width:${part}%"></span>`;
+      }
+
       const carte = document.querySelector("#cadeau");
       carte.className = "cadeau" + (e.classes ? " " + e.classes : "");
       document.querySelector("#cadeau-titre").textContent = e.titre;
@@ -83,14 +92,14 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
       sous.hidden = !e.sous;
 
 
-      const boite = document.querySelector("#cadeau-boite");
+      const boite = document.querySelector("#cadeau-scene");
       boite.querySelector(".confettis")?.remove();
       if (e.salve) {
         const couleurs = ["#ff6b5b", "#e2b23f", "#818cf8", "#57d98a", "#ff6b5b", "#818cf8"];
         let html = "";
         for (let i = 0; i < 6; i++) {
           const a = (i / 6) * Math.PI * 2;
-          html += `<i style="--x:${Math.round(Math.cos(a) * 34)}px;--y:${Math.round(Math.sin(a) * 34)}px;` +
+          html += `<i style="--x:${Math.round(Math.cos(a) * 44)}px;--y:${Math.round(Math.sin(a) * 44)}px;` +
                   `--r:${Math.round(Math.random() * 240 - 120)}deg;--c:${couleurs[i]}"></i>`;
         }
         boite.insertAdjacentHTML("beforeend", `<span class="confettis">${html}</span>`);
