@@ -2246,15 +2246,28 @@
         position: relative; width: 100%; aspect-ratio: 4 / 3;
         background: var(--socle); overflow: hidden;
       }
+      /* `contain`, et surtout PAS `cover`. Les dessins sont carres
+         (512x512) et le cadre est en 4/3 : avec `cover`, un quart de la
+         hauteur partait a la poubelle, et l'agrandissement de 1,08 en
+         mangeait encore. Resultat visible sur les quatre tuiles --
+         l'anse du cintre coupee, le col de la bouteille coupe, la mousse
+         de la pinte coupee, le pied du verre coupe. Julien : "les autres
+         ne sont pas tres bien cadres".
+
+         Un dessin detoure se rogne mal : il n'a pas de decor autour a
+         sacrifier, chaque pixel coupe est un morceau de l'objet. Le
+         fichier le dit deja pour la carte de favori, plus bas ; la
+         boutique avait garde l'ancienne regle.
+
+         `contain` remplit toute la HAUTEUR du cadre (le dessin est aussi
+         grand qu'il peut l'etre sans etre coupe) et laisse un peu de
+         blanc sur les cotes. C'est le bon compromis : mieux vaut un peu
+         d'air qu'un objet ampute. */
       .carte-reco .photo img {
-        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        /* Le dessin est cadre large dans son fichier : sans ce leger
-           agrandissement, il reste une vignette posee au centre d'un
-           cadre, la ou une photo de DICE remplit le sien. */
-        transform: scale(1.08);
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
         transition: transform .5s cubic-bezier(.2,.7,.3,1);
       }
-      .carte-reco:hover .photo img { transform: scale(1.13); }
+      .carte-reco:hover .photo img { transform: scale(1.05); }
       .carte-reco .photo svg {
         position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
         width: 54%; height: 54%;
