@@ -3244,6 +3244,10 @@
       }
       /* La regle du jeu : sous le bouton, en encre sourde. Elle ne
          doit pas concurrencer l'action -- elle l'encadre. */
+      /* Une fois la story du soir deposee, la ligne de regle passe en
+         encre normale : elle ne rappelle plus une contrainte, elle
+         constate un fait. */
+      .ps-regle.faite { color: var(--ink); font-weight: 600; }
       .ps-regle {
         margin: 12px 0 0; text-align: center;
         font-size: calc(12 * var(--u)); line-height: 1.45; color: var(--ink3);
@@ -7730,11 +7734,13 @@ function ouvrirChoixReseau(nomClub) {
              tripler ses points a perdu sa soiree. Elle se lit AVANT le
              geste, pas apres.
 
-             ⚠️ C'est un TEXTE, pas encore un verrou. Le plafond doit
-             etre tenu par submit_story() cote base clubbeur, sinon il
-             suffit de renvoyer le formulaire. A poser dans la meme
-             migration que le reste, cote 06-pwa-clubbeurs. */
-          '<p class="ps-regle">Une seule story compte par soirée. Les suivantes ne rapportent rien de plus.</p>' +
+             Le verrou existe depuis la migration 0042 (base clubbeur) :
+             submit_story() leve `deja_ce_soir`, et story_du_soir() permet
+             de le savoir AVANT de remplir le formulaire -- voir
+             verifierStoryDuSoir() plus bas. Une soiree va de 6 h a 6 h,
+             heure de Bruxelles : une story de 2 h du matin appartient a
+             la veille. */
+          '<p class="ps-regle" id="ps-regle">Une seule story par soirée.</p>' +
         "</div>" +
       "</form>" +
     "</div>";
@@ -7768,6 +7774,11 @@ function ouvrirChoixReseau(nomClub) {
   VUE_STORY.hidden = false;
   history.replaceState(null, "", "#story");
   $("#sh-story-story").focus();
+
+  // La regle du soir se lit AVANT de remplir : story_du_soir() dit si la
+  // soiree est deja prise. Pas d'await -- la page s'affiche tout de
+  // suite, la ligne se corrige au retour du serveur.
+  verifierStoryDuSoir();
 
 
   // Met a jour la mention ("Tague @lehandle") et l'etape 2 des qu'on
@@ -7975,6 +7986,10 @@ function ouvrirChoixReseau(nomClub) {
         invalid_kind: "Ça n'a pas marché. Réessaie dans un instant.",
         url_required: "Colle le lien de ta story ou vidéo.",
         already_pending: "Tu as déjà une story en attente pour ce club, patiente un peu.",
+        // Leve par submit_story() depuis la migration 0042. Le message
+        // dit QUAND ca redevient possible, sinon "non" tout seul ressemble
+        // a une panne.
+        deja_ce_soir: "Tu as déjà posté ta story ce soir. La prochaine compte demain.",
         not_authenticated: "Ta session a expiré, reconnecte-toi.",
       };
       return dire(messages[res.error.message] || "Ça n'a pas marché. Réessaie dans un instant.", true);
@@ -7982,6 +7997,28 @@ function ouvrirChoixReseau(nomClub) {
     champ.value = "";
     dire("Envoyé ! Le club vérifie ta publication, tes points arrivent ensuite.", false);
   });
+}
+
+/* La regle avant le geste, pas apres.
+   Le formulaire s'affiche identique pour tout le monde ; seule la ligne
+   de regle change de ton une fois la story du soir deja deposee. On ne
+   MASQUE pas le formulaire : le depot peut avoir ete rejete entre-temps
+   (auquel cas la soiree est rendue), et c'est le serveur qui tranche --
+   l'appli ne fait qu'annoncer. */
+async function verifierStoryDuSoir() {
+  var ligne = document.getElementById("ps-regle");
+  if (!ligne || !supabaseClubbeur) return;
+  var res = await supabaseClubbeur.rpc("story_du_soir");
+  // Fonction absente (migration pas encore passee) : on se tait et la
+  // ligne garde son texte par defaut.
+  if (res.error || !res.data) return;
+  if (res.data.etat === "deja_postee") {
+    ligne.textContent = "Story déjà postée ce soir. La prochaine compte demain.";
+    ligne.classList.add("faite");
+  } else {
+    ligne.textContent = "Une seule story par soirée.";
+    ligne.classList.remove("faite");
+  }
 }
 
 // Tente le schema natif de l'appli ; si rien ne se passe (appli pas
