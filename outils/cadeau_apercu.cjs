@@ -60,9 +60,16 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   }
 
   // Pose l'etat d'une carte : solde affiche, titre, sous-titre, et
-  // l'escalier avec la marche en cours. `classes` reprend exactement
-  // celles que pose le vrai code (bienvenue / ouvert / jackpot).
-  async function poser({ solde, titre, sous, jour, classes }) {
+  // l'escalier. `classes` reprend exactement celles que pose le vrai
+  // code (bienvenue / ouvert / jackpot). `pris` remplit la marche du
+  // jour au lieu de la surligner -- c'est ce que fait le vrai code une
+  // fois le cadeau ouvert.
+  //
+  // `salve` rejoue la volee de confettis et LA FIGE : elle dure moins
+  // d'une seconde, une capture prise apres coup ne montrerait rien. Le
+  // dessin, les couleurs et les distances sont ceux de confettis() dans
+  // l'appli ; seul le temps est arrete.
+  async function poser({ solde, titre, sous, jour, classes, pris, salve }) {
     await page.evaluate((e) => {
       const num = document.querySelector("#solde-num");
       if (num) num.textContent = String(e.solde);
@@ -75,13 +82,38 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
       const jours = document.querySelector("#cadeau-jours");
       jours.innerHTML = e.echelle.map((points, i) => {
         const j = i + 1;
-        const c = j < e.jour ? " fait" : (j === e.jour ? " aujourdhui" : "");
+        const c = e.pris
+          ? (j <= e.jour ? " fait" : "")
+          : (j < e.jour ? " fait" : (j === e.jour ? " aujourdhui" : ""));
         return `<li class="cadeau-jour${c}">${points}</li>`;
       }).join("");
 
+      const boite = document.querySelector("#cadeau-boite");
+      boite.querySelector(".confettis")?.remove();
+      if (e.salve) {
+        const couleurs = ["#ff6b5b", "#e2b23f", "#818cf8", "#57d98a", "#ff6b5b", "#818cf8"];
+        let html = "";
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          html += `<i style="--x:${Math.round(Math.cos(a) * 34)}px;--y:${Math.round(Math.sin(a) * 34)}px;` +
+                  `--r:${Math.round(Math.random() * 240 - 120)}deg;--c:${couleurs[i]}"></i>`;
+        }
+        boite.insertAdjacentHTML("beforeend", `<span class="confettis">${html}</span>`);
+        boite.querySelectorAll(".confettis i").forEach((el) =>
+          el.getAnimations().forEach((an) => { an.pause(); an.currentTime = 200; }));
+      }
+
+      // Le montant grossit en arrivant : fige a la fin, sinon la capture
+      // l'attrape a mi-course et il parait simplement trop petit.
+      document.querySelectorAll("#cadeau .cadeau-txt strong").forEach((el) =>
+        el.getAnimations().forEach((an) => { an.pause(); an.currentTime = 420; }));
+
       carte.hidden = false;
       window.scrollTo(0, 0);
-    }, { solde, titre, sous, jour: jour || 0, classes: classes || "", echelle: ECHELLE });
+    }, {
+      solde, titre, sous, jour: jour || 0, classes: classes || "",
+      pris: !!pris, salve: !!salve, echelle: ECHELLE,
+    });
     await pause(500);
   }
 
@@ -108,7 +140,7 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   // ---- 2. Le meme, ouvert ----
   await poser({
     solde: 50, titre: "+50 pts", sous: "Dans ta boutique Le Mirage",
-    classes: "bienvenue ouvert",
+    classes: "bienvenue ouvert", salve: true,
   });
   await prendre("02-bienvenue-ouvert", "Le bonus pris, le solde a suivi");
 
@@ -121,14 +153,14 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   // ---- 4. Pris : la marche rejoint les pleines ----
   await poser({
     solde: 70, titre: "+5 pts", sous: "Dans ta boutique Le Mirage",
-    jour: 5, classes: "ouvert",
+    jour: 4, classes: "ouvert", pris: true, salve: true,
   });
   await prendre("04-escalier-pris", "Pris — la marche se remplit");
 
   // ---- 5. Le jackpot, 1 fois sur 100 ----
   await poser({
     solde: 105, titre: "+40 pts", sous: "Jackpot, chez Le Mirage",
-    jour: 5, classes: "ouvert jackpot",
+    jour: 4, classes: "ouvert jackpot", pris: true, salve: true,
   });
   await prendre("05-jackpot", "Le jackpot — un mot change, pas la carte");
 

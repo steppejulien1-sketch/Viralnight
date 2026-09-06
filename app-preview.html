@@ -1991,7 +1991,36 @@
         color: var(--ink); font-family: inherit; text-align: left;
         transition: transform .16s cubic-bezier(.23,1,.32,1);
       }
-      .cadeau-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .cadeau-tete { display: flex; align-items: center; gap: 12px; }
+
+      /* ---- Le paquet ----
+         Julien : "pas un truc de merde ou bizarre [...] juste un truc
+         cadeau du jour, tu cliques et tu recuperes tes points". La carte
+         toute neutre ne donnait envie de rien : rien n'y disait qu'il y
+         avait un cadeau. Un seul element porte le rouge de la marque --
+         cette tuile -- au lieu de l'etaler sur toute la carte comme
+         avant. Et il ne bouge pas : c'est l'ouverture qui doit etre
+         agreable, pas l'attente. */
+      .cadeau-boite {
+        position: relative; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 13px;
+        display: grid; place-items: center; background: var(--bouton);
+      }
+      .cadeau-boite svg {
+        width: 21px; height: 21px; fill: none; stroke: #fff;
+        stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+      }
+      /* La salve part d une tuile de 40px, pas du gros rond de
+         confirmation d un echange : au reglage d origine elle etait deja
+         a 40 % d opacite au bout d un dixieme de seconde, donc invisible.
+         Meme dessin et memes couleurs, geste un peu plus ample et plus
+         long -- c est le moment que Julien veut voir. Surcharge locale :
+         la salve de la boutique ne bouge pas. */
+      .cadeau-boite .confettis { inset: -34px; }
+      .cadeau-boite .confettis i {
+        width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
+        animation-duration: .9s;
+      }
+      .cadeau-txt { flex: 1 1 auto; min-width: 0; }
 
       /* ---- Les sept marches ----
          Les jours passes sont pleins, le jour du moment est cercle de
@@ -2009,19 +2038,20 @@
         font-variant-numeric: tabular-nums; letter-spacing: -.02em;
       }
       .cadeau-jour.fait { background: var(--s3); color: var(--ink2); }
-      .cadeau-jour.aujourdhui {
-        background: transparent; box-shadow: inset 0 0 0 1.5px var(--bouton); color: var(--ink);
-      }
+      /* Encre pleine, pas un cercle rouge : le rouge de cette carte est
+         deja pris par le paquet, et deux rouges pour deux informations
+         differentes ne disent plus rien. */
+      .cadeau-jour.aujourdhui { background: var(--ink); color: var(--s1); }
       /* Mode bienvenue : une seule fois dans la vie du compte, il n'y a
          pas de semaine a montrer. */
       .cadeau.bienvenue .cadeau-jours { display: none; }
       .cadeau[hidden] { display: none; }
       .cadeau:active { transform: scale(.98); }
-      .cadeau-tete strong {
+      .cadeau-txt strong {
         display: block; font-family: var(--titre);
         font-size: calc(15 * var(--u)); font-weight: 800; letter-spacing: -.02em;
       }
-      .cadeau-tete > span { flex: 0 0 auto; font-size: calc(12.5 * var(--u)); color: var(--ink2); }
+      .cadeau-txt > span { display: block; margin-top: 1px; font-size: calc(12.5 * var(--u)); color: var(--ink2); }
       /* Le chevron dit que la carte s'ouvre. Le paquet cadeau qui gigotait
          le disait aussi, en beaucoup plus voyant et pour le meme service :
          sans lui, plus rien n'indiquait qu'il y avait quelque chose a
@@ -2034,9 +2064,16 @@
       .cadeau.ouvert { pointer-events: none; }
       /* Ouvert, le montant prend la place du titre -- en encre normale.
          Un grand chiffre en couleur de marque est precisement ce qui a
-         ete retire de la carte des points juste au-dessus. */
-      .cadeau.ouvert .cadeau-tete strong {
-        font-family: var(--chiffre); font-size: calc(26 * var(--u)); letter-spacing: -.04em;
+         ete retire de la carte des points juste au-dessus. Il arrive en
+         grossissant : c'est court, ca ne tourne pas en boucle, et c'est
+         la seule chose de la carte qui bouge. */
+      .cadeau.ouvert .cadeau-txt strong {
+        font-family: var(--chiffre); font-size: calc(27 * var(--u)); letter-spacing: -.04em;
+        animation: cadeauMontant .42s cubic-bezier(.2,.9,.3,1.25) both;
+      }
+      @keyframes cadeauMontant {
+        from { transform: scale(.55); opacity: 0; }
+        to   { transform: scale(1); opacity: 1; }
       }
       /* Le jackpot ne repeint pas la carte, il change UN mot. Un degrade
          orange pose pour une fois sur cent, c'est porter un effet toute
@@ -4395,8 +4432,17 @@
                    le remplit pas. -->
               <button type="button" class="cadeau" id="cadeau" hidden>
                 <span class="cadeau-tete">
-                  <strong id="cadeau-titre">Cadeau du jour</strong>
-                  <span id="cadeau-sous">Touche pour l'ouvrir</span>
+                  <span class="cadeau-boite" id="cadeau-boite" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="9.5" width="18" height="11.5" rx="2"/>
+                      <path d="M2 6.5h20v3H2zM12 6.5V21"/>
+                      <path d="M12 6.5S9.2 1.4 7 3.2s5 3.3 5 3.3zM12 6.5s2.8-5.1 5-3.3-5 3.3-5 3.3z"/>
+                    </svg>
+                  </span>
+                  <span class="cadeau-txt">
+                    <strong id="cadeau-titre">Cadeau du jour</strong>
+                    <span id="cadeau-sous">Touche pour l'ouvrir</span>
+                  </span>
                   <svg class="cadeau-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </span>
                 <!-- Les sept marches. C'est ELLE qui fait revenir : sans
@@ -9517,7 +9563,7 @@ $("#pf-avis")?.addEventListener("click", function () {
    pas -- un tirage cote navigateur, c'est un jackpot a volonte, et une
    garde "un par jour" dans le localStorage se contourne en vidant son
    navigateur. */
-var CADEAU = $("#cadeau"), CADEAU_JOURS = $("#cadeau-jours");
+var CADEAU = $("#cadeau"), CADEAU_JOURS = $("#cadeau-jours"), CADEAU_BOITE = $("#cadeau-boite");
 
 /* Le jeton d'appareil, pour le bonus de bienvenue.
    Julien : "que ca ne lui redonne pas cinquante points [...] parce que
@@ -9627,6 +9673,16 @@ CADEAU?.addEventListener("click", async function () {
     ? "Jackpot" + (d.club ? ", chez " + d.club : "")
     : (d.club ? "Dans ta boutique " + d.club : "");
 
+  /* La salve part du paquet. C'est confettis() -- celle qui existe deja
+     pour la confirmation d'un echange -- et pas une seconde famille
+     d'animation : six eclats, une seule fois, jamais en boucle, et
+     coupee par prefers-reduced-motion via sa propre regle CSS. */
+  if (CADEAU_BOITE) {
+    var ancienne = CADEAU_BOITE.querySelector(".confettis");
+    if (ancienne) ancienne.remove();
+    CADEAU_BOITE.insertAdjacentHTML("beforeend", confettis());
+  }
+
   // La marche du jour vient d'etre prise : elle rejoint les pleines.
   if (!bienvenue && CADEAU_JOURS) {
     var pastille = CADEAU_JOURS.querySelector(".aujourdhui");
@@ -9645,6 +9701,7 @@ CADEAU?.addEventListener("click", async function () {
   setTimeout(function () {
     CADEAU.hidden = true;
     CADEAU.classList.remove("ouvert", "jackpot", "bienvenue");
+    CADEAU_BOITE?.querySelector(".confettis")?.remove();
     $("#cadeau-titre").textContent = "Cadeau du jour";
     $("#cadeau-sous").textContent = "Touche pour l'ouvrir";
   }, 4200);
