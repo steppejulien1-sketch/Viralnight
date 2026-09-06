@@ -838,7 +838,37 @@
          sont retirees elles aussi : un element qui passe en boucle
          au-dessus d'un code a scanner fait gadget et gene sa lecture. */
 
-      /* ---- Le gain, en typographie forte ----
+      /* Le gain, en tete d'ecran et en gros. Le nombre reste en encre
+         normale : un grand chiffre en couleur de marque est ce qui a ete
+         retire de la carte des points. */
+      .va-gain-num {
+        margin: 0; font-family: var(--chiffre); font-size: calc(34 * var(--u));
+        font-weight: 800; letter-spacing: -.03em; line-height: 1.1; color: var(--ink);
+      }
+      .va-gain-txt {
+        margin: 6px 0 20px; font-size: calc(13 * var(--u)); color: var(--ink2); line-height: 1.5;
+      }
+
+      /* L'avatar et son crayon quittent l'ecran de partage : modifier sa
+         photo se fait dans Profil, qui porte deja exactement le meme
+         reglage. L'element reste dans le DOM pour ne rien casser cote JS
+         (ouvrirPageAmis l'alimente et gere l'envoi du fichier). */
+      .va-code .va-avatar { display: none; }
+
+      /* Le code en clair, a cote du QR, avec de quoi le copier. */
+      .va-code-ligne {
+        display: flex; align-items: center; gap: 8px;
+        margin: 0 0 16px; padding: 6px 6px 6px 14px;
+        border-radius: var(--r-pill); background: var(--s2);
+        box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .va-code-ligne .va-handle {
+        flex: 1 1 auto; min-width: 0; margin: 0; text-align: left;
+        font-size: calc(14.5 * var(--u)); font-weight: 700; color: var(--ink);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
+      /* ---- Ancien traitement du gain, conserve pour reference ----
          "Tu gagnes 150 points" etait noye dans un paragraphe gris de
          12,5px. C'est l'argument de l'ecran : il se lit maintenant
          avant le reste. */
@@ -851,14 +881,18 @@
       /* Action secondaire sous "Partager mon code". */
       /* Action secondaire : suit le theme au lieu d'un blanc fige, qui
          devenait invisible une fois l'ecran passe en clair. */
+      /* Etait un second bouton pleine largeur sous "Partager", qui
+         faisait presque la meme chose : deux actions de meme poids pour
+         un seul geste. Il devient une pastille dans la ligne du code,
+         attachee a ce qu'elle copie. */
       .va-copier {
-        width: 100%; min-height: 44px; margin-top: 8px; border: 0;
-        border-radius: var(--r-pill); background: transparent;
+        flex: 0 0 auto; min-height: 34px; padding: 0 14px; border: 0;
+        border-radius: var(--r-pill); background: var(--s1);
         box-shadow: inset 0 0 0 1px var(--line2);
-        color: var(--ink2); font-family: inherit; font-size: calc(13.5 * var(--u)); font-weight: 600;
+        color: var(--ink); font-family: inherit; font-size: calc(13 * var(--u)); font-weight: 700;
         cursor: pointer; transition: background var(--tr-court), transform var(--tr-court), color var(--tr-court);
       }
-      .va-copier:hover { background: var(--s2); color: var(--ink); }
+      .va-copier:hover { background: var(--s2); }
       .va-copier:active { transform: scale(.98); }
 
 
@@ -4143,9 +4177,26 @@
                 <button type="button" class="va-back" id="va-back" aria-label="Retour à mes amis">
                   <svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg>
                 </button>
-                <h2 class="va-invite-titre">Mon code</h2>
+                <h2 class="va-invite-titre">Inviter des amis</h2>
               </div>
               <div class="va-code">
+                <!-- CE QUE CA RAPPORTE, EN PREMIER.
+                     Sur les ecrans de parrainage qui marchent (Uber,
+                     Revolut, Cash App), le gain est la premiere chose
+                     lue, en gros. Ici il etait en gris, sous le QR :
+                     on voyait une photo, un pseudo et un carre noir
+                     avant de savoir pourquoi on serait la. -->
+                <p class="va-gain-num">150 points</p>
+                <p class="va-gain-txt">
+                  par ami qui s&rsquo;inscrit avec ton code.<br />
+                  Ton ami re&ccedil;oit 50 points de bienvenue.
+                </p>
+
+                <!-- L'avatar reste dans le DOM (le JS l'alimente et gere
+                     l'envoi de photo) mais ne s'affiche plus ici : le
+                     crayon de modification n'a rien a faire sur un ecran
+                     de partage, et l'onglet Profil porte deja le meme
+                     reglage. Voir .va-code .va-avatar dans le style. -->
                 <button type="button" class="va-avatar" id="va-avatar" aria-label="Changer ma photo de profil">
                   <span class="va-avatar-init" id="va-avatar-init"></span>
                   <img class="va-avatar-img" id="va-avatar-img" alt="" hidden />
@@ -4154,13 +4205,22 @@
                   </span>
                 </button>
                 <input type="file" accept="image/*" id="va-avatar-file" hidden />
-                <p class="va-handle" id="va-handle">@...</p>
+
                 <div class="va-qr-cadre">
                   <div class="va-qr" id="va-qr" aria-hidden="true"></div>
                 </div>
-                <p class="va-gain">150 points quand un ami s'inscrit.</p>
-                <button type="button" class="va-share" id="va-share">Partager mon code</button>
-                <button type="button" class="va-copier" id="va-copier">Copier le lien</button>
+
+                <!-- LE CODE SE LIT ET SE COPIE.
+                     Il n'y avait qu'un QR : impossible de dicter son code
+                     au telephone, de le taper, ou de le mettre dans une
+                     legende. Toutes les applis de parrainage montrent le
+                     code EN CLAIR a cote du QR, avec un bouton copier. -->
+                <div class="va-code-ligne">
+                  <span class="va-handle" id="va-handle">@...</span>
+                  <button type="button" class="va-copier" id="va-copier">Copier</button>
+                </div>
+
+                <button type="button" class="va-share" id="va-share">Partager mon lien</button>
               </div>
             </div>
 

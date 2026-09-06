@@ -214,6 +214,28 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
     console.log("  (pas de club dans le rail, fiche non capturee)");
   }
 
+  // ---- 9. L'ecran de parrainage ----
+  // Sans session, l'onglet Amis ne montre que sa porte : on pose donc
+  // l'ecran a la main, comme le reste de ce script.
+  await page.evaluate(() => {
+    document.querySelector(".sheet, #sh-close")?.click?.();
+    const va = document.querySelector("#vue-amis");
+    va.hidden = false;
+    va.classList.add("sur-code");
+    document.querySelector("#va-connecte-toi").hidden = true;
+    document.querySelector("#va-contenu").hidden = false;
+    document.querySelector("#va-liste").hidden = true;
+    document.querySelector("#va-invite").hidden = false;
+    document.querySelector("#va-handle").textContent = "@julien";
+    // Faux QR : le vrai est genere depuis le lien de parrainage d'une
+    // session reelle, que ce script n'a pas.
+    document.querySelector("#va-qr").innerHTML =
+      '<div style="width:100%;height:100%;background:repeating-conic-gradient(#0a0b0e 0% 25%, #fff 0% 50%) 0 0/16px 16px"></div>';
+    window.scrollTo(0, 0);
+  });
+  await pause(700);
+  await prendre("09-parrainage", "Inviter des amis — le gain d'abord, le code lisible");
+
   await navigateur.close();
   console.log(`\n-> ${DOSSIER}\n`);
 })();
