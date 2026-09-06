@@ -465,9 +465,9 @@
       /* Le logo Instagram en grand, pose sur son degrade : il dit de quoi
          parle l'ecran avant qu'on lise le titre. */
       .ig-tuile {
-        width: 62px; height: 62px; border-radius: 18px; overflow: hidden;
-        align-self: center; margin-bottom: 16px;
-        box-shadow: var(--ombre-2);
+        width: 54px; height: 54px; border-radius: 16px; overflow: hidden;
+        align-self: center; margin-bottom: 14px;
+        box-shadow: var(--ombre-1);
       }
       .ig-tuile svg { display: block; width: 100%; height: 100%; }
 
@@ -476,26 +476,30 @@
         letter-spacing: -.03em; line-height: 1.15; text-align: center;
       }
       .ig-sous {
-        margin: 0 0 24px; font-size: calc(13.5 * var(--u)); font-weight: 500;
+        margin: 0 0 20px; font-size: calc(13.5 * var(--u)); font-weight: 500;
         color: var(--ink2); text-align: center;
       }
 
-      /* Une etape = une carte numerotee. Le numero est dans le bord, pas
-         au-dessus : il compte l'etape sans prendre une ligne. */
+      /* Deux cartes blanches bordees ET ombrees, empilees, avec un
+         numero en pastille pleine dans chaque entete : ca se lisait
+         comme un tutoriel, pas comme un formulaire. Julien : "rends la
+         page plus propre". L'ombre part, le lisere s'allege, et le
+         numero devient discret -- il compte encore l'etape, il ne la
+         proclame plus. Il ne reprend de la couleur qu'une fois l'etape
+         faite, ou il dit quelque chose de neuf. */
       .ig-etape {
         position: relative; background: var(--s1);
-        border: 1px solid var(--line); border-radius: 18px;
-        padding: 16px 16px 16px; margin-bottom: 12px;
-        box-shadow: var(--ombre-1);
+        border: 1px solid var(--line); border-radius: 16px;
+        padding: 14px 14px 15px; margin-bottom: 10px;
       }
-      .ig-etape-tete { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+      .ig-etape-tete { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
       .ig-num {
-        flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
-        background: var(--ink); color: #fff;
+        flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%;
+        background: var(--s2); color: var(--ink2);
         display: grid; place-items: center;
-        font-size: calc(11.5 * var(--u)); font-weight: 800; font-family: var(--chiffre, inherit);
+        font-size: calc(11 * var(--u)); font-weight: 700; font-family: var(--chiffre, inherit);
       }
-      .ig-etape.faite .ig-num { background: #12874d; }
+      .ig-etape.faite .ig-num { background: #12874d; color: #fff; }
       .ig-etape-tete strong { font-size: calc(14.5 * var(--u)); font-weight: 700; letter-spacing: -.01em; }
       .ig-etape-aide { margin: 12px 0 0; font-size: calc(11.5 * var(--u)); color: var(--ink3); line-height: 1.4; }
 
@@ -503,7 +507,12 @@
          elle etait un titre. Ici c'est une legende sous un intitule
          d'etape : elle doit s'effacer devant lui. */
       .vue-ig .ps-modeles-titre { font-weight: 500; color: var(--ink3); }
-      .vue-ig .ps-modeles-vues img { border-color: var(--line2); }
+      /* Les deux exemples occupaient presque la moitie de l'ecran : ils
+         aident une fois, puis ils encombrent. Bridés a 128 px de large,
+         cales a gauche -- assez pour voir ou se lit le pseudo, pas assez
+         pour voler la vedette au champ qu'il faut remplir. */
+      .vue-ig .ps-modeles-vues { max-width: 264px; }
+      .vue-ig .ps-modeles-vues img { border-color: var(--line2); max-width: 128px; }
 
       /* Le bouton reste en bas -- c'est la zone du pouce -- et l'espace
          au-dessus est assume : un ecran d'inscription se termine par une
@@ -2863,6 +2872,38 @@
          (scrim degrade), comme une vraie fiche Google/Apple Maps sur
          mobile, plutot qu'en texte plat en dessous -- plus immersif,
          plus "fiche", moins "liste de champs". */
+      /* ---- ENTETE COMPACTE : un club sans photo deposee ----
+         Le verre du club dans un rond, le nom et le type a cote. Une
+         ligne d'identite, pas une banniere -- voir heroClub(). */
+      /* padding-right : la croix de fermeture de la feuille est posee en
+         absolu sur le coin haut droit (x 329-359 sur un ecran de 375).
+         Sans cette reserve, le coeur venait se glisser dessous -- meme
+         collision que sur l'ancienne banniere, a un autre endroit. */
+      .club-entete {
+        display: flex; align-items: center; gap: 14px;
+        margin: 2px 0 18px; padding-right: 42px;
+      }
+      .club-entete-rond {
+        flex: 0 0 auto; width: 64px; height: 64px; border-radius: 50%;
+        /* Creme en dur, comme les autres substituts : ces dessins sont au
+           trait NOIR et disparaitraient sur une surface sombre. */
+        background: #f2ede5; display: grid; place-items: center; overflow: hidden;
+      }
+      .club-entete-rond img { width: 78%; height: 78%; object-fit: contain; display: block; }
+      .club-entete .club-hero-titre { flex: 1 1 auto; min-width: 0; }
+      .club-entete .club-hero-nom {
+        color: var(--ink); font-size: calc(21 * var(--u)); margin: 0 0 2px;
+      }
+      .club-entete .club-meta { color: var(--ink2); }
+      .club-entete .club-meta strong { color: var(--ink); }
+      /* Le coeur reprend sa place dans le flux : sans banniere, il n'a
+         plus rien sur quoi flotter. */
+      .club-entete .club-fav {
+        position: static; flex: 0 0 auto;
+        background: var(--s2); box-shadow: inset 0 0 0 1px var(--line); backdrop-filter: none;
+      }
+      .club-entete .club-fav svg { stroke: var(--ink); }
+
       .club-hero-photo {
         position: relative; margin: -6px -6px 8px; border-radius: 20px; overflow: hidden;
         height: 190px; background: var(--s2);
@@ -3951,7 +3992,7 @@
           </span>
 
           <h2 class="ig-titre">Relie ton compte Instagram</h2>
-          <p class="ig-sous">Deux choses, une seule fois.</p>
+          <p class="ig-sous">Pour gagner tes points.</p>
 
           <div class="ig-etape" id="ig-etape-capture">
             <div class="ig-etape-tete">
@@ -7118,41 +7159,64 @@ function avatarClub(c) {
 // vivaient dans du texte plat sous des photos plus petites, ce qui
 // faisait plus "liste" que "fiche".
 function heroClub(c) {
+  /* La note et le type, communs aux deux formes d'entete. La note Google
+     n'est pas toujours connue : sans elle, l'etoile et le compteur
+     d'avis disparaissent au lieu d'afficher un chiffre invente -- et
+     null.toFixed() faisait planter le rendu de la fiche entiere. */
+  var titre =
+    '<span class="club-hero-titre">' +
+      '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
+      '<p class="club-meta">' +
+        (c.note != null
+          ? '<svg class="club-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>' +
+            '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong>" +
+            (c.avis != null ? " (" + c.avis + ")" : "") + " · "
+          : "") +
+        libelleType(c.type) +
+      "</p>" +
+    "</span>";
+
+  var coeur =
+    '<button class="club-fav" id="sh-fav" type="button">' +
+      '<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9A4.9 4.9 0 0 1 12 5.7a4.9 4.9 0 0 1 8.5 3.2C20.5 15 12 20.5 12 20.5z"/></svg>' +
+    "</button>";
+
+  /* ⚠️ SANS VRAIE PHOTO, PAS DE BANNIERE.
+     Julien : "affiche le cocktail comme badge et comme photo [de
+     profil], mais pas comme photo genre photo photo. Ca, ce n'est pas
+     serieux."
+
+     Il a raison : un dessin de verre etire sur 190 px de haut se lit
+     comme la photo de l'etablissement, et ce n'en est pas une -- c'est
+     le meme defaut que les images de stock piochees au hasard, en plus
+     visible. Dans un rond de 64 px, le meme dessin se lit comme un
+     signe, ce qu'il est.
+
+     Donc : entete compacte (rond + nom + type) tant qu'aucune photo
+     n'est deposee, et la grande banniere seulement quand il y en a une
+     vraie. Deposer le fichier dans public/clubs/ et remplir `photo`
+     dans CLUBS suffit a basculer de l'une a l'autre. */
+  if (visuelClub(c).substitut) {
+    return (
+      '<div class="club-entete">' +
+        '<span class="club-entete-rond"><img src="' + fotoClub(c) + '" alt="" /></span>' +
+        titre +
+        coeur +
+      "</div>"
+    );
+  }
+
+  // Grande photo d'entete avec nom + note incrustes dessus (scrim
+  // degrade), comme une vraie fiche Google/Apple Maps.
   return (
-    '<div class="club-hero-photo' + classeFoto(c) + '">' +
+    '<div class="club-hero-photo">' +
       '<img src="' + fotoClub(c) + '" alt="" />' +
-      '<button class="club-fav" id="sh-fav" type="button">' +
-        '<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9A4.9 4.9 0 0 1 12 5.7a4.9 4.9 0 0 1 8.5 3.2C20.5 15 12 20.5 12 20.5z"/></svg>' +
-      "</button>" +
-      // Badge "Partenaire" retire (Julien : "le partenaire, c'est
-      // inutile") : le mot ne parle qu'a nous, pas au clubbeur. Le bloc
-      // "Tu gagnes des points ici" juste dessous dit deja, en clair, ce
-      // que l'appli apporte dans ce club.
+      coeur +
       '<div class="club-hero-scrim">' +
         '<div class="club-hero-ligne">' +
           (c.avatar ? '<span class="club-hero-avatar">' + avatarClub(c) + "</span>" : "") +
-          '<span class="club-hero-titre">' +
-            '<h3 class="club-hero-nom">' + c.nom + "</h3>" +
-        // La note Google n'est pas toujours connue : sans elle, l'etoile
-        // et le compteur d'avis disparaissent au lieu d'afficher un
-        // chiffre invente -- et null.toFixed() faisait planter le rendu
-        // de la fiche entiere.
-        '<p class="club-meta">' +
-          (c.note != null
-            ? '<svg class="club-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>' +
-              '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong>" +
-              (c.avis != null ? " (" + c.avis + ")" : "") + " · "
-            : "") +
-          libelleType(c.type) +
-            "</p>" +
-          "</span>" +
+          titre +
         "</div>" +
-        // La pastille "Ferme · Ouvre jeudi a 21h00" a quitte la banniere
-        // (Julien : "tu retires le ferme, ouvre jeudi a 21h"). L'entete
-        // ne porte plus que la photo et le nom ; la reponse a "c'est
-        // ouvert ?" reste sur la ligne d'horaires juste dessous, qui la
-        // donne deja et se deplie pour le detail.
-
       "</div>" +
     "</div>"
   );
