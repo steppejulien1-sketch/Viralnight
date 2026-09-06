@@ -136,46 +136,50 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   await poser({
     solde: 0, titre: "Bienvenue", montant: "50 points", classes: "bienvenue",
   });
-  await prendre("01-bienvenue", "Le bonus, juste sous le solde");
+  await prendre("01-bienvenue", "Le bonus de bienvenue");
 
-  // ---- 2. Recupere ----
-  await poser({
-    solde: 50, titre: "Récupéré", montant: "+50 pts", sous: "Dans ta boutique Le Mirage",
-    classes: "bienvenue ouvert", salve: true,
-  });
-  await prendre("02-bienvenue-recupere", "Recupere — la carte s'en va juste apres");
-
-  // ---- 3. Le cadeau du jour, en milieu de semaine ----
+  // ---- 2. Le cadeau du jour ----
   await poser({
     solde: 65, titre: "Cadeau du jour", montant: "5 points",
   });
-  await prendre("03-cadeau", "Le cadeau — le montant est annonce avant le clic");
+  await prendre("02-cadeau", "Le cadeau — le montant est annonce avant le clic");
 
-  // ---- 4. Recupere ----
+  // ---- 3. L'instant du clic ----
+  // Le bouton s'en va, la salve part, le solde a deja monte. La carte
+  // n'ecrit PLUS "Recupere, +5 pts, dans ta boutique X" -- Julien : "il
+  // vaut mieux que ca disparaisse [...] sinon ca prend trop de place".
   await poser({
-    solde: 70, titre: "Récupéré", montant: "+5 pts", sous: "Dans ta boutique Le Mirage", classes: "ouvert", salve: true,
+    solde: 70, titre: "Cadeau du jour", montant: "5 points",
+    classes: "ouvert", salve: true,
   });
-  await prendre("04-cadeau-recupere", "Recupere — la carte s'en va 2,2 s plus tard");
+  await prendre("03-cadeau-salve", "Au clic — la salve, et le solde qui monte");
 
-  // ---- 5. Le jackpot, 1 fois sur 100 ----
-  await poser({
-    solde: 105, titre: "Jackpot", montant: "+40 pts", sous: "Dans ta boutique Le Mirage", classes: "ouvert jackpot", salve: true,
+  // ---- 4. Une seconde plus tard : la carte n'est plus la ----
+  await page.evaluate(() => {
+    const carte = document.querySelector("#cadeau");
+    carte.classList.add("part");
+    carte.style.transition = "none";
   });
-  await prendre("05-jackpot", "Le jackpot — un mot change, pas la carte");
+  await pause(400);
+  await prendre("04-apres", "Apres — la boutique a repris la place");
 
-  // ---- 6. Le septieme jour : la marche haute de l'escalier ----
+  // ---- 5. Le septieme jour : la marche haute de l'escalier ----
+  await page.evaluate(() => {
+    const carte = document.querySelector("#cadeau");
+    carte.style.transition = "";
+  });
   await poser({
     solde: 96, titre: "Cadeau du jour", montant: "20 points",
   });
-  await prendre("06-cadeau-jour7", "Septieme jour d'affilee — 20 points");
+  await prendre("05-cadeau-jour7", "Septieme jour d'affilee — 20 points");
 
-  // ---- 7. Le cas sans club ----
+  // ---- 6. Le cas sans club ----
   await poser({
     solde: 0, titre: "", montant: "Scanne un club d'abord",
     sous: "Les points vont dans la boutique de ton dernier club.",
     classes: "ouvert message",
   });
-  await prendre("07-aucun-club", "Sans club scanne — rien a payer, on le dit");
+  await prendre("06-aucun-club", "Sans club scanne — rien a payer, on le dit");
 
   await navigateur.close();
   console.log(`\n-> ${DOSSIER}\n`);

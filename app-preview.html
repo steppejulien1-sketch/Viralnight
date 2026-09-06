@@ -1991,11 +1991,26 @@
          ECRIT avant qu'on appuie. La boutique reste juste dessous :
          la carte ne prend pas l'ecran, elle le partage. */
       .cadeau {
-        display: block; width: 100%; margin-top: 12px; padding: 26px 18px 20px;
+        display: block; width: 100%; max-height: 600px; margin-top: 12px; padding: 26px 18px 20px;
         border: 0; border-radius: 20px;
         background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
         color: var(--ink); font-family: inherit; text-align: center;
       }
+      /* Julien : "quand on le recupere il vaut mieux que ca disparaisse
+         [...] que ca laisse la place a la boutique. Sinon ca prend trop
+         de place." Donc pas d'ecran de confirmation qui occupe la carte
+         pendant deux secondes : la salve de confettis et le solde qui
+         monte juste au-dessus disent deja que c'est pris. La carte se
+         replie ensuite, et les recompenses remontent a sa place. */
+      .cadeau.part {
+        max-height: 0; margin-top: 0; padding-top: 0; padding-bottom: 0;
+        opacity: 0; overflow: hidden; pointer-events: none;
+        transition: max-height .34s cubic-bezier(.4,0,.2,1),
+                    margin .34s cubic-bezier(.4,0,.2,1),
+                    padding .34s cubic-bezier(.4,0,.2,1),
+                    opacity .22s ease;
+      }
+      @media (prefers-reduced-motion: reduce) { .cadeau.part { transition: none; } }
 
       /* ---- Le paquet ----
          Julien : "celui-la en plus gros, le truc rouge, le cadeau rouge
@@ -2082,23 +2097,15 @@
       }
 
       .cadeau[hidden] { display: none; }
-      /* Une fois recupere, le montant se rejoue en grossissant : c'est
-         court, ca ne tourne pas en boucle, et c'est la seule chose de la
-         carte qui bouge. La carte disparait juste apres (cote JS) --
-         Julien : "une fois que tu as recupere, ca disparait". */
-      .cadeau.ouvert .cadeau-montant {
-        animation: cadeauMontant .42s cubic-bezier(.2,.9,.3,1.25) both;
-      }
-      @keyframes cadeauMontant {
-        from { transform: scale(.55); opacity: 0; }
-        to   { transform: scale(1); opacity: 1; }
-      }
+      /* Le montant ne se rejoue plus en grossissant : il ne change pas au
+         moment du clic, donc l'animation aurait fait grossir le meme
+         nombre pour rien. Ce qui bouge maintenant, c'est le compteur de
+         points au-dessus et la salve -- puis la carte s'en va. */
       /* Le jackpot ne repeint pas la carte, il change UN mot. Un degrade
          orange pose pour une fois sur cent, c'est porter un effet toute
          l'annee pour trois secondes par trimestre. */
       .cadeau.jackpot .cadeau-titre { color: var(--prix-encre, var(--bouton)); font-weight: 700; }
       @media (prefers-reduced-motion: reduce) {
-        .cadeau.ouvert .cadeau-montant { animation: none; }
         .cadeau-btn { transition: none; }
         .cadeau-btn:active { transform: none; }
       }
@@ -9697,7 +9704,7 @@ async function verifierCadeau() {
 // (jour_cadeau(), migration 0040), pas ce fichier.
 function rangerCadeau() {
   CADEAU.hidden = true;
-  CADEAU.classList.remove("ouvert", "jackpot", "bienvenue", "message");
+  CADEAU.classList.remove("ouvert", "jackpot", "bienvenue", "message", "part");
   CADEAU_SCENE?.querySelector(".confettis")?.remove();
   $("#cadeau-titre").textContent = "Cadeau du jour";
   $("#cadeau-montant").textContent = "";
@@ -9730,16 +9737,17 @@ CADEAU_BTN?.addEventListener("click", async function () {
     $("#cadeau-montant").textContent = dit[0];
     $("#cadeau-sous").textContent = dit[1];
     $("#cadeau-sous").hidden = !dit[1];
-    setTimeout(rangerCadeau, 2600);
+    setTimeout(function () {
+      CADEAU.classList.add("part");
+      setTimeout(rangerCadeau, 400);
+    }, 2600);
     return;
   }
 
+  // La carte ne se transforme plus en accuse de reception : elle se fige
+  // (plus de bouton, plus de tap) et part. Ce qui confirme, c'est la
+  // salve et le compteur de points qui monte juste au-dessus.
   CADEAU.classList.add("ouvert");
-  CADEAU.classList.toggle("jackpot", !!d.jackpot);
-  $("#cadeau-titre").textContent = d.jackpot ? "Jackpot" : "Récupéré";
-  $("#cadeau-montant").textContent = "+" + nb(d.points) + " pts";
-  $("#cadeau-sous").textContent = d.club ? "Dans ta boutique " + d.club : "";
-  $("#cadeau-sous").hidden = !d.club;
 
   /* La salve part du paquet. C'est confettis() -- celle qui existe deja
      pour la confirmation d'un echange -- et pas une seconde famille
@@ -9753,14 +9761,18 @@ CADEAU_BTN?.addEventListener("click", async function () {
 
   jouer(d.jackpot ? "jackpot" : "points");
 
-  // Le solde suit tout de suite : voir "+40 pts" sans que le compteur
-  // juste au-dessus bouge, c'est un cadeau qui n'arrive nulle part.
+  // Le solde monte pendant que la salve retombe : c'est LUI qui dit
+  // combien on vient de gagner, maintenant que la carte ne l'ecrit plus.
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (session) await chargerSoldeReel(session.user.id);
 
-  // Le temps de lire le montant, puis la carte s'en va et la boutique
-  // remonte a sa place.
-  setTimeout(rangerCadeau, 2200);
+  /* Le temps de voir la salve, puis la carte se replie (0,34 s) et la
+     boutique remonte. On attend la fin du repli pour la masquer
+     vraiment, sinon elle disparaitrait d'un coup au lieu de glisser. */
+  setTimeout(function () {
+    CADEAU.classList.add("part");
+    setTimeout(rangerCadeau, 400);
+  }, 700);
 });
 
 function localiser() {
