@@ -2963,13 +2963,22 @@
          ("Poster ma story") ; tout le reste redescend en texte/lien
          plat, plus proche d'une vraie fiche Maps que d'un dashboard de
          widgets. Coeur flottant sur la photo, inchange. */
+      /* A GAUCHE, pas a droite : la croix de fermeture de la feuille
+         (.sheet-close) occupe deja le coin droit, et les deux se
+         chevauchaient -- la croix sur x 329-359, le coeur sur 309-345.
+         Elles ne sont pas dans le meme conteneur, donc rien ne les
+         empechait de se marcher dessus. */
       .club-fav {
-        position: absolute; top: 12px; right: 12px; z-index: 2;
+        position: absolute; top: 12px; left: 12px; z-index: 2;
         width: 36px; height: 36px; border-radius: 50%;
         background: rgba(8,6,5,.55); backdrop-filter: blur(6px); border: 0; display: grid; place-items: center; cursor: pointer;
       }
       .club-fav svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .club-fav.actif svg { stroke: #ff2f45; fill: #ff2f45; }
+      /* Sans photo, la banniere est creme : une pastille sombre y fait
+         une tache. Elle s'inverse, comme le nom du club juste dessous. */
+      .club-hero-photo.sans-photo .club-fav { background: rgba(255,255,255,.86); box-shadow: inset 0 0 0 1px rgba(20,20,20,.10); }
+      .club-hero-photo.sans-photo .club-fav svg { stroke: var(--ink); }
 
       /* Adresse + itineraire : une seule ligne plate (icone, texte,
          lien), pas une case de plus a cote des autres. */
@@ -2989,7 +2998,7 @@
          ("copie la fiche ligne par ligne, mot par mot") -- bleu Google,
          pas notre rouge de marque : ici on reproduit litteralement
          l'ecran qu'il a envoye en capture, pas notre propre design. */
-      .club-actions-row { display: flex; gap: 20px; margin: 4px 0 20px; overflow-x: auto; padding: 2px 0 4px; }
+      .club-actions-row { display: flex; gap: 10px; margin: 4px 0 20px; padding: 2px 0 4px; }
       /* Rangee Appeler / Voir sur la carte / Site / Partager.
          Elle etait litteralement en bleu Google (#1a73e8, cercles en
          contour fin) : c'est ce qui donnait a la fiche son air de
@@ -3011,9 +3020,15 @@
         transition: background var(--tr-court), box-shadow var(--tr-court);
       }
       .club-action-ico svg { width: 19px; height: 19px; stroke: var(--ink); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      /* Le libelle passe a la ligne au lieu d'etre coupe. Avec
+         `nowrap` + ellipsis, "Voir sur la carte" sortait litteralement
+         en "Voir sur l..." sur un ecran de 375 px : quatre boutons et
+         20 px d'ecart ne laissaient que 69 px chacun. L'ecart tombe a
+         10 px, le libelle est raccourci, et s'il deborde encore il se
+         plie -- une etiquette tronquee est un defaut, deux lignes non. */
       .club-action-btn span {
         font-size: calc(11.5 * var(--u)); font-weight: 600; color: var(--ink2);
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+        text-align: center; line-height: 1.25; max-width: 100%;
       }
       .club-action-btn:active .club-action-ico { transform: scale(.94); background: var(--s3); }
       .club-action-btn:focus-visible .club-action-ico { box-shadow: inset 0 0 0 2px var(--ink); }
@@ -3042,17 +3057,22 @@
          Les recompenses et "Poster ma story" etaient deux lignes parmi
          d'autres, tout en bas. C'est pourtant la seule raison d'ouvrir
          cette fiche depuis Noctify plutot que depuis Maps. */
+      /* Le fond etait un degrade rouge tres peu opaque, avec un lisere
+         rouge autour : le lavis de couleur deja refuse sur la carte des
+         points ("BCP TROP L'AIR D'ETRE VIBECODE") et sur la carte de
+         solde. Du rouge partout = du rouge nulle part. Surface neutre et
+         lisere neutre ; le seul rouge du bloc reste son bouton, qui est
+         la vraie action de la fiche. */
       .club-partenaire-bloc {
-        margin: 0 0 20px; padding: 16px 16px 16px;
+        margin: 0 0 20px; padding: 16px;
         border-radius: var(--r3);
-        border: 1px solid rgba(255,47,69,.28);
-        background: linear-gradient(160deg, rgba(255,47,69,.10), rgba(255,47,69,.03));
+        border: 1px solid var(--line);
+        background: var(--s1);
       }
       .club-partenaire-bloc h4 {
-        margin: 0 0 3px; font-size: calc(15.5 * var(--u)); font-weight: 800;
+        margin: 0 0 12px; font-size: calc(15.5 * var(--u)); font-weight: 800;
         letter-spacing: -.02em; color: var(--ink);
       }
-      .club-partenaire-bloc p { margin: 0 0 12px; font-size: calc(13 * var(--u)); font-weight: 500; color: var(--ink2); line-height: 1.4; }
 
       /* ---- Attribution Google, reduite a sa fonction ----
          C'etait un bouton en pleine largeur, au meme rang que les
@@ -3079,8 +3099,16 @@
       .club-info-ico svg { width: 19px; height: 19px; stroke: var(--ink3); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       .club-info-txt { flex: 1 1 auto; min-width: 0; }
       .club-info-principal { font-size: calc(15 * var(--u)); font-weight: 700; color: var(--ink); }
-      .club-info-principal.ferme { color: #d93025; }
-      .club-info-ligne.lien .club-info-principal { color: #1a73e8; }
+      /* Un club ferme n'est pas une panne. Le rouge d'erreur (#d93025,
+         herite de la fiche Google recopiee) alertait pour une
+         information parfaitement normale a 20 h un mardi. Le mot
+         "Ferme" se suffit. */
+      .club-info-principal.ferme { color: var(--ink); }
+      /* Etait en #1a73e8, le bleu de Google -- le meme qui avait deja
+         ete retire de la rangee d'actions parce que "ca ne ressemble pas
+         a ce qu'on achete". Il restait sur cette ligne. L'icone
+         Instagram a cote dit deja que c'est un lien. */
+      .club-info-ligne.lien .club-info-principal { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line2); }
 
       /* Recompenses disponibles : rappel discret, pas un bouton --
          vit juste au-dessus de la note deja presente, meme registre de
@@ -7175,7 +7203,7 @@ function ouvrirClub(c, src, id) {
   if (c.lngLat) {
     actions += '<button type="button" class="club-action-btn" id="sh-carte">' +
       '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
-      "<span>Voir sur la carte</span></button>";
+      "<span>Sur la carte</span></button>";
   }
   actions += '<button type="button" class="club-action-btn" id="sh-partager">' +
     '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0 4 4m-4-4L8 7"/><path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg></span>' +
@@ -7224,8 +7252,12 @@ function ouvrirClub(c, src, id) {
   // cette fiche ici. Il portait avant deux liens perdus tout en bas.
   var blocPartenaire = c.partenaire
     ? '<div class="club-partenaire-bloc">' +
+        // La phrase "Poste ta story avec le tag du club, cumule des
+        // points, echange-les sur place" est retiree : trois imperatifs
+        // a la suite, c'est un argumentaire, pas un libelle. Le bouton
+        // juste dessous dit quoi faire, et la ligne des recompenses dit
+        // ce que ca rapporte.
         "<h4>Tu gagnes des points ici</h4>" +
-        "<p>Poste ta story avec le tag du club, cumule des points, échange-les sur place.</p>" +
         '<button class="sheet-cta" id="sh-poster-story" type="button">Poster ma story</button>' +
         '<a class="club-recompenses-lien" id="sh-voir-recompenses" href="#boutique" style="margin:12px 0 0">' +
           (RECOMPENSES.length || 4) + " récompenses à échanger ici →" +

@@ -195,6 +195,25 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   await pause(900);
   await prendre("07-boutique", "Les quatre recompenses — rien de coupe");
 
+  // ---- 8. La fiche d'un club ----
+  // Le lavis rouge du bloc de points, le libelle tronque, le "Ferme" en
+  // rouge d'erreur, le lien en bleu Google et le coeur qui recouvrait la
+  // croix : tout se voit sur une seule capture.
+  await page.evaluate(() => document.querySelector("#tab-carte").click());
+  await pause(2500);
+  const ouverte = await page.evaluate(() => {
+    const b = document.querySelector("#club-rail button");
+    if (!b) return false;
+    b.click();
+    return true;
+  });
+  if (ouverte) {
+    await pause(1800);
+    await prendre("08-fiche-club", "La fiche d'un club");
+  } else {
+    console.log("  (pas de club dans le rail, fiche non capturee)");
+  }
+
   await navigateur.close();
   console.log(`\n-> ${DOSSIER}\n`);
 })();
