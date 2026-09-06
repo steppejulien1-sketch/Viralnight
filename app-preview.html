@@ -1979,36 +1979,66 @@
          jamais du decor. */
       /* Surface neutre et lisere neutre, comme .solde-carte juste
          au-dessus -- qui a fait exactement ce chemin : "les deux degrades
-         rouges donnaient un lavis rose qui faisait carte generee". Une
-         carte cadeau posee en aplat rouge avec une ombre rouge dessous
-         aurait refait la meme faute, en plus voyant. Le seul rouge de
-         cette carte est le contour de la marche du jour : une couleur,
-         une information. */
+         rouges donnaient un lavis rose qui faisait carte generee". Le
+         seul rouge de cette carte est le paquet.
+
+         Julien, 06/09/2026 : "je vois un truc plus gros [...] cadeau du
+         jour, trente points par exemple [...] tu cliques sur un truc ou
+         il faut mettre recuperer et c'est assez gros et une fois que tu
+         as recupere, ca disparait, ca laisse place a la boutique."
+         D'ou une carte haute et centree, avec un vrai bouton, au lieu
+         d'une ligne de reglage qu'on ne remarquait pas -- et le montant
+         ECRIT avant qu'on appuie. La boutique reste juste dessous :
+         la carte ne prend pas l'ecran, elle le partage. */
       .cadeau {
-        display: block; width: 100%; margin-top: 12px; padding: 14px 15px;
-        border: 0; border-radius: 18px; cursor: pointer;
+        display: block; width: 100%; margin-top: 12px; padding: 20px 18px 16px;
+        border: 0; border-radius: 20px;
         background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
-        color: var(--ink); font-family: inherit; text-align: left;
-        transition: transform .16s cubic-bezier(.23,1,.32,1);
+        color: var(--ink); font-family: inherit; text-align: center;
       }
-      .cadeau-tete { display: flex; align-items: center; gap: 12px; }
 
       /* ---- Le paquet ----
-         Julien : "pas un truc de merde ou bizarre [...] juste un truc
-         cadeau du jour, tu cliques et tu recuperes tes points". La carte
-         toute neutre ne donnait envie de rien : rien n'y disait qu'il y
-         avait un cadeau. Un seul element porte le rouge de la marque --
-         cette tuile -- au lieu de l'etaler sur toute la carte comme
-         avant. Et il ne bouge pas : c'est l'ouverture qui doit etre
-         agreable, pas l'attente. */
+         Un seul element porte le rouge de la marque, au lieu de l'etaler
+         sur toute la carte comme la premiere version. Et il ne bouge
+         pas : c'est l'ouverture qui doit etre agreable, pas l'attente --
+         un paquet qui gigote toute la journee devient un meuble. */
       .cadeau-boite {
-        position: relative; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 13px;
-        display: grid; place-items: center; background: var(--bouton);
+        position: relative; width: 52px; height: 52px; border-radius: 17px;
+        margin: 0 auto 12px; display: grid; place-items: center; background: var(--bouton);
       }
       .cadeau-boite svg {
-        width: 21px; height: 21px; fill: none; stroke: #fff;
+        width: 27px; height: 27px; fill: none; stroke: #fff;
         stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
       }
+      .cadeau-titre { margin: 0; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2); }
+      .cadeau-montant {
+        margin: 1px 0 0; font-family: var(--chiffre); font-size: calc(30 * var(--u));
+        font-weight: 800; letter-spacing: -.03em; line-height: 1.15; color: var(--ink);
+      }
+      .cadeau-sous { margin: 3px 0 0; font-size: calc(12.5 * var(--u)); color: var(--ink2); }
+      .cadeau-sous[hidden] { display: none; }
+      /* "Scanne un club d'abord", "Deja pris" : une phrase, pas un
+         montant. Elle prend la place du chiffre plutot que d'ajouter une
+         ligne -- la carte garde sa forme et ne saute pas. */
+      .cadeau.message .cadeau-montant {
+        font-family: var(--sans); font-size: calc(16 * var(--u));
+        font-weight: 700; letter-spacing: -.01em;
+      }
+
+      /* Le bouton : encre inversee, comme "Partager mon code" sur Amis.
+         Le corail reste une couleur de marque -- il est deja pris par le
+         paquet juste au-dessus, et deux rouges pour deux choses
+         differentes ne disent plus rien. */
+      .cadeau-btn {
+        width: 100%; min-height: 48px; margin-top: 14px; border: 0;
+        border-radius: var(--r-pill); background: var(--ink); color: var(--s1);
+        font-family: inherit; font-size: calc(15 * var(--u)); font-weight: 700;
+        cursor: pointer; transition: opacity var(--tr-court), transform var(--tr-court);
+      }
+      .cadeau-btn:hover { opacity: .88; }
+      .cadeau-btn:active { transform: scale(.98); }
+      .cadeau-btn:disabled { opacity: .5; cursor: default; }
+      .cadeau.ouvert .cadeau-btn { display: none; }
       /* La salve part d une tuile de 40px, pas du gros rond de
          confirmation d un echange : au reglage d origine elle etait deja
          a 40 % d opacite au bout d un dixieme de seconde, donc invisible.
@@ -2020,7 +2050,6 @@
         width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
         animation-duration: .9s;
       }
-      .cadeau-txt { flex: 1 1 auto; min-width: 0; }
 
       /* ---- Les sept marches ----
          Les jours passes sont pleins, le jour du moment est cercle de
@@ -2029,7 +2058,7 @@
          montant du septieme jour qui fait revenir le quatrieme. */
       .cadeau-jours {
         display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;
-        list-style: none; margin: 12px 0 0; padding: 0;
+        list-style: none; margin: 14px 0 0; padding: 0;
       }
       .cadeau-jour {
         display: grid; place-items: center; min-height: 34px; border-radius: 9px;
@@ -2046,29 +2075,11 @@
          pas de semaine a montrer. */
       .cadeau.bienvenue .cadeau-jours { display: none; }
       .cadeau[hidden] { display: none; }
-      .cadeau:active { transform: scale(.98); }
-      .cadeau-txt strong {
-        display: block; font-family: var(--titre);
-        font-size: calc(15 * var(--u)); font-weight: 800; letter-spacing: -.02em;
-      }
-      .cadeau-txt > span { display: block; margin-top: 1px; font-size: calc(12.5 * var(--u)); color: var(--ink2); }
-      /* Le chevron dit que la carte s'ouvre. Le paquet cadeau qui gigotait
-         le disait aussi, en beaucoup plus voyant et pour le meme service :
-         sans lui, plus rien n'indiquait qu'il y avait quelque chose a
-         toucher. Meme traitement que la ligne "Inviter des amis". */
-      .cadeau-fleche {
-        flex: 0 0 auto; align-self: center; width: 15px; height: 15px;
-        fill: none; stroke: var(--ink3); stroke-width: 2.2; stroke-linecap: round;
-      }
-      .cadeau.ouvert .cadeau-fleche { display: none; }
-      .cadeau.ouvert { pointer-events: none; }
-      /* Ouvert, le montant prend la place du titre -- en encre normale.
-         Un grand chiffre en couleur de marque est precisement ce qui a
-         ete retire de la carte des points juste au-dessus. Il arrive en
-         grossissant : c'est court, ca ne tourne pas en boucle, et c'est
-         la seule chose de la carte qui bouge. */
-      .cadeau.ouvert .cadeau-txt strong {
-        font-family: var(--chiffre); font-size: calc(27 * var(--u)); letter-spacing: -.04em;
+      /* Une fois recupere, le montant se rejoue en grossissant : c'est
+         court, ca ne tourne pas en boucle, et c'est la seule chose de la
+         carte qui bouge. La carte disparait juste apres (cote JS) --
+         Julien : "une fois que tu as recupere, ca disparait". */
+      .cadeau.ouvert .cadeau-montant {
         animation: cadeauMontant .42s cubic-bezier(.2,.9,.3,1.25) both;
       }
       @keyframes cadeauMontant {
@@ -2078,10 +2089,11 @@
       /* Le jackpot ne repeint pas la carte, il change UN mot. Un degrade
          orange pose pour une fois sur cent, c'est porter un effet toute
          l'annee pour trois secondes par trimestre. */
-      .cadeau.jackpot .cadeau-tete > span { color: var(--prix-encre, var(--bouton)); font-weight: 700; }
+      .cadeau.jackpot .cadeau-titre { color: var(--prix-encre, var(--bouton)); font-weight: 700; }
       @media (prefers-reduced-motion: reduce) {
-        .cadeau { transition: none; }
-        .cadeau:active { transform: none; }
+        .cadeau.ouvert .cadeau-montant { animation: none; }
+        .cadeau-btn { transition: none; }
+        .cadeau-btn:active { transform: none; }
       }
 
       .solde-label {
@@ -4430,26 +4442,27 @@
                    au dernier club frequente. Rien ici ne decide de
                    quoi que ce soit -- l'appli ouvre le paquet, elle ne
                    le remplit pas. -->
-              <button type="button" class="cadeau" id="cadeau" hidden>
-                <span class="cadeau-tete">
-                  <span class="cadeau-boite" id="cadeau-boite" aria-hidden="true">
-                    <svg viewBox="0 0 24 24">
-                      <rect x="3" y="9.5" width="18" height="11.5" rx="2"/>
-                      <path d="M2 6.5h20v3H2zM12 6.5V21"/>
-                      <path d="M12 6.5S9.2 1.4 7 3.2s5 3.3 5 3.3zM12 6.5s2.8-5.1 5-3.3-5 3.3-5 3.3z"/>
-                    </svg>
-                  </span>
-                  <span class="cadeau-txt">
-                    <strong id="cadeau-titre">Cadeau du jour</strong>
-                    <span id="cadeau-sous">Touche pour l'ouvrir</span>
-                  </span>
-                  <svg class="cadeau-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              <section class="cadeau" id="cadeau" hidden>
+                <span class="cadeau-boite" id="cadeau-boite" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="9.5" width="18" height="11.5" rx="2"/>
+                    <path d="M2 6.5h20v3H2zM12 6.5V21"/>
+                    <path d="M12 6.5S9.2 1.4 7 3.2s5 3.3 5 3.3zM12 6.5s2.8-5.1 5-3.3-5 3.3-5 3.3z"/>
+                  </svg>
                 </span>
+                <p class="cadeau-titre" id="cadeau-titre">Cadeau du jour</p>
+                <!-- Le montant est ANNONCE, pas devoile au clic. C'est ce
+                     qui oblige le tirage a etre deterministe cote base
+                     (montant_cadeau, migration 0040) : sinon il suffirait
+                     de rafraichir jusqu'a lire 40. -->
+                <p class="cadeau-montant" id="cadeau-montant">&nbsp;</p>
+                <p class="cadeau-sous" id="cadeau-sous" hidden></p>
+                <button type="button" class="cadeau-btn" id="cadeau-btn">Récupérer</button>
                 <!-- Les sept marches. C'est ELLE qui fait revenir : sans
                      voir la marche suivante et ce qu'elle vaut, un cadeau
                      quotidien n'est qu'un montant de plus. -->
                 <ol class="cadeau-jours" id="cadeau-jours" aria-hidden="true"></ol>
-              </button>
+              </section>
             </section>
 
             <!-- Retire le 03/09/2026. Julien : "retire le un cocktail
@@ -9563,7 +9576,8 @@ $("#pf-avis")?.addEventListener("click", function () {
    pas -- un tirage cote navigateur, c'est un jackpot a volonte, et une
    garde "un par jour" dans le localStorage se contourne en vidant son
    navigateur. */
-var CADEAU = $("#cadeau"), CADEAU_JOURS = $("#cadeau-jours"), CADEAU_BOITE = $("#cadeau-boite");
+var CADEAU = $("#cadeau"), CADEAU_JOURS = $("#cadeau-jours"),
+    CADEAU_BOITE = $("#cadeau-boite"), CADEAU_BTN = $("#cadeau-btn");
 
 /* Le jeton d'appareil, pour le bonus de bienvenue.
    Julien : "que ca ne lui redonne pas cinquante points [...] parce que
@@ -9619,8 +9633,11 @@ async function verifierCadeau() {
   if (!bv.error && bv.data && bv.data.etat === "disponible") {
     modeCadeau = "bienvenue";
     CADEAU.classList.add("bienvenue");
+    CADEAU.classList.remove("message");
     $("#cadeau-titre").textContent = "Bienvenue";
-    $("#cadeau-sous").textContent = nb(bv.data.points) + " points";
+    $("#cadeau-montant").textContent = nb(bv.data.points) + " points";
+    $("#cadeau-sous").hidden = true;
+    CADEAU_BTN.textContent = "Récupérer";
     CADEAU.hidden = false;
     return;
   }
@@ -9633,19 +9650,37 @@ async function verifierCadeau() {
   if (res.error || !res.data) return;
 
   modeCadeau = "jour";
-  CADEAU.classList.remove("bienvenue");
+  CADEAU.classList.remove("bienvenue", "message");
   dessinerEchelle(res.data.echelle, res.data.jour);
+  // Le montant est ANNONCE avant le clic. Sans risque : montant_cadeau()
+  // est deterministe pour le couple (personne, journee), rafraichir la
+  // page ne retire pas un autre nombre.
   $("#cadeau-titre").textContent = "Cadeau du jour";
-  $("#cadeau-sous").textContent = "Jour " + (res.data.jour || 1);
+  $("#cadeau-montant").textContent = nb(res.data.points) + " points";
+  $("#cadeau-sous").hidden = true;
+  CADEAU_BTN.textContent = "Récupérer";
   CADEAU.hidden = res.data.etat !== "disponible";
 }
 
-CADEAU?.addEventListener("click", async function () {
+// La carte s'efface et se remet a neuf. Julien : "une fois que tu as
+// recupere, ca disparait, ca laisse place a la boutique." Elle ne
+// reviendra qu'au prochain 10 h -- c'est la base qui en decide
+// (jour_cadeau(), migration 0040), pas ce fichier.
+function rangerCadeau() {
+  CADEAU.hidden = true;
+  CADEAU.classList.remove("ouvert", "jackpot", "bienvenue", "message");
+  CADEAU_BOITE?.querySelector(".confettis")?.remove();
+  $("#cadeau-titre").textContent = "Cadeau du jour";
+  $("#cadeau-montant").textContent = "";
+  $("#cadeau-sous").hidden = true;
+  if (CADEAU_BTN) { CADEAU_BTN.disabled = false; CADEAU_BTN.textContent = "Récupérer"; }
+}
+
+CADEAU_BTN?.addEventListener("click", async function () {
   if (CADEAU.classList.contains("ouvert")) return;
   var bienvenue = modeCadeau === "bienvenue";
-  CADEAU.classList.add("ouvert");
-  $("#cadeau-titre").textContent = "…";
-  $("#cadeau-sous").textContent = "";
+  CADEAU_BTN.disabled = true;
+  CADEAU_BTN.textContent = "…";
 
   var res = bienvenue
     ? await supabaseClubbeur.rpc("welcome_bonus", { p_device: jetonAppareil() })
@@ -9654,24 +9689,28 @@ CADEAU?.addEventListener("click", async function () {
 
   if (d.etat !== "ok") {
     // Aucun de ces cas n'est une panne : on le dit en clair et la carte
-    // s'en va, plutot que de laisser un paquet qui ne s'ouvre pas.
+    // s'en va, plutot que de laisser un bouton qui ne fait rien.
     var phrases = {
       aucun_club: ["Scanne un club d'abord", "Les points vont dans la boutique de ton dernier club."],
       deja_pris: ["Déjà pris", ""],
       appareil_deja_servi: ["Bonus déjà utilisé", "Un seul bonus de bienvenue par téléphone."],
     };
     var dit = phrases[d.etat] || ["Réessaie plus tard", ""];
-    $("#cadeau-titre").textContent = dit[0];
+    CADEAU.classList.add("ouvert", "message");
+    $("#cadeau-titre").textContent = "";
+    $("#cadeau-montant").textContent = dit[0];
     $("#cadeau-sous").textContent = dit[1];
-    setTimeout(function () { CADEAU.hidden = true; CADEAU.classList.remove("ouvert"); }, 2600);
+    $("#cadeau-sous").hidden = !dit[1];
+    setTimeout(rangerCadeau, 2600);
     return;
   }
 
+  CADEAU.classList.add("ouvert");
   CADEAU.classList.toggle("jackpot", !!d.jackpot);
-  $("#cadeau-titre").textContent = "+" + nb(d.points) + " pts";
-  $("#cadeau-sous").textContent = d.jackpot
-    ? "Jackpot" + (d.club ? ", chez " + d.club : "")
-    : (d.club ? "Dans ta boutique " + d.club : "");
+  $("#cadeau-titre").textContent = d.jackpot ? "Jackpot" : "Récupéré";
+  $("#cadeau-montant").textContent = "+" + nb(d.points) + " pts";
+  $("#cadeau-sous").textContent = d.club ? "Dans ta boutique " + d.club : "";
+  $("#cadeau-sous").hidden = !d.club;
 
   /* La salve part du paquet. C'est confettis() -- celle qui existe deja
      pour la confirmation d'un echange -- et pas une seconde famille
@@ -9696,15 +9735,9 @@ CADEAU?.addEventListener("click", async function () {
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (session) await chargerSoldeReel(session.user.id);
 
-  // La carte reste le temps qu'on lise, puis disparait -- elle n'a plus
-  // rien a proposer avant demain.
-  setTimeout(function () {
-    CADEAU.hidden = true;
-    CADEAU.classList.remove("ouvert", "jackpot", "bienvenue");
-    CADEAU_BOITE?.querySelector(".confettis")?.remove();
-    $("#cadeau-titre").textContent = "Cadeau du jour";
-    $("#cadeau-sous").textContent = "Touche pour l'ouvrir";
-  }, 4200);
+  // Le temps de lire le montant, puis la carte s'en va et la boutique
+  // remonte a sa place.
+  setTimeout(rangerCadeau, 2200);
 });
 
 function localiser() {

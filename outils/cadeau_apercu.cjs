@@ -59,17 +59,16 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
     console.log(`  ${nom}  ${titre}`);
   }
 
-  // Pose l'etat d'une carte : solde affiche, titre, sous-titre, et
-  // l'escalier. `classes` reprend exactement celles que pose le vrai
-  // code (bienvenue / ouvert / jackpot). `pris` remplit la marche du
-  // jour au lieu de la surligner -- c'est ce que fait le vrai code une
-  // fois le cadeau ouvert.
+  // Pose l'etat d'une carte. `classes` reprend exactement celles que
+  // pose le vrai code (bienvenue / ouvert / jackpot / message), et
+  // `pris` remplit la marche du jour au lieu de la surligner -- ce que
+  // fait le vrai code une fois le cadeau recupere.
   //
   // `salve` rejoue la volee de confettis et LA FIGE : elle dure moins
   // d'une seconde, une capture prise apres coup ne montrerait rien. Le
   // dessin, les couleurs et les distances sont ceux de confettis() dans
   // l'appli ; seul le temps est arrete.
-  async function poser({ solde, titre, sous, jour, classes, pris, salve }) {
+  async function poser({ solde, titre, montant, sous, jour, classes, pris, salve }) {
     await page.evaluate((e) => {
       const num = document.querySelector("#solde-num");
       if (num) num.textContent = String(e.solde);
@@ -77,7 +76,11 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
       const carte = document.querySelector("#cadeau");
       carte.className = "cadeau" + (e.classes ? " " + e.classes : "");
       document.querySelector("#cadeau-titre").textContent = e.titre;
-      document.querySelector("#cadeau-sous").textContent = e.sous;
+      document.querySelector("#cadeau-montant").textContent = e.montant;
+
+      const sous = document.querySelector("#cadeau-sous");
+      sous.textContent = e.sous || "";
+      sous.hidden = !e.sous;
 
       const jours = document.querySelector("#cadeau-jours");
       jours.innerHTML = e.echelle.map((points, i) => {
@@ -105,14 +108,14 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
 
       // Le montant grossit en arrivant : fige a la fin, sinon la capture
       // l'attrape a mi-course et il parait simplement trop petit.
-      document.querySelectorAll("#cadeau .cadeau-txt strong").forEach((el) =>
+      document.querySelectorAll("#cadeau .cadeau-montant").forEach((el) =>
         el.getAnimations().forEach((an) => { an.pause(); an.currentTime = 420; }));
 
       carte.hidden = false;
       window.scrollTo(0, 0);
     }, {
-      solde, titre, sous, jour: jour || 0, classes: classes || "",
-      pris: !!pris, salve: !!salve, echelle: ECHELLE,
+      solde, titre, montant, sous: sous || "", jour: jour || 0,
+      classes: classes || "", pris: !!pris, salve: !!salve, echelle: ECHELLE,
     });
     await pause(500);
   }
@@ -133,42 +136,50 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   // Solde a zero : le scan lui-meme rapporte 15 points (qrCheckin), mais
   // on montre ici le pire cas, celui ou la carte est seule a l'ecran.
   await poser({
-    solde: 0, titre: "Bienvenue", sous: "50 points", classes: "bienvenue",
+    solde: 0, titre: "Bienvenue", montant: "50 points", classes: "bienvenue",
   });
   await prendre("01-bienvenue", "Le bonus, juste sous le solde");
 
-  // ---- 2. Le meme, ouvert ----
+  // ---- 2. Recupere ----
   await poser({
-    solde: 50, titre: "+50 pts", sous: "Dans ta boutique Le Mirage",
+    solde: 50, titre: "Récupéré", montant: "+50 pts", sous: "Dans ta boutique Le Mirage",
     classes: "bienvenue ouvert", salve: true,
   });
-  await prendre("02-bienvenue-ouvert", "Le bonus pris, le solde a suivi");
+  await prendre("02-bienvenue-recupere", "Recupere — la carte s'en va juste apres");
 
   // ---- 3. Le cadeau du jour, quatrieme marche ----
   await poser({
-    solde: 65, titre: "Cadeau du jour", sous: "Jour 4", jour: 4,
+    solde: 65, titre: "Cadeau du jour", montant: "5 points", jour: 4,
   });
-  await prendre("03-escalier-jour4", "L'escalier — jour 4, le 20 en vue");
+  await prendre("03-escalier-jour4", "Jour 4 — le montant est annonce");
 
-  // ---- 4. Pris : la marche rejoint les pleines ----
+  // ---- 4. Recupere : la marche rejoint les pleines ----
   await poser({
-    solde: 70, titre: "+5 pts", sous: "Dans ta boutique Le Mirage",
+    solde: 70, titre: "Récupéré", montant: "+5 pts", sous: "Dans ta boutique Le Mirage",
     jour: 4, classes: "ouvert", pris: true, salve: true,
   });
-  await prendre("04-escalier-pris", "Pris — la marche se remplit");
+  await prendre("04-escalier-recupere", "Recupere — la marche se remplit");
 
   // ---- 5. Le jackpot, 1 fois sur 100 ----
   await poser({
-    solde: 105, titre: "+40 pts", sous: "Jackpot, chez Le Mirage",
+    solde: 105, titre: "Jackpot", montant: "+40 pts", sous: "Dans ta boutique Le Mirage",
     jour: 4, classes: "ouvert jackpot", pris: true, salve: true,
   });
   await prendre("05-jackpot", "Le jackpot — un mot change, pas la carte");
 
   // ---- 6. Le septieme jour, celui qui fait revenir ----
   await poser({
-    solde: 96, titre: "Cadeau du jour", sous: "Jour 7", jour: 7,
+    solde: 96, titre: "Cadeau du jour", montant: "20 points", jour: 7,
   });
   await prendre("06-escalier-jour7", "Jour 7 — la grosse marche");
+
+  // ---- 7. Le cas sans club ----
+  await poser({
+    solde: 0, titre: "", montant: "Scanne un club d'abord",
+    sous: "Les points vont dans la boutique de ton dernier club.",
+    classes: "ouvert message",
+  });
+  await prendre("07-aucun-club", "Sans club scanne — rien a payer, on le dit");
 
   await navigateur.close();
   console.log(`\n-> ${DOSSIER}\n`);
