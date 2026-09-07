@@ -79,6 +79,21 @@ check("429 (trop de requetes) -> on garde", !abonnementExpire(429));
 check("500 -> on garde", !abonnementExpire(500));
 check("503 -> on garde", !abonnementExpire(503));
 
+console.log("\nCadeau du jour disponible");
+const cadeau = construireMessage({ type: "cadeau_dispo" });
+check("un message est produit", cadeau !== null);
+check("le titre annonce le cadeau", cadeau.titre.toLowerCase().includes("cadeau"), cadeau.titre);
+check("ouvre la boutique", cadeau.url.includes("#boutique"), cadeau.url);
+check("meme tag que les points (ne s'empile pas)", cadeau.tag === "points");
+// Le montant depend de la marche du jour et d'un tirage a 1 % : l'ecrire
+// dans la notification obligerait a le calculer par personne avant
+// l'envoi, et "+2 points" ne fait ouvrir personne.
+check("ne promet aucun montant", !/\d/.test(cadeau.corps), cadeau.corps);
+check("ne depend d'aucun club", construireMessage({ type: "cadeau_dispo", club: "" }) !== null);
+
+console.log("\nType inconnu");
+check("rien pour un type non prevu", construireMessage({ type: "bidon" }) === null);
+
 console.log("\nConversion vers web-push");
 const ligne = { endpoint: "https://fcm.googleapis.com/x", p256dh: "cle-p", auth: "cle-a", autre: "ignore" };
 const converti = versAbonnementWebPush(ligne);

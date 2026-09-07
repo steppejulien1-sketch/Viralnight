@@ -19,7 +19,7 @@
 // VARIABLES : PWA_FUNCTIONS_URL, PWA_BRIDGE_SECRET
 
 import { createClient } from "@supabase/supabase-js";
-import { notifierStory } from "../lib/notifications/envoyer.js";
+import { notifierStory, notifierCadeauDuJour } from "../lib/notifications/envoyer.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 
@@ -264,6 +264,36 @@ async function actionSyncBoutique(request, response) {
   });
 }
 
+/* ?action=notifier-cadeau — le rappel du matin.
+   Programme dans vercel.json, protege par CRON_SECRET comme les deux
+   taches Instagram : jamais appelable par un club ni un clubbeur.
+
+   ⚠️ SUR HOBBY, L'HEURE EST APPROXIMATIVE A ±59 MINUTES (limite
+   documentee par Vercel). Le cron est donc pose a 9 h UTC et non 8 h :
+   a 8 h UTC, un declenchement tardif en hiver tomberait encore avant
+   10 h a Paris, quand jour_cadeau() n'a pas encore bascule -- on
+   annoncerait un cadeau qui n'existe pas. A 9 h UTC, la fenetre reelle
+   est 10 h-10 h 59 en hiver et 11 h-11 h 59 en ete : jamais trop tot. */
+async function actionNotifierCadeau(request, response) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) {
+    return json(response, { error: "CRON_SECRET absent de ce serveur : aucune tache planifiee ne peut s'executer." }, 401);
+  }
+  if (request.headers.authorization !== `Bearer ${secret}`) {
+    return json(response, { error: "Non autorise." }, 401);
+  }
+
+  try {
+    const bilan = await notifierCadeauDuJour();
+    return json(response, { ok: true, ...bilan });
+  } catch (erreur) {
+    // Une tache de fond qui echoue ne doit pas rester silencieuse : le
+    // cron se contente d'un code HTTP, les logs portent le detail.
+    console.error("[credit-clubbeur:notifier-cadeau]", erreur);
+    return json(response, { error: "Envoi impossible." }, 500);
+  }
+}
+
 function json(response, body, status = 200) {
   response.statusCode = status;
   response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -280,9 +310,15 @@ async function readBody(request) {
 }
 
 export default async function handler(request, response) {
-  if (request.method !== "POST") return json(response, { error: "Method not allowed" }, 405);
-
   const action = new URL(request.url, "http://localhost").searchParams.get("action");
+
+  /* ⚠️ AVANT le controle de methode : les crons de Vercel appellent en
+     GET, pas en POST. Et greffe ICI plutot que dans un nouveau fichier :
+     le plan Hobby plafonne a 12 fonctions serverless et api/ y est deja
+     -- une treizieme ferait echouer tous les deploiements. */
+  if (action === "notifier-cadeau") return actionNotifierCadeau(request, response);
+
+  if (request.method !== "POST") return json(response, { error: "Method not allowed" }, 405);
   if (action === "sync-boutique") return actionSyncBoutique(request, response);
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
