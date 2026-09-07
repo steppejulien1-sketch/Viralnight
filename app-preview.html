@@ -915,6 +915,11 @@
       .va-share:hover { opacity: .88; }
       .va-share:active { transform: scale(.98); }
 
+      .va-parrainages {
+        margin: 14px 0 0; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2);
+      }
+      .va-parrainages[hidden] { display: none; }
+
       .va-sep { font-size: calc(11 * var(--u)); font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 16px; }
 
       /* Une loupe DANS le champ, et plus de bouton "Ajouter" a cote :
@@ -1249,14 +1254,18 @@
          photo de profil"). La cloche vit en absolu a 16px et ne bouge
          pas ; rien ne l'empeche donc de remonter. */
       .pf-head { text-align: center; padding-top: 16px; margin: 0 0 20px; }
+      /* Fond neutre, pas un degrade rouge avec un faux reflet en haut a
+         gauche. C'est exactement la bille refusee sur l'ecran Amis
+         ("BCP TROP L'AIR D'ETRE VIBECODE") ; a 84 px elle etait encore
+         plus voyante ici. La couleur viendra de la vraie photo. */
       .pf-avatar {
         position: relative; width: 84px; height: 84px; margin: 0 auto 12px; border-radius: 50%;
-        background: radial-gradient(120% 120% at 30% 22%, var(--accent), #7a0f1e 78%);
+        background: var(--s2); box-shadow: inset 0 0 0 1px var(--line);
         border: 0; padding: 0; cursor: pointer; display: grid; place-items: center;
         transition: transform var(--tr-court);
       }
       .pf-avatar:active { transform: scale(.97); }
-      .pf-avatar-init { font-size: calc(42 * var(--u)); font-weight: 800; color: #fff; }
+      .pf-avatar-init { font-size: calc(42 * var(--u)); font-weight: 700; color: var(--ink2); }
       /* overflow:hidden vit sur la photo elle-meme, pas sur le bouton
          .pf-avatar -- avant, le bouton entier etait en overflow:hidden,
          et comme il est rond (border-radius 50%), ca rognait le badge
@@ -1316,6 +1325,41 @@
          moins gras qu'avant, barre de 4px, pastille en simple teinte.
          Ce n'est pas la quantite de rouge qui le rend premium, c'est
          sa finesse. */
+      /* ---- L'historique des points ----
+         Une ligne = un mouvement : ce qui l'a produit a gauche, le club
+         et le moment dessous, le montant a droite. Pas d'icone par
+         source : cinq pictogrammes differents dans une liste de six
+         lignes font un inventaire, pas un releve. */
+      .pf-histo { margin: 0 0 24px; }
+      .pf-histo-titre {
+        margin: 0 0 8px; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2);
+      }
+      .pf-histo-liste {
+        list-style: none; margin: 0; padding: 0;
+        background: var(--s1); border-radius: var(--r3);
+        box-shadow: inset 0 0 0 1px var(--line); overflow: hidden;
+      }
+      .pf-histo-liste li {
+        display: flex; align-items: baseline; gap: 12px;
+        padding: 12px 14px; border-top: 1px solid var(--line);
+      }
+      .pf-histo-liste li:first-child { border-top: 0; }
+      .pf-histo-quoi { flex: 1 1 auto; min-width: 0; }
+      .pf-histo-quoi strong {
+        display: block; font-size: calc(14 * var(--u)); font-weight: 600; color: var(--ink);
+      }
+      .pf-histo-quoi span {
+        display: block; margin-top: 1px; font-size: calc(12 * var(--u)); color: var(--ink3);
+      }
+      .pf-histo-pts {
+        flex: 0 0 auto; font-family: var(--chiffre); font-variant-numeric: tabular-nums;
+        font-size: calc(14.5 * var(--u)); font-weight: 700; color: var(--ink);
+      }
+      /* Un grant pas encore libere est gagne mais pas depensable. Le dire
+         evite le "j'ai pas eu mes points" -- c'est meme la raison d'etre
+         de cette liste. */
+      .pf-histo-attente { color: var(--ink3); }
+
       .pf-fidelite {
         position: relative; overflow: hidden;
         width: 100%; display: block;
@@ -1344,9 +1388,13 @@
          libelle discret, le chevron qui dit qu on peut entrer, et le
          nombre qui porte la carte. */
       .pf-fid-entete { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      /* Alignee sur .solde-label de la boutique, qui a deja fait ce
+         chemin : les capitales tres espacees se lisent comme un libelle
+         de tableau de bord, pas de carte de fidelite. Le chiffre garde
+         son rouge -- celui-la, Julien l'a demande. */
       .pf-fid-label {
-        font-size: calc(11.5 * var(--u)); font-weight: 800; letter-spacing: .09em;
-        text-transform: uppercase; color: var(--ink3);
+        font-size: calc(12.5 * var(--u)); font-weight: 600; letter-spacing: -.005em;
+        color: var(--ink3);
       }
       /* Meme traitement que le solde de la boutique : chasse fixe pour
          que le nombre ne saute pas quand il change. */
@@ -4229,6 +4277,11 @@
                 </div>
 
                 <button type="button" class="va-share" id="va-share">Partager mon lien</button>
+
+                <!-- LE COMPTEUR. C'est ce qui fait rouvrir cet ecran :
+                     sans lui, on partage un lien dans le vide. Masque a
+                     zero -- "0 ami" n'apprend rien et decourage. -->
+                <p class="va-parrainages" id="va-parrainages" hidden></p>
               </div>
             </div>
 
@@ -4294,6 +4347,18 @@
               <span class="pf-fid-piste"><span class="pf-fid-barre" id="pf-fid-barre"></span></span>
               <p class="pf-fid-txt" id="pf-fid-txt"></p>
             </button>
+
+            <!-- D'OU VIENNENT LES POINTS.
+                 On voyait un solde, jamais son origine. C'est ce qui rend
+                 un compte de fidelite credible -- et ce qui coupe court
+                 aux "j'ai pas eu mes points". Alimente par
+                 historique_points() (migration 0043) : la section reste
+                 masquee tant que la fonction n'existe pas ou qu'il n'y a
+                 rien a montrer. -->
+            <section class="pf-histo" id="pf-histo" hidden>
+              <p class="pf-histo-titre">Mes derniers points</p>
+              <ul class="pf-histo-liste" id="pf-histo-liste"></ul>
+            </section>
 
             <div class="pf-liste">
               <button type="button" class="pf-item" id="pf-reglages">
@@ -8429,6 +8494,21 @@ async function ouvrirPageAmis(session) {
   chargerAmis();
   chargerSuggestions();
 
+  /* Le compteur de parrainage. mes_parrainages() ne renvoie que le
+     NOMBRE d'amis, pas un total de points : claim_referral() en donne 50
+     alors que l'ecran en annonce 150, et tant que Julien n'a pas
+     tranche, afficher un total reviendrait a choisir a sa place. */
+  (async function () {
+    var ligne = document.getElementById("va-parrainages");
+    if (!ligne) return;
+    var res = await supabaseClubbeur.rpc("mes_parrainages");
+    if (res.error || !res.data || !res.data.amis) return;  // 0 ou fonction absente : rien
+    ligne.textContent = res.data.amis === 1
+      ? "1 ami s'est inscrit avec ton code."
+      : res.data.amis + " amis se sont inscrits avec ton code.";
+    ligne.hidden = false;
+  })();
+
   // --- Mon code : pseudo + photo + QR, generes une fois a l'ouverture -
   var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).single()).data;
   var monHandle = profil && profil.handle;
@@ -8714,6 +8794,56 @@ function fermerProfil() {
   TAB_PROFIL.setAttribute("aria-current", "false");
 }
 
+/* L'historique des points, dans Profil.
+   Les libelles sont ecrits ICI et pas en base : la base note d'ou vient
+   un grant ('scan', 'cadeau'...), l'appli decide comment ca se dit. Une
+   source inconnue retombe sur "Points" plutot que d'afficher son code
+   technique. */
+var LIBELLE_SOURCE = {
+  scan: "Scan du QR",
+  story: "Story validée",
+  cadeau: "Cadeau du jour",
+  bienvenue: "Bienvenue",
+  instagram: "Mention Instagram",
+};
+
+function quandCourt(iso) {
+  var d = new Date(iso);
+  if (isNaN(d)) return "";
+  var jours = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (jours <= 0) return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  if (jours === 1) return "hier";
+  if (jours < 7) return "il y a " + jours + " jours";
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
+async function chargerHistorique() {
+  var bloc = document.getElementById("pf-histo");
+  var liste = document.getElementById("pf-histo-liste");
+  if (!bloc || !liste || !supabaseClubbeur) return;
+
+  var res = await supabaseClubbeur.rpc("historique_points", { p_limite: 12 });
+  // Migration pas encore passee, ou rien a montrer : la section n'existe
+  // pas plutot que d'afficher une carte vide.
+  if (res.error || !res.data || !res.data.lignes || !res.data.lignes.length) {
+    bloc.hidden = true;
+    return;
+  }
+
+  liste.innerHTML = res.data.lignes.map(function (l) {
+    var quoi = LIBELLE_SOURCE[l.source] || "Points";
+    var ou = [l.club, quandCourt(l.quand)].filter(Boolean).join(" · ");
+    return "<li>" +
+      '<span class="pf-histo-quoi">' +
+        "<strong>" + escapeHtmlSupport(quoi) + "</strong>" +
+        "<span>" + escapeHtmlSupport(ou) + (l.en_attente ? " · en attente" : "") + "</span>" +
+      "</span>" +
+      '<span class="pf-histo-pts' + (l.en_attente ? " pf-histo-attente" : "") + '">+' + nb(l.points) + "</span>" +
+    "</li>";
+  }).join("");
+  bloc.hidden = false;
+}
+
 TAB_PROFIL?.addEventListener("click", async function () {
   fermerStory();
   fermerAmis();
@@ -8735,6 +8865,10 @@ TAB_PROFIL?.addEventListener("click", async function () {
   }
   $("#pf-connecte-toi").hidden = true;
   $("#pf-contenu").hidden = false;
+
+  // Pas d'await : la page s'affiche tout de suite, la liste se remplit
+  // au retour du serveur.
+  chargerHistorique();
 
   var handleEl = $("#pf-handle"), avatarInit = $("#pf-avatar-init"), avatarImg = $("#pf-avatar-img");
   var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).single()).data;
