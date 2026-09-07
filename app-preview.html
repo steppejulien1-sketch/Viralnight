@@ -8256,6 +8256,7 @@ map.on("load", function () {
     // (demande de Julien) -- la photo + le point de statut suffisent,
     // le detail (horaires precis, avis...) reste dans la fiche.
     el.classList.toggle("sans-photo", !c.photo);
+    el.dataset.club = key;
     el.innerHTML = imgClub(c) + '<span class="club-badge-dot"></span>';
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     // Retour a notre propre fiche (pas l'iframe Google directement) :
@@ -8785,6 +8786,7 @@ var clubRail = $("#club-rail");
 function creerClubChip(c, key, index) {
   var b = document.createElement("button");
   b.className = "fr";
+  b.dataset.club = key;
   // Retard de la cascade, lu par le CSS (var(--i)).
   b.style.setProperty("--i", index || 0);
 
@@ -9910,16 +9912,48 @@ var CLUB_ID_DEMO = "ff1abccb-adeb-496a-a8db-16706a9d467b";
 // chargement.
 var IDS_CLUBS = {};
 
+/* Pose la photo dans les ronds deja dessines, sans tout reconstruire :
+   reconstruire le rail perdrait la position de defilement, et recreer
+   les marqueurs de la carte les ferait clignoter. On ne touche que le
+   contenu du rond, et seulement pour les clubs qui viennent d'en
+   recevoir une. */
+function rafraichirPhotosClubs() {
+  document.querySelectorAll("[data-club]").forEach(function (noeud) {
+    var c = CLUBS[noeud.dataset.club];
+    if (!c || !c.photo) return;
+    var rond = noeud.classList.contains("club-badge") ? noeud : noeud.querySelector(".bub-club");
+    if (!rond || rond.querySelector("img")) return;
+    rond.classList.remove("sans-photo");
+    rond.insertAdjacentHTML("afterbegin", '<img src="' + escapeHtmlSupport(c.photo) + '" alt="" />');
+  });
+}
+
 async function resoudreIdsClubs() {
   try {
     var noms = Object.keys(CLUBS).map(function (k) { return CLUBS[k].nom; });
-    var res = await supabaseClubbeur.from("clubs").select("id, name").in("name", noms);
+    /* logo_url en plus de l'id : c'est la photo que le gerant depose dans
+       son parcours d'installation. Elle etait enregistree cote gerant,
+       recopiee cote clubbeur par api/credit-clubbeur -- et personne ne
+       la lisait ici. Le rond du club restait vide pour toujours, meme
+       quand la photo existait. */
+    var res = await supabaseClubbeur.from("clubs").select("id, name, logo_url").in("name", noms);
     if (res.error) throw new Error(res.error.message);
+    var aChange = false;
     (res.data || []).forEach(function (ligne) {
       Object.keys(CLUBS).forEach(function (k) {
-        if (CLUBS[k].nom === ligne.name) IDS_CLUBS[k] = ligne.id;
+        if (CLUBS[k].nom !== ligne.name) return;
+        IDS_CLUBS[k] = ligne.id;
+        if (ligne.logo_url && CLUBS[k].photo !== ligne.logo_url) {
+          CLUBS[k].photo = ligne.logo_url;
+          aChange = true;
+        }
       });
     });
+    // Les badges et le rail sont deja dessines quand la reponse arrive
+    // (ils se construisent au chargement, cette requete revient apres) :
+    // sans ce rafraichissement, la photo n'apparaitrait qu'au prochain
+    // demarrage de l'appli.
+    if (aChange) rafraichirPhotosClubs();
   } catch (erreur) {
     console.error("[boutique] ids clubs indisponibles:", erreur.message);
   }

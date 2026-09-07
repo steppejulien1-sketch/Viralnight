@@ -77,6 +77,11 @@ async function ouvrirClubClubbeur(clubbeur, supabaseGerants, etab, establishment
     slug: base,
     ig_handle: handle || base,
     primary_color: etab.primary_color || "#ff6363",
+    // La photo de couverture deposee dans le parcours d'installation.
+    // Sans cette ligne, elle restait cote gerant : le club apparaissait
+    // sur la carte des clubbeurs avec un rond vide alors que le gerant
+    // avait bel et bien mis une photo -- et rien ne le disait.
+    logo_url: etab.logo_url || null,
     b2b_public_code: etab.public_code,
     // Les deux cles de jointure sont posees d'un coup. b2b_public_code
     // sert a la synchro de boutique, establishment_id au credit
@@ -133,7 +138,7 @@ async function actionSyncBoutique(request, response) {
 
   const { data: etab, error: erreurEtab } = await auth.supabase
     .from("establishments")
-    .select("public_code, name, city, slug, ig_handle, primary_color")
+    .select("public_code, name, city, slug, ig_handle, primary_color, logo_url")
     .eq("id", auth.establishmentId)
     .maybeSingle();
 
@@ -167,6 +172,17 @@ async function actionSyncBoutique(request, response) {
     }
     club = { id: cree.id };
     clubOuvert = cree;
+  }
+
+  /* La photo suit a CHAQUE synchro, pas seulement a la creation du club.
+     Le gerant peut la changer des mois apres son installation : si elle
+     n'etait copiee qu'a l'ouverture, la carte des clubbeurs garderait
+     pour toujours celle du premier jour (ou aucune). */
+  if (!clubOuvert) {
+    await clubbeur
+      .from("clubs")
+      .update({ logo_url: etab.logo_url || null })
+      .eq("id", club.id);
   }
 
   const { data: source, error: erreurSource } = await auth.supabase
