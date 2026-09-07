@@ -236,6 +236,33 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   await pause(700);
   await prendre("09-parrainage", "Inviter des amis — le gain d'abord, le code lisible");
 
+  // ---- 10. Profil : l'historique des points ----
+  await page.evaluate(() => {
+    document.querySelector("#vue-amis").hidden = true;
+    const v = document.querySelector("#vue-profil");
+    v.hidden = false;
+    document.querySelector("#pf-connecte-toi").hidden = true;
+    document.querySelector("#pf-contenu").hidden = false;
+    document.querySelector("#pf-handle").textContent = "@julien";
+    document.querySelector("#pf-avatar-init").textContent = "J";
+    document.querySelector("#pf-fid-solde").textContent = "150";
+    const lignes = [
+      ["Cadeau du jour", "Mirage · 20:14", 5, false],
+      ["Scan du QR", "Mirage · hier", 15, false],
+      ["Story validée", "Mirage · il y a 3 jours", 80, true],
+      ["Bienvenue", "Mirage · il y a 4 jours", 50, false],
+    ];
+    document.querySelector("#pf-histo-liste").innerHTML = lignes
+      .map(([quoi, ou, pts, attente]) =>
+        `<li><span class="pf-histo-quoi"><strong>${quoi}</strong><span>${ou}${attente ? " · en attente" : ""}</span></span>` +
+        `<span class="pf-histo-pts${attente ? " pf-histo-attente" : ""}">+${pts}</span></li>`)
+      .join("");
+    document.querySelector("#pf-histo").hidden = false;
+    window.scrollTo(0, 0);
+  });
+  await pause(700);
+  await prendre("10-historique", "Profil — d'ou viennent les points");
+
   await navigateur.close();
   console.log(`\n-> ${DOSSIER}\n`);
 })();
