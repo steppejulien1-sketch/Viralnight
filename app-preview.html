@@ -7252,21 +7252,24 @@ map.on("style.load", function () {
    ecran a l'autre et d'une session a l'autre. Un tirage au hasard
    donnerait a un meme club une biere sur la carte et un cocktail dans
    sa fiche -- on ne le reconnaitrait plus. */
-var VERRES_CLUB = [
-  "/recompenses/art-bouteille.webp",
-  "/recompenses/art-pinte.webp",
-  "/recompenses/art-cocktail.webp",
-  "/recompenses/art-shot.webp",
-];
+/* UN SEUL repere, au trait, pour tout club sans photo.
+   Julien : "je ne veux pas un des cocktails qu'on a dans la liste, je
+   veux juste un tout petit dessin de cocktail simple, juste des lignes."
+
+   Les quatre dessins de recompense qui servaient ici (bouteille, pinte,
+   cocktail, shot) sont pleins et colores : reutilises comme repere de
+   club, ils disaient "une recompense" au lieu de "un club" -- et le
+   meme cocktail se retrouvait a deux endroits de l'ecran avec deux sens
+   differents. Le trait les remplace.
+
+   Un seul et pas quatre : ce n'est plus une identite de club (une photo
+   le sera), c'est un signe qui dit "club". Le tirage par somme des
+   codes du nom n'a donc plus lieu d'etre. */
+var VERRE_CLUB = "/clubs/verre-simple.svg";
 
 function visuelClub(c) {
   if (c.photo) return { src: c.photo, substitut: false };
-  var nom = c.nom || "";
-  // La somme des codes, pas la longueur : deux clubs de meme longueur de
-  // nom -- ils sont nombreux -- tomberaient sinon sur le meme verre.
-  var somme = 0;
-  for (var i = 0; i < nom.length; i++) somme += nom.charCodeAt(i);
-  return { src: VERRES_CLUB[somme % VERRES_CLUB.length], substitut: true };
+  return { src: VERRE_CLUB, substitut: true };
 }
 
 // Garde son nom : quatre endroits l'appellent, et une photo reste une
