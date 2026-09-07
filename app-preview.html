@@ -872,14 +872,14 @@
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
 
-      /* ---- Ancien traitement du gain, conserve pour reference ----
-         "Tu gagnes 150 points" etait noye dans un paragraphe gris de
-         12,5px. C'est l'argument de l'ecran : il se lit maintenant
-         avant le reste. */
-      /* Le "150" faisait 32px, en gras, dans le rouge de la marque, pose
-         sous un QR code : exactement le grand chiffre colore deja refuse sur
-         la carte des points. Un chiffre n'a pas besoin d'etre gros pour etre
-         vrai. La phrase le porte, en encre normale. */
+      /* ---- Historique de cet ecran, en deux corrections ----
+         Le montant du parrainage etait d'abord noye dans un paragraphe
+         gris de 12,5 px sous le QR ; c'est l'argument de l'ecran, il se
+         lit maintenant en premier. Il a ensuite ete un chiffre de 32 px
+         dans le rouge de la marque -- exactement le grand chiffre colore
+         refuse sur la carte des points ; il est repasse en encre normale.
+         ⚠️ Aucun montant n'est ecrit en dur ici : il vient de
+         montant_parrainage() (migration 0044). */
       .va-gain { margin: 0 0 18px; font-size: calc(13.5 * var(--u)); color: var(--ink2); line-height: 1.5; }
 
       /* Action secondaire sous "Partager mon code". */
@@ -4204,7 +4204,7 @@
                    qui s'allonge finissait par la pousser hors de l'ecran. -->
               <button type="button" class="va-invite-cta" id="va-ouvrir-invite">
                 Inviter des amis
-                <span class="va-invite-val">150 points</span>
+                <span class="va-invite-val" id="va-invite-val">100 points</span>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
               </button>
 
@@ -4242,10 +4242,16 @@
                      lue, en gros. Ici il etait en gris, sous le QR :
                      on voyait une photo, un pseudo et un carre noir
                      avant de savoir pourquoi on serait la. -->
-                <p class="va-gain-num">150 points</p>
+                <!-- Les deux nombres sont relus depuis la base a
+                     l'ouverture (montant_parrainage / montant_bienvenue,
+                     migration 0044). Ce qui est ecrit ici n'est qu'un
+                     repli : l'ecran a deja annonce 150 pendant que la
+                     base en donnait 50, et personne ne s'en est apercu.
+                     Un seul endroit decide desormais. -->
+                <p class="va-gain-num"><span id="va-gain-montant">100</span> points</p>
                 <p class="va-gain-txt">
                   par ami qui s&rsquo;inscrit avec ton code.<br />
-                  Ton ami re&ccedil;oit 50 points de bienvenue.
+                  Ton ami re&ccedil;oit <span id="va-gain-bienvenue">50</span> points de bienvenue.
                 </p>
 
                 <!-- L'avatar reste dans le DOM (le JS l'alimente et gere
@@ -8370,7 +8376,7 @@ async function ouvrirPageAmis(session) {
   // Julien (2026-08-26) : pour un premier club, la liste d'amis/
   // recherche/suggestions n'est pas utile (effet reseau -- personne a
   // trouver). L'onglet Amis reste dans la barre, mais atterrit
-  // directement sur l'invitation (le lien de parrainage a 150 points,
+  // directement sur l'invitation (le lien de parrainage, voir
   // un vrai levier d'acquisition) plutot que sur la liste. Le code de
   // la liste reste intact et fonctionnel (voir #va-back plus bas) pour
   // la remettre en avant sans rien reecrire, une fois qu'il y aura du
@@ -8493,6 +8499,30 @@ async function ouvrirPageAmis(session) {
 
   chargerAmis();
   chargerSuggestions();
+
+  /* Les montants viennent de la BASE, pas du HTML. C'est la seule facon
+     d'eviter que l'ecran reannonce un chiffre que le serveur ne verse
+     pas -- ce qui a dure des semaines avec 150 affiches contre 50
+     verses. Si les fonctions n'existent pas encore, le repli du HTML
+     reste affiche. */
+  (async function () {
+    var r = await Promise.all([
+      supabaseClubbeur.rpc("montant_parrainage"),
+      supabaseClubbeur.rpc("montant_bienvenue"),
+    ]);
+    var parrainage = !r[0].error && r[0].data;
+    var bienvenue = !r[1].error && r[1].data;
+    if (parrainage) {
+      var m = document.getElementById("va-gain-montant");
+      if (m) m.textContent = nb(parrainage);
+      var v = document.getElementById("va-invite-val");
+      if (v) v.textContent = nb(parrainage) + " points";
+    }
+    if (bienvenue) {
+      var b = document.getElementById("va-gain-bienvenue");
+      if (b) b.textContent = nb(bienvenue);
+    }
+  })();
 
   /* Le compteur de parrainage. mes_parrainages() ne renvoie que le
      NOMBRE d'amis, pas un total de points : claim_referral() en donne 50
@@ -8804,6 +8834,7 @@ var LIBELLE_SOURCE = {
   story: "Story validée",
   cadeau: "Cadeau du jour",
   bienvenue: "Bienvenue",
+  parrainage: "Ami parrainé",
   instagram: "Mention Instagram",
 };
 

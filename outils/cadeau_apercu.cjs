@@ -238,6 +238,9 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
 
   // ---- 10. Profil : l'historique des points ----
   await page.evaluate(() => {
+    // La feuille du club (etape 8) reste posee par-dessus si on ne la
+    // ferme pas : la capture montrait Mirano au lieu du profil.
+    document.querySelector("#sh-close")?.click();
     document.querySelector("#vue-amis").hidden = true;
     const v = document.querySelector("#vue-profil");
     v.hidden = false;
@@ -260,7 +263,7 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
     document.querySelector("#pf-histo").hidden = false;
     window.scrollTo(0, 0);
   });
-  await pause(700);
+  await pause(900);
   await prendre("10-historique", "Profil — d'ou viennent les points");
 
   await navigateur.close();
