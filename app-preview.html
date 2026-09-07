@@ -2971,11 +2971,12 @@
       }
       .club-entete-rond {
         flex: 0 0 auto; width: 64px; height: 64px; border-radius: 50%;
-        /* Creme en dur, comme les autres substituts : ces dessins sont au
-           trait NOIR et disparaitraient sur une surface sombre. */
-        background: #f2ede5; display: grid; place-items: center; overflow: hidden;
+        background: var(--s2); box-shadow: inset 0 0 0 1px var(--line);
+        display: grid; place-items: center; overflow: hidden;
       }
-      .club-entete-rond img { width: 78%; height: 78%; object-fit: contain; display: block; }
+      /* `cover` et non `contain` : c'est une VRAIE photo qui vient ici,
+         pas un dessin detoure -- elle doit remplir le rond. */
+      .club-entete-rond img { width: 100%; height: 100%; object-fit: cover; display: block; }
       .club-entete .club-hero-titre { flex: 1 1 auto; min-width: 0; }
       .club-entete .club-hero-nom {
         color: var(--ink); font-size: calc(21 * var(--u)); margin: 0 0 2px;
@@ -3072,9 +3073,12 @@
       /* Sur les petits ronds (badge de la carte, bulle, ligne de
          favori), le dessin respire un peu moins : a 42 px, une marge de
          plus ne laisserait qu'un point. */
-      .club-badge.sans-photo img,
-      .fr .bub-club.sans-photo img,
-      .fv-foto.sans-photo img { object-fit: contain; padding: 4px; background: #f2ede5; }
+      /* Un rond sans photo est VIDE. Plus de fond creme ni de dessin
+         cale dedans : la surface neutre du badge suffit, et c'est elle
+         qui appelle la photo. Voir visuelClub(). */
+      .club-badge.sans-photo,
+      .fr .bub-club.sans-photo,
+      .fv-foto.sans-photo { background: var(--s2); }
 
       .club-statut { margin: 0 0 16px; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
       .club-statut .ouvert { color: var(--succes-texte, #57d98a); font-weight: 700; }
@@ -7252,24 +7256,41 @@ map.on("style.load", function () {
    ecran a l'autre et d'une session a l'autre. Un tirage au hasard
    donnerait a un meme club une biere sur la carte et un cocktail dans
    sa fiche -- on ne le reconnaitrait plus. */
-/* UN SEUL repere, au trait, pour tout club sans photo.
-   Julien : "je ne veux pas un des cocktails qu'on a dans la liste, je
-   veux juste un tout petit dessin de cocktail simple, juste des lignes."
+/* ⚠️ AUCUN DESSIN DE SUBSTITUTION. C'est une regle, pas un oubli.
+   Julien, 07/09/2026 : "juste pas de dessin. Tous les clubs, j'ai envie
+   qu'ils aient le meme badge [...] s'ils ont mis une photo, et s'ils
+   n'ont pas mis de photo, il est vierge, tu ne vois rien."
 
-   Les quatre dessins de recompense qui servaient ici (bouteille, pinte,
-   cocktail, shot) sont pleins et colores : reutilises comme repere de
-   club, ils disaient "une recompense" au lieu de "un club" -- et le
-   meme cocktail se retrouvait a deux endroits de l'ecran avec deux sens
-   differents. Le trait les remplace.
+   Trois tentatives ont echoue avant celle-la, toutes pour la meme
+   raison : un dessin dans le rond PREND LA PLACE de la photo au lieu de
+   l'attendre.
+     · les quatre illustrations de recompense (bouteille, pinte,
+       cocktail, shot) -- elles disaient "une recompense", et le meme
+       cocktail se retrouvait deux fois sur un ecran avec deux sens ;
+     · un cocktail au trait -- "c'est quoi ce cocktail de merde" ; et sur
+       la carte il entrait en collision avec le repere "Toi", qui est
+       lui aussi un verre ;
+     · un monogramme ("M" sur la couleur du club), rejete des le
+       30/08 : "une initiale dans un rond ne remplace pas une photo,
+       elle signale juste qu'il en manque une".
 
-   Un seul et pas quatre : ce n'est plus une identite de club (une photo
-   le sera), c'est un signe qui dit "club". Le tirage par somme des
-   codes du nom n'a donc plus lieu d'etre. */
-var VERRE_CLUB = "/clubs/verre-simple.svg";
+   Le badge est donc le MEME pour tous les clubs : un rond. Avec photo,
+   il la porte. Sans photo, il reste vide -- une surface neutre, et rien
+   dedans. C'est le vide qui appelle la photo.
+
+   Deposer le fichier dans public/clubs/ et remplir `photo` dans CLUBS
+   (ou la colonne cote base) suffit a le remplir. */
 
 function visuelClub(c) {
-  if (c.photo) return { src: c.photo, substitut: false };
-  return { src: VERRE_CLUB, substitut: true };
+  return c.photo ? { src: c.photo, substitut: false } : { src: null, substitut: true };
+}
+
+// L'<img> n'est emise QUE s'il y a une vraie photo : une balise avec un
+// src vide afficherait l'icone d'image cassee du navigateur, ce qui est
+// pire que le rond vide qu'on cherche.
+function imgClub(c) {
+  var v = visuelClub(c);
+  return v.src ? '<img src="' + v.src + '" alt="" />' : "";
 }
 
 // Garde son nom : quatre endroits l'appellent, et une photo reste une
@@ -7341,7 +7362,7 @@ function heroClub(c) {
   if (visuelClub(c).substitut) {
     return (
       '<div class="club-entete">' +
-        '<span class="club-entete-rond"><img src="' + fotoClub(c) + '" alt="" /></span>' +
+        '<span class="club-entete-rond">' + imgClub(c) + "</span>" +
         titre +
         coeur +
       "</div>"
@@ -7352,7 +7373,7 @@ function heroClub(c) {
   // degrade), comme une vraie fiche Google/Apple Maps.
   return (
     '<div class="club-hero-photo">' +
-      '<img src="' + fotoClub(c) + '" alt="" />' +
+      imgClub(c) +
       coeur +
       '<div class="club-hero-scrim">' +
         '<div class="club-hero-ligne">' +
@@ -8235,7 +8256,7 @@ map.on("load", function () {
     // (demande de Julien) -- la photo + le point de statut suffisent,
     // le detail (horaires precis, avis...) reste dans la fiche.
     el.classList.toggle("sans-photo", !c.photo);
-    el.innerHTML = '<img src="' + fotoClub(c) + '" alt="" /><span class="club-badge-dot"></span>';
+    el.innerHTML = imgClub(c) + '<span class="club-badge-dot"></span>';
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     // Retour a notre propre fiche (pas l'iframe Google directement) :
     // Julien voulait "tomber direct sur la fiche" mais pas sur "Google
@@ -8782,7 +8803,7 @@ function creerClubChip(c, key, index) {
   b.innerHTML =
     '<span class="bub bub-club' + (c.shut ? " shut" : "") + classeFoto(c) +
       (c.partenaire ? " partenaire" : "") + '" style="--c:' + c.c + '">' +
-      '<img src="' + fotoClub(c) + '" alt="" />' +
+      imgClub(c) +
       '<span class="club-badge-dot"></span>' +
       /* L'ecusson "partenaire" est retire. Julien, 06/09/2026 : "on
          voit un petit v a cote sur la photo, ca ne rend pas bien".
@@ -9118,7 +9139,7 @@ function chargerFavoris() {
     var sous = c ? [c.statut, c.horaire].filter(Boolean).join(" · ") : "";
     return '<div class="fv-item' + (c && c.shut ? " shut" : "") + '"' +
         (c ? ' style="--c:' + c.c + '"' : "") + ">" +
-      (c ? '<span class="fv-foto' + classeFoto(c) + '"><img src="' + fotoClub(c) + '" alt="" /></span>' : "") +
+      (c ? '<span class="fv-foto' + classeFoto(c) + '">' + imgClub(c) + "</span>" : "") +
       '<button type="button" class="fv-nom" data-id="' + escapeHtmlSupport(f.id) + '">' +
         "<strong>" + escapeHtmlSupport(nom) + "</strong>" +
         (sous ? "<span>" + escapeHtmlSupport(sous) + "</span>" : "") +
