@@ -40,6 +40,9 @@
         <p>
           Aucun consentement n'est donc requis pour ces catégories de cookies, qui n'existent tout simplement pas sur ce site.
         </p>
+        <p>
+          <strong>Les polices de caractères sont hébergées sur nos propres serveurs.</strong> Beaucoup de sites chargent les leurs depuis Google Fonts, ce qui transmet l'adresse IP du visiteur à Google avant même l'affichage de la page. Ce n'est pas le cas ici : Inter, Archivo, DM Mono et JetBrains Mono sont servies depuis notre domaine, et aucune requête ne part vers Google lors du chargement d'une page.
+        </p>
       </section>
 
       <section class="lg-section">
@@ -62,30 +65,96 @@
               <tr>
                 <td><code>sb-[ref]-auth-token</code></td>
                 <td>localStorage</td>
-                <td>Session d'authentification Supabase. Maintient la connexion de l'utilisateur entre les pages.</td>
+                <td>Session d'authentification Supabase. Maintient la connexion entre les pages.</td>
                 <td>Durée de la session + expiration du jeton JWT</td>
                 <td>Non — strictement nécessaire</td>
               </tr>
+              <tr class="lg-table-groupe"><td colspan="5"><strong>Application clubbeur</strong></td></tr>
               <tr>
-                <td><code>viralnight.customerId</code></td>
+                <td><code>vn_appareil</code></td>
                 <td>localStorage</td>
-                <td>Identifiant anonyme (UUID aléatoire) attribué aux visiteurs qui scannent le QR code d'un club. Permet de cumuler les points lors d'une soirée sans créer de compte. Non lié à une identité personnelle.</td>
+                <td>Identifiant aléatoire (UUID) tiré par votre navigateur et propre à cet appareil. Sert uniquement à limiter la création répétée de comptes pour toucher plusieurs fois le cadeau de bienvenue. Il n'est rattaché à aucune identité, ne suit votre navigation nulle part et n'est jamais transmis à un tiers.</td>
                 <td>Persistant jusqu'à effacement manuel</td>
-                <td>Non — anonyme, fonctionnel</td>
+                <td>Non — strictement nécessaire</td>
               </tr>
               <tr>
-                <td><code>vn-prospects-[id]</code></td>
+                <td><code>vn_club_principal</code></td>
                 <td>localStorage</td>
-                <td>Cache interne : liste des 80 derniers prospects consultés par l'équipe Noctify dans l'interface d'administration. Usage strictement interne, jamais accessible aux utilisateurs externes.</td>
-                <td>Persistant, mis à jour à chaque consultation</td>
-                <td>Non — usage interne uniquement</td>
+                <td>Le club affiché par défaut dans la boutique, pour ne pas le rechoisir à chaque ouverture.</td>
+                <td>Persistant jusqu'à effacement manuel</td>
+                <td>Non — strictement nécessaire</td>
+              </tr>
+              <tr>
+                <td><code>vn_favoris</code></td>
+                <td>localStorage</td>
+                <td>La liste de vos clubs favoris.</td>
+                <td>Persistant jusqu'à effacement manuel</td>
+                <td>Non — strictement nécessaire</td>
+              </tr>
+              <tr>
+                <td><code>vn_scan_en_attente</code></td>
+                <td>localStorage</td>
+                <td>Un scan de QR code effectué avant la connexion, gardé le temps que vous vous connectiez pour que les points ne soient pas perdus.</td>
+                <td>Jusqu'à la connexion, puis effacé</td>
+                <td>Non — strictement nécessaire</td>
               </tr>
               <tr>
                 <td><code>vn.parrain</code></td>
                 <td>localStorage</td>
-                <td>Pseudo de la personne qui a partagé le lien d'invitation, dans l'application clubbeur. Permet d'attribuer les points de parrainage une fois le compte créé.</td>
+                <td>Pseudo de la personne qui a partagé le lien d'invitation. Permet d'attribuer les points de parrainage à la création du compte.</td>
                 <td>Jusqu'à la création du compte, puis effacé</td>
                 <td>Non — strictement nécessaire</td>
+              </tr>
+              <tr>
+                <td><code>vn_notif_report</code></td>
+                <td>localStorage</td>
+                <td>Date à laquelle vous avez écarté la proposition d'activer les notifications, pour ne pas vous la reposer avant une semaine.</td>
+                <td>7 jours</td>
+                <td>Non — strictement nécessaire</td>
+              </tr>
+              <tr>
+                <td><code>noctify_son</code></td>
+                <td>localStorage</td>
+                <td>Votre choix d'activer ou couper les sons de l'application.</td>
+                <td>Persistant jusqu'à effacement manuel</td>
+                <td>Non — strictement nécessaire</td>
+              </tr>
+              <tr class="lg-table-groupe"><td colspan="5"><strong>Application club (gérants)</strong></td></tr>
+              <tr>
+                <td><code>noctify_club_installation<br>noctify_club_installation_pas</code></td>
+                <td>localStorage</td>
+                <td>Mémorise que le parcours d'installation du club a été fait, et à quelle étape il en était. Évite de le refaire à chaque ouverture.</td>
+                <td>Persistant jusqu'à effacement manuel</td>
+                <td>Non — strictement nécessaire</td>
+              </tr>
+              <tr>
+                <td><code>noctify_invitation_club</code></td>
+                <td>localStorage</td>
+                <td>Jeton d'un lien d'invitation ouvert avant la connexion, gardé le temps de créer le compte.</td>
+                <td>Jusqu'à la création du club, puis effacé</td>
+                <td>Non — strictement nécessaire</td>
+              </tr>
+              <tr>
+                <td><code>noctify_ig_plus_tard</code></td>
+                <td>localStorage</td>
+                <td>Mémorise que vous avez repoussé la connexion du compte Instagram, pour ne pas vous la represser.</td>
+                <td>Persistant jusqu'à effacement manuel</td>
+                <td>Non — strictement nécessaire</td>
+              </tr>
+              <tr>
+                <td><code>noctify.club.periode</code></td>
+                <td>localStorage</td>
+                <td>La période affichée sur le tableau de bord (7, 30 ou 90 jours), pour la retrouver telle quelle.</td>
+                <td>Persistant jusqu'à effacement manuel</td>
+                <td>Non — strictement nécessaire</td>
+              </tr>
+              <tr class="lg-table-groupe"><td colspan="5"><strong>Interne Noctify</strong></td></tr>
+              <tr>
+                <td><code>vn-prospects-[id]</code></td>
+                <td>localStorage</td>
+                <td>Cache interne : les 80 derniers prospects consultés par l'équipe Noctify dans l'interface d'administration. Jamais présent chez un utilisateur externe.</td>
+                <td>Persistant, mis à jour à chaque consultation</td>
+                <td>Non — usage interne uniquement</td>
               </tr>
             </tbody>
           </table>
@@ -104,14 +173,24 @@
           <li><strong>Mobile (Chrome) :</strong> Paramètres → Confidentialité → Effacer les données de navigation</li>
         </ul>
         <p>
-          L'effacement de la donnée <code>viralnight.customerId</code> réinitialisera votre solde de points sur les appareils concernés.
+          Effacer ces données ne vous fait rien perdre : vos points, vos récompenses et vos favoris vivent dans votre compte, pas dans votre navigateur. Vous retrouverez tout en vous reconnectant. Seules vos préférences d'affichage (club par défaut, sons) reviendront à leur réglage initial.
         </p>
       </section>
 
       <section class="lg-section">
         <h2>Services tiers</h2>
         <p>
-          Le Service fait appel à des tiers techniques (Supabase, Vercel, OpenAI, Google) qui peuvent, pour leur propre fonctionnement, déposer des éléments de stockage lors de la navigation. Ces éléments sont couverts par les politiques de confidentialité respectives de ces prestataires. Pour en savoir plus, consultez notre <a href="./confidentialite.html">Politique de confidentialité</a> (section 3).
+          Le Service fait appel à des tiers techniques (Supabase, Vercel, OpenAI, Google, MapTiler) qui peuvent, pour leur propre fonctionnement, déposer des éléments de stockage lors de la navigation. Ces éléments sont couverts par les politiques de confidentialité respectives de ces prestataires. Pour en savoir plus, consultez notre <a href="./confidentialite.html">Politique de confidentialité</a> (section 3).
+        </p>
+        <p>
+          Deux d'entre eux ne sont sollicités <strong>que si vous les déclenchez vous-même</strong>, dans l'application clubbeur :
+        </p>
+        <ul>
+          <li><strong>MapTiler</strong> — le fond de la carte des clubs, chargé à l'ouverture de l'onglet Carte, jamais avant.</li>
+          <li><strong>Google Maps</strong> — la fiche d'un club (avis, photos, horaires), chargée uniquement lorsque vous ouvrez cette fiche, et déchargée dès que vous la fermez.</li>
+        </ul>
+        <p>
+          Tant que vous n'ouvrez ni la carte ni une fiche Google, aucune requête ne part vers ces deux services.
         </p>
       </section>
 
@@ -119,7 +198,7 @@
         <h2>Contact</h2>
         <p>
           Pour toute question relative au stockage local ou à la présente politique :
-          <a href="mailto:contact@viralnight.fr">contact@viralnight.fr</a>
+          <a href="mailto:viralnight001@gmail.com">viralnight001@gmail.com</a>
         </p>
       </section>
 
