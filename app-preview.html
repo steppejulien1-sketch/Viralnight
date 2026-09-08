@@ -3353,6 +3353,17 @@
         margin: 12px 0 0; text-align: center;
         font-size: calc(12 * var(--u)); line-height: 1.45; color: var(--ink3);
       }
+      /* La mention de collaboration commerciale. Encadree, pas en gris
+         discret sous le bouton : la loi demande une mention CLAIRE et
+         LISIBLE, et une regle qu'on ne voit pas n'est pas suivie. Le
+         lisere corail est le seul usage de la marque en accent ici --
+         c'est un cartouche d'information, pas un bouton. */
+      .ps-mention {
+        margin: 10px 0 0; padding: 10px 12px;
+        background: var(--s2); border-left: 2px solid var(--accent); border-radius: 8px;
+        text-align: left; font-size: calc(11.5 * var(--u)); line-height: 1.5; color: var(--ink2);
+      }
+      .ps-mention strong { color: var(--ink); font-weight: 700; }
       .ps-steps { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; text-align: left; }
       /* Les trois etapes arrivent l'une apres l'autre : on lit "1 puis 2
          puis 3" au lieu de recevoir le bloc entier d'un coup. Court
@@ -4744,8 +4755,16 @@
               Plateforme.
             </p>
             <p>
-              La Plateforme est réservée aux personnes âgées de 16 ans révolus. L'Utilisateur
+              La Plateforme est réservée aux personnes âgées de 15 ans révolus. L'Utilisateur
               garantit remplir cette condition.
+            </p>
+            <p>
+              <strong>Les récompenses comportant des boissons alcoolisées sont strictement
+              réservées aux personnes majeures.</strong> L'Établissement vérifie l'âge au
+              moment du service et refuse de servir toute personne mineure, conformément à
+              l'article L.3342-1 du code de la santé publique. Un bon obtenu par une personne
+              mineure sur une récompense alcoolisée ne peut pas être honoré et les points
+              correspondants sont restitués.
             </p>
 
             <h2>Article 3 — Compte</h2>
@@ -4906,10 +4925,14 @@
             <p>
               En cas de difficulté, l'Utilisateur est invité à contacter l'Éditeur à
               <a href="mailto:viralnight001@gmail.com?subject=R%C3%A9clamation">viralnight001@gmail.com</a>
-              afin de rechercher une solution amiable. Conformément aux articles L.612-1 et
-              suivants du code de la consommation, l'Utilisateur peut également recourir
-              gratuitement à un médiateur de la consommation. À défaut d'accord, le litige
-              relève des tribunaux compétents dans les conditions prévues par la loi.
+              afin de rechercher une solution amiable.
+            </p>
+            <p>
+              L'Utilisateur peut également déposer une réclamation sur la plateforme
+              européenne de règlement en ligne des litiges, à
+              <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer">ec.europa.eu/consumers/odr</a>.
+              À défaut d'accord, le litige relève des tribunaux compétents dans les
+              conditions prévues par la loi.
             </p>
 
             <p class="legal-date">Version du 8 septembre 2026</p>
@@ -8202,7 +8225,19 @@ function ouvrirChoixReseau(nomClub) {
              verifierStoryDuSoir() plus bas. Une soiree va de 6 h a 6 h,
              heure de Bruxelles : une story de 2 h du matin appartient a
              la veille. */
+          /* ⚠️ MENTION OBLIGATOIRE, PAS UN CONSEIL. Poster contre une
+             contrepartie -- des points echangeables contre une boisson en
+             est une -- releve de l'influence commerciale (loi du 9 juin
+             2023). Sans mention visible, la publication est une publicite
+             dissimulee : pratique commerciale trompeuse au sens de
+             l'art. L121-4 11° du code de la consommation, et le club comme
+             nous sommes exposes. Instagram et TikTok ont tous deux un
+             reglage natif pour ca, d'ou le renvoi au reglage plutot qu'a
+             un hashtag colle a la main. */
           '<p class="ps-regle" id="ps-regle">Une seule story par soirée.</p>' +
+          '<p class="ps-mention" id="ps-mention">Tu gagnes des points pour cette publication\u00a0: ' +
+          'active <strong>Collaboration commerciale</strong> (ou ajoute <strong>#publicite</strong>) ' +
+          'dans Instagram ou TikTok avant de publier. C\u2019est obligatoire, et ça prend deux secondes.</p>' +
         "</div>" +
       "</form>" +
     "</div>";
@@ -10057,9 +10092,63 @@ $("#rg-email-modifier")?.addEventListener("click", async function () {
 // CLAUDE.md, section API -- supprimer un utilisateur demande la cle
 // service_role, cote serveur uniquement). Honnete plutot que fictif :
 // on confirme l'intention et on renvoie vers le support en attendant.
-$("#rg-supprimer-compte")?.addEventListener("click", function () {
-  if (!window.confirm("Es-tu vraiment sûr de vouloir supprimer ton compte Noctify ? Cette action ne peut pas encore se faire directement dans l'appli.")) return;
-  window.location.href = "mailto:viralnight001@gmail.com?subject=" + encodeURIComponent("Suppression de mon compte Noctify");
+/* La suppression de compte, POUR DE VRAI.
+
+   ⚠️ C'ETAIT UN mailto:. Apple exige depuis le 30 juin 2022 (regle
+   5.1.1(v)) qu'une appli permettant de creer un compte permette d'en
+   demander la suppression DEPUIS L'APPLI. Un lien mail est explicitement
+   cite comme insuffisant : c'est un rejet a la soumission, pas un detail.
+   Google Play demande la meme chose.
+
+   Deux confirmations plutot qu'une. Non pour compliquer -- c'est
+   irreversible et ca emporte les points : quelqu'un qui a cumule trois
+   mois de soirees ne doit pas pouvoir tout perdre sur un tap mal place.
+   La seconde annonce le solde, parce que c'est LUI qu'on perd, pas un
+   "compte" abstrait. */
+$("#rg-supprimer-compte")?.addEventListener("click", async function () {
+  var bouton = this;
+  if (!window.confirm(
+    "Supprimer ton compte Noctify ?\n\n" +
+    "Tout est efface : tes points, tes recompenses en cours et ton historique. " +
+    "C'est definitif, on ne peut pas revenir en arriere."
+  )) return;
+
+  var solde = parseInt(($("#solde-num")?.textContent || "0").replace(/\D/g, ""), 10) || 0;
+  if (solde > 0 && !window.confirm(
+    "Il te reste " + solde + " points.\n\n" +
+    "Ils seront perdus. Tu preferes peut-etre les depenser avant ?\n\n" +
+    "Appuie sur Annuler pour garder ton compte."
+  )) return;
+
+  bouton.disabled = true;
+  var texteOrigine = bouton.textContent;
+  bouton.textContent = "Suppression...";
+
+  try {
+    var session = (await supabaseClubbeur.auth.getSession()).data.session;
+    if (!session) throw new Error("session");
+
+    var res = await fetch(BASE_API + "/api/credit-clubbeur?action=supprimer-compte", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + session.access_token },
+    });
+    if (!res.ok) throw new Error("api");
+
+    // Le compte n'existe plus : la session locale non plus. On repart sur
+    // l'ecran d'accueil, comme apres une deconnexion.
+    await supabaseClubbeur.auth.signOut();
+    try { localStorage.clear(); } catch (e) {}
+    fermerProfil();
+    VUE_ACCUEIL.classList.remove("masque");
+    window.alert("Ton compte a ete supprime. Merci d'avoir essaye Noctify.");
+  } catch (e) {
+    bouton.disabled = false;
+    bouton.textContent = texteOrigine;
+    window.alert(
+      "La suppression n'a pas abouti. Reessaie dans un moment, ou ecris-nous " +
+      "a viralnight001@gmail.com et on s'en occupe."
+    );
+  }
 });
 
 // Plus de ligne "Notifications" dans le menu Profil (demande de

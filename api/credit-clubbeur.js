@@ -16,7 +16,8 @@
 // quelle story en la nommant lui-meme. Meme principe que
 // requireEstablishment : ce qui autorise ne vient jamais du client.
 //
-// VARIABLES : PWA_FUNCTIONS_URL, PWA_BRIDGE_SECRET
+// VARIABLES : PWA_FUNCTIONS_URL, PWA_BRIDGE_SECRET,
+//             SUPABASE_CLUBBEUR_URL, SUPABASE_CLUBBEUR_SERVICE_ROLE_KEY
 
 import { createClient } from "@supabase/supabase-js";
 import { notifierStory, notifierCadeauDuJour } from "../lib/notifications/envoyer.js";
@@ -310,6 +311,81 @@ async function actionNotifierCadeau(request, response) {
   }
 }
 
+/* Les origines de la coquille mobile. Une appli Capacitor ne s'execute pas
+   sur notre domaine : iOS sert la page depuis capacitor://localhost et
+   Android depuis https://localhost. Sans en-tete CORS, le navigateur
+   embarque refuse la reponse avant meme que le code la voie.
+
+   Liste blanche plutot que "*" : cette route efface des comptes. Ce n'est
+   pas le CORS qui autorise l'appel — c'est le jeton de session, verifie
+   plus bas — mais autant ne pas l'offrir a n'importe quelle page web. */
+const ORIGINES_APPLI = new Set([
+  "capacitor://localhost",
+  "ionic://localhost",
+  "http://localhost",
+  "https://localhost",
+  "https://viralnight-koif.vercel.app",
+]);
+
+function poserCors(request, response) {
+  const origine = request.headers.origin;
+  if (!origine || !ORIGINES_APPLI.has(origine)) return;
+  response.setHeader("Access-Control-Allow-Origin", origine);
+  response.setHeader("Vary", "Origin");
+  response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  response.setHeader("Access-Control-Max-Age", "86400");
+}
+
+/* ?action=supprimer-compte — le clubbeur efface son propre compte.
+
+   ⚠️ EXIGENCE APP STORE, PAS UN CONFORT. Depuis le 30 juin 2022, la regle
+   5.1.1(v) impose qu'une appli permettant de creer un compte permette d'en
+   demander la suppression DEPUIS L'APPLI. Un lien mailto — ce qu'on avait —
+   est explicitement insuffisant et fait rejeter la soumission. Google Play
+   demande la meme chose, plus un chemin equivalent sur le web.
+
+   ⚠️ L'IDENTIFIANT NE VIENT PAS DU CORPS DE LA REQUETE. Il est relu depuis
+   le jeton de session, cote base clubbeur. Meme principe que
+   requireEstablishment : ce qui autorise ne vient jamais du client. Sinon
+   n'importe qui pourrait supprimer le compte d'un autre en postant son
+   UUID.
+
+   Greffe ici plutot que dans un nouveau fichier : le plan Hobby plafonne a
+   12 fonctions serverless et api/ y est deja (voir CLAUDE.md).
+
+   La suppression de l'utilisateur Auth fait tomber ses lignes par cascade
+   (les tables clubbeur referencent auth.users avec ON DELETE CASCADE). Les
+   points et l'historique partent donc avec — c'est ce que les CGU
+   annoncent, et ce que le RGPD appelle le droit a l'effacement. */
+async function actionSupprimerCompte(request, response) {
+  poserCors(request, response);
+
+  const token = (request.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  if (!token) return json(response, { error: "Session requise" }, 401);
+
+  let clubbeur;
+  try {
+    clubbeur = getSupabaseClubbeurAdmin();
+  } catch (e) {
+    return json(response, { error: "Configuration serveur incomplete" }, 500);
+  }
+
+  // Le jeton est verifie par la base elle-meme : un jeton expire, revoque
+  // ou fabrique ne rend aucun utilisateur.
+  const { data: qui, error: erreurAuth } = await clubbeur.auth.getUser(token);
+  const userId = qui?.user?.id;
+  if (erreurAuth || !userId) return json(response, { error: "Session invalide" }, 401);
+
+  const { error } = await clubbeur.auth.admin.deleteUser(userId);
+  if (error) {
+    console.error("[supprimer-compte] echec", error.message);
+    return json(response, { error: "La suppression a echoue" }, 500);
+  }
+
+  return json(response, { ok: true });
+}
+
 function json(response, body, status = 200) {
   response.statusCode = status;
   response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -334,8 +410,21 @@ export default async function handler(request, response) {
      -- une treizieme ferait echouer tous les deploiements. */
   if (action === "notifier-cadeau") return actionNotifierCadeau(request, response);
 
+  /* Le prevol arrive en OPTIONS : il doit passer avant le controle de
+     methode, sinon le navigateur recoit un 405 et abandonne l'appel reel. */
+  if (action === "supprimer-compte" && request.method === "OPTIONS") {
+    poserCors(request, response);
+    response.statusCode = 204;
+    return response.end();
+  }
+
   if (request.method !== "POST") return json(response, { error: "Method not allowed" }, 405);
   if (action === "sync-boutique") return actionSyncBoutique(request, response);
+
+  /* AVANT le controle d'administrateur qui suit : celui-ci n'est pas une
+     action d'admin. C'est le clubbeur lui-meme qui efface son compte, et il
+     s'authentifie avec SA session, cote base clubbeur. */
+  if (action === "supprimer-compte") return actionSupprimerCompte(request, response);
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
