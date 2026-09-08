@@ -5320,6 +5320,10 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import QRCode from "qrcode";
 import jsQR from "jsqr";
 import { createClient } from "@supabase/supabase-js";
+/* Le pont natif. Chaque fonction marche aussi au navigateur -- voir
+   l'en-tete de natif.js. Rien d'autre dans ce fichier ne doit toucher
+   a `Capacitor` directement. */
+import * as natif from "./natif.js";
 
 // Connexion reelle sur la BONNE base : celle des clients de club
 // (gcopwgmqjiufemapamek), pas celle des gerants qu'utilise le reste du
@@ -5377,6 +5381,10 @@ var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koi
       barre.style.width = "100%";
     }
     setTimeout(function () { splash.classList.add("masque"); }, 220);
+    /* Et l'ecran de lancement NATIF avec lui : sinon il reste par-dessus
+       une appli deja prete, et le demarrage parait deux fois plus long
+       qu'il ne l'est. Sans effet au navigateur. */
+    natif.masquerSplash();
   }
   Promise.all([
     attendre(MIN_AFFICHAGE_MS),
@@ -8410,6 +8418,20 @@ function ouvrirChoixReseau(nomClub) {
     var canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
 
     btn?.addEventListener("click", async function () {
+      /* LE SCANNER NATIF D'ABORD. Il ouvre la camera du systeme : mise au
+         point continue, correction de la lumiere, decodage materiel. La
+         boucle jsQR juste en dessous fait le meme travail en JavaScript sur
+         des images de <video> -- honnete en plein jour, mediocre dans un
+         club, qui est precisement l'endroit ou on s'en sert.
+
+         `undefined` = pas de scanner natif ici, on prend le chemin web.
+         `null` = le clubbeur a ferme le scanner, on ne fait rien de plus. */
+      var luNatif = await natif.scannerQr();
+      if (luNatif !== undefined) {
+        if (luNatif) { natif.vibrer("succes"); traiterCode(luNatif); }
+        return;
+      }
+
       zone.hidden = false;
       btn.hidden = true;
       try {
@@ -8431,7 +8453,7 @@ function ouvrirChoixReseau(nomClub) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         var image = ctx.getImageData(0, 0, canvas.width, canvas.height);
         var code = jsQR(image.data, image.width, image.height);
-        if (code) { traiterCode(code.data); return; }
+        if (code) { natif.vibrer("succes"); traiterCode(code.data); return; }
       }
       animation = requestAnimationFrame(boucleScan);
     }
@@ -10717,6 +10739,7 @@ CADEAU_BTN?.addEventListener("click", async function () {
       appareil_deja_servi: ["Bonus déjà utilisé", "Un seul bonus de bienvenue par téléphone."],
     };
     var dit = phrases[d.etat] || ["Réessaie plus tard", ""];
+    natif.vibrer("erreur");
     CADEAU.classList.add("ouvert", "message");
     $("#cadeau-titre").textContent = "";
     $("#cadeau-montant").textContent = dit[0];
@@ -10745,6 +10768,11 @@ CADEAU_BTN?.addEventListener("click", async function () {
   }
 
   jouer(d.jackpot ? "jackpot" : "points");
+  /* Le son peut etre coupe -- par le reglage de l'appli, par le mode
+     silencieux, par le bruit d'un club. La vibration, non : c'est elle
+     qui confirme le gain quand rien ne s'entend. Le jackpot cogne plus
+     fort que les cinq points ordinaires. */
+  natif.vibrer(d.jackpot ? "succes" : "leger");
 
   // Le solde monte pendant que la salve retombe : c'est LUI qui dit
   // combien on vient de gagner, maintenant que la carte ne l'ecrit plus.
@@ -10760,20 +10788,39 @@ CADEAU_BTN?.addEventListener("click", async function () {
   }, 700);
 });
 
-function localiser() {
+/* Ce que les deux chemins -- natif et navigateur -- font d'une position :
+   recalculer les distances et basculer sur le club le plus proche, sauf si
+   le clubbeur en a choisi un a la main. Ecrit une fois pour que les deux ne
+   puissent pas diverger. */
+function appliquerPosition(pos) {
+  Object.keys(CLUBS).forEach(function (k) {
+    DISTANCES_CLUBS[k] = distanceKm([pos.coords.longitude, pos.coords.latitude], CLUBS[k].lngLat);
+  });
+  var proche = clubLePlusProche();
+  if (proche && !choixManuelClub && proche !== CLUB_BOUTIQUE) {
+    CLUB_BOUTIQUE = proche;
+    rendreChoixClub();
+    chargerRecompenses();
+    return;
+  }
+  rendreChoixClub();
+}
+
+async function localiser() {
+  /* Le plugin natif demande la VRAIE permission systeme, celle qui se
+     souvient et qui apparait dans les reglages iOS de Noctify. Celle de
+     navigator.geolocation est rattachee au "site" dans la WKWebView : elle
+     se redemande a chaque session et ne se retrouve nulle part. */
+  var posNative = await natif.position({ timeout: 8000, maximumAge: 600000 });
+  if (posNative !== undefined) {
+    if (posNative) appliquerPosition(posNative);
+    else { positionRefusee = true; rendreChoixClub(); }
+    return;
+  }
+
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(function (pos) {
-    Object.keys(CLUBS).forEach(function (k) {
-      DISTANCES_CLUBS[k] = distanceKm([pos.coords.longitude, pos.coords.latitude], CLUBS[k].lngLat);
-    });
-    var proche = clubLePlusProche();
-    if (proche && !choixManuelClub && proche !== CLUB_BOUTIQUE) {
-      CLUB_BOUTIQUE = proche;
-      rendreChoixClub();
-      chargerRecompenses();
-      return;
-    }
-    rendreChoixClub();
+    appliquerPosition(pos);
   }, function () {
     // Refus ou echec : on garde le club par defaut, sans rien dire. Une
     // erreur de geolocalisation n'interesse personne dans une boutique.
@@ -10823,12 +10870,22 @@ function detecterClubProche() {
     setTimeout(function () { resolve({ state: "prompt" }); }, 1500);
   });
 
-  Promise.race([navigator.permissions.query({ name: "geolocation" }), horloge])
-    .then(function (etat) {
-      if (etat && etat.state === "granted") localiser();
+  /* Au natif, checkPermissions() repond tout de suite et sans jamais
+     declencher de fenetre -- pas besoin de l'arbitrer contre une horloge. */
+  natif.positionAutorisee().then(function (accordee) {
+    if (accordee !== undefined) {
+      if (accordee) localiser();
       else rendreChoixClub();
-    })
-    .catch(function () {});
+      return;
+    }
+
+    Promise.race([navigator.permissions.query({ name: "geolocation" }), horloge])
+      .then(function (etat) {
+        if (etat && etat.state === "granted") localiser();
+        else rendreChoixClub();
+      })
+      .catch(function () {});
+  });
 }
 
 function rendreChoixClub() {
@@ -11583,6 +11640,86 @@ setInterval(majRebours, 30000);
      Rien en local : les URL de modules de Vite changent a chaque
      rechargement a chaud, un worker par-dessus n'apporte que de la
      confusion. -->
+<script type="module">
+  /* ================= LA COQUILLE NATIVE =================
+     Pose en dernier, une fois que toutes les fonctions de fermeture
+     existent. Sans effet au navigateur : natif.preparerCoque() sort
+     immediatement si Capacitor n'est pas la.
+
+     ⚠️ CE BLOC EST UN MODULE A PART. Il ne peut donc pas appeler les
+     fonctions du script principal (fermerFeuille, fermerProfil...) : les
+     modules ne partagent pas de portee. Il ferme donc les ecrans par le
+     DOM, ce qui revient au meme et evite d'exposer une dizaine de
+     fonctions sur `window` juste pour ca. */
+  import * as natif from "./natif.js";
+
+  /* Le bouton retour d'Android, dans l'ordre ou les choses se
+     superposent : la fiche Google par-dessus tout, puis la feuille du
+     bas, puis les panneaux du profil, puis les pages pleines.
+
+     Rend true si quelque chose a ete ferme -- l'appli reste ouverte.
+     Rend false quand il ne reste rien a fermer : l'appli passe alors en
+     veille, ce qu'un utilisateur Android attend du bouton retour sur
+     l'ecran d'accueil. Sans ca, il quitte l'appli au milieu d'un ecran,
+     ce qui est signale comme un defaut cote Play. */
+  function fermerLePlusHaut() {
+    var google = document.querySelector("#vue-google");
+    if (google && !google.hidden) {
+      document.querySelector("#vg-close")?.click();
+      return true;
+    }
+
+    var feuille = document.querySelector("#sheet");
+    if (feuille && feuille.getAttribute("aria-hidden") === "false") {
+      document.querySelector("#sh-close")?.click();
+      return true;
+    }
+
+    /* Les panneaux du profil (Reglages, Notifications, Favoris, Aide,
+       A propos, CGU, Confidentialite) : le dernier ouvert est le plus
+       haut, on prend donc en partant de la fin. */
+    var panneaux = [...document.querySelectorAll(".vue-profil-feuille, .vue-aide-page")]
+      .filter(function (p) { return !p.hidden; });
+    if (panneaux.length) {
+      panneaux[panneaux.length - 1].hidden = true;
+      return true;
+    }
+
+    /* Les pages pleines : on revient a la carte plutot que de quitter. */
+    for (var id of ["vue-story", "vue-amis", "vue-profil"]) {
+      var vue = document.querySelector("#" + id);
+      if (vue && !vue.hidden && !vue.classList.contains("masque")) {
+        document.querySelector("#tab-carte")?.click();
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  natif.preparerCoque({
+    surRetour: fermerLePlusHaut,
+
+    /* Au reveil, les points affiches peuvent avoir des heures : une story
+       validee entre-temps a pu en ajouter. Plutot que de recharger tout
+       l'etat -- risque de defaire ce que le clubbeur etait en train de
+       faire -- on redemande juste la page. C'est brutal mais c'est juste,
+       et ca n'arrive qu'apres un vrai passage en arriere-plan.
+
+       Le garde-fou de 5 minutes evite de recharger a chaque fois qu'on
+       bascule une seconde vers Instagram pour poster : c'est le geste le
+       plus courant de l'appli, et le recharger serait insupportable. */
+    surReprise: (function () {
+      var depuis = Date.now();
+      return function () {
+        var absent = Date.now() - depuis;
+        depuis = Date.now();
+        if (absent > 5 * 60 * 1000) location.reload();
+      };
+    })(),
+  });
+</script>
+
 <script>
   if ("serviceWorker" in navigator &&
       location.hostname !== "127.0.0.1" &&
