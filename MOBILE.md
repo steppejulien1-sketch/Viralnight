@@ -267,14 +267,19 @@ encore entre Noctify et ViralNight — tranche maintenant, pas après.
 
 ### CORS sur `api/`
 
-Le formulaire « demande de démo » de l'appli appelle `/api/demo-request`.
-J'ai rendu l'URL absolue (sans effet sur le web), mais **aucune route `api/`
-ne renvoie d'en-tête CORS aujourd'hui** : depuis l'app iOS l'origine sera
-`capacitor://localhost`, et l'appel sera bloqué.
+Depuis le 08/09/2026, **une seule action est ouverte** :
+`credit-clubbeur?action=supprimer-compte`, parce qu'Apple exige qu'elle
+fonctionne depuis l'app (voir ⑤ plus bas). Elle répond sur une liste
+blanche d'origines — `capacitor://localhost`, `ionic://localhost`,
+`http(s)://localhost`, la prod — et gère le prévol `OPTIONS`. Le CORS n'y
+autorise rien par lui-même : c'est le jeton de session qui autorise, et
+l'identifiant de l'utilisateur est relu depuis ce jeton, jamais depuis le
+corps de la requête.
 
-Je ne l'ai pas ouvert de moi-même — c'est une décision de sécurité. Le
-moment venu, ajouter un `Access-Control-Allow-Origin` restreint à cette
-origine, sur cette route précise, jamais sur tout `api/`.
+**Le reste de `api/` demeure fermé**, volontairement. Le formulaire
+« demande de démo » (`/api/demo-request`) sera donc encore bloqué depuis
+l'app iOS. Le jour où il faudra l'ouvrir, reprendre `poserCors()` de
+`credit-clubbeur.js` — route par route, jamais sur tout `api/`.
 
 ---
 
@@ -316,13 +321,44 @@ Si ça change, Apple prend 30 %.
 
 ### ④ Alcool et vie nocturne
 
-Classification **17+** obligatoire. L'interface ne doit pas encourager la
-consommation. Le vocabulaire compte.
+Classification **17+** obligatoire (Apple), **18+** côté Play. L'interface ne
+doit pas encourager la consommation. Le vocabulaire compte.
+
+Ce n'est pas qu'une case à cocher : les deux magasins refusent les apps qui
+*incitent* à boire, et la loi française va plus loin que leurs règles. Voir
+les CGU de l'appli, article 2 — les récompenses alcoolisées y sont réservées
+aux majeurs, la vérification incombant à l'établissement qui sert. Reste
+ouvert : la loi Evin impose un message sanitaire sur toute publicité en
+faveur de l'alcool, et le catalogue de récompenses en est une.
 
 ### ⑤ Confidentialité (directive 5.1.1)
 
 Nutrition labels à remplir dans App Store Connect, et lien vers
-`confidentialite.html`. La page existe déjà.
+`confidentialite.html`. La page existe déjà, et l'appli porte désormais ses
+propres écrans CGU et Confidentialité (Réglages → Informations légales).
+
+**Suppression de compte — fait le 08/09/2026.** La 5.1.1(v) impose depuis le
+30 juin 2022 qu'une app permettant de créer un compte permette d'en demander
+la suppression *depuis l'app*, et cite expressément le renvoi par e-mail
+comme insuffisant. C'était exactement ce qu'on avait : un `mailto:`. C'est
+un rejet automatique, pas une remarque. Résolu par
+`credit-clubbeur?action=supprimer-compte`.
+
+Google Play impose la même chose **et en plus une URL web** de demande de
+suppression, accessible sans installer l'app, à déclarer dans la console.
+Elle n'existe pas encore.
+
+**Privacy manifest — pas commencé.** Depuis mai 2024 Apple exige un fichier
+`PrivacyInfo.xcprivacy` dans le bundle, qui déclare les catégories de
+données collectées et les *required reason APIs* utilisées (ici au moins
+`UserDefaults`). Sans lui, la soumission est refusée au dépôt, avant même
+la review. À créer quand le dossier `ios/` existera.
+
+**Chaînes d'usage des permissions — pas commencé.** `Info.plist` doit porter
+`NSLocationWhenInUseUsageDescription` et `NSCameraUsageDescription`, rédigées
+en français et *spécifiques* (« Pour afficher les clubs autour de toi », pas
+« Cette app utilise la localisation »). Une chaîne absente fait planter
+l'app à la première demande ; une chaîne vague fait rejeter.
 
 ---
 
