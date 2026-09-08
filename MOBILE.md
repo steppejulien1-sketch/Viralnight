@@ -375,14 +375,24 @@ l'app à la première demande ; une chaîne vague fait rejeter.
 
 ## 5. Ce qui reste à faire pour que la 4.2 ne soit plus un sujet
 
-Les plugins sont installés, pas encore branchés. Par ordre d'impact :
+**Branché le 08/09/2026** — tout passe par [`natif.js`](../natif.js), et par
+lui seul : aucun appel à `Capacitor` ailleurs dans l'appli. Chaque fonction
+marche dans les deux mondes, sinon le web casserait, et le web est le canal
+d'acquisition.
 
-| Capacité | État | Pourquoi ça compte |
+| Capacité | État | Ce que ça change |
 |---|---|---|
-| **Notifications push** | plugin installé, à brancher | L'argument massue. « Ta story est validée, +150 pts », « Soirée ce soir ». Impossible correctement sur le web iOS. Demande APNs et une table de tokens. |
-| **Apple Wallet** | non commencé | La récompense devient un pass dans le Wallet, le videur le scanne. Tue la 4.2 net. Pas de plugin officiel, passe par PassKit natif. |
-| **Scan QR natif** | plugin installé, jsQR encore en place | Plus rapide et bien meilleur en basse lumière — un club, c'est sombre. |
-| **Géoloc native** | plugin installé, à brancher | « Les clubs autour de toi » avec la vraie position. |
+| **Scan QR natif** | **branché** | Caméra système : mise au point continue, correction de la lumière, décodage matériel. jsQR reste en repli web. Un club, c'est sombre — c'est justement là que jsQR décrochait. |
+| **Géoloc native** | **branché** | La permission est celle de l'**appli** : elle se souvient et apparaît dans les réglages iOS. Celle de `navigator.geolocation` est rattachée au « site » dans la WKWebView, se redémande à chaque session et ne se retrouve nulle part. |
+| **Retour haptique** | **branché** | Le moins cher de tous, et le seul qui confirme un gain quand le son est coupé — ce qu'il est toujours en club. Sur les scans et sur les cadeaux. |
+| **Bouton retour Android** | **branché** | Sans lui, le retour quitte l'appli au milieu d'un écran. Ferme d'abord ce qui est ouvert, dans l'ordre où les choses se superposent. |
+| **Reprise au réveil** | **branché** | Les points affichés peuvent avoir des heures. Garde-fou de 5 min pour ne pas recharger à chaque aller-retour vers Instagram, qui est le geste le plus courant de l'appli. |
+| **Écran de lancement** | **branché** | Retiré quand l'appli est prête, pas sur une minuterie qui s'attarde ou découvre une page vide. |
+| **Notifications push** | **bloqué** | L'argument massue, et le seul qui reste. Exige un compte Apple Developer, une clé APNs, **et** un chemin d'envoi différent du Web Push actuel (`lib/notifications/envoyer.js` parle VAPID). À moitié branchées elles pourriraient : rien n'a été commencé exprès. |
+| **Apple Wallet** | non commencé | La récompense devient un pass, le videur le scanne. Tue la 4.2 net. Pas de plugin officiel, passe par PassKit natif. |
+
+Les plugins se chargent à la demande : Vite les sort en morceaux de 119 à
+3 261 octets, et le bundle web ne prend que les 5,5 Ko du pont lui-même.
 
 ---
 
