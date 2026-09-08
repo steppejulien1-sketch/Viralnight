@@ -3364,6 +3364,13 @@
         text-align: left; font-size: calc(11.5 * var(--u)); line-height: 1.5; color: var(--ink2);
       }
       .ps-mention strong { color: var(--ink); font-weight: 700; }
+      /* Le message sanitaire : lisible, jamais tape-a-l'oeil. Il doit se
+         lire sans effort mais ne pas concurrencer le catalogue. */
+      .sante {
+        margin: 4px 0 0; padding: 0 2px;
+        font-size: calc(11 * var(--u)); line-height: 1.5; color: var(--ink3);
+        text-align: center;
+      }
       .ps-steps { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; text-align: left; }
       /* Les trois etapes arrivent l'une apres l'autre : on lit "1 puis 2
          puis 3" au lieu de recevoir le bloc entier d'un coup. Court
@@ -4820,6 +4827,25 @@
               Les points expirent à la fermeture du compte, quelle qu'en soit la cause.
             </p>
 
+            <h2>Article 5 bis — Le cadeau du jour</h2>
+            <p>
+              L'Utilisateur connecté peut recevoir un cadeau une fois par jour. Sa valeur est
+              tirée au sort par nos serveurs : <strong>cinq points dans la grande majorité des
+              cas, et trente-cinq points avec une probabilité d'environ 1&nbsp;%</strong>. Le
+              montant est affiché avant que l'Utilisateur le récupère, jamais après.
+            </p>
+            <p>
+              <strong>La participation est gratuite et n'impose aucun achat</strong>, aucune
+              publication et aucune dépense de points. Il suffit d'ouvrir l'application. Un seul
+              cadeau par jour et par compte ; les points sont versés sur le dernier
+              établissement fréquenté.
+            </p>
+            <p>
+              Le tirage est effectué côté serveur et ne peut être influencé ni par
+              l'Utilisateur, ni par l'Établissement. Les probabilités indiquées ci-dessus
+              peuvent être modifiées ; le présent article est alors mis à jour.
+            </p>
+
             <h2>Article 6 — Récompenses</h2>
             <p>
               Les récompenses sont définies, financées et servies par l'Établissement. La
@@ -5156,6 +5182,22 @@
                 <div id="gains"></div>
               </details>
             </section>
+
+            <!-- ⚠️ MENTION LEGALE, PAS UNE PRECAUTION DE STYLE. Le catalogue
+                 propose des boissons alcoolisees contre des points : c'est
+                 une promotion en faveur de l'alcool au sens de la loi Evin,
+                 et l'article L3323-4 du code de la sante publique impose
+                 alors ce message. Il se pose UNE fois en pied de boutique
+                 plutot que sur chaque tuile : la loi veut qu'il accompagne
+                 le message, pas qu'il le noie.
+
+                 Discret par construction (gris, petit), mais jamais masque
+                 ni replie derriere un accordeon -- un message sanitaire
+                 qu'il faut deplier n'accompagne rien. -->
+            <p class="sante">
+              L'abus d'alcool est dangereux pour la santé. À consommer avec modération.
+              La vente d'alcool aux mineurs de moins de 18 ans est interdite.
+            </p>
 
           </div>
         </div>
@@ -5704,7 +5746,11 @@ $("#story-page-corps")?.addEventListener("click", async function (e) {
   var handle = bouton.dataset.handle;
   var libelleOriginal = bouton.querySelector("span").textContent;
   try {
-    await navigator.clipboard.writeText("@" + handle);
+    /* Le tag ET la mention, ensemble. Le clubbeur copie deja ce bouton
+       pour ne pas se tromper de pseudo : la mention obligatoire voyage
+       donc avec, sans qu'il ait rien a retenir ni a taper. Une consigne
+       ecrite a cote (la premiere version) se serait fait ignorer. */
+    await navigator.clipboard.writeText("@" + handle + " " + MENTION_PUB);
     bouton.classList.add("copie");
     bouton.querySelector("span").textContent = "Copié !";
   } catch (err) {
@@ -7984,6 +8030,27 @@ $("#vg-close")?.addEventListener("click", fermerFicheGoogle);
 // PAS de justification marketing ("ca touche ton cercle proche...").
 // Julien a trouve la premiere version "trop IA" : la story est payee a
 // montant fixe, un point. Rien a expliquer de plus.
+/* La mention obligatoire, en un seul endroit.
+
+   ⚠️ POURQUOI ELLE EXISTE. Poster contre une contrepartie -- des points
+   echangeables contre une boisson en sont une -- rend la publication
+   promotionnelle. Ne pas le dire, c'est une omission trompeuse au sens des
+   articles L121-2 et L121-3 du code de la consommation : le lecteur croit
+   a un avis spontane alors qu'il lit une publication payee. L'obligation
+   pese sur l'ANNONCEUR -- le club, et nous -- et pas seulement sur celui
+   qui poste.
+
+   ⚠️ LE BADGE NATIF NE SUFFIT PAS. "Collaboration commerciale" cote
+   Instagram et "Contenu promotionnel" cote TikTok sont utiles, mais ils ne
+   remplacent pas la mention ecrite dans la publication : ils dependent du
+   reglage d'un compte, ils ne s'affichent pas partout, et l'ARPP comme la
+   DGCCRF attendent une mention lisible dans le contenu lui-meme. D'ou le
+   choix de la coller dans le texte plutot que de renvoyer au reglage.
+
+   "#publicite" sans accent : un hashtag accentue se saisit mal et se
+   partage mal d'un telephone a l'autre. Le mot reste explicite. */
+var MENTION_PUB = "#publicite";
+
 var BAREME_STORY = {
   story: { pts: "+100", texte: "Montant fixe." },
   reel: { pts: "+60", texte: "Montant fixe." },
@@ -8060,7 +8127,7 @@ function ouvrirChoixReseau(nomClub) {
   function blocHandleCopiable(handle) {
     if (!handle) return "";
     return '<button type="button" class="ps-handle-copy" data-handle="' + escapeHtmlSupport(handle) + '">' +
-      '<span>@' + escapeHtmlSupport(handle) + "</span>" +
+      '<span>@' + escapeHtmlSupport(handle) + " " + MENTION_PUB + "</span>" +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>' +
     "</button>";
   }
@@ -8235,9 +8302,9 @@ function ouvrirChoixReseau(nomClub) {
              reglage natif pour ca, d'ou le renvoi au reglage plutot qu'a
              un hashtag colle a la main. */
           '<p class="ps-regle" id="ps-regle">Une seule story par soirée.</p>' +
-          '<p class="ps-mention" id="ps-mention">Tu gagnes des points pour cette publication\u00a0: ' +
-          'active <strong>Collaboration commerciale</strong> (ou ajoute <strong>#publicite</strong>) ' +
-          'dans Instagram ou TikTok avant de publier. C\u2019est obligatoire, et ça prend deux secondes.</p>' +
+          '<p class="ps-mention" id="ps-mention">Le bouton copie <strong>#publicite</strong> avec le tag\u00a0: ' +
+          'garde-le dans ta publication. Une story qui rapporte des points est une publication ' +
+          'sponsorisée, et la loi demande de le dire.</p>' +
         "</div>" +
       "</form>" +
     "</div>";
