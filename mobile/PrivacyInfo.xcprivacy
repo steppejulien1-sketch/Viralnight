@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Manifeste de confidentialite Noctify.
+
+  OU LE POSER : a la racine du projet iOS, dans le meme groupe que
+  Info.plist (App/App/PrivacyInfo.xcprivacy), et l'ajouter a la cible dans
+  Xcode ("Target Membership" coche). Depuis mai 2024, une soumission sans ce
+  fichier est refusee AU DEPOT, avant meme la review.
+
+  CE QUI EST DECLARE, ET POURQUOI :
+
+  - Aucun suivi. NSPrivacyTracking est false et la liste des domaines de
+    suivi est vide, parce qu'il n'y en a aucun : ni mesure d'audience, ni
+    traceur publicitaire, nulle part dans le projet.
+
+  - La POSITION N'EST PAS DECLAREE COLLECTEE. Ce n'est pas un oubli. Au sens
+    d'Apple, "collecter" veut dire transmettre hors de l'appareil. La
+    position sert uniquement au telephone a calculer quel club est le plus
+    proche ; elle n'est envoyee a aucun serveur et n'est jamais enregistree.
+    La declarer serait faux dans l'autre sens.
+
+  - UserDefaults figure en "required reason API" avec le motif CA92.1 :
+    l'appli n'y accede que pour ses propres donnees. WKWebView, sur lequel
+    repose Capacitor, s'en sert pour le localStorage de la page.
+-->
+<plist version="1.0">
+<dict>
+  <key>NSPrivacyTracking</key>
+  <false/>
+
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
+
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array>
+    <!-- L'adresse e-mail : c'est le compte. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeEmailAddress</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- L'identifiant du compte, et l'identifiant d'appareil anti-abus. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeUserID</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- Le pseudo Instagram, seul lien entre une story et un compte. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeOtherUserContent</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- Points, bons, historique : l'usage du produit. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeProductInteraction</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+  </array>
+
+  <key>NSPrivacyAccessedAPITypes</key>
+  <array>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

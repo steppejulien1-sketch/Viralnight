@@ -345,14 +345,25 @@ un rejet automatique, pas une remarque. Résolu par
 `credit-clubbeur?action=supprimer-compte`.
 
 Google Play impose la même chose **et en plus une URL web** de demande de
-suppression, accessible sans installer l'app, à déclarer dans la console.
-Elle n'existe pas encore.
+suppression, accessible sans installer l'app. Elle existe depuis le
+08/09/2026 : `https://viralnight-koif.vercel.app/suppression-compte.html`.
+C'est le champ « Account deletion URL » de la console. Elle ne se contente
+pas d'expliquer la marche à suivre : le clubbeur s'y identifie par lien
+magique et supprime réellement, par la même route serveur que le bouton de
+l'appli.
 
-**Privacy manifest — pas commencé.** Depuis mai 2024 Apple exige un fichier
-`PrivacyInfo.xcprivacy` dans le bundle, qui déclare les catégories de
-données collectées et les *required reason APIs* utilisées (ici au moins
-`UserDefaults`). Sans lui, la soumission est refusée au dépôt, avant même
-la review. À créer quand le dossier `ios/` existera.
+**Privacy manifest — écrit, pas encore posé.** Le fichier est prêt dans
+`mobile/PrivacyInfo.xcprivacy` ; il ne reste qu'à le copier dans le projet
+Xcode et à cocher sa Target Membership. Voir `mobile/README.md`.
+
+Depuis mai 2024 Apple exige ce fichier dans le bundle : il déclare les
+catégories de données collectées et les *required reason APIs* utilisées
+(ici `UserDefaults`, via WKWebView). Sans lui la soumission est refusée au
+dépôt, avant même la review — ce n'est pas un motif de rejet, c'est un mur.
+
+À noter : **la position n'y est pas déclarée comme collectée**, et c'est
+volontaire. « Collecter » veut dire, au sens d'Apple, transmettre hors de
+l'appareil ; ici elle ne sort jamais du téléphone. La déclarer serait faux.
 
 **Chaînes d'usage des permissions — pas commencé.** `Info.plist` doit porter
 `NSLocationWhenInUseUsageDescription` et `NSCameraUsageDescription`, rédigées

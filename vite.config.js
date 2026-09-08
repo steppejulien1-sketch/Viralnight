@@ -31,6 +31,9 @@ export default defineConfig({
         confidentialite: resolve(__dirname, "confidentialite.html"),
         cgu: resolve(__dirname, "cgu.html"),
         cookies: resolve(__dirname, "cookies.html"),
+        // URL publique de suppression de compte, exigee par Google Play
+        // (voir MOBILE.md). Doit repondre sans installer l'appli.
+        suppressionCompte: resolve(__dirname, "suppression-compte.html"),
         cartePreview: resolve(__dirname, "carte-preview.html"),
         appPreview: resolve(__dirname, "app-preview.html"),
         clubApp: resolve(__dirname, "club-app.html"),
