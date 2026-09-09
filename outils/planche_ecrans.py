@@ -115,6 +115,12 @@ CLUBBEUR_SESSION = [
      "100 points, le gain d’abord, le code en gros. L’écran a longtemps annoncé 150 pendant que le serveur en versait 50.", "valeurs posées"),
     (CADEAU, "10-historique", "Onglet 5", "Profil — l’historique",
      "D’où viennent les points, ligne par ligne : scan, story, cadeau, bienvenue, parrainage.", "valeurs posées"),
+    # Les deux seuls ecrans de cette planche pris avec un VRAI compte
+    # (outils/clubbeur_connecte.cjs, compte jetable cree puis supprime).
+    (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
+     "Le premier écran d’un compte tout neuf. Le solde à zéro est en corail : la couleur de marque dépensée sur un rien.", "vrai compte"),
+    (CLUBBEUR, "10-amis-connecte", "Onglet 4", "Amis, pour de vrai",
+     "Le parrainage à 100 points et le code personnel. C’est tout ce que contient l’onglet tant qu’on n’a pas d’ami.", "vrai compte"),
 ]
 
 
