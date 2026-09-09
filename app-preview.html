@@ -5325,6 +5325,16 @@ import { createClient } from "@supabase/supabase-js";
    a `Capacitor` directement. */
 import * as natif from "./natif.js";
 
+/* LE BAREME NE S'ECRIT PAS ICI. Les montants annonces au clubbeur sont
+   exactement ceux que le pont credite cote gerant : DEFAULT_POINT_RULES
+   pour ce qui se compte aux vues ou au geste, FORFAIT_STORY_DEFAUT pour
+   la story taguee. Ils etaient recopies a la main dans GAINS et dans la
+   note de la fiche recompense -- deux copies de plus a corriger le jour
+   ou un chiffre bouge, et l'appli du client promettait alors autre chose
+   que ce que le club paie. */
+import { DEFAULT_POINT_RULES } from "./dashboardData.js";
+import { FORFAIT_STORY_DEFAUT } from "./lib/points/mentionAutomatique.js";
+
 // Connexion reelle sur la BONNE base : celle des clients de club
 // (gcopwgmqjiufemapamek), pas celle des gerants qu'utilise le reste du
 // site (mrukkexghpcqtwvwwcbe, voir supabaseClient.js). Un login reussi
@@ -11185,12 +11195,16 @@ var OFFRE = {
   });
 })();
 
+/* Pas de nombre en dur : voir la note sur les imports, en haut du module.
+   Il n'y a volontairement PAS de ligne "vues de ta story" -- Meta ne rend
+   pas les statistiques d'une story qui ne vous appartient pas, donc une
+   story taguee vaut un forfait et rien d'autre. */
 var GAINS = [
-  { t: "Scanner le QR au club",   s: "À l'entrée, une fois par soirée", v: 15 },
-  { t: "Poster ta story",         s: "Taguée avec le club",             v: 50 },
-  { t: "1 000 vues sur ta vidéo", s: "TikTok, Reel ou Short",           v: 25 },
-  { t: "Contenu qui décolle",     s: "Bonus au-delà de 10 000 vues",    v: 90 },
-  { t: "Ambassadeur du mois",     s: "Le plus gros total du mois",      v: 350 }
+  { t: "Scanner le QR au club",   s: "À l'entrée, une fois par soirée", v: DEFAULT_POINT_RULES.qrCheckin },
+  { t: "Poster ta story",         s: "Taguée avec le club",             v: FORFAIT_STORY_DEFAUT },
+  { t: "1 000 vues sur ta vidéo", s: "TikTok, Reel ou Short",           v: DEFAULT_POINT_RULES.videoViewsPerThousand },
+  { t: "Contenu qui décolle",     s: "Bonus au-delà de 10 000 vues",    v: DEFAULT_POINT_RULES.viralBonus },
+  { t: "Ambassadeur du mois",     s: "Le plus gros total du mois",      v: DEFAULT_POINT_RULES.monthlyAmbassador }
 ];
 
 var OUVERTURE = 23, FERMETURE = 6;
@@ -11486,7 +11500,7 @@ function ouvrirRecompense(item, src) {
     // Le montant manquant est deja sur le bouton juste au-dessus : la note
     // n'a plus besoin de le repeter, seulement d'expliquer comment gagner
     // les points — sinon le meme chiffre s'affiche deux fois cote a cote.
-    note = "Une story taguée rapporte 50 pts.";
+    note = "Une story taguée rapporte " + nb(FORFAIT_STORY_DEFAUT) + " pts.";
   } else if (item.cout === 0 && item === OFFRE && !OFFRE.reelle) {
     // Rien a echanger en base : un bouton actif qui echoue est pire
     // qu'un bouton eteint qui explique.

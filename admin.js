@@ -1,6 +1,7 @@
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { computePoints, describePoints } from "./lib/points/computePoints.js";
 import { evaluerFiabilite, validationRapidePossible } from "./lib/verification/customerTrust.js";
+import { DEFAULT_POINT_RULES as BAREME_PAR_DEFAUT } from "./dashboardData.js";
 
 const ADMIN_EMAIL = "viralnight001@gmail.com";
 
@@ -756,10 +757,16 @@ async function crediterClubbeur(submissionId, approuve, submission) {
  */
 const pointRulesCache = new Map();
 
+/* ⚠️ CES TROIS VALEURS NE S'ECRIVENT PAS ICI. Elles etaient recopiees
+   (25 / 80 / 90) a cote de celles de dashboardData.js, et ce ne sont pas
+   des chiffres d'affichage : loadPointRules() s'en sert pour CALCULER ce
+   qu'un contenu rapporte quand l'admin le valide. Deux copies d'un
+   bareme qui credite, c'est deux montants le jour ou l'une bouge.
+   Ce projet a deja ramene ce bareme de quatre exemplaires a un. */
 const DEFAULT_POINT_RULES = {
-  videoViewsPerThousand: 25,
-  storyViewsPerThousand: 80,
-  viralBonus: 90,
+  videoViewsPerThousand: BAREME_PAR_DEFAUT.videoViewsPerThousand,
+  storyViewsPerThousand: BAREME_PAR_DEFAUT.storyViewsPerThousand,
+  viralBonus: BAREME_PAR_DEFAUT.viralBonus,
 };
 
 async function loadPointRules(establishmentId) {
