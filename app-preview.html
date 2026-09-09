@@ -3039,7 +3039,18 @@
         .bon.neuf { animation: none; }
       }
 
-      .grab { width: 40px; height: 4.5px; border-radius: 99px; background: rgba(255,255,255,.15); margin: 0 auto 4px; position: sticky; top: 0; }
+      /* La zone de prise fait 22 px de haut, le trait n'en fait que 4,5.
+         `background-clip: content-box` peint le fond dans le contenu
+         seulement : le doigt attrape la marge, l'oeil ne voit que le
+         trait. Sans ca, la poignee etait une cible de 4 px -- injouable
+         des l'instant ou elle sert vraiment a faire descendre la feuille. */
+      .grab {
+        width: 40px; height: 4.5px; border-radius: 99px;
+        background: rgba(255,255,255,.15); background-clip: content-box;
+        padding: 9px 0; margin: 0 auto 4px; position: sticky; top: 0;
+        cursor: grab; touch-action: none;
+      }
+      .grab:active { cursor: grabbing; }
       .sheet-close {
         position: absolute; top: 16px; right: 16px; z-index: 3;
         width: 30px; height: 30px; border-radius: 50%; background: var(--s3); border: 0;
@@ -5306,11 +5317,16 @@
 
         <div class="voile" id="voile"></div>
 
-        <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sh-titre">
-          <div class="grab"></div>
-          <button class="sheet-close" id="sh-close" aria-label="Fermer">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
+        <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sh-titre" tabindex="-1">
+          <!-- ⚠️ PLUS DE CROIX. Julien, 09/09/2026 : "je ne comprends pas
+               l'utilite quand on est sur la carte : il y a une croix et
+               en plus un truc pour faire descendre [...] je pense que
+               c'est mieux juste un truc pour faire descendre".
+               La poignee etait DECORATIVE -- aucun glisser n'y etait
+               branche. Elle l'est maintenant (voir plus bas). Le voile et
+               la touche Echap fermaient deja la feuille : retirer la
+               croix ne laisse personne enferme. -->
+          <div class="grab" id="sh-grab"></div>
           <div id="sh-corps"></div>
         </div>
 
@@ -5778,7 +5794,9 @@ function ouvrirFeuille(html, focusSel) {
   sheet.setAttribute("aria-hidden", "false");
   voile.classList.add("on");
   var cible = focusSel ? corps.querySelector(focusSel) : null;
-  (cible || $("#sh-close")).focus();
+  // Plus de croix a focaliser : c'est la feuille elle-meme qui prend le
+  // focus, pour que la touche Echap parte de la bonne place.
+  (cible || sheet).focus();
 }
 
 function fermerFeuille() {
@@ -5789,7 +5807,13 @@ function fermerFeuille() {
   rendeur = null;
 }
 
-$("#sh-close").addEventListener("click", fermerFeuille);
+activerGlisserPourFermer(sheet, $("#sh-grab"), fermerFeuille);
+/* ⚠️ PONT VERS L'AUTRE MODULE. Le geste "retour" d'Android est gere dans
+   un second <script type="module">, donc dans une autre portee : il ne
+   voit pas fermerFeuille(). Il cliquait avant sur la croix ; la croix
+   n'existe plus. Un pont nomme, plutot qu'une deuxieme copie de la
+   logique de fermeture -- qui divergerait au premier changement. */
+window.noctifyFermerFeuille = fermerFeuille;
 voile.addEventListener("click", fermerFeuille);
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape" && sheet.classList.contains("up")) fermerFeuille();
@@ -11215,6 +11239,15 @@ var REMPLACEMENTS = {
   "Un cocktail offert": { nom: "Cocktail offert", fam: "bar" },
 };
 
+/* Ou se retire cette recompense. Une seule definition : la fiche et le
+   bon delivre doivent dire la meme chose, sinon le clubbeur se presente
+   au mauvais endroit. */
+function ouMontrer(famille) {
+  if (famille === "bar") return "Montre ce bon au bar";
+  if (famille === "acces" || famille === "vip") return "Montre ce bon à l'entrée";
+  return "Montre ce bon au bar ou à l'entrée";
+}
+
 function completerRecompense(r, index, prefixe) {
   var remplace = REMPLACEMENTS[r.title];
   if (remplace) {
@@ -11237,7 +11270,13 @@ function completerRecompense(r, index, prefixe) {
        dessous. Un club qui ecrit vraiment quelque chose est affiche ;
        sinon la fiche n'a pas de paragraphe, et elle se lit mieux. */
     desc: r.description || "",
-    regles: ["Valable ce soir", "Montre ce bon au bar ou à l'entrée"]
+    /* Julien, 09/09/2026 : "pour les boissons cocktail etc mets montre ce
+       bon au bar, et pour les recompenses comme une entree gratuite,
+       montre a l'entree". La famille le dit deja : `bar` se retire au
+       comptoir, `acces` et `vip` se montrent au videur. Une famille
+       inconnue garde la formule qui couvre les deux -- mieux vaut une
+       phrase large qu'une phrase fausse. */
+    regles: ["Valable ce soir", ouMontrer(r.category)]
   };
 }
 
@@ -11806,7 +11845,8 @@ setInterval(majRebours, 30000);
 
     var feuille = document.querySelector("#sheet");
     if (feuille && feuille.getAttribute("aria-hidden") === "false") {
-      document.querySelector("#sh-close")?.click();
+      // Voir le pont pose a cote de fermerFeuille() : autre module, autre portee.
+      window.noctifyFermerFeuille?.();
       return true;
     }
 
