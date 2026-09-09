@@ -378,7 +378,7 @@ PAGE = u"""<title>Noctify, \u00e9cran par \u00e9cran</title>
     </p>
     <p class="meta">
       <span>9 septembre 2026</span>
-      <span>35 \u00e9crans</span>
+      <span>37 \u00e9crans</span>
       <a href="https://viralnight-koif.vercel.app/club-app.html">club-app</a>
       <a href="https://viralnight-koif.vercel.app/app-preview.html?app=1">app-preview</a>
     </p>
@@ -442,7 +442,7 @@ __CLUBBEUR__
     <div class="groupe">
       <div class="groupe-tete">
         <h3>Avec un compte</h3>
-        <span class="compte">10 écrans</span>
+        <span class="compte">12 écrans</span>
         <p>Le même code, une fois connecté : le cadeau du jour, la boutique remplie, le parrainage, l’historique. Seules les valeurs sont posées à la main.</p>
       </div>
       <div class="planche">
@@ -454,7 +454,7 @@ __CLUBBEUR_SESSION__
   <div class="reserve">
     <h2>Ce que ces captures ne montrent pas</h2>
     <ul>
-      <li><b>Deux \u00e9crans clubbeur manquent : Story et Amis.</b> Ils ne se remplissent qu\u2019avec un vrai compte, et je n\u2019en cr\u00e9e pas. Les dix \u00e9crans \u00ab avec un compte \u00bb sont le vrai code de la production, avec le solde et le montant du jour pos\u00e9s \u00e0 la main : le dessin est juste, les chiffres sont choisis. R\u00e9compenses et Carte se lisent, elles, avec la cl\u00e9 publique. Pour les trois autres : soit tu me passes un compte de test, soit on lance <code>06-pwa-clubbeurs/outils/parcours_clubbeur.cjs</code>, qui fabrique un compte jetable et le nettoie.</li>
+      <li><b>Profil et Amis sont pris avec un VRAI compte.</b> <code>outils/clubbeur_connecte.cjs</code> en fabrique un jetable dans la base clubbeur, photographie, puis le supprime. Les dix autres \u00e9crans \u00ab avec un compte \u00bb sont le vrai code de la production, avec le solde et le montant du jour pos\u00e9s \u00e0 la main : le dessin est juste, les chiffres sont choisis. Il ne manque plus que <b>Story</b>, qui demande en plus un club scann\u00e9.</li>
       <li><b>Les chiffres du c\u00f4t\u00e9 g\u00e9rant sont ceux de la d\u00e9monstration.</b> Sans session, l\u2019appli retombe sur un club fictif \u2014 Mirage Club Brussels, 249 480 abonn\u00e9s touch\u00e9s. Un vrai club voit les siens.</li>
       <li><b>L\u2019\u00e9cran 06 de l\u2019installation est vide.</b> L\u2019affiche A4 et le bilan se fabriquent \u00e0 partir du club connect\u00e9.</li>
       <li><b>Les photos de l\u2019\u00e9tape 02 sont des exemples.</b> Ce sont les deux images d\u2019ambiance du d\u00e9p\u00f4t, pos\u00e9es l\u00e0 pour montrer la forme de l\u2019\u00e9cran une fois rempli.</li>
