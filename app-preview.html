@@ -601,8 +601,15 @@
         display: block; width: 100%; height: auto; margin-top: -21%;
       }
 
-      /* ---- Bloc de texte, cale a gauche comme la reference ---- */
-      .ac-hero { margin: auto 0 20px; }
+      /* ⚠️ UN SEUL `auto` DANS CETTE COLONNE. Il y en avait deux -- un
+         au-dessus de la mascotte, un au-dessus du texte -- et un flex
+         partage l'espace libre entre TOUS les `auto` qu'il trouve. Sur un
+         ecran de 844 px, ca faisait deux vides de 250 px : le logo
+         flottait au milieu de rien, et le texte etait decroche des
+         boutons qu'il introduit.
+         Un seul respire, sous le titre. Mascotte, texte et boutons
+         forment ensuite un bloc qui tient au bas de l'ecran. */
+      .ac-hero { margin: 22px 0 20px; }
       /* Titre d'accueil : centre et tout en haut, il sert d'en-tete a
          l'ecran. Le bloc texte plus bas reste cale a gauche, comme la
          reference envoyee par Julien. */
@@ -627,8 +634,8 @@
       /* Etat presse visible : sur mobile le :hover ne sert a rien. */
       .ac-btn:active { transform: scale(.965); }
       .ac-btn svg { width: 18px; height: 18px; flex: none; }
-      /* Meme repartition que la reference : Apple en noir plein,
-         Google en blanc borde, puis l'email en couleur de marque. */
+      /* Apple en noir plein, Google en blanc borde, l'email en encre
+         inversee sous son champ -- voir .ac-btn-marque plus bas. */
       .ac-btn-apple  { background: #000000; color: #ffffff; }
       .ac-btn-google { background: #ffffff; color: #1a1a1a; box-shadow: inset 0 0 0 1px rgba(0,0,0,.16); }
       .ac-btn-apple:hover  { filter: brightness(1.25); }
@@ -642,10 +649,17 @@
       .ac-sep::before, .ac-sep::after {
         content: ""; flex: 1 1 auto; height: 1px; background: var(--line2);
       }
-      /* Le bouton email porte le rouge de marque, comme le bouton
-         violet de la reference porte la marque de l'appli. */
+      /* ⚠️ PLUS DE ROUGE ICI. Ce bouton etait un aplat `--marque` plein,
+         donc la couleur de marque depensee sur une action ordinaire --
+         exactement ce que la regle du projet interdit ("le corail est une
+         couleur de MARQUE, jamais un bouton d'action"). Et il y avait
+         alors DEUX boutons principaux a l'ecran, le noir d'Apple et
+         celui-ci, qui se disputaient l'oeil.
+         Le principal de cette appli claire est en ENCRE INVERSEE. Celui-ci
+         est sous le champ email, apres le separateur : le groupe dit deja
+         que c'est la suite de ce champ, il n'a pas besoin de crier. */
       .ac-btn-marque {
-        background: var(--marque); color: #ffffff;
+        background: var(--ink); color: var(--s1);
         box-shadow: none;
       }
       .ac-btn-marque:hover { filter: brightness(1.06); }
@@ -1930,8 +1944,13 @@
       .marker-porteur { display: inline-block; line-height: 0; }
 
 
+      /* ⚠️ 92 px NE SUFFISAIT PAS. La barre d'onglets commence a 88 px du
+         bas : le rail s'arretait donc 4 px au-dessus, mais la pastille
+         qu'il contient depasse son conteneur de 7 px. Le NOM du club
+         passait sous la barre -- sur la carte, "Mirano" etait tronque a
+         mi-hauteur et illisible. */
       .club-rail {
-        position: absolute; left: 0; right: 0; bottom: 92px; z-index: 24;
+        position: absolute; left: 0; right: 0; bottom: 106px; z-index: 24;
         display: flex; gap: 8px; padding: 0 12px; overflow-x: auto; scrollbar-width: none;
       }
       .club-rail::-webkit-scrollbar { display: none; }
@@ -2435,27 +2454,41 @@
         display: flex; flex-direction: column; flex: 1;
         padding: 12px 12px 13px;
       }
+      /* ⚠️ HAUTEUR RESERVEE POUR DEUX LIGNES. "Table offerte + bouteille"
+         passe a la ligne, les trois autres non : le prix de cette carte
+         descendait donc d'un cran et la rangee etait bancale. Reserver la
+         place de la deuxieme ligne aligne les quatre prix, plein ou vide.
+         Le nom redescend en 13.5/600 : c'est le PRIX qu'on compare d'une
+         carte a l'autre, l'image dit deja de quoi il s'agit. */
       .carte-reco strong {
         font-family: var(--titre);
-        display: block; font-size: calc(14.5 * var(--u)); font-weight: 700; letter-spacing: -.02em;
-        line-height: 1.25; color: var(--ink);
+        display: block; font-size: calc(13.5 * var(--u)); font-weight: 600; letter-spacing: -.015em;
+        line-height: 1.3; min-height: 2.6em; color: var(--ink);
       }
       /* Le prix devient la deuxieme information la plus lisible de la
          carte, juste sous le nom -- il etait sur la photo avant. */
+      /* ⚠️ PLUS DE PASTILLE ROSE. Le prix etait un chiffre en couleur de
+         marque pose sur un lavis de cette meme couleur -- les deux
+         marqueurs deja rejetes sur la carte "Mes points" le 01/09, remis
+         cette fois QUATRE fois sur un meme ecran. Du rouge partout, donc
+         du rouge nulle part.
+         La hierarchie ne vient plus de la couleur mais de la graisse et
+         de la taille : c'est le prix qu'on compare d'une carte a l'autre,
+         il passe donc devant le nom. Meme principe que le contraste de
+         surfaces cote gerant. */
       .carte-reco .prix {
-        display: inline-flex; align-items: baseline; gap: 3px; align-self: flex-start;
-        margin-top: 7px; padding: 4px 10px; border-radius: var(--r-pill);
-        background: color-mix(in srgb, var(--accent) 13%, transparent);
+        display: inline-flex; align-items: baseline; gap: 4px; align-self: flex-start;
+        margin-top: 6px;
         font-family: var(--titre); font-variant-numeric: tabular-nums;
-        font-size: calc(14 * var(--u)); font-weight: 700;
-        letter-spacing: -.02em; color: var(--prix-encre, var(--accent));
+        font-size: calc(17 * var(--u)); font-weight: 800;
+        letter-spacing: -.03em; color: var(--ink);
       }
       /* "pts" dans la meme encre que le nombre : c'est son unite, pas une
          deuxieme information. Deux couleurs pour un seul prix, c'etait la
          moitie du bruit de la carte. */
       .carte-reco .prix span {
-        font-family: var(--sans); font-size: calc(10 * var(--u)); font-weight: 700;
-        color: inherit; opacity: .72;
+        font-family: var(--sans); font-size: calc(10.5 * var(--u)); font-weight: 600;
+        color: inherit; opacity: .55;
       }
 
       /* ---- Etat, en bas de carte ---- */
@@ -3548,9 +3581,12 @@
       .ps-handle-copy svg { width: 14px; height: 14px; stroke: var(--ink2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .ps-handle-copy.copie { border-style: solid; border-color: var(--succes-texte, #57d98a); color: var(--succes-texte, #57d98a); }
       .ps-handle-copy.copie svg { stroke: var(--succes-texte, #57d98a); }
+      /* Casse normale : cette ligne ne porte plus qu'un etat de stock,
+         et une capitale espacee sur "Plus que 3" ferait sonner une alerte
+         la ou il n'y a qu'une information. */
       .sheet-fam {
-        display: block; font-size: calc(11 * var(--u)); font-weight: 700; letter-spacing: .13em;
-        text-transform: uppercase; color: var(--ink3); margin-bottom: 8px;
+        display: block; font-size: calc(12 * var(--u)); font-weight: 600; letter-spacing: -.005em;
+        color: var(--ink3); margin-bottom: 6px;
       }
       .sheet h3 { font-family: var(--titre); margin: 0 0 8px; font-size: calc(27 * var(--u)); font-weight: 700; letter-spacing: -.045em; line-height: 1.12; color: var(--ink); }
       .sheet .desc { margin: 0 0 20px; font-size: calc(15 * var(--u)); color: var(--ink2); font-weight: 500; line-height: 1.5; }
@@ -4107,7 +4143,7 @@
              tap sur "Commencer" -- pas integre au switcher carte/boutique
              (activerVue), qui gere la navigation APRES l'accueil. -->
         <div class="vue-accueil" id="vue-accueil">
-          <h2 class="ac-title">Bienvenue sur Noctify !</h2>
+          <h2 class="ac-title">Bienvenue sur Noctify</h2>
 
           <!-- Logo Noctify, envoye par Julien le 2026-08-30. Il remplace
                le paresseux, qu'il a lui-meme juge sans rapport avec le
@@ -4120,7 +4156,13 @@
           </p>
 
           <div class="ac-hero">
-            <p class="ac-lead">Transforme tes soirées en récompenses : poste, cumule des points, échange-les dans tes clubs préférés.</p>
+            <!-- ⚠️ PAS DE SLOGAN. La phrase d'avant enchainait quatre
+                 verbes a l'imperatif adresses au clubbeur ("Transforme",
+                 "poste", "cumule", "echange-les") : c'est la voix d'un
+                 coach, deja rejetee deux fois ailleurs dans l'appli.
+                 Celle-ci NOMME le mecanisme, a la troisieme personne, et
+                 tient en deux propositions. -->
+            <p class="ac-lead">Une story taguée avec le club rapporte des points. Les points s'échangent au bar.</p>
           </div>
 
           <div class="ac-actions">
@@ -11125,7 +11167,12 @@ function completerRecompense(r, index, prefixe) {
        s'affiche. La difference entre un catalogue et une boutique. */
     art: visuel.art, glow: visuel.glow, foto: r.image_url || visuel.foto,
     code: prefixe + "·" + String(index + 1).padStart(3, "0"),
-    desc: r.description || ("Échange tes points contre « " + r.title + " », proposé par le club."),
+    /* ⚠️ PAS DE DESCRIPTION INVENTEE. Le repli disait « Echange tes
+       points contre "Cocktail offert", proposé par le club » -- une
+       phrase qui repete le titre juste au-dessus et le prix juste en
+       dessous. Un club qui ecrit vraiment quelque chose est affiche ;
+       sinon la fiche n'a pas de paragraphe, et elle se lit mieux. */
+    desc: r.description || "",
     regles: ["Valable ce soir", "Montre ce bon au bar ou à l'entrée"]
   };
 }
@@ -11488,8 +11535,15 @@ function ouvrirRecompense(item, src) {
   // 04/09/2026). Une famille inconnue ne s'ecrit pas du tout : mieux vaut
   // une ligne plus courte qu'un mot anglais en majuscules.
   var famille = FAMILLES[item.fam] || "";
-  var entete = [item.code, famille, (item.stock > 0 && item.stock <= 5 ? "plus que " + item.stock : "")]
-    .filter(Boolean).join(" · ");
+  /* ⚠️ PLUS DE REFERENCE DE CATALOGUE. Cette ligne portait "MIR·001 ·
+     BAR" en capitales espacees : un faux numero de serie sur un cocktail
+     offert. Deux tics d'un coup -- les capitales espacees ("c'est du
+     tableau de bord, pas de l'appli") et une donnee que personne ne lit
+     ni ne cite. `famille` disparait avec : elle repete ce que l'image
+     montre deja.
+     Ne reste que ce qui fait AGIR : le stock, et seulement quand il est
+     bas. La ligne n'existe pas le reste du temps. */
+  var entete = item.stock > 0 && item.stock <= 5 ? "Plus que " + item.stock : "";
 
   var cta, note;
   if (epuise) {
@@ -11516,9 +11570,9 @@ function ouvrirRecompense(item, src) {
 
   var html =
     visuel(item, "grand") +
-    '<span class="sheet-fam">' + entete + "</span>" +
+    (entete ? '<span class="sheet-fam">' + entete + "</span>" : "") +
     '<h3 id="sh-titre">' + item.nom + "</h3>" +
-    '<p class="desc">' + item.desc + "</p>" +
+    (item.desc ? '<p class="desc">' + item.desc + "</p>" : "") +
     '<ul class="regles">' + item.regles.map(function (r) {
       return "<li>" + picto("check") + "<span>" + r + "</span></li>";
     }).join("") + "</ul>" +
