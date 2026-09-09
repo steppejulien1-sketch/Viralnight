@@ -284,6 +284,11 @@
          d'un objet. Le ticket de la boutique a montre ce que gagne un
          rayon court. */
       --r1: 6px; --r2: 9px; --r3: 13px; --r4: 18px; --r-pill: 999px;
+        /* Le verre de la mascotte, tel que Julien l'a genere et tel qu'il
+           a ete detoure -- PAS un dessin refait ici. Un seul endroit le
+           nomme : le badge de club sur la carte, sa pastille dans le rail
+           et l'entete de sa fiche s'en servent tous. */
+        --verre-noctify: url("/mascotte/verre-salut.webp");
         --ombre-1: 0 1px 2px rgba(0,0,0,.35);
         --ombre-2: 0 6px 20px rgba(0,0,0,.45);
         --ombre-3: 0 18px 48px rgba(0,0,0,.55);
@@ -1817,15 +1822,18 @@
       #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
       .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left { bottom: 92px !important; }
-      .maplibregl-ctrl-attrib { font-size: calc(9.5 * var(--u)) !important; background: rgba(15,17,22,.55) !important; }
-      .maplibregl-ctrl-attrib a { color: rgba(255,255,255,.7) !important; }
+      .maplibregl-ctrl-attrib { font-size: calc(9.5 * var(--u)) !important; background: rgba(255,255,255,.72) !important; }
+      .maplibregl-ctrl-attrib a { color: rgba(21,24,29,.62) !important; }
       /* Le petit rond "i" (attribution repliee) reste present et cliquable
          -- contractuel sur l'offre gratuite MapTiler, ne jamais le
-         retirer -- mais fond noir plutot que blanc : il se fond dans la
-         carte au lieu de sauter aux yeux (demande de Julien). */
+         retirer. L'INTENTION de Julien est qu'il se fonde dans la carte ;
+         elle avait ete traduite par un fond noir, du temps ou le plan
+         etait sombre. Le plan est clair depuis : ce meme noir en faisait
+         la chose la plus visible du coin, un disque plein au milieu d'un
+         quartier presque blanc. Meme intention, couleur inverse. */
       .maplibregl-ctrl-attrib-button {
-        background-color: #0b0d11 !important;
-        opacity: .55;
+        background-color: rgba(255,255,255,.66) !important;
+        opacity: .9;
       }
       .maplibregl-popup { display: none; }
       .maplibregl-ctrl-logo { display: none !important; }
@@ -1854,30 +1862,45 @@
          overflow: hidden est retire (il decoupait tout ce qui depasse,
          donc la pointe) ; c'est l'image qui porte desormais son propre
          arrondi pour rester un disque. */
+      /* ⚠️ UN SEUL BADGE, LE MEME POUR TOUS LES CLUBS. Julien,
+         09/09/2026 : "un badge pour tout le monde, le meme badge pour
+         tout le monde, un truc carre [...] un truc en rapport avec la
+         mascotte".
+         Ce qui part avec le rond : l'anneau a la couleur du club
+         (`var(--c)`), qui donnait autant de badges differents que de
+         clubs, et le vide qui "attendait la photo" -- un rond vide se lit
+         comme une image qui n'a pas charge, pas comme un choix.
+         Le carre arrondi porte le creme de la mascotte et le verre
+         lui-meme. Un club qui depose une photo la voit remplir le carre ;
+         sans photo, le badge reste un objet fini. */
       .club-badge {
-        width: 58px; height: 58px; border-radius: 50%;
+        width: 56px; height: 56px; border-radius: 18px;
         margin-bottom: 12px;
-        background: var(--s2); border: 3px solid var(--c);
-        box-shadow: var(--ombre-1);
+        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
+        border: 0; overflow: hidden;
+        box-shadow: 0 0 0 3px #fff, 0 8px 18px -8px rgba(16,18,22,.55);
         position: relative; cursor: pointer;
         /* Le scale de majTailleMarqueurs doit pivoter autour de la
            POINTE, pas du centre : sinon le club se decolle de son lieu
            des que la carte change de zoom. */
         transform-origin: 50% calc(100% + 11px);
       }
-      .club-badge img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
+      .club-badge img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
       /* La pointe. Reprend la couleur de l'anneau : le cercle et sa
          pointe doivent se lire comme un seul objet, pas comme un badge
          pose sur un triangle. Le -2px la fait mordre sur l'anneau pour
          qu'aucun liseré de fond ne passe entre les deux. */
-      .club-badge::before {
-        content: ""; position: absolute; left: 50%; top: 100%;
-        translate: -50% -2px;
-        width: 9px; height: 12px; background: var(--c);
+      /* La pointe suit le liseré blanc du badge, plus la couleur du club :
+         il n'y en a plus. `overflow: hidden` la decouperait, elle se pose
+         donc sur le porteur, pas sur le badge. */
+      .marker-club::after {
+        content: ""; position: absolute; left: 50%; bottom: 6px;
+        translate: -50% 0;
+        width: 11px; height: 13px; background: #fff;
         clip-path: polygon(50% 100%, 0 0, 100% 0);
+        filter: drop-shadow(0 3px 4px rgba(16,18,22,.35));
       }
-      .club-badge.shut::before { background: #b6bcc6; }
-      .club-badge.shut { border-color: #b6bcc6; filter: grayscale(.45) brightness(.82); }
+      .club-badge.shut { filter: grayscale(.28); opacity: .82; }
       .club-badge-dot {
         position: absolute; right: -2px; bottom: -2px; width: 15px; height: 15px;
         border-radius: 50%; border: 2.5px solid #fff; background: var(--succes-texte, #57d98a);
@@ -1941,7 +1964,7 @@
          inline-block : se love exactement autour du badge/pinte qu'il
          contient, sans quoi un <div> prendrait toute la largeur du
          conteneur de la carte et fausserait le centrage du marqueur. */
-      .marker-porteur { display: inline-block; line-height: 0; }
+      .marker-porteur { position: relative; display: inline-block; line-height: 0; }
 
 
       /* ⚠️ 92 px NE SUFFISAIT PAS. La barre d'onglets commence a 88 px du
@@ -1965,16 +1988,24 @@
       }
       .fr .bub svg.pint { width: 27px; height: 35px; }
       .fr .bub svg.plus { width: 24px; height: 24px; stroke: #1b1f25; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-      /* Meme traitement "photo + anneau couleur + point de statut" que
-         le badge sur la carte (voir .club-badge) -- la bulle sous la
-         carte et le badge dessus doivent se reconnaitre comme le meme
-         club au premier coup d'oeil. */
-      .fr .bub-club { position: relative; border: 2.5px solid var(--c); }
-      .fr .bub-club img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .fr .bub-club.shut { border-color: #b6bcc6; filter: grayscale(.45) brightness(.82); }
+      /* La pastille du rail et le badge de la carte sont le MEME objet :
+         mise a jour ensemble, toujours. L'anneau a la couleur du club est
+         parti avec le reste -- un badge par club n'etait plus un badge. */
+      .fr .bub-club {
+        position: relative; border: 0; border-radius: 16px;
+        background: #f7efe6 var(--verre-noctify) center 58% / 78% no-repeat;
+        box-shadow: 0 0 0 2.5px #fff, 0 6px 14px -7px rgba(16,18,22,.5);
+      }
+      .fr .bub-club img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
+      .fr .bub-club.shut { filter: grayscale(.28); opacity: .82; }
       .fr .bub-club .club-badge-dot { width: 13px; height: 13px; border-width: 2px; }
+      /* ⚠️ ENCRE SOMBRE, HALO BLANC -- pas l'inverse. Le nom etait blanc
+         avec une ombre portee : lisible sur un plan de nuit, illisible sur
+         celui-ci, qui est presque blanc. Un halo blanc autour d'un texte
+         sombre tient sur les deux. */
       .fr b {
-        font-size: calc(10.5 * var(--u)); font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6);
+        font-size: calc(10.5 * var(--u)); font-weight: 700; color: #15181d;
+        text-shadow: 0 0 3px #fff, 0 0 6px #fff, 0 1px 2px #fff;
         max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
 
@@ -3155,12 +3186,15 @@
       /* Sur les petits ronds (badge de la carte, bulle, ligne de
          favori), le dessin respire un peu moins : a 42 px, une marge de
          plus ne laisserait qu'un point. */
-      /* Un rond sans photo est VIDE. Plus de fond creme ni de dessin
-         cale dedans : la surface neutre du badge suffit, et c'est elle
-         qui appelle la photo. Voir visuelClub(). */
-      .club-badge.sans-photo,
-      .fr .bub-club.sans-photo,
-      .fv-foto.sans-photo { background: var(--s2); }
+      /* ⚠️ PLUS DE "TRAITEMENT DU VIDE". Julien, 09/09/2026 : "le petit
+         truc qu'on a mis pour cacher l'information, retire le traitement
+         pour tout".
+         Ces trois selecteurs repeignaient le rond en `--s2` quand le club
+         n'avait pas de photo. Sous la palette sombre que porte la carte,
+         `--s2` vaut #261c17 : le badge etait un DISQUE NOIR au milieu
+         d'un plan clair -- lu comme une image qui n'a pas charge.
+         Sans photo, tous portent maintenant le meme badge Noctify. */
+      .fv-foto.sans-photo { background: #f7efe6 var(--verre-noctify) center 58% / 76% no-repeat; }
 
       .club-statut { margin: 0 0 16px; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
       .club-statut .ouvert { color: var(--succes-texte, #57d98a); font-weight: 700; }
@@ -8790,7 +8824,9 @@ map.on("load", function () {
   Object.keys(CLUBS).forEach(function (key) {
     var c = CLUBS[key];
     var porteur = document.createElement("div");
-    porteur.className = "marker-porteur";
+    // marker-club : c'est LUI qui porte la pointe. `.marker-porteur` sert
+    // aussi au repere "moi", qui n'en veut pas.
+    porteur.className = "marker-porteur marker-club";
     var el = document.createElement("button");
     el.className = "club-badge" + (c.hot ? " hot" : "") + (c.shut ? " shut" : "");
     el.style.setProperty("--c", c.c);

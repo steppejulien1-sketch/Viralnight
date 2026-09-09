@@ -140,7 +140,7 @@ def img(dossier, nom):
         return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
 
 
-def figures(liste, ratio):
+def figures(liste, ratio, extra=""):
     out = []
     for dossier, nom, eyebrow, titre, note, marque in liste:
         tag = ('<span class="marque">' + marque + "</span>") if marque else ""
@@ -148,7 +148,7 @@ def figures(liste, ratio):
         # propres proportions et perd le rayon d'un cadre de telephone.
         est_detail = "-galerie-" in nom or "-detail" in nom
         dim = mesurer(dossier, nom) if est_detail else ratio
-        classe = "cadre bande" if est_detail else "cadre"
+        classe = "cadre bande" if est_detail else ("cadre " + extra).strip()
         out.append(
             '        <figure class="ecran">\n'
             '          <button type="button" class="' + classe + '" data-titre="' + titre + '">\n'
@@ -284,6 +284,21 @@ PAGE = u"""<title>Noctify, \u00e9cran par \u00e9cran</title>
   /* Une bande decoupee dans l'ecran, pas un telephone : rayon court, et
      elle se cale en haut de sa case au lieu de l'occuper. */
   .cadre.bande { border-radius: 12px; align-self: start; }
+  /* ⚠️ POURQUOI SEULEMENT COTE CLUBBEUR. Les captures du gerant sont
+     prises dans club-app.html, qui EST une page de demonstration : le
+     telephone y est deja dessine, il fait partie de l'image. Celles du
+     clubbeur sont prises en `?app=1`, plein ecran, dans un vrai viewport
+     de 390x844 -- c'est ce qui rend --u juste (voir CLAUDE.md). Les
+     capturer dans un cadre fausserait les tailles de texte.
+     Le telephone est donc dessine ICI, autour d'une image qui reste
+     exacte. Julien, 09/09/2026 : "l'app clubbeur mets-le en mode
+     telephone". */
+  .cadre.tel {
+    background: #0a0b0d; border-radius: 34px; padding: 7px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.10), 0 0 0 2px rgba(0,0,0,.9),
+                0 22px 44px -24px rgba(0,0,0,.9);
+  }
+  .cadre.tel img { border-radius: 27px; }
   .cadre:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px var(--ligne-2), 0 28px 50px -26px rgba(0,0,0,.85); }
   .cadre:focus-visible { outline: 2px solid var(--corail); outline-offset: 3px; }
 
@@ -481,7 +496,7 @@ __CLUBBEUR_SESSION__
 page = (PAGE
         .replace("__INSTALLATION__", figures(INSTALLATION, 'width="360" height="760"'))
         .replace("__CLUB_APPLI__", figures(CLUB_APPLI, 'width="360" height="760"'))
-        .replace("__CLUBBEUR__", figures(CLUBBEUR_APPLI, 'width="390" height="844"'))
-        .replace("__CLUBBEUR_SESSION__", figures(CLUBBEUR_SESSION, 'width="390" height="844"')))
+        .replace("__CLUBBEUR__", figures(CLUBBEUR_APPLI, 'width="390" height="844"', "tel"))
+        .replace("__CLUBBEUR_SESSION__", figures(CLUBBEUR_SESSION, 'width="390" height="844"', "tel")))
 io.open(OUT, "w", encoding="utf-8").write(page)
 print("planche ecrite :", OUT, round(os.path.getsize(OUT) / 1024), "Ko")
