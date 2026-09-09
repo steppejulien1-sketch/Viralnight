@@ -56,13 +56,13 @@ CLUB_APPLI = [
     (CLUB, "08-tableau-de-bord-activite", "Onglet 1", "Activité récente",
      "Le glyphe dit la plateforme, le point de couleur dit l’état. Avant : l’initiale du statut (« V », « E », « R ») dans un rond gris.", ""),
     (CLUB, "09-recompenses", "Onglet 2", "Boutique de récompenses",
-     "Une tuile, une cible, une promesse : elle ouvre la fiche. Avant, la même tuile en avait deux — la pilule photo ouvrait le sélecteur de fichier, le reste dépliait un formulaire.", ""),
+     "L’écran ne disait AUCUN chiffre : on voyait ce qu’on propose, jamais ce qui marche. Même période que le tableau de bord, un bilan en tête, et sur chaque tuile le nombre de prises avec sa courbe.", ""),
     (CLUB, "10-recompense-fiche", "Onglet 2", "Une récompense, sa fiche",
      "Julien : « configurer une récompense, c’est bizarre, les gens ne vont pas comprendre ». Zettle, Square et Shopify ouvrent un produit dans son propre écran, avec un retour. La photo d’abord : c’est ce qu’on vient changer.", ""),
     (CLUB, "11-reglages", "Onglet 3", "Réglages",
      "Deux cartes, plus de titres de section, et une colonne d’état à droite — mais seulement là où il y a un état. « Changer le mot de passe » est retiré : ça se fait depuis l’écran de connexion, là où on en a besoin.", ""),
-    (CLUB, "12-bareme", "Réglages", "Barème de points",
-     "Une ligne par règle, le champ à droite, sous le pouce.", ""),
+    (CLUB, "12-bareme", "Onglet 3", "Barème de points",
+     "Sorti des Réglages : c’est l’écran qui décide de ce que le club paie. Chaque règle porte ce qu’elle distribue au tarif actuel — la vidéo pèse 63 % du total. Simulation, pas relevé.", ""),
     (CLUB, "13-qr", "Réglages", "Affiche et QR code",
      "L’aperçu de ce qui sera imprimé, en A4. Le QR garde son fond blanc : les appareils photo attendent du sombre sur clair.", ""),
     (CLUB, "14-conditions", "Réglages", "Conditions d’utilisation",
@@ -409,8 +409,8 @@ __INSTALLATION__
     <div class="groupe">
       <div class="groupe-tete">
         <h3>L\u2019appli</h3>
-        <span class="compte">3 onglets</span>
-        <p>Regarder, vendre, r\u00e9gler. Le bar\u00e8me et le QR vivent dans les R\u00e9glages, \u00e0 un geste de l\u00e0.</p>
+        <span class="compte">4 onglets</span>
+        <p>Regarder, vendre, tarifer, r\u00e9gler. Le bar\u00e8me a quitt\u00e9 les R\u00e9glages le 9 septembre : c\u2019est lui qui d\u00e9cide de ce que le club paie.</p>
       </div>
       <div class="planche">
 __CLUB_APPLI__
