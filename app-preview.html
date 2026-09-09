@@ -1901,11 +1901,12 @@
         filter: drop-shadow(0 3px 4px rgba(16,18,22,.35));
       }
       .club-badge.shut { filter: grayscale(.28); opacity: .82; }
-      .club-badge-dot {
-        position: absolute; right: -2px; bottom: -2px; width: 15px; height: 15px;
-        border-radius: 50%; border: 2.5px solid #fff; background: var(--succes-texte, #57d98a);
-      }
-      .club-badge.shut .club-badge-dot { background: #9aa1ab; }
+      /* ⚠️ LE VOYANT OUVERT/FERME EST RETIRE. Julien, 09/09/2026 : "il y
+         a un petit point comme ca, blanc, inutile [...] j'aurais juste
+         besoin de mettre le badge avec un logo qu'on met tout le monde".
+         L'information ne se perd pas : `.shut` eteint le badge entier
+         (opacite + gris). Le point disait la meme chose, en plus petit,
+         et cassait la silhouette du carre juste apres qu'on l'ait faite. */
       /* Anneau qui pulse sur les clubs "chauds". Il n'a en fait JAMAIS
          ete visible : l'ancien overflow: hidden du badge le decoupait
          entierement (inset negatif = hors du cadre). Retirer overflow
@@ -1998,7 +1999,6 @@
       }
       .fr .bub-club img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
       .fr .bub-club.shut { filter: grayscale(.28); opacity: .82; }
-      .fr .bub-club .club-badge-dot { width: 13px; height: 13px; border-width: 2px; }
       /* ⚠️ ENCRE SOMBRE, HALO BLANC -- pas l'inverse. Le nom etait blanc
          avec une ombre portee : lisible sur un plan de nuit, illisible sur
          celui-ci, qui est presque blanc. Un halo blanc autour d'un texte
@@ -8853,7 +8853,12 @@ map.on("load", function () {
     // le detail (horaires precis, avis...) reste dans la fiche.
     el.classList.toggle("sans-photo", !c.photo);
     el.dataset.club = key;
-    el.innerHTML = imgClub(c) + '<span class="club-badge-dot"></span>';
+    // ⚠️ PAS DE VOYANT SUR LE BADGE. Julien, 09/09/2026 : "il y a un
+    // petit point comme ca, blanc, inutile [...] j'aurais juste besoin de
+    // mettre le badge avec un logo qu'on met tout le monde".
+    // L'etat ouvert/ferme ne se perd pas : `.shut` eteint deja le badge
+    // entier. Un pastillage en plus disait la meme chose, en plus petit.
+    el.innerHTML = imgClub(c);
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     // Retour a notre propre fiche (pas l'iframe Google directement) :
     // Julien voulait "tomber direct sur la fiche" mais pas sur "Google
@@ -9402,7 +9407,6 @@ function creerClubChip(c, key, index) {
     '<span class="bub bub-club' + (c.shut ? " shut" : "") + classeFoto(c) +
       (c.partenaire ? " partenaire" : "") + '" style="--c:' + c.c + '">' +
       imgClub(c) +
-      '<span class="club-badge-dot"></span>' +
       /* L'ecusson "partenaire" est retire. Julien, 06/09/2026 : "on
          voit un petit v a cote sur la photo, ca ne rend pas bien".
 
