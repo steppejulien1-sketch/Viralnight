@@ -5262,7 +5262,11 @@
               <div class="grille" id="liste"></div>
             </section>
 
-            <section class="sec">
+            <!-- ⚠️ MASQUEE TANT QU'IL N'Y A PAS DE BON. Le titre
+                 s'affichait toujours, avec le vide dessous : un intitule
+                 qui ne presente rien, en plein milieu de l'onglet
+                 principal. rendreBons() la montre des qu'il y a un bon. -->
+            <section class="sec" id="sec-bons" hidden>
               <div class="sec-head"><h2>Mes bons</h2></div>
               <div class="bons" id="bons"></div>
             </section>
@@ -11505,6 +11509,9 @@ async function rendreBons(neufCode) {
 
   var z = $("#bons");
   z.innerHTML = "";
+  // Le titre suit sa liste : pas de bon, pas de section.
+  var sec = $("#sec-bons");
+  if (sec) sec.hidden = !ETAT.bons.length;
   for (var i = 0; i < ETAT.bons.length; i++) {
     var bon = ETAT.bons[i];
     var svgQr = await qrBon(bon.code);
