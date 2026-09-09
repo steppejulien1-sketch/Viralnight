@@ -1961,6 +1961,40 @@
         font-family: var(--chiffre); font-size: 14px; font-weight: 800;
         letter-spacing: -.02em; color: var(--accent-fort); font-variant-numeric: tabular-nums;
       }
+
+      /* ---- Ce que la boutique RAPPORTE, pas seulement ce qu'elle propose ----
+         Meme grammaire que le tableau de bord : un libelle, un chiffre
+         avec sa variation sur la periode d'avant, une note qui dit sur
+         quoi on compte. Volontairement PLUS SOBRE que le hero du tableau
+         de bord (pas de carte sombre) : c'est un bilan de section, pas le
+         chiffre principal de l'appli. */
+      .reco-bilan {
+        display: grid; gap: 2px; margin: 16px 0 4px; padding: 0 2px;
+      }
+      .reco-bilan:empty { display: none; }
+      .reco-bilan-lbl { font-size: 12.5px; font-weight: 600; color: var(--ink2); }
+      .reco-bilan-val {
+        display: flex; align-items: center; gap: 10px;
+        font-family: var(--chiffre); font-size: 30px; font-weight: 800;
+        letter-spacing: -.045em; line-height: 1.05; color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      /* La pastille vit dans le hero du tableau de bord, sur fond sombre :
+         ses encres claires y sont justes. Ici le fond est clair, il faut
+         les valeurs sombres -- sinon un "+32 %" vert pale sur creme. */
+      .reco-bilan .hero-delta.hausse { color: #1c7f52; border-color: rgba(28,127,82,.34); }
+      .reco-bilan .hero-delta.baisse { color: var(--accent-fort); border-color: rgba(214,40,40,.32); }
+      .reco-bilan .hero-delta.plat   { color: var(--ink3); border-color: var(--line2); }
+      .reco-bilan-note { font-size: 11.5px; color: var(--ink3); font-variant-numeric: tabular-nums; }
+
+      /* ⚠️ PAS DE STYLE `.reco-courbe` ICI, ET C'EST VOULU.
+         rendreCourbeMini() REECRIT la classe de l'element qu'on lui passe
+         (`zone.className = "kpi-courbe " + sens`) : toute regle accrochee
+         a .reco-courbe sauterait au premier rendu. La courbe herite donc
+         de .kpi-courbe, exactement comme les quatre cases du tableau de
+         bord -- ce qui est de toute facon ce qu'on veut, et une regle de
+         moins a garder en phase. La classe reste dans le markup pour que
+         l'element se lise avant son premier dessin. */
       @media (prefers-reduced-motion: reduce) {
         .recompense-carte, .bouton, .tab, .retour, .retirer, .ajouter-recompense, .ac-btn { transition: none; }
         /* On garde l'opacite, on retire le mouvement : c'est le
@@ -2788,6 +2822,20 @@
             <div class="vue" id="vue-recompenses">
               <h1 class="ecran-titre">Boutique de récompenses</h1>
               <p class="ecran-sous">Ce que tes clients peuvent échanger contre leurs points.</p>
+
+              <!-- ⚠️ LA MEME PERIODE QUE LE TABLEAU DE BORD, littéralement.
+                   choisirPeriode() balaie TOUS les `.periode` de la page et
+                   les synchronise : ce second jeu de boutons se cable donc
+                   tout seul, et les deux ecrans ne peuvent pas raconter
+                   deux fenetres differentes. Julien, 09/09/2026 : les
+                   recompenses "au meme niveau que le tableau de bord". -->
+              <div class="periodes" role="tablist" aria-label="Période">
+                <button type="button" class="periode" role="tab" data-jours="7">7 jours</button>
+                <button type="button" class="periode" role="tab" data-jours="30">30 jours</button>
+                <button type="button" class="periode" role="tab" data-jours="90">3 mois</button>
+              </div>
+
+              <div class="reco-bilan" id="reco-bilan"></div>
               <div id="recompenses-liste"></div>
               <button type="button" class="bouton pleine" id="recompense-ajouter" style="margin-top:14px">Ajouter une récompense</button>
               <p class="fiche-msg" id="recompense-msg"></p>
@@ -2822,12 +2870,6 @@
                 <div id="reglages-instagram">
                   <div class="reglage-ligne"><span class="reglage-txt"><strong>Instagram</strong><span>Vérification…</span></span></div>
                 </div>
-                <button type="button" class="reglage-lien" data-va="bareme">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg></span>
-                  <span class="reglage-txt"><strong>Barème de points</strong></span>
-                  <span class="reglage-etat" id="reglages-bareme-etat"></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </button>
                 <button type="button" class="reglage-lien" data-va="qr">
                   <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg></span>
                   <span class="reglage-txt"><strong>Affiche et QR code</strong></span>
@@ -3300,7 +3342,6 @@
             </div>
 
             <div class="vue" id="vue-bareme">
-              <button type="button" class="retour" data-va="reglages"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
               <h1 class="ecran-titre">Ton barème</h1>
               <p class="ecran-sous">Ce que rapporte chaque publication de tes clients.</p>
 
@@ -3365,6 +3406,18 @@
               <button class="tab" type="button" data-tab="recompenses">
                 <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
                 <span class="lbl">Récompenses</span>
+              </button>
+              <!-- ⚠️ LE BAREME EST UN ONGLET DEPUIS LE 09/09/2026. Julien :
+                   "le bareme de points, on peut le mettre en avant en vrai
+                   parce que ca peut etre utile [...] il faut que tu le
+                   mettes au meme niveau que le tableau de bord".
+                   C'est l'ecran qui decide de ce que le club PAIE : il
+                   etait a deux niveaux de profondeur, sous Reglages.
+                   Le grid-template-columns de .tabs suit le nombre
+                   d'onglets, il n'y a rien d'autre a changer. -->
+              <button class="tab" type="button" data-tab="bareme">
+                <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg>
+                <span class="lbl">Barème</span>
               </button>
               <button class="tab" type="button" data-tab="reglages">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l1.8-1.5-2-3.4-2.2.7a7.6 7.6 0 0 0-2.6-1.5L14 2.6h-4l-.4 2.2a7.6 7.6 0 0 0-2.6 1.5l-2.2-.7-2 3.4L4.6 10.5a7.6 7.6 0 0 0 0 3L2.8 15l2 3.4 2.2-.7c.76.65 1.64 1.16 2.6 1.5l.4 2.2h4l.4-2.2a7.6 7.6 0 0 0 2.6-1.5l2.2.7 2-3.4z"/></svg>
@@ -3526,7 +3579,7 @@
       // Les trois ecrans qui ont perdu leur onglet : ils vivent
       // maintenant sous Reglages, qui reste allume pendant qu'on y est.
       var SOUS_ECRANS = {
-        bareme: "reglages", qr: "reglages",
+        qr: "reglages",
         conditions: "reglages", confidentialite: "reglages",
         recompense: "recompenses",
         contenus: "dashboard",
@@ -4534,7 +4587,10 @@
           b.classList.toggle("on", on);
           b.setAttribute("aria-selected", on ? "true" : "false");
         });
-        if (ETAT.data) rendreDashboard();
+        // Les deux ecrans lisent la meme fenetre : ils se redessinent
+        // ensemble, sinon la boutique garderait les chiffres de la
+        // periode d'avant sans que rien ne le dise.
+        if (ETAT.data) { rendreDashboard(); rendreRecompenses(); }
       }
 
       document.querySelectorAll(".periode").forEach(function (bouton) {
@@ -5048,6 +5104,40 @@
         var rewards = getActiveRewards(ETAT.data.rewards || []);
         var zone = $("#recompenses-liste");
 
+        /* ⚠️ CET ECRAN NE DISAIT AUCUN CHIFFRE. Il montrait quatre tuiles
+           et leur prix : le gerant voyait ce qu'il PROPOSE, jamais ce qui
+           MARCHE. Le tableau de bord, lui, compte tout sur la periode
+           choisie -- c'est ce qui manquait ici, et c'est la MEME
+           machinerie (fenetres / seauxDe / somme), pas une deuxieme. */
+        var f = fenetres(ETAT.periode);
+        var toutes = ETAT.data.rewardRedemptions || [];
+        var serieDe = function (id, fen) {
+          return seauxDe(toutes.filter(function (x) { return x.reward_id === id; }), "redeemed_at", fen);
+        };
+
+        /* Le bilan : combien de bons sont partis, et ce qu'ils ont coute
+           en points. Le cout est la seule chose qu'un gerant ne peut pas
+           deduire de l'ecran -- il faudrait multiplier chaque prix par
+           chaque compte, de tete, pour chaque recompense. */
+        var totalPris = 0, coutPoints = 0;
+        rewards.forEach(function (r) {
+          var n = somme(serieDe(r.id, f));
+          totalPris += n;
+          coutPoints += n * Number(r.points_required || 0);
+        });
+        var bilan = $("#reco-bilan");
+        if (bilan) {
+          var vBilan = variation(totalPris, somme(seauxDe(toutes, "redeemed_at", f.avant)));
+          var pastille = vBilan === null
+            ? '<span class="hero-delta plat">nouveau</span>'
+            : '<span class="hero-delta ' + (vBilan > 0 ? "hausse" : vBilan < 0 ? "baisse" : "plat") + '">' +
+              (vBilan > 0 ? "↑ +" : vBilan < 0 ? "↓ " : "→ ") + vBilan + " %</span>";
+          bilan.innerHTML =
+            '<span class="reco-bilan-lbl">Récompenses prises</span>' +
+            '<span class="reco-bilan-val">' + nb.format(totalPris) + pastille + "</span>" +
+            '<span class="reco-bilan-note">' + nb.format(coutPoints) + " points échangés sur la période</span>";
+        }
+
         // Hors session, tout est en lecture seule : les champs partaient
         // sinon vers Supabase avec un id de demo et revenaient avec une
         // erreur Postgres brute.
@@ -5063,9 +5153,16 @@
           // Le stock est la seule information du resume qui puisse
           // manquer : sans plafond, on ecrit "stock illimite" plutot
           // que de laisser un blanc qui ressemble a une donnee perdue.
-          var stock = (r.max_redemptions === null || r.max_redemptions === undefined || r.max_redemptions === "")
-            ? "stock illimité"
-            : "stock " + nb.format(Number(r.max_redemptions));
+          /* ⚠️ LE STOCK NE S'ECRIT PLUS QUE QUAND IL EST BAS. "stock 100"
+             occupait la place du seul chiffre qui manquait vraiment : le
+             nombre de fois ou la recompense a ete prise. Un plafond
+             confortable n'est une information pour personne ; un plafond
+             qui s'epuise en est une. */
+          var plafond = Number(r.max_redemptions);
+          var stock = Number.isFinite(plafond) && plafond > 0 && plafond <= 10
+            ? "plus que " + nb.format(plafond)
+            : "";
+          var prises = somme(serieDe(r.id, f));
 
           /* ⚠️ PLUS D'ACCORDEON. Julien : "quand on veut configurer une
              récompense, c'est bizarre, ce n'est même pas logique, les gens
@@ -5101,10 +5198,23 @@
                   : "") +
               "</span>" +
               '<span class="reco-resume-txt"><strong>' + escapeHtml(r.title) + "</strong>" +
-                '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts · " + stock + "</span></span>" +
+                '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts" +
+                  " · " + nb.format(prises) + (prises > 1 ? " prises" : " prise") +
+                  (stock ? " · " + stock : "") + "</span>" +
+                '<span class="reco-courbe" data-courbe="' + escapeHtml(r.id) + '" aria-hidden="true"></span>' +
+              "</span>" +
             "</button>"
           );
         }).join("");
+
+        /* Les mini-courbes, comme les quatre cases du tableau de bord :
+           elles ne portent pas d'echelle, elles portent le SENS. Dessinees
+           apres coup parce que rendreCourbeMini() ecrit dans un element,
+           il ne rend pas une chaine. */
+        zone.querySelectorAll("[data-courbe]").forEach(function (case_) {
+          var serie = serieDe(case_.dataset.courbe, f);
+          rendreCourbeMini(case_, serie, variation(somme(serie), somme(serieDe(case_.dataset.courbe, f.avant))));
+        });
 
         // Une tuile, une cible, une promesse : elle ouvre la fiche.
         zone.querySelectorAll("[data-reward-id]").forEach(function (tuile) {
@@ -5525,11 +5635,8 @@
         // un bouton qui ne fait rien.
         $("#reglages-installation").hidden = !clubReelCharge();
 
-        // Le tarif, sur la ligne : "Barème de points" tout seul est une
-        // porte fermee, il faut l'ouvrir pour savoir ou on en est.
-        var regles = ETAT.data.pointRules || {};
-        $("#reglages-bareme-etat").textContent =
-          nb.format(Math.round(Number(regles.videoViewsPerThousand || 0))) + " pts";
+        // (La ligne "Barème de points" a quitte les Reglages le
+        // 09/09/2026 : c'est un onglet maintenant.)
 
         var zone = $("#reglages-instagram");
 

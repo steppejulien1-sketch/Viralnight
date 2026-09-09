@@ -223,11 +223,20 @@ function remplirGalerie() {
 
   console.log("Les écrans de réglage");
   const SOUS = [
-    ["bareme", "12-bareme", "Barème de points"],
+    // ⚠️ "bareme" a QUITTE cette liste le 09/09/2026 : c'est un onglet
+    // maintenant, plus une ligne des Reglages. Il se photographie avec
+    // les autres onglets, juste au-dessus.
     ["qr", "13-qr", "Affiche et QR code"],
     ["conditions", "14-conditions", "Conditions d'utilisation"],
     ["confidentialite", "15-confidentialite", "Confidentialité"],
   ];
+  console.log("L'onglet Barème");
+  await page.evaluate(() => document.querySelector('[data-tab="bareme"]').click());
+  await pause(900);
+  await prendre("12-bareme", "Barème de points");
+  await page.evaluate(() => document.querySelector('[data-tab="reglages"]').click());
+  await pause(600);
+
   for (const [va, nom, titre] of SOUS) {
     await page.evaluate((v) => document.querySelector(`[data-va="${v}"]`).click(), va);
     // Le QR et l'affiche sont dessines sur un canvas : plus lent que le
