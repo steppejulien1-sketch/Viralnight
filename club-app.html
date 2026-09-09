@@ -579,6 +579,35 @@
         font-variant-numeric: tabular-nums; color: var(--encre);
       }
       .hero-note { position: relative; z-index: 1; display: block; margin-top: 2px; font-size: 12px; color: var(--encre-3); }
+      /* Les deux chiffres de tete. Le filet vertical entre les deux fait
+         tout le travail : sans lui, "81" et "1 003 774" se lisent comme
+         un seul groupe, et le premier passe pour une legende du second. */
+      .hero-duo {
+        position: relative; z-index: 1;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      }
+      .hero-duo .hero-bloc + .hero-bloc {
+        padding-left: 14px; border-left: 1px solid rgba(255,255,255,.15);
+      }
+      /* 42 px etait la taille d'un chiffre SEUL sur toute la largeur. A
+         deux dans un cadre de 360 px, "1 003 774" deborde : la colonne
+         fait 150 px utiles. La pastille de variation passe sous le
+         nombre plutot que de le comprimer. */
+      .hero-duo .hero-valeur {
+        font-size: 27px; gap: 6px; margin-top: 4px;
+        flex-wrap: wrap; align-items: baseline;
+      }
+      /* La pastille passe TOUJOURS a la ligne, meme quand le nombre est
+         court. Laissee libre, elle se posait a cote de "78" et sous
+         "1 003 774" : les deux colonnes ne s'alignaient plus, et le
+         desalignement bougeait avec les chiffres du club. */
+      .hero-duo .hero-delta { font-size: 10.5px; padding: 2px 7px; flex: 0 0 auto; margin-top: 3px; }
+      .hero-duo .hero-valeur > span:first-child { flex: 0 0 100%; }
+      .hero-duo .hero-label { font-size: 11.5px; }
+      .hero-courbe-titre {
+        position: relative; z-index: 1;
+        margin: 15px 0 -4px; font-size: 11px; color: var(--encre-3);
+      }
       .hero-graphe { margin-top: 14px; height: 56px; }
       .hero-graphe svg { display: block; width: 100%; height: 100%; overflow: visible; }
       /* Les jours sans publication valent 0, pas "pas de donnee" : une
@@ -1372,7 +1401,7 @@
       /* Meme piege qu'a la ligne 343 : un display explicite (grid, flex,
          block) bat la regle [hidden] du navigateur. Ces elements-la sont
          masques depuis le JS. */
-      .pa-champ[hidden], .pa-affiche[hidden],
+      .pa-champ[hidden], .pa-affiche[hidden], .pa-affiche-attente[hidden],
       .parcours .ac-btn[hidden], .parcours .bouton[hidden],
       .reglage-lien[hidden] { display: none; }
 
@@ -1549,10 +1578,22 @@
          porte le chiffre qui decide de l'echange. */
       .pa-tuile-prix { display: flex; align-items: baseline; gap: 4px; margin-top: 7px; }
       .pa-tuile-prix input {
-        min-width: 0; width: 3.6ch; padding: 0; border: 0; background: none;
+        min-width: 0; width: 4.2ch; padding: 0; border: 0; background: none;
         color: var(--accent-fort); font-family: var(--chiffre); font-size: 19px;
         font-weight: 800; letter-spacing: -.03em; text-align: left;
       }
+      /* ⚠️ CE NE SONT PAS LES CHIFFRES QUI DEBORDAIENT, CE SONT LES
+         FLECHES. Un input[type=number] reserve ~15 px DANS sa boite pour
+         ses deux fleches, meme quand on ne les survole pas. A 3.6ch
+         (43 px), "40" tenait et "130" etait rogne -- d'ou une seule
+         tuile sur quatre au prix colle au bord, celle du cocktail.
+         Mesure : "130" ne fait que 33,9 px de texte, mais 49 px de
+         contenu une fois les fleches comptees.
+         Elles ne servent a rien ici : on tape un prix, et iOS ne les
+         dessine de toute facon pas. 4.2ch couvre desormais 4 chiffres. */
+      .pa-tuile-prix input::-webkit-outer-spin-button,
+      .pa-tuile-prix input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+      .pa-tuile-prix input { appearance: textfield; -moz-appearance: textfield; }
       .pa-tuile-prix input:focus { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
       .pa-tuile-prix input:disabled { color: var(--ink3); }
       .pa-tuile-prix span { font-family: var(--mono); font-size: 12px; color: var(--ink3); }
@@ -1637,6 +1678,15 @@
       .pa-affiche {
         display: block; width: 100%; max-width: 188px; margin: 0 auto 16px;
         border-radius: 10px; border: 1px solid var(--line); background: var(--s1);
+      }
+      /* Le temps que l'affiche se dessine. Meme encombrement vertical
+         que l'apercu qui la remplace, pour que le bilan en dessous ne
+         saute pas d'un cran quand l'image arrive. */
+      .pa-affiche-attente {
+        display: grid; place-items: center; width: 100%; max-width: 188px;
+        min-height: 132px; margin: 0 auto 16px; padding: 0 14px;
+        border-radius: 10px; border: 1px dashed var(--line); background: var(--s1);
+        font-size: 12px; color: var(--ink3); text-align: center;
       }
       .pa-bilan { display: grid; gap: 0; margin: 0 0 16px; padding: 0; list-style: none; }
       .pa-bilan li {
@@ -2429,14 +2479,23 @@
                         <form id="porte-form" style="display:grid;gap:10px">
                           <input type="text" class="ac-input" id="porte-club" placeholder="Nom de ton club" autocomplete="organization" hidden />
                           <input type="email" class="ac-input" id="porte-email" placeholder="ton@email.com" autocomplete="username" required />
-                          <input type="password" class="ac-input" id="porte-password" placeholder="Mot de passe" autocomplete="current-password" required />
-                          <p class="ac-aide" id="porte-aide-mdp" hidden>8 caractères minimum, dont un chiffre.</p>
-                          <button type="submit" class="ac-btn ac-btn-marque" id="porte-submit">Se connecter</button>
+                          <input type="password" class="ac-input" id="porte-password" placeholder="Mot de passe" autocomplete="new-password" required />
+                          <p class="ac-aide" id="porte-aide-mdp">8 caractères minimum, dont un chiffre.</p>
+                          <button type="submit" class="ac-btn ac-btn-marque" id="porte-submit">Créer mon compte</button>
                           <p class="ac-aide" id="porte-form-msg"></p>
                         </form>
 
                         <p class="ac-bascule-bloc">
-                          <button type="button" class="ac-bascule" id="porte-bascule">Pas encore de compte ? En créer un</button>
+                          <!-- CET ECRAN SERT A CREER UN CLUB. C'est le
+                               premier ecran d'un gerant qui n'a encore
+                               rien : lui presenter "Se connecter" en gros
+                               bouton noir et la creation en petit lien
+                               demandait de corriger le systeme avant de
+                               pouvoir s'en servir. Le retour est intact --
+                               la bascule ci-dessous, et les deux endroits
+                               qui forcent modeInscription = false (bandeau
+                               "se connecter", et sortie de session). -->
+                          <button type="button" class="ac-bascule" id="porte-bascule">J'ai déjà un compte, me connecter</button>
                         </p>
                         <p class="ac-aide" id="accueil-msg"></p>
                       </div>
@@ -2548,8 +2607,18 @@
                       <h1 class="pa-titre">Tout est prêt.</h1>
                       <p class="pa-sous">Il ne reste qu'à coller ton affiche : à l'entrée, au bar, aux toilettes.</p>
 
-                      <img class="pa-affiche pa-arrive" id="pa-affiche" alt="Aperçu de l'affiche à imprimer" />
-                      <a class="bouton sobre pleine pa-arrive" id="pa-affiche-lien" download="affiche-noctify.png">Télécharger l'affiche (A4)</a>
+                      <!-- L'IMAGE PART MASQUEE, et ce n'est pas un detail.
+                           Un <img> visible SANS src fait dessiner au
+                           navigateur son icone d'image cassee. C'est ce
+                           qu'on voyait a l'ouverture de l'etape : le src
+                           n'arrive qu'a la fin de preparerPasQr(), qui
+                           attend rendreQr() (canvas + QR, asynchrone). Et
+                           si le club n'a pas de code public, il n'arrive
+                           jamais -- l'icone cassee restait a l'ecran sous
+                           le message qui expliquait pourtant la situation. -->
+                      <p class="pa-affiche-attente" id="pa-affiche-attente">Préparation de ton affiche…</p>
+                      <img class="pa-affiche pa-arrive" id="pa-affiche" alt="Aperçu de l'affiche à imprimer" hidden />
+                      <a class="bouton sobre pleine pa-arrive" id="pa-affiche-lien" download="affiche-noctify.png" hidden>Télécharger l'affiche (A4)</a>
 
                       <ul class="pa-bilan pa-arrive" id="pa-bilan"></ul>
                     </section>
@@ -2603,9 +2672,27 @@
               </div>
 
               <div class="hero">
-                <span class="hero-label">Abonnés touchés</span>
-                <span class="hero-valeur"><span id="kpi-vues">—</span><span class="hero-delta plat" id="kpi-delta"></span></span>
-                <span class="hero-note" id="kpi-vues-note"></span>
+                <!-- DEUX CHIFFRES A EGALITE, et pas un chiffre suivi
+                     d'une note. Le club PAIE au contenu (bareme au
+                     forfait : une story taguee vaut un montant fixe) mais
+                     il ACHETE de la visibilite. Aucun des deux ne resume
+                     l'autre, donc aucun des deux ne descend en petit gris.
+                     Avant : "Abonnés touchés" en 42 px, "81 contenus
+                     validés" en note de 12 px en dessous. -->
+                <div class="hero-duo">
+                  <div class="hero-bloc">
+                    <span class="hero-label">Contenus validés</span>
+                    <span class="hero-valeur"><span id="kpi-contenus">—</span><span class="hero-delta plat" id="kpi-contenus-delta"></span></span>
+                  </div>
+                  <div class="hero-bloc">
+                    <span class="hero-label">Abonnés touchés</span>
+                    <span class="hero-valeur"><span id="kpi-vues">—</span><span class="hero-delta plat" id="kpi-delta"></span></span>
+                  </div>
+                </div>
+                <!-- La courbe ne trace qu'UNE des deux series : tant que
+                     le grand chiffre etait seul, elle allait de soi. A
+                     deux, il faut le dire. -->
+                <p class="hero-courbe-titre">Abonnés touchés, jour par jour</p>
                 <div class="hero-courbe" id="hero-courbe"></div>
                 <div class="hero-graphe" id="hero-graphe" hidden></div>
                 <!-- La legende porte les DEUX totaux et les DEUX dates.
@@ -3686,7 +3773,11 @@
          puis /api/create-client pour creer l'etablissement. Sans ce second
          appel, le nom saisi part dans user_metadata et n'est jamais lu :
          le gerant se retrouve avec un compte sans club derriere. */
-      var modeInscription = false;
+      /* ⚠️ VRAI PAR DEFAUT, et le markup de l'etape 1 est ecrit dans le
+         meme sens. majModePorte() n'est PAS appelee au demarrage : les
+         deux doivent donc concorder a la main, sinon le premier ecran
+         annonce un mode et le formulaire en applique un autre. */
+      var modeInscription = true;
 
       /* ---- Invitation ----
          L'inscription se fait sur invitation : le lien porte
@@ -4290,23 +4381,34 @@
         var vuesAvant = seauxDe(stats.validated, "submitted_at", f.avant, vuesDe);
         var totalVues = somme(vues), totalAvant = somme(vuesAvant);
 
-        poserChiffre($("#kpi-vues"), totalVues);
+        /* Les deux chiffres de tete se lisent sur la MEME fenetre et se
+           comparent a la MEME periode d'avant. Les compter sur des
+           fenetres differentes remettrait exactement le defaut qu'on a
+           corrige ici (un total depuis le debut sous un graphe de 14
+           jours). */
         var contenus = somme(seauxDe(stats.validated, "submitted_at", f));
-        $("#kpi-vues-note").textContent = nb.format(contenus) + " contenu" +
-          (contenus > 1 ? "s" : "") + " validé" + (contenus > 1 ? "s" : "");
+        var contenusAvant = somme(seauxDe(stats.validated, "submitted_at", f.avant));
+
+        poserChiffre($("#kpi-contenus"), contenus);
+        poserChiffre($("#kpi-vues"), totalVues);
 
         rendreCourbe(vues, vuesAvant, f);
 
-        var v = variation(totalVues, totalAvant);
-        var delta = $("#kpi-delta");
-        if (v === null) {
-          // Rien avant : afficher "+∞ %" serait faux, et "0 %" aussi.
-          delta.className = "hero-delta plat";
-          delta.textContent = "nouveau";
-        } else {
-          delta.className = "hero-delta " + (v > 0 ? "hausse" : v < 0 ? "baisse" : "plat");
-          delta.textContent = (v > 0 ? "↑ +" : v < 0 ? "↓ " : "→ ") + v + " %";
-        }
+        // La meme regle pour les deux pastilles : elle etait ecrite une
+        // fois, elle l'aurait ete deux.
+        var poserDelta = function (el, actuel, avant) {
+          var v = variation(actuel, avant);
+          if (v === null) {
+            // Rien avant : afficher "+∞ %" serait faux, et "0 %" aussi.
+            el.className = "hero-delta plat";
+            el.textContent = "nouveau";
+            return;
+          }
+          el.className = "hero-delta " + (v > 0 ? "hausse" : v < 0 ? "baisse" : "plat");
+          el.textContent = (v > 0 ? "↑ +" : v < 0 ? "↓ " : "→ ") + v + " %";
+        };
+        poserDelta($("#kpi-contenus-delta"), contenus, contenusAvant);
+        poserDelta($("#kpi-delta"), totalVues, totalAvant);
 
         // Une courbe a plat sur zero ressemble a un graphe casse : quand
         // il n'y a rien, on l'ecrit.
@@ -6717,15 +6819,22 @@
         var lien = $("#affiche-telecharger").getAttribute("href");
 
         if (!source) {
+          // Le message dit deja tout : laisser en plus un cadre "en
+          // preparation" pour quelque chose qui n'arrivera pas serait
+          // une deuxieme reponse, et la mauvaise.
+          $("#pa-affiche-attente").hidden = true;
           $("#pa-affiche").hidden = true;
           $("#pa-affiche-lien").hidden = true;
           direParcours("Ce club n'a pas encore de code public : l'affiche arrivera plus tard, dans Réglages.", false);
           return;
         }
 
+        // Le src AVANT de demasquer : demasquer d'abord rendrait visible,
+        // le temps d'une image, l'element vide qu'on cherche a eviter.
+        $("#pa-affiche").setAttribute("src", source);
+        $("#pa-affiche-attente").hidden = true;
         $("#pa-affiche").hidden = false;
         $("#pa-affiche-lien").hidden = false;
-        $("#pa-affiche").setAttribute("src", source);
         if (lien) $("#pa-affiche-lien").setAttribute("href", lien);
       }
 
