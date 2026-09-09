@@ -4394,9 +4394,17 @@
 
         rendreCourbe(vues, vuesAvant, f);
 
-        // La meme regle pour les deux pastilles : elle etait ecrite une
-        // fois, elle l'aurait ete deux.
-        var poserDelta = function (el, actuel, avant) {
+        /* ⚠️ NE PAS RENOMMER EN poserDelta. Il existe deja une fonction
+           de ce nom plus haut, celle des QUATRE CASES, qui pose la classe
+           `kpi-delta`. Declarer un `var poserDelta` ici la masque dans
+           toute la fonction (hoisting), et les quatre cases se sont
+           retrouvees en `hero-delta` : bordure, chasse, et surtout plus
+           de `white-space: nowrap` -- la pastille de "Points donnes"
+           (15 051, la valeur la plus large) se pliait sur trois lignes.
+           Les deux pastilles ne disent PAS la meme chose : celle du haut
+           ecrit toujours "nouveau" et marque le plat d'une fleche, celle
+           des cases se tait quand il ne s'est rien passe. */
+        var poserDeltaHero = function (el, actuel, avant) {
           var v = variation(actuel, avant);
           if (v === null) {
             // Rien avant : afficher "+∞ %" serait faux, et "0 %" aussi.
@@ -4407,8 +4415,8 @@
           el.className = "hero-delta " + (v > 0 ? "hausse" : v < 0 ? "baisse" : "plat");
           el.textContent = (v > 0 ? "↑ +" : v < 0 ? "↓ " : "→ ") + v + " %";
         };
-        poserDelta($("#kpi-contenus-delta"), contenus, contenusAvant);
-        poserDelta($("#kpi-delta"), totalVues, totalAvant);
+        poserDeltaHero($("#kpi-contenus-delta"), contenus, contenusAvant);
+        poserDeltaHero($("#kpi-delta"), totalVues, totalAvant);
 
         // Une courbe a plat sur zero ressemble a un graphe casse : quand
         // il n'y a rien, on l'ecrit.
