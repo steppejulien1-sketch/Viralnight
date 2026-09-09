@@ -1986,6 +1986,18 @@
       .reco-bilan .hero-delta.baisse { color: var(--accent-fort); border-color: rgba(214,40,40,.32); }
       .reco-bilan .hero-delta.plat   { color: var(--ink3); border-color: var(--line2); }
       .reco-bilan-note { font-size: 11.5px; color: var(--ink3); font-variant-numeric: tabular-nums; }
+      /* "pts" appartient au nombre, pas a la phrase : meme corps que le
+         chiffre aurait fait deux nombres cote a cote. */
+      .reco-bilan-unite { font-family: var(--sans); font-size: 14px; font-weight: 700; color: var(--ink3); }
+
+      /* Ce que la regle distribue vraiment. En encre sourde sous sa
+         definition : elle encadre le champ, elle ne lui dispute pas la
+         place -- c'est le champ qu'on vient regler. */
+      .bareme-cout {
+        display: block; margin-top: 3px;
+        font-family: var(--chiffre); font-size: 11.5px; font-weight: 700;
+        letter-spacing: -.01em; color: var(--ink2); font-variant-numeric: tabular-nums;
+      }
 
       /* ⚠️ PAS DE STYLE `.reco-courbe` ICI, ET C'EST VOULU.
          rendreCourbeMini() REECRIT la classe de l'element qu'on lui passe
@@ -3345,6 +3357,16 @@
               <h1 class="ecran-titre">Ton barème</h1>
               <p class="ecran-sous">Ce que rapporte chaque publication de tes clients.</p>
 
+              <!-- Meme periode que les deux autres onglets : choisirPeriode()
+                   balaie tous les `.periode` de la page. -->
+              <div class="periodes" role="tablist" aria-label="Période">
+                <button type="button" class="periode" role="tab" data-jours="7">7 jours</button>
+                <button type="button" class="periode" role="tab" data-jours="30">30 jours</button>
+                <button type="button" class="periode" role="tab" data-jours="90">3 mois</button>
+              </div>
+
+              <div class="reco-bilan" id="bareme-bilan"></div>
+
               <div id="bareme-bandeau"></div>
 
               <div class="carte" id="bareme-liste"></div>
@@ -4590,7 +4612,7 @@
         // Les deux ecrans lisent la meme fenetre : ils se redessinent
         // ensemble, sinon la boutique garderait les chiffres de la
         // periode d'avant sans que rien ne le dise.
-        if (ETAT.data) { rendreDashboard(); rendreRecompenses(); }
+        if (ETAT.data) { rendreDashboard(); rendreRecompenses(); rendreBareme(); }
       }
 
       document.querySelectorAll(".periode").forEach(function (bouton) {
@@ -4766,9 +4788,57 @@
          "Prime au client qui t’a le plus fait voir", "pts"],
       ];
 
+      /* ⚠️ CE QUE CHAQUE REGLE COUTE, AU TARIF ACTUEL.
+         Cet ecran etait un formulaire : quatre champs, aucun moyen de
+         savoir lequel pese. Un gerant qui hesite entre 15 et 25 points au
+         scan n'a pas besoin d'une definition, il a besoin du montant que
+         ca represente chez lui.
+         C'est une SIMULATION, pas un releve : on applique le tarif
+         actuellement enregistre au volume de la periode. C'est exactement
+         la question qu'on se pose avant de changer un chiffre -- "si je
+         mets ca, ca me coute combien ?" -- et c'est pour ca qu'on ne lit
+         pas `points_awarded`, qui porte les anciens tarifs. */
+      function coutsBareme(regles) {
+        var f = fenetres(ETAT.periode);
+        var dans = function (liste, champ) {
+          return (liste || []).filter(function (l) {
+            var t = Date.parse(l[champ] || "");
+            return Number.isFinite(t) && t >= f.debut && t <= f.fin;
+          });
+        };
+        var valides = dans(ETAT.data.submissions, "submitted_at")
+          .filter(function (x) { return x.status === "validated"; });
+        var vues = function (x) { return Number(x.views_count || 0); };
+
+        // "Reel, TikTok ou Short" : tout ce qui n'est pas une story.
+        var videos = valides.filter(function (x) { return x.content_type !== "story"; });
+        var milliers = videos.reduce(function (t, x) { return t + vues(x) / 1000; }, 0);
+        var viraux = valides.filter(function (x) { return vues(x) >= 10000; }).length;
+        var scans = dans(ETAT.data.qrScans, "scanned_at").length;
+        // L'ambassadeur tombe une fois par mois, quelle que soit la fenetre.
+        var mois = Math.max(1, Math.round(ETAT.periode / 30));
+
+        return {
+          videoViewsPerThousand: Math.round(milliers * Number(regles.videoViewsPerThousand || 0)),
+          viralBonus: viraux * Number(regles.viralBonus || 0),
+          qrCheckin: scans * Number(regles.qrCheckin || 0),
+          monthlyAmbassador: mois * Number(regles.monthlyAmbassador || 0),
+        };
+      }
+
       function rendreBareme() {
         var regles = ETAT.data.pointRules || {};
         var inerte = estDemo() ? " disabled" : "";
+        var couts = coutsBareme(regles);
+        var total = Object.keys(couts).reduce(function (t, k) { return t + couts[k]; }, 0);
+
+        var bilan = $("#bareme-bilan");
+        if (bilan) {
+          bilan.innerHTML =
+            '<span class="reco-bilan-lbl">Ce que ton barème distribue</span>' +
+            '<span class="reco-bilan-val">' + nb.format(total) + '<span class="reco-bilan-unite">pts</span></span>' +
+            '<span class="reco-bilan-note">au tarif ci-dessous, sur la période choisie</span>';
+        }
 
         $("#bareme-bandeau").innerHTML = bandeauDemo("ton barème");
         $("#bareme-enregistrer").disabled = estDemo();
@@ -4776,7 +4846,8 @@
         $("#bareme-liste").innerHTML = REGLES_BAREME.map(function (r) {
           return '<div class="bareme-ligne">' +
             '<span class="bareme-txt"><strong>' + escapeHtml(r[2]) + "</strong>" +
-            "<span>" + escapeHtml(r[3]) + "</span></span>" +
+            "<span>" + escapeHtml(r[3]) + "</span>" +
+            '<b class="bareme-cout">' + nb.format(couts[r[0]] || 0) + " pts distribués</b></span>" +
             '<span class="bareme-champ">' +
               '<input type="number" min="0" max="9999" step="5" data-regle="' + r[0] + '" value="' +
                 Number(regles[r[0]] ?? 0) + '"' + inerte + " />" +
