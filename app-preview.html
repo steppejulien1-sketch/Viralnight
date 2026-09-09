@@ -3089,6 +3089,28 @@
          absolu sur le coin haut droit (x 329-359 sur un ecran de 375).
          Sans cette reserve, le coeur venait se glisser dessous -- meme
          collision que sur l'ancienne banniere, a un autre endroit. */
+      /* ⚠️ PETITES, ET QU'ON FAIT DEFILER. Julien : "des petites photos,
+         que ce ne soit pas trop [...] avant c'etait trop imposant."
+         96 px de haut : assez pour reconnaitre une salle, trop peu pour
+         se prendre pour une banniere. Le defilement horizontal permet
+         d'en montrer quatre ou cinq sans manger l'ecran -- c'est la
+         fiche du club qu'on est venu lire, pas sa galerie. */
+      .club-galerie {
+        display: flex; gap: 8px; margin: 12px 0 2px;
+        overflow-x: auto; scrollbar-width: none;
+        /* Les vignettes debordent des marges de la feuille et se calent
+           dessus : une bande qui commence pile au bord du texte a l'air
+           coupee, une bande qui deborde a l'air de continuer. */
+        padding: 0 18px; margin-left: -18px; margin-right: -18px;
+        scroll-snap-type: x proximity;
+      }
+      .club-galerie::-webkit-scrollbar { display: none; }
+      .club-galerie img {
+        flex: 0 0 auto; width: 132px; height: 96px; object-fit: cover;
+        border-radius: 12px; background: var(--s2);
+        scroll-snap-align: start;
+      }
+
       .club-entete {
         display: flex; align-items: center; gap: 14px;
         margin: 2px 0 18px; padding-right: 42px;
@@ -7937,30 +7959,44 @@ function heroClub(c) {
      n'est deposee, et la grande banniere seulement quand il y en a une
      vraie. Deposer le fichier dans public/clubs/ et remplir `photo`
      dans CLUBS suffit a basculer de l'une a l'autre. */
-  if (visuelClub(c).substitut) {
-    return (
-      '<div class="club-entete">' +
-        '<span class="club-entete-rond">' + imgClub(c) + "</span>" +
-        titre +
-        coeur +
-      "</div>"
-    );
-  }
-
-  // Grande photo d'entete avec nom + note incrustes dessus (scrim
-  // degrade), comme une vraie fiche Google/Apple Maps.
+  /* ⚠️ L'ENTETE EST TOUJOURS COMPACTE, MEME AVEC DES PHOTOS.
+     La grande banniere de 190 px, avec le nom incruste dessus, existait
+     des qu'une photo etait deposee. Julien, 09/09/2026 : "je mets la
+     mascotte partout, mais quand on clique on peut voir quelques photos
+     du club [...] des petites photos, pas trop, parce qu'avant c'etait
+     trop imposant."
+     Le badge (la mascotte) est le meme partout, y compris ici ; les
+     photos du club vivent maintenant dans une bande de vignettes, sous
+     l'entete. Voir galerieClub(). */
   return (
-    '<div class="club-hero-photo">' +
-      imgClub(c) +
+    '<div class="club-entete">' +
+      '<span class="club-entete-rond">' + imgClub(c) + "</span>" +
+      titre +
       coeur +
-      '<div class="club-hero-scrim">' +
-        '<div class="club-hero-ligne">' +
-          (c.avatar ? '<span class="club-hero-avatar">' + avatarClub(c) + "</span>" : "") +
-          titre +
-        "</div>" +
-      "</div>" +
     "</div>"
   );
+}
+
+/* La bande de photos du club : quelques vignettes, qu'on fait defiler.
+   Rien du tout s'il n'y en a pas -- ni cadre vide, ni image d'ambiance
+   prise ailleurs (regle du projet : une photo trouvee sur Google
+   appartient a quelqu'un, et une photo de stock se lit comme un
+   mensonge).
+
+   ⚠️ CE QUI MANQUE POUR QUE CA SE REMPLISSE TOUT SEUL : la colonne
+   `establishments.photos` n'existe pas encore en base --
+   supabase/migrations/202609050001_photos_du_club.sql est ecrite et
+   n'a jamais ete passee. Tant qu'elle dort, l'etape 2 du parcours
+   d'installation laisse le gerant deposer ses photos et ne les
+   enregistre pas. En attendant, `photos` peut etre rempli a la main
+   dans CLUBS, comme `photo` l'etait. */
+function galerieClub(c) {
+  var liste = Array.isArray(c.photos) ? c.photos.filter(Boolean) : [];
+  if (!liste.length && c.photo) liste = [c.photo];
+  if (!liste.length) return "";
+  return '<div class="club-galerie">' + liste.slice(0, 8).map(function (src) {
+    return '<img src="' + escapeHtmlSupport(src) + '" alt="" loading="lazy" />';
+  }).join("") + "</div>";
 }
 
 function ouvrirClub(c, src, id) {
@@ -8083,6 +8119,7 @@ function ouvrirClub(c, src, id) {
 
   var html =
     heroClub(c) +
+    galerieClub(c) +
     blocPartenaire +
     '<div class="club-actions-row">' + actions + "</div>" +
     '<div class="club-adresse">' +
