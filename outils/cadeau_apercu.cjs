@@ -242,17 +242,37 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
     // ferme pas : la capture montrait Mirano au lieu du profil.
     document.querySelector("#sh-close")?.click();
     document.querySelector("#vue-amis").hidden = true;
-    const v = document.querySelector("#vue-profil");
-    v.hidden = false;
+    // ⚠️ PASSER PAR L'ONGLET, pas par .hidden = false. Le gestionnaire de
+    // #tab-profil appelle masquerCarteEtBoutique(), qui range le rail des
+    // clubs de la carte. Sans lui, une pastille de club (ronde, noire,
+    // "Mirano") restait posee en bas a gauche PAR-DESSUS l'historique --
+    // et un audit visuel l'a prise pour un bouton flottant de l'appli qui
+    // recouvrait la ligne "Bienvenue +50". Le produit n'a jamais eu ce
+    // defaut ; la capture, si.
+    document.querySelector("#tab-profil").click();
+  });
+  // ⚠️ Le gestionnaire de l'onglet est ASYNCHRONE : il attend getSession()
+  // puis repose #pf-connecte-toi. Tout ecrire dans la meme evaluate se
+  // faisait donc effacer une fraction de seconde plus tard.
+  await pause(900);
+
+  await page.evaluate(() => {
     document.querySelector("#pf-connecte-toi").hidden = true;
     document.querySelector("#pf-contenu").hidden = false;
     document.querySelector("#pf-handle").textContent = "@julien";
     document.querySelector("#pf-avatar-init").textContent = "J";
     document.querySelector("#pf-fid-solde").textContent = "150";
+    // ⚠️ CES MONTANTS DOIVENT RESTER CEUX DE LA BASE. Une capture qui
+    // annonce un chiffre que le produit ne verse pas se relit plus tard
+    // comme un bug du produit : la ligne "Story validee" a porte 80
+    // pendant deux jours (ancien bareme aux vues), et un audit visuel
+    // l'a remontee comme une incoherence de l'appli.
+    //   story_points('story') = 100   ·   montant_bienvenue() = 50
+    //   qr_checkin (bareme gerant) = 15
     const lignes = [
       ["Cadeau du jour", "Mirage · 20:14", 5, false],
       ["Scan du QR", "Mirage · hier", 15, false],
-      ["Story validée", "Mirage · il y a 3 jours", 80, true],
+      ["Story validée", "Mirage · il y a 3 jours", 100, true],
       ["Bienvenue", "Mirage · il y a 4 jours", 50, false],
     ];
     document.querySelector("#pf-histo-liste").innerHTML = lignes

@@ -27,6 +27,7 @@ import struct
 ICI = os.path.dirname(os.path.abspath(__file__))
 CLUB = os.path.join(ICI, "pages-club")
 CLUBBEUR = os.path.join(ICI, "pages-clubbeur")
+CADEAU = os.path.join(ICI, "pages-cadeau")
 OUT = os.path.join(ICI, "noctify-ecrans.html")
 
 # (dossier, fichier, eyebrow, titre, note, marque)
@@ -87,6 +88,33 @@ CLUBBEUR_APPLI = [
      "M\u00eame chose : le contenu vient du compte.", "sans compte"),
     (CLUBBEUR, "08-profil", "Onglet 5", "Profil",
      "M\u00eame chose. Les trois \u00e9crans qui manquent sont ceux qui parlent de la personne.", "sans compte"),
+]
+
+# Les ecrans que l'onglet Recompenses montre UNE FOIS CONNECTE. C'est le
+# vrai code de la prod : seules les valeurs (solde, montant du jour) sont
+# posees a la main, parce qu'elles demanderaient un compte et un scan.
+# Produits par `outils/cadeau_apercu.cjs`, dossier pages-cadeau.
+CLUBBEUR_SESSION = [
+    (CADEAU, "01-bienvenue", "Première venue", "Le bonus de bienvenue",
+     "50 points, une fois par compte, et seulement après avoir scanné le QR d’un club — c’est ce club-là qui les paie.", "valeurs posées"),
+    (CADEAU, "02-cadeau", "Chaque jour", "Le cadeau du jour",
+     "Le montant est annoncé AVANT le clic. L’escalier 2·3·4·5·6·8·20 existe en base mais n’est plus dessiné : tu n’en voulais plus.", "valeurs posées"),
+    (CADEAU, "03-cadeau-salve", "Chaque jour", "Au clic",
+     "La salve, et le solde qui monte. Les confettis sont figés pour la capture : en vrai ils durent moins d’une seconde.", "valeurs posées"),
+    (CADEAU, "04-apres", "Chaque jour", "Après",
+     "La carte se replie au bout de 0,7 s et la boutique reprend la place. Rien n’est écrit à l’écran.", "valeurs posées"),
+    (CADEAU, "05-cadeau-jour7", "Chaque jour", "Le septième jour d’affilée",
+     "20 points, le haut de l’escalier. Un jour sauté renvoie à la première marche.", "valeurs posées"),
+    (CADEAU, "06-aucun-club", "Cas limite", "Sans club scanné",
+     "Personne à qui facturer les points : l’écran le dit au lieu de proposer un bouton qui échouerait.", "valeurs posées"),
+    (CADEAU, "07-boutique", "Onglet 1", "La boutique, remplie",
+     "Quatre récompenses, rien de coupé. Les prix affichés (300 / 600 / 1 200) sont de la donnée de démonstration périmée : un vrai club est créé avec 40 · 60 · 90 · 130.", "prix périmés"),
+    (CADEAU, "08-fiche-club", "Onglet 3", "La fiche d’un club",
+     "Ce qui s’ouvre quand on touche un point sur la carte.", "valeurs posées"),
+    (CADEAU, "09-parrainage", "Onglet 5", "Inviter des amis",
+     "100 points, le gain d’abord, le code en gros. L’écran a longtemps annoncé 150 pendant que le serveur en versait 50.", "valeurs posées"),
+    (CADEAU, "10-historique", "Onglet 5", "Profil — l’historique",
+     "D’où viennent les points, ligne par ligne : scan, story, cadeau, bienvenue, parrainage.", "valeurs posées"),
 ]
 
 
@@ -328,8 +356,8 @@ PAGE = u"""<title>Noctify, \u00e9cran par \u00e9cran</title>
       une capture pour l\u2019agrandir.
     </p>
     <p class="meta">
-      <span>5 septembre 2026</span>
-      <span>22 \u00e9crans</span>
+      <span>9 septembre 2026</span>
+      <span>35 \u00e9crans</span>
       <a href="https://viralnight-koif.vercel.app/club-app.html">club-app</a>
       <a href="https://viralnight-koif.vercel.app/app-preview.html?app=1">app-preview</a>
     </p>
@@ -389,12 +417,23 @@ __CLUB_APPLI__
 __CLUBBEUR__
       </div>
     </div>
+
+    <div class="groupe">
+      <div class="groupe-tete">
+        <h3>Avec un compte</h3>
+        <span class="compte">10 écrans</span>
+        <p>Le même code, une fois connecté : le cadeau du jour, la boutique remplie, le parrainage, l’historique. Seules les valeurs sont posées à la main.</p>
+      </div>
+      <div class="planche">
+__CLUBBEUR_SESSION__
+      </div>
+    </div>
   </div>
 
   <div class="reserve">
     <h2>Ce que ces captures ne montrent pas</h2>
     <ul>
-      <li><b>Trois \u00e9crans clubbeur manquent : Story, Amis, Profil.</b> Ils ne se remplissent qu\u2019avec un compte, et je n\u2019en cr\u00e9e pas. R\u00e9compenses et Carte se lisent, elles, avec la cl\u00e9 publique. Pour les trois autres : soit tu me passes un compte de test, soit on lance <code>06-pwa-clubbeurs/outils/parcours_clubbeur.cjs</code>, qui fabrique un compte jetable et le nettoie.</li>
+      <li><b>Deux \u00e9crans clubbeur manquent : Story et Amis.</b> Ils ne se remplissent qu\u2019avec un vrai compte, et je n\u2019en cr\u00e9e pas. Les dix \u00e9crans \u00ab avec un compte \u00bb sont le vrai code de la production, avec le solde et le montant du jour pos\u00e9s \u00e0 la main : le dessin est juste, les chiffres sont choisis. R\u00e9compenses et Carte se lisent, elles, avec la cl\u00e9 publique. Pour les trois autres : soit tu me passes un compte de test, soit on lance <code>06-pwa-clubbeurs/outils/parcours_clubbeur.cjs</code>, qui fabrique un compte jetable et le nettoie.</li>
       <li><b>Les chiffres du c\u00f4t\u00e9 g\u00e9rant sont ceux de la d\u00e9monstration.</b> Sans session, l\u2019appli retombe sur un club fictif \u2014 Mirage Club Brussels, 249 480 abonn\u00e9s touch\u00e9s. Un vrai club voit les siens.</li>
       <li><b>L\u2019\u00e9cran 06 de l\u2019installation est vide.</b> L\u2019affiche A4 et le bilan se fabriquent \u00e0 partir du club connect\u00e9.</li>
       <li><b>Les photos de l\u2019\u00e9tape 02 sont des exemples.</b> Ce sont les deux images d\u2019ambiance du d\u00e9p\u00f4t, pos\u00e9es l\u00e0 pour montrer la forme de l\u2019\u00e9cran une fois rempli.</li>
@@ -442,6 +481,7 @@ __CLUBBEUR__
 page = (PAGE
         .replace("__INSTALLATION__", figures(INSTALLATION, 'width="360" height="760"'))
         .replace("__CLUB_APPLI__", figures(CLUB_APPLI, 'width="360" height="760"'))
-        .replace("__CLUBBEUR__", figures(CLUBBEUR_APPLI, 'width="390" height="844"')))
+        .replace("__CLUBBEUR__", figures(CLUBBEUR_APPLI, 'width="390" height="844"'))
+        .replace("__CLUBBEUR_SESSION__", figures(CLUBBEUR_SESSION, 'width="390" height="844"')))
 io.open(OUT, "w", encoding="utf-8").write(page)
 print("planche ecrite :", OUT, round(os.path.getsize(OUT) / 1024), "Ko")
