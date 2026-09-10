@@ -1284,6 +1284,27 @@
       .pa-seule .pa-jauge, .pa-seule .pa-compteur { visibility: hidden; }
       .pa-seule .pa-fleche { display: none; }
 
+      /* ---- L'ARRIVEE (etape 1), au gabarit de l'accueil clubbeur ----
+         Voir poserPas() pour le pourquoi. Ce qui change, et rien d'autre :
+         le compteur et la jauge se taisent, la carte creme s'efface (le
+         logo se pose a meme la page, comme cote clubbeur), et le titre
+         passe au centre. Les six etapes suivantes ne bougent pas d'un
+         pixel -- c'est une classe sur #parcours, retiree des l'etape 2. */
+      .pa-arrivee .pa-jauge, .pa-arrivee .pa-compteur { visibility: hidden; }
+      .pa-arrivee .pa-bandeau {
+        height: 150px; margin: 6px 20px 2px; padding: 0;
+        background: none; border: 0;
+        align-items: center; justify-content: center;
+      }
+      .pa-arrivee .pa-mascotte {
+        width: min(292px, 100%); height: 100%; margin-bottom: 0;
+      }
+      .pa-arrivee .pa-mascotte img { object-position: center; }
+      .pa-arrivee .pa-titre {
+        text-align: center; font-size: 22px; letter-spacing: -.03em; line-height: 1.2;
+        margin-bottom: 8px;
+      }
+
       .pa-corps { flex: 1 1 auto; overflow-y: auto; }
 
       /* Ce qui glisse d'une etape a l'autre. La barre du haut et le pied
@@ -2505,7 +2526,7 @@
 
                   <div class="pa-texte">
                     <!-- 1 · Le compte -->
-                    <section class="pa-etape" data-pas="1" data-mascotte="/mascotte/verre-salut.webp" hidden>
+                    <section class="pa-etape" data-pas="1" data-mascotte="/noctify-logo-verre-detoure.webp" hidden>
                       <h1 class="pa-titre">Ton compte.</h1>
                       <p class="pa-sous">Dix secondes. Tu règles ton club juste après.</p>
 
@@ -6086,6 +6107,15 @@
         $("#pa-jauge").querySelectorAll("span").forEach(function (trait, i) {
           trait.classList.toggle("faite", i < cible);
         });
+
+        /* ⚠️ L'ETAPE 1 EST UN ECRAN D'ARRIVEE, PAS UNE PREMIERE MARCHE.
+           Julien, 10/09/2026 : "l'ecran d'arrivee du gerant reprend celui
+           du clubbeur". Cote clubbeur on arrive sur : le titre centre, le
+           logo pose au milieu SANS cadre, le texte, les boutons.
+           Pas de compteur "01 / 06" a ce moment-la : le gerant n'a pas
+           encore de compte, il n'a rien commence. Le parcours -- et son
+           compteur -- demarre a l'etape 2. */
+        $("#parcours").classList.toggle("pa-arrivee", cible === 1);
 
         rendreMascotte(cible);
 

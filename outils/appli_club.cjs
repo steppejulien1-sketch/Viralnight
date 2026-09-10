@@ -50,6 +50,10 @@ function etapeVisible(n) {
     s.hidden = Number(s.dataset.pas) !== n;
   });
   document.querySelector("#pa-compteur-n").textContent = String(n).padStart(2, "0");
+  // L'etape 1 est un ecran d'arrivee : poserPas() lui pose cette classe,
+  // qui efface le compteur et la carte creme. Sans elle la capture montre
+  // un ecran que le produit n'affiche jamais.
+  document.querySelector("#parcours").classList.toggle("pa-arrivee", n === 1);
   [...document.querySelectorAll("#pa-jauge span")].forEach((s, i) => {
     s.classList.toggle("faite", i < n);
   });
