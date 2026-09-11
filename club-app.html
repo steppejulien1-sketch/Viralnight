@@ -1291,18 +1291,41 @@
          passe au centre. Les six etapes suivantes ne bougent pas d'un
          pixel -- c'est une classe sur #parcours, retiree des l'etape 2. */
       .pa-arrivee .pa-jauge, .pa-arrivee .pa-compteur { visibility: hidden; }
-      .pa-arrivee .pa-bandeau {
-        height: 150px; margin: 6px 20px 2px; padding: 0;
-        background: none; border: 0;
-        align-items: center; justify-content: center;
-      }
-      .pa-arrivee .pa-mascotte {
-        width: min(292px, 100%); height: 100%; margin-bottom: 0;
-      }
-      .pa-arrivee .pa-mascotte img { object-position: center; }
+      /* Le bandeau creme est partage par les six etapes ; ici le logo vit
+         dans l'etape, sous le titre. Le masquer est ce qui permet de
+         mettre le titre EN PREMIER, comme cote clubbeur. */
+      .pa-arrivee .pa-bandeau { display: none; }
+
+      /* La colonne, pour que le `margin: auto` du logo ait de l'espace a
+         prendre -- c'est lui qui pousse le bloc texte + boutons en bas,
+         exactement comme .vue-accueil cote clubbeur. Scope a .pa-arrivee :
+         les six autres etapes gardent leur flux normal. */
+      .pa-arrivee .pa-corps { display: flex; flex-direction: column; }
+      .pa-arrivee .pa-scene { flex: 1 1 auto; display: flex; flex-direction: column; }
+      .pa-arrivee .pa-texte { flex: 1 1 auto; display: flex; flex-direction: column; }
+      .pa-arrivee .pa-etape[data-pas="1"] { flex: 1 1 auto; display: flex; flex-direction: column; }
+
+      /* Les trois valeurs viennent telles quelles de app-preview.html
+         (.ac-title, .ac-mascot, .ac-lead). Ne pas les "harmoniser" avec
+         le reste du parcours : c'est justement l'ecart qui etait le
+         probleme. */
       .pa-arrivee .pa-titre {
-        text-align: center; font-size: 22px; letter-spacing: -.03em; line-height: 1.2;
-        margin-bottom: 8px;
+        /* 12 px de plancher sous le titre. Le `margin: auto` du logo
+           tombe a zero quand il n'y a pas d'espace libre a prendre -- et
+           il y en a moins ici que cote clubbeur, qui n'a ni champ mot de
+           passe ni bascule "j'ai deja un compte". Sans ce plancher, le
+           logo se colle au titre sur un ecran court. */
+        margin: 0 0 12px; font-size: 22px; font-weight: 800; letter-spacing: -.03em;
+        line-height: 1.2; text-align: center;
+      }
+      .pa-logo {
+        width: min(292px, 100%); aspect-ratio: 1 / .53;
+        margin: auto auto 0; align-self: center; overflow: hidden;
+      }
+      .pa-logo img { display: block; width: 100%; height: auto; margin-top: -21%; }
+      .pa-arrivee .pa-sous {
+        margin: 22px 0 20px; font-size: 14.5px; font-weight: 500;
+        letter-spacing: -.01em; line-height: 1.45; color: var(--ink2); max-width: none;
       }
 
       .pa-corps { flex: 1 1 auto; overflow-y: auto; }
@@ -2526,8 +2549,28 @@
 
                   <div class="pa-texte">
                     <!-- 1 · Le compte -->
+                    <!-- ⚠️ CET ECRAN EST LA COPIE DE L'ACCUEIL CLUBBEUR.
+                         Julien, 11/09/2026 : "l'accueil de l'app des
+                         gerants, fais-la pareil que celle des clubbeurs,
+                         genre tout pareil, je veux pas un truc
+                         different."
+                         Meme ordre (titre centre, logo, texte, boutons),
+                         memes valeurs (22/800/-.03em pour le titre,
+                         14.5/500 pour le texte, le logo recadre en bande
+                         par aspect-ratio 1/.53 et margin-top -21%).
+                         Le bandeau creme partage par les six etapes est
+                         masque ici : le logo vit dans l'etape elle-meme,
+                         sinon il resterait au-dessus du titre.
+                         `data-mascotte` ne sert donc plus a rien sur
+                         cette etape, mais reste : rendreMascotte() le lit
+                         pour toutes. -->
                     <section class="pa-etape" data-pas="1" data-mascotte="/noctify-logo-verre-detoure.webp" hidden>
-                      <h1 class="pa-titre">Ton compte.</h1>
+                      <h1 class="pa-titre">Bienvenue sur Noctify</h1>
+
+                      <p class="pa-logo">
+                        <img src="/noctify-logo-verre-detoure.webp" alt="Noctify" width="640" height="640">
+                      </p>
+
                       <p class="pa-sous">Dix secondes. Tu règles ton club juste après.</p>
 
                       <div class="accueil-actions pa-arrive">
