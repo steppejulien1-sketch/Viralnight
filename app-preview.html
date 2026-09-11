@@ -3022,8 +3022,19 @@
          Classe posee par proposerNotifications(). */
       .screen.invite-notif .app { padding-bottom: 208px; }
 
+      /* ⚠️ VOILE CLAIR, PAS NOIR. Julien, 11/09/2026 : "pourquoi y a un
+         des cocktails qui est en noir, laisse en blanc."
+         C'etait `rgba(3,4,6,.7)` -- 70 % de noir sur toute la page. Sous
+         une feuille ouverte, la boutique virait au gris et le cocktail
+         rose derriere devenait bordeaux : on croyait a un deuxieme
+         dessin, plus sombre, alors que c'est le meme.
+         L'appli est claire : ce qui doit reculer, recule vers le BLANC.
+         La feuille garde son ombre portee (--ombre-3), c'est elle qui
+         fait la separation, pas l'assombrissement du fond. */
       .voile {
-        position: absolute; inset: 0; z-index: 30; background: rgba(3,4,6,.7);
+        position: absolute; inset: 0; z-index: 30;
+        background: rgba(255,255,255,.66);
+        -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
         opacity: 0; pointer-events: none; transition: opacity .3s ease;
       }
       .voile.on { opacity: 1; pointer-events: auto; }
@@ -5293,9 +5304,14 @@
             </section>
 
             <section class="sec">
+              <!-- ⚠️ PAS DE COMPTEUR A COTE DU TITRE. Julien, 11/09/2026 :
+                   "retire a cote de Recompenses le 4."
+                   Un "4" nu au bout d'un titre ne dit ni de quoi il parle
+                   ni quoi en faire -- et la reponse est juste en dessous,
+                   dans la grille, ou les quatre cartes se comptent d'un
+                   coup d'oeil. -->
               <div class="sec-head">
                 <h2>Récompenses</h2>
-                <span class="sub" id="g-compte"></span>
               </div>
               <div class="grille" id="liste"></div>
             </section>
@@ -11482,12 +11498,6 @@ function rendreListe() {
   // directement.
   var liste = RECOMPENSES;
 
-  // Le titre de la section dit deja "Recompenses" : le repeter juste a
-  // cote donnait "Recompenses ... 4 recompenses" sur la meme ligne. Le
-  // chiffre seul suffit, c'est ce que fait Starbucks au-dessus de sa
-  // liste ("Redeem with Stars", puis les paliers nus).
-  $("#g-compte").textContent = liste.length;
-
   liste.forEach(function (r, index) {
     var loin = r.cout > ETAT.solde;
     var epuise = r.stock <= 0;
@@ -11699,10 +11709,12 @@ function ouvrirRecompense(item, src) {
     note = "Le club recharge ses stocks chaque soirée.";
   } else if (loin) {
     cta = '<button class="sheet-cta" type="button" disabled>Encore ' + nb(item.cout - ETAT.solde) + " pts</button>";
-    // Le montant manquant est deja sur le bouton juste au-dessus : la note
-    // n'a plus besoin de le repeter, seulement d'expliquer comment gagner
-    // les points — sinon le meme chiffre s'affiche deux fois cote a cote.
-    note = "Une story taguée rapporte " + nb(FORFAIT_STORY_DEFAUT) + " pts.";
+    /* ⚠️ PAS DE NOTE ICI. Julien, 11/09/2026 : "retire le une story
+       taguee rapporte 50 points".
+       Le bouton juste au-dessus dit deja ce qu'il manque ("Encore 300
+       pts") ; la ligne d'en-dessous expliquait comment les gagner, et
+       ramenait un tarif sur un ecran qui parle d'une recompense. */
+    note = "";
   } else if (item.cout === 0 && item === OFFRE && !OFFRE.reelle) {
     // Rien a echanger en base : un bouton actif qui echoue est pire
     // qu'un bouton eteint qui explique.
@@ -11725,7 +11737,7 @@ function ouvrirRecompense(item, src) {
       return "<li>" + picto("check") + "<span>" + r + "</span></li>";
     }).join("") + "</ul>" +
     cta +
-    '<p class="sheet-note">' + note + "</p>";
+    (note ? '<p class="sheet-note">' + note + "</p>" : "");
 
   ouvrirFeuille(html, "#sh-cta, .sheet-cta");
 
