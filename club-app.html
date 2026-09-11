@@ -2659,27 +2659,26 @@
 
                         <p class="ac-sep">ou par email</p>
 
+                        <!-- ⚠️ UN SEUL CHAMP, PAS DE MOT DE PASSE. Julien,
+                             11/09/2026 : "je veux tout pareil, rien qui
+                             change." Le clubbeur entre par LIEN MAGIQUE :
+                             il tape son email, il recoit un lien, il
+                             clique. Sans passer le gerant au meme
+                             mecanisme, l'ecran gardait deux lignes de plus
+                             (mot de passe + sa regle) et une bascule
+                             "j'ai deja un compte".
+                             S'inscrire et se reconnecter deviennent le
+                             MEME geste -- c'est ce qui permet de retirer
+                             la bascule, pas un choix cosmetique.
+                             ⚠️ Les comptes existants ne perdent rien : le
+                             lien magique ouvre le meme compte, et
+                             connexion.html garde la connexion par mot de
+                             passe pour qui la prefere. -->
                         <form id="porte-form" style="display:grid;gap:10px">
-                          <input type="text" class="ac-input" id="porte-club" placeholder="Nom de ton club" autocomplete="organization" hidden />
-                          <input type="email" class="ac-input" id="porte-email" placeholder="ton@email.com" autocomplete="username" required />
-                          <input type="password" class="ac-input" id="porte-password" placeholder="Mot de passe" autocomplete="new-password" required />
-                          <p class="ac-aide" id="porte-aide-mdp">8 caractères minimum, dont un chiffre.</p>
-                          <button type="submit" class="ac-btn ac-btn-marque" id="porte-submit">Créer mon compte</button>
+                          <input type="email" class="ac-input" id="porte-email" placeholder="ton@email.com" autocomplete="email" required />
+                          <button type="submit" class="ac-btn ac-btn-marque" id="porte-submit">Continuer avec l'email</button>
                           <p class="ac-aide" id="porte-form-msg"></p>
                         </form>
-
-                        <p class="ac-bascule-bloc">
-                          <!-- CET ECRAN SERT A CREER UN CLUB. C'est le
-                               premier ecran d'un gerant qui n'a encore
-                               rien : lui presenter "Se connecter" en gros
-                               bouton noir et la creation en petit lien
-                               demandait de corriger le systeme avant de
-                               pouvoir s'en servir. Le retour est intact --
-                               la bascule ci-dessous, et les deux endroits
-                               qui forcent modeInscription = false (bandeau
-                               "se connecter", et sortie de session). -->
-                          <button type="button" class="ac-bascule" id="porte-bascule">J'ai déjà un compte, me connecter</button>
-                        </p>
                         <p class="ac-aide" id="accueil-msg"></p>
                       </div>
                     </section>
@@ -4068,35 +4067,20 @@
         }
       }
 
+      /* ⚠️ IL N'Y A PLUS DE "MODE". Depuis le passage au lien magique,
+         s'inscrire et se reconnecter sont le MEME geste : on tape son
+         email, on recoit un lien. La fonction ne garde qu'une chose --
+         le mot d'accueil de l'ecran `porte`, celui qui s'affiche quand
+         une session existe sans club derriere. `modeInscription` est
+         conserve parce que deux endroits le remettent a faux avant
+         d'appeler cette fonction ; il ne pilote plus rien d'autre. */
       function majModePorte() {
-        $("#porte-club").hidden = true;
-        $("#porte-club").required = false;
-        $("#porte-aide-mdp").hidden = !modeInscription;
-        $("#porte-password").setAttribute("autocomplete", modeInscription ? "new-password" : "current-password");
-        $("#porte-submit").textContent = modeInscription ? "Créer mon compte" : "Se connecter";
-        $("#porte-bascule").textContent = modeInscription
-          ? "J'ai déjà un compte, me connecter"
-          : "Pas encore de compte ? En créer un";
-        $("#porte-message").textContent = modeInscription
-          ? "Crée le compte de ton club."
-          : "Connecte-toi avec ton compte club.";
-
-        // L'inscription est ouverte depuis le 05/09/2026 : plus de
-        // bouton desactive, plus de message qui renvoie chercher un lien.
-        // Un lien reste utile quand il y en a un -- il porte le nom du
-        // club prepare par l'admin -- mais il n'est plus exige.
+        var message = $("#porte-message");
+        if (message) message.textContent = "Connecte-toi avec ton compte club.";
         $("#porte-submit").disabled = false;
         $("#porte-form-msg").style.display = "none";
       }
 
-      $("#porte-bascule").addEventListener("click", function () {
-        modeInscription = !modeInscription;
-        majModePorte();
-      });
-
-      // Meme regle qu'auth.js : 8 caracteres et un chiffre. Verifiee ici
-      // pour dire pourquoi avant l'aller-retour reseau -- Supabase renvoie
-      // un message en anglais, trop technique pour un gerant de club.
       function motDePasseValide(valeur) {
         return valeur.length >= 8 && /\d/.test(valeur);
       }
@@ -4106,7 +4090,6 @@
         var bouton = $("#porte-submit");
         var msg = $("#porte-form-msg");
         var email = $("#porte-email").value.trim();
-        var password = $("#porte-password").value;
 
         function dire(texte, erreur) {
           msg.style.display = "block";
@@ -4114,59 +4097,40 @@
           msg.textContent = texte;
         }
 
-        // Le nom du club ne se demande plus ici : il se saisit a
-        // l'etape 2, avec la ville et la photo.
-        if (modeInscription && !motDePasseValide(password)) {
-          return dire("Mot de passe trop simple : 8 caractères minimum, dont un chiffre.", true);
+        if (!email || email.indexOf("@") === -1) {
+          return dire("Adresse email invalide.", true);
         }
 
+        /* ⚠️ LIEN MAGIQUE, PAS DE MOT DE PASSE. Meme mecanique que
+           l'appli clubbeur : un seul champ, un lien recu par email.
+           S'INSCRIRE ET SE RECONNECTER SONT LE MEME GESTE -- c'est pour
+           ca qu'il n'y a plus ni bascule ni regle de mot de passe a
+           afficher. Supabase cree le compte si l'adresse est inconnue,
+           et ouvre le compte existant sinon.
+
+           Le club, lui, ne se cree toujours pas ici : au retour du lien
+           il y a une session, demarrer() enchaine sur l'etape 2, qui
+           demande le nom et la ville et cree l'etablissement avec.
+
+           `emailRedirectTo` passe par urlDeRetour() pour REPORTER
+           l'invitation : sans ca, le gerant qui ouvre le lien depuis un
+           autre appareil arrive sur une appli qui ne sait plus de quelle
+           invitation il vient. */
         var libelle = bouton.textContent;
         bouton.disabled = true;
-        bouton.textContent = modeInscription ? "Création…" : "Connexion…";
+        bouton.textContent = "Envoi…";
         msg.style.display = "none";
 
-        try {
-          if (modeInscription) {
-            var { data, error: erreurInscription } = await supabase.auth.signUp({
-              email: email,
-              password: password,
-              options: { emailRedirectTo: urlDeRetour() },
-            });
-            if (erreurInscription) throw erreurInscription;
-
-            // Pas de session : Supabase attend la confirmation par email.
-            // On ne peut donc pas encore creer l'etablissement (aucun jeton
-            // pour appeler l'API) -- on le dira a la premiere connexion.
-            if (!data.session) {
-              dire("Compte créé. Ouvre l'email envoyé à " + email + " pour confirmer, puis connecte-toi.", false);
-              modeInscription = false;
-              majModePorte();
-              return;
-            }
-
-            // Le club ne se cree plus ici. On vient d'obtenir un compte ;
-            // demarrer() enchaine sur l'etape 2, qui demande le nom, la
-            // ville et la photo, et cree le club avec les trois.
-          } else {
-            var { error: erreurConnexion } = await supabase.auth.signInWithPassword({
-              email: email,
-              password: password,
-            });
-            if (erreurConnexion) throw erreurConnexion;
-          }
-        } catch (error) {
-          bouton.disabled = false;
-          bouton.textContent = libelle;
-          return dire(traduireErreurConnexion(error), true);
-        }
+        var { error } = await supabase.auth.signInWithOtp({
+          email: email,
+          options: { emailRedirectTo: urlDeRetour() },
+        });
 
         bouton.disabled = false;
         bouton.textContent = libelle;
 
-        // On reste sur CETTE page (jamais de redirection vers
-        // connexion.html/app.html) -- on recharge juste les vraies donnees.
-        PORTE.hidden = true;
-        await demarrer();
+        if (error) return dire(traduireErreurConnexion(error), true);
+        dire("Lien envoyé à " + email + ". Ouvre-le sur ce téléphone pour continuer.", false);
       });
 
       /* ---- Ecran d'arrivee Instagram ----
