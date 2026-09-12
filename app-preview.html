@@ -2510,11 +2510,22 @@
       .parrain-val { font-size: calc(13.5 * var(--u)); font-weight: 600; color: var(--ink3); white-space: nowrap; }
       .parrain-chev { width: 16px; height: 16px; fill: none; stroke: var(--ink3); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
-      /* Le filet pleine largeur qui separe le haut du catalogue. */
-      .sec-filet { border: 0; height: 1px; margin: 26px 0 0; background: var(--line); }
+      /* ---- DANS STORY : la carte d'intro et la ligne de parrainage ---- */
+      .story-intro { margin: 0 0 16px; text-align: center; }
+      .story-intro .gagne-carte { padding: 20px 18px 18px; }
+      .story-intro .gagne-sous { margin-bottom: 0; }
+      .story-parrain { margin: 16px 0 0; text-align: left; }
+      .story-parrain .parrain-ligne { margin-top: 0; }
 
-      /* ---- LA SECTION TITREE ("NEW DROP") ---- */
-      .sec-drop { margin-top: 24px; }
+      /* ---- LA BOUTIQUE PAR BAR ----
+         Un filet pleine largeur entre deux bars, comme entre deux sections
+         de DUSK. */
+      .sec-bars { margin-top: 22px; }
+      .bar-section { position: relative; }
+      .bar-section + .bar-section { margin-top: 4px; padding-top: 22px; }
+      .bar-section + .bar-section::before {
+        content: ""; position: absolute; top: 0; left: -20px; right: -20px; height: 1px; background: var(--line);
+      }
       .drop-titre {
         display: flex; align-items: center; gap: 8px; margin: 0;
         font-size: calc(17 * var(--u)); font-weight: 800; letter-spacing: .06em;
@@ -2571,15 +2582,9 @@
         background: var(--socle); border-radius: 6px;
         box-shadow: inset 0 0 0 1px var(--line);
       }
-      /* Le logo de la marque en tuile, a cheval sur le bas de l'image
-         (DUSK : "AWKN"). Chez nous, le club : sa photo, sinon le verre. */
-      .reco-club {
-        position: absolute; left: 8px; bottom: -16px; z-index: 2;
-        width: 40px; height: 40px; border-radius: 6px; overflow: hidden;
-        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
-        box-shadow: 0 0 0 2px #ffffff, 0 4px 10px -4px rgba(16,18,22,.4);
-      }
-      .reco-club img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      /* Plus de tuile du club sur chaque image : la section porte deja le
+         nom du bar. Julien : "ne mets pas a chaque fois mon petit logo en
+         dessous". */
       /* La valeur, posee SUR l'image, comme DUSK ("500 Points" en haut a
          droite). Pastille sombre et translucide : sur un dessin clair elle
          se detache sans avoir besoin de couleur, et elle ne cache jamais
@@ -2653,8 +2658,7 @@
       .carte-reco .corps {
         position: relative;
         display: flex; flex-direction: column; flex: 1;
-        /* 26 px en haut : la tuile du club deborde de 16 px sous l'image. */
-        padding: 26px 2px 0;
+        padding: 10px 2px 0;
       }
       /* ⚠️ HAUTEUR RESERVEE POUR DEUX LIGNES. "Table offerte + bouteille"
          passe a la ligne, les trois autres non : le prix de cette carte
@@ -4667,7 +4671,41 @@
              feuille du bas. -->
         <div class="vue-story" id="vue-story" hidden>
           <h1 class="va-title">Poster ma story</h1>
+          <!-- ⚠️ LA CARTE "DES POINTS A CHAQUE STORY" VIT ICI. Julien,
+               13/09/2026, en la voyant en tete de la boutique : "ce n'est
+               pas ici que c'est cense etre, c'est dans Story". C'est la
+               page ou l'on poste : la regle du jeu se lit la ou on la joue.
+               Sans le bouton noir "Poster ma story" qu'elle portait dans la
+               boutique -- le formulaire est juste en dessous. -->
+          <div class="story-intro">
+            <div class="gagne-carte">
+              <svg class="gagne-ico" viewBox="0 0 64 52" aria-hidden="true">
+                <rect x="18" y="3" width="28" height="46" rx="5"/>
+                <path d="M28 7.5h8"/>
+                <rect x="24" y="15" width="7" height="7" rx="1"/><rect x="33" y="15" width="7" height="7" rx="1"/><rect x="24" y="24" width="7" height="7" rx="1"/>
+                <path d="M34 25h2M39 25v2M34 29h6M39 31v1"/>
+                <path d="M26 40h12"/>
+              </svg>
+              <p class="gagne-titre">Des points à chaque story taguée dans ton club</p>
+              <p class="gagne-sous">Validée par le club, créditée sur ton solde. <strong>Rien à payer</strong>, jamais.</p>
+              <div class="gagne-reseaux" aria-label="Instagram et TikTok">
+                <span class="reseau reseau-ig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></svg></span>
+                <span class="reseau reseau-tt" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3.5v11.2a3.8 3.8 0 1 1-3.8-3.8"/><path d="M14 3.5c.4 2.6 2.3 4.4 5 4.6"/></svg></span>
+              </div>
+            </div>
+
+          </div>
           <div id="story-page-corps"></div>
+          <!-- "Inviter des amis", meme demande : dans Story plutot que dans
+               la boutique. -->
+          <div class="story-parrain">
+            <button type="button" class="parrain-ligne" id="story-inviter">
+              <svg class="parrain-ico" viewBox="0 0 40 32" aria-hidden="true"><rect x="3" y="7" width="34" height="22" rx="2.5"/><path d="m3.8 8.6 16.2 12 16.2-12"/><path class="parrain-coeur" d="M20 13.6c-1.3-2.4-5-2-5 .8 0 2.2 2.6 3.7 5 5.8 2.4-2.1 5-3.6 5-5.8 0-2.8-3.7-3.2-5-.8z"/></svg>
+              <span class="parrain-txt">Inviter des amis</span>
+              <span class="parrain-val"><span class="js-montant-parrainage">100</span> points</span>
+              <svg class="parrain-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+          </div>
         </div>
 
         <!-- ECRAN FICHE GOOGLE -- ouvre la fiche Google du club en
@@ -5664,51 +5702,7 @@
               </section>
             </section>
 
-            <!-- ⚠️ LA BOUTIQUE FACON DUSK. Julien, 12/09/2026 : "attaque-toi a
-                 la boutique, mais facon DUSK". Sur sa capture de l'onglet
-                 Rewards de DUSK, dans l'ordre : le titre et l'encadre de
-                 points ; une grande carte blanche qui dit COMMENT on gagne
-                 (chez eux : "Add a card", un pictogramme au trait, une phrase
-                 en capitales espacees, une ligne rassurante, un bouton noir,
-                 les logos des cartes acceptees) ; une ligne "Refer a friend
-                 for 500 points" ; un filet ; puis une section titree ("NEW
-                 DROP") avec les recompenses en rangee horizontale.
-                 Chez nous on ne relie pas de carte bancaire : on poste une
-                 story. La carte dit donc ca, et ses logos sont ceux des
-                 reseaux ou la story compte (Instagram, TikTok).
-                 La phrase NOMME ce qui rapporte, elle ne donne pas d'ordre
-                 ("Poste ta story pour gagner..." est le registre deja refuse,
-                 voir le ton de l'interface). -->
-            <section class="sec">
-              <div class="gagne-carte">
-                <svg class="gagne-ico" viewBox="0 0 64 52" aria-hidden="true">
-                  <rect x="18" y="3" width="28" height="46" rx="5"/>
-                  <path d="M28 7.5h8"/>
-                  <rect x="24" y="15" width="7" height="7" rx="1"/><rect x="33" y="15" width="7" height="7" rx="1"/><rect x="24" y="24" width="7" height="7" rx="1"/>
-                  <path d="M34 25h2M39 25v2M34 29h6M39 31v1"/>
-                  <path d="M26 40h12"/>
-                </svg>
-                <p class="gagne-titre">Des points à chaque story taguée dans ton club</p>
-                <p class="gagne-sous">Validée par le club, créditée sur ton solde. <strong>Rien à payer</strong>, jamais.</p>
-                <button type="button" class="gagne-btn" id="gagne-story">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/></svg>
-                  Poster ma story
-                </button>
-                <div class="gagne-reseaux" aria-label="Instagram et TikTok">
-                  <span class="reseau reseau-ig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></svg></span>
-                  <span class="reseau reseau-tt" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3.5v11.2a3.8 3.8 0 1 1-3.8-3.8"/><path d="M14 3.5c.4 2.6 2.3 4.4 5 4.6"/></svg></span>
-                </div>
-              </div>
 
-              <button type="button" class="parrain-ligne" id="boutique-inviter">
-                <svg class="parrain-ico" viewBox="0 0 40 32" aria-hidden="true"><rect x="3" y="7" width="34" height="22" rx="2.5"/><path d="m3.8 8.6 16.2 12 16.2-12"/><path class="parrain-coeur" d="M20 13.6c-1.3-2.4-5-2-5 .8 0 2.2 2.6 3.7 5 5.8 2.4-2.1 5-3.6 5-5.8 0-2.8-3.7-3.2-5-.8z"/></svg>
-                <span class="parrain-txt">Inviter des amis</span>
-                <span class="parrain-val"><span class="js-montant-parrainage">100</span> points</span>
-                <svg class="parrain-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-              </button>
-            </section>
-
-            <hr class="sec-filet" />
 
             <!-- Retire le 03/09/2026. Julien : "retire le un cocktail
                  offert en dessous des points, tu n'ecris rien en
@@ -5733,16 +5727,17 @@
               <div id="liste-soir"></div>
             </section>
 
-            <!-- La section titree de DUSK ("NEW DROP" + une phrase), en
-                 rangee horizontale. Le titre porte le nom du club courant :
-                 c'est le catalogue de CE club. -->
-            <section class="sec sec-drop">
-              <h2 class="drop-titre">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>
-                <span id="drop-club">Au Mirano</span>
-              </h2>
-              <p class="drop-sous">À échanger au bar ou à l’entrée, le soir même.</p>
-              <div class="grille" id="liste"></div>
+            <!-- ⚠️ LA BOUTIQUE, C'EST L'ENDROIT DES BARS. Julien, 13/09/2026 :
+                 "il faut que ce soit vraiment l'endroit des bars [...] fais
+                 comme s'il y avait plusieurs bars, affiche des recompenses de
+                 plusieurs bars [...] qu'on puisse defiler les recompenses, et
+                 que les bars montres soient les bars proches de nous".
+                 Une section par bar, du plus proche au plus loin : le nom en
+                 capitales, le genre de lieu et la distance, puis SES
+                 recompenses en rangee qui glisse (le "NEW DROP" de DUSK, une
+                 fois par bar). Rempli par rendreListe(). -->
+            <section class="sec sec-bars">
+              <div id="liste"></div>
             </section>
 
             <!-- ⚠️ MASQUEE TANT QU'IL N'Y A PAS DE BON. Le titre
@@ -9495,7 +9490,7 @@ async function ouvrirInvitation(depuis) {
   $("#va-contenu").hidden = false;
   ouvrirPageAmis(session);
   var retour = $("#va-back");
-  retour.setAttribute("aria-label", depuisProfil ? "Retour au profil" : "Retour aux récompenses");
+  retour.setAttribute("aria-label", depuisProfil ? "Retour au profil" : "Retour");
   retour.onclick = function () {
     fermerAmis();
     if (depuisProfil) VUE_PROFIL.hidden = false;
@@ -10160,8 +10155,7 @@ function dateCourte(iso) {
 /* "Inviter des amis", dans les parametres : la page d'invitation (gain,
    QR, code, partage du lien), celle de l'ancien onglet Amis. */
 $("#pf-inviter")?.addEventListener("click", function () { ouvrirInvitation("profil"); });
-$("#boutique-inviter")?.addEventListener("click", function () { ouvrirInvitation("boutique"); });
-$("#gagne-story")?.addEventListener("click", function () { TAB_STORY.click(); });
+$("#story-inviter")?.addEventListener("click", function () { ouvrirInvitation("story"); });
 
 /* Le montant du parrainage, partout ou il s'ecrit (boutique, profil). Il
    vient de la base : l'ecran a deja annonce 150 quand le serveur versait
@@ -10179,10 +10173,13 @@ function majMontantParrainage() {
    au doigt c'est natif. Un vrai glisser ne doit pas ouvrir la fiche au
    relachement. */
 (function () {
-  var rangee = $("#liste");
-  if (!rangee) return;
-  var bas = false, x0 = 0, scroll0 = 0, bouge = false;
-  rangee.addEventListener("mousedown", function (e) {
+  var conteneur = $("#liste");
+  if (!conteneur) return;
+  var rangee = null, bas = false, x0 = 0, scroll0 = 0, bouge = false;
+  // Delegue : les rangees sont recreees a chaque rendu de la boutique.
+  conteneur.addEventListener("mousedown", function (e) {
+    rangee = e.target.closest(".grille");
+    if (!rangee) return;
     bas = true; bouge = false; x0 = e.clientX; scroll0 = rangee.scrollLeft;
     rangee.style.scrollSnapType = "none";
   });
@@ -10197,8 +10194,9 @@ function majMontantParrainage() {
     bas = false;
     rangee.style.scrollSnapType = "";
     if (bouge) {
-      var bloquer = function (e) { e.stopPropagation(); e.preventDefault(); rangee.removeEventListener("click", bloquer, true); };
-      rangee.addEventListener("click", bloquer, true);
+      var cible = rangee;
+      var bloquer = function (e) { e.stopPropagation(); e.preventDefault(); cible.removeEventListener("click", bloquer, true); };
+      cible.addEventListener("click", bloquer, true);
     }
   });
 })();
@@ -11453,6 +11451,9 @@ CADEAU_BTN?.addEventListener("click", async function () {
    le clubbeur en a choisi un a la main. Ecrit une fois pour que les deux ne
    puissent pas diverger. */
 function appliquerPosition(pos) {
+  // La boutique trie ses bars par distance : elle se redessine.
+  POSITION_MOI = [pos.coords.longitude, pos.coords.latitude];
+  rendreListe();
   Object.keys(CLUBS).forEach(function (k) {
     DISTANCES_CLUBS[k] = distanceKm([pos.coords.longitude, pos.coords.latitude], CLUBS[k].lngLat);
   });
@@ -11930,8 +11931,50 @@ function rendreOffre() {
 
 var horsDePorteeAvant = null;
 
+// Lue par carteRecompense() : posee a chaque rendu par rendreListe().
+var vientDeDebloquer = function () { return false; };
+
+/* ⚠️ BARS DE DEMONSTRATION -- A RETIRER AVANT D'OUVRIR L'APPLI AU PUBLIC.
+   Julien, 13/09/2026 : "fais comme s'il y avait plusieurs bars" -- pour
+   juger la boutique par bar alors qu'un seul club (Mirano) est branche.
+   Noms INVENTES, positions autour du centre de Bruxelles. Ils n'existent
+   pas en base : leurs recompenses s'ouvrent, mais ne s'echangent pas (voir
+   item.demo dans ouvrirRecompense). Ils ne sont PAS dans CLUBS : ni pin sur
+   la carte, ni choix de club, ni points. Tout s'eteint avec ce booleen. */
+var MONTRER_BARS_DEMO = true;
+var BARS_DEMO = [
+  { nom: "Velours", type: "bar", lngLat: [4.3503, 50.8468], quartier: "Bruxelles-Centre" },
+  { nom: "Minuit Douze", type: "bar", lngLat: [4.3452, 50.8331], quartier: "Saint-Gilles" },
+  { nom: "Néon 88", type: "club", lngLat: [4.3688, 50.8322], quartier: "Ixelles" },
+];
+BARS_DEMO.forEach(function (bar, i) {
+  // Les MEMES dessins peints que le catalogue du vrai club (FOTOS) : les
+  // SVG de repli, a cote, faisaient bars de seconde zone.
+  var catalogues = [
+    [["Shot maison", "bar", 120, artShot, "artShot"], ["Cocktail offert", "bar", 250, artCocktail, "artCocktail"], ["Vestiaire offert", "acces", 300, artShot, "artCintre"]],
+    [["Pinte offerte", "bar", 200, artPinte, "artPinte"], ["Cocktail signature", "bar", 350, artCocktail, "artCocktail"], ["Bouteille pour la table", "vip", 2200, artBouteille, "artBouteille"]],
+    [["Vestiaire offert", "acces", 250, artShot, "artCintre"], ["Shot maison", "bar", 150, artShot, "artShot"], ["Table + bouteille", "vip", 3000, artBouteille, "artBouteille"]],
+  ][i];
+  bar.club = { nom: bar.nom, type: bar.type, adr: bar.quartier };
+  bar.recompenses = catalogues.map(function (c, j) {
+    return { id: "demo-" + i + "-" + j, nom: c[0], fam: c[1], cout: c[2], art: c[3], foto: FOTOS[c[4]], stock: 20, code: "", demo: true, bar: bar.club };
+  });
+});
+
+// "1210 Saint-Josse-ten-Noode" dans une adresse -> "Saint-Josse-ten-Noode".
+function quartierDe(adresse) {
+  var m = String(adresse || "").match(/\b\d{4}\s+(.+)$/);
+  return m ? m[1].trim() : "";
+}
+function formaterDistance(km) {
+  return km < 1 ? Math.max(50, Math.round(km * 1000 / 50) * 50) + " m" : nb(Math.round(km * 10) / 10).replace(".", ",") + " km";
+}
+// La vraie position, quand on l'a (voir appliquerPosition).
+var POSITION_MOI = null;
+
 function rendreListe() {
   var z = $("#liste");
+  if (!z) return;
   z.innerHTML = "";
 
   var horsDePortee = new Set(
@@ -11939,7 +11982,7 @@ function rendreListe() {
   );
   // null au tout premier rendu : sinon la boutique entiere s'allumerait
   // a l'ouverture de l'appli, ce qui ne veut plus rien dire.
-  var vientDeDebloquer = horsDePorteeAvant
+  vientDeDebloquer = horsDePorteeAvant
     ? function (id) { return horsDePorteeAvant.has(id) && !horsDePortee.has(id); }
     : function () { return false; };
   horsDePorteeAvant = horsDePortee;
@@ -11948,24 +11991,45 @@ function rendreListe() {
   // utile") : le catalogue tient sur 4 recompenses aujourd'hui, une
   // categorisation n'apportait rien. La liste complete s'affiche
   // directement.
-  var liste = RECOMPENSES;
-
-  // Le club du catalogue : son nom titre la section, sa tuile se pose sur
-  // chaque image (le logo de marque des cartes DUSK).
-  var clubListe = CLUBS[CLUB_BOUTIQUE] || null;
-  var titreClub = $("#drop-club");
-  if (titreClub && clubListe) {
-    // "Au Mirano", mais "Au Trebuchet" pour "Le Trebuchet", "A la ..." pour "La ...".
-    var nomClub = clubListe.nom;
-    titreClub.textContent =
-      /^Le /.test(nomClub) ? "Au " + nomClub.slice(3) :
-      /^La /.test(nomClub) ? "À la " + nomClub.slice(3) :
-      /^Les /.test(nomClub) ? "Aux " + nomClub.slice(4) :
-      /^L['’]/.test(nomClub) ? "À l’" + nomClub.slice(2) :
-      "Au " + nomClub;
+  /* Les bars de la boutique : le club courant (ses vraies recompenses,
+     lues en base), puis les bars de demonstration tant que
+     MONTRER_BARS_DEMO le permet. Tries par distance : depuis la vraie
+     position si on l'a, sinon depuis le point "moi" de la carte. */
+  var clubReel = CLUBS[CLUB_BOUTIQUE] || null;
+  var bars = [];
+  if (clubReel) {
+    bars.push({ nom: clubReel.nom, type: clubReel.type, lngLat: clubReel.lngLat,
+      quartier: quartierDe(clubReel.adr), recompenses: RECOMPENSES, club: clubReel });
   }
+  if (MONTRER_BARS_DEMO) bars = bars.concat(BARS_DEMO);
+  var origine = POSITION_MOI || MOI;
+  bars.forEach(function (bar) { bar.km = distanceKm(origine, bar.lngLat); });
+  bars.sort(function (a, b) { return a.km - b.km; });
 
-  liste.forEach(function (r, index) {
+  var indexCarte = 0;
+  bars.forEach(function (bar) {
+    var section = document.createElement("section");
+    section.className = "bar-section";
+    // La distance seulement quand la position est VRAIE : une distance
+    // calculee depuis le point de demonstration serait inventee.
+    var ou = POSITION_MOI ? formaterDistance(bar.km) : bar.quartier;
+    section.innerHTML =
+      '<h2 class="drop-titre">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>' +
+        "<span>" + escapeHtmlSupport(bar.nom) + "</span>" +
+      "</h2>" +
+      '<p class="drop-sous">' + [libelleType(bar.type), ou].filter(Boolean).map(escapeHtmlSupport).join(" · ") + "</p>";
+    var rangee = document.createElement("div");
+    rangee.className = "grille";
+    section.appendChild(rangee);
+    z.appendChild(section);
+    bar.recompenses.forEach(function (r) {
+      rangee.appendChild(carteRecompense(r, indexCarte++, bar));
+    });
+  });
+}
+
+function carteRecompense(r, index, bar) {
     var loin = r.cout > ETAT.solde;
     var epuise = r.stock <= 0;
 
@@ -11991,7 +12055,7 @@ function rendreListe() {
     // dans la pastille verte (celle-ci est prenable).
 
     b.style.setProperty("--i", index);
-    if (vientDeDebloquer(r.id)) {
+    if (!r.demo && vientDeDebloquer(r.id)) {
       b.classList.add("debloque");
       vibrer("leger");
       jouer("debloque");
@@ -12010,7 +12074,6 @@ function rendreListe() {
       '<span class="photo">' +
         visuelInterieur +
         '<span class="pts-pastille">' + nb(r.cout) + " points</span>" +
-        (clubListe ? '<span class="reco-club' + classeFoto(clubListe) + '" aria-hidden="true">' + imgClub(clubListe) + "</span>" : "") +
       "</span>" +
       '<span class="corps">' +
         // Toujours rendue, meme vide : sans elle, une recompense sans
@@ -12035,8 +12098,7 @@ function rendreListe() {
       "</span>";
 
     b.addEventListener("click", function () { ouvrirRecompense(r, b); });
-    z.appendChild(b);
-  });
+    return b;
 }
 
 /* --- Le QR d'un bon : genere localement, sans limite, avec la
@@ -12195,6 +12257,10 @@ function ouvrirRecompense(item, src) {
        pts") ; la ligne d'en-dessous expliquait comment les gagner, et
        ramenait un tarif sur un ecran qui parle d'une recompense. */
     note = "";
+  } else if (item.demo) {
+    // Bar de demonstration (voir BARS_DEMO) : rien en base, rien a echanger.
+    cta = '<button class="sheet-cta" type="button" disabled>Bientôt disponible</button>';
+    note = "Ce bar n'a pas encore rejoint Noctify.";
   } else if (item.cout === 0 && item === OFFRE && !OFFRE.reelle) {
     // Rien a echanger en base : un bouton actif qui echoue est pire
     // qu'un bouton eteint qui explique.
@@ -12238,7 +12304,7 @@ function ouvrirRecompense(item, src) {
      rejoint donc la categorie juste en dessous -- "BAR · Mirano" --
      et c'est le couple tuile + nom qui se lit. Un club qui depose sa
      photo la voit remplacer la mascotte dans la tuile. */
-  var club = CLUBS[CLUB_BOUTIQUE];
+  var club = item.bar || CLUBS[CLUB_BOUTIQUE];
   var tuileClub = club
     ? '<span class="sheet-club-tuile' + classeFoto(club) + '" aria-hidden="true">' + imgClub(club) + "</span>"
     : "";
