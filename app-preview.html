@@ -1863,12 +1863,13 @@
       #map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
       #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-      /* ⚠️ L'ATTRIBUTION MONTE EN HAUT A DROITE. La feuille de la carte
-         recouvre maintenant tout le bas de l'ecran : laisse en bas, le
-         bouton "i" -- contractuel sur l'offre gratuite MapTiler, voir plus
-         bas -- se serait retrouve cache dessous. */
+      /* ⚠️ L'ATTRIBUTION MONTE EN HAUT A DROITE. En bas, la capsule
+         d'onglets et la fiche du club flottent sur la carte : le bouton "i"
+         -- contractuel sur l'offre gratuite MapTiler, voir plus bas -- se
+         retrouverait cache dessous. Pose SOUS la ligne des filtres : a cote,
+         il coupait "Ouvert maintenant" en deux. */
       .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left {
-        bottom: auto !important; top: 14px !important;
+        bottom: auto !important; top: calc(56px + env(safe-area-inset-top)) !important;
       }
       .maplibregl-ctrl-attrib { font-size: calc(9.5 * var(--u)) !important; background: rgba(255,255,255,.72) !important; }
       .maplibregl-ctrl-attrib a { color: rgba(21,24,29,.62) !important; }
@@ -1997,15 +1998,15 @@
          marqueur reste un dessin propre. Meme principe que la legende
          d'une carte papier. */
       .carte-legende {
-        position: absolute; top: 14px; left: 12px; z-index: 24;
-        display: flex; align-items: center; gap: 8px;
-        padding: 4px 12px 4px 8px; border-radius: 999px;
-        background: rgba(255,255,255,.94); color: #14161a;
-        font-size: calc(12 * var(--u)); font-weight: 700; letter-spacing: -.01em;
-        box-shadow: var(--ombre-2);
+        flex: 0 0 auto; height: 34px; box-sizing: border-box;
+        display: flex; align-items: center; gap: 7px;
+        padding: 0 12px 0 8px; border-radius: 999px;
+        background: rgba(255,255,255,.96); color: #14161a;
+        font-size: calc(12.5 * var(--u)); font-weight: 700; letter-spacing: -.01em;
+        box-shadow: 0 0 0 .5px rgba(16,18,22,.08), 0 4px 14px -6px rgba(16,18,22,.32);
         pointer-events: none;
       }
-      .carte-legende .pint { width: 17px; height: 23px; display: block; }
+      .carte-legende .pint { width: 16px; height: 22px; display: block; }
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
          chaque deplacement) -- ne jamais lui donner de transform a
@@ -2021,86 +2022,107 @@
          qu'il contient depasse son conteneur de 7 px. Le NOM du club
          passait sous la barre -- sur la carte, "Mirano" etait tronque a
          mi-hauteur et illisible. */
-      /* ---- LA FEUILLE DE LA CARTE (modele DUSK) ----
-         Posee au-dessus de la barre d'onglets (88 px), coins hauts
-         arrondis, ombre vers le HAUT : c'est elle qui separe le plan de
-         la liste, pas un filet. */
-      /* ⚠️ LA FEUILLE REDECLARE LA PALETTE CLAIRE. L'ecran carte herite de
-         la palette SOMBRE de l'appli, ou --ink vaut #ffffff et --ink3 un
-         brun : pose sur la feuille blanche, le nom du club etait BLANC SUR
-         BLANC -- invisible sur la premiere capture -- et les filtres
-         sortaient delaves. Troisieme fois que la carte fait ce coup-la
-         (le badge noir en --s2, le nom blanc sous la pastille) : une
-         surface claire posee sur la carte doit porter ses propres jetons.
-         Valeurs reprises de la palette claire de l'appli. */
-      .carte-feuille {
+      /* ⚠️ TOUT CE QUI FLOTTE SUR LA CARTE REDECLARE LA PALETTE CLAIRE.
+         L'ecran carte herite de la palette SOMBRE de l'appli, ou --ink vaut
+         #ffffff et --ink3 un brun : pose sur du blanc, le nom du club etait
+         BLANC SUR BLANC -- invisible sur une capture -- et les filtres
+         sortaient delaves. Trois fois que la carte a fait ce coup-la (le
+         badge noir en --s2, le nom blanc sous la pastille, la feuille DUSK) :
+         une surface claire posee sur la carte porte ses propres jetons. */
+      .carte-clair {
         --ink: #15181d; --ink2: #535b68; --ink3: #676d77;
         --s1: #ffffff; --s2: #eef0f4;
         --line: rgba(16,18,22,.09); --line2: rgba(16,18,22,.15);
-        position: absolute; left: 0; right: 0; bottom: 88px; z-index: 24;
-        padding: 14px 0 16px;
-        background: #ffffff; border-radius: 22px 22px 0 0;
-        box-shadow: 0 -12px 30px -14px rgba(16,18,22,.30);
       }
-      /* Les filtres, en pastilles au contour fin comme "NEAR ME" / "OPEN
-         NOW" : capitales SERREES, pas l'intertitre espace du tableau de
-         bord. Actif = contour et texte en encre. */
-      .carte-filtres {
-        display: flex; gap: 8px; padding: 0 16px 12px;
+
+      /* ---- EN HAUT : la legende et les filtres, sur une seule ligne ----
+         Comme les pastilles de Plans sous la recherche. Le conteneur laisse
+         passer le doigt (pointer-events) : entre deux pastilles, on attrape
+         la carte, pas un bandeau invisible. */
+      .carte-haut {
+        position: absolute; left: 0; right: 0; z-index: 24;
+        top: calc(8px + env(safe-area-inset-top));
+        display: flex; gap: 8px; padding: 6px 12px 14px;
         overflow-x: auto; scrollbar-width: none;
+        pointer-events: none;
       }
-      .carte-filtres::-webkit-scrollbar { display: none; }
+      .carte-haut::-webkit-scrollbar { display: none; }
+      .carte-filtres { display: flex; gap: 8px; flex: 0 0 auto; }
       .carte-filtre {
-        flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
-        padding: 7px 12px; border-radius: 8px;
-        border: 1px solid var(--line2); background: #ffffff; color: var(--ink2);
-        font-family: var(--sans); font-size: calc(10.5 * var(--u)); font-weight: 700;
-        letter-spacing: .05em; text-transform: uppercase; line-height: 1; cursor: pointer;
+        pointer-events: auto;
+        flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+        height: 34px; box-sizing: border-box; padding: 0 12px; border-radius: 999px;
+        border: 0; background: rgba(255,255,255,.96); color: var(--ink);
+        box-shadow: 0 0 0 .5px rgba(16,18,22,.08), 0 4px 14px -6px rgba(16,18,22,.32);
+        font-family: var(--sans); font-size: calc(12.5 * var(--u)); font-weight: 650;
+        letter-spacing: -.01em; line-height: 1; cursor: pointer; white-space: nowrap;
+        transition: background .15s ease, color .15s ease;
       }
       .carte-filtre svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
-      .carte-filtre[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); box-shadow: inset 0 0 0 .5px var(--ink); }
+      /* Actif : la pastille s'inverse, comme un filtre allume dans Plans. */
+      .carte-filtre[aria-pressed="true"] { background: #15181d; color: #ffffff; }
       .carte-filtre:active { transform: scale(.97); }
 
-      /* Le carrousel. 78 % de large pour que la fiche suivante DEPASSE,
-         comme chez DUSK -- c'est ce qui dit qu'on peut faire glisser.
-         Une fiche seule prend toute la largeur : un carrousel d'un seul
-         element a 78 % aurait l'air coupe. */
+      /* ---- EN BAS : la fiche du club, posee sur la carte ----
+         Juste au-dessus de la capsule d'onglets. Une carte blanche compacte
+         -- vignette, nom, etiquettes -- et non plus l'image 16/9 d'une
+         feuille : c'est ce qui laisse voir le plan autour. */
+      .carte-bas {
+        position: absolute; left: 0; right: 0; z-index: 24;
+        bottom: 88px;
+        pointer-events: none;
+      }
+      html.mode-appli .carte-bas { bottom: calc(88px + env(safe-area-inset-bottom)); }
+      /* Plusieurs clubs : la fiche suivante DEPASSE (86 %), c'est ce qui dit
+         qu'on peut faire glisser. Une fiche seule prend toute la largeur. */
       .club-rail {
-        display: flex; gap: 12px; padding: 0 16px;
+        display: flex; gap: 10px; padding: 12px 12px 6px;
         overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory;
       }
       .lieu {
-        flex: 0 0 78%; min-width: 0; padding: 0; border: 0; background: none;
-        text-align: left; cursor: pointer; scroll-snap-align: start;
+        pointer-events: auto;
+        flex: 0 0 86%; min-width: 0; box-sizing: border-box;
+        display: grid; grid-template-columns: 56px 1fr auto; align-items: center; column-gap: 12px;
+        padding: 10px 14px 10px 10px; border: 0; border-radius: 20px;
+        background: rgba(255,255,255,.97);
+        box-shadow: 0 0 0 .5px rgba(16,18,22,.08), 0 10px 26px -12px rgba(16,18,22,.38);
+        text-align: left; cursor: pointer; scroll-snap-align: center;
         color: var(--ink); font-family: inherit;
       }
       .lieu:only-child { flex-basis: 100%; }
       .lieu:active { transform: scale(.985); }
-      /* L'image en 16/9. Sans photo, le creme et la mascotte : le meme
-         badge que partout, en grand. Une photo deposee le remplit. */
+      /* La vignette. Sans photo, le creme et la mascotte : le meme badge
+         que sur la carte. Une photo deposee la remplit. */
       .lieu-image {
-        position: relative; display: block; aspect-ratio: 16 / 9;
-        border-radius: 14px; overflow: hidden;
-        background: #f7efe6 var(--verre-noctify) center 55% / auto 62% no-repeat;
+        grid-row: 1 / 3; position: relative; display: block;
+        width: 56px; height: 56px; border-radius: 14px; overflow: hidden;
+        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
       }
       .lieu-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
-      .lieu-pastille {
-        position: absolute; top: 8px; right: 8px;
-        padding: 4px 9px; border-radius: 999px;
-        background: rgba(16,18,22,.72); color: #ffffff;
-        font-size: calc(11 * var(--u)); font-weight: 700; line-height: 1.2;
-      }
       .lieu-nom {
-        display: block; margin-top: 9px;
-        font-family: var(--titre); font-size: calc(16.5 * var(--u)); font-weight: 800;
+        grid-column: 2; align-self: end; min-width: 0;
+        font-family: var(--titre); font-size: calc(16 * var(--u)); font-weight: 800;
         letter-spacing: -.02em; line-height: 1.2; color: var(--ink);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
       .lieu-tags {
-        display: block; margin-top: 2px;
+        grid-column: 2; align-self: start; min-width: 0; margin-top: 2px;
         font-size: calc(12.5 * var(--u)); color: var(--ink3);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
-      .carte-vide { margin: 2px 16px 0; font-size: calc(13 * var(--u)); color: var(--ink3); }
+      .lieu-pastille {
+        grid-column: 3; grid-row: 1 / 3;
+        padding: 5px 10px; border-radius: 999px;
+        background: #15181d; color: #ffffff;
+        font-size: calc(11 * var(--u)); font-weight: 700; line-height: 1.2;
+      }
+      .carte-vide {
+        pointer-events: auto;
+        width: fit-content; margin: 12px auto 6px; padding: 9px 14px; border-radius: 999px;
+        background: rgba(255,255,255,.97);
+        box-shadow: 0 0 0 .5px rgba(16,18,22,.08), 0 6px 18px -8px rgba(16,18,22,.34);
+        font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2);
+      }
       .club-rail::-webkit-scrollbar { display: none; }
       .fr {
         flex: 0 0 auto; background: none; border: 0; padding: 0; cursor: pointer;
@@ -3066,19 +3088,37 @@
          defaut ci-dessous. Plus de condition : ces valeurs etaient
          avant dupliquees dans .screen.boutique-pro .tabs/.tab, retire
          plus bas (redondant une fois la barre fixee en clair). */
+      /* ⚠️ UNE CAPSULE FLOTTANTE, PAS UNE BARRE. Julien a envoye le
+         12/09/2026 cinq captures de l'appli DUSK prises sur SON telephone :
+         la barre du bas y est une capsule arrondie DETACHEE des bords, et
+         l'onglet actif est pose dans une pastille plus claire. La premiere
+         version faite ici copiait les captures App Store de janvier 2025 --
+         une barre plate pleine largeur, que DUSK n'utilise plus.
+         .tabs GARDE sa geometrie (88 px, pleine largeur) : la feuille de la
+         carte, le bas du profil et tous les ecrans se calent dessus. La
+         capsule est dessinee DEDANS, par ::before, avec des marges. */
       .tabs {
         position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
-        background: rgba(255,255,255,.92); border-top: 1px solid var(--line2, #dedee2);
-        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        background: transparent; border-top: 0;
         /* Un peu d'air sur les cotes : sans lui, "Récompenses" (le plus
            long des cinq libelles) collait au bord de l'ecran (Julien :
            "c'est un peu trop vers le bord de l'application"). */
-        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding: 0 8px 20px;
+        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding: 0 16px 20px;
+      }
+      .tabs::before {
+        content: ""; position: absolute; z-index: -1;
+        left: 10px; right: 10px; top: 6px; bottom: 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.94);
+        -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+        box-shadow: 0 0 0 1px rgba(16,18,22,.07), 0 10px 26px -12px rgba(16,18,22,.35);
       }
 
       .tab {
-        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
         background: none; border: 0; cursor: pointer; position: relative; padding: 0;
+        height: 54px; margin: 0 1px; border-radius: 999px;
+        transition: background .18s ease;
       }
       .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
       /* Retour au comportement standard apres coup : Julien avait aime
@@ -3119,6 +3159,9 @@
          est. */
       .tab.on svg { stroke: #15181d; stroke-width: 1.9; }
       .tab.on .lbl { color: #15181d; }
+      /* La pastille de l'onglet actif, comme chez DUSK : c'est ELLE qui dit
+         ou l'on est, bien plus que la couleur du trait. */
+      .tab.on { background: #eceef2; }
       .tab { transition: transform .16s var(--sortie); }
       .tab:active { transform: scale(.93); }
       .tab .badge { position: absolute; top: -2px; right: 50%; margin-right: -17px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
@@ -3136,10 +3179,13 @@
          Julien -- qu'elle ne change pas d'un ecran a l'autre -- tient
          toujours. */
       @media (prefers-color-scheme: dark) {
-        .tabs {
-          background: rgba(16,12,11,.92);
-          border-top-color: rgba(255,238,225,.14);
+        .tabs::before {
+          background: rgba(20,17,16,.92);
+          box-shadow: 0 0 0 1px rgba(255,238,225,.10), 0 10px 26px -12px rgba(0,0,0,.6);
         }
+        .tab.on { background: rgba(255,238,225,.10); }
+        .tab.on svg { stroke: #ffffff; }
+        .tab.on .lbl { color: #ffffff; }
         .tab svg { stroke: #96887c; }
         .tab .lbl { color: #96887c; }
         .tab:focus-visible { outline-color: #fff; }
@@ -4392,6 +4438,9 @@
         height: calc(88px + env(safe-area-inset-bottom));
         padding-bottom: calc(18px + env(safe-area-inset-bottom));
       }
+      /* La capsule remonte d'autant : sans ca, sur un iPhone a encoche, la
+         barre de geste passerait PAR-DESSUS le bas de la capsule. */
+      html.mode-appli .tabs::before { bottom: calc(10px + env(safe-area-inset-bottom)); }
     </style>
   </head>
   <body>
@@ -5455,24 +5504,19 @@
           <div id="map"></div>
           <canvas id="etoiles" aria-hidden="true"></canvas>
 
-          <!-- Legende : dit ce que represente le verre sur la carte,
-               sans rien ecrire par-dessus la carte elle-meme. Remplie
-               par le JS, qui reutilise le meme pint() que le marqueur --
-               les deux ne peuvent donc pas diverger. -->
-          <div class="carte-legende" id="carte-legende"></div>
-
-          <!-- ⚠️ LA FEUILLE DE LA CARTE DUSK. Julien, 12/09/2026, captures de
-               DUSK a l'appui : "inspire-toi de la carte surtout".
-               Chez DUSK, le plan occupe le haut, et une feuille pose en bas
-               des FILTRES en pastilles ("NEAR ME", "OPEN NOW") puis un
-               CARROUSEL de fiches de lieux -- grande image, nom en gras,
-               etiquettes en gris. Ici, sur fond blanc.
-               Le rail de petites pastilles rondes qu'elle remplace ne
-               montrait qu'un rond et un nom : ni ce qu'est le lieu, ni s'il
-               est ouvert.
-               #club-rail garde son identifiant : le glisser a la souris et
-               le remplissage s'y accrochent. -->
-          <div class="carte-feuille" id="carte-feuille">
+          <!-- ⚠️ PLUS DE FEUILLE BLANCHE SUR LA CARTE. Julien, 12/09/2026,
+               apres la version DUSK : "prends la meme carte qu'eux mais ne
+               coupe pas avec un truc en bas, en gros mets la carte d'Apple".
+               La feuille coupait le plan a mi-hauteur. Le plan va maintenant
+               jusqu'en bas, et tout ce qui se pose dessus FLOTTE, comme dans
+               Plans : les filtres en haut, la fiche du club juste au-dessus
+               de la capsule d'onglets. -->
+          <div class="carte-haut carte-clair">
+            <!-- Legende : dit ce que represente le verre sur la carte,
+                 sans rien ecrire par-dessus la carte elle-meme. Remplie
+                 par le JS, qui reutilise le meme pint() que le marqueur --
+                 les deux ne peuvent donc pas diverger. -->
+            <div class="carte-legende" id="carte-legende"></div>
             <!-- Deux filtres, et ils FILTRENT. Pas de "+ Filtre" : il n'y a
                  aucun ecran de filtres derriere, et un bouton qui n'ouvre
                  rien est exactement le bouton decoratif deja refuse. -->
@@ -5483,6 +5527,11 @@
               </button>
               <button type="button" class="carte-filtre" data-filtre="ouvert" aria-pressed="false">Ouvert maintenant</button>
             </div>
+          </div>
+
+          <!-- #club-rail garde son identifiant : le glisser a la souris et
+               le remplissage s'y accrochent. -->
+          <div class="carte-bas carte-clair">
             <div class="club-rail" id="club-rail"></div>
             <p class="carte-vide" id="carte-vide" hidden>Aucun club ouvert en ce moment.</p>
           </div>
@@ -7379,7 +7428,7 @@ var MAPTILER_KEY = "HRqda4Ggxp9Mx9bKwvTh";
 
 var map = new maplibregl.Map({
   container: "map",
-  style: "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=" + MAPTILER_KEY,
+  style: "https://api.maptiler.com/maps/streets-v2/style.json?key=" + MAPTILER_KEY,
   // Le Trebuchet (Pessoux, pres de Ciney) et Cactus Club (Auderghem,
   // Bruxelles) sont a ~65 km l'un de l'autre -- centrer sur Bruxelles
   // avec le zoom d'origine (16, pense pour des clubs a 400 m les uns
@@ -7390,8 +7439,9 @@ var map = new maplibregl.Map({
   zoom: 8,
   minZoom: 0.6,
   maxZoom: 18.5,
-  pitch: 40,
-  bearing: -12,
+  // A plat et plein nord, comme Plans (voir habillerPlans).
+  pitch: 0,
+  bearing: 0,
   attributionControl: { compact: true }
 });
 map.on("error", function (e) {
@@ -7534,7 +7584,7 @@ map.once("idle", function () {
 
 map.on("load", function () {
   map.setProjection({ type: "globe" });
-  map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 40, bearing: -12 });
+  map.jumpTo({ center: BRUXELLES, zoom: 16, pitch: 0, bearing: 0 });
 });
 
 /* --- Jour/nuit : sur l'heure LOCALE de l'appareil, deja au bon
@@ -7587,34 +7637,35 @@ function ambiance() {
 setInterval(function () { try { ambiance(); } catch (e) {} }, 5 * 60 * 1000);
 
 
-function snapifie() {
-  // Couleurs exactes envoyees par Julien (deux aplats unis, capture
-  // ecran) : #93d4fe pour l'eau (verifie pixel par pixel), #c2e6a0
-  // pour le vert -- notre vert precedent (#8fbf68) etait juge trop
-  // fonce. mentheFonce garde la meme teinte, juste un peu plus
-  // profonde, pour que Forest/Wood se distinguent encore de
-  // Background/Grass sans s'ecarter du vert demande.
-  // Vert franc type Google Maps, choisi par Julien parmi 4 options
-  // presentees.
-  var mentheClair = "#dcecd6", mentheFonce = "#8ec27a", eau = "#93d4fe";
-  // Glacier (calottes polaires) : voir plus bas -- avant, gardait son
-  // bleu marine d'origine du fond de carte sombre.
-  var glace = "#f4f7f8";
-  // Deserts/Sand (zones arides) : Julien trouvait le blanc casse
-  // d'avant trop proche du blanc des poles (Glacier, #f4f7f8) --
-  // un vrai beige grisaille, nettement plus fonce/mat, pour qu'on ne
-  // confonde plus les deux au premier coup d'oeil.
-  var blancCasse = "#d6c8a3";
+/* ⚠️ LA CARTE D'APPLE PLANS. Julien, 12/09/2026 : "prends la meme carte
+   qu'eux [DUSK] [...] en gros mets la carte d'Apple, et sur Samsung trouve
+   une solution".
+   DUSK affiche le vrai Plans d'Apple (MapKit, dans une appli iOS native).
+   Chez nous, MapKit JS exige un compte Apple Developer paye et un jeton
+   signe -- rien de tout ca n'existe encore. Et MapKit ne donnerait de
+   toute facon rien de natif sur un Samsung.
+   La solution retenue marche partout pareil : le plan vectoriel MapTiler
+   (deja paye, deja branche) repeint aux couleurs de Plans. Terre creme
+   tres claire, parcs vert tendre, eau bleu clair, batiments a plat, rues
+   blanches liserees de gris, voies rapides jaunes, noms de rue en gris.
+   Vue de dessus, plein nord : Plans ne penche pas la carte par defaut.
+   Remplace l'habillage "Snap Map" (vert menthe, volumes 3D, aucun nom de
+   rue) que DUSK a rendu date.
+   Sous le zoom 4, la vraie photo satellite et le globe restent : c'est
+   aussi ce que fait Plans vu de loin. */
+function habillerPlans() {
+  var terre = "#f7f5f0";
+  var quartier = "#f4f2ec";
+  var parc = "#cfe8c0", bois = "#c3e0af", vegetationLoin = "#dcebcf";
+  var eau = "#a6d4f6";
+  var batiment = "#ece9e3", batimentContour = "#dcd7ce";
+  var rue = "#ffffff", rueBord = "#dedad2", axeBord = "#d3cdc2";
+  var voieRapide = "#fad67d", voieRapideBord = "#e6b95e";
+  var sable = "#efe6cf", glace = "#f7f9fa";
 
-  // Le "vert bizarre" et les "zones oranges" signales par Julien a la vue
-  // planete entiere ne sont pas un probleme de teinte a corriger encore
-  // une fois a l'aveugle (deja tente plusieurs fois, voir historique de ce
-  // fichier) : c'est le principe meme d'un aplat de couleur unique qui ne
-  // ressemble jamais a une vraie terre vue de l'espace. En dessous du
-  // zoom 4, on montre donc la vraie photo satellite (meme fournisseur
-  // MapTiler, deja paye) au lieu de la peindre a la main -- au-dela,
-  // le plan vectoriel colore repredend le dessus normalement, pour la
-  // recherche de club (l'usage reel de la carte), inchangee.
+  // En dessous du zoom 4, la vraie photo satellite (meme fournisseur
+  // MapTiler) plutot qu'un aplat : vue de l'espace, aucune couleur unie ne
+  // ressemble a une vraie terre. Au-dela, le plan vectoriel reprend la main.
   if (!map.getSource("satellite")) {
     map.addSource("satellite", {
       type: "raster",
@@ -7631,67 +7682,61 @@ function snapifie() {
       paint: { "raster-opacity": ["interpolate", ["linear"], ["zoom"], 2, 1, 4, 0] }
     }, "Background");
   }
-  // Reprise du role que tenait l'aplat bleu : la photo satellite brute
-  // rend l'ocean quasi noir. On sature et on releve le niveau de noir
-  // du raster lui-meme a la vue planete, ce qui rend l'eau bleue sans
-  // poser aucune forme par-dessus. Retour a zero des le zoom 3, ou la
-  // carte vectorielle reprend la main.
+  // La photo satellite brute rend l'ocean quasi noir : on sature et on
+  // releve le niveau de noir a la vue planete. Retour a zero au zoom 3.
   map.setPaintProperty("Terre reelle", "raster-saturation",
     ["interpolate", ["linear"], ["zoom"], 0, .38, 3, 0]);
   map.setPaintProperty("Terre reelle", "raster-brightness-min",
     ["interpolate", ["linear"], ["zoom"], 0, .06, 3, 0]);
   // Meme plage de fondu (zoom 2 -> 4) que le champ d'etoiles (majOpacite,
-  // plus bas) et les frontieres : au moment ou la photo satellite est
-  // pleinement visible, les aplats vectoriels doivent etre transparents,
-  // sinon ils la recouvrent completement.
+  // plus bas) : quand la photo est pleinement visible, les aplats doivent
+  // etre transparents, sinon ils la recouvrent.
   var fondu = ["interpolate", ["linear"], ["zoom"], 2, 0, 4, 1];
-  // L'ocean en photo satellite brute rend tres sombre (quasi noir) sans
-  // aucun traitement colorimetrique -- signale par Julien ("l'eau est un
-  // peu trop noire"). Contrairement aux terres, l'eau garde donc toujours
-  // un peu de couleur pardessus la photo, meme a la vue planete entiere,
-  // pour rester lisible comme de l'eau plutot que du vide.
-  // L'aplat ne commence qu'a partir du zoom 2, la ou la photo satellite
-  // s'efface deja : au-dessus (vue planete), on laisse la vraie photo,
-  // corrigee autrement (voir raster-saturation plus bas).
+  // L'eau garde un peu de couleur des le zoom 2 : en photo brute, elle se
+  // lit comme du vide.
   var fonduEau = ["interpolate", ["linear"], ["zoom"], 2, 0, 3, .5, 4, 1];
-  // Bleu profond type Google Earth pour l'ocean vu depuis l'espace --
-  // demande explicite de Julien apres le premier essai (bleu clair de la
-  // carte de rue, #93d4fe, trop pale/delave a cette distance). Uniquement
-  // a la vue planete : au zoom 4, l'eau redevient #93d4fe, la teinte de
-  // la carte de recherche de club, inchangee.
+  // Bleu profond pour l'ocean vu de l'espace (demande de Julien), qui
+  // rejoint le bleu clair de Plans au zoom 4.
   var eauEspace = "#0f3d5c";
 
-  map.setPaintProperty("Background", "background-color", mentheClair);
+  map.setPaintProperty("Background", "background-color", terre);
   map.setPaintProperty("Background", "background-opacity", fondu);
 
-  ["Residential", "Industrial", "School", "Cemetery", "Hospital", "Pedestrian"].forEach(function (id) {
-    if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", mentheClair);
+  // Les zones construites : Plans ne les teinte presque pas. Seuls
+  // l'hopital (rose), l'ecole (sable) et le cimetiere (vert gris) se
+  // distinguent, a peine.
+  var ZONES = {
+    Residential: quartier, Industrial: "#eeebee", Pedestrian: "#f8f6f2",
+    Hospital: "#f6e1e2", School: "#f1e9d8", Cemetery: "#dbe7d2",
+    Stadium: parc, "Airport zone": "#eae8f0"
+  };
+  Object.keys(ZONES).forEach(function (id) {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "fill-color", ZONES[id]);
+    map.setPaintProperty(id, "fill-opacity", fondu);
   });
 
   ["Forest", "Wood"].forEach(function (id) {
-    map.setPaintProperty(id, "fill-color", mentheFonce);
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "fill-color", bois);
     map.setPaintProperty(id, "fill-opacity", fondu);
     map.setLayoutProperty(id, "visibility", "visible");
     map.setLayerZoomRange(id, 0, 24);
   });
-  // Scrub/Crop (savane, cultures) viennent de "globallandcover" -- les
-  // seules tuiles que MapTiler charge a l'echelle d'un continent entier
-  // (vu depuis l'espace, comme l'Afrique). On ne les recolorait pas :
-  // elles gardaient le bleu marine hsl(198,55%,22%) du style d'origine,
-  // d'ou les grandes taches bleu fonce signalees par Julien sur toute
-  // l'Afrique. Meme vert que Grass/Meadow -- de la vegetation, pas du
-  // desert.
-  ["Grass", "Meadow", "Scrub", "Crop"].forEach(function (id) {
+  if (map.getLayer("Grass")) {
+    map.setPaintProperty("Grass", "fill-color", parc);
+    map.setPaintProperty("Grass", "fill-opacity", fondu);
+  }
+  // Scrub/Crop/Meadow viennent de "globallandcover", les seules tuiles
+  // chargees a l'echelle d'un continent : un vert plus pale que les parcs,
+  // pour que la campagne ne se lise pas comme un parc geant.
+  ["Meadow", "Scrub", "Crop"].forEach(function (id) {
     if (!map.getLayer(id)) return;
-    map.setPaintProperty(id, "fill-color", mentheFonce);
+    map.setPaintProperty(id, "fill-color", vegetationLoin);
     map.setPaintProperty(id, "fill-opacity", fondu);
   });
-  // Glacier (calottes polaires, Groenland) : blanc/gris tres clair.
-  // Sand (dunes locales, tag OSM natural=sand) : blanc casse, comme
-  // "Deserts" plus bas -- teinte separee de celle des poles, demande
-  // de Julien.
   if (map.getLayer("Sand")) {
-    map.setPaintProperty("Sand", "fill-color", blancCasse);
+    map.setPaintProperty("Sand", "fill-color", sable);
     map.setPaintProperty("Sand", "fill-opacity", fondu);
   }
   if (map.getLayer("Glacier")) {
@@ -7699,121 +7744,80 @@ function snapifie() {
     map.setPaintProperty("Glacier", "fill-opacity", fondu);
   }
 
-  // Les grands deserts (Sahara, Arabie, Gobi, Kalahari, Outback
-  // australien...) n'existent PAS dans les donnees MapTiler -- ce
-  // style "streets" est pense pour la voirie, pas pour le climat/relief,
-  // et Scrub/Grass (globallandcover) melent vegetation et aridite dans
-  // la meme case a l'echelle d'un continent. Faute de la bonne donnee
-  // chez MapTiler, on l'apporte nous-memes : Natural Earth (domaine
-  // public, aucune attribution requise) recense precisement les 35
-  // grands deserts du monde nommes -- pas une couleur au hasard,
-  // exactement la meme logique que Google/Snap Map. Ajoutee juste
-  // au-dessus du vert et en dessous de "Water" : un lac ou une riviere
-  // a l'interieur d'un desert reste bleu, pas avale par le beige.
-  //
-  // Couleur : blanc casse, PAS la couleur des poles -- Julien est
-  // revenu sur la decision precedente (meme ton que Glacier) : les
-  // zones arides doivent avoir leur propre teinte, distincte des
-  // calottes polaires. Blanc volontairement pas pur (#ffffff jugé trop
-  // clinique) : un blanc casse, legerement plus sombre/chaud.
+  // Les grands deserts n'existent pas dans les donnees MapTiler : Natural
+  // Earth (domaine public) les apporte. Pose sous "Water", pour qu'un lac
+  // au milieu d'un desert reste bleu. Seulement a partir du zoom 4 : a
+  // l'echelle de la planete, ses contours basse resolution se voient.
   if (!map.getSource("deserts")) {
     map.addSource("deserts", { type: "geojson", data: "/deserts.geojson" });
   }
   if (!map.getLayer("Deserts")) {
     map.addLayer({
       id: "Deserts", type: "fill", source: "deserts",
-      paint: { "fill-color": blancCasse, "fill-opacity": 1 }
+      paint: { "fill-color": sable, "fill-opacity": 1 }
     }, "Water");
   } else {
-    map.setPaintProperty("Deserts", "fill-color", blancCasse);
+    map.setPaintProperty("Deserts", "fill-color", sable);
   }
-  // A l'echelle de la planete entiere, les contours (peu precis, source
-  // Natural Earth basse resolution) de ce calque se voient comme des
-  // decoupes anguleuses posees sur le Sahara/Moyen-Orient -- signale par
-  // Julien ("c'est quoi ces bazars"). Le calque n'a de sens qu'a partir
-  // du moment ou on distingue un pays, pas la planete entiere -- meme
-  // seuil (4) que les autres aplats plus bas, une fois la vraie photo
-  // satellite entierement fondue.
   map.setLayerZoomRange("Deserts", 4, 24);
 
   map.setPaintProperty("Water", "fill-color", [
     "interpolate", ["linear"], ["zoom"], 0, eauEspace, 4, eau
   ]);
   map.setPaintProperty("Water", "fill-opacity", fonduEau);
+  if (map.getLayer("River")) map.setPaintProperty("River", "line-color", eau);
 
-  // Empreinte au sol en aplat clair (zoom 13-15, plage native du style),
-  // puis vrais volumes 3D (fill-extrusion native "Building 3D", deja
-  // fournie par MapTiler avec render_height / render_min_height issus
-  // d'OpenStreetMap) des qu'on est assez proche du sol. Hauteur reduite
-  // (x0.55, plafonnee) et teinte unie (pas de degrade, pas de motif de
-  // facade) pour rester minimaliste et ne jamais ecraser les marqueurs
-  // des clubs — le degre de detail de Snap Map, pas une carte "realiste".
-  // Gris beton (couleur envoyee par Julien -- estimation visuelle, le
-  // copier-coller direct ne laisse pas de fichier exploitable ici,
-  // a corriger s'il la voit encore a cote) au lieu du beige d'origine :
-  // "les parties betonnees en gris".
-  var beton = "#d6d6d3";
-  map.setPaintProperty("Building", "fill-color", beton);
-  map.setPaintProperty("Building", "fill-opacity", .5);
-
-  map.setLayoutProperty("Building 3D", "visibility", "visible");
-  map.setPaintProperty("Building 3D", "fill-extrusion-color", beton);
-  map.setPaintProperty("Building 3D", "fill-extrusion-base", [
-    "*", ["coalesce", ["get", "render_min_height"], 0], .55
-  ]);
-  map.setPaintProperty("Building 3D", "fill-extrusion-height", [
-    "min", ["*", ["coalesce", ["get", "render_height"], 8], .55], 45
-  ]);
-  // Apparition avancee (13 -> 14 au lieu de 15 -> 15.6) : Julien veut
-  // voir les volumes des batiments en hauteur des qu'on dezoome un peu,
-  // comme sur les captures Snap Map envoyees -- pas seulement au ras
-  // du sol. Le contour plat "Building" charge deja des le zoom 13
-  // (plage native du style), les volumes peuvent donc apparaitre au
-  // meme moment.
-  map.setPaintProperty("Building 3D", "fill-extrusion-opacity", [
-    "interpolate", ["linear"], ["zoom"], 13, 0, 14, .88
-  ]);
+  // Batiments A PLAT, comme Plans vu de dessus : l'empreinte au sol, un
+  // ton au-dessus de la terre, un liseré a peine plus fonce. Le calque plat
+  // du style s'arretait au zoom 15 pour laisser la place aux volumes 3D ;
+  // il va maintenant jusqu'au bout, et les volumes sont eteints.
+  map.setLayerZoomRange("Building", 13, 24);
+  map.setPaintProperty("Building", "fill-color", batiment);
+  map.setPaintProperty("Building", "fill-outline-color", batimentContour);
+  map.setPaintProperty("Building", "fill-opacity", ["interpolate", ["linear"], ["zoom"], 13, 0, 14.5, 1]);
+  if (map.getLayer("Building 3D")) map.setLayoutProperty("Building 3D", "visibility", "none");
 
   if (map.getLayer("Country border")) {
-    if (!map.getLayer("Contour pays halo")) {
-      map.addLayer({
-        id: "Contour pays halo", type: "line", source: "maptiler_planet", "source-layer": "boundary",
-        filter: ["all", ["==", "admin_level", 2], ["==", "disputed", 0], ["==", "maritime", 0]],
-        paint: {
-          "line-color": "#2c2e4e", "line-opacity": .55,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 2.2, 5, 3.4, 10, 4.4, 24, 6.5]
-        }
-      });
-    }
-    map.setPaintProperty("Country border", "line-color", "#ffffff");
-    // A l'echelle de la planete entiere, des traits blancs purs sur chaque
-    // pays donnent un effet "carte scolaire/jeu video", pas une terre vue
-    // depuis l'espace (aucune vraie carte -- Google Earth, Snap Map -- ne
-    // montre de frontieres a cette distance). Meme logique que "Country
-    // labels" juste au-dessus ("seulement en zoomant"), et meme plage de
-    // zoom (2 -> 4) que le champ d'etoiles plus bas (majOpacite) : les
-    // traits n'apparaissent qu'en sortant de la vue spatiale, en fondu.
+    map.setPaintProperty("Country border", "line-color", "#b4adc0");
+    // Pas de frontieres vues de l'espace : elles apparaissent en fondu en
+    // sortant de la vue planete, meme plage que les etoiles.
     map.setPaintProperty("Country border", "line-opacity", [
       "interpolate", ["linear"], ["zoom"], 2, 0, 4, 1
     ]);
     map.setPaintProperty("Country border", "line-width", [
-      "interpolate", ["linear"], ["zoom"], 1, 1.3, 5, 2.6, 10, 3.6, 24, 5
+      "interpolate", ["linear"], ["zoom"], 1, .8, 5, 1.4, 10, 2, 24, 3
     ]);
-    map.setPaintProperty("Contour pays halo", "line-opacity", [
-      "interpolate", ["linear"], ["zoom"], 2, 0, 4, .55
-    ]);
-    map.moveLayer("Contour pays halo");
-    map.moveLayer("Country border");
   }
 
+  // Les rues : blanches, liserees de gris. Les voies rapides en jaune.
+  // Ce style n'a que 3 niveaux -- "Highway", "Major road", "Minor road" --
+  // verifie dans le JSON brut du style.
+  map.setPaintProperty("Minor road", "line-color", rue);
+  map.setPaintProperty("Major road", "line-color", rue);
+  map.setPaintProperty("Highway", "line-color", voieRapide);
+  map.setPaintProperty("Minor road outline", "line-color", rueBord);
+  map.setPaintProperty("Major road outline", "line-color", axeBord);
+  map.setPaintProperty("Highway outline", "line-color", voieRapideBord);
+  ["Bridge", "Pier"].forEach(function (id) {
+    if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", terre);
+  });
+  // Chemins pietons : le contour par defaut encombre un quartier entier
+  // de pointilles. Plans ne les montre qu'en zoomant tres pres.
+  ["Path", "Path minor", "Path outline"].forEach(function (id) {
+    if (map.getLayer(id)) map.setLayerZoomRange(id, 17, 24);
+  });
+
+  // Les noms. Plans montre les noms de rue, de quartier, d'eau et de parc,
+  // en gris doux sur halo blanc. Les points d'interet (restaurants,
+  // magasins, bars...) restent caches : sur une carte de sortie, ce sont
+  // les clubs qu'on cherche, pas le kebab d'a cote.
   [
     "Public", "Sport", "Education", "Tourism", "Culture", "Shopping",
-    "Food", "Transport", "Park", "Healthcare", "Station",
-    "Road labels", "Highway junction", "Highway shield", "Highway shield (US)",
+    "Food", "Transport", "Healthcare", "Station",
+    "Highway junction", "Highway shield", "Highway shield (US)",
     "Highway shield interstate top (US)", "Highway shield interstate (US)",
     "Housenumber", "Oneway", "Gondola", "Ferry",
-    "River labels", "Ocean labels", "Lake labels",
-    "Airport gate", "Airport", "Place labels",
+    "Airport gate", "Airport",
     // "AFRICA", "EUROPE"... en majuscules qui traversent tout un
     // continent, ca n'a aucun sens sur une carte de boite de nuit --
     // signale par Julien. Jamais affiche, meme dezoome au maximum.
@@ -7821,41 +7825,30 @@ function snapifie() {
   ].forEach(function (id) {
     if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
   });
+  if (map.getLayer("Road labels")) {
+    map.setPaintProperty("Road labels", "text-color", "#6b6b70");
+    map.setPaintProperty("Road labels", "text-halo-color", "rgba(255,255,255,.95)");
+    map.setPaintProperty("Road labels", "text-halo-width", 1.4);
+    map.setPaintProperty("Road labels", "text-halo-blur", 0);
+  }
+  ["Place labels", "Town labels", "City labels", "Capital city labels", "State labels"].forEach(function (id) {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "text-color", "#4a4a4f");
+    map.setPaintProperty(id, "text-halo-color", "rgba(255,255,255,.95)");
+  });
+  ["River labels", "Lake labels", "Ocean labels"].forEach(function (id) {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "text-color", "#3f7fbf");
+    map.setPaintProperty(id, "text-halo-color", "rgba(166,212,246,.6)");
+  });
+  if (map.getLayer("Park")) {
+    map.setPaintProperty("Park", "text-color", "#4d8a3b");
+    map.setPaintProperty("Park", "icon-color", "#4d8a3b");
+  }
 
-  // Les noms de pays, eux, ont leur place -- mais seulement une fois
-  // suffisamment zoome, pas des l'echelle d'un continent entier
-  // (demande de Julien : "seulement en zoomant"). Le style d'origine
-  // les affiche des le zoom 1.
+  // Les noms de pays, seulement une fois suffisamment zoome (demande de
+  // Julien : "seulement en zoomant").
   if (map.getLayer("Country labels")) map.setLayerZoomRange("Country labels", 4, 12);
-
-  // Blanc pur demande par Julien (#ffffff), plus l'ecru d'avant.
-  //
-  // ATTENTION : ce style MapTiler (streets-v2-dark) n'a que 3 niveaux
-  // de route -- "Highway", "Major road", "Minor road" -- et PAS du
-  // tout "Motorway"/"Trunk"/"Primary"/"Secondary"/"Tertiary"/"Service"/
-  // "Street" comme l'ancienne liste le supposait. Verifie via le JSON
-  // brut du style (pas une simple lecture rapide) : ces id n'existaient
-  // JAMAIS, donc `if (!map.getLayer(id)) return;` sortait a chaque fois
-  // sans rien faire -- aucune route n'a donc jamais ete recoloree, et
-  // les tuiles gardaient le gris/bleu tres sombre par defaut de
-  // MapTiler ("plein de routes noires bizarres", signale par Julien).
-  var ROUTES_PLEINES = ["Highway", "Major road", "Minor road"];
-  ROUTES_PLEINES.forEach(function (id) {
-    if (!map.getLayer(id)) return;
-    map.setPaintProperty(id, "line-color", "#ffffff");
-    map.setPaintProperty(id, "line-opacity", 1);
-  });
-  var CASINGS = ["Highway outline", "Major road outline", "Minor road outline"];
-  CASINGS.forEach(function (id) {
-    if (!map.getLayer(id)) return;
-    map.setPaintProperty(id, "line-color", "#d8cdb2");
-  });
-  // Chemins pietons (Path/Path minor) : hors-sujet pour une carte de
-  // sortie nocturne, et leur contour par defaut est quasi noir --
-  // masques plutot que recolores, pour ne pas encombrer la carte.
-  ["Path", "Path minor", "Path outline"].forEach(function (id) {
-    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none");
-  });
 }
 
 
@@ -8104,7 +8097,7 @@ function snapifie() {
   }
 })();
 map.on("style.load", function () {
-  try { ambiance(); snapifie(); }
+  try { ambiance(); habillerPlans(); }
   catch (e) { console.error("[carte] exception style.load:", e); }
 });
 
@@ -8470,7 +8463,7 @@ function ouvrirClub(c, src, id) {
     activerVue("carte");
     // easeTo plutot qu'un saut sec : on voit d'ou on vient, donc ou se
     // situe le club par rapport au reste de la carte.
-    map.easeTo({ center: c.lngLat, zoom: 15.5, pitch: 45, duration: 1100 });
+    map.easeTo({ center: c.lngLat, zoom: 15.5, pitch: 0, bearing: 0, duration: 1100 });
   });
   // Bouton "Partager" de la rangee copiee sur Google Maps : partage
   // natif si dispo (mobile), sinon copie le lien dans le presse-papier.
@@ -9272,10 +9265,10 @@ map.on("load", function () {
   // cadre malgre des bounds corrects.
   var lngLats = Object.keys(CLUBS).map(function (k) { return CLUBS[k].lngLat; });
   var bounds = lngLats.reduce(function (b, ll) { return b.extend(ll); }, new maplibregl.LngLatBounds(lngLats[0], lngLats[0]));
-  /* Marge du BAS agrandie : la feuille des fiches couvre le bas de la
-     carte. Sans ca, le club se cadrait au milieu de l'ecran -- c'est-a-dire
-     sous la feuille. */
-  map.fitBounds(bounds, { padding: { top: 90, left: 64, right: 64, bottom: 380 }, pitch: 0, bearing: 0, maxZoom: 15, duration: 0 });
+  /* Marge du BAS agrandie : la fiche du club et la capsule d'onglets
+     flottent sur le bas de la carte. Sans ca, le club pouvait se cadrer
+     juste dessous. */
+  map.fitBounds(bounds, { padding: { top: 80, left: 64, right: 64, bottom: 200 }, pitch: 0, bearing: 0, maxZoom: 15, duration: 0 });
 
   // Point "moi" -- position fixe pour cette maquette (pas de vraie
   // geolocalisation branchee), juste pour garder un repere visuel de
@@ -9792,13 +9785,13 @@ function creerClubChip(c, key, index) {
      c'est ouvert. L'image est la photo du club s'il en a depose une, et
      sinon le badge Noctify : le meme partout, decision du 09/09. */
   var etiquettes = [libelleType(c.type), c.shut ? c.horaire : "Ouvert"].filter(Boolean);
+  // La pastille "Ce soir" sort de l'image : la vignette est trop petite
+  // pour la porter, elle se range a droite de la fiche.
   b.innerHTML =
-    '<span class="lieu-image' + classeFoto(c) + '">' +
-      imgClub(c) +
-      (offreIci ? '<span class="lieu-pastille">Ce soir</span>' : "") +
-    "</span>" +
+    '<span class="lieu-image' + classeFoto(c) + '">' + imgClub(c) + "</span>" +
     '<strong class="lieu-nom">' + escapeHtmlSupport(c.nom) + "</strong>" +
-    '<span class="lieu-tags">' + etiquettes.map(escapeHtmlSupport).join(" • ") + "</span>";
+    '<span class="lieu-tags">' + etiquettes.map(escapeHtmlSupport).join(" • ") + "</span>" +
+    (offreIci ? '<span class="lieu-pastille">Ce soir</span>' : "");
   b.addEventListener("click", function () {
     activerVue("carte");
     ouvrirClub(c, b, key);
