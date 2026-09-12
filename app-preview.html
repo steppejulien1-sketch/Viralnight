@@ -2444,6 +2444,29 @@
         position: relative; width: 100%; aspect-ratio: 4 / 3;
         background: var(--socle); overflow: hidden;
       }
+      /* La valeur, posee SUR l'image, comme DUSK ("500 Points" en haut a
+         droite). Pastille sombre et translucide : sur un dessin clair elle
+         se detache sans avoir besoin de couleur, et elle ne cache jamais
+         le sujet, qui est au centre. */
+      .carte-reco .pts-pastille {
+        position: absolute; top: 8px; right: 8px; z-index: 2;
+        padding: 4px 9px; border-radius: 999px;
+        background: rgba(16,18,22,.72); color: #ffffff;
+        -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+        font-family: var(--titre); font-variant-numeric: tabular-nums;
+        font-size: calc(11.5 * var(--u)); font-weight: 700; letter-spacing: -.01em;
+        line-height: 1.2;
+      }
+      /* La categorie, en petites capitales AU-DESSUS du titre ("LIFESTYLE"
+         chez DUSK). Serree, pas espacee : c'est une etiquette, pas un
+         intertitre de tableau de bord. Le corail y est a sa place -- un
+         accent minuscule, une fois par carte, jamais un aplat. */
+      .carte-reco .categorie {
+        display: block; margin-bottom: 3px;
+        font-size: calc(10 * var(--u)); font-weight: 700;
+        letter-spacing: .04em; text-transform: uppercase;
+        color: var(--accent-fort, var(--accent));
+      }
       /* `contain`, et surtout PAS `cover`. Les dessins sont carres
          (512x512) et le cadre est en 4/3 : avec `cover`, un quart de la
          hauteur partait a la poubelle, et l'agrandissement de 1,08 en
@@ -2461,8 +2484,15 @@
          grand qu'il peut l'etre sans etre coupe) et laisse un peu de
          blanc sur les cotes. C'est le bon compromis : mieux vaut un peu
          d'air qu'un objet ampute. */
+      /* ⚠️ LE DESSIN SE RETIRE DES COINS. La pastille de points est posee
+         en haut a droite ; les dessins, eux, remplissaient tout le cadre
+         -- la pastille couvrait la rondelle d'orange du cocktail et le
+         goulot de la bouteille. DUSK n'a pas ce probleme : ses photos ont
+         de l'air. Un retrait de 14 % en haut et sur les cotes rend cet
+         air au coin, sans rogner le sujet (object-fit reste contain). */
       .carte-reco .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+        box-sizing: border-box; padding: 14% 12% 4%;
         transition: transform .5s cubic-bezier(.2,.7,.3,1);
       }
       .carte-reco:hover .photo img { transform: scale(1.05); }
@@ -2495,10 +2525,13 @@
          place de la deuxieme ligne aligne les quatre prix, plein ou vide.
          Le nom redescend en 13.5/600 : c'est le PRIX qu'on compare d'une
          carte a l'autre, l'image dit deja de quoi il s'agit. */
+      /* Le titre est desormais le texte principal sous l'image (le prix
+         est parti sur la pastille). Gras, sur deux lignes reservees pour
+         que les rangees restent alignees quel que soit le nom. */
       .carte-reco strong {
         font-family: var(--titre);
-        display: block; font-size: calc(13.5 * var(--u)); font-weight: 600; letter-spacing: -.015em;
-        line-height: 1.3; min-height: 2.6em; color: var(--ink);
+        display: block; font-size: calc(14.5 * var(--u)); font-weight: 700; letter-spacing: -.02em;
+        line-height: 1.25; min-height: 2.5em; color: var(--ink);
       }
       /* Le prix devient la deuxieme information la plus lisible de la
          carte, juste sous le nom -- il etait sur la photo avant. */
@@ -3683,6 +3716,42 @@
       /* Casse normale : cette ligne ne porte plus qu'un etat de stock,
          et une capitale espacee sur "Plus que 3" ferait sonner une alerte
          la ou il n'y a qu'une information. */
+      /* ---- La fiche, au modele DUSK ----
+         Categorie en petites capitales (accent), stock a cote s'il est
+         bas, titre gras, puis "Comment en profiter" : des etapes dont
+         l'icone vit dans une TUILE (un carre arrondi en surface
+         secondaire), comme les lignes "Tap redeem reward" / "Copy the
+         discount code" de DUSK. La tuile, c'est ce qui fait lire une
+         ligne comme une ETAPE et pas comme une puce de liste. */
+      .sheet-tete { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; }
+      .sheet-tete:empty { display: none; }
+      .sheet-categorie {
+        font-size: calc(10.5 * var(--u)); font-weight: 700;
+        letter-spacing: .04em; text-transform: uppercase; color: var(--accent);
+      }
+      .sheet-stock { font-size: calc(11.5 * var(--u)); font-weight: 600; color: var(--ink3); }
+      .sheet-etapes-titre {
+        margin: 18px 0 10px; font-size: calc(13 * var(--u)); font-weight: 700; color: var(--ink);
+      }
+      .sheet-etapes { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 12px; }
+      .sheet-etapes li { display: flex; align-items: flex-start; gap: 12px; }
+      .sheet-etape-ico {
+        flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px;
+        display: grid; place-items: center; background: var(--s2);
+      }
+      .sheet-etape-ico svg {
+        width: 19px; height: 19px; fill: none; stroke: var(--ink);
+        stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+      }
+      .sheet-etape-txt { flex: 1; min-width: 0; padding-top: 1px; }
+      .sheet-etape-txt strong {
+        display: block; font-size: calc(14 * var(--u)); font-weight: 700; color: var(--ink);
+      }
+      .sheet-etape-txt span {
+        display: block; margin-top: 2px; font-size: calc(12.5 * var(--u));
+        line-height: 1.4; color: var(--ink2);
+      }
+
       .sheet-fam {
         display: block; font-size: calc(12 * var(--u)); font-weight: 600; letter-spacing: -.005em;
         color: var(--ink3); margin-bottom: 6px;
@@ -11529,15 +11598,27 @@ function rendreListe() {
       vibrer("leger");
       jouer("debloque");
     }
-    // Rien n'est pose sur la photo : ni prix, ni badge, ni degrade.
-    // Tout ce qui est du texte vit dans .corps, sous l'image.
+    /* ⚠️ ANATOMIE DE LA CARTE DUSK. Julien, 12/09/2026, devant l'appli
+       DUSK : "je veux que tu t'inspires de ca" -- fond blanc garde, tout
+       le reste pris.
+       Une carte DUSK, c'est : l'image, la valeur en PASTILLE TRANSLUCIDE
+       sur l'image (en haut a droite), puis sous l'image une categorie en
+       petites capitales et le titre. Le prix quitte donc le corps de la
+       carte pour se poser sur l'image : c'est la que l'oeil tombe en
+       premier, et ca libere le texte pour ce qui DECRIT la recompense.
+       (L'ancienne regle "rien sur la photo" est levee par ce choix.) */
+    var famille = FAMILLES[r.fam] || "";
     b.innerHTML =
       '<span class="photo">' +
         visuelInterieur +
+        '<span class="pts-pastille">' + nb(r.cout) + " pts</span>" +
       "</span>" +
       '<span class="corps">' +
+        // Toujours rendue, meme vide : sans elle, une recompense sans
+        // famille ("Table offerte + bouteille") remontait son titre d'une
+        // ligne et decalait toute la rangee.
+        '<span class="categorie">' + (famille || "&nbsp;") + "</span>" +
         "<strong>" + r.nom + "</strong>" +
-        '<span class="prix">' + nb(r.cout) + "<span>pts</span></span>" +
         (epuise || rare
           ? '<span class="ligne-etat">' +
               (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
@@ -11728,14 +11809,41 @@ function ouvrirRecompense(item, src) {
     note = "Il te restera <em>" + nb(ETAT.solde - item.cout) + " pts</em> ce soir.";
   }
 
+  /* ⚠️ LA FICHE DUSK : "UNLOCKING THIS REWARD". Julien avait trouve
+     cette fiche "degueulasse, pas ouf" ; DUSK est le modele qu'il a
+     choisi le 12/09/2026. Leur fiche ne se contente pas de nommer la
+     recompense, elle dit COMMENT S'EN SERVIR : la categorie, le titre,
+     puis des etapes numerotees -- une icone dans une tuile, un titre
+     court, une phrase -- et UN seul bouton en bas.
+     Les deux coches d'avant ("Valable ce soir", "Montre ce bon au bar")
+     disaient la meme chose sans l'ordonner : dans quel ordre, a quel
+     moment, avec quoi dans la main. */
+  var lieu = item.fam === "bar" ? "Au bar"
+    : (item.fam === "acces" || item.fam === "vip") ? "À l'entrée"
+    : "Au bar ou à l'entrée";
+  var ICONE_ECHANGE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2"/></svg>';
+  var ICONE_QR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 20h2.5M20 14v2.5"/></svg>';
+  var etapes = [
+    [ICONE_ECHANGE, "Échange tes points", "Touche le bouton : ils quittent ton solde et ton bon s'affiche."],
+    [ICONE_QR, "Montre ton bon", lieu + ", présente le QR. Valable ce soir."],
+  ];
+
+  var famille = FAMILLES[item.fam] || "";
   var html =
     visuel(item, "grand") +
-    (entete ? '<span class="sheet-fam">' + entete + "</span>" : "") +
+    '<p class="sheet-tete">' +
+      (famille ? '<span class="sheet-categorie">' + famille + "</span>" : "") +
+      (entete ? '<span class="sheet-stock">' + entete + "</span>" : "") +
+    "</p>" +
     '<h3 id="sh-titre">' + item.nom + "</h3>" +
     (item.desc ? '<p class="desc">' + item.desc + "</p>" : "") +
-    '<ul class="regles">' + item.regles.map(function (r) {
-      return "<li>" + picto("check") + "<span>" + r + "</span></li>";
-    }).join("") + "</ul>" +
+    '<p class="sheet-etapes-titre">Comment en profiter</p>' +
+    '<ol class="sheet-etapes">' + etapes.map(function (e) {
+      return "<li>" +
+        '<span class="sheet-etape-ico">' + e[0] + "</span>" +
+        '<span class="sheet-etape-txt"><strong>' + e[1] + "</strong><span>" + e[2] + "</span></span>" +
+      "</li>";
+    }).join("") + "</ol>" +
     cta +
     (note ? '<p class="sheet-note">' + note + "</p>" : "");
 
