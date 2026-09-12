@@ -1911,86 +1911,40 @@
       .maplibregl-ctrl-logo { display: none !important; }
 
 
-      /* Badge de club v3 -- deux versions precedentes jugees "pas
-         encore ca" (meme icone de verre repetee, puis une initiale sur
-         fond de couleur) : la vraie photo du lieu, en avatar rond
-         cercle dans la couleur du club, porte davantage d'identite que
-         n'importe quel pictogramme ou lettre -- et recoupe la fiche
-         (meme photo, voir fotoClub()), donc le badge sur la carte
-         annonce deja ce qu'on va voir en tapant dessus. Point de
-         statut ouvert/ferme en overlay, ombre au sol (::before) pour
-         le detacher un peu du fond de carte. */
-      /* Ancrage : le badge etait pose PAR SON CENTRE sur les
-         coordonnees (anchor "center"), donc il ne designait aucun point
-         precis -- Julien voulait "bien mettre les clubs aux endroits".
-         Il porte maintenant une pointe (::before) et c'est cette pointe
-         qui touche le lieu exact, comme une epingle de carte.
+      /* ⚠️ DES PINS FACON APPLE PLANS. Julien, 12/09/2026 : "sur la carte ce
+         serait bien qu'il y ait des pins, comme sur les cartes Apple que je
+         t'ai envoyees, pour pinser les batiments affilies".
+         Remplace le badge carre a la mascotte (09/09). Sur un plan aux
+         couleurs de Plans, c'est l'epingle de Plans qui se lit comme "un
+         lieu" : une goutte de couleur, un pictogramme blanc, le nom
+         dessous en couleur avec un halo blanc. Rouge Noctify (--bouton) :
+         c'est la seule chose rouge du plan, elle veut dire "club affilie".
+         Toujours rouge, meme ferme : Mirano l'est six soirs sur sept, et un
+         pin gris ne disait plus "affilie". Les horaires sont dans la fiche.
 
-         MARGE DU BAS : MapLibre ancre le PORTEUR, pas le badge. La
-         marge reserve dans le porteur la place de la pointe, sans quoi
-         un anchor "bottom" poserait le bas du CERCLE sur le club et la
-         pointe pendrait 11px trop bas.
-
-         overflow: hidden est retire (il decoupait tout ce qui depasse,
-         donc la pointe) ; c'est l'image qui porte desormais son propre
-         arrondi pour rester un disque. */
-      /* ⚠️ UN SEUL BADGE, LE MEME POUR TOUS LES CLUBS. Julien,
-         09/09/2026 : "un badge pour tout le monde, le meme badge pour
-         tout le monde, un truc carre [...] un truc en rapport avec la
-         mascotte".
-         Ce qui part avec le rond : l'anneau a la couleur du club
-         (`var(--c)`), qui donnait autant de badges differents que de
-         clubs, et le vide qui "attendait la photo" -- un rond vide se lit
-         comme une image qui n'a pas charge, pas comme un choix.
-         Le carre arrondi porte le creme de la mascotte et le verre
-         lui-meme. Un club qui depose une photo la voit remplir le carre ;
-         sans photo, le badge reste un objet fini. */
-      .club-badge {
-        width: 56px; height: 56px; border-radius: 18px;
-        margin-bottom: 12px;
-        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
-        border: 0; overflow: hidden;
-        box-shadow: 0 0 0 3px #fff, 0 8px 18px -8px rgba(16,18,22,.55);
-        position: relative; cursor: pointer;
-        /* Le scale de majTailleMarqueurs doit pivoter autour de la
-           POINTE, pas du centre : sinon le club se decolle de son lieu
-           des que la carte change de zoom. */
-        transform-origin: 50% calc(100% + 11px);
+         ANCRAGE : MapLibre ancre le porteur par le BAS ("bottom"). Le
+         porteur a la taille exacte de la goutte, donc c'est la POINTE qui
+         touche le lieu. Le nom est en position absolue sous le porteur :
+         il ne compte pas dans sa hauteur, et ne decale pas la pointe.
+         Le scale de majTailleMarqueurs pivote autour de cette pointe
+         (transform-origin 50% 100%) : le pin ne glisse pas en zoomant. */
+      .marker-club { width: 34px; height: 44px; }
+      .club-pin {
+        position: relative; display: block; width: 34px; height: 44px;
+        padding: 0; border: 0; background: none; cursor: pointer;
+        transform-origin: 50% 100%;
       }
-      .club-badge img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
-      /* La pointe. Reprend la couleur de l'anneau : le cercle et sa
-         pointe doivent se lire comme un seul objet, pas comme un badge
-         pose sur un triangle. Le -2px la fait mordre sur l'anneau pour
-         qu'aucun liseré de fond ne passe entre les deux. */
-      /* La pointe suit le liseré blanc du badge, plus la couleur du club :
-         il n'y en a plus. `overflow: hidden` la decouperait, elle se pose
-         donc sur le porteur, pas sur le badge. */
-      .marker-club::after {
-        content: ""; position: absolute; left: 50%; bottom: 6px;
-        translate: -50% 0;
-        width: 11px; height: 13px; background: #fff;
-        clip-path: polygon(50% 100%, 0 0, 100% 0);
-        filter: drop-shadow(0 3px 4px rgba(16,18,22,.35));
+      .club-pin svg { display: block; width: 34px; height: 44px; filter: drop-shadow(0 3px 4px rgba(16,18,22,.32)); }
+      .club-pin .goutte { fill: var(--bouton, #ff2f45); stroke: #ffffff; stroke-width: 1.4; }
+      .club-pin .picto { fill: none; stroke: #ffffff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .club-pin-nom {
+        position: absolute; top: calc(100% + 2px); left: 50%; transform: translateX(-50%);
+        white-space: nowrap; pointer-events: none;
+        font-family: var(--sans); font-size: calc(12.5 * var(--u)); font-weight: 700; line-height: 1.15;
+        color: #d0142c;
+        text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff, 0 0 5px #fff;
       }
-      .club-badge.shut { filter: grayscale(.28); opacity: .82; }
-      /* ⚠️ LE VOYANT OUVERT/FERME EST RETIRE. Julien, 09/09/2026 : "il y
-         a un petit point comme ca, blanc, inutile [...] j'aurais juste
-         besoin de mettre le badge avec un logo qu'on met tout le monde".
-         L'information ne se perd pas : `.shut` eteint le badge entier
-         (opacite + gris). Le point disait la meme chose, en plus petit,
-         et cassait la silhouette du carre juste apres qu'on l'ait faite. */
-      /* Anneau qui pulse sur les clubs "chauds". Il n'a en fait JAMAIS
-         ete visible : l'ancien overflow: hidden du badge le decoupait
-         entierement (inset negatif = hors du cadre). Retirer overflow
-         pour laisser passer la pointe l'aurait donc fait apparaitre
-         d'un coup -- un anneau rouge anime que personne n'a demande, en
-         plein dans ce que Julien evite ("pas trop de rouge, fin et
-         soigne"). Neutralise ici pour que la pose de la pointe ne
-         change QUE la pointe ; a reactiver en supprimant ce display
-         si l'effet est voulu un jour. */
-      .club-badge.hot::after { display: none; }
-      @keyframes ping { 0% { transform: scale(1); opacity: .8; } 70%, 100% { transform: scale(2); opacity: 0; } }
-      @media (prefers-reduced-motion: reduce) { .club-badge.hot::after { animation: none; opacity: .45; } }
+      .club-pin:active svg { transform: scale(.94); transform-origin: 50% 100%; }
 
       /* Marqueur "moi" -- Julien : un point bleu generique "c'est de la
          merde", un verre est plus logique sur cette carte (coherent
@@ -3046,10 +3000,12 @@
          c'est superpose sur la page, c'est style". Chez DUSK le texte de la
          page passe SOUS la capsule et se devine a travers. La premiere
          capsule d'ici etait blanche a 94 % sur une page blanche : elle
-         existait, mais ne se voyait pas posee. Elle est maintenant en verre
-         depoli (blanc a 72 %, flou fort), plus petite et plus haute, avec
-         une ombre franche -- les pages defilent deja dessous (inset 0 et
-         112 px de marge basse), il fallait juste que ca se voie.
+         existait, mais ne se voyait pas posee. Elle est plus petite, plus
+         haute, avec une ombre franche -- c'est ce qui la fait flotter.
+         ⚠️ OPAQUE, PAS EN VERRE. Un essai en verre depoli (blanc a 72 %,
+         flou) a ete retire le meme soir. Julien : "quand on est sur la
+         carte, l'onglet en dessous devient transparent, j'aime pas" -- le
+         plan se voyait a travers.
          Proportions prises sur la capture : 56 px de haut, 14 px des bords,
          22 px du bas. */
       .tabs {
@@ -3067,8 +3023,7 @@
         content: ""; position: absolute; z-index: -1;
         left: 14px; right: 14px; top: 10px; bottom: 22px;
         border-radius: 999px;
-        background: rgba(255,255,255,.72);
-        -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
+        background: #ffffff;
         box-shadow: 0 0 0 .5px rgba(16,18,22,.12), 0 14px 34px -10px rgba(16,18,22,.34), 0 2px 6px -2px rgba(16,18,22,.12);
       }
 
@@ -3140,7 +3095,7 @@
          toujours. */
       @media (prefers-color-scheme: dark) {
         .tabs::before {
-          background: rgba(20,17,16,.72);
+          background: #141110;
           box-shadow: 0 0 0 1px rgba(255,238,225,.10), 0 10px 26px -12px rgba(0,0,0,.6);
         }
         .tab.on { background: rgba(255,238,225,.10); }
@@ -9211,7 +9166,7 @@ function majTailleMarqueurs() {
     m.el.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + s.toFixed(3) + ")";
     // Le marqueur "moi" n'est pas concerne : il est seul, il ne se
     // superpose a rien, et c'est le seul repere utile vu de loin.
-    if (m.el.classList.contains("club-badge")) {
+    if (m.el.classList.contains("club-pin")) {
       m.el.style.opacity = fonduClubs.toFixed(2);
       // Invisible ne doit pas rester cliquable : sinon on ouvre une
       // fiche club en tapant le vide au milieu de l'ocean.
@@ -9224,24 +9179,22 @@ map.on("load", function () {
   Object.keys(CLUBS).forEach(function (key) {
     var c = CLUBS[key];
     var porteur = document.createElement("div");
-    // marker-club : c'est LUI qui porte la pointe. `.marker-porteur` sert
-    // aussi au repere "moi", qui n'en veut pas.
+    // marker-club : le porteur a la taille de la goutte, pour que l'ancre
+    // "bottom" pose la pointe sur le lieu. `.marker-porteur` sert aussi au
+    // repere "moi".
     porteur.className = "marker-porteur marker-club";
     var el = document.createElement("button");
-    el.className = "club-badge" + (c.hot ? " hot" : "") + (c.shut ? " shut" : "");
-    el.style.setProperty("--c", c.c);
-    // Le nombre/etiquette ("42 ICI", "1h OUVRE"...) faisait plus
-    // confus que clair, un peu comme une heure affichee au hasard
-    // (demande de Julien) -- la photo + le point de statut suffisent,
-    // le detail (horaires precis, avis...) reste dans la fiche.
-    el.classList.toggle("sans-photo", !c.photo);
+    el.className = "club-pin";
     el.dataset.club = key;
-    // ⚠️ PAS DE VOYANT SUR LE BADGE. Julien, 09/09/2026 : "il y a un
-    // petit point comme ca, blanc, inutile [...] j'aurais juste besoin de
-    // mettre le badge avec un logo qu'on met tout le monde".
-    // L'etat ouvert/ferme ne se perd pas : `.shut` eteint deja le badge
-    // entier. Un pastillage en plus disait la meme chose, en plus petit.
-    el.innerHTML = imgClub(c);
+    // Le pin de Plans : goutte, verre a cocktail blanc, nom dessous. Pas de
+    // photo dedans -- une epingle porte un pictogramme ; la photo est dans
+    // la fiche qui s'ouvre au toucher.
+    el.innerHTML =
+      '<svg viewBox="0 0 34 44" aria-hidden="true">' +
+        '<path class="goutte" d="M17 43c-1-4.8-4.7-8.6-8.44-13A15.5 15.5 0 1 1 25.44 30C21.7 34.4 18 38.2 17 43z"/>' +
+        '<path class="picto" d="M10.6 10.8h12.8L17 17.9zM17 17.9v5.4M13.9 23.6h6.2"/>' +
+      "</svg>" +
+      '<span class="club-pin-nom">' + escapeHtmlSupport(c.nom) + "</span>";
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     // Retour a notre propre fiche (pas l'iframe Google directement) :
     // Julien voulait "tomber direct sur la fiche" mais pas sur "Google

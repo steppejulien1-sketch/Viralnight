@@ -202,7 +202,7 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   await page.evaluate(() => document.querySelector("#tab-carte").click());
   await pause(2500);
   const ouverte = await page.evaluate(() => {
-    const b = document.querySelector(".club-badge");
+    const b = document.querySelector(".club-pin");
     if (!b) return false;
     b.click();
     return true;
