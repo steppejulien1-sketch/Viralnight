@@ -2138,14 +2138,17 @@
          l'ecran -- combien j'ai, et ce que ca me permet d'atteindre.
          Reference Starbucks Rewards : le solde se lit d'un coup d'oeil,
          la progression vers le palier suivant est juste dessous. */
-      .solde-carte {
-        position: relative; overflow: hidden;
-        padding: 18px 18px 17px; border-radius: var(--r4);
-        /* Meme correction que .pf-fidelite : surface neutre. Les deux
-           degrades rouges superposes donnaient un lavis rose qui faisait
-           "carte generee" plus que "carte de fidelite". */
-        border: 1px solid var(--line);
-        background: var(--s1);
+      /* ⚠️ PLUS DE CADRE. Depuis le 12/09/2026 c'est l'en-tete DUSK
+         ("Rewards" + encadre de points), pas une carte. Une boite autour
+         d'un titre en ferait une carte de plus a lire avant d'arriver au
+         catalogue. */
+      .solde-carte { position: relative; padding: 2px 2px 0; }
+      .solde-tete {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      }
+      .solde-titre {
+        margin: 0; font-size: calc(26 * var(--u)); font-weight: 800; letter-spacing: -.035em;
+        line-height: 1.05; color: var(--ink);
       }
       /* ---- LE CONTRASTE D'ECHELLE ----
          Le chiffre faisait 42 px, le libelle 11,5, le texte courant 13.
@@ -2320,28 +2323,38 @@
         margin: 0; font-size: calc(12.5 * var(--u)); font-weight: 600;
         letter-spacing: -.005em; color: var(--ink3);
       }
-      .solde-chiffre { margin: 4px 0 0; display: flex; align-items: baseline; gap: 7px; }
+      /* L'ENCADRE DE POINTS, calque sur "13,200 / POINTS" de DUSK : un
+         lisere fin, le nombre en gras, l'unite en petites capitales
+         dessous. Un contour et pas un aplat -- le solde se lit comme une
+         etiquette posee au bout du titre, pas comme un bouton. */
+      .solde-chiffre {
+        flex: 0 0 auto; margin: 0;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 5px 11px 5px; border-radius: 10px;
+        border: 1.5px solid var(--ink); min-width: 64px;
+      }
       .carte-solde-num {
         /* Archivo, pas le mono : DM Mono barre ses zeros, ce qui donne un
            panneau d'interdiction des que le solde en contient un. Les
            chiffres tabulaires empechent la largeur de sauter pendant le
            comptage. */
         font-family: var(--titre); font-variant-numeric: tabular-nums;
-        font-size: calc(52 * var(--u)); font-weight: 700;
+        font-size: calc(19 * var(--u)); font-weight: 800;
         /* ENCRE, plus corail. Un grand chiffre en couleur de marque est
            exactement ce que Julien avait deja fait retirer de la carte du
            profil ("BCP TROP L'AIR D'ETRE VIBECODE") ; il etait reste ici.
            Le corail garde les prix et la barre : la ou il porte une
            information, pas la ou il decore la plus grosse chose de
            l'ecran. */
-        letter-spacing: -.05em; line-height: .95; color: var(--ink);
+        letter-spacing: -.03em; line-height: 1; color: var(--ink);
       }
       .solde-chiffre span {
-        font-family: var(--sans); font-size: calc(14 * var(--u)); font-weight: 600;
-        color: var(--ink3); letter-spacing: -.01em;
+        margin-top: 2px;
+        font-family: var(--sans); font-size: calc(8.5 * var(--u)); font-weight: 700;
+        color: var(--ink2); letter-spacing: .06em; text-transform: uppercase; line-height: 1;
       }
       /* ---- Progression vers la prochaine recompense atteignable ---- */
-      .solde-prog { margin-top: 18px; }
+      .solde-prog { margin-top: 14px; }
       /* UNE barre, UNE cible.
          Elle etait crantee aux prix des recompenses, avec les chiffres
          ecrits dessous -- 300 / 600 / 1,2k / 3k. Julien : "le compteur de
@@ -5288,11 +5301,25 @@
             <section class="sec sec-premiere">
 
 
+              <!-- ⚠️ L'EN-TETE DUSK : "Rewards" A GAUCHE, "13,200 POINTS"
+                   DANS UN ENCADRE A DROITE. Julien, 12/09/2026 : "vas-y,
+                   continue" apres la carte et la fiche au modele DUSK.
+                   La carte "Mes points" etait une grande boite presque
+                   vide -- un libelle, un zero de 52 px, une barre. Chez
+                   DUSK le solde n'est pas un ecran, c'est un OBJET pose au
+                   bout du titre : on le lit sans qu'il prenne la place du
+                   catalogue.
+                   Les identifiants restent (#solde-num, #solde-prog...) :
+                   le comptage, le cadeau du jour et la jauge s'en servent.
+                   La jauge reste aussi -- Julien l'a demandee ("il faut que
+                   ca se remplisse un peu"). -->
               <div class="solde-carte">
-                <p class="solde-label">Mes points</p>
-                <p class="solde-chiffre">
-                  <strong class="carte-solde-num" id="solde-num">0</strong><span>pts</span>
-                </p>
+                <div class="solde-tete">
+                  <h2 class="solde-titre">Récompenses</h2>
+                  <p class="solde-chiffre">
+                    <strong class="carte-solde-num" id="solde-num">0</strong><span>points</span>
+                  </p>
+                </div>
                 <div class="solde-prog" id="solde-prog">
                   <span class="solde-prog-piste" id="solde-prog-piste"></span>
                   <span class="solde-prog-paliers" id="solde-prog-paliers"></span>
@@ -5373,15 +5400,9 @@
             </section>
 
             <section class="sec">
-              <!-- ⚠️ PAS DE COMPTEUR A COTE DU TITRE. Julien, 11/09/2026 :
-                   "retire a cote de Recompenses le 4."
-                   Un "4" nu au bout d'un titre ne dit ni de quoi il parle
-                   ni quoi en faire -- et la reponse est juste en dessous,
-                   dans la grille, ou les quatre cartes se comptent d'un
-                   coup d'oeil. -->
-              <div class="sec-head">
-                <h2>Récompenses</h2>
-              </div>
+              <!-- Plus de titre ici : "Recompenses" est porte par l'en-tete
+                   du haut, a cote du solde. Le repeter au-dessus de la
+                   grille donnait deux fois le meme mot sur un ecran. -->
               <div class="grille" id="liste"></div>
             </section>
 
