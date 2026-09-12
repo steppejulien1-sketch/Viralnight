@@ -2543,6 +2543,8 @@
       .grille {
         display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain;
         margin: 0 -20px; padding: 0 20px 22px; scroll-padding-left: 20px;
+        /* Chaque carte garde sa hauteur : pas d'etirement sur la plus haute. */
+        align-items: flex-start;
         scroll-snap-type: x mandatory; scrollbar-width: none;
       }
       .grille::-webkit-scrollbar { display: none; }
@@ -2592,12 +2594,13 @@
          droite). Pastille sombre et translucide : sur un dessin clair elle
          se detache sans avoir besoin de couleur, et elle ne cache jamais
          le sujet, qui est au centre. */
-      /* Le prix, en derniere ligne de la carte. margin-top: auto le pousse
-         en bas : dans une rangee, les cartes ont la meme hauteur, et les
-         prix tombent sur la meme ligne meme quand un titre passe sur deux. */
+      /* Le prix, juste sous le titre. PAS pousse en bas de carte : une
+         seule carte plus haute dans la rangee (un badge "Plus que 3")
+         etirait toutes les autres, et leur prix tombait 60 px sous le
+         titre, isole dans le vide. */
       .carte-reco .prix-ligne {
         display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-        margin-top: auto; padding-top: 4px;
+        margin-top: 4px;
         font-family: var(--sans); font-variant-numeric: tabular-nums;
         font-size: calc(13.5 * var(--u)); font-weight: 600; letter-spacing: -.005em;
         color: var(--ink2);
@@ -12083,12 +12086,6 @@ function carteRecompense(r, index, bar) {
         // ligne et decalait toute la rangee.
         '<span class="categorie">' + (famille || "&nbsp;") + "</span>" +
         "<strong>" + r.nom + "</strong>" +
-        (epuise || rare
-          ? '<span class="ligne-etat">' +
-              (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
-              (rare ? '<span class="badge-rarete">Plus que ' + r.stock + "</span>" : "") +
-            "</span>"
-          : "") +
         // Plus de jauge ni de "Encore X pts" par carte : depuis que la
         // jauge du solde est CRANTEE aux prix des recompenses, elle dit
         // deja ou l'on se situe pour toutes a la fois. Quatre barres
@@ -12100,6 +12097,12 @@ function carteRecompense(r, index, bar) {
         '<span class="prix-ligne">' + nb(r.cout) + " points" +
           (epuise || loin ? "" : '<span class="dispo-txt">À échanger</span>') +
         "</span>" +
+        (epuise || rare
+          ? '<span class="ligne-etat">' +
+              (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
+              (rare ? '<span class="badge-rarete">Plus que ' + r.stock + "</span>" : "") +
+            "</span>"
+          : "") +
         '<span class="serie">' + r.code + "</span>" +
       "</span>";
 
