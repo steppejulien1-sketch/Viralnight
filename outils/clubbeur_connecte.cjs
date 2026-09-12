@@ -74,6 +74,17 @@ const HAUTEUR = 844;
     );
     console.log(`  @${handle}`);
 
+    /* LE NOM EN HAUT DU PROFIL. L'adresse jetable (e2e-apercu-...) ne
+       contient aucun prenom : nomAffiche() rendrait null, et la capture
+       montrerait le pseudo au lieu du nom en capitales. On pose un nom la
+       ou Google et Apple posent le leur -- et ou Reglages range le nom
+       corrige : user_metadata.full_name. Nom invente. A faire AVANT la
+       connexion : la session emporte les metadonnees du moment. */
+    const [stNom] = await V.admin(`/auth/v1/admin/users/${compte.uid}`, "PUT", {
+      user_metadata: { full_name: "Camille Durand" },
+    });
+    console.log(`  nom pose (HTTP ${stNom})`);
+
     navigateur = await puppeteer.launch({
       executablePath: V.CHROME,
       headless: "new",

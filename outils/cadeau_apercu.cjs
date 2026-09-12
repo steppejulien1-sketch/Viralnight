@@ -261,8 +261,8 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   await page.evaluate(() => {
     document.querySelector("#pf-connecte-toi").hidden = true;
     document.querySelector("#pf-contenu").hidden = false;
-    document.querySelector("#pf-handle").textContent = "@julien";
-    document.querySelector("#pf-avatar-init").textContent = "J";
+    document.querySelector("#pf-nom").textContent = "Camille Durand";
+    document.querySelector("#pf-avatar-init").textContent = "C";
     document.querySelector("#pf-fid-solde").textContent = "150";
     // ⚠️ CES MONTANTS DOIVENT RESTER CEUX DE LA BASE. Une capture qui
     // annonce un chiffre que le produit ne verse pas se relit plus tard

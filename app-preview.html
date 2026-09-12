@@ -1258,16 +1258,19 @@
         }
       }
 
-      /* Cloche notifications : raccourci en haut a droite de l'ecran
-         Profil (demande de Julien, "comme sur la capture") -- ouvre
-         directement l'ecran Notifications, meme destination que la
-         ligne de la liste plus bas. */
-      .pf-cloche {
-        position: absolute; top: 16px; right: 16px; z-index: 2;
-        width: 34px; height: 34px; border-radius: 50%; background: var(--s2); border: 0;
-        cursor: pointer; display: grid; place-items: center;
+      /* La carte des notifications, en haut du profil (modele DUSK) : un
+         bloc gris clair pose sur le blanc, titre gras, phrase grise,
+         interrupteur a droite. */
+      .pf-notif {
+        display: flex; align-items: center; gap: 14px;
+        margin: 4px 0 6px; padding: 16px 16px 16px 18px; border-radius: 16px;
+        background: var(--s2);
       }
-      .pf-cloche svg { width: 16px; height: 16px; stroke: var(--ink2); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-notif-txt { flex: 1; min-width: 0; }
+      .pf-notif-titre { margin: 0 0 3px; font-size: calc(15 * var(--u)); font-weight: 800; letter-spacing: -.015em; color: var(--ink); }
+      .pf-notif-desc { margin: 0; font-size: calc(13 * var(--u)); line-height: 1.4; color: var(--ink2); }
+      .pf-notif-msg { margin-top: 6px; color: var(--ink); font-weight: 600; }
+      .pf-notif .rg-switch { flex: 0 0 auto; }
 
       /* Entete sobre. Le halo de marque rouge derriere l'entete et
          l'anneau rouge autour de la photo, essayes pendant la refonte,
@@ -1276,8 +1279,8 @@
          L'etat presse sur la photo, lui, reste : il confirme le tap. */
       /* 44px de padding au-dessus de la photo faisaient un trou blanc en
          haut d'ecran (Julien : "il y a trop d'espaces blancs autour de la
-         photo de profil"). La cloche vit en absolu a 16px et ne bouge
-         pas ; rien ne l'empeche donc de remonter. */
+         photo de profil"). La carte des notifications est au-dessus, dans
+         le flux : la photo la suit de pres. */
       .pf-head { text-align: center; padding-top: 16px; margin: 0 0 20px; }
       /* Fond neutre, pas un degrade rouge avec un faux reflet en haut a
          gauche. C'est exactement la bille refusee sur l'ecran Amis
@@ -1307,8 +1310,14 @@
         background: var(--s1); box-shadow: var(--ombre-1); display: grid; place-items: center;
       }
       .pf-avatar-edit svg { width: 13px; height: 13px; stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-      .pf-nom { margin: 0 0 3px; font-size: calc(19 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
-      .pf-sub { margin: 0; font-size: calc(13 * var(--u)); color: var(--ink3); font-weight: 600; }
+      /* Le nom en capitales, gros et serre, comme "JULIEN STEPPE" chez
+         DUSK. L'adresse dessous, en gris. */
+      .pf-nom {
+        margin: 0 0 4px; font-family: var(--titre); font-size: calc(26 * var(--u)); font-weight: 800;
+        letter-spacing: .01em; line-height: 1.1; text-transform: uppercase;
+        overflow-wrap: anywhere;
+      }
+      .pf-sub { margin: 0; font-size: calc(13.5 * var(--u)); color: var(--ink3); font-weight: 600; overflow-wrap: anywhere; }
 
       .pf-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 0 24px; }
       /* Etat presse : sur mobile le :hover n'existe pas, sans ca rien
@@ -2069,14 +2078,14 @@
          feuille : c'est ce qui laisse voir le plan autour. */
       .carte-bas {
         position: absolute; left: 0; right: 0; z-index: 24;
-        bottom: 88px;
+        bottom: 74px;
         pointer-events: none;
       }
-      html.mode-appli .carte-bas { bottom: calc(88px + env(safe-area-inset-bottom)); }
+      html.mode-appli .carte-bas { bottom: calc(74px + max(0px, calc(env(safe-area-inset-bottom) - 22px))); }
       /* Plusieurs clubs : la fiche suivante DEPASSE (86 %), c'est ce qui dit
          qu'on peut faire glisser. Une fiche seule prend toute la largeur. */
       .club-rail {
-        display: flex; gap: 10px; padding: 12px 12px 6px;
+        display: flex; gap: 10px; padding: 12px 12px 10px;
         overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory;
       }
       .lieu {
@@ -3096,28 +3105,42 @@
          une barre plate pleine largeur, que DUSK n'utilise plus.
          .tabs GARDE sa geometrie (88 px, pleine largeur) : la feuille de la
          carte, le bas du profil et tous les ecrans se calent dessus. La
-         capsule est dessinee DEDANS, par ::before, avec des marges. */
+         capsule est dessinee DEDANS, par ::before, avec des marges.
+
+         ⚠️ ELLE SE VOIT POSEE SUR LA PAGE. Julien, 12/09/2026 : "tu vois
+         c'est superpose sur la page, c'est style". Chez DUSK le texte de la
+         page passe SOUS la capsule et se devine a travers. La premiere
+         capsule d'ici etait blanche a 94 % sur une page blanche : elle
+         existait, mais ne se voyait pas posee. Elle est maintenant en verre
+         depoli (blanc a 72 %, flou fort), plus petite et plus haute, avec
+         une ombre franche -- les pages defilent deja dessous (inset 0 et
+         112 px de marge basse), il fallait juste que ca se voie.
+         Proportions prises sur la capture : 56 px de haut, 14 px des bords,
+         22 px du bas. */
       .tabs {
         position: absolute; left: 0; right: 0; bottom: 0; height: 88px; z-index: 26;
         background: transparent; border-top: 0;
         /* Un peu d'air sur les cotes : sans lui, "Récompenses" (le plus
            long des cinq libelles) collait au bord de l'ecran (Julien :
            "c'est un peu trop vers le bord de l'application"). */
-        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding: 0 16px 20px;
+        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding: 0 18px 12px;
+        /* Ce qui depasse sous le bas du telephone (barre de geste) : la
+           capsule ne remonte que de ce qui manque au-dela de ses 22 px. */
+        --geste: max(0px, calc(env(safe-area-inset-bottom) - 22px));
       }
       .tabs::before {
         content: ""; position: absolute; z-index: -1;
-        left: 10px; right: 10px; top: 6px; bottom: 12px;
+        left: 14px; right: 14px; top: 10px; bottom: 22px;
         border-radius: 999px;
-        background: rgba(255,255,255,.94);
-        -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-        box-shadow: 0 0 0 1px rgba(16,18,22,.07), 0 10px 26px -12px rgba(16,18,22,.35);
+        background: rgba(255,255,255,.72);
+        -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
+        box-shadow: 0 0 0 .5px rgba(16,18,22,.12), 0 14px 34px -10px rgba(16,18,22,.34), 0 2px 6px -2px rgba(16,18,22,.12);
       }
 
       .tab {
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
         background: none; border: 0; cursor: pointer; position: relative; padding: 0;
-        height: 54px; margin: 0 1px; border-radius: 999px;
+        height: 48px; margin: 0 1px; border-radius: 999px;
         transition: background .18s ease;
       }
       .tab:focus-visible { outline: 3px solid #fff; outline-offset: -3px; border-radius: 10px; }
@@ -3161,7 +3184,7 @@
       .tab.on .lbl { color: #15181d; }
       /* La pastille de l'onglet actif, comme chez DUSK : c'est ELLE qui dit
          ou l'on est, bien plus que la couleur du trait. */
-      .tab.on { background: #eceef2; }
+      .tab.on { background: rgba(16,18,22,.07); }
       .tab { transition: transform .16s var(--sortie); }
       .tab:active { transform: scale(.93); }
       .tab .badge { position: absolute; top: -2px; right: 50%; margin-right: -17px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
@@ -3180,7 +3203,7 @@
          toujours. */
       @media (prefers-color-scheme: dark) {
         .tabs::before {
-          background: rgba(20,17,16,.92);
+          background: rgba(20,17,16,.72);
           box-shadow: 0 0 0 1px rgba(255,238,225,.10), 0 10px 26px -12px rgba(0,0,0,.6);
         }
         .tab.on { background: rgba(255,238,225,.10); }
@@ -4435,12 +4458,12 @@
          vaut 0 sur un telephone sans encoche et au navigateur : cette
          regle n'y change rien. */
       html.mode-appli .tabs {
-        height: calc(88px + env(safe-area-inset-bottom));
-        padding-bottom: calc(18px + env(safe-area-inset-bottom));
+        height: calc(88px + var(--geste));
+        padding-bottom: calc(12px + var(--geste));
       }
       /* La capsule remonte d'autant : sans ca, sur un iPhone a encoche, la
          barre de geste passerait PAR-DESSUS le bas de la capsule. */
-      html.mode-appli .tabs::before { bottom: calc(10px + env(safe-area-inset-bottom)); }
+      html.mode-appli .tabs::before { bottom: calc(22px + var(--geste)); }
     </style>
   </head>
   <body>
@@ -4832,10 +4855,28 @@
 
           <div class="pf-contenu" id="pf-contenu" hidden>
 
-            <button type="button" class="pf-cloche" id="pf-cloche" aria-label="Notifications">
-              <svg viewBox="0 0 24 24"><path d="M18 15.2V11a6 6 0 0 0-4.7-5.86V4a1.3 1.3 0 1 0-2.6 0v1.14A6 6 0 0 0 6 11v4.2L4.2 17v1h15.6v-1z"/><path d="M10.3 19.5a1.7 1.7 0 0 0 3.4 0"/></svg>
-            </button>
+            <!-- ⚠️ LA CARTE DES NOTIFICATIONS, EN HAUT DU PROFIL. Julien,
+                 12/09/2026, capture de DUSK : "le bail avec les notifications
+                 est bien". Chez DUSK, c'est la premiere chose du profil : un
+                 titre, une phrase, un interrupteur. Elle remplace la cloche
+                 ronde du coin, qui cachait la meme chose derriere un ecran.
+                 L'interrupteur est le MEME que celui de l'ecran
+                 Notifications (classe js-bascule-notif) : les deux ne
+                 peuvent pas se contredire.
+                 La phrase ne promet que ce qui part vraiment : la
+                 notification du credit de points. -->
+            <div class="pf-notif">
+              <div class="pf-notif-txt">
+                <p class="pf-notif-titre">Tes notifications</p>
+                <p class="pf-notif-desc">Sois prévenu dès qu'une story est validée et que tes points arrivent.</p>
+                <p class="pf-notif-desc pf-notif-msg js-msg-notif" hidden></p>
+              </div>
+              <button type="button" class="rg-switch js-bascule-notif" id="pf-notif-actif" role="switch" aria-checked="false" aria-label="Activer les notifications"></button>
+            </div>
 
+            <!-- Le NOM en grand, l'adresse dessous, comme DUSK. Le nom vient de
+                 Google/Apple, sinon de l'adresse (lib/profil/nomDepuisEmail.js),
+                 sinon c'est le pseudo qui s'affiche. -->
             <div class="pf-head">
               <button type="button" class="pf-avatar" id="pf-avatar" aria-label="Changer ma photo de profil">
                 <span class="pf-avatar-init" id="pf-avatar-init"></span>
@@ -4845,7 +4886,7 @@
                 </span>
               </button>
               <input type="file" accept="image/*" id="pf-avatar-file" hidden />
-              <p class="pf-nom" id="pf-handle">@...</p>
+              <h1 class="pf-nom" id="pf-nom">…</h1>
               <p class="pf-sub" id="pf-sub"></p>
             </div>
 
@@ -4940,6 +4981,12 @@
           <h1 class="va-title">Réglages</h1>
 
           <div class="rg-liste">
+            <!-- Le nom du haut du profil se corrige ici : devine depuis
+                 l'adresse, il peut etre faux ("Marine Land"). -->
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Nom</strong><span id="rg-nom">—</span></span>
+              <button type="button" class="rg-lien" id="rg-nom-modifier">Modifier</button>
+            </div>
             <div class="rg-ligne">
               <span class="rg-ligne-txt"><strong>Pseudo</strong><span id="rg-pseudo">—</span></span>
               <button type="button" class="rg-lien" id="rg-pseudo-modifier">Modifier</button>
@@ -5012,7 +5059,7 @@
           <div class="rg-carte">
             <div class="rg-carte-ligne">
               <span class="rg-label">Activer les notifications</span>
-              <button type="button" class="rg-switch" id="rg-notif-actif" role="switch" aria-checked="false" aria-label="Activer les notifications"></button>
+              <button type="button" class="rg-switch js-bascule-notif" id="rg-notif-actif" role="switch" aria-checked="false" aria-label="Activer les notifications"></button>
             </div>
             <!-- Le texte ne promet plus que ce qui existe. Il annoncait
                  "amis a proximite" et "nouveautes des clubs", dont rien
@@ -5022,7 +5069,7 @@
             <!-- Etat reel : permission refusee, appli pas installee sur
                  iOS, service indisponible. Sans ca la bascule mentait en
                  silence -- elle revenait sur "off" sans dire pourquoi. -->
-            <p class="rg-carte-desc" id="rg-notif-msg" hidden></p>
+            <p class="rg-carte-desc js-msg-notif" id="rg-notif-msg" hidden></p>
           </div>
         </div>
 
@@ -5833,6 +5880,7 @@ import * as natif from "./natif.js";
    que ce que le club paie. */
 import { DEFAULT_POINT_RULES } from "./dashboardData.js";
 import { FORFAIT_STORY_DEFAUT } from "./lib/points/mentionAutomatique.js";
+import { nomAffiche } from "./lib/profil/nomDepuisEmail.js";
 
 // Connexion reelle sur la BONNE base : celle des clients de club
 // (gcopwgmqjiufemapamek), pas celle des gerants qu'utilise le reste du
@@ -9921,15 +9969,15 @@ TAB_PROFIL?.addEventListener("click", async function () {
   // au retour du serveur.
   chargerHistorique();
 
-  var handleEl = $("#pf-handle"), avatarInit = $("#pf-avatar-init"), avatarImg = $("#pf-avatar-img");
+  var nomEl = $("#pf-nom"), avatarInit = $("#pf-avatar-init"), avatarImg = $("#pf-avatar-img");
   var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).single()).data;
   var monHandle = profil && profil.handle;
-  // Tant qu'aucun pseudo n'est choisi : on appelle la personne par la
-  // partie avant le @ de son email (julien.steppe@gmail.com ->
-  // "julien.steppe"), plus lisible que "Profil en cours de creation".
+  // Le nom d'abord ("Julien Steppe", voir lib/profil/nomDepuisEmail.js),
+  // puis le pseudo, puis la partie avant le @ si vraiment rien d'autre.
   var nomRepli = String(session.user.email || "").split("@")[0];
+  var monNom = nomAffiche({ metadata: session.user.user_metadata, email: session.user.email });
 
-  handleEl.textContent = monHandle ? "@" + monHandle : nomRepli;
+  nomEl.textContent = monNom || (monHandle ? "@" + monHandle : nomRepli);
   if (profil && profil.avatar_url) {
     avatarImg.src = profil.avatar_url;
     avatarImg.hidden = false;
@@ -9937,17 +9985,12 @@ TAB_PROFIL?.addEventListener("click", async function () {
   } else {
     avatarImg.hidden = true;
     avatarInit.hidden = false;
-    avatarInit.textContent = (monHandle || nomRepli).charAt(0).toUpperCase();
+    avatarInit.textContent = (monNom || monHandle || nomRepli).charAt(0).toUpperCase();
   }
 
-  // Sous le pseudo : depuis quand la personne est la. "Clubbeur" ne
-  // disait rien -- tout le monde l'est (Julien : "Clubbeur, tu peux
-  // retirer, mais tu peux mettre autre chose"). La date d'inscription
-  // vient de la session, sans requete supplementaire.
-  var creeLe = session.user.created_at ? new Date(session.user.created_at) : null;
-  $("#pf-sub").textContent = creeLe && !isNaN(creeLe)
-    ? "Membre depuis " + creeLe.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })
-    : "";
+  // Sous le nom : l'adresse, comme DUSK. "Membre depuis" est dans
+  // Reglages, avec le pseudo.
+  $("#pf-sub").textContent = session.user.email || "";
 
   $("#pf-fid-solde").textContent = nb(ETAT.solde);
 
@@ -10096,12 +10139,6 @@ function dateCourte(iso) {
     return "";
   }
 }
-
-// Cloche du profil : meme destination que la ligne "Notifications"
-// de la liste plus bas.
-$("#pf-cloche")?.addEventListener("click", function () {
-  VUE_NOTIFICATIONS.hidden = false;
-});
 
 function pasEncore(texte) {
   $("#pf-msg-bientot") || document.body.insertAdjacentHTML("beforeend",
@@ -10325,8 +10362,10 @@ activerGlisserPourFermer(VUE_REGLAGES, $("#rg-poignee"), fermerReglages);
    il pouvait dire "on" alors que la permission avait ete revoquee
    entre-temps depuis les reglages du telephone.
    ========================================================== */
-var BOUTON_NOTIF = $("#rg-notif-actif");
-var MESSAGE_NOTIF = $("#rg-notif-msg");
+// Deux interrupteurs, un seul etat : la carte en haut du profil et la
+// ligne de l'ecran Notifications (classe js-bascule-notif).
+var BOUTONS_NOTIF = Array.prototype.slice.call(document.querySelectorAll(".js-bascule-notif"));
+var MESSAGES_NOTIF = Array.prototype.slice.call(document.querySelectorAll(".js-msg-notif"));
 // Cle publique VAPID : publique par definition, elle voyage dans chaque
 // abonnement. La cle PRIVEE, elle, ne vit que sur Vercel.
 var CLE_VAPID = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
@@ -10353,15 +10392,17 @@ function base64UrlVersOctets(base64) {
 }
 
 function direNotif(texte) {
-  if (!MESSAGE_NOTIF) return;
-  MESSAGE_NOTIF.textContent = texte || "";
-  MESSAGE_NOTIF.hidden = !texte;
+  MESSAGES_NOTIF.forEach(function (m) {
+    m.textContent = texte || "";
+    m.hidden = !texte;
+  });
 }
 
 function peindreBasculeNotif(actif) {
-  if (!BOUTON_NOTIF) return;
-  BOUTON_NOTIF.classList.toggle("on", actif);
-  BOUTON_NOTIF.setAttribute("aria-checked", String(actif));
+  BOUTONS_NOTIF.forEach(function (b) {
+    b.classList.toggle("on", actif);
+    b.setAttribute("aria-checked", String(actif));
+  });
 }
 
 async function abonnementCourant() {
@@ -10455,7 +10496,7 @@ async function desactiverNotifications() {
 }
 
 async function synchroniserBasculeNotif() {
-  if (!BOUTON_NOTIF) return;
+  if (!BOUTONS_NOTIF.length) return;
   if (!pushDisponible() || Notification.permission !== "granted") {
     peindreBasculeNotif(false);
     return;
@@ -10508,6 +10549,10 @@ function ecranPrincipalVisible() {
   var ig = $("#vue-ig");
   if (accueil && !accueil.classList.contains("masque")) return false;
   if (ig && !ig.hidden) return false;
+  // Le profil porte deja sa carte a interrupteur, tout en haut : la
+  // proposition par-dessus disait deux fois la meme chose au meme endroit.
+  var profil = $("#vue-profil");
+  if (profil && !profil.hidden) return false;
   return true;
 }
 
@@ -10539,25 +10584,27 @@ $("#notif-invite-oui")?.addEventListener("click", async function () {
   peindreBasculeNotif(await activerNotifications());
 });
 
-if (BOUTON_NOTIF) {
+if (BOUTONS_NOTIF.length) {
   var notifEnCours = false;
-  BOUTON_NOTIF.addEventListener("click", async function () {
-    // requestPermission() peut rester ouvert plusieurs secondes ; sans
-    // ce verrou, deux tapes impatientes lancent deux abonnements.
-    if (notifEnCours) return;
-    notifEnCours = true;
-    BOUTON_NOTIF.disabled = true;
-    try {
-      if (BOUTON_NOTIF.classList.contains("on")) {
-        await desactiverNotifications();
-        peindreBasculeNotif(false);
-      } else {
-        peindreBasculeNotif(await activerNotifications());
+  BOUTONS_NOTIF.forEach(function (bouton) {
+    bouton.addEventListener("click", async function () {
+      // requestPermission() peut rester ouvert plusieurs secondes ; sans
+      // ce verrou, deux tapes impatientes lancent deux abonnements.
+      if (notifEnCours) return;
+      notifEnCours = true;
+      BOUTONS_NOTIF.forEach(function (b) { b.disabled = true; });
+      try {
+        if (bouton.classList.contains("on")) {
+          await desactiverNotifications();
+          peindreBasculeNotif(false);
+        } else {
+          peindreBasculeNotif(await activerNotifications());
+        }
+      } finally {
+        notifEnCours = false;
+        BOUTONS_NOTIF.forEach(function (b) { b.disabled = false; });
       }
-    } finally {
-      notifEnCours = false;
-      BOUTON_NOTIF.disabled = false;
-    }
+    });
   });
   synchroniserBasculeNotif();
 }
@@ -10584,6 +10631,7 @@ $("#pf-reglages")?.addEventListener("click", async function () {
   VUE_REGLAGES.hidden = false;
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) {
+    $("#rg-nom").textContent = "—";
     $("#rg-pseudo").textContent = "—";
     $("#rg-email").textContent = "Non connecté";
     $("#rg-membre-depuis").textContent = "—";
@@ -10593,6 +10641,7 @@ $("#pf-reglages")?.addEventListener("click", async function () {
   var nomRepliReglages = String(session.user.email || "").split("@")[0];
   $("#rg-pseudo").textContent = profil && profil.handle ? "@" + profil.handle : nomRepliReglages;
   $("#rg-email").textContent = session.user.email;
+  $("#rg-nom").textContent = nomAffiche({ metadata: session.user.user_metadata, email: session.user.email }) || "—";
   // Le compte Instagram et sa capture, a la place du telephone et de
   // l'adresse. La capture n'est pas une valeur affichable (c'est un
   // chemin dans un bucket prive) : on montre si elle est enregistree,
@@ -10604,6 +10653,24 @@ $("#pf-reglages")?.addEventListener("click", async function () {
   ligneCapture.classList.toggle("vide", !aCapture);
   $("#rg-langue").textContent = (profil && profil.langue) || "Français";
   $("#rg-membre-depuis").textContent = moisAnnee(session.user.created_at);
+});
+
+// Le nom corrige se range dans user_metadata.full_name, la ou Google et
+// Apple posent deja le leur : nomAffiche() le lit en premier, et aucune
+// colonne n'est a creer dans la base clubbeur.
+$("#rg-nom-modifier")?.addEventListener("click", async function () {
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return;
+  var actuel = nomAffiche({ metadata: session.user.user_metadata, email: session.user.email }) || "";
+  var saisie = window.prompt("Ton prénom et ton nom :", actuel);
+  if (saisie === null) return;
+  var nettoye = saisie.replace(/\s+/g, " ").trim().slice(0, 60);
+  if (!nettoye || nettoye.indexOf("@") !== -1) { window.alert("Nom invalide."); return; }
+  var res = await supabaseClubbeur.auth.updateUser({ data: { full_name: nettoye } });
+  if (res.error) { window.alert("Ça n'a pas marché, réessaie."); return; }
+  $("#rg-nom").textContent = nettoye;
+  var nomProfil = $("#pf-nom");
+  if (nomProfil) nomProfil.textContent = nettoye;
 });
 
 // Meme nettoyage que le repli automatique a la creation du compte
@@ -10743,9 +10810,9 @@ $("#rg-supprimer-compte")?.addEventListener("click", async function () {
   }
 });
 
-// Plus de ligne "Notifications" dans le menu Profil (demande de
-// Julien : ca faisait doublon avec la cloche du haut, seule entree
-// desormais -- voir pf-cloche plus bas).
+// L'ecran Notifications n'a plus d'entree : la cloche du profil est
+// remplacee par la carte a interrupteur du haut (12/09/2026, modele DUSK),
+// qui porte le meme reglage -- le seul que cet ecran contenait.
 var VUE_NOTIFICATIONS = $("#vue-notifications");
 activerGlisserPourFermer(VUE_NOTIFICATIONS, $("#nt-poignee"), function () { VUE_NOTIFICATIONS.hidden = true; });
 
