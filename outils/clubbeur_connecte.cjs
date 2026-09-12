@@ -4,7 +4,8 @@
 //   VN_URL=http://127.0.0.1:5173 node outils/clubbeur_connecte.cjs
 //
 // Sortie : outils/pages-clubbeur/09-profil-connecte.{png,jpg}
-//                                10-amis-connecte.{png,jpg}
+//                                09b-profil-parametres.{png,jpg}
+//                                10-inviter.{png,jpg}
 //
 // POURQUOI CET OUTIL EXISTE. `appli_clubbeur.cjs` photographie l'appli
 // SANS session : Story, Amis et Profil n'y montrent que leur porte
@@ -136,9 +137,11 @@ const HAUTEUR = 844;
     await prendre("09b-profil-parametres", "Profil — les parametres");
     await page.evaluate(() => { document.querySelector("#vue-profil").scrollTop = 0; });
 
-    await page.evaluate(() => document.querySelector("#tab-amis").click());
+    // Plus d'onglet Amis (12/09/2026) : l'invitation s'ouvre depuis
+    // Profil > Partager > Inviter des amis.
+    await page.evaluate(() => document.querySelector("#pf-inviter").click());
     await pause(3000);
-    await prendre("10-amis-connecte", "Amis — avec un compte");
+    await prendre("10-inviter", "Inviter des amis — depuis le profil");
 
     // Ce que les deux ecrans affichent VRAIMENT, pour pouvoir juger sans
     // ouvrir l'image : une capture ne dit pas si un bloc est vide parce

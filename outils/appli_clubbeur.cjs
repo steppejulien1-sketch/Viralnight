@@ -111,7 +111,6 @@ const HAUTEUR = 844;
   for (const [tab, nom, titre] of [
     ["tab-carte", "05-carte", "La carte des clubs"],
     ["tab-story", "06-story", "Story — sans compte"],
-    ["tab-amis", "07-amis", "Amis — sans compte"],
     ["tab-profil", "08-profil", "Profil — sans compte"],
   ]) {
     await page.evaluate((t) => document.getElementById(t).click(), tab);

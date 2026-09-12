@@ -1258,48 +1258,40 @@
         }
       }
 
-      /* La carte des notifications, en haut du profil (modele DUSK).
-         Fond gris clair ; l'apercu de notification est la seule surface
-         blanche dessus, avec l'ombre d'une vraie banniere iOS. Le bouton est
-         en encre inversee : c'est le bouton principal de cet ecran, et le
-         rouge n'y porterait aucune information. */
+      /* ---- L'ENTETE DU PROFIL (modele DUSK) ----
+         Pleine largeur (marges negatives du padding de #vue-profil). Le
+         motif de verres vit dans ::before, et s'efface vers le bas par un
+         masque : le texte, lui, reste net. */
+      .pf-entete {
+        position: relative; margin: -20px -20px 0;
+        padding: calc(34px + env(safe-area-inset-top)) 20px 34px;
+      }
+      .pf-entete::before {
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240' fill='none' stroke='%23c9ccd3' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(14 22) rotate(-14 22 30)'%3E%3Cpath d='M2 6h40L22 30z'/%3E%3Cpath d='M22 30v24M12 54h20'/%3E%3Ccircle cx='29' cy='13' r='3.4'/%3E%3Cpath d='M27 16 17 1'/%3E%3C/g%3E%3Cg transform='translate(146 10) rotate(11 18 32)'%3E%3Cpath d='M4 12h26l-3 46H7z'/%3E%3Cpath d='M4 12c-1-5 4-8 8-6 2-4 9-4 11 0 4-2 8 1 7 6'/%3E%3Cpath d='M30 22h5a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4h-6'/%3E%3C/g%3E%3Cg transform='translate(92 92) rotate(-9 16 30)'%3E%3Cpath d='M4 2h24c0 18-5 26-12 26S4 20 4 2z'/%3E%3Cpath d='M16 28v24M7 52h18'/%3E%3Cpath d='M5 12h22'/%3E%3C/g%3E%3Cg transform='translate(186 104) rotate(13 18 28)'%3E%3Cpath d='M3 12h32l-4 38H7z'/%3E%3Crect x='10' y='24' width='9' height='9' rx='1.6' transform='rotate(-16 14 28)'/%3E%3Crect x='20' y='32' width='9' height='9' rx='1.6' transform='rotate(12 24 36)'/%3E%3Cpath d='M25 12 32 0h6'/%3E%3C/g%3E%3Cg transform='translate(30 150) rotate(17 10 32)'%3E%3Cpath d='M4 0h12l-1 26a5 5 0 0 1-10 0z'/%3E%3Cpath d='M10 31v22M3 53h14'/%3E%3Cpath d='M8 9v.01M12 15v.01M9 21v.01'/%3E%3C/g%3E%3Cg transform='translate(124 190) rotate(-15 12 14)'%3E%3Cpath d='M2 2h22l-3 26H5z'/%3E%3Cpath d='M4 13h18'/%3E%3C/g%3E%3Cg transform='translate(206 200)'%3E%3Ccircle cx='12' cy='12' r='11'/%3E%3Cpath d='M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4'/%3E%3C/g%3E%3C/svg%3E") -20px -10px / 300px 300px repeat;
+        -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
+        mask-image: linear-gradient(to bottom, #000 78%, transparent);
+      }
+      .pf-entete > * { position: relative; }
+      /* La carte : grise, coins presque droits comme chez DUSK. */
       .pf-notif {
-        margin: 4px 0 8px; padding: 14px 14px 16px; border-radius: 20px;
-        background: var(--s2);
+        display: flex; align-items: center; gap: 18px;
+        padding: 18px 16px 18px 20px; border-radius: 6px;
+        background: #efeff1;
       }
-      .pf-notif-apercu {
-        display: flex; align-items: center; gap: 11px;
-        padding: 11px 13px 11px 11px; border-radius: 16px; background: #ffffff;
-        box-shadow: 0 0 0 .5px rgba(16,18,22,.06), 0 8px 22px -12px rgba(16,18,22,.30);
-        margin-bottom: 14px;
+      .pf-notif-txt { flex: 1; min-width: 0; }
+      .pf-notif-titre { margin: 0 0 6px; font-size: calc(16 * var(--u)); font-weight: 800; letter-spacing: -.01em; line-height: 1.25; color: #15181d; }
+      .pf-notif-desc { margin: 0; font-size: calc(13.5 * var(--u)); line-height: 1.4; color: #5d626b; }
+      .pf-notif-msg { margin: 8px 0 0; font-size: calc(13 * var(--u)); line-height: 1.4; font-weight: 600; color: #15181d; }
+      /* L'interrupteur DUSK : un contour, une bille pleine. */
+      .pf-notif .rg-switch {
+        width: 48px; height: 28px; background: transparent;
+        box-shadow: inset 0 0 0 2px #15181d;
       }
-      .pf-notif-appli { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 9px; display: block; }
-      .pf-notif-apercu-txt { flex: 1; min-width: 0; }
-      .pf-notif-apercu-tete {
-        display: flex; justify-content: space-between; gap: 8px; margin: 0 0 1px;
-        font-size: calc(11.5 * var(--u)); color: #8a8f98; line-height: 1.2;
-      }
-      .pf-notif-apercu-tete strong { font-weight: 600; color: #8a8f98; text-transform: uppercase; letter-spacing: .02em; }
-      .pf-notif-apercu-titre { margin: 0; font-size: calc(13.5 * var(--u)); font-weight: 700; color: #15181d; line-height: 1.3; }
-      .pf-notif-apercu-corps { margin: 0; font-size: calc(13.5 * var(--u)); color: #15181d; line-height: 1.3; }
-      .pf-notif-titre { margin: 0 0 3px 4px; font-size: calc(16 * var(--u)); font-weight: 800; letter-spacing: -.015em; color: var(--ink); }
-      .pf-notif-desc { margin: 0 4px; font-size: calc(13 * var(--u)); line-height: 1.4; color: var(--ink2); }
-      .pf-notif-activer {
-        display: block; width: 100%; margin-top: 14px; height: 46px; border: 0; border-radius: 999px;
-        background: #15181d; color: #ffffff; cursor: pointer;
-        font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 700;
-      }
-      .pf-notif-activer:active { transform: scale(.985); }
-      .pf-notif-activer:disabled { opacity: .6; }
-      .pf-notif-msg { margin: 10px 4px 0; font-size: calc(13 * var(--u)); line-height: 1.4; font-weight: 600; color: var(--ink); }
-      /* Allumee : la carte se replie en une ligne. */
-      .pf-notif-allumee { display: none; align-items: center; gap: 12px; }
-      .pf-notif.actif { padding: 12px 14px 12px 16px; }
-      .pf-notif.actif .pf-notif-offre { display: none; }
-      .pf-notif.actif .pf-notif-allumee { display: flex; }
-      .pf-notif-allumee .pf-notif-titre { flex: 1; margin: 0; font-size: calc(15 * var(--u)); }
-      .pf-notif-allumee .rg-switch { flex: 0 0 auto; }
-      .pf-notif-cloche { flex: 0 0 auto; width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-notif .rg-switch::after { top: 4px; left: 4px; width: 20px; height: 20px; background: #15181d; box-shadow: none; }
+      .pf-notif .rg-switch.on { background: #15181d; }
+      .pf-notif .rg-switch.on::after { background: #ffffff; transform: translateX(20px); }
+      .pf-notif .rg-switch:disabled { opacity: .55; }
 
       /* Entete sobre. Le halo de marque rouge derriere l'entete et
          l'anneau rouge autour de la photo, essayes pendant la refonte,
@@ -1310,7 +1302,9 @@
          haut d'ecran (Julien : "il y a trop d'espaces blancs autour de la
          photo de profil"). La carte des notifications est au-dessus, dans
          le flux : la photo la suit de pres. */
-      .pf-head { text-align: center; padding-top: 16px; margin: 0 0 20px; }
+      .pf-head { text-align: center; padding-top: 58px; margin: 0; }
+      /* Pas de photo dans l'entete DUSK : elle se change dans Reglages. */
+      .pf-head .pf-avatar { display: none; }
       /* Fond neutre, pas un degrade rouge avec un faux reflet en haut a
          gauche. C'est exactement la bille refusee sur l'ecran Amis
          ("BCP TROP L'AIR D'ETRE VIBECODE") ; a 84 px elle etait encore
@@ -1342,8 +1336,8 @@
       /* Le nom en capitales, gros et serre, comme "JULIEN STEPPE" chez
          DUSK. L'adresse dessous, en gris. */
       .pf-nom {
-        margin: 0 0 4px; font-family: var(--titre); font-size: calc(26 * var(--u)); font-weight: 800;
-        letter-spacing: .01em; line-height: 1.1; text-transform: uppercase;
+        margin: 0 0 8px; font-family: var(--titre); font-size: calc(25 * var(--u)); font-weight: 800;
+        letter-spacing: .06em; line-height: 1.1; text-transform: uppercase;
         overflow-wrap: anywhere;
       }
       .pf-sub { margin: 0; font-size: calc(13.5 * var(--u)); color: var(--ink3); font-weight: 600; overflow-wrap: anywhere; }
@@ -3055,7 +3049,7 @@
         /* Un peu d'air sur les cotes : sans lui, "Récompenses" (le plus
            long des cinq libelles) collait au bord de l'ecran (Julien :
            "c'est un peu trop vers le bord de l'application"). */
-        display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding: 0 18px 12px;
+        display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; padding: 0 18px 12px;
         /* Ce qui depasse sous le bas du telephone (barre de geste) : la
            capsule ne remonte que de ce qui manque au-dela de ses 22 px. */
         --geste: max(0px, calc(env(safe-area-inset-bottom) - 22px));
@@ -4787,56 +4781,44 @@
 
           <div class="pf-contenu" id="pf-contenu" hidden>
 
-            <!-- ⚠️ LA CARTE DES NOTIFICATIONS, EN HAUT DU PROFIL. Julien,
-                 12/09/2026, capture de DUSK : "le bail avec les notifications
-                 est bien", puis "rends-le plus attirant, pour que les gens les
-                 mettent".
-                 Ce qui la rend attirante : elle MONTRE la notification au lieu
-                 de la decrire. L'apercu reprend mot pour mot le texte envoye
-                 par lib/notifications/push.js ("Ta story est validee", "+N
-                 points chez <club>.") -- il ne promet rien qui ne parte pas.
-                 Le montant vient de FORFAIT_STORY_DEFAUT, le meme que la ligne
-                 "Poster ta story" de la boutique.
-                 Eteinte : apercu, une phrase, UN bouton en encre. Allumee : la
-                 carte se replie en une ligne a interrupteur (le modele DUSK),
-                 pour pouvoir couper. Les deux boutons portent js-bascule-notif :
-                 un seul etat, partage avec l'ecran Notifications. -->
-            <div class="pf-notif" id="pf-notif">
-              <div class="pf-notif-offre">
-                <div class="pf-notif-apercu" aria-hidden="true">
-                  <img class="pf-notif-appli" src="/icones/icone-192.png" alt="" width="38" height="38" />
-                  <div class="pf-notif-apercu-txt">
-                    <p class="pf-notif-apercu-tete"><strong>Noctify</strong><span>maintenant</span></p>
-                    <p class="pf-notif-apercu-titre">Ta story est validée</p>
-                    <p class="pf-notif-apercu-corps">+<span id="pf-notif-points">50</span> points chez Mirano.</p>
-                  </div>
+            <!-- ⚠️ L'ENTETE DU PROFIL, EXACTEMENT COMME DUSK. Julien, 12/09/2026 :
+                 "l'onglet des notifications, fais-le exactement comme ce que je
+                 t'avais envoye, avec le truc a cocher et avec des petits dessins".
+                 Sur sa capture : un motif de verres dessines au trait derriere
+                 le haut de l'ecran, une carte grise a coins presque droits avec
+                 un titre, une phrase et un interrupteur, puis le NOM en
+                 capitales espacees et l'adresse dessous. Pas de photo.
+                 L'essai d'avant (apercu de notification + gros bouton noir) est
+                 abandonne pour ca.
+                 Les dessins sont les notres, pas ceux de DUSK : sept verres au
+                 trait gris clair, dans .pf-entete::before.
+                 La phrase ne promet que ce qui part vraiment (voir
+                 lib/notifications/push.js) : story validee, cadeau du jour.
+                 La photo de profil se change desormais dans Reglages ; ses
+                 elements restent dans le DOM, caches, parce que le code
+                 d'envoi les alimente. -->
+            <div class="pf-entete">
+              <div class="pf-notif" id="pf-notif">
+                <div class="pf-notif-txt">
+                  <p class="pf-notif-titre">Des notifications faites pour toi</p>
+                  <p class="pf-notif-desc">Sois le premier au courant quand ta story est validée et quand ton cadeau du jour est prêt.</p>
+                  <p class="pf-notif-msg js-msg-notif" hidden></p>
                 </div>
-                <p class="pf-notif-titre">Prévenu quand tes points arrivent</p>
-                <p class="pf-notif-desc">Une notification quand ta story est validée, et quand ton cadeau du jour est prêt.</p>
-                <button type="button" class="pf-notif-activer js-bascule-notif" id="pf-notif-activer">Activer les notifications</button>
+                <button type="button" class="rg-switch js-bascule-notif" id="pf-notif-actif" role="switch" aria-checked="false" aria-label="Activer les notifications"></button>
               </div>
-              <div class="pf-notif-allumee">
-                <svg class="pf-notif-cloche" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 15.2V11a6 6 0 0 0-4.7-5.86V4a1.3 1.3 0 1 0-2.6 0v1.14A6 6 0 0 0 6 11v4.2L4.2 17v1h15.6v-1z"/><path d="M10.3 19.5a1.7 1.7 0 0 0 3.4 0"/></svg>
-                <p class="pf-notif-titre">Notifications activées</p>
-                <button type="button" class="rg-switch js-bascule-notif" id="pf-notif-actif" role="switch" aria-checked="false" aria-label="Notifications"></button>
-              </div>
-              <p class="pf-notif-msg js-msg-notif" hidden></p>
-            </div>
 
-            <!-- Le NOM en grand, l'adresse dessous, comme DUSK. Le nom vient de
-                 Google/Apple, sinon de l'adresse (lib/profil/nomDepuisEmail.js),
-                 sinon c'est le pseudo qui s'affiche. -->
-            <div class="pf-head">
-              <button type="button" class="pf-avatar" id="pf-avatar" aria-label="Changer ma photo de profil">
-                <span class="pf-avatar-init" id="pf-avatar-init"></span>
-                <img id="pf-avatar-img" alt="" hidden />
-                <span class="pf-avatar-edit" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
-                </span>
-              </button>
-              <input type="file" accept="image/*" id="pf-avatar-file" hidden />
-              <h1 class="pf-nom" id="pf-nom">…</h1>
-              <p class="pf-sub" id="pf-sub"></p>
+              <div class="pf-head">
+                <button type="button" class="pf-avatar" id="pf-avatar" aria-label="Changer ma photo de profil">
+                  <span class="pf-avatar-init" id="pf-avatar-init"></span>
+                  <img id="pf-avatar-img" alt="" hidden />
+                  <span class="pf-avatar-edit" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
+                  </span>
+                </button>
+                <input type="file" accept="image/*" id="pf-avatar-file" hidden />
+                <h1 class="pf-nom" id="pf-nom">…</h1>
+                <p class="pf-sub" id="pf-sub"></p>
+              </div>
             </div>
 
             <!-- Plus de tuiles Amis / Favoris / Recompenses : Amis et
@@ -4888,6 +4870,17 @@
                   <span class="pf-item-txt"><strong>Inviter des amis</strong><span><span id="pf-inviter-montant">100</span> points par ami qui s’inscrit avec ton lien.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
+                <!-- L'avis Google du CLUB, pas de l'appli. Julien, 12/09/2026 :
+                     "fais un onglet pour donner des avis Google aussi". Noctify
+                     n'a pas de fiche Google ; le club, si. Ouvre directement le
+                     formulaire "ecrire un avis" de sa fiche (googlePlaceId dans
+                     CLUBS). C'est aussi ce qui se vend : le gerant voit ses avis
+                     Google monter. -->
+                <button type="button" class="pf-item" id="pf-avis-google">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>
+                  <span class="pf-item-txt"><strong>Laisser un avis Google</strong><span>Ta note sur la fiche Google de <span id="pf-avis-google-club">Mirano</span>.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
               </div>
             </section>
 
@@ -4895,13 +4888,13 @@
               <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9.3a3 3 0 0 1 5.8 1c0 2-2.9 2.3-2.9 4.3"/><path d="M12 17.3h.01"/></svg>Aide</h2>
               <div class="pf-liste">
                 <button type="button" class="pf-item" id="pf-aide">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-11.7 7.1L4 20l1-4.1A8 8 0 1 1 20 12z"/><path d="M9 10.5h6M9 13.5h4"/></svg>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/><path d="m5.6 5.6 3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/></svg>
                   <span class="pf-item-txt"><strong>Aide &amp; Support</strong><span>Une question sur tes points ou une récompense.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
                 <button type="button" class="pf-item" id="pf-avis">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>
-                  <span class="pf-item-txt"><strong>Donner mon avis</strong><span>Ce qui marche et ce qui manque, par e-mail.</span></span>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-11.7 7.1L4 20l1-4.1A8 8 0 1 1 20 12z"/><path d="M9 10.5h6M9 13.5h4"/></svg>
+                  <span class="pf-item-txt"><strong>Donner mon avis</strong><span>Sur l’appli Noctify, par e-mail.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
               </div>
@@ -4946,6 +4939,12 @@
           <div class="rg-liste">
             <!-- Le nom du haut du profil se corrige ici : devine depuis
                  l'adresse, il peut etre faux ("Marine Land"). -->
+            <!-- La photo de profil quitte l'entete du profil (modele DUSK, sans
+                 photo) : elle se change ici. -->
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Photo de profil</strong><span id="rg-photo">—</span></span>
+              <button type="button" class="rg-lien" id="rg-photo-modifier">Modifier</button>
+            </div>
             <div class="rg-ligne">
               <span class="rg-ligne-txt"><strong>Nom</strong><span id="rg-nom">—</span></span>
               <button type="button" class="rg-lien" id="rg-nom-modifier">Modifier</button>
@@ -5733,10 +5732,10 @@
             <svg viewBox="0 0 24 24"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>
             <span class="lbl">Carte</span>
           </button>
-          <button class="tab" id="tab-amis" aria-label="Amis">
-            <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
-            <span class="lbl">Amis</span>
-          </button>
+          <!-- ⚠️ PLUS D'ONGLET AMIS. Julien, 12/09/2026 : "retire l'onglet Amis,
+               vu que c'est dans les reglages". L'invitation (QR, code, lien)
+               s'ouvre depuis Profil > Partager > Inviter des amis. La page
+               #vue-amis et son code restent : c'est elle qui s'ouvre. -->
           <!-- ⚠️ PLUS DE POINT ROUGE. Il etait ecrit en dur ici et AUCUN
                script ne l'allumait ni ne l'eteignait : allume en
                permanence, il ne signalait rien -- il disait "tu as quelque
@@ -7325,6 +7324,10 @@ var CLUBS = {
     // un Mirage Club a Paris et un Mirano a Paris aussi, la fiche Google
     // tomberait sur un homonyme.
     googleQuery: "Mirano Brussels, Chaussée de Louvain 38, 1210 Saint-Josse-ten-Noode, Belgique",
+    // Identifiant de la fiche Google ("Mirano Brussels, Chau. de Louvain
+    // 38"), releve le 12/09/2026 dans la page d'embed Google Maps de
+    // googleQuery. Sert au lien "ecrire un avis" du profil.
+    googlePlaceId: "ChIJpwov02LDw0cRA9JgUbYb7jc",
     // Coordonnees geocodees sur l'adresse (Nominatim/OpenStreetMap), pas
     // estimees a l'oeil sur la carte.
     lngLat: [4.37139, 50.84937], hot: true, type: "club",
@@ -9362,8 +9365,33 @@ $("#va-connecte-btn")?.addEventListener("click", function () {
 // pendant qu'on est sur "Amis" (voir .vue-amis, z-index sous .tabs).
 function fermerAmis() {
   VUE_AMIS.hidden = true;
-  TAB_AMIS.classList.remove("on");
-  TAB_AMIS.setAttribute("aria-current", "false");
+  VUE_AMIS.classList.remove("depuis-profil");
+  // L'onglet Amis n'existe plus dans la barre (12/09/2026) : TAB_AMIS vaut
+  // null, et la page s'ouvre depuis Profil.
+  if (TAB_AMIS) {
+    TAB_AMIS.classList.remove("on");
+    TAB_AMIS.setAttribute("aria-current", "false");
+  }
+}
+
+/* L'invitation (QR, code, lien), ouverte depuis Profil > Partager. L'onglet
+   Profil reste allume : on est "dans" le profil. La fleche retour y ramene,
+   au lieu de mener a la liste d'amis comme depuis l'ancien onglet. */
+async function ouvrirInvitation() {
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return;
+  VUE_PROFIL.hidden = true;
+  VUE_AMIS.hidden = false;
+  VUE_AMIS.classList.add("depuis-profil");
+  $("#va-connecte-toi").hidden = true;
+  $("#va-contenu").hidden = false;
+  ouvrirPageAmis(session);
+  var retour = $("#va-back");
+  retour.setAttribute("aria-label", "Retour au profil");
+  retour.onclick = function () {
+    fermerAmis();
+    VUE_PROFIL.hidden = false;
+  };
 }
 
 async function ouvrirPageAmis(session) {
@@ -9879,13 +9907,10 @@ TAB_PROFIL?.addEventListener("click", async function () {
 
   $("#pf-fid-solde").textContent = nb(ETAT.solde);
 
-  // Le lien de parrainage, pour la ligne "Inviter des amis". Meme forme
-  // que celui de l'onglet Amis (?parrain=<pseudo>).
-  LIEN_PARRAINAGE = monHandle
-    ? window.location.origin + window.location.pathname + "?parrain=" + encodeURIComponent(monHandle)
-    : null;
-  var pointsApercu = $("#pf-notif-points");
-  if (pointsApercu) pointsApercu.textContent = nb(FORFAIT_STORY_DEFAUT);
+  // Le club dont on laisse l'avis Google : le club courant de la boutique.
+  var clubAvis = CLUBS[CLUB_BOUTIQUE];
+  var nomClubAvis = $("#pf-avis-google-club");
+  if (clubAvis && nomClubAvis) nomClubAvis.textContent = clubAvis.nom;
   // Le montant du parrainage vient de la base, comme sur l'onglet Amis.
   supabaseClubbeur.rpc("montant_parrainage").then(function (r) {
     var el = $("#pf-inviter-montant");
@@ -10027,26 +10052,24 @@ function dateCourte(iso) {
   }
 }
 
-/* "Inviter des amis", dans les parametres : la feuille de partage du
-   telephone avec le lien, directement. Sans partage natif (ordinateur),
-   le lien est copie. Le QR et le code en clair restent dans l'onglet Amis. */
-var LIEN_PARRAINAGE = null;
-$("#pf-inviter")?.addEventListener("click", async function () {
-  if (!LIEN_PARRAINAGE) {
-    fermerProfil();
-    TAB_AMIS.click();
-    return;
-  }
-  if (navigator.share) {
-    navigator.share({ title: "Noctify", url: LIEN_PARRAINAGE }).catch(function () {});
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(LIEN_PARRAINAGE);
-    pasEncore("Lien copié");
-  } catch (e) {
-    window.prompt("Copie ton lien :", LIEN_PARRAINAGE);
-  }
+/* "Inviter des amis", dans les parametres : la page d'invitation (gain,
+   QR, code, partage du lien), celle de l'ancien onglet Amis. */
+$("#pf-inviter")?.addEventListener("click", ouvrirInvitation);
+
+/* "Laisser un avis Google" : le formulaire d'avis de la fiche Google du
+   club courant. Sans googlePlaceId, la fiche Google elle-meme (le bouton
+   "Avis" y est a un tap). Dans l'appli native, le navigateur integre ; au
+   web, un nouvel onglet OUVERT DANS LE GESTE (un window.open apres un await
+   se fait bloquer comme popup). */
+function lienAvisGoogle(c) {
+  return c && c.googlePlaceId
+    ? "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(c.googlePlaceId)
+    : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((c && (c.googleQuery || c.nom)) || "");
+}
+$("#pf-avis-google")?.addEventListener("click", function () {
+  var url = lienAvisGoogle(CLUBS[CLUB_BOUTIQUE] || CLUBS[Object.keys(CLUBS)[0]]);
+  if (natif.estNatif) { natif.ouvrirLien(url); return; }
+  window.open(url, "_blank", "noopener");
 });
 
 function pasEncore(texte) {
@@ -10312,10 +10335,6 @@ function peindreBasculeNotif(actif) {
     b.classList.toggle("on", actif);
     if (b.getAttribute("role") === "switch") b.setAttribute("aria-checked", String(actif));
   });
-  // La carte du profil change de forme : apercu + bouton eteinte, une
-  // ligne a interrupteur allumee.
-  var carte = document.getElementById("pf-notif");
-  if (carte) carte.classList.toggle("actif", actif);
 }
 
 async function abonnementCourant() {
@@ -10555,6 +10574,9 @@ $("#pf-reglages")?.addEventListener("click", async function () {
   $("#rg-pseudo").textContent = profil && profil.handle ? "@" + profil.handle : nomRepliReglages;
   $("#rg-email").textContent = session.user.email;
   $("#rg-nom").textContent = nomAffiche({ metadata: session.user.user_metadata, email: session.user.email }) || "—";
+  var lignePhoto = $("#rg-photo");
+  lignePhoto.textContent = profil && profil.avatar_url ? "Ajoutée" : "Aucune";
+  lignePhoto.classList.toggle("vide", !(profil && profil.avatar_url));
   // Le compte Instagram et sa capture, a la place du telephone et de
   // l'adresse. La capture n'est pas une valeur affichable (c'est un
   // chemin dans un bucket prive) : on montre si elle est enregistree,
@@ -10566,6 +10588,14 @@ $("#pf-reglages")?.addEventListener("click", async function () {
   ligneCapture.classList.toggle("vide", !aCapture);
   $("#rg-langue").textContent = (profil && profil.langue) || "Français";
   $("#rg-membre-depuis").textContent = moisAnnee(session.user.created_at);
+});
+
+// La photo : meme champ fichier et meme envoi que la photo du profil (le
+// gestionnaire onchange est pose a l'ouverture du profil, et Reglages ne
+// s'ouvre que depuis le profil).
+$("#rg-photo-modifier")?.addEventListener("click", function () {
+  var champ = $("#pf-avatar-file");
+  if (champ) champ.click();
 });
 
 // Le nom corrige se range dans user_metadata.full_name, la ou Google et

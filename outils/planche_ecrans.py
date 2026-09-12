@@ -84,10 +84,8 @@ CLUBBEUR_APPLI = [
      "Les couleurs de Plans (Apple), \u00e0 plat, jusqu\u2019en bas de l\u2019\u00e9cran. Rien d\u2019autre dessus : on ouvre un club en touchant son badge. M\u00eame rendu sur iPhone et Samsung.", "nouveau"),
     (CLUBBEUR, "06-story", "Onglet 2", "Story",
      "L\u2019onglet qui d\u00e9pose une publication. Sans compte, il ne montre que sa porte.", "sans compte"),
-    (CLUBBEUR, "07-amis", "Onglet 4", "Amis",
-     "M\u00eame chose : le contenu vient du compte.", "sans compte"),
-    (CLUBBEUR, "08-profil", "Onglet 5", "Profil",
-     "M\u00eame chose. Les trois \u00e9crans qui manquent sont ceux qui parlent de la personne.", "sans compte"),
+    (CLUBBEUR, "08-profil", "Onglet 4", "Profil",
+     "M\u00eame chose. Plus d\u2019onglet Amis : l\u2019invitation est dans Profil > Partager.", "sans compte"),
 ]
 
 # Les ecrans que l'onglet Recompenses montre UNE FOIS CONNECTE. C'est le
@@ -118,11 +116,11 @@ CLUBBEUR_SESSION = [
     # Les deux seuls ecrans de cette planche pris avec un VRAI compte
     # (outils/clubbeur_connecte.cjs, compte jetable cree puis supprime).
     (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
-     "La carte des notifications montre la vraie notification, mot pour mot, et un seul bouton. Allumée, elle se replie en une ligne à interrupteur. Nom de la capture inventé.", "vrai compte"),
+     "Exactement l’entête de DUSK : les petits verres dessinés derrière, la carte grise à interrupteur, le nom en capitales. La photo se change dans Réglages. Nom de la capture inventé.", "vrai compte"),
     (CLUBBEUR, "09b-profil-parametres", "Onglet 5", "Les paramètres, façon DUSK",
-     "Trois blocs : Partager, Aide, Compte. « Inviter des amis » ouvre le partage du lien de parrainage. Les tuiles Amis et Récompenses sont parties : ce sont déjà deux onglets.", "vrai compte"),
-    (CLUBBEUR, "10-amis-connecte", "Onglet 4", "Amis, pour de vrai",
-     "Le parrainage à 100 points et le code personnel. C’est tout ce que contient l’onglet tant qu’on n’a pas d’ami.", "vrai compte"),
+     "Trois blocs : Partager, Aide, Compte. « Laisser un avis Google » ouvre le formulaire d’avis de la fiche Google du club.", "vrai compte"),
+    (CLUBBEUR, "10-inviter", "Profil > Partager", "Inviter des amis",
+     "L’ancien onglet Amis, ouvert depuis les paramètres. La flèche ramène au profil.", "vrai compte"),
 ]
 
 
