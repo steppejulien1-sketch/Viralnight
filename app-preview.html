@@ -1863,7 +1863,13 @@
       #map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
       #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-      .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left { bottom: 92px !important; }
+      /* ⚠️ L'ATTRIBUTION MONTE EN HAUT A DROITE. La feuille de la carte
+         recouvre maintenant tout le bas de l'ecran : laisse en bas, le
+         bouton "i" -- contractuel sur l'offre gratuite MapTiler, voir plus
+         bas -- se serait retrouve cache dessous. */
+      .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left {
+        bottom: auto !important; top: 14px !important;
+      }
       .maplibregl-ctrl-attrib { font-size: calc(9.5 * var(--u)) !important; background: rgba(255,255,255,.72) !important; }
       .maplibregl-ctrl-attrib a { color: rgba(21,24,29,.62) !important; }
       /* Le petit rond "i" (attribution repliee) reste present et cliquable
@@ -2015,10 +2021,86 @@
          qu'il contient depasse son conteneur de 7 px. Le NOM du club
          passait sous la barre -- sur la carte, "Mirano" etait tronque a
          mi-hauteur et illisible. */
-      .club-rail {
-        position: absolute; left: 0; right: 0; bottom: 106px; z-index: 24;
-        display: flex; gap: 8px; padding: 0 12px; overflow-x: auto; scrollbar-width: none;
+      /* ---- LA FEUILLE DE LA CARTE (modele DUSK) ----
+         Posee au-dessus de la barre d'onglets (88 px), coins hauts
+         arrondis, ombre vers le HAUT : c'est elle qui separe le plan de
+         la liste, pas un filet. */
+      /* ⚠️ LA FEUILLE REDECLARE LA PALETTE CLAIRE. L'ecran carte herite de
+         la palette SOMBRE de l'appli, ou --ink vaut #ffffff et --ink3 un
+         brun : pose sur la feuille blanche, le nom du club etait BLANC SUR
+         BLANC -- invisible sur la premiere capture -- et les filtres
+         sortaient delaves. Troisieme fois que la carte fait ce coup-la
+         (le badge noir en --s2, le nom blanc sous la pastille) : une
+         surface claire posee sur la carte doit porter ses propres jetons.
+         Valeurs reprises de la palette claire de l'appli. */
+      .carte-feuille {
+        --ink: #15181d; --ink2: #535b68; --ink3: #676d77;
+        --s1: #ffffff; --s2: #eef0f4;
+        --line: rgba(16,18,22,.09); --line2: rgba(16,18,22,.15);
+        position: absolute; left: 0; right: 0; bottom: 88px; z-index: 24;
+        padding: 14px 0 16px;
+        background: #ffffff; border-radius: 22px 22px 0 0;
+        box-shadow: 0 -12px 30px -14px rgba(16,18,22,.30);
       }
+      /* Les filtres, en pastilles au contour fin comme "NEAR ME" / "OPEN
+         NOW" : capitales SERREES, pas l'intertitre espace du tableau de
+         bord. Actif = contour et texte en encre. */
+      .carte-filtres {
+        display: flex; gap: 8px; padding: 0 16px 12px;
+        overflow-x: auto; scrollbar-width: none;
+      }
+      .carte-filtres::-webkit-scrollbar { display: none; }
+      .carte-filtre {
+        flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+        padding: 7px 12px; border-radius: 8px;
+        border: 1px solid var(--line2); background: #ffffff; color: var(--ink2);
+        font-family: var(--sans); font-size: calc(10.5 * var(--u)); font-weight: 700;
+        letter-spacing: .05em; text-transform: uppercase; line-height: 1; cursor: pointer;
+      }
+      .carte-filtre svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+      .carte-filtre[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); box-shadow: inset 0 0 0 .5px var(--ink); }
+      .carte-filtre:active { transform: scale(.97); }
+
+      /* Le carrousel. 78 % de large pour que la fiche suivante DEPASSE,
+         comme chez DUSK -- c'est ce qui dit qu'on peut faire glisser.
+         Une fiche seule prend toute la largeur : un carrousel d'un seul
+         element a 78 % aurait l'air coupe. */
+      .club-rail {
+        display: flex; gap: 12px; padding: 0 16px;
+        overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory;
+      }
+      .lieu {
+        flex: 0 0 78%; min-width: 0; padding: 0; border: 0; background: none;
+        text-align: left; cursor: pointer; scroll-snap-align: start;
+        color: var(--ink); font-family: inherit;
+      }
+      .lieu:only-child { flex-basis: 100%; }
+      .lieu:active { transform: scale(.985); }
+      /* L'image en 16/9. Sans photo, le creme et la mascotte : le meme
+         badge que partout, en grand. Une photo deposee le remplit. */
+      .lieu-image {
+        position: relative; display: block; aspect-ratio: 16 / 9;
+        border-radius: 14px; overflow: hidden;
+        background: #f7efe6 var(--verre-noctify) center 55% / auto 62% no-repeat;
+      }
+      .lieu-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .lieu-pastille {
+        position: absolute; top: 8px; right: 8px;
+        padding: 4px 9px; border-radius: 999px;
+        background: rgba(16,18,22,.72); color: #ffffff;
+        font-size: calc(11 * var(--u)); font-weight: 700; line-height: 1.2;
+      }
+      .lieu-nom {
+        display: block; margin-top: 9px;
+        font-family: var(--titre); font-size: calc(16.5 * var(--u)); font-weight: 800;
+        letter-spacing: -.02em; line-height: 1.2; color: var(--ink);
+      }
+      .lieu-tags {
+        display: block; margin-top: 2px;
+        font-size: calc(12.5 * var(--u)); color: var(--ink3);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .carte-vide { margin: 2px 16px 0; font-size: calc(13 * var(--u)); color: var(--ink3); }
       .club-rail::-webkit-scrollbar { display: none; }
       .fr {
         flex: 0 0 auto; background: none; border: 0; padding: 0; cursor: pointer;
@@ -5379,7 +5461,30 @@
                les deux ne peuvent donc pas diverger. -->
           <div class="carte-legende" id="carte-legende"></div>
 
-          <div class="club-rail" id="club-rail">
+          <!-- ⚠️ LA FEUILLE DE LA CARTE DUSK. Julien, 12/09/2026, captures de
+               DUSK a l'appui : "inspire-toi de la carte surtout".
+               Chez DUSK, le plan occupe le haut, et une feuille pose en bas
+               des FILTRES en pastilles ("NEAR ME", "OPEN NOW") puis un
+               CARROUSEL de fiches de lieux -- grande image, nom en gras,
+               etiquettes en gris. Ici, sur fond blanc.
+               Le rail de petites pastilles rondes qu'elle remplace ne
+               montrait qu'un rond et un nom : ni ce qu'est le lieu, ni s'il
+               est ouvert.
+               #club-rail garde son identifiant : le glisser a la souris et
+               le remplissage s'y accrochent. -->
+          <div class="carte-feuille" id="carte-feuille">
+            <!-- Deux filtres, et ils FILTRENT. Pas de "+ Filtre" : il n'y a
+                 aucun ecran de filtres derriere, et un bouton qui n'ouvre
+                 rien est exactement le bouton decoratif deja refuse. -->
+            <div class="carte-filtres" role="group" aria-label="Filtrer les clubs">
+              <button type="button" class="carte-filtre" data-filtre="proche" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5 3.5 10.6l7 2.3 2.3 7z"/></svg>
+                Près de moi
+              </button>
+              <button type="button" class="carte-filtre" data-filtre="ouvert" aria-pressed="false">Ouvert maintenant</button>
+            </div>
+            <div class="club-rail" id="club-rail"></div>
+            <p class="carte-vide" id="carte-vide" hidden>Aucun club ouvert en ce moment.</p>
           </div>
 
         </div>
@@ -9167,7 +9272,10 @@ map.on("load", function () {
   // cadre malgre des bounds corrects.
   var lngLats = Object.keys(CLUBS).map(function (k) { return CLUBS[k].lngLat; });
   var bounds = lngLats.reduce(function (b, ll) { return b.extend(ll); }, new maplibregl.LngLatBounds(lngLats[0], lngLats[0]));
-  map.fitBounds(bounds, { padding: 64, pitch: 0, bearing: 0, maxZoom: 15, duration: 0 });
+  /* Marge du BAS agrandie : la feuille des fiches couvre le bas de la
+     carte. Sans ca, le club se cadrait au milieu de l'ecran -- c'est-a-dire
+     sous la feuille. */
+  map.fitBounds(bounds, { padding: { top: 90, left: 64, right: 64, bottom: 380 }, pitch: 0, bearing: 0, maxZoom: 15, duration: 0 });
 
   // Point "moi" -- position fixe pour cette maquette (pas de vraie
   // geolocalisation branchee), juste pour garder un repere visuel de
@@ -9661,42 +9769,36 @@ document.addEventListener("click", function (e) {
 var clubRail = $("#club-rail");
 function creerClubChip(c, key, index) {
   var b = document.createElement("button");
-  b.className = "fr";
+  b.type = "button";
+  b.className = "lieu";
   b.dataset.club = key;
   // Retard de la cascade, lu par le CSS (var(--i)).
   b.style.setProperty("--i", index || 0);
 
-  // Une offre en cours ce soir dans CE club : signal temporel, il prime
-  // visuellement sur le statut permanent de partenaire. OFFRE porte le
-  // club concerne (voir la section "Ce soir au ..." de la boutique).
+  // Une offre en cours ce soir dans CE club : signal temporel. OFFRE porte
+  // le club concerne (voir la section "Ce soir au ..." de la boutique).
   var offreIci = !c.shut && typeof OFFRE !== "undefined" && OFFRE &&
     OFFRE.stock > 0 && (OFFRE.club ? OFFRE.club === key : false);
 
-  // L'etiquette accessible dit ce que les pastilles montrent : sans ca,
-  // un lecteur d'ecran n'entend que le nom du club.
-  var libelle = c.nom + (c.partenaire ? ", club partenaire" : "") +
+  // L'etiquette accessible dit ce que la fiche montre.
+  var libelle = c.nom + ", " + libelleType(c.type) +
     (c.shut ? ", fermé" : ", ouvert") + (offreIci ? ", offre en cours ce soir" : "");
   b.setAttribute("aria-label", libelle);
 
+  /* LA FICHE DE LIEU DUSK ("Late Night Louie" / "Live Music • Killer
+     Cocktails • Late Night") : l'image, le nom en gras, puis des etiquettes
+     separees par des points. Ce sont les deux faits qu'on cherche en
+     regardant une carte de nuit -- quel genre d'endroit, et est-ce que
+     c'est ouvert. L'image est la photo du club s'il en a depose une, et
+     sinon le badge Noctify : le meme partout, decision du 09/09. */
+  var etiquettes = [libelleType(c.type), c.shut ? c.horaire : "Ouvert"].filter(Boolean);
   b.innerHTML =
-    '<span class="bub bub-club' + (c.shut ? " shut" : "") + classeFoto(c) +
-      (c.partenaire ? " partenaire" : "") + '" style="--c:' + c.c + '">' +
+    '<span class="lieu-image' + classeFoto(c) + '">' +
       imgClub(c) +
-      /* L'ecusson "partenaire" est retire. Julien, 06/09/2026 : "on
-         voit un petit v a cote sur la photo, ca ne rend pas bien".
-
-         C'etait une coche blanche dans un rond rouge, collee en bas a
-         gauche du badge : a 17 px sur une photo de 47, elle ne se lisait
-         pas comme une coche mais comme une tache. Et le mot qu'elle
-         portait, Julien l'avait DEJA fait retirer de la fiche du club --
-         "le partenaire, c'est inutile", il ne parle qu'a nous. Il
-         revenait ici en pictogramme.
-
-         Ce qui distingue vraiment un club partenaire, c'est qu'on y
-         gagne des points : le bloc "Tu gagnes des points ici" de la
-         fiche le dit en toutes lettres. */
-      (offreIci ? '<span class="fr-urgence" aria-hidden="true">ce soir</span>' : "") +
-    "</span><b>" + escapeHtmlSupport(c.nom) + "</b>";
+      (offreIci ? '<span class="lieu-pastille">Ce soir</span>' : "") +
+    "</span>" +
+    '<strong class="lieu-nom">' + escapeHtmlSupport(c.nom) + "</strong>" +
+    '<span class="lieu-tags">' + etiquettes.map(escapeHtmlSupport).join(" • ") + "</span>";
   b.addEventListener("click", function () {
     activerVue("carte");
     ouvrirClub(c, b, key);
@@ -10887,7 +10989,7 @@ function rafraichirPhotosClubs() {
   document.querySelectorAll("[data-club]").forEach(function (noeud) {
     var c = CLUBS[noeud.dataset.club];
     if (!c || !c.photo) return;
-    var rond = noeud.classList.contains("club-badge") ? noeud : noeud.querySelector(".bub-club");
+    var rond = noeud.classList.contains("club-badge") ? noeud : noeud.querySelector(".bub-club, .lieu-image");
     if (!rond || rond.querySelector("img")) return;
     rond.classList.remove("sans-photo");
     rond.insertAdjacentHTML("afterbegin", '<img src="' + escapeHtmlSupport(c.photo) + '" alt="" />');
@@ -11204,6 +11306,11 @@ function appliquerPosition(pos) {
   Object.keys(CLUBS).forEach(function (k) {
     DISTANCES_CLUBS[k] = distanceKm([pos.coords.longitude, pos.coords.latitude], CLUBS[k].lngLat);
   });
+  // Le tri "Pres de moi" de la feuille de la carte depend de ces distances.
+  // ⚠️ FILTRES_CARTE est un `var` declare plus bas dans le module : hisse,
+  // mais `undefined` tant que sa ligne n'a pas tourne. Une position qui
+  // arriverait avant ferait planter tout appliquerPosition().
+  if (typeof FILTRES_CARTE !== "undefined" && FILTRES_CARTE && FILTRES_CARTE.proche) rendreRailClubs();
   var proche = clubLePlusProche();
   if (proche && !choixManuelClub && proche !== CLUB_BOUTIQUE) {
     CLUB_BOUTIQUE = proche;
@@ -11606,12 +11713,43 @@ var OFFRE = {
 // Remplissage du rail des clubs sous la carte. Appele ICI et pas a la
 // declaration de creerClubChip : la pastille "ce soir" a besoin de
 // OFFRE, declaree juste au-dessus.
-(function peuplerRailClubs() {
+var FILTRES_CARTE = { proche: false, ouvert: false };
+
+/* Redessine les fiches selon les filtres. "Ouvert maintenant" retire les
+   clubs fermes ; "Pres de moi" trie par distance. S'il ne reste rien, la
+   feuille le DIT au lieu de montrer un rail vide. */
+function rendreRailClubs() {
   if (!clubRail) return;
-  Object.keys(CLUBS).forEach(function (key, i) {
-    clubRail.appendChild(creerClubChip(CLUBS[key], key, i));
+  var cles = Object.keys(CLUBS);
+  if (FILTRES_CARTE.ouvert) cles = cles.filter(function (k) { return !CLUBS[k].shut; });
+  if (FILTRES_CARTE.proche) {
+    cles.sort(function (a, b) {
+      return (DISTANCES_CLUBS[a] == null ? 1e9 : DISTANCES_CLUBS[a]) -
+             (DISTANCES_CLUBS[b] == null ? 1e9 : DISTANCES_CLUBS[b]);
+    });
+  }
+  clubRail.innerHTML = "";
+  cles.forEach(function (key, i) { clubRail.appendChild(creerClubChip(CLUBS[key], key, i)); });
+  var vide = $("#carte-vide");
+  if (vide) vide.hidden = cles.length > 0;
+  rafraichirPhotosClubs();
+}
+
+document.querySelectorAll(".carte-filtre").forEach(function (bouton) {
+  bouton.addEventListener("click", function () {
+    var nom = bouton.dataset.filtre;
+    FILTRES_CARTE[nom] = !FILTRES_CARTE[nom];
+    bouton.setAttribute("aria-pressed", FILTRES_CARTE[nom] ? "true" : "false");
+    // "Pres de moi" sans position connue : on la demande. appliquerPosition()
+    // redessine les fiches a son retour.
+    if (nom === "proche" && FILTRES_CARTE.proche && !Object.keys(DISTANCES_CLUBS).length) {
+      localiser();
+    }
+    rendreRailClubs();
   });
-})();
+});
+
+rendreRailClubs();
 
 /* Pas de nombre en dur : voir la note sur les imports, en haut du module.
    Il n'y a volontairement PAS de ligne "vues de ta story" -- Meta ne rend
