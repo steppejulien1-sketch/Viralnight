@@ -2611,9 +2611,9 @@
          titre, isole dans le vide. */
       .carte-reco .prix-ligne {
         display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-        margin-top: 4px;
+        margin-top: 2px;
         font-family: var(--sans); font-variant-numeric: tabular-nums;
-        font-size: calc(13.5 * var(--u)); font-weight: 600; letter-spacing: -.005em;
+        font-size: calc(12.5 * var(--u)); font-weight: 600; letter-spacing: -.005em;
         color: var(--ink2);
       }
       /* La categorie, en petites capitales AU-DESSUS du titre ("LIFESTYLE"
@@ -2652,7 +2652,8 @@
       .carte-reco .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
         /* Plus de pastille dans le coin : le dessin se recentre. */
-        box-sizing: border-box; padding: 11%;
+        /* Le bas du dessin laisse la place a l'etiquette qui mord sur l'image. */
+        box-sizing: border-box; padding: 9% 12% 24%;
         transition: transform .5s cubic-bezier(.2,.7,.3,1);
       }
       .carte-reco:hover .photo img { transform: scale(1.05); }
@@ -2674,10 +2675,21 @@
          exactement pareil sans lui, et le pointille a 1 px passait son
          temps a couper l'illustration en deux. Ce qui separe l'image du
          texte, c'est le blanc, pas un trait. */
+      /* ⚠️ L'ETIQUETTE SUPERPOSEE A L'IMAGE. Julien, 13/09/2026 : "remets des
+         trucs superposes [...] meme quand tu superposes, ca rend extremement
+         bien". C'est ce qui fait la profondeur de DUSK : la tuile de marque
+         a cheval sur la photo, la capsule d'onglets sur la page, la carte
+         des notifications sur les dessins.
+         Ici : le nom et les points dans une etiquette blanche qui MORD sur
+         le bas de l'image, avec une ombre. Le logo du club n'y revient pas
+         ("ne mets pas a chaque fois mon petit logo"), les points restent
+         sous le nom ("mets les points en dessous"). */
       .carte-reco .corps {
-        position: relative;
+        position: relative; z-index: 1;
         display: flex; flex-direction: column; flex: 1;
-        padding: 10px 2px 0;
+        margin: -30px 8px 0; padding: 9px 11px 10px;
+        background: #ffffff; border-radius: 10px;
+        box-shadow: 0 0 0 .5px rgba(16,18,22,.06), 0 8px 18px -10px rgba(16,18,22,.35);
       }
       /* ⚠️ HAUTEUR RESERVEE POUR DEUX LIGNES. "Table offerte + bouteille"
          passe a la ligne, les trois autres non : le prix de cette carte
@@ -2690,7 +2702,7 @@
          que les rangees restent alignees quel que soit le nom. */
       .carte-reco strong {
         font-family: var(--titre);
-        display: block; font-size: calc(15 * var(--u)); font-weight: 700; letter-spacing: -.02em;
+        display: block; font-size: calc(14.5 * var(--u)); font-weight: 700; letter-spacing: -.02em;
         line-height: 1.25; color: var(--ink);
       }
       /* Le prix devient la deuxieme information la plus lisible de la
@@ -2733,6 +2745,10 @@
          photo. Elle vit maintenant dans le corps, a cote du prix, et
          garde sa couleur d'urgence pour rester reperable. */
       .carte-reco .ligne-etat { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+      .carte-reco .photo .badge-rarete, .carte-reco .photo .badge-epuise {
+        position: absolute; top: 8px; left: 8px; z-index: 2; background: #ffffff;
+        box-shadow: 0 4px 10px -6px rgba(16,18,22,.35);
+      }
       .carte-reco .badge-rarete {
         display: inline-flex; align-items: center; gap: 5px;
         padding: 3px 9px; border-radius: var(--r-pill);
@@ -12106,7 +12122,13 @@ function carteRecompense(r, index, bar) {
        prix se lit en derniere ligne, aligne d'une carte a l'autre. */
     var famille = FAMILLES[r.fam] || "";
     b.innerHTML =
-      '<span class="photo">' + visuelInterieur + "</span>" +
+      // Le stock bas ("Plus que 3", "Epuise") POSE SUR L'IMAGE, en haut a
+      // gauche : un element superpose de plus (Julien, 13/09), et l'etiquette
+      // du bas garde la meme hauteur sur toutes les cartes.
+      '<span class="photo">' + visuelInterieur +
+        (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
+        (rare ? '<span class="badge-rarete">Plus que ' + r.stock + "</span>" : "") +
+      "</span>" +
       '<span class="corps">' +
         // ⚠️ PLUS DE CATEGORIE ("BAR", "ACCES") au-dessus du titre. Julien,
         // 13/09/2026 : "c'est bizarre de mettre bar [...] en dessous de
@@ -12124,12 +12146,6 @@ function carteRecompense(r, index, bar) {
         '<span class="prix-ligne">' + nb(r.cout) + " points" +
           (epuise || loin ? "" : '<span class="dispo-txt">À échanger</span>') +
         "</span>" +
-        (epuise || rare
-          ? '<span class="ligne-etat">' +
-              (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
-              (rare ? '<span class="badge-rarete">Plus que ' + r.stock + "</span>" : "") +
-            "</span>"
-          : "") +
         '<span class="serie">' + r.code + "</span>" +
       "</span>";
 
