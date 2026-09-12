@@ -81,7 +81,7 @@ CLUBBEUR_APPLI = [
     (CLUBBEUR, "04-recompense-fiche", "Onglet 1", "Une r\u00e9compense, ouverte",
      "La feuille qui d\u00e9cide de l\u2019\u00e9change. \u00c0 z\u00e9ro point, le bouton nomme ce qu\u2019il manque.", ""),
     (CLUBBEUR, "05-carte", "Onglet 3", "La carte des clubs",
-     "Les clubs autour de soi. La carte garde sa nuit d\u2019origine, sans lien avec le th\u00e8me clair de la boutique.", ""),
+     "Les couleurs de Plans (Apple), \u00e0 plat, jusqu\u2019en bas de l\u2019\u00e9cran. Filtres en haut, fiche du club au-dessus des onglets. M\u00eame rendu sur iPhone et Samsung.", "nouveau"),
     (CLUBBEUR, "06-story", "Onglet 2", "Story",
      "L\u2019onglet qui d\u00e9pose une publication. Sans compte, il ne montre que sa porte.", "sans compte"),
     (CLUBBEUR, "07-amis", "Onglet 4", "Amis",
@@ -118,7 +118,7 @@ CLUBBEUR_SESSION = [
     # Les deux seuls ecrans de cette planche pris avec un VRAI compte
     # (outils/clubbeur_connecte.cjs, compte jetable cree puis supprime).
     (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
-     "Le premier écran d’un compte tout neuf. Le solde à zéro est en corail : la couleur de marque dépensée sur un rien.", "vrai compte"),
+     "Façon DUSK : les notifications en haut, le nom en capitales, l’adresse dessous. Le nom vient de Google/Apple ou de l’adresse (julien.dupont → Julien Dupont). Nom de la capture inventé.", "vrai compte"),
     (CLUBBEUR, "10-amis-connecte", "Onglet 4", "Amis, pour de vrai",
      "Le parrainage à 100 points et le code personnel. C’est tout ce que contient l’onglet tant qu’on n’a pas d’ami.", "vrai compte"),
 ]
@@ -377,7 +377,7 @@ PAGE = u"""<title>Noctify, \u00e9cran par \u00e9cran</title>
       une capture pour l\u2019agrandir.
     </p>
     <p class="meta">
-      <span>11 septembre 2026</span>
+      <span>12 septembre 2026</span>
       <span>37 \u00e9crans</span>
       <a href="https://viralnight-koif.vercel.app/club-app.html">club-app</a>
       <a href="https://viralnight-koif.vercel.app/app-preview.html?app=1">app-preview</a>
