@@ -377,7 +377,7 @@ PAGE = u"""<title>Noctify, \u00e9cran par \u00e9cran</title>
       une capture pour l\u2019agrandir.
     </p>
     <p class="meta">
-      <span>9 septembre 2026</span>
+      <span>11 septembre 2026</span>
       <span>37 \u00e9crans</span>
       <a href="https://viralnight-koif.vercel.app/club-app.html">club-app</a>
       <a href="https://viralnight-koif.vercel.app/app-preview.html?app=1">app-preview</a>

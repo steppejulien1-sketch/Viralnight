@@ -13,6 +13,12 @@
 // bien que tu puisses ameliorer ce point-la". Sans compte, ces deux
 // ecrans ne peuvent ni etre juges ni etre corriges.
 //
+// ⚠️ A LANCER APRES `appli_clubbeur.cjs`, JAMAIS AVANT.
+// Cet outil-la fait un `fs.rmSync` du dossier pages-clubbeur/ au
+// demarrage : lance dans le mauvais ordre, il efface les deux captures
+// produites ici, et la planche s'arrete sur un fichier manquant
+// (09-profil-connecte.jpg). Paye le 11/09/2026.
+//
 // ⚠️ IL CREE UN VRAI COMPTE DANS LA VRAIE BASE CLUBBEUR, ET LE SUPPRIME.
 // La suppression est dans un `finally` : elle passe meme si la capture
 // echoue. En cas de plantage du process (Ctrl+C), le compte reste --
