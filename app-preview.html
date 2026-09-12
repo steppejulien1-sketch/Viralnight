@@ -1258,19 +1258,48 @@
         }
       }
 
-      /* La carte des notifications, en haut du profil (modele DUSK) : un
-         bloc gris clair pose sur le blanc, titre gras, phrase grise,
-         interrupteur a droite. */
+      /* La carte des notifications, en haut du profil (modele DUSK).
+         Fond gris clair ; l'apercu de notification est la seule surface
+         blanche dessus, avec l'ombre d'une vraie banniere iOS. Le bouton est
+         en encre inversee : c'est le bouton principal de cet ecran, et le
+         rouge n'y porterait aucune information. */
       .pf-notif {
-        display: flex; align-items: center; gap: 14px;
-        margin: 4px 0 6px; padding: 16px 16px 16px 18px; border-radius: 16px;
+        margin: 4px 0 8px; padding: 14px 14px 16px; border-radius: 20px;
         background: var(--s2);
       }
-      .pf-notif-txt { flex: 1; min-width: 0; }
-      .pf-notif-titre { margin: 0 0 3px; font-size: calc(15 * var(--u)); font-weight: 800; letter-spacing: -.015em; color: var(--ink); }
-      .pf-notif-desc { margin: 0; font-size: calc(13 * var(--u)); line-height: 1.4; color: var(--ink2); }
-      .pf-notif-msg { margin-top: 6px; color: var(--ink); font-weight: 600; }
-      .pf-notif .rg-switch { flex: 0 0 auto; }
+      .pf-notif-apercu {
+        display: flex; align-items: center; gap: 11px;
+        padding: 11px 13px 11px 11px; border-radius: 16px; background: #ffffff;
+        box-shadow: 0 0 0 .5px rgba(16,18,22,.06), 0 8px 22px -12px rgba(16,18,22,.30);
+        margin-bottom: 14px;
+      }
+      .pf-notif-appli { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 9px; display: block; }
+      .pf-notif-apercu-txt { flex: 1; min-width: 0; }
+      .pf-notif-apercu-tete {
+        display: flex; justify-content: space-between; gap: 8px; margin: 0 0 1px;
+        font-size: calc(11.5 * var(--u)); color: #8a8f98; line-height: 1.2;
+      }
+      .pf-notif-apercu-tete strong { font-weight: 600; color: #8a8f98; text-transform: uppercase; letter-spacing: .02em; }
+      .pf-notif-apercu-titre { margin: 0; font-size: calc(13.5 * var(--u)); font-weight: 700; color: #15181d; line-height: 1.3; }
+      .pf-notif-apercu-corps { margin: 0; font-size: calc(13.5 * var(--u)); color: #15181d; line-height: 1.3; }
+      .pf-notif-titre { margin: 0 0 3px 4px; font-size: calc(16 * var(--u)); font-weight: 800; letter-spacing: -.015em; color: var(--ink); }
+      .pf-notif-desc { margin: 0 4px; font-size: calc(13 * var(--u)); line-height: 1.4; color: var(--ink2); }
+      .pf-notif-activer {
+        display: block; width: 100%; margin-top: 14px; height: 46px; border: 0; border-radius: 999px;
+        background: #15181d; color: #ffffff; cursor: pointer;
+        font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 700;
+      }
+      .pf-notif-activer:active { transform: scale(.985); }
+      .pf-notif-activer:disabled { opacity: .6; }
+      .pf-notif-msg { margin: 10px 4px 0; font-size: calc(13 * var(--u)); line-height: 1.4; font-weight: 600; color: var(--ink); }
+      /* Allumee : la carte se replie en une ligne. */
+      .pf-notif-allumee { display: none; align-items: center; gap: 12px; }
+      .pf-notif.actif { padding: 12px 14px 12px 16px; }
+      .pf-notif.actif .pf-notif-offre { display: none; }
+      .pf-notif.actif .pf-notif-allumee { display: flex; }
+      .pf-notif-allumee .pf-notif-titre { flex: 1; margin: 0; font-size: calc(15 * var(--u)); }
+      .pf-notif-allumee .rg-switch { flex: 0 0 auto; }
+      .pf-notif-cloche { flex: 0 0 auto; width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
       /* Entete sobre. Le halo de marque rouge derriere l'entete et
          l'anneau rouge autour de la photo, essayes pendant la refonte,
@@ -1319,28 +1348,6 @@
       }
       .pf-sub { margin: 0; font-size: calc(13.5 * var(--u)); color: var(--ink3); font-weight: 600; overflow-wrap: anywhere; }
 
-      .pf-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 0 24px; }
-      /* Etat presse : sur mobile le :hover n'existe pas, sans ca rien
-         ne confirme le tap. */
-      .pf-action:active { transform: scale(.96); background: var(--s2); }
-      .pf-action:hover { border-color: var(--line2); }
-      /* 4 raccourcis (Amis/Favoris/Mes stories/Recompenses) : meme
-         carte, juste un peu plus compacte pour tenir sur une ligne. */
-      .pf-actions-4 { grid-template-columns: repeat(4, 1fr); gap: 8px; }
-      .pf-actions-4 .pf-action { padding: 12px 4px; border-radius: 15px; }
-      .pf-actions-4 .pf-action svg { width: 19px; height: 19px; }
-      .pf-actions-4 .pf-action span { font-size: calc(10.5 * var(--u)); }
-      .pf-action {
-        display: flex; flex-direction: column; align-items: center; gap: 8px;
-        background: var(--s1); border: 1px solid var(--line); border-radius: var(--r3);
-        /* Plus d'air qu'avant (16px -> 19px) : les 3 tuiles etaient
-           serrees au point de ressembler a une barre d'icones. */
-        padding: 20px 8px; cursor: pointer; font-family: inherit; color: var(--ink);
-        transition: transform var(--tr-court), border-color var(--tr-court), background var(--tr-court);
-      }
-      .pf-action svg { width: 22px; height: 22px; stroke: var(--ink2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-      .pf-action span { font-size: calc(12 * var(--u)); font-weight: 700; }
-      .pf-action:active { transform: scale(.97); }
 
       /* La carte de fidelite est la piece maitresse du profil : elle
          affiche le solde en grand et la progression vers le palier
@@ -1494,39 +1501,44 @@
       @media (prefers-reduced-motion: reduce) { .pf-fid-barre { transition: none; } }
       .pf-fidelite-chev { flex: 0 0 auto; width: 16px; height: 16px; stroke: var(--ink3); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
-      /* Ces lignes sont de l'utilitaire : reglages, aide, a propos. En
-         16.5px gras avec des icones en pleine encre, elles criaient plus
-         fort que la carte de points juste au-dessus -- c'est ce qui
-         faisait basculer l'ecran du cote "reglages" (Julien : "tout le
-         profil fait trop code", "un peu trop le truc de reglage").
-         Elles ne disparaissent pas, elles reculent : un cran de taille et
-         de graisse en moins, des icones en --ink3 comme le reste du
-         secondaire. La hierarchie de l'ecran redevient photo > points >
-         raccourcis > utilitaire. */
-      .pf-liste { margin: 0 0 8px; }
-      .pf-item {
-        width: 100%; display: flex; align-items: center; gap: 16px;
-        padding: 16px 2px; border: 0; border-top: 1px solid var(--line);
-        background: transparent; color: var(--ink); font-family: inherit;
-        font-size: calc(15 * var(--u)); font-weight: 600; cursor: pointer; text-align: left;
+      /* ---- LES SECTIONS DU PROFIL (modele DUSK) ----
+         Un titre de bloc gras avec son icone, puis une carte blanche au
+         liseré fin ; dans la carte, des lignes separees par un filet qui ne
+         touche pas les bords. Icone au trait, sans tuile : chez DUSK c'est le
+         titre et sa phrase qui portent la ligne. */
+      .pf-section { margin: 28px 0 0; }
+      .pf-section-titre {
+        display: flex; align-items: center; gap: 9px; margin: 0 0 10px 2px;
+        font-family: var(--titre); font-size: calc(20 * var(--u)); font-weight: 800;
+        letter-spacing: -.02em; line-height: 1.2; color: var(--ink);
       }
-      .pf-item:first-child { border-top: 0; }
-      /* ⚠️ L'ICONE DANS UNE TUILE, comme les etapes de la fiche et les
-         lignes "Tap redeem reward" de DUSK. La tuile est portee par le SVG
-         lui-meme (padding + fond + rayon, box-sizing) : aucune ligne du
-         menu n'a eu besoin d'etre reecrite pour l'avoir. Une icone nue
-         faisait lire la liste comme des reglages ; une tuile la fait lire
-         comme des destinations. */
-      .pf-item svg {
-        flex: 0 0 auto; box-sizing: border-box; width: 38px; height: 38px; padding: 9px;
-        border-radius: 11px; background: var(--s2);
-        stroke: var(--ink); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+      .pf-section-titre svg { flex: 0 0 auto; width: 21px; height: 21px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-liste {
+        margin: 0; border-radius: 18px; overflow: hidden;
+        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .pf-item {
+        position: relative; width: 100%;
+        display: grid; grid-template-columns: 28px 1fr 16px; align-items: center; column-gap: 16px;
+        padding: 16px 16px 16px 18px; border: 0; background: transparent;
+        color: var(--ink); font-family: inherit; cursor: pointer; text-align: left;
+      }
+      .pf-item + .pf-item::before {
+        content: ""; position: absolute; top: 0; left: 18px; right: 16px; height: 1px; background: var(--line);
       }
       .pf-item:active { background: var(--s2); }
-      /* Supprimer mon compte / Deconnexion : memes lignes que le reste
-         de la liste, juste en rouge -- plus lisible qu'un bouton texte
-         seul perdu en bas de l'ecran (demande de Julien). */
-      .pf-item-danger, .pf-item-danger svg { color: var(--erreur-texte, #ff6b7d); stroke: var(--erreur-texte, #ff6b7d); }
+      .pf-item-ico { width: 28px; height: 28px; fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-item-txt { min-width: 0; }
+      .pf-item-txt strong { display: block; font-size: calc(15.5 * var(--u)); font-weight: 750; letter-spacing: -.01em; line-height: 1.25; }
+      .pf-item-txt > span { display: block; margin-top: 3px; font-size: calc(13 * var(--u)); line-height: 1.4; color: var(--ink3); }
+      .pf-item-chev { width: 16px; height: 16px; fill: none; stroke: var(--ink3); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* Se deconnecter : un lien texte sous les blocs, pas une ligne de
+         plus. Rien de rouge : ce n'est pas une destruction, on revient. */
+      .pf-deconnexion {
+        display: block; width: 100%; margin: 22px 0 0; padding: 14px; border: 0; background: transparent;
+        font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 650; color: var(--ink3); cursor: pointer;
+      }
 
       .pf-deco { width: 100%; background: transparent; border: 0; padding: 16px; color: #ff8290; font-family: inherit; font-size: calc(14 * var(--u)); font-weight: 700; cursor: pointer; }
 
@@ -4777,21 +4789,38 @@
 
             <!-- ⚠️ LA CARTE DES NOTIFICATIONS, EN HAUT DU PROFIL. Julien,
                  12/09/2026, capture de DUSK : "le bail avec les notifications
-                 est bien". Chez DUSK, c'est la premiere chose du profil : un
-                 titre, une phrase, un interrupteur. Elle remplace la cloche
-                 ronde du coin, qui cachait la meme chose derriere un ecran.
-                 L'interrupteur est le MEME que celui de l'ecran
-                 Notifications (classe js-bascule-notif) : les deux ne
-                 peuvent pas se contredire.
-                 La phrase ne promet que ce qui part vraiment : la
-                 notification du credit de points. -->
-            <div class="pf-notif">
-              <div class="pf-notif-txt">
-                <p class="pf-notif-titre">Tes notifications</p>
-                <p class="pf-notif-desc">Sois prévenu dès qu'une story est validée et que tes points arrivent.</p>
-                <p class="pf-notif-desc pf-notif-msg js-msg-notif" hidden></p>
+                 est bien", puis "rends-le plus attirant, pour que les gens les
+                 mettent".
+                 Ce qui la rend attirante : elle MONTRE la notification au lieu
+                 de la decrire. L'apercu reprend mot pour mot le texte envoye
+                 par lib/notifications/push.js ("Ta story est validee", "+N
+                 points chez <club>.") -- il ne promet rien qui ne parte pas.
+                 Le montant vient de FORFAIT_STORY_DEFAUT, le meme que la ligne
+                 "Poster ta story" de la boutique.
+                 Eteinte : apercu, une phrase, UN bouton en encre. Allumee : la
+                 carte se replie en une ligne a interrupteur (le modele DUSK),
+                 pour pouvoir couper. Les deux boutons portent js-bascule-notif :
+                 un seul etat, partage avec l'ecran Notifications. -->
+            <div class="pf-notif" id="pf-notif">
+              <div class="pf-notif-offre">
+                <div class="pf-notif-apercu" aria-hidden="true">
+                  <img class="pf-notif-appli" src="/icones/icone-192.png" alt="" width="38" height="38" />
+                  <div class="pf-notif-apercu-txt">
+                    <p class="pf-notif-apercu-tete"><strong>Noctify</strong><span>maintenant</span></p>
+                    <p class="pf-notif-apercu-titre">Ta story est validée</p>
+                    <p class="pf-notif-apercu-corps">+<span id="pf-notif-points">50</span> points chez Mirano.</p>
+                  </div>
+                </div>
+                <p class="pf-notif-titre">Prévenu quand tes points arrivent</p>
+                <p class="pf-notif-desc">Une notification quand ta story est validée, et quand ton cadeau du jour est prêt.</p>
+                <button type="button" class="pf-notif-activer js-bascule-notif" id="pf-notif-activer">Activer les notifications</button>
               </div>
-              <button type="button" class="rg-switch js-bascule-notif" id="pf-notif-actif" role="switch" aria-checked="false" aria-label="Activer les notifications"></button>
+              <div class="pf-notif-allumee">
+                <svg class="pf-notif-cloche" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 15.2V11a6 6 0 0 0-4.7-5.86V4a1.3 1.3 0 1 0-2.6 0v1.14A6 6 0 0 0 6 11v4.2L4.2 17v1h15.6v-1z"/><path d="M10.3 19.5a1.7 1.7 0 0 0 3.4 0"/></svg>
+                <p class="pf-notif-titre">Notifications activées</p>
+                <button type="button" class="rg-switch js-bascule-notif" id="pf-notif-actif" role="switch" aria-checked="false" aria-label="Notifications"></button>
+              </div>
+              <p class="pf-notif-msg js-msg-notif" hidden></p>
             </div>
 
             <!-- Le NOM en grand, l'adresse dessous, comme DUSK. Le nom vient de
@@ -4810,21 +4839,9 @@
               <p class="pf-sub" id="pf-sub"></p>
             </div>
 
-            <div class="pf-actions">
-              <button type="button" class="pf-action" id="pf-action-amis">
-                <svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/></svg>
-                <span>Amis</span>
-              </button>
-              <button type="button" class="pf-action" id="pf-action-favoris">
-                <svg viewBox="0 0 24 24"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1z"/></svg>
-                <span>Favoris</span>
-              </button>
-              <button type="button" class="pf-action" id="pf-action-recompenses">
-                <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
-                <span>Récompenses</span>
-              </button>
-            </div>
-
+            <!-- Plus de tuiles Amis / Favoris / Recompenses : Amis et
+                 Recompenses sont deja deux onglets de la barre, juste en
+                 dessous. Favoris devient une ligne de "Compte". -->
             <button type="button" class="pf-fidelite" id="pf-fidelite">
               <!-- Meme encadre que l'en-tete de la boutique ("13,200 POINTS"
                    chez DUSK) : le solde est UN objet, qui s'ecrit pareil
@@ -4852,45 +4869,71 @@
               <ul class="pf-histo-liste" id="pf-histo-liste"></ul>
             </section>
 
-            <div class="pf-liste">
-              <button type="button" class="pf-item" id="pf-reglages">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.1 12.9a7.3 7.3 0 0 0 .07-.9 7.3 7.3 0 0 0-.07-.9l1.9-1.5a.46.46 0 0 0 .11-.58l-1.8-3.1a.45.45 0 0 0-.55-.2l-2.24.9a6.8 6.8 0 0 0-1.56-.9l-.34-2.38a.44.44 0 0 0-.44-.38h-3.6a.44.44 0 0 0-.44.38l-.34 2.38a6.8 6.8 0 0 0-1.56.9l-2.24-.9a.45.45 0 0 0-.55.2l-1.8 3.1a.46.46 0 0 0 .11.58l1.9 1.5a7.3 7.3 0 0 0-.07.9 7.3 7.3 0 0 0 .07.9l-1.9 1.5a.46.46 0 0 0-.11.58l1.8 3.1c.12.2.36.28.55.2l2.24-.9c.48.38 1 .68 1.56.9l.34 2.38c.04.22.22.38.44.38h3.6c.22 0 .4-.16.44-.38l.34-2.38c.56-.22 1.08-.52 1.56-.9l2.24.9c.2.08.43 0 .55-.2l1.8-3.1a.46.46 0 0 0-.11-.58z"/></svg>
-                Réglages
-              </button>
-              <button type="button" class="pf-item" id="pf-devenir-club">
-                <svg viewBox="0 0 24 24"><path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/></svg>
-                Vous gérez un club ?
-              </button>
-              <button type="button" class="pf-item" id="pf-aide">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9.3a3 3 0 0 1 5.8 1c0 2-2.9 2.3-2.9 4.3"/><circle cx="12" cy="17.3" r="1" fill="var(--ink)" stroke="none"/></svg>
-                Aide &amp; Support
-              </button>
-              <!-- Julien, 06/09/2026 : un bouton pour laisser son avis --
-                   sur l'APPLI, pas sur le club (il l'a tranché : « un avis
-                   sur l'appli Noctify »).
+            <!-- ⚠️ LES PARAMETRES FACON DUSK. Julien, 12/09/2026 : "attaque les
+                 parametres facon DUSK, mets le lien d'affiliation dedans, faut
+                 etre plutot minimaliste".
+                 DUSK range son profil en trois blocs titres (Share / Support /
+                 Account). Chaque ligne : une icone au trait, un titre, UNE
+                 phrase qui dit ce qu'il y a derriere, un chevron. La phrase
+                 NOMME, elle n'encourage pas (voir le ton de l'interface).
+                 Minimaliste : sept lignes, rien de plus. "Donner mon avis" et
+                 "Vous gerez un club ?" restent parce qu'ils menent quelque part.
+                 Les identifiants des boutons sont ceux d'avant : leurs
+                 gestionnaires n'ont pas bouge. -->
+            <section class="pf-section">
+              <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.5l7 2.5 2.5 7z"/><path d="m21 3-11 10"/></svg>Partager</h2>
+              <div class="pf-liste">
+                <button type="button" class="pf-item" id="pf-inviter">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6.5L20.5 7"/></svg>
+                  <span class="pf-item-txt"><strong>Inviter des amis</strong><span><span id="pf-inviter-montant">100</span> points par ami qui s’inscrit avec ton lien.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+            </section>
 
-                   Tant que Noctify n'est pas sur les stores, il n'y a pas
-                   de page où noter : le bouton ouvre donc un mail. C'est
-                   moins beau qu'une pluie d'étoiles, mais c'est la seule
-                   chose qui arrive VRAIMENT quelque part aujourd'hui -- et
-                   le jour où l'appli est sur l'App Store, seule cette
-                   adresse change. -->
-              <button type="button" class="pf-item" id="pf-avis">
-                <svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>
-                Donner mon avis
-              </button>
-              <button type="button" class="pf-item" id="pf-apropos">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6.3"/><circle cx="12" cy="7.5" r="1" fill="var(--ink)" stroke="none"/></svg>
-                À propos
-              </button>
-            </div>
+            <section class="pf-section">
+              <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9.3a3 3 0 0 1 5.8 1c0 2-2.9 2.3-2.9 4.3"/><path d="M12 17.3h.01"/></svg>Aide</h2>
+              <div class="pf-liste">
+                <button type="button" class="pf-item" id="pf-aide">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-11.7 7.1L4 20l1-4.1A8 8 0 1 1 20 12z"/><path d="M9 10.5h6M9 13.5h4"/></svg>
+                  <span class="pf-item-txt"><strong>Aide &amp; Support</strong><span>Une question sur tes points ou une récompense.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+                <button type="button" class="pf-item" id="pf-avis">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>
+                  <span class="pf-item-txt"><strong>Donner mon avis</strong><span>Ce qui marche et ce qui manque, par e-mail.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+            </section>
 
-            <div class="pf-liste">
-              <button type="button" class="pf-item pf-item-danger" id="pf-deconnexion">
-                <svg viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M16 16l4-4-4-4M20 12H9"/></svg>
-                Déconnexion
-              </button>
-            </div>
+            <section class="pf-section">
+              <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.4 20.2a7.6 7.6 0 0 1 15.2 0"/></svg>Compte</h2>
+              <div class="pf-liste">
+                <button type="button" class="pf-item" id="pf-reglages">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+                  <span class="pf-item-txt"><strong>Réglages</strong><span>Nom, pseudo, e-mail, Instagram et sons.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+                <button type="button" class="pf-item" id="pf-action-favoris">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1z"/></svg>
+                  <span class="pf-item-txt"><strong>Favoris</strong><span>Les clubs que tu as gardés.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+                <button type="button" class="pf-item" id="pf-devenir-club">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/></svg>
+                  <span class="pf-item-txt"><strong>Vous gérez un club ?</strong><span>Proposer Noctify à ton établissement.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+                <button type="button" class="pf-item" id="pf-apropos">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/></svg>
+                  <span class="pf-item-txt"><strong>À propos</strong><span>Comment marche Noctify, et les mentions légales.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+            </section>
+
+            <button type="button" class="pf-deconnexion" id="pf-deconnexion">Se déconnecter</button>
 
           </div>
         </div>
@@ -9793,6 +9836,10 @@ TAB_PROFIL?.addEventListener("click", async function () {
   TAB_PROFIL.classList.add("on");
   TAB_PROFIL.setAttribute("aria-current", "page");
   VUE_PROFIL.hidden = false;
+  // La proposition de notifications a pu s'afficher juste avant, sur un
+  // autre onglet : le profil porte deja sa propre carte, on la range. Pas
+  // de report d'une semaine, ce n'est pas un refus.
+  afficherInviteNotif(false);
 
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) {
@@ -9831,6 +9878,19 @@ TAB_PROFIL?.addEventListener("click", async function () {
   $("#pf-sub").textContent = session.user.email || "";
 
   $("#pf-fid-solde").textContent = nb(ETAT.solde);
+
+  // Le lien de parrainage, pour la ligne "Inviter des amis". Meme forme
+  // que celui de l'onglet Amis (?parrain=<pseudo>).
+  LIEN_PARRAINAGE = monHandle
+    ? window.location.origin + window.location.pathname + "?parrain=" + encodeURIComponent(monHandle)
+    : null;
+  var pointsApercu = $("#pf-notif-points");
+  if (pointsApercu) pointsApercu.textContent = nb(FORFAIT_STORY_DEFAUT);
+  // Le montant du parrainage vient de la base, comme sur l'onglet Amis.
+  supabaseClubbeur.rpc("montant_parrainage").then(function (r) {
+    var el = $("#pf-inviter-montant");
+    if (el && !r.error && r.data) el.textContent = nb(r.data);
+  });
 
   // Meme logique que la barre de la boutique : on vise la prochaine
   // recompense encore hors de portee. Sans cible, tout est atteignable.
@@ -9894,20 +9954,9 @@ $("#pf-connecte-btn")?.addEventListener("click", function () {
 
 $("#pf-close")?.addEventListener("click", fermerProfil);
 
-// "Amis" et "Récompenses" renvoient vers les vrais ecrans deja
-// construits (onglet Amis, onglet Boutique) plutot que de dupliquer
-// leur contenu ici. "Ma fidélité" est different : la Boutique ne
+// "Ma fidélité" a son propre ecran (vue-historique) : la Boutique ne
 // montre que le catalogue et les bons encore valables, pas l'historique
-// des points gagnes/depenses -- d'ou son propre ecran (vue-historique).
-$("#pf-action-amis")?.addEventListener("click", function () {
-  fermerProfil();
-  TAB_AMIS.click();
-});
-$("#pf-action-recompenses")?.addEventListener("click", function () {
-  fermerProfil();
-  activerVue("boutique");
-});
-
+// des points gagnes/depenses.
 var VUE_HISTORIQUE = $("#vue-historique");
 $("#pf-fidelite")?.addEventListener("click", function () {
   VUE_HISTORIQUE.hidden = false;
@@ -9977,6 +10026,28 @@ function dateCourte(iso) {
     return "";
   }
 }
+
+/* "Inviter des amis", dans les parametres : la feuille de partage du
+   telephone avec le lien, directement. Sans partage natif (ordinateur),
+   le lien est copie. Le QR et le code en clair restent dans l'onglet Amis. */
+var LIEN_PARRAINAGE = null;
+$("#pf-inviter")?.addEventListener("click", async function () {
+  if (!LIEN_PARRAINAGE) {
+    fermerProfil();
+    TAB_AMIS.click();
+    return;
+  }
+  if (navigator.share) {
+    navigator.share({ title: "Noctify", url: LIEN_PARRAINAGE }).catch(function () {});
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(LIEN_PARRAINAGE);
+    pasEncore("Lien copié");
+  } catch (e) {
+    window.prompt("Copie ton lien :", LIEN_PARRAINAGE);
+  }
+});
 
 function pasEncore(texte) {
   $("#pf-msg-bientot") || document.body.insertAdjacentHTML("beforeend",
@@ -10239,8 +10310,12 @@ function direNotif(texte) {
 function peindreBasculeNotif(actif) {
   BOUTONS_NOTIF.forEach(function (b) {
     b.classList.toggle("on", actif);
-    b.setAttribute("aria-checked", String(actif));
+    if (b.getAttribute("role") === "switch") b.setAttribute("aria-checked", String(actif));
   });
+  // La carte du profil change de forme : apercu + bouton eteinte, une
+  // ligne a interrupteur allumee.
+  var carte = document.getElementById("pf-notif");
+  if (carte) carte.classList.toggle("actif", actif);
 }
 
 async function abonnementCourant() {

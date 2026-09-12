@@ -126,6 +126,16 @@ const HAUTEUR = 844;
     await pause(3000);
     await prendre("09-profil-connecte", "Profil — avec un compte");
 
+    // Le bas du profil : les parametres en blocs facon DUSK (Partager,
+    // Aide, Compte). Hors champ sur la premiere capture.
+    await page.evaluate(() => {
+      const vue = document.querySelector("#vue-profil");
+      vue.scrollTop = vue.scrollHeight;
+    });
+    await pause(600);
+    await prendre("09b-profil-parametres", "Profil — les parametres");
+    await page.evaluate(() => { document.querySelector("#vue-profil").scrollTop = 0; });
+
     await page.evaluate(() => document.querySelector("#tab-amis").click());
     await pause(3000);
     await prendre("10-amis-connecte", "Amis — avec un compte");
