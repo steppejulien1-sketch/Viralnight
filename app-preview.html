@@ -2577,10 +2577,13 @@
          recompenses". Les illustrations sont detourees et cadrees large :
          elles perdent du vide, pas du dessin, et le club montre quatre
          bons au lieu de deux. */
+      /* L'image sur un aplat gris doux, sans contour -- le meme gris que
+         le haut de la fiche. Une boite blanche liseree sur un fond gris se
+         lisait comme un cadre vide autour du dessin ; chez DUSK, l'image
+         EST la carte. */
       .carte-reco .photo {
         position: relative; width: 100%; aspect-ratio: 1 / 1;
-        background: var(--socle); border-radius: 6px;
-        box-shadow: inset 0 0 0 1px var(--line);
+        background: #ebecef; border-radius: 10px; overflow: hidden;
       }
       /* Plus de tuile du club sur chaque image : la section porte deja le
          nom du bar. Julien : "ne mets pas a chaque fois mon petit logo en
@@ -2589,14 +2592,15 @@
          droite). Pastille sombre et translucide : sur un dessin clair elle
          se detache sans avoir besoin de couleur, et elle ne cache jamais
          le sujet, qui est au centre. */
-      .carte-reco .pts-pastille {
-        position: absolute; top: 8px; right: 8px; z-index: 2;
-        padding: 5px 9px; border-radius: 6px;
-        background: rgba(16,18,22,.72); color: #ffffff;
-        -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-        font-family: var(--titre); font-variant-numeric: tabular-nums;
-        font-size: calc(11.5 * var(--u)); font-weight: 700; letter-spacing: -.01em;
-        line-height: 1.2;
+      /* Le prix, en derniere ligne de la carte. margin-top: auto le pousse
+         en bas : dans une rangee, les cartes ont la meme hauteur, et les
+         prix tombent sur la meme ligne meme quand un titre passe sur deux. */
+      .carte-reco .prix-ligne {
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        margin-top: auto; padding-top: 4px;
+        font-family: var(--sans); font-variant-numeric: tabular-nums;
+        font-size: calc(13.5 * var(--u)); font-weight: 600; letter-spacing: -.005em;
+        color: var(--ink2);
       }
       /* La categorie, en petites capitales AU-DESSUS du titre ("LIFESTYLE"
          chez DUSK). Serree, pas espacee : c'est une etiquette, pas un
@@ -2633,7 +2637,8 @@
          air au coin, sans rogner le sujet (object-fit reste contain). */
       .carte-reco .photo img {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
-        box-sizing: border-box; padding: 14% 12% 4%;
+        /* Plus de pastille dans le coin : le dessin se recentre. */
+        box-sizing: border-box; padding: 11%;
         transition: transform .5s cubic-bezier(.2,.7,.3,1);
       }
       .carte-reco:hover .photo img { transform: scale(1.05); }
@@ -2671,8 +2676,8 @@
          que les rangees restent alignees quel que soit le nom. */
       .carte-reco strong {
         font-family: var(--titre);
-        display: block; font-size: calc(14.5 * var(--u)); font-weight: 700; letter-spacing: -.02em;
-        line-height: 1.25; min-height: 2.5em; color: var(--ink);
+        display: block; font-size: calc(15 * var(--u)); font-weight: 700; letter-spacing: -.02em;
+        line-height: 1.25; color: var(--ink);
       }
       /* Le prix devient la deuxieme information la plus lisible de la
          carte, juste sous le nom -- il etait sur la photo avant. */
@@ -2703,7 +2708,7 @@
       /* ---- Etat, en bas de carte ---- */
       .carte-reco .dispo-txt {
         display: inline-flex; align-items: center; gap: 4px; align-self: flex-start;
-        margin-top: 12px; padding: 4px 12px; border-radius: var(--r-pill);
+        margin-top: 0; padding: 3px 9px; border-radius: var(--r-pill);
         background: rgba(53,208,127,.16); color: #1c9a5f;
         font-size: calc(11 * var(--u)); font-weight: 700; letter-spacing: -.005em;
       }
@@ -12062,19 +12067,16 @@ function carteRecompense(r, index, bar) {
     }
     /* ⚠️ ANATOMIE DE LA CARTE DUSK. Julien, 12/09/2026, devant l'appli
        DUSK : "je veux que tu t'inspires de ca" -- fond blanc garde, tout
-       le reste pris.
-       Une carte DUSK, c'est : l'image, la valeur en PASTILLE TRANSLUCIDE
-       sur l'image (en haut a droite), puis sous l'image une categorie en
-       petites capitales et le titre. Le prix quitte donc le corps de la
-       carte pour se poser sur l'image : c'est la que l'oeil tombe en
-       premier, et ca libere le texte pour ce qui DECRIT la recompense.
-       (L'ancienne regle "rien sur la photo" est levee par ce choix.) */
+       le reste pris : l'image, puis une categorie en petites capitales et
+       le titre.
+       ⚠️ LES POINTS SONT SOUS LE TITRE, PLUS SUR L'IMAGE. Julien,
+       13/09/2026 : "mets les points en dessous, c'est plus esthetique".
+       La pastille sombre posee sur le dessin (le "500 Points" de DUSK)
+       tachait des illustrations claires ; l'image reste nette, et le
+       prix se lit en derniere ligne, aligne d'une carte a l'autre. */
     var famille = FAMILLES[r.fam] || "";
     b.innerHTML =
-      '<span class="photo">' +
-        visuelInterieur +
-        '<span class="pts-pastille">' + nb(r.cout) + " points</span>" +
-      "</span>" +
+      '<span class="photo">' + visuelInterieur + "</span>" +
       '<span class="corps">' +
         // Toujours rendue, meme vide : sans elle, une recompense sans
         // famille ("Table offerte + bouteille") remontait son titre d'une
@@ -12093,7 +12095,11 @@ function carteRecompense(r, index, bar) {
         // grises et quatre phrases repetaient une information portee une
         // fois, plus haut, et mieux. Ne reste que la pastille verte, qui
         // dit ce que la jauge ne dit pas : celle-ci, tu peux la prendre.
-        (epuise || loin ? "" : '<span class="dispo-txt">À échanger</span>') +
+        // Le prix en derniere ligne, et "A echanger" a cote quand le solde
+        // suffit : deux faits sur le meme sujet, sur la meme ligne.
+        '<span class="prix-ligne">' + nb(r.cout) + " points" +
+          (epuise || loin ? "" : '<span class="dispo-txt">À échanger</span>') +
+        "</span>" +
         '<span class="serie">' + r.code + "</span>" +
       "</span>";
 
