@@ -2231,12 +2231,23 @@
          d'une ligne de reglage qu'on ne remarquait pas -- et le montant
          ECRIT avant qu'on appuie. La boutique reste juste dessous :
          la carte ne prend pas l'ecran, elle le partage. */
+      /* ⚠️ UNE LIGNE, PLUS UNE GRANDE CARTE. Julien, 13/09/2026 : "essaie de
+         rendre le cadeau du jour pour que ca s'adapte bien dans le truc".
+         La carte haute et centree (paquet, titre, montant, gros bouton)
+         venait d'une boutique en grille ; dans la boutique par bar, elle
+         faisait un bloc etranger de 230 px en tete. Elle prend la forme
+         des lignes grises de l'appli (parrainage, notifications) : le
+         paquet dans une tuile blanche, "Cadeau du jour" et le montant,
+         le bouton rouge a droite. Le montant reste ecrit AVANT le clic,
+         le bouton reste rouge (demande du 06/09), la carte se replie
+         toujours une fois prise. */
       .cadeau {
-        display: block; width: 100%; max-height: 600px; margin-top: 12px; padding: 16px 16px 14px;
-        border: 0; border-radius: 18px;
-        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
-        color: var(--ink); font-family: inherit; text-align: center;
+        display: flex; align-items: center; gap: 14px;
+        width: 100%; max-height: 600px; margin-top: 16px; padding: 12px 14px 12px 12px;
+        border: 0; border-radius: 12px; background: #efeff1;
+        color: var(--ink); font-family: inherit; text-align: left;
       }
+      .cadeau-txt { flex: 1; min-width: 0; display: block; }
       /* Julien : "quand on le recupere il vaut mieux que ca disparaisse
          [...] que ca laisse la place a la boutique. Sinon ca prend trop
          de place." Donc pas d'ecran de confirmation qui occupe la carte
@@ -2279,12 +2290,12 @@
          est detoure, il se pose tres bien sur le blanc de la carte --
          comme les illustrations des tuiles de recompense. */
       .cadeau-scene {
-        position: relative; display: grid; place-items: center;
-        width: 100%; height: 78px; margin: 0 0 8px;
+        position: relative; display: grid; place-items: center; flex: 0 0 auto;
+        width: 58px; height: 58px; margin: 0; border-radius: 10px; background: #ffffff;
       }
-      .cadeau-art { max-width: 78px; max-height: 78px; object-fit: contain; }
+      .cadeau-art { max-width: 44px; max-height: 44px; object-fit: contain; }
       .cadeau-boite {
-        position: relative; width: 66px; height: 66px; border-radius: 20px;
+        position: relative; width: 40px; height: 40px; border-radius: 12px;
         display: grid; place-items: center; background: var(--bouton);
       }
       /* `display: grid` bat le `display: none` que le navigateur pose sur
@@ -2293,30 +2304,30 @@
          piege que .cadeau[hidden] et .cadeau-sous[hidden] plus haut. */
       .cadeau-art[hidden], .cadeau-boite[hidden] { display: none; }
       .cadeau-boite svg {
-        width: 33px; height: 33px; fill: none; stroke: #fff;
+        width: 22px; height: 22px; fill: none; stroke: #fff;
         stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
       }
       /* Meme famille typographique que le nom d'une recompense
          (.carte-reco strong) : les deux se lisent l'un sous l'autre. */
       .cadeau-titre {
-        margin: 0; font-family: var(--titre); font-size: calc(13.5 * var(--u));
-        font-weight: 700; letter-spacing: -.02em; color: var(--ink2);
+        margin: 0; font-family: var(--sans); font-size: calc(12.5 * var(--u));
+        font-weight: 600; letter-spacing: -.005em; color: var(--ink2);
       }
       /* Le montant reste en encre normale : un grand chiffre en couleur
          de marque est precisement ce qui a ete retire de la carte des
          points. La couleur de la carte vit dans le socle et le paquet. */
       .cadeau-montant {
-        margin: 1px 0 0; font-family: var(--chiffre); font-size: calc(25 * var(--u));
+        margin: 1px 0 0; font-family: var(--chiffre); font-size: calc(20 * var(--u));
         font-weight: 800; letter-spacing: -.03em; line-height: 1.15; color: var(--ink);
       }
-      .cadeau-sous { margin: 3px 0 0; font-size: calc(12.5 * var(--u)); color: var(--ink2); }
+      .cadeau-sous { margin: 2px 0 0; font-size: calc(12 * var(--u)); color: var(--ink2); }
       .cadeau-sous[hidden] { display: none; }
       /* "Scanne un club d'abord", "Deja pris" : une phrase, pas un
          montant. Elle prend la place du chiffre plutot que d'ajouter une
          ligne -- la carte garde sa forme et ne saute pas. */
       .cadeau.message .cadeau-montant {
-        font-family: var(--sans); font-size: calc(16 * var(--u));
-        font-weight: 700; letter-spacing: -.01em;
+        font-family: var(--sans); font-size: calc(14.5 * var(--u));
+        font-weight: 700; letter-spacing: -.01em; line-height: 1.3;
       }
 
       /* Rouge, demande de Julien ("Recuperer, mets-le en rouge"). C'est
@@ -2324,9 +2335,9 @@
          et il n'est la qu'un instant par jour -- il ne devient donc
          jamais du decor. */
       .cadeau-btn {
-        width: 100%; min-height: 46px; margin-top: 12px; border: 0;
+        flex: 0 0 auto; width: auto; min-height: 40px; margin: 0; padding: 0 18px; border: 0;
         border-radius: var(--r-pill); background: var(--bouton); color: #fff;
-        font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 700;
+        font-family: inherit; font-size: calc(14 * var(--u)); font-weight: 700;
         cursor: pointer; transition: filter var(--tr-court), transform var(--tr-court);
       }
       .cadeau-btn:hover { filter: brightness(1.06); }
@@ -5699,13 +5710,15 @@
                     </svg>
                   </span>
                 </span>
-                <p class="cadeau-titre" id="cadeau-titre">Cadeau du jour</p>
-                <!-- Le montant est ANNONCE, pas devoile au clic. C'est ce
-                     qui oblige le tirage a etre deterministe cote base
-                     (montant_cadeau, migration 0040) : sinon il suffirait
-                     de rafraichir jusqu'a lire 40. -->
-                <p class="cadeau-montant" id="cadeau-montant">&nbsp;</p>
-                <p class="cadeau-sous" id="cadeau-sous" hidden></p>
+                <div class="cadeau-txt">
+                  <p class="cadeau-titre" id="cadeau-titre">Cadeau du jour</p>
+                  <!-- Le montant est ANNONCE, pas devoile au clic. C'est ce
+                       qui oblige le tirage a etre deterministe cote base
+                       (montant_cadeau, migration 0040) : sinon il suffirait
+                       de rafraichir jusqu'a lire 40. -->
+                  <p class="cadeau-montant" id="cadeau-montant">&nbsp;</p>
+                  <p class="cadeau-sous" id="cadeau-sous" hidden></p>
+                </div>
                 <button type="button" class="cadeau-btn" id="cadeau-btn">Récupérer</button>
               </section>
             </section>
@@ -11959,15 +11972,27 @@ BARS_DEMO.forEach(function (bar, i) {
   // Les MEMES dessins peints que le catalogue du vrai club (FOTOS) : les
   // SVG de repli, a cote, faisaient bars de seconde zone.
   var catalogues = [
-    [["Shot maison", "bar", 120, artShot, "artShot"], ["Cocktail offert", "bar", 250, artCocktail, "artCocktail"], ["Vestiaire offert", "acces", 300, artShot, "artCintre"]],
-    [["Pinte offerte", "bar", 200, artPinte, "artPinte"], ["Cocktail signature", "bar", 350, artCocktail, "artCocktail"], ["Bouteille pour la table", "vip", 2200, artBouteille, "artBouteille"]],
-    [["Vestiaire offert", "acces", 250, artShot, "artCintre"], ["Shot maison", "bar", 150, artShot, "artShot"], ["Table + bouteille", "vip", 3000, artBouteille, "artBouteille"]],
+    [["Shot maison", "bar", 120, artShot, "artShot"], ["Cocktail", "bar", 250, artCocktail, "artCocktail"], ["Vestiaire", "acces", 300, artShot, "artCintre"]],
+    [["Pinte", "bar", 200, artPinte, "artPinte"], ["Cocktail signature", "bar", 350, artCocktail, "artCocktail"], ["Bouteille pour la table", "vip", 2200, artBouteille, "artBouteille"]],
+    [["Vestiaire", "acces", 250, artShot, "artCintre"], ["Shot maison", "bar", 150, artShot, "artShot"], ["Table + bouteille", "vip", 3000, artBouteille, "artBouteille"]],
   ][i];
   bar.club = { nom: bar.nom, type: bar.type, adr: bar.quartier };
   bar.recompenses = catalogues.map(function (c, j) {
     return { id: "demo-" + i + "-" + j, nom: c[0], fam: c[1], cout: c[2], art: c[3], foto: FOTOS[c[4]], stock: 20, code: "", demo: true, bar: bar.club };
   });
 });
+
+/* ⚠️ "OFFERT" NE S'ECRIT PLUS DANS LE NOM. Julien, 13/09/2026 : "arrete de
+   mettre offert a cote, ils ont compris que c'etait offert". Dans une
+   boutique de recompenses, tout est offert : le mot se repetait sur chaque
+   carte. Les titres viennent de la base (le gerant les tape), on ne les
+   reecrit donc pas : on les AFFICHE sans le mot. "Table offerte +
+   bouteille" -> "Table + bouteille". */
+function nomRecompense(nom) {
+  var brut = String(nom || "");
+  var court = brut.replace(/\s+offert(e|s|es)?\b/gi, "").replace(/\s{2,}/g, " ").trim();
+  return court || brut;
+}
 
 // "1210 Saint-Josse-ten-Noode" dans une adresse -> "Saint-Josse-ten-Noode".
 function quartierDe(adresse) {
@@ -12020,13 +12045,15 @@ function rendreListe() {
     section.className = "bar-section";
     // La distance seulement quand la position est VRAIE : une distance
     // calculee depuis le point de demonstration serait inventee.
+    // Pas de "Bar" / "Boite de nuit" devant : meme remarque de Julien que
+    // pour les cartes ("bizarre de mettre bar en sous-titre").
     var ou = POSITION_MOI ? formaterDistance(bar.km) : bar.quartier;
     section.innerHTML =
       '<h2 class="drop-titre">' +
         '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>' +
         "<span>" + escapeHtmlSupport(bar.nom) + "</span>" +
       "</h2>" +
-      '<p class="drop-sous">' + [libelleType(bar.type), ou].filter(Boolean).map(escapeHtmlSupport).join(" · ") + "</p>";
+      (ou ? '<p class="drop-sous">' + escapeHtmlSupport(ou) + "</p>" : "");
     var rangee = document.createElement("div");
     rangee.className = "grille";
     section.appendChild(rangee);
@@ -12044,7 +12071,7 @@ function carteRecompense(r, index, bar) {
     var b = document.createElement("button");
     b.className = "carte-reco" + (loin ? " loin" : " dispo") + (epuise ? " epuise" : "");
     b.type = "button";
-    b.setAttribute("aria-label", r.nom + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
+    b.setAttribute("aria-label", nomRecompense(r.nom) + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
 
     // La rarete quitte la ligne de texte grise pour devenir un badge
     // sur la photo : c'est un signal d'urgence, il doit se voir.
@@ -12081,11 +12108,11 @@ function carteRecompense(r, index, bar) {
     b.innerHTML =
       '<span class="photo">' + visuelInterieur + "</span>" +
       '<span class="corps">' +
-        // Toujours rendue, meme vide : sans elle, une recompense sans
-        // famille ("Table offerte + bouteille") remontait son titre d'une
-        // ligne et decalait toute la rangee.
-        '<span class="categorie">' + (famille || "&nbsp;") + "</span>" +
-        "<strong>" + r.nom + "</strong>" +
+        // ⚠️ PLUS DE CATEGORIE ("BAR", "ACCES") au-dessus du titre. Julien,
+        // 13/09/2026 : "c'est bizarre de mettre bar [...] en dessous de
+        // chaque truc". La section dit deja dans quel bar on est ; le dessin
+        // dit deja ce qu'est la recompense.
+        "<strong>" + nomRecompense(r.nom) + "</strong>" +
         // Plus de jauge ni de "Encore X pts" par carte : depuis que la
         // jauge du solde est CRANTEE aux prix des recompenses, elle dit
         // deja ou l'on se situe pour toutes a la fois. Quatre barres
@@ -12163,7 +12190,7 @@ async function rendreBons(neufCode) {
     e.setAttribute("aria-label", "Voir le QR de " + bon.titre);
     e.innerHTML =
       '<span class="bon-qr">' + svgQr + "</span>" +
-      '<span class="txt"><strong>' + bon.titre + "</strong><span>" + compteARebours(bon.expireA) + "</span></span>" +
+      '<span class="txt"><strong>' + nomRecompense(bon.titre) + "</strong><span>" + compteARebours(bon.expireA) + "</span></span>" +
       '<span class="bon-droite">' +
         '<span class="bon-pret">Prêt</span>' +
         '<span class="bon-code">' + bon.code + "</span>" +
@@ -12204,7 +12231,7 @@ async function ouvrirBon(bon, src) {
           '<span class="bt-visuel">' +
             (art.foto ? '<img src="' + art.foto + '" alt="">' : art.art()) +
           "</span>" +
-          '<strong class="bt-nom" id="sh-titre">' + bon.titre + "</strong>" +
+          '<strong class="bt-nom" id="sh-titre">' + nomRecompense(bon.titre) + "</strong>" +
         "</div>" +
         '<div class="bt-souche">' +
           '<div class="bt-qr">' + svgQr + "</div>" +
@@ -12320,11 +12347,11 @@ function ouvrirRecompense(item, src) {
   var html =
     '<div class="sheet-hero">' + visuel(item, "grand") + tuileClub + "</div>" +
     '<p class="sheet-tete">' +
-      (famille ? '<span class="sheet-categorie">' + famille + "</span>" : "") +
+
       (club ? '<span class="sheet-club-nom">' + club.nom + "</span>" : "") +
       (entete ? '<span class="sheet-stock">' + entete + "</span>" : "") +
     "</p>" +
-    '<h3 id="sh-titre">' + item.nom + "</h3>" +
+    '<h3 id="sh-titre">' + nomRecompense(item.nom) + "</h3>" +
     (item.desc ? '<p class="desc">' + item.desc + "</p>" : "") +
     '<p class="sheet-etapes-titre">Comment en profiter</p>' +
     '<ol class="sheet-etapes">' + etapes.map(function (e) {
