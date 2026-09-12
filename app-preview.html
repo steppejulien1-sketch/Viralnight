@@ -3736,7 +3736,36 @@
          secondaire), comme les lignes "Tap redeem reward" / "Copy the
          discount code" de DUSK. La tuile, c'est ce qui fait lire une
          ligne comme une ETAPE et pas comme une puce de liste. */
+      /* Le bandeau d'image de la fiche. DUSK ouvre sa fiche sur une photo
+         pleine largeur ; ici le dessin reste a sa taille, mais il est pose
+         sur une bande de la meme surface que l'image des cartes -- c'est
+         cette bande qui donne un bord ou accrocher la tuile du club. */
+      /* ⚠️ --s2 ET PAS --socle. --socle vaut du blanc dans la feuille : le
+         bandeau etait invisible, blanc sur blanc, et la tuile du club
+         flottait seule sous le dessin au lieu de s'accrocher a un bord.
+         --s2 est le gris clair des tuiles d'etapes juste en dessous : le
+         bandeau et les tuiles parlent la meme langue. */
+      .sheet-hero {
+        position: relative; margin: 4px 0 30px; padding: 14px 0;
+        border-radius: 18px; background: var(--s2);
+      }
+      .sheet-hero .sheet-visuel { margin: 0 auto; }
+      /* La tuile du club, a cheval sur le bas-gauche du bandeau, comme le
+         logo de la marque sur une fiche DUSK. Meme badge que sur la carte
+         (creme + mascotte), liseré blanc pour la detacher du bandeau. */
+      .sheet-club-tuile {
+        position: absolute; left: 14px; bottom: -22px; z-index: 2;
+        width: 46px; height: 46px; border-radius: 13px; overflow: hidden;
+        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
+        box-shadow: 0 0 0 3px #ffffff, 0 8px 16px -8px rgba(16,18,22,.5);
+      }
+      .sheet-club-tuile img { display: block; width: 100%; height: 100%; object-fit: cover; }
       .sheet-tete { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; }
+      /* Le nom du club suit la categorie : "BAR · Mirano". Le point median
+         vient du CSS, pas du texte, pour qu'il disparaisse tout seul quand
+         la recompense n'a pas de famille. */
+      .sheet-club-nom { font-size: calc(12 * var(--u)); font-weight: 600; color: var(--ink2); }
+      .sheet-categorie + .sheet-club-nom::before { content: "·"; margin-right: 8px; color: var(--ink3); }
       .sheet-tete:empty { display: none; }
       .sheet-categorie {
         font-size: calc(10.5 * var(--u)); font-weight: 700;
@@ -11850,10 +11879,25 @@ function ouvrirRecompense(item, src) {
   ];
 
   var famille = FAMILLES[item.fam] || "";
+
+  /* ⚠️ LA TUILE DE LA MARQUE, CHEZ NOUS LE CLUB. Sur une fiche DUSK, le
+     logo de la marque qui offre la recompense est pose en petite tuile
+     sur le coin bas-gauche de la photo ("Wild", "PATCH"). Chez Noctify,
+     celui qui offre, c'est le club.
+     Mais TOUS les clubs portent le meme badge mascotte (decision du
+     09/09/2026) : la tuile seule ne dirait pas LEQUEL. Le nom du club
+     rejoint donc la categorie juste en dessous -- "BAR · Mirano" --
+     et c'est le couple tuile + nom qui se lit. Un club qui depose sa
+     photo la voit remplacer la mascotte dans la tuile. */
+  var club = CLUBS[CLUB_BOUTIQUE];
+  var tuileClub = club
+    ? '<span class="sheet-club-tuile' + classeFoto(club) + '" aria-hidden="true">' + imgClub(club) + "</span>"
+    : "";
   var html =
-    visuel(item, "grand") +
+    '<div class="sheet-hero">' + visuel(item, "grand") + tuileClub + "</div>" +
     '<p class="sheet-tete">' +
       (famille ? '<span class="sheet-categorie">' + famille + "</span>" : "") +
+      (club ? '<span class="sheet-club-nom">' + club.nom + "</span>" : "") +
       (entete ? '<span class="sheet-stock">' + entete + "</span>" : "") +
     "</p>" +
     '<h3 id="sh-titre">' + item.nom + "</h3>" +
