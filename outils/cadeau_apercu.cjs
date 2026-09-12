@@ -218,7 +218,7 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   // Sans session, l'onglet Amis ne montre que sa porte : on pose donc
   // l'ecran a la main, comme le reste de ce script.
   await page.evaluate(() => {
-    document.querySelector(".sheet, #sh-close")?.click?.();
+    window.noctifyFermerFeuille?.();
     const va = document.querySelector("#vue-amis");
     va.hidden = false;
     va.classList.add("sur-code");
@@ -240,7 +240,9 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   await page.evaluate(() => {
     // La feuille du club (etape 8) reste posee par-dessus si on ne la
     // ferme pas : la capture montrait Mirano au lieu du profil.
-    document.querySelector("#sh-close")?.click();
+    // Plus de croix depuis le 12/09/2026 : sans ce pont, la fiche du club
+    // restait ouverte par-dessus le profil sur la capture.
+    window.noctifyFermerFeuille?.();
     document.querySelector("#vue-amis").hidden = true;
     // ⚠️ PASSER PAR L'ONGLET, pas par .hidden = false. Le gestionnaire de
     // #tab-profil appelle masquerCarteEtBoutique(), qui range le rail des
@@ -269,17 +271,18 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
     // l'a remontee comme une incoherence de l'appli.
     //   story_points('story') = 100   ·   montant_bienvenue() = 50
     //   qr_checkin (bareme gerant) = 15
+    // Les lignes passent par la fonction de l'appli (window.noctifyLigneHistorique),
+    // plus par une copie de son HTML : sans ca, la capture n'aurait jamais eu les
+    // icones par origine. Des horodatages reels, pour que quandCourt() ecrive
+    // "20:14", "hier", "il y a 3 jours" comme en production.
+    const H = 3600000, J = 24 * H, maintenant = Date.now();
     const lignes = [
-      ["Cadeau du jour", "Mirage · 20:14", 5, false],
-      ["Scan du QR", "Mirage · hier", 15, false],
-      ["Story validée", "Mirage · il y a 3 jours", 100, true],
-      ["Bienvenue", "Mirage · il y a 4 jours", 50, false],
+      { source: "cadeau",    club: "Mirage", quand: new Date(maintenant - 2 * H).toISOString(), points: 5,   en_attente: false },
+      { source: "scan",      club: "Mirage", quand: new Date(maintenant - 1 * J).toISOString(), points: 15,  en_attente: false },
+      { source: "story",     club: "Mirage", quand: new Date(maintenant - 3 * J).toISOString(), points: 100, en_attente: true },
+      { source: "bienvenue", club: "Mirage", quand: new Date(maintenant - 4 * J).toISOString(), points: 50,  en_attente: false },
     ];
-    document.querySelector("#pf-histo-liste").innerHTML = lignes
-      .map(([quoi, ou, pts, attente]) =>
-        `<li><span class="pf-histo-quoi"><strong>${quoi}</strong><span>${ou}${attente ? " · en attente" : ""}</span></span>` +
-        `<span class="pf-histo-pts${attente ? " pf-histo-attente" : ""}">+${pts}</span></li>`)
-      .join("");
+    document.querySelector("#pf-histo-liste").innerHTML = lignes.map(window.noctifyLigneHistorique).join("");
     document.querySelector("#pf-histo").hidden = false;
     window.scrollTo(0, 0);
   });

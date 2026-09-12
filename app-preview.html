@@ -1364,9 +1364,20 @@
         background: var(--s1); border-radius: var(--r3);
         box-shadow: inset 0 0 0 1px var(--line); overflow: hidden;
       }
+      /* align-items passe de baseline a center : avec une tuile de 36 px
+         a gauche, un alignement sur la ligne de base faisait descendre le
+         texte sous le milieu de l'icone. */
       .pf-histo-liste li {
-        display: flex; align-items: baseline; gap: 12px;
-        padding: 12px 14px; border-top: 1px solid var(--line);
+        display: flex; align-items: center; gap: 12px;
+        padding: 11px 14px; border-top: 1px solid var(--line);
+      }
+      .pf-histo-ico {
+        flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px;
+        display: grid; place-items: center; background: var(--s2);
+      }
+      .pf-histo-ico svg {
+        width: 18px; height: 18px; fill: none; stroke: var(--ink);
+        stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
       }
       .pf-histo-liste li:first-child { border-top: 0; }
       .pf-histo-quoi { flex: 1 1 auto; min-width: 0; }
@@ -1423,19 +1434,36 @@
       }
       /* Meme traitement que le solde de la boutique : chasse fixe pour
          que le nombre ne saute pas quand il change. */
-      .pf-fidelite-solde { display: flex; align-items: baseline; gap: 8px; margin: 8px 0 0; }
+      /* ⚠️ L'ENCADRE DE LA BOUTIQUE, REPRIS A L'IDENTIQUE (.solde-chiffre).
+         Le chiffre etait un 34 px en corail -- a zero, la couleur de
+         marque depensee sur un rien. Il passe en encre, dans le meme
+         encadre que l'en-tete de la boutique : un solde qui s'ecrit de
+         deux facons sur deux ecrans se lit comme deux soldes.
+         La couleur que Julien voulait ("ajoute un peu de couleur quand
+         meme") reste portee par la barre juste en dessous. */
+      .pf-fidelite-solde {
+        flex: 0 0 auto; margin: 0;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 5px 11px; border-radius: 10px;
+        border: 1.5px solid var(--ink); min-width: 64px;
+      }
       .pf-fidelite-solde strong {
         font-family: var(--titre); font-variant-numeric: tabular-nums;
-        font-size: calc(34 * var(--u)); font-weight: 700;
+        font-size: calc(19 * var(--u)); font-weight: 800;
         /* Le chiffre porte le rouge, et il est le seul avec la barre a le
            faire. C'etait deja le cas avant, mais sur un fond rose : le
            rouge se noyait dans sa propre teinte. Sur une surface neutre il
            redevient un accent (Julien : "ajoute un peu de couleur quand
            meme, c'est un peu trop peu colore"). */
-        letter-spacing: -.035em; line-height: 1; color: var(--accent);
+        letter-spacing: -.03em; line-height: 1; color: var(--ink);
         font-variant-numeric: tabular-nums;
       }
-      .pf-fidelite-solde span { font-size: calc(14 * var(--u)); font-weight: 700; color: var(--ink3); }
+      .pf-fidelite-solde span {
+        margin-top: 2px; font-size: calc(8.5 * var(--u)); font-weight: 700;
+        color: var(--ink2); letter-spacing: .06em; text-transform: uppercase; line-height: 1;
+      }
+      .pf-fid-label { display: inline-flex; align-items: center; gap: 2px; }
+      .pf-fid-label .pf-fidelite-chev { width: 16px; height: 16px; }
       .pf-fid-piste {
         display: block; height: 4px; margin: 12px 0 0; border-radius: var(--r-pill);
         background: var(--line2); overflow: hidden;
@@ -1474,7 +1502,17 @@
         font-size: calc(15 * var(--u)); font-weight: 600; cursor: pointer; text-align: left;
       }
       .pf-item:first-child { border-top: 0; }
-      .pf-item svg { flex: 0 0 auto; width: 20px; height: 20px; stroke: var(--ink3); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      /* ⚠️ L'ICONE DANS UNE TUILE, comme les etapes de la fiche et les
+         lignes "Tap redeem reward" de DUSK. La tuile est portee par le SVG
+         lui-meme (padding + fond + rayon, box-sizing) : aucune ligne du
+         menu n'a eu besoin d'etre reecrite pour l'avoir. Une icone nue
+         faisait lire la liste comme des reglages ; une tuile la fait lire
+         comme des destinations. */
+      .pf-item svg {
+        flex: 0 0 auto; box-sizing: border-box; width: 38px; height: 38px; padding: 9px;
+        border-radius: 11px; background: var(--s2);
+        stroke: var(--ink); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+      }
       .pf-item:active { background: var(--s2); }
       /* Supprimer mon compte / Deconnexion : memes lignes que le reste
          de la liste, juste en rouge -- plus lisible qu'un bouton texte
@@ -3189,9 +3227,16 @@
         display: flex; align-items: center; gap: 14px;
         margin: 2px 0 18px; padding-right: 42px;
       }
+      /* ⚠️ LE MEME BADGE QUE SUR LA CARTE. C'etait un ROND GRIS VIDE --
+         exactement le "traitement du vide" que Julien a demande de retirer
+         "pour tout" le 09/09/2026, et qui avait survecu ici, dans l'entete
+         de la fiche du club. Le carre arrondi creme + mascotte y est
+         maintenant, comme sur la carte, dans le rail et sur la fiche d'une
+         recompense. Une photo deposee le remplit toujours (img en cover). */
       .club-entete-rond {
-        flex: 0 0 auto; width: 64px; height: 64px; border-radius: 50%;
-        background: var(--s2); box-shadow: inset 0 0 0 1px var(--line);
+        flex: 0 0 auto; width: 64px; height: 64px; border-radius: 18px;
+        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
+        box-shadow: 0 0 0 1px var(--line);
         display: grid; place-items: center; overflow: hidden;
       }
       /* `cover` et non `contain` : c'est une VRAIE photo qui vient ici,
@@ -4689,12 +4734,15 @@
             </div>
 
             <button type="button" class="pf-fidelite" id="pf-fidelite">
+              <!-- Meme encadre que l'en-tete de la boutique ("13,200 POINTS"
+                   chez DUSK) : le solde est UN objet, qui s'ecrit pareil
+                   partout ou il apparait. Le chevron reste colle au libelle :
+                   c'est lui qui dit que la carte s'ouvre. -->
               <span class="pf-fid-entete">
-                <span class="pf-fid-label">Mes points</span>
-                <svg class="pf-fidelite-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-              </span>
-              <span class="pf-fidelite-solde">
-                <strong id="pf-fid-solde">0</strong><span>pts</span>
+                <span class="pf-fid-label">Mes points<svg class="pf-fidelite-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+                <span class="pf-fidelite-solde">
+                  <strong id="pf-fid-solde">0</strong><span>points</span>
+                </span>
               </span>
               <span class="pf-fid-piste"><span class="pf-fid-barre" id="pf-fid-barre"></span></span>
               <p class="pf-fid-txt" id="pf-fid-txt"></p>
@@ -9691,6 +9739,40 @@ var LIBELLE_SOURCE = {
   instagram: "Mention Instagram",
 };
 
+/* ⚠️ UNE ICONE PAR ORIGINE, DANS UNE TUILE -- la ligne DUSK. Le libelle
+   seul ("Scan du QR", "Story validee") obligeait a LIRE chaque ligne pour
+   savoir d'ou venaient les points ; l'icone se reconnait d'un coup d'oeil
+   en descendant la liste. Ce sont les icones de la barre d'onglets
+   (cadeau, appareil photo, amis) et du QR de la fiche : une meme chose se
+   dessine pareil partout. */
+var ICONES_SOURCE = {
+  scan: '<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 20h2.5M20 14v2.5"/>',
+  story: '<rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/>',
+  cadeau: '<rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/>',
+  bienvenue: '<path d="M12 3.5l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.4l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/>',
+  parrainage: '<circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/><circle cx="17.4" cy="9.8" r="2.5"/><path d="M16.2 15.8a5.7 5.7 0 0 1 5.3 4.2"/>',
+  instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r=".9"/>',
+};
+
+function ligneHistorique(l) {
+  var quoi = LIBELLE_SOURCE[l.source] || "Points";
+  var ou = [l.club, quandCourt(l.quand)].filter(Boolean).join(" · ");
+  var ico = ICONES_SOURCE[l.source] || ICONES_SOURCE.bienvenue;
+  return "<li>" +
+    '<span class="pf-histo-ico" aria-hidden="true"><svg viewBox="0 0 24 24">' + ico + "</svg></span>" +
+    '<span class="pf-histo-quoi">' +
+      "<strong>" + escapeHtmlSupport(quoi) + "</strong>" +
+      "<span>" + escapeHtmlSupport(ou) + (l.en_attente ? " · en attente" : "") + "</span>" +
+    "</span>" +
+    '<span class="pf-histo-pts' + (l.en_attente ? " pf-histo-attente" : "") + '">+' + nb(l.points) + "</span>" +
+  "</li>";
+}
+/* Pont vers l'outil de capture (outils/cadeau_apercu.cjs), qui pose des
+   lignes de demonstration : il fabriquait sa propre copie du HTML de la
+   ligne, et elle n'aurait jamais eu les icones. Il appelle maintenant la
+   meme fonction que l'appli. */
+window.noctifyLigneHistorique = ligneHistorique;
+
 function quandCourt(iso) {
   var d = new Date(iso);
   if (isNaN(d)) return "";
@@ -9714,17 +9796,7 @@ async function chargerHistorique() {
     return;
   }
 
-  liste.innerHTML = res.data.lignes.map(function (l) {
-    var quoi = LIBELLE_SOURCE[l.source] || "Points";
-    var ou = [l.club, quandCourt(l.quand)].filter(Boolean).join(" · ");
-    return "<li>" +
-      '<span class="pf-histo-quoi">' +
-        "<strong>" + escapeHtmlSupport(quoi) + "</strong>" +
-        "<span>" + escapeHtmlSupport(ou) + (l.en_attente ? " · en attente" : "") + "</span>" +
-      "</span>" +
-      '<span class="pf-histo-pts' + (l.en_attente ? " pf-histo-attente" : "") + '">+' + nb(l.points) + "</span>" +
-    "</li>";
-  }).join("");
+  liste.innerHTML = res.data.lignes.map(ligneHistorique).join("");
   bloc.hidden = false;
 }
 

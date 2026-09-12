@@ -100,7 +100,9 @@ const HAUTEUR = 844;
     await prendre("04-recompense-fiche", "Une récompense, ouverte");
     // La feuille reste posee par-dessus l'onglet suivant si on ne la
     // ferme pas : la capture de la carte montrait un cocktail.
-    await page.evaluate(() => document.querySelector("#sh-close")?.click());
+    // La croix n'existe plus (12/09/2026) : la feuille se ferme par le
+    // meme pont que le geste "retour" d'Android.
+    await page.evaluate(() => window.noctifyFermerFeuille?.());
     await pause(900);
   } else {
     console.log("  (pas de fiche de recompense ouvrable hors session)");
