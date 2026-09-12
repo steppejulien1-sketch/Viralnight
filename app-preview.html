@@ -1264,7 +1264,9 @@
          masque : le texte, lui, reste net. */
       .pf-entete {
         position: relative; margin: -20px -20px 0;
-        padding: calc(34px + env(safe-area-inset-top)) 20px 34px;
+        /* 46 px au-dessus de la carte : les verres dessines doivent se voir
+           AU-DESSUS d'elle aussi, comme chez DUSK. */
+        padding: calc(46px + env(safe-area-inset-top)) 20px 34px;
       }
       .pf-entete::before {
         content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -1273,24 +1275,29 @@
         mask-image: linear-gradient(to bottom, #000 78%, transparent);
       }
       .pf-entete > * { position: relative; }
-      /* La carte : grise, coins presque droits comme chez DUSK. */
+      /* La carte : grise, coins presque droits comme chez DUSK.
+         ⚠️ PLUS FINE. Julien, 12/09/2026 : "le truc notification, rends-le
+         plus fin". Elle faisait 150 px de haut -- titre sur deux lignes,
+         phrase sur trois, gros interrupteur -- et masquait les dessins du
+         haut. Chez DUSK elle en fait une petite centaine : titre sur UNE
+         ligne, phrase sur deux, interrupteur au trait fin. */
       .pf-notif {
-        display: flex; align-items: center; gap: 18px;
-        padding: 18px 16px 18px 20px; border-radius: 6px;
+        display: flex; align-items: center; gap: 14px;
+        padding: 13px 14px 13px 16px; border-radius: 6px;
         background: #efeff1;
       }
       .pf-notif-txt { flex: 1; min-width: 0; }
-      .pf-notif-titre { margin: 0 0 6px; font-size: calc(16 * var(--u)); font-weight: 800; letter-spacing: -.01em; line-height: 1.25; color: #15181d; }
-      .pf-notif-desc { margin: 0; font-size: calc(13.5 * var(--u)); line-height: 1.4; color: #5d626b; }
-      .pf-notif-msg { margin: 8px 0 0; font-size: calc(13 * var(--u)); line-height: 1.4; font-weight: 600; color: #15181d; }
-      /* L'interrupteur DUSK : un contour, une bille pleine. */
+      .pf-notif-titre { margin: 0 0 3px; font-size: calc(14.5 * var(--u)); font-weight: 750; letter-spacing: -.01em; line-height: 1.25; color: #15181d; }
+      .pf-notif-desc { margin: 0; font-size: calc(12.5 * var(--u)); line-height: 1.4; color: #6a6f78; }
+      .pf-notif-msg { margin: 6px 0 0; font-size: calc(12.5 * var(--u)); line-height: 1.4; font-weight: 600; color: #15181d; }
+      /* L'interrupteur DUSK : un contour fin, une bille pleine. */
       .pf-notif .rg-switch {
-        width: 48px; height: 28px; background: transparent;
-        box-shadow: inset 0 0 0 2px #15181d;
+        width: 40px; height: 24px; background: transparent;
+        box-shadow: inset 0 0 0 1.5px #15181d;
       }
-      .pf-notif .rg-switch::after { top: 4px; left: 4px; width: 20px; height: 20px; background: #15181d; box-shadow: none; }
+      .pf-notif .rg-switch::after { top: 4px; left: 4px; width: 16px; height: 16px; background: #15181d; box-shadow: none; }
       .pf-notif .rg-switch.on { background: #15181d; }
-      .pf-notif .rg-switch.on::after { background: #ffffff; transform: translateX(20px); }
+      .pf-notif .rg-switch.on::after { background: #ffffff; transform: translateX(16px); }
       .pf-notif .rg-switch:disabled { opacity: .55; }
 
       /* Entete sobre. Le halo de marque rouge derriere l'entete et
@@ -1528,11 +1535,13 @@
       .pf-item-chev { width: 16px; height: 16px; fill: none; stroke: var(--ink3); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
       /* Se deconnecter : un lien texte sous les blocs, pas une ligne de
-         plus. Rien de rouge : ce n'est pas une destruction, on revient. */
+         plus. En ROUGE : Julien, 12/09/2026, "le se deconnecter, mets-le en
+         rouge". Le rouge des boutons de l'appli (--bouton). */
       .pf-deconnexion {
         display: block; width: 100%; margin: 22px 0 0; padding: 14px; border: 0; background: transparent;
-        font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 650; color: var(--ink3); cursor: pointer;
+        font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 700; color: var(--bouton, #ff2f45); cursor: pointer;
       }
+      .pf-deconnexion:active { opacity: .7; }
 
       .pf-deco { width: 100%; background: transparent; border: 0; padding: 16px; color: #ff8290; font-family: inherit; font-size: calc(14 * var(--u)); font-weight: 700; cursor: pointer; }
 
@@ -4803,7 +4812,7 @@
               <div class="pf-notif" id="pf-notif">
                 <div class="pf-notif-txt">
                   <p class="pf-notif-titre">Des notifications faites pour toi</p>
-                  <p class="pf-notif-desc">Sois le premier au courant quand ta story est validée et quand ton cadeau du jour est prêt.</p>
+                  <p class="pf-notif-desc">Sois prévenu dès qu’une story est validée ou qu’un cadeau t’attend.</p>
                   <p class="pf-notif-msg js-msg-notif" hidden></p>
                 </div>
                 <button type="button" class="rg-switch js-bascule-notif" id="pf-notif-actif" role="switch" aria-checked="false" aria-label="Activer les notifications"></button>
