@@ -202,7 +202,7 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
   await page.evaluate(() => document.querySelector("#tab-carte").click());
   await pause(2500);
   const ouverte = await page.evaluate(() => {
-    const b = document.querySelector("#club-rail button");
+    const b = document.querySelector(".club-badge");
     if (!b) return false;
     b.click();
     return true;
@@ -211,7 +211,7 @@ const ECHELLE = [2, 3, 4, 5, 6, 8, 20];
     await pause(1800);
     await prendre("08-fiche-club", "La fiche d'un club");
   } else {
-    console.log("  (pas de club dans le rail, fiche non capturee)");
+    console.log("  (pas de badge de club sur la carte, fiche non capturee)");
   }
 
   // ---- 9. L'ecran de parrainage ----

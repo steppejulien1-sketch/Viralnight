@@ -81,7 +81,7 @@ CLUBBEUR_APPLI = [
     (CLUBBEUR, "04-recompense-fiche", "Onglet 1", "Une r\u00e9compense, ouverte",
      "La feuille qui d\u00e9cide de l\u2019\u00e9change. \u00c0 z\u00e9ro point, le bouton nomme ce qu\u2019il manque.", ""),
     (CLUBBEUR, "05-carte", "Onglet 3", "La carte des clubs",
-     "Les couleurs de Plans (Apple), \u00e0 plat, jusqu\u2019en bas de l\u2019\u00e9cran. Filtres en haut, fiche du club au-dessus des onglets. M\u00eame rendu sur iPhone et Samsung.", "nouveau"),
+     "Les couleurs de Plans (Apple), \u00e0 plat, jusqu\u2019en bas de l\u2019\u00e9cran. Rien d\u2019autre dessus : on ouvre un club en touchant son badge. M\u00eame rendu sur iPhone et Samsung.", "nouveau"),
     (CLUBBEUR, "06-story", "Onglet 2", "Story",
      "L\u2019onglet qui d\u00e9pose une publication. Sans compte, il ne montre que sa porte.", "sans compte"),
     (CLUBBEUR, "07-amis", "Onglet 4", "Amis",
