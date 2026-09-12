@@ -118,7 +118,9 @@ CLUBBEUR_SESSION = [
     # Les deux seuls ecrans de cette planche pris avec un VRAI compte
     # (outils/clubbeur_connecte.cjs, compte jetable cree puis supprime).
     (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
-     "Façon DUSK : les notifications en haut, le nom en capitales, l’adresse dessous. Le nom vient de Google/Apple ou de l’adresse (julien.dupont → Julien Dupont). Nom de la capture inventé.", "vrai compte"),
+     "La carte des notifications montre la vraie notification, mot pour mot, et un seul bouton. Allumée, elle se replie en une ligne à interrupteur. Nom de la capture inventé.", "vrai compte"),
+    (CLUBBEUR, "09b-profil-parametres", "Onglet 5", "Les paramètres, façon DUSK",
+     "Trois blocs : Partager, Aide, Compte. « Inviter des amis » ouvre le partage du lien de parrainage. Les tuiles Amis et Récompenses sont parties : ce sont déjà deux onglets.", "vrai compte"),
     (CLUBBEUR, "10-amis-connecte", "Onglet 4", "Amis, pour de vrai",
      "Le parrainage à 100 points et le code personnel. C’est tout ce que contient l’onglet tant qu’on n’a pas d’ami.", "vrai compte"),
 ]
