@@ -74,16 +74,22 @@ CLUB_APPLI = [
 CLUBBEUR_APPLI = [
     (CLUBBEUR, "01-accueil", "Arriv\u00e9e", "L\u2019accueil",
      "Ce que voit quelqu\u2019un qui vient de scanner le QR coll\u00e9 au mur du club.", ""),
-    (CLUBBEUR, "02-recompenses", "Onglet 1", "R\u00e9compenses, bar par bar",
-     "Une section par bar, du plus proche au plus loin, et ses r\u00e9compenses en rang\u00e9e qui glisse. Velours, Minuit Douze et N\u00e9on 88 sont des bars de d\u00e9monstration : noms invent\u00e9s, rien ne s\u2019y \u00e9change.", "bars de d\u00e9mo"),
+    (CLUBBEUR, "02-recompenses", "Onglet 1", "Récompenses, établissement par établissement",
+     "Chaque en-tête dit s’il est ouvert ou quand il ouvre (calculé sur ses horaires) et son quartier ; un tap ouvre sa fiche. Ses photos s’afficheront en bandeau dès qu’il en aura : aucune n’est déposée aujourd’hui. Velours, Minuit Douze et Néon 88 sont inventés.", "bars de démo"),
     (CLUBBEUR, "03-recompenses-cartes", "Onglet 1", "Plus bas dans la liste",
      "Sans position, chaque bar affiche son quartier ; avec la position, sa distance. Plus de petit logo du club sur chaque image.", "bars de d\u00e9mo"),
+    (CLUBBEUR, "03b-gagner", "Onglet 1", "Gagner des points",
+     "Plus un menu replié : une ligne par geste, et chaque ligne mène au geste. Les montants sont ceux que la base clubbeur verse vraiment (story 100, Reel/TikTok 60, QR 15, ami 100, cadeau 2 à 20).", "nouveau"),
     (CLUBBEUR, "04-recompense-fiche", "Onglet 1", "Une r\u00e9compense, ouverte",
      "La feuille qui d\u00e9cide de l\u2019\u00e9change. \u00c0 z\u00e9ro point, le bouton nomme ce qu\u2019il manque.", ""),
     (CLUBBEUR, "05-carte", "Onglet 3", "La carte des clubs",
-     "Les couleurs de Plans (Apple), \u00e0 plat, jusqu\u2019en bas de l\u2019\u00e9cran. Rien d\u2019autre dessus : on ouvre un club en touchant son badge. M\u00eame rendu sur iPhone et Samsung.", "nouveau"),
+     "Plus de verre « Toi » : seulement les pins des établissements, qui restent pleins et touchables même dézoomé jusqu’au globe.", "nouveau"),
+    (CLUBBEUR, "05b-fiche", "Onglet 3", "La fiche d’un établissement",
+     "Au toucher du pin. La poignée est redevenue un trait fin. « Laisser un avis Google » vit ici ; le titre devient « Ta soirée au… » quand l’historique prouve un passage. Aucun point en échange : Google l’interdit.", "nouveau"),
     (CLUBBEUR, "06-story", "Onglet 2", "Story",
-     "La carte \u00ab Des points \u00e0 chaque story tagu\u00e9e \u00bb vit ici maintenant, en t\u00eate de la page o\u00f9 l\u2019on poste. \u00ab Inviter des amis \u00bb est en bas de la page.", "sans compte"),
+     "Refaite. Une story dessinée avec la mention dessus et ce qu’elle rapporte, l’établissement déjà choisi, trois formats, le tag à copier avec #publicite.", "nouveau"),
+    (CLUBBEUR, "06b-story-bas", "Onglet 2", "Story, le bas",
+     "Un seul bouton plein : « Ouvrir Instagram ». Au retour de l’appli, « J’ai posté » passe devant. L’invitation devient une carte.", "nouveau"),
     (CLUBBEUR, "08-profil", "Onglet 4", "Profil",
      "M\u00eame chose. Plus d\u2019onglet Amis : l\u2019invitation est dans Profil > Partager.", "sans compte"),
 ]
@@ -116,11 +122,13 @@ CLUBBEUR_SESSION = [
     # Les deux seuls ecrans de cette planche pris avec un VRAI compte
     # (outils/clubbeur_connecte.cjs, compte jetable cree puis supprime).
     (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
-     "Exactement l’entête de DUSK : les petits verres dessinés derrière, la carte grise à interrupteur, le nom en capitales. La photo se change dans Réglages. Nom de la capture inventé.", "vrai compte"),
+     "L’entête DUSK, et la carte des notifications qui pousse à les activer : une cloche avec un point rouge tant qu’elles sont éteintes. Allumées, elle se replie sur une ligne. Nom de la capture inventé.", "vrai compte"),
     (CLUBBEUR, "09b-profil-parametres", "Onglet 5", "Les paramètres, façon DUSK",
-     "Trois blocs : Partager, Aide, Compte. « Laisser un avis Google » ouvre le formulaire d’avis de la fiche Google du club.", "vrai compte"),
+     "Donner mon avis s’ouvre dans l’appli, l’avis Google est parti dans la fiche des établissements, « Vous gérez un établissement ? », et Se déconnecter entouré de rouge.", "vrai compte"),
     (CLUBBEUR, "10-inviter", "Profil > Partager", "Inviter des amis",
-     "L’ancien onglet Amis, ouvert depuis les paramètres. La flèche ramène au profil.", "vrai compte"),
+     "Refait : ce que chacun gagne côte à côte, comment ça marche en trois lignes, le lien et un seul bouton plein. Le QR se déplie.", "vrai compte"),
+    (CLUBBEUR, "11-avis", "Profil > Aide", "Donner mon avis",
+     "Une note sur cinq et un mot. L’avis arrive dans ta messagerie Aide & Support, dans le fil de la personne : tu peux lui répondre. Rien n’a été envoyé pour la capture.", "vrai compte"),
 ]
 
 
@@ -431,8 +439,8 @@ __CLUB_APPLI__
     <div class="groupe">
       <div class="groupe-tete">
         <h3>L\u2019appli</h3>
-        <span class="compte">5 onglets</span>
-        <p>R\u00e9compenses, Story, Carte, Amis, Profil. Les trois derniers demandent un compte.</p>
+        <span class="compte">4 onglets</span>
+        <p>R\u00e9compenses, Story, Carte, Profil. Profil demande un compte ; Story montre son formulaire sans compte, l\u2019envoi en exige un.</p>
       </div>
       <div class="planche">
 __CLUBBEUR__
@@ -442,7 +450,7 @@ __CLUBBEUR__
     <div class="groupe">
       <div class="groupe-tete">
         <h3>Avec un compte</h3>
-        <span class="compte">12 écrans</span>
+        <span class="compte">13 écrans</span>
         <p>Le même code, une fois connecté : le cadeau du jour, la boutique remplie, le parrainage, l’historique. Seules les valeurs sont posées à la main.</p>
       </div>
       <div class="planche">

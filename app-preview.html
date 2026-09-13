@@ -1188,7 +1188,6 @@
          fond/texte fixes en dur (pas des variables), invisibles ou
          illisibles une fois le fond de la feuille passe en blanc --
          corrige comme deja fait pour .screen.boutique-pro. */
-      .sheet.clair .grab { background: rgba(0,0,0,.13); }
       @media (prefers-color-scheme: dark) {
         .sheet.clair {
           --ink: #ffffff;
@@ -1299,6 +1298,28 @@
       .pf-notif .rg-switch.on { background: #15181d; }
       .pf-notif .rg-switch.on::after { background: #ffffff; transform: translateX(16px); }
       .pf-notif .rg-switch:disabled { opacity: .55; }
+      /* La cloche, dans une tuile blanche comme le paquet du cadeau du jour.
+         Le point rouge ne s'allume QUE notifications eteintes : c'est un
+         voyant qui a une raison d'etre allume, et qui s'eteint quand elle
+         disparait -- pas le point rouge permanent retire de la barre. */
+      .pf-notif-cloche {
+        position: relative; flex: 0 0 auto; width: 42px; height: 42px; border-radius: 10px;
+        display: grid; place-items: center; background: #ffffff;
+      }
+      .pf-notif-cloche svg { width: 22px; height: 22px; fill: none; stroke: #15181d; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-notif-cloche::after {
+        content: ""; position: absolute; top: 9px; right: 10px; width: 8px; height: 8px; border-radius: 50%;
+        background: var(--marque); box-shadow: 0 0 0 2px #ffffff;
+      }
+      .pf-notif-on { display: none; }
+      .pf-notif.actives .pf-notif-on { display: inline; }
+      .pf-notif.actives .pf-notif-off,
+      .pf-notif.actives .pf-notif-desc,
+      .pf-notif.actives .pf-notif-cloche::after { display: none; }
+      .pf-notif.actives { padding-top: 9px; padding-bottom: 9px; }
+      .pf-notif.actives .pf-notif-cloche { width: 34px; height: 34px; }
+      .pf-notif.actives .pf-notif-cloche svg { width: 18px; height: 18px; }
+      .pf-notif.actives .pf-notif-titre { margin: 0; }
 
       /* Entete sobre. Le halo de marque rouge derriere l'entete et
          l'anneau rouge autour de la photo, essayes pendant la refonte,
@@ -1537,11 +1558,17 @@
       /* Se deconnecter : un lien texte sous les blocs, pas une ligne de
          plus. En ROUGE : Julien, 12/09/2026, "le se deconnecter, mets-le en
          rouge". Le rouge des boutons de l'appli (--bouton). */
+      /* ⚠️ ENTOURE DE ROUGE, PAS REMPLI. Julien, 13/09/2026 : "le bouton se
+         deconnecter, tu l'as mis en rouge, mais il faut l'entourer en
+         rouge". Un contour : l'action se voit et se distingue des lignes
+         du dessus, sans peser comme un bouton principal. */
       .pf-deconnexion {
-        display: block; width: 100%; margin: 22px 0 0; padding: 14px; border: 0; background: transparent;
-        font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 700; color: var(--bouton, #ff2f45); cursor: pointer;
+        display: block; width: 100%; margin: 28px 0 0; padding: 14px; border-radius: var(--r-pill);
+        border: 1.5px solid var(--marque); background: transparent;
+        font-family: inherit; font-size: calc(15 * var(--u)); font-weight: 700; color: var(--marque); cursor: pointer;
+        transition: transform var(--tr-court), background var(--tr-court);
       }
-      .pf-deconnexion:active { opacity: .7; }
+      .pf-deconnexion:active { transform: scale(.98); background: rgba(255,47,69,.06); }
 
       .pf-deco { width: 100%; background: transparent; border: 0; padding: 16px; color: #ff8290; font-family: inherit; font-size: calc(14 * var(--u)); font-weight: 700; cursor: pointer; }
 
@@ -1816,13 +1843,17 @@
 
       /* A propos : liste de fonctionnalites, icone + texte. */
       .ap-feature { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 16px; }
+      /* Tuile grise, icone a l'encre : le lavis rose et l'icone rouge etaient
+         le marqueur "vibecode" retire partout ailleurs (13/09/2026). */
       .ap-feature-ico {
         flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px;
-        background: rgba(255,47,69,.14); display: grid; place-items: center;
+        background: var(--s2); display: grid; place-items: center;
       }
-      .ap-feature-ico svg { width: 19px; height: 19px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .ap-feature-ico svg { width: 19px; height: 19px; stroke: var(--ink); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       .ap-feature strong { display: block; font-size: calc(14.5 * var(--u)); font-weight: 700; color: var(--ink); margin-bottom: 2px; }
       .ap-feature span { font-size: calc(13 * var(--u)); color: var(--ink2); line-height: 1.45; }
+      /* strong est deja en bloc : le <br> ajoutait une ligne vide. */
+      .ap-feature br { display: none; }
       .ap-copyright { text-align: center; font-size: calc(12 * var(--u)); color: var(--ink3); margin: 20px 0 0; }
 
       /* ---- Un texte legal qui se LIT ----
@@ -1945,45 +1976,14 @@
         text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff, 0 0 5px #fff;
       }
       .club-pin:active svg { transform: scale(.94); transform-origin: 50% 100%; }
+      /* Le focus rendu au pin a la fermeture de la fiche (rendeur) dessinait
+         un cadre noir autour de la goutte, visible de tres loin sur le globe.
+         Le clavier garde son repere : la goutte se cerne d'encre. */
+      .club-pin:focus { outline: none; }
+      .club-pin:focus-visible .goutte { stroke: #15181d; stroke-width: 2.2; }
 
-      /* Marqueur "moi" -- Julien : un point bleu generique "c'est de la
-         merde", un verre est plus logique sur cette carte (coherent
-         avec le vocabulaire du reste de l'appli). Reprend le meme
-         verre (pint(), plein) et le meme
-         gabarit que l'ancien marqueur d'ami retire plus tot -- ancre en
-         bas comme lui (transform-origin: bottom, voir majTailleMarqueurs). */
-      .moi-marker { position: relative; width: 46px; height: 60px; transform-origin: bottom center; }
-      /* position/z-index explicites : sans eux, le halo (positionne)
-         passerait AU-DESSUS du verre (statique), et un z-index negatif
-         l'enverrait derriere le canvas de la carte -- .moi-marker ne
-         cree pas de contexte d'empilement a lui tout seul. */
-      .moi-marker .pint {
-        position: relative; z-index: 1;
-        width: 100%; height: 100%; display: block;
-        filter: drop-shadow(0 3px 5px rgba(0,0,0,.4));
-      }
-
-
-      /* Rien ne disait que ce verre-la, c'etait SOI. Deux essais avant
-         celui-ci : une pastille d'avatar sur le verre ("bizarre"), puis
-         le mot "Toi" colle a cote du marqueur -- ecrit SUR la carte, il
-         se melangeait aux noms de rue. Julien : "pas que ce soit ecrit
-         sur la carte".
-
-         D'ou une legende, hors carte : le meme verre en miniature et le
-         mot a cote. On lit la regle une fois, dans un coin, et le
-         marqueur reste un dessin propre. Meme principe que la legende
-         d'une carte papier. */
-      .carte-legende {
-        flex: 0 0 auto; height: 34px; box-sizing: border-box;
-        display: flex; align-items: center; gap: 7px;
-        padding: 0 12px 0 8px; border-radius: 999px;
-        background: rgba(255,255,255,.96); color: #14161a;
-        font-size: calc(12.5 * var(--u)); font-weight: 700; letter-spacing: -.01em;
-        box-shadow: 0 0 0 .5px rgba(16,18,22,.08), 0 4px 14px -6px rgba(16,18,22,.32);
-        pointer-events: none;
-      }
-      .carte-legende .pint { width: 16px; height: 22px; display: block; }
+      /* Le verre "moi" et sa legende "Toi" sont retires (13/09/2026) :
+         la carte ne porte plus que les pins des etablissements. */
 
       /* Element que MapLibre positionne lui-meme (translate ecrit a
          chaque deplacement) -- ne jamais lui donner de transform a
@@ -3322,12 +3322,21 @@
          seulement : le doigt attrape la marge, l'oeil ne voit que le
          trait. Sans ca, la poignee etait une cible de 4 px -- injouable
          des l'instant ou elle sert vraiment a faire descendre la feuille. */
+      /* ⚠️ LE TRAIT EST UN ::before, PLUS UN background-clip. Julien,
+         13/09/2026 : "le truc pour descendre, il est trop large, il faut
+         que ce soit pareil que les autres". Les regles de theme plus bas
+         ecrivaient `background: rgba(...)` -- un raccourci, qui remet
+         background-clip a border-box : toute la zone de prise se peignait,
+         d'ou une pilule de 40 x 18 au lieu d'un trait. Le trait vit
+         maintenant dans son propre pseudo-element, a la mesure exacte de
+         .va-poignee (36 x 4) ; la zone de prise garde ses 22 px. */
       .grab {
-        width: 40px; height: 4.5px; border-radius: 99px;
-        background: rgba(255,255,255,.15); background-clip: content-box;
-        padding: 9px 0; margin: 0 auto 4px; position: sticky; top: 0;
+        display: flex; justify-content: center; align-items: flex-start;
+        width: 88px; height: 22px; padding-top: 2px; margin: -4px auto 6px;
+        position: sticky; top: 0; z-index: 2;
         cursor: grab; touch-action: none;
       }
+      .grab::before { content: ""; width: 36px; height: 4px; border-radius: 99px; background: var(--line2); }
       .grab:active { cursor: grabbing; }
       .sheet-close {
         position: absolute; top: 16px; right: 16px; z-index: 3;
@@ -4304,7 +4313,6 @@
       }
       .screen.boutique-pro .app { background: var(--bg); }
       .screen.boutique-pro .sheet { background: #ffffff; border-top-color: var(--line2); box-shadow: var(--ombre-3); }
-      .screen.boutique-pro .grab { background: rgba(0,0,0,.13); }
       .screen.boutique-pro .sheet-close { background: var(--s2); }
       .screen.boutique-pro .sheet-close svg { stroke: var(--ink2); }
       .screen.boutique-pro .sheet-cta.sobre { background: var(--s2); color: var(--ink); }
@@ -4377,7 +4385,6 @@
           background: var(--s1); border-top-color: var(--line2);
           box-shadow: var(--ombre-3);
         }
-        .screen.boutique-pro .grab { background: rgba(255,238,225,.22); }
         /* La vignette est claire dans une carte sombre : un filet chaud
            l'assoit au lieu de la laisser flotter comme un trou. */
         .screen.boutique-pro .carte-reco .photo { border-bottom: 1px solid rgba(20,16,14,.10); }
@@ -4399,6 +4406,350 @@
       @media (max-width: 430px) {
         .wrap { padding: 40px 12px 72px; }
         .phone { width: 100%; max-width: 360px; }
+      }
+
+      /* ============================================================
+         PASSE DU 13/09/2026 -- Story, invitation, boutique par
+         etablissement, avis. Pose ici, en fin de feuille, pour gagner sur
+         les regles d'origine sans les dupliquer ; chaque bloc dit ce qu'il
+         remplace. Toutes les couleurs passent par les jetons de theme :
+         le mode sombre automatique suit sans regle de plus.
+         ============================================================ */
+
+      /* ---------------- ONGLET STORY ---------------- */
+      .vue-story { text-align: left; padding: 16px 20px 120px; }
+      .st-tete { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 18px; }
+      .st-titre {
+        margin: 0; font-size: calc(26 * var(--u)); font-weight: 800; letter-spacing: -.035em;
+        line-height: 1.05; color: var(--ink);
+      }
+      .vue-story .solde-chiffre { background: var(--s2); }
+
+      /* L'image qui dit la regle : une story, la mention dessus, le gain. */
+      .st-hero {
+        display: flex; align-items: center; gap: 18px;
+        padding: 14px 18px 14px 14px; margin: 0 0 8px;
+        border-radius: var(--r4); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .st-apercu {
+        position: relative; flex: 0 0 auto; width: 104px; height: 176px; border-radius: 14px; overflow: hidden;
+        background: #f7efe6;
+        box-shadow: 0 0 0 4px #15181d, 0 14px 24px -14px rgba(16,18,22,.55);
+        margin: 4px 4px 4px 4px;
+      }
+      .st-apercu-barres { position: absolute; top: 7px; left: 7px; right: 7px; display: flex; gap: 3px; }
+      .st-apercu-barres i { flex: 1; height: 2px; border-radius: 2px; background: rgba(21,24,29,.18); }
+      .st-apercu-barres i:first-child { background: rgba(21,24,29,.7); }
+      .st-apercu-profil {
+        position: absolute; top: 15px; left: 7px; width: 14px; height: 14px; border-radius: 50%;
+        background: linear-gradient(45deg, #f9a13a, #e1306c 60%, #8a3ab9);
+        box-shadow: inset 0 0 0 1.5px #f7efe6;
+      }
+      .st-apercu-verre { position: absolute; left: 50%; top: 32px; width: 94px; height: auto; transform: translateX(-50%); }
+      /* L'autocollant de mention d'Instagram : blanc, texte en degrade,
+         capitales. C'est lui qu'on reconnait d'un coup d'oeil. */
+      .st-apercu-mention {
+        position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%) rotate(-4deg);
+        max-width: 98px; padding: 4px 5px; border-radius: 5px; background: #ffffff;
+        box-shadow: 0 4px 10px -4px rgba(16,18,22,.35);
+        font-family: var(--sans); font-size: 7px; font-weight: 800; letter-spacing: -.01em;
+        text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        color: #d62976;
+      }
+      .st-hero-txt { min-width: 0; }
+      .st-hero-pts { margin: 0; display: flex; align-items: baseline; gap: 6px; color: var(--ink); }
+      .st-hero-pts strong {
+        font-family: var(--chiffre); font-variant-numeric: tabular-nums;
+        font-size: calc(40 * var(--u)); font-weight: 800; letter-spacing: -.04em; line-height: 1;
+      }
+      .st-hero-pts span { font-size: calc(15 * var(--u)); font-weight: 700; }
+      .st-hero-sous { margin: 6px 0 0; font-size: calc(14 * var(--u)); line-height: 1.35; color: var(--ink2); }
+      .st-hero-autres {
+        display: inline-block; margin: 12px 0 0; padding: 5px 10px; border-radius: var(--r-pill);
+        background: var(--s2); font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--ink2);
+      }
+      .st-hero-autres b { color: var(--ink); font-family: var(--chiffre); }
+
+      .st-form { display: block; text-align: left; }
+      .st-bloc { margin: 24px 0 0; }
+      .st-bloc-titre {
+        margin: 0 0 10px 2px; font-family: var(--titre); font-size: calc(17 * var(--u)); font-weight: 800;
+        letter-spacing: -.02em; color: var(--ink);
+      }
+
+      /* L'etablissement, pre-choisi. Le <select> natif est pose dessus,
+         invisible : un tap ouvre la roue du telephone. */
+      .st-lieu {
+        position: relative; display: flex; align-items: center; gap: 12px;
+        padding: 10px 14px 10px 10px; border-radius: var(--r4);
+        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .st-lieu-corps { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
+      .st-lieu-tuile, .bar-tuile {
+        flex: 0 0 auto; width: 46px; height: 46px; border-radius: 12px; overflow: hidden;
+        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
+      }
+      .st-lieu-tuile img, .bar-tuile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .st-lieu-txt { min-width: 0; }
+      .st-lieu-txt strong { display: block; font-size: calc(16 * var(--u)); font-weight: 750; letter-spacing: -.015em; color: var(--ink); }
+      .st-lieu-txt span { display: block; margin-top: 1px; font-size: calc(13 * var(--u)); color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .st-lieu-changer { flex: 0 0 auto; font-size: calc(13.5 * var(--u)); font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+      .st-lieu-select {
+        position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+        font-size: 16px; /* 16 px : iOS ne zoome pas sur la page a l'ouverture */
+      }
+      .st-lieu:focus-within { box-shadow: inset 0 0 0 2px var(--ink); }
+
+      .st-scan {
+        display: flex; align-items: center; gap: 10px; width: 100%; margin: 10px 0 0;
+        padding: 13px 14px; border: 0; border-radius: var(--r4); background: var(--s2);
+        font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 700; color: var(--ink); cursor: pointer;
+        transition: transform var(--tr-court);
+      }
+      .st-scan:active { transform: scale(.985); }
+      .st-scan svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .st-scan > span:first-of-type { flex: 1; text-align: left; }
+      .st-scan-pts { font-family: var(--chiffre); font-size: calc(13.5 * var(--u)); font-weight: 800; color: var(--ink2); }
+      .st-scan[hidden] { display: none; }
+      .st-scan-zone { position: relative; margin: 10px 0 0; border-radius: var(--r4); overflow: hidden; background: #000; aspect-ratio: 1; }
+      .st-scan-zone[hidden] { display: none; }
+      .st-scan-zone video { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .st-scan-zone p {
+        position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 10px;
+        background: rgba(0,0,0,.6); color: #fff; text-align: center; font-size: calc(13 * var(--u));
+      }
+
+      /* Les trois formats : des tuiles blanches, le choix a l'encre. */
+      .st-formats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .st-formats .reseau-bouton {
+        gap: 6px; padding: 14px 6px 12px; border-radius: var(--r4); border: 0;
+        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); transform: none;
+      }
+      .st-formats .reseau-bouton.actif { background: var(--s1); box-shadow: inset 0 0 0 2px var(--ink); transform: none; }
+      .st-formats .reseau-ico { width: 36px; height: 36px; border-radius: 11px; }
+      .st-format-nom { font-size: calc(14 * var(--u)); font-weight: 700; color: var(--ink); }
+      .st-formats .reseau-pts { font-size: calc(13 * var(--u)); font-weight: 800; color: var(--ink2); }
+      .st-formats .reseau-bouton.actif .reseau-pts { color: var(--ink); }
+
+      /* Le tag a ecrire, dans une ligne a bouton copier. */
+      .st-tag {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 8px 8px 16px; border-radius: var(--r4);
+        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .st-tag-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+      .st-tag-txt b { color: var(--ink); font-size: calc(15.5 * var(--u)); font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .st-tag-txt span { font-size: calc(13.5 * var(--u)); font-weight: 600; color: var(--ink2); }
+      .ps-copier {
+        flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+        min-height: 38px; padding: 0 14px; border: 0; border-radius: var(--r-pill);
+        background: var(--ink); color: var(--bg);
+        font-family: inherit; font-size: calc(13.5 * var(--u)); font-weight: 700; cursor: pointer;
+        transition: transform var(--tr-court), background var(--tr-court);
+      }
+      .ps-copier svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .ps-copier:active { transform: scale(.96); }
+      .ps-copier.copie { background: #1f9d5c; color: #fff; }
+      .st-note { margin: 8px 2px 0; font-size: calc(12.5 * var(--u)); line-height: 1.45; color: var(--ink3); }
+
+      .st-champ { display: block; margin: 20px 0 0; }
+      .st-champ > span { display: block; margin: 0 0 8px 2px; font-size: calc(13 * var(--u)); font-weight: 700; color: var(--ink); }
+      .st-champ .va-input { padding-left: 16px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line2); }
+
+      /* UN bouton plein. Au retour de l'appli (.st-revenu), il passe la main
+         a "J'ai poste". */
+      .st-actions { margin: 24px 0 0; display: grid; gap: 10px; }
+      .st-cta, .st-cta-second {
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        width: 100%; min-height: 54px; border: 0; border-radius: var(--r-pill);
+        font-family: inherit; font-size: calc(16 * var(--u)); font-weight: 700; letter-spacing: -.01em; cursor: pointer;
+        transition: transform var(--tr-court), background var(--tr-court), color var(--tr-court);
+      }
+      .st-cta { background: var(--ink); color: var(--bg); }
+      .st-cta .reseau-ico { width: 24px; height: 24px; border-radius: 7px; }
+      .st-cta .reseau-ico.tk { background: #010101; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
+      .st-cta-second { background: var(--s2); color: var(--ink); }
+      .st-cta:active, .st-cta-second:active { transform: scale(.98); }
+      .st-cta-second:disabled { opacity: .6; }
+      .st-revenu .st-cta { background: var(--s2); color: var(--ink); }
+      .st-revenu .st-cta-second { background: var(--ink); color: var(--bg); order: -2; }
+      .st-revenu #story-ouvrir { order: -1; }
+      .st-msg { margin: 2px 0 0; text-align: center; font-size: calc(13.5 * var(--u)); font-weight: 600; line-height: 1.45; color: var(--succes-texte, #1f9d5c); }
+      .st-msg.err { color: var(--erreur-texte, #d92e42); }
+      .st-msg[hidden] { display: none; }
+      .st-actions .ps-regle { margin: 2px 0 0; }
+
+      .st-inviter {
+        display: flex; align-items: center; gap: 14px; width: 100%; margin: 28px 0 0;
+        padding: 12px 12px 12px 12px; border: 0; border-radius: var(--r4);
+        background: var(--s2); color: var(--ink); font-family: inherit; text-align: left; cursor: pointer;
+        transition: transform var(--tr-court);
+      }
+      .st-inviter:active { transform: scale(.985); }
+      .st-inviter-tuile { flex: 0 0 auto; width: 54px; height: 54px; border-radius: 13px; background: #f7efe6; display: grid; place-items: center; overflow: hidden; }
+      .st-inviter-tuile img { width: 50px; height: 50px; object-fit: contain; }
+      .st-inviter-txt { flex: 1; min-width: 0; }
+      .st-inviter-txt strong { display: block; font-size: calc(15.5 * var(--u)); font-weight: 750; letter-spacing: -.01em; }
+      .st-inviter-txt > span { display: block; margin-top: 2px; font-size: calc(13 * var(--u)); color: var(--ink2); }
+      .st-inviter-btn {
+        flex: 0 0 auto; padding: 9px 16px; border-radius: var(--r-pill);
+        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line2);
+        font-size: calc(13.5 * var(--u)); font-weight: 700;
+      }
+
+      /* ---------------- INVITER DES AMIS ---------------- */
+      .va-code { background: transparent; border: 0; border-radius: 0; padding: 0; margin: 0; text-align: left; }
+      .iv-hero {
+        position: relative; padding: 18px 16px 16px; border-radius: var(--r4);
+        background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); text-align: center;
+      }
+      .iv-verre { display: block; width: 92px; height: 92px; margin: -4px auto 8px; object-fit: contain; }
+      .iv-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .iv-part {
+        margin: 0; padding: 12px 8px 12px; border-radius: 12px; background: var(--s2);
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+      }
+      .iv-part > span { font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--ink2); }
+      .iv-part strong {
+        font-family: var(--chiffre); font-variant-numeric: tabular-nums;
+        font-size: calc(30 * var(--u)); font-weight: 800; letter-spacing: -.035em; line-height: 1.1; color: var(--ink);
+      }
+      .iv-part em { font-style: normal; font-size: calc(12 * var(--u)); line-height: 1.3; color: var(--ink3); }
+      .iv-etapes { margin: 22px 0 0; }
+      .iv-label { margin: 24px 0 8px 2px; font-size: calc(13 * var(--u)); font-weight: 700; color: var(--ink); }
+      .vue-amis .va-code-ligne { margin: 0; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); border-radius: var(--r4); padding: 6px 6px 6px 16px; }
+      .iv-lien { flex: 1; min-width: 0; font-size: calc(14 * var(--u)); font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .vue-amis .va-copier { background: var(--ink); color: var(--bg); box-shadow: none; min-height: 38px; }
+      .vue-amis .va-copier.copie { background: #1f9d5c; color: #fff; }
+      .iv-code { margin: 8px 2px 0; font-size: calc(12.5 * var(--u)); color: var(--ink3); }
+      .iv-code .va-handle { margin: 0; font-size: inherit; font-weight: 700; color: var(--ink2); }
+      .vue-amis .va-share { margin: 22px 0 0; min-height: 54px; font-size: calc(16 * var(--u)); }
+      .iv-qr-bascule {
+        display: block; width: 100%; margin: 10px 0 0; min-height: 50px; border: 0; border-radius: var(--r-pill);
+        background: var(--s2); color: var(--ink); font-family: inherit; font-size: calc(15 * var(--u)); font-weight: 700; cursor: pointer;
+      }
+      .iv-qr-zone { margin: 16px 0 0; text-align: center; }
+      .iv-qr-zone[hidden] { display: none; }
+      .iv-qr-zone .va-qr-cadre { max-width: 220px; margin-bottom: 8px; }
+      .iv-note { margin: 0; font-size: calc(12.5 * var(--u)); color: var(--ink3); }
+      .vue-amis .va-parrainages { text-align: center; margin-top: 18px; }
+
+      /* ---------------- BOUTIQUE : L'ETABLISSEMENT ---------------- */
+      .bar-photos {
+        display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px 12px; padding: 0 20px;
+        scroll-snap-type: x mandatory; scrollbar-width: none;
+      }
+      .bar-photos::-webkit-scrollbar { display: none; }
+      .bar-photos img {
+        flex: 0 0 78%; height: 150px; object-fit: cover; border-radius: 14px; scroll-snap-align: start; background: var(--s2);
+      }
+      .bar-photos.seule img { flex-basis: 100%; }
+      .bar-tete {
+        display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 14px; padding: 0;
+        border: 0; background: none; font-family: inherit; color: var(--ink); text-align: left;
+      }
+      button.bar-tete { cursor: pointer; }
+      button.bar-tete:active { opacity: .7; }
+      .bar-tete-txt { flex: 1; min-width: 0; }
+      .bar-tete .drop-titre { display: block; font-size: calc(17 * var(--u)); letter-spacing: .05em; }
+      .bar-meta {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; margin-top: 3px;
+        font-size: calc(13 * var(--u)); color: var(--ink3);
+      }
+      .bar-etat { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ink2); }
+      .bar-etat.ouvert { color: #1c8a55; }
+      .bar-etat.ouvert::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #21a86a; }
+      .bar-sep { color: var(--ink3); }
+      .bar-chev { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: var(--ink3); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      /* ⚠️ MODE SOMBRE : TROIS BLANCS ECRITS EN DUR. Vu en capturant la
+         passe du 13/09/2026 -- sur un telephone en sombre, l'etiquette des
+         recompenses (#ffffff) portait un nom en --ink, qui y vaut BLANC : le
+         nom etait invisible, il ne restait que "250 points". Meme chose pour
+         le chiffre de l'encadre de points (#efeff1) et le fond du cadeau du
+         jour. En clair, --s1 / --s2 valent exactement ces blancs-la. */
+      @media (prefers-color-scheme: dark) {
+        .bar-etat.ouvert { color: #4fd493; }
+        .screen.boutique-pro .carte-reco .corps {
+          background: var(--s2);
+          box-shadow: 0 0 0 .5px rgba(255,238,225,.10), 0 8px 18px -10px rgba(0,0,0,.7);
+        }
+        .screen.boutique-pro .solde-chiffre,
+        .screen.boutique-pro .cadeau { background: var(--s2); }
+      }
+
+      /* ---------------- BOUTIQUE : GAGNER DES POINTS ---------------- */
+      .sec-gagner { margin-top: 12px; }
+      .gagner-titre {
+        margin: 0 0 12px 2px; font-size: calc(20 * var(--u)); font-weight: 800; letter-spacing: -.025em; color: var(--ink);
+      }
+      .gagner-liste { border-radius: var(--r4); overflow: hidden; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); }
+      .gagner-liste .gain {
+        position: relative; display: flex; align-items: center; gap: 12px; width: 100%;
+        padding: 13px 14px; border: 0; border-top: 0; background: transparent;
+        font-family: inherit; color: var(--ink); text-align: left;
+      }
+      .gagner-liste .gain + .gain::before { content: ""; position: absolute; top: 0; left: 64px; right: 14px; height: 1px; background: var(--line); }
+      .gagner-liste .gain-lien { cursor: pointer; }
+      .gagner-liste .gain-lien:active { background: var(--s2); }
+      .gain-ico { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: var(--s2); }
+      .gain-ico svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .gain-txt { flex: 1; min-width: 0; }
+      .gain-txt strong { display: block; font-size: calc(14.5 * var(--u)); font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
+      .gain-txt > span { display: block; margin-top: 2px; font-size: calc(12.5 * var(--u)); line-height: 1.35; color: var(--ink3); }
+      .gain-val {
+        flex: 0 0 auto; font-family: var(--chiffre); font-variant-numeric: tabular-nums;
+        font-size: calc(15 * var(--u)); font-weight: 800; letter-spacing: -.02em; color: var(--ink); white-space: nowrap;
+      }
+      .gain-chev { flex: 0 0 auto; width: 15px; height: 15px; margin-left: -4px; fill: none; stroke: var(--ink3); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* ---------------- FICHE ETABLISSEMENT : L'AVIS GOOGLE ---------------- */
+      .club-avis {
+        display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 18px;
+        padding: 14px 16px; border: 0; border-radius: var(--r3);
+        background: var(--s2); color: var(--ink); font-family: inherit; text-align: left; cursor: pointer;
+        transition: transform var(--tr-court);
+      }
+      .club-avis:active { transform: scale(.985); }
+      .club-avis-txt { flex: 1; min-width: 0; }
+      .club-avis-txt strong { display: block; font-size: calc(15 * var(--u)); font-weight: 750; letter-spacing: -.01em; }
+      .club-avis-txt span { display: block; margin-top: 2px; font-size: calc(12.5 * var(--u)); color: var(--ink2); }
+      .club-avis-etoiles { flex: 0 0 auto; display: flex; gap: 1px; }
+      .club-avis-etoiles svg { width: 17px; height: 17px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linejoin: round; }
+
+      /* ---------------- PROFIL : DONNER MON AVIS ---------------- */
+      .avis-appli { text-align: center; padding: 6px 0 0; }
+      .avis-appli h3 { margin: 0 0 4px; font-size: calc(22 * var(--u)); }
+      .avis-sous { margin: 0 0 18px; font-size: calc(14 * var(--u)); line-height: 1.45; color: var(--ink2); }
+      .avis-etoiles { display: flex; justify-content: center; gap: 6px; }
+      .avis-etoile {
+        width: 50px; height: 50px; padding: 6px; border: 0; background: none; cursor: pointer; border-radius: 12px;
+        transition: transform .18s var(--sortie);
+      }
+      .avis-etoile svg { width: 100%; height: 100%; fill: none; stroke: var(--ink3); stroke-width: 1.5; stroke-linejoin: round; transition: fill .15s ease, stroke .15s ease; }
+      .avis-etoile.on svg { fill: var(--ink); stroke: var(--ink); }
+      .avis-etoile:active { transform: scale(.88); }
+      .avis-etoile:focus-visible { outline: 2px solid var(--ink); }
+      .avis-libelle { margin: 6px 0 14px; min-height: 1.4em; font-size: calc(14 * var(--u)); font-weight: 700; color: var(--ink); }
+      .avis-texte {
+        display: block; width: 100%; resize: none; padding: 14px 16px; border: 0; border-radius: var(--r3);
+        background: var(--s2); color: var(--ink); font-family: inherit; font-size: 16px; line-height: 1.45; text-align: left;
+      }
+      .avis-texte::placeholder { color: var(--ink3); }
+      .avis-texte:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--ink); }
+      .avis-msg { margin: 10px 0 0; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--erreur-texte, #d92e42); }
+      .avis-msg[hidden] { display: none; }
+      .avis-envoyer {
+        width: 100%; min-height: 54px; margin: 16px 0 4px; border: 0; border-radius: var(--r-pill);
+        background: var(--ink); color: var(--bg); font-family: inherit; font-size: calc(16 * var(--u)); font-weight: 700; cursor: pointer;
+        transition: transform var(--tr-court), opacity var(--tr-court);
+      }
+      .avis-envoyer:disabled { opacity: .35; cursor: default; }
+      .avis-envoyer:not(:disabled):active { transform: scale(.98); }
+      .avis-merci { padding: 8px 0 0; }
+      .avis-merci-rond { display: grid; place-items: center; width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 50%; background: var(--s2); }
+      .avis-merci-rond svg { width: 26px; height: 26px; fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+      @media (prefers-reduced-motion: reduce) {
+        .avis-etoile, .st-cta, .st-cta-second, .st-scan, .st-inviter, .club-avis { transition: none; }
       }
 
       /* ============================================================
@@ -4705,42 +5056,57 @@
              maintenant elle aussi sur cette page plutot que sur la
              feuille du bas. -->
         <div class="vue-story" id="vue-story" hidden>
-          <h1 class="va-title">Poster ma story</h1>
-          <!-- ⚠️ LA CARTE "DES POINTS A CHAQUE STORY" VIT ICI. Julien,
-               13/09/2026, en la voyant en tete de la boutique : "ce n'est
-               pas ici que c'est cense etre, c'est dans Story". C'est la
-               page ou l'on poste : la regle du jeu se lit la ou on la joue.
-               Sans le bouton noir "Poster ma story" qu'elle portait dans la
-               boutique -- le formulaire est juste en dessous. -->
-          <div class="story-intro">
-            <div class="gagne-carte">
-              <svg class="gagne-ico" viewBox="0 0 64 52" aria-hidden="true">
-                <rect x="18" y="3" width="28" height="46" rx="5"/>
-                <path d="M28 7.5h8"/>
-                <rect x="24" y="15" width="7" height="7" rx="1"/><rect x="33" y="15" width="7" height="7" rx="1"/><rect x="24" y="24" width="7" height="7" rx="1"/>
-                <path d="M34 25h2M39 25v2M34 29h6M39 31v1"/>
-                <path d="M26 40h12"/>
-              </svg>
-              <p class="gagne-titre">Des points à chaque story taguée dans ton club</p>
-              <p class="gagne-sous">Validée par le club, créditée sur ton solde. <strong>Rien à payer</strong>, jamais.</p>
-              <div class="gagne-reseaux" aria-label="Instagram et TikTok">
-                <span class="reseau reseau-ig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></svg></span>
-                <span class="reseau reseau-tt" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3.5v11.2a3.8 3.8 0 1 1-3.8-3.8"/><path d="M14 3.5c.4 2.6 2.3 4.4 5 4.6"/></svg></span>
-              </div>
-            </div>
+          <!-- ⚠️ L'ONGLET STORY, REFAIT LE 13/09/2026. Julien : "l'onglet
+               pour poster une story, je le trouve degueulasse", et la carte
+               "Des points a chaque story taguee dans ton club, validee par le
+               club, creditee sur ton solde, rien a payer, jamais" : "claque
+               au sol". Trois cartes grises empilees, trois boutons rouges,
+               une liste d'etapes et un paragraphe de loi.
 
+               Ce qui le remplace, du haut vers le bas :
+               · le meme en-tete que Recompenses (titre + encadre de points) ;
+               · UNE image qui dit la regle sans phrase : une story, la
+                 mention de l'etablissement dessus, et ce qu'elle rapporte ;
+               · le formulaire en trois blocs ouverts (ou, format, quoi
+                 ecrire), construit par ouvrirChoixReseau() ;
+               · l'invitation, en carte.
+               Un seul bouton plein a la fois (voir .st-cta). -->
+          <header class="st-tete">
+            <h1 class="st-titre">Story</h1>
+            <p class="solde-chiffre"><strong class="carte-solde-num js-solde">0</strong><span>points</span></p>
+          </header>
+
+          <div class="st-hero">
+            <!-- Une story dessinee en CSS : barres de progression, pastille
+                 de profil, le verre de la mascotte (le fichier de Julien,
+                 jamais redessine) et l'autocollant de mention, rempli avec
+                 le vrai compte a mentionner (majHandle). -->
+            <div class="st-apercu" aria-hidden="true">
+              <span class="st-apercu-barres"><i></i><i></i><i></i></span>
+              <span class="st-apercu-profil"></span>
+              <img class="st-apercu-verre" src="/mascotte/verre-salut.webp" alt="" width="640" height="640" />
+              <span class="st-apercu-mention" id="st-apercu-mention">@mirano</span>
+            </div>
+            <div class="st-hero-txt">
+              <p class="st-hero-pts"><strong id="st-hero-montant">+100</strong><span>points</span></p>
+              <p class="st-hero-sous">par story qui mentionne l’établissement</p>
+              <p class="st-hero-autres">Reel ou TikTok : <b>+60</b></p>
+            </div>
           </div>
+
           <div id="story-page-corps"></div>
-          <!-- "Inviter des amis", meme demande : dans Story plutot que dans
-               la boutique. -->
-          <div class="story-parrain">
-            <button type="button" class="parrain-ligne" id="story-inviter">
-              <svg class="parrain-ico" viewBox="0 0 40 32" aria-hidden="true"><rect x="3" y="7" width="34" height="22" rx="2.5"/><path d="m3.8 8.6 16.2 12 16.2-12"/><path class="parrain-coeur" d="M20 13.6c-1.3-2.4-5-2-5 .8 0 2.2 2.6 3.7 5 5.8 2.4-2.1 5-3.6 5-5.8 0-2.8-3.7-3.2-5-.8z"/></svg>
-              <span class="parrain-txt">Inviter des amis</span>
-              <span class="parrain-val"><span class="js-montant-parrainage">100</span> points</span>
-              <svg class="parrain-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-            </button>
-          </div>
+
+          <!-- "Inviter des amis" reste dans Story (demande du 13/09 matin),
+               mais en carte : la ligne grise a enveloppe et coeur rouge
+               faisait "pas esthetique". -->
+          <button type="button" class="st-inviter" id="story-inviter">
+            <span class="st-inviter-tuile" aria-hidden="true"><img src="/mascotte/verre-salut.webp" alt="" width="640" height="640" /></span>
+            <span class="st-inviter-txt">
+              <strong>Inviter des amis</strong>
+              <span><span class="js-montant-parrainage">100</span> points par ami qui s’inscrit</span>
+            </span>
+            <span class="st-inviter-btn">Inviter</span>
+          </button>
         </div>
 
         <!-- ECRAN FICHE GOOGLE -- ouvre la fiche Google du club en
@@ -4821,7 +5187,18 @@
 
             </div>
 
-            <!-- ===== Etat invitation : code perso, QR, lien ===== -->
+            <!-- ===== Etat invitation : code perso, QR, lien =====
+                 ⚠️ REFAIT LE 13/09/2026. Julien : "l'onglet pour inviter des
+                 amis, je ne trouve vraiment pas esthetique". C'etait une
+                 grande boite blanche : "100 points" en gros, deux lignes
+                 grises, un QR de 240 px, "@pseudo" + Copier (qui copiait le
+                 LIEN, pas le pseudo), un bouton noir.
+                 Maintenant, comme les ecrans de parrainage qui marchent
+                 (Uber, Revolut, DUSK) : ce que chacun gagne, cote a cote ;
+                 comment ca marche en trois lignes a tuile (la fiche DUSK) ;
+                 le lien lisible avec son bouton copier ; UN bouton plein.
+                 Le QR passe derriere "Afficher mon QR code" : il ne sert
+                 qu'en face a face, pas a chaque ouverture. -->
             <div class="va-invite" id="va-invite" hidden>
               <div class="va-invite-head">
                 <button type="button" class="va-back" id="va-back" aria-label="Retour à mes amis">
@@ -4830,29 +5207,35 @@
                 <h2 class="va-invite-titre">Inviter des amis</h2>
               </div>
               <div class="va-code">
-                <!-- CE QUE CA RAPPORTE, EN PREMIER.
-                     Sur les ecrans de parrainage qui marchent (Uber,
-                     Revolut, Cash App), le gain est la premiere chose
-                     lue, en gros. Ici il etait en gris, sous le QR :
-                     on voyait une photo, un pseudo et un carre noir
-                     avant de savoir pourquoi on serait la. -->
-                <!-- Les deux nombres sont relus depuis la base a
-                     l'ouverture (montant_parrainage / montant_bienvenue,
-                     migration 0044). Ce qui est ecrit ici n'est qu'un
-                     repli : l'ecran a deja annonce 150 pendant que la
-                     base en donnait 50, et personne ne s'en est apercu.
-                     Un seul endroit decide desormais. -->
-                <p class="va-gain-num"><span id="va-gain-montant">100</span> points</p>
-                <p class="va-gain-txt">
-                  par ami qui s&rsquo;inscrit avec ton code.<br />
-                  Ton ami re&ccedil;oit <span id="va-gain-bienvenue">50</span> points de bienvenue.
-                </p>
+                <!-- Les deux nombres sont relus depuis la base a l'ouverture
+                     (montant_parrainage / montant_bienvenue, migration 0044) :
+                     ce qui est ecrit ici n'est qu'un repli. -->
+                <div class="iv-hero">
+                  <img class="iv-verre" src="/mascotte/verre-salut.webp" alt="" width="640" height="640" />
+                  <div class="iv-duo">
+                    <p class="iv-part"><span>Pour toi</span><strong>+<span id="va-gain-montant" class="js-montant-parrainage">100</span></strong><em>points par ami inscrit</em></p>
+                    <p class="iv-part"><span>Pour ton ami</span><strong>+<span id="va-gain-bienvenue">50</span></strong><em>points à sa première venue</em></p>
+                  </div>
+                </div>
+
+                <ol class="sheet-etapes iv-etapes">
+                  <li>
+                    <span class="sheet-etape-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5m0 0 4 4m-4-4-4 4"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg></span>
+                    <span class="sheet-etape-txt"><strong>Tu partages ton lien</strong><span>Par message, en story, ou avec ton QR code.</span></span>
+                  </li>
+                  <li>
+                    <span class="sheet-etape-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.6"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/></svg></span>
+                    <span class="sheet-etape-txt"><strong>Ton ami s’inscrit avec ton lien</strong><span>Vous devenez amis dans l’appli.</span></span>
+                  </li>
+                  <li>
+                    <span class="sheet-etape-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m12 7.3 1.4 2.9 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z"/></svg></span>
+                    <span class="sheet-etape-txt"><strong>Tes points arrivent</strong><span>Dès son inscription, sur ton solde.</span></span>
+                  </li>
+                </ol>
 
                 <!-- L'avatar reste dans le DOM (le JS l'alimente et gere
-                     l'envoi de photo) mais ne s'affiche plus ici : le
-                     crayon de modification n'a rien a faire sur un ecran
-                     de partage, et l'onglet Profil porte deja le meme
-                     reglage. Voir .va-code .va-avatar dans le style. -->
+                     l'envoi de photo) mais ne s'affiche pas ici : la photo se
+                     change dans Reglages. -->
                 <button type="button" class="va-avatar" id="va-avatar" aria-label="Changer ma photo de profil">
                   <span class="va-avatar-init" id="va-avatar-init"></span>
                   <img class="va-avatar-img" id="va-avatar-img" alt="" hidden />
@@ -4862,25 +5245,26 @@
                 </button>
                 <input type="file" accept="image/*" id="va-avatar-file" hidden />
 
-                <div class="va-qr-cadre">
-                  <div class="va-qr" id="va-qr" aria-hidden="true"></div>
-                </div>
-
-                <!-- LE CODE SE LIT ET SE COPIE.
-                     Il n'y avait qu'un QR : impossible de dicter son code
-                     au telephone, de le taper, ou de le mettre dans une
-                     legende. Toutes les applis de parrainage montrent le
-                     code EN CLAIR a cote du QR, avec un bouton copier. -->
+                <p class="iv-label">Ton lien</p>
                 <div class="va-code-ligne">
-                  <span class="va-handle" id="va-handle">@...</span>
+                  <span class="iv-lien" id="va-lien">…</span>
                   <button type="button" class="va-copier" id="va-copier">Copier</button>
                 </div>
+                <!-- Le code, c'est le pseudo : claim_referral() le prend tel
+                     quel. Utile pour le dicter a quelqu'un a cote. -->
+                <p class="iv-code">Ton code : <span class="va-handle" id="va-handle">…</span></p>
 
                 <button type="button" class="va-share" id="va-share">Partager mon lien</button>
+                <button type="button" class="iv-qr-bascule" id="iv-qr-bascule" aria-expanded="false" aria-controls="iv-qr-zone">Afficher mon QR code</button>
 
-                <!-- LE COMPTEUR. C'est ce qui fait rouvrir cet ecran :
-                     sans lui, on partage un lien dans le vide. Masque a
-                     zero -- "0 ami" n'apprend rien et decourage. -->
+                <div class="iv-qr-zone" id="iv-qr-zone" hidden>
+                  <div class="va-qr-cadre">
+                    <div class="va-qr" id="va-qr" aria-hidden="true"></div>
+                  </div>
+                  <p class="iv-note">À faire scanner par ton ami, appareil photo ouvert.</p>
+                </div>
+
+                <!-- LE COMPTEUR. Masque a zero : "0 ami" n'apprend rien. -->
                 <p class="va-parrainages" id="va-parrainages" hidden></p>
               </div>
             </div>
@@ -4921,10 +5305,21 @@
                  elements restent dans le DOM, caches, parce que le code
                  d'envoi les alimente. -->
             <div class="pf-entete">
+              <!-- ⚠️ POUSSER A ACTIVER. Julien, 13/09/2026 : "essaye de pousser
+                   plus les gens a activer les notifications, ca peut etre plus
+                   interessant pour moi". On garde la carte DUSK a interrupteur
+                   (sa demande du 12/09), on lui donne de quoi accrocher l'oeil
+                   quand elle est eteinte : une cloche avec un point, et ce que
+                   la notification rapporte concretement. Allumee, elle se
+                   replie sur une ligne (.actives, pose par peindreBasculeNotif).
+                   Ne promet que ce qui part vraiment (lib/notifications/push.js). -->
               <div class="pf-notif" id="pf-notif">
+                <span class="pf-notif-cloche" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>
+                </span>
                 <div class="pf-notif-txt">
-                  <p class="pf-notif-titre">Des notifications faites pour toi</p>
-                  <p class="pf-notif-desc">Sois prévenu dès qu’une story est validée ou qu’un cadeau t’attend.</p>
+                  <p class="pf-notif-titre"><span class="pf-notif-off">Tes points en direct</span><span class="pf-notif-on">Notifications activées</span></p>
+                  <p class="pf-notif-desc">Dès qu’une story est validée ou qu’un cadeau t’attend.</p>
                   <p class="pf-notif-msg js-msg-notif" hidden></p>
                 </div>
                 <button type="button" class="rg-switch js-bascule-notif" id="pf-notif-actif" role="switch" aria-checked="false" aria-label="Activer les notifications"></button>
@@ -4993,17 +5388,12 @@
                   <span class="pf-item-txt"><strong>Inviter des amis</strong><span><span id="pf-inviter-montant">100</span> points par ami qui s’inscrit avec ton lien.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
-                <!-- L'avis Google du CLUB, pas de l'appli. Julien, 12/09/2026 :
-                     "fais un onglet pour donner des avis Google aussi". Noctify
-                     n'a pas de fiche Google ; le club, si. Ouvre directement le
-                     formulaire "ecrire un avis" de sa fiche (googlePlaceId dans
-                     CLUBS). C'est aussi ce qui se vend : le gerant voit ses avis
-                     Google monter. -->
-                <button type="button" class="pf-item" id="pf-avis-google">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.7z"/></svg>
-                  <span class="pf-item-txt"><strong>Laisser un avis Google</strong><span>Ta note sur la fiche Google de <span id="pf-avis-google-club">Mirano</span>.</span></span>
-                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-                </button>
+                <!-- ⚠️ "LAISSER UN AVIS GOOGLE" A QUITTE LE PROFIL. Julien,
+                     13/09/2026 : "pas laisser un avis Google [dans les
+                     parametres] [...] qu'ils puissent donner un avis Google
+                     depuis la carte, aux etablissements ou ils ont ete". Il
+                     vit maintenant dans la fiche de l'etablissement (voir
+                     blocAvisGoogle dans ouvrirClub). -->
               </div>
             </section>
 
@@ -5017,7 +5407,7 @@
                 </button>
                 <button type="button" class="pf-item" id="pf-avis">
                   <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-11.7 7.1L4 20l1-4.1A8 8 0 1 1 20 12z"/><path d="M9 10.5h6M9 13.5h4"/></svg>
-                  <span class="pf-item-txt"><strong>Donner mon avis</strong><span>Sur l’appli Noctify, par e-mail.</span></span>
+                  <span class="pf-item-txt"><strong>Donner mon avis</strong><span>Une note et un mot sur l’appli Noctify.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
               </div>
@@ -5033,12 +5423,15 @@
                 </button>
                 <button type="button" class="pf-item" id="pf-action-favoris">
                   <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1z"/></svg>
-                  <span class="pf-item-txt"><strong>Favoris</strong><span>Les clubs que tu as gardés.</span></span>
+                  <span class="pf-item-txt"><strong>Favoris</strong><span>Les établissements que tu as gardés.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
+                <!-- "Club" -> "etablissement". Julien, 13/09/2026 : "je ne vais
+                     pas faire seulement les boites de nuit". Bar, restaurant,
+                     club : l'icone passe du verre a cocktail a la devanture. -->
                 <button type="button" class="pf-item" id="pf-devenir-club">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/></svg>
-                  <span class="pf-item-txt"><strong>Vous gérez un club ?</strong><span>Proposer Noctify à ton établissement.</span></span>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v10h16V10"/><path d="M3 10 5 4h14l2 6"/><path d="M3 10c0 1.4 1.3 2.4 3 2.4s3-1 3-2.4c0 1.4 1.3 2.4 3 2.4s3-1 3-2.4c0 1.4 1.3 2.4 3 2.4s3-1 3-2.4"/><path d="M10 20v-4.5h4V20"/></svg>
+                  <span class="pf-item-txt"><strong>Vous gérez un établissement&nbsp;?</strong><span>Bar, boîte de nuit ou restaurant : rejoindre Noctify.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
                 <button type="button" class="pf-item" id="pf-apropos">
@@ -5133,7 +5526,7 @@
             Supprimer mon compte
           </button>
 
-          <button type="button" class="pf-deco" id="rg-deconnexion" style="margin-top:6px">Se déconnecter</button>
+          <button type="button" class="pf-deconnexion" id="rg-deconnexion" style="margin-top:14px">Se déconnecter</button>
         </div>
 
         <!-- ================= ECRAN NOTIFICATIONS ================= -->
@@ -5168,7 +5561,7 @@
           <h1 class="va-title">Ma fidélité</h1>
           <div class="solde-ligne" style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
             <span style="flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--s2);display:grid;place-items:center" aria-hidden="true">
-              <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+              <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="9"/><path d="m12 7.3 1.4 2.9 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z"/></svg>
             </span>
             <strong id="hs-solde" style="font-size: calc(22 * var(--u));font-weight:800;font-family:var(--mono);color:var(--accent)">0 pts</strong>
           </div>
@@ -5192,7 +5585,7 @@
               <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.6 12 20 12 20z"/></svg>
             </span>
             <strong>Aucun favori</strong>
-            <span>Tape sur le cœur d'un club pour le retrouver ici.</span>
+            <span>Tape sur le cœur d'un établissement pour le retrouver ici.</span>
           </div>
         </div>
 
@@ -5259,18 +5652,18 @@
           <p class="rg-section-titre" style="text-align:left">À propos de Noctify</p>
           <div class="rg-carte">
             <p class="rg-carte-desc" style="border-top:0;padding-top:0;margin-top:0">
-              Scanne le QR code du club, poste ta story, gagne des points. Tu les échanges
-              au bar contre une boisson, une entrée ou un coupe-file.
+              Poste une story qui mentionne un établissement partenaire, gagne des points,
+              et échange-les sur place contre une boisson, une entrée ou un coupe-file.
             </p>
           </div>
 
           <p class="rg-section-titre" style="text-align:left">Fonctionnalités</p>
           <div class="ap-feature">
             <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/></svg></span>
-            <span><strong>Poster ma story</strong><br>Scanne le QR code du club et publie en un geste.</span>
+            <span><strong>Poster ma story</strong><br>Instagram ou TikTok, avec la mention de l'établissement.</span>
           </div>
           <div class="ap-feature">
-            <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></span>
+            <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m12 7.3 1.4 2.9 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z"/></svg></span>
             <span><strong>Gagner des points</strong><br>Chaque story taguée te rapporte des points.</span>
           </div>
           <div class="ap-feature">
@@ -5279,7 +5672,7 @@
           </div>
           <div class="ap-feature">
             <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.4" r="3.4"/><path d="M2.6 20a6.6 6.6 0 0 1 13.2 0"/></svg></span>
-            <span><strong>Retrouver ses amis</strong><br>Voir qui est où, ce soir, sur la carte.</span>
+            <span><strong>Trouver un établissement</strong><br>Tous les lieux partenaires, sur la carte.</span>
           </div>
 
           <p class="sante">L'abus d'alcool nuit à la santé.</p>
@@ -5644,14 +6037,9 @@
                au-dessus des onglets, avec les filtres "Pres de moi" /
                "Ouvert maintenant" en haut -- ils ne filtraient que cette
                liste, ils partent avec elle.
-               On atteint un club en touchant son badge sur la carte. -->
-          <div class="carte-haut carte-clair">
-            <!-- Legende : dit ce que represente le verre sur la carte,
-                 sans rien ecrire par-dessus la carte elle-meme. Remplie
-                 par le JS, qui reutilise le meme pint() que le marqueur --
-                 les deux ne peuvent donc pas diverger. -->
-            <div class="carte-legende" id="carte-legende"></div>
-          </div>
+               On atteint un club en touchant son badge sur la carte.
+               13/09/2026 : la legende "Toi" (le verre de biere en haut a
+               gauche) part avec le verre qu'elle legendait. -->
 
         </div>
 
@@ -5786,14 +6174,14 @@
               <div class="bons" id="bons"></div>
             </section>
 
-            <section class="sec">
-              <details class="bareme">
-                <summary>
-                  Comment gagner des points
-                  <span class="chev"><svg viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></svg></span>
-                </summary>
-                <div id="gains"></div>
-              </details>
+            <!-- ⚠️ PLUS UN ACCORDEON. Julien, 13/09/2026 : "comment gagner des
+                 points, ameliore le truc, c'est bizarre". Un menu replie en bas
+                 de page, qui listait des montants que l'appli ne verse pas
+                 (voir GAINS). Une section ouverte, une ligne par geste, et
+                 chaque ligne mene au geste. -->
+            <section class="sec sec-gagner">
+              <h2 class="gagner-titre">Gagner des points</h2>
+              <div class="gagner-liste" id="gains"></div>
             </section>
 
             <!-- ⚠️ LE MESSAGE SANITAIRE A DEMENAGE, IL N'A PAS DISPARU.
@@ -5844,8 +6232,11 @@
              question qui bloque, c'est une proposition. On peut l'ignorer
              et continuer a se servir de l'appli. -->
         <div class="notif-invite" id="notif-invite" hidden>
+          <!-- "Rien d'autre" est retire (13/09/2026) : Julien veut pousser a
+               activer, et la phrase vendait surtout ce qu'on n'aurait pas.
+               Elle nomme maintenant les deux notifications qui partent. -->
           <p class="notif-invite-titre">Être prévenu quand tes points arrivent ?</p>
-          <p class="notif-invite-txt">Quand une de tes stories est validée. Rien d'autre.</p>
+          <p class="notif-invite-txt">Une alerte quand ta story est validée, et quand ton cadeau du jour t’attend.</p>
           <div class="notif-invite-actions">
             <button type="button" class="notif-invite-btn" id="notif-invite-non">Plus tard</button>
             <button type="button" class="notif-invite-btn oui" id="notif-invite-oui">Activer</button>
@@ -5951,15 +6342,13 @@ import { createClient } from "@supabase/supabase-js";
    a `Capacitor` directement. */
 import * as natif from "./natif.js";
 
-/* LE BAREME NE S'ECRIT PAS ICI. Les montants annonces au clubbeur sont
-   exactement ceux que le pont credite cote gerant : DEFAULT_POINT_RULES
-   pour ce qui se compte aux vues ou au geste, FORFAIT_STORY_DEFAUT pour
-   la story taguee. Ils etaient recopies a la main dans GAINS et dans la
-   note de la fiche recompense -- deux copies de plus a corriger le jour
-   ou un chiffre bouge, et l'appli du client promettait alors autre chose
-   que ce que le club paie. */
-import { DEFAULT_POINT_RULES } from "./dashboardData.js";
-import { FORFAIT_STORY_DEFAUT } from "./lib/points/mentionAutomatique.js";
+/* ⚠️ LE BAREME AFFICHE AU CLUBBEUR EST CELUI DE LA BASE CLUBBEUR.
+   "Comment gagner des points" lisait DEFAULT_POINT_RULES (le bareme GERANT :
+   1 000 vues = 25, contenu viral = 90, ambassadeur du mois = 350) et
+   FORFAIT_STORY_DEFAUT (50, la mention detectee par le webhook). Aucune de
+   ces lignes n'est ce que l'appli verse : l'onglet Story annoncait +100
+   pendant que la meme boutique disait "Poster ta story +50" -- Julien,
+   13/09/2026 : "c'est bizarre". Voir GAINS pour les sources exactes. */
 import { nomAffiche } from "./lib/profil/nomDepuisEmail.js";
 
 // Connexion reelle sur la BONNE base : celle des clients de club
@@ -6387,31 +6776,36 @@ $("#story-page-corps")?.addEventListener("click", function (e) {
   ouvrirAppOuWeb(bouton.dataset.schema, bouton.dataset.secours);
 });
 
-// Copie le pseudo Instagram du club (bouton .ps-handle-copy, voir
-// blocHandleCopiable() plus bas) -- demande de Julien, pour eviter les
-// fautes de frappe quand on retape le pseudo a la main. Delegue sur
-// #story-page-corps (jamais recree, seul son contenu change a chaque
-// ouverture de la page) : un seul cablage, valable pour toutes les
-// ouvertures de "Poster ma story".
+/* Au retour d'Instagram ou de TikTok, le geste suivant est "J'ai poste" :
+   il devient le bouton plein, "Ouvrir" repasse en second. Sans ca, la
+   personne revient devant le meme gros bouton qui la renvoie la-bas. */
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState !== "visible" || !partiPublier) return;
+  partiPublier = false;
+  var form = document.getElementById("story-form");
+  if (form) form.classList.add("st-revenu");
+});
+
+/* Copie le tag de l'etablissement ET #publicite, d'un tap (bouton
+   .ps-copier, voir blocTag() dans ouvrirChoixReseau). Delegue sur
+   #story-page-corps : son contenu est recree a chaque ouverture, lui non.
+   La mention obligatoire voyage avec le pseudo -- une consigne ecrite a
+   cote se serait fait ignorer. */
 $("#story-page-corps")?.addEventListener("click", async function (e) {
-  var bouton = e.target.closest(".ps-handle-copy");
+  var bouton = e.target.closest(".ps-copier");
   if (!bouton) return;
-  var handle = bouton.dataset.handle;
-  var libelleOriginal = bouton.querySelector("span").textContent;
+  var libelle = bouton.querySelector("span");
   try {
-    /* Le tag ET la mention, ensemble. Le clubbeur copie deja ce bouton
-       pour ne pas se tromper de pseudo : la mention obligatoire voyage
-       donc avec, sans qu'il ait rien a retenir ni a taper. Une consigne
-       ecrite a cote (la premiere version) se serait fait ignorer. */
-    await navigator.clipboard.writeText("@" + handle + " " + MENTION_PUB);
+    await navigator.clipboard.writeText(bouton.dataset.copie);
     bouton.classList.add("copie");
-    bouton.querySelector("span").textContent = "Copié !";
+    libelle.textContent = "Copié";
+    vibrer("leger");
   } catch (err) {
-    bouton.querySelector("span").textContent = "Impossible de copier";
+    window.prompt("Copie ce texte :", bouton.dataset.copie);
   }
   setTimeout(function () {
     bouton.classList.remove("copie");
-    bouton.querySelector("span").textContent = libelleOriginal;
+    libelle.textContent = "Copier";
   }, 1600);
 });
 
@@ -7265,6 +7659,8 @@ function majCagnotte(animer) {
     cancelAnimationFrame(compteurEnCours);
     el.textContent = nb(ETAT.solde);
   }
+  // Le meme encadre de points en tete de l'onglet Story : un seul solde.
+  document.querySelectorAll(".js-solde").forEach(function (s) { s.textContent = nb(ETAT.solde); });
 
   if (animer) {
     el.classList.remove("maj");
@@ -8507,11 +8903,16 @@ function ouvrirClub(c, src, id) {
   var AUJ = (new Date().getDay() + 6) % 7; // 0 = lundi, comme c.horaires
   var blocHoraires = "";
   if (c.horaires && c.horaires.length) {
+    // Calcule sur les horaires (voir etatOuverture) : "Ferme · Ouvre jeudi
+    // a 21h00" etait ecrit a la main dans CLUBS et restait vrai le jeudi soir.
+    var etatC = etatOuverture(c);
+    var texteEtat = etatC ? (etatC.ouvert ? etatC.texte : "Fermé · " + etatC.texte) : c.statut + " · " + c.horaire;
+    var fermeC = etatC ? !etatC.ouvert : c.shut;
     blocHoraires =
       '<button type="button" class="club-info-ligne club-horaires" id="sh-horaires" aria-expanded="false" aria-controls="sh-horaires-jours">' +
         '<span class="club-info-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>' +
-        '<span class="club-info-txt"><span class="club-info-principal' + (c.shut ? " ferme" : "") + '">' +
-          escapeHtmlSupport(c.statut + " · " + c.horaire) + "</span></span>" +
+        '<span class="club-info-txt"><span class="club-info-principal' + (fermeC ? " ferme" : "") + '">' +
+          escapeHtmlSupport(texteEtat) + "</span></span>" +
         '<svg class="club-horaires-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>' +
       "</button>" +
       '<div class="club-horaires-jours" id="sh-horaires-jours" hidden>' +
@@ -8557,11 +8958,30 @@ function ouvrirClub(c, src, id) {
       "</div>"
     : "";
 
+  /* ⚠️ L'AVIS GOOGLE VIT ICI. Julien, 13/09/2026 : "qu'ils puissent donner
+     un avis Google depuis la carte, aux etablissements ou ils ont ete".
+     La carte s'affiche pour tout etablissement qui a une fiche Google ; son
+     titre devient personnel quand l'historique de points prouve un passage
+     (voir aVisite). Aucun point en echange : Google interdit les avis
+     recompenses, et un club qui s'y fait prendre voit ses avis effaces. */
+  var blocAvisGoogle = (c.googlePlaceId || c.googleQuery)
+    ? '<button type="button" class="club-avis" id="sh-avis-google">' +
+        '<span class="club-avis-txt">' +
+          '<strong id="sh-avis-titre">Laisser un avis Google</strong>' +
+          '<span id="sh-avis-sous">Ta note sur la fiche Google ' + escapeHtmlSupport(duClub(c.nom)) + ".</span>" +
+        "</span>" +
+        '<span class="club-avis-etoiles" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>'.repeat(5) +
+        "</span>" +
+      "</button>"
+    : "";
+
   var html =
     heroClub(c) +
     galerieClub(c) +
     blocPartenaire +
     '<div class="club-actions-row">' + actions + "</div>" +
+    blocAvisGoogle +
     '<div class="club-adresse">' +
       '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
@@ -8593,6 +9013,13 @@ function ouvrirClub(c, src, id) {
     activerVue("boutique");
   });
   $("#sh-poster-story")?.addEventListener("click", function () { ouvrirChoixReseau(c.nom); });
+  $("#sh-avis-google")?.addEventListener("click", function () { ouvrirAvisGoogle(c); });
+  aVisite(id).then(function (oui) {
+    var titre = $("#sh-avis-titre"), sous = $("#sh-avis-sous");
+    if (!oui || !titre || !sous) return;
+    titre.textContent = "Ta soirée " + auClub(c.nom);
+    sous.textContent = "Ta note sur sa fiche Google, en deux minutes.";
+  });
   $("#sh-carte")?.addEventListener("click", function () {
     fermerFeuille();
     activerVue("carte");
@@ -8725,303 +9152,203 @@ var KINDS_STORY = [
 // -- meme raisonnement affiche, meme marche a suivre numerotee,
 // adaptes au HTML/JS de ce fichier (pas de composants a importer).
 function ouvrirChoixReseau(nomClub) {
-  // Handle Instagram a taguer, quand on le connait -- affine par
-  // majMention()/majEtapes() plus bas des qu'un club est identifie
-  // (fiche club, selection dans la liste, ou clubs.ig_handle resolu).
-  var handleActuel = null;
+  /* ⚠️ REFAIT LE 13/09/2026 (voir #vue-story). Ce qui a disparu, et
+     pourquoi :
+     · les trois cartes grises "Club / Format / Publication" -- des boites
+       dans une page deja claire, qui faisaient formulaire administratif ;
+     · le gros bouton rouge "Scanner le QR du club" ET le menu deroulant
+       "Choisis un club..." : l'etablissement est maintenant PRE-CHOISI
+       (celui de la boutique, donc le plus proche ou le dernier choisi), on
+       ne touche "Changer" que s'il est faux ;
+     · l'avertissement a triangle, la liste d'etapes 1-2-3, et le
+       paragraphe "Le bouton copie #publicite avec le tag : garde-le dans
+       ta publication..." (Julien : "eclate au sol"). La regle tient
+       maintenant dans l'autocollant de l'apercu, dans le bloc "A ecrire
+       dans ta story", et dans UNE ligne sous le bouton copier ;
+     · trois boutons rouges. Il reste UN bouton plein (Ouvrir Instagram),
+       qui passe la main a "J'ai poste" au retour de l'appli (.st-revenu).
 
-  // Avertissement bien visible, tout en haut -- Julien : certains ne
-  // taguent pas le club, ne recoivent donc aucun point, et s'en
-  // etonnent/enervent alors que c'est la regle. Doit se voir avant
-  // meme de choisir un format, pas seulement dans l'etape 2 en bas.
-  function texteMention(handle) {
-    var cible = handle ? '<span class="ps-club">@' + handle + "</span>" : nomClub ? '<span class="ps-club">' + nomClub + "</span>" : "du club";
-    return "Sans mention " + (handle || nomClub ? "de " + cible : cible) + ", tu ne reçois aucun point.";
+     ⚠️ LA MENTION #publicite RESTE COPIEE AVEC LE TAG. Poster contre des
+     points est une publication promotionnelle (voir MENTION_PUB) : le
+     bouton copier l'emporte avec le pseudo, sans rien a retenir. */
+
+  // L'etablissement : celui de la fiche d'ou l'on vient, sinon celui de la
+  // boutique (le plus proche, ou le dernier choisi a la main).
+  var cleChoisie = null;
+  Object.keys(CLUBS).forEach(function (k) { if (nomClub && CLUBS[k].nom === nomClub) cleChoisie = k; });
+  if (!cleChoisie) cleChoisie = CLUBS[CLUB_BOUTIQUE] ? CLUB_BOUTIQUE : Object.keys(CLUBS)[0];
+
+  // Le compte a mentionner. CLUBS[..].ig d'abord (le vrai compte, releve a
+  // la main) ; la table clubs le remplace quand elle le connait.
+  var handleActuel = (CLUBS[cleChoisie] && CLUBS[cleChoisie].ig) || null;
+  var kindChoisi = "story";
+
+  var ICONE_QR = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h2.6v2.6H14zM18 18h2.5v2.5H18zM14 20.5h2.6M20.5 14v2.6"/></svg>';
+  var ICONE_COPIER = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11.5" height="11.5" rx="2.2"/><path d="M5.5 15V5.8a2.3 2.3 0 0 1 2.3-2.3H15"/></svg>';
+
+  function blocLieu(cle) {
+    var c = CLUBS[cle];
+    if (!c) return "";
+    // Le quartier seul : "Boite de nuit" en sous-titre, Julien l'a deja
+    // trouve bizarre sur la boutique (13/09/2026).
+    var sous = quartierDe(c.adr);
+    return '<span class="st-lieu-tuile' + classeFoto(c) + '" aria-hidden="true">' + imgClub(c) + "</span>" +
+      '<span class="st-lieu-txt"><strong>' + escapeHtmlSupport(c.nom) + "</strong>" +
+        (sous ? "<span>" + escapeHtmlSupport(sous) + "</span>" : "") +
+      "</span>";
   }
 
-  // Bouton "copier le pseudo" -- Julien : afficher le hashtag exact du
-  // club a mentionner, copiable, pour eviter les fautes de frappe quand
-  // on le retape a la main dans Instagram/TikTok. Vide (rien affiche)
-  // tant que le handle n'est pas connu -- pas de faux pseudo invente.
-  function blocHandleCopiable(handle) {
-    if (!handle) return "";
-    return '<button type="button" class="ps-handle-copy" data-handle="' + escapeHtmlSupport(handle) + '">' +
-      '<span>@' + escapeHtmlSupport(handle) + " " + MENTION_PUB + "</span>" +
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>' +
-    "</button>";
+  // Le tag a ecrire, et de quoi le copier d'un tap -- avec #publicite.
+  function blocTag(handle) {
+    var c = CLUBS[cleChoisie];
+    var cible = handle ? "@" + handle : (c ? c.nom : "l'établissement");
+    var aCopier = handle ? "@" + handle + " " + MENTION_PUB : "";
+    return '<div class="st-tag">' +
+      '<span class="st-tag-txt"><b>' + escapeHtmlSupport(cible) + "</b><span>" + MENTION_PUB + "</span></span>" +
+      (aCopier
+        ? '<button type="button" class="ps-copier" data-copie="' + escapeHtmlSupport(aCopier) + '">' + ICONE_COPIER + "<span>Copier</span></button>"
+        : "") +
+    "</div>";
   }
 
-  /* blocIdentite() a disparu : le pseudo et la capture sont demandes a
-     l'inscription (voir verifierIdentiteIg plus haut), pas ici. Les
-     reclamer au moment de declarer une story, c'etait les reclamer au
-     pire moment -- et a chaque tentative tant qu'on ne les avait pas
-     donnes. */
-
-  // Etapes reduites au titre seul (plus de sous-texte explicatif) --
-  // Julien : "trop ecrit pour ca", le detail (ce que "verifier la
-  // mention" veut dire pour une story vs un lien) n'apportait rien.
-  function blocEtapes(kindId, handle) {
-    var k = KINDS_STORY.filter(function (x) { return x.id === kindId; })[0] || KINDS_STORY[0];
-    var cible = handle ? "@" + handle : nomClub || "le compte du club";
-    var etapes = [
-      { n: "1", t: "Ouvre " + (kindId === "tiktok" ? "TikTok" : "Instagram") },
-      { n: "2", t: "Poste " + k.verbe + " en mentionnant " + cible },
-      // Troisieme etape demandee par Julien. Elle n'est pas decorative :
-      // les points ne sont pas disponibles tout de suite (unlocks_at,
-      // points_lock_hours du club), et une story supprimee dans la nuit
-      // n'est jamais payee. 24 h, comme la duree de vie d'une story :
-      // c'est ce que le clubbeur comprend sans explication. La
-      // VERIFICATION, elle, passe a 20 h -- avant l'echeance, tant que
-      // la story est encore interrogeable. Le dire ici evite le message
-      // "j'ai poste,
-      // je n'ai rien recu" une heure plus tard.
-      { n: "3", t: "Tu reçois tes points 24 h après" },
-    ];
-    return (
-      '<ol class="ps-steps">' +
-      etapes.map(function (e) {
-        return '<li class="ps-step"><span class="ps-step-n">' + e.n + "</span>" +
-          '<span class="ps-step-txt"><b>' + e.t + "</b></span></li>";
-      }).join("") +
-      "</ol>"
-    );
-  }
-
-  // Bouton "Ouvrir l'appli" -- etape 3 seulement (voir le message de
-  // Julien plus haut). Separe du choix de format : taper Story/Reel/
-  // TikTok ne fait plus que selectionner, ce bouton est la seule action
-  // qui bascule reellement vers Instagram/TikTok.
   function blocOuvrir(kindId) {
     var k = KINDS_STORY.filter(function (x) { return x.id === kindId; })[0] || KINDS_STORY[0];
-    return '<button type="button" class="sheet-cta" id="story-ouvrir-app" ' +
-      'data-schema="' + k.schema + '" data-secours="' + k.secours + '" ' +
-      'style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:16px">' +
-      '<span class="reseau-ico ' + k.classe + '" style="width:24px;height:24px;border-radius:8px"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
+    return '<button type="button" class="st-cta" id="story-ouvrir-app" ' +
+      'data-schema="' + k.schema + '" data-secours="' + k.secours + '">' +
+      '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
       "Ouvrir " + (kindId === "tiktok" ? "TikTok" : "Instagram") +
     "</button>";
   }
 
   function blocChamp(kindId) {
-    // Une story Instagram n'a pas d'URL publique (contrairement a un Reel
-    // ou un TikTok) : la lui demander bloquait bêtement quiconque postait
-    // une vraie story, pour un lien qui n'existe pas. Meme logique que la
-    // vraie PWA clubbeur -- voir post-story.js, "on ne demande le lien
-    // que pour les Reels et TikToks".
-    if (kindId === "story") {
-      // La phrase d'explication a ete retiree (Julien) : une story sans
-      // champ de lien se comprend d'elle-meme. Le champ reste, masque,
-      // parce que le formulaire lit toujours #story-url a l'envoi.
-      return '<input class="va-input" id="story-url" type="url" hidden />';
-    }
-    return '<label class="rg-label" style="font-size: calc(13 * var(--u))" for="story-url">Lien de ta publication</label>' +
+    // Une story Instagram n'a pas d'URL publique : on ne demande le lien
+    // que pour un Reel ou un TikTok (meme regle que post-story.js). Le
+    // champ reste dans le DOM, masque, parce que l'envoi le lit toujours.
+    if (kindId === "story") return '<input class="va-input" id="story-url" type="url" hidden />';
+    return '<label class="st-champ">' +
+      "<span>Lien de ton " + (kindId === "tiktok" ? "TikTok" : "Reel") + "</span>" +
       '<input class="va-input" id="story-url" type="url" placeholder="' +
-      (kindId === "tiktok" ? "https://tiktok.com/@toi/video/…" : "https://instagram.com/reel/…") +
-      '" required />' +
-      // Le badge du bouton TikTok montre le forfait fixe (+60) mais pas
-      // le bonus aux vues, variable -- sans cette ligne, on sous-vend le
-      // format le plus genereux de la liste.
-      // "comptees par TikTok, en plus du forfait" empilait trois
-      // precisions pour une seule idee. Le +60 est affiche juste au-
-      // dessus : un "+ 7 pts par 100 vues" se lit deja comme un ajout.
-      (kindId === "tiktok" ? '<p class="desc ps-hint">+ 7 pts par 100 vues.</p>' : "");
+        (kindId === "tiktok" ? "https://tiktok.com/@toi/video/…" : "https://instagram.com/reel/…") + '" required />' +
+      "</label>" +
+      // Le forfait est sur la tuile ; le bonus aux vues, variable, non.
+      (kindId === "tiktok" ? '<p class="st-note">Plus 7 points par tranche de 100 vues comptées par TikTok.</p>' : "");
   }
 
-  // Tout sur une seule page, rien de cache derriere une etape -- Julien
-  // a rejete la version en etapes ("ca c'est pour les handicapes, ca ne
-  // marche pas") : il veut retrouver le formulaire d'avant, ameliore,
-  // mais sans rien a deplier ni a debloquer au fil de la saisie.
+  var options = Object.keys(CLUBS).map(function (k) {
+    return '<option value="' + k + '"' + (k === cleChoisie ? " selected" : "") + ">" + escapeHtmlSupport(CLUBS[k].nom) + "</option>";
+  }).join("");
+
   var html =
-    '<div class="sheet-ok">' +
-      '<form id="story-form" style="display:grid;gap:14px;text-align:left">' +
-        // GROUPE 1 -- Club (seulement si pas deja connu depuis une fiche).
-        // Savoir QUI on va taguer avant l'avertissement a ce sujet.
-        (nomClub
-          ? ""
-          : '<div class="ps-groupe">' +
-              '<span class="ps-groupe-titre">Club</span>' +
-              '<button type="button" class="sheet-cta" id="story-scan-btn">' +
-                '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>' +
-                "Scanner le QR du club" +
-              "</button>" +
-              '<div id="story-scan-zone" hidden style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1">' +
-                '<video id="story-scan-video" playsinline muted style="width:100%;height:100%;object-fit:cover;display:block"></video>' +
-                '<p class="desc" id="story-scan-msg" style="position:absolute;left:0;right:0;bottom:0;margin:0;padding:8px;background:rgba(0,0,0,.65);color:#fff;text-align:center;font-size: calc(12 * var(--u))">Vise le QR affiché dans le club…</p>' +
-              "</div>" +
-              '<label class="rg-label" style="font-size: calc(13 * var(--u))" for="story-club">Ou choisis-le dans la liste</label>' +
-              '<select class="va-input" id="story-club" required><option value="">Choisis un club…</option></select>' +
-            "</div>") +
-        // GROUPE 2 -- Format : l'avertissement, le pseudo copiable et les
-        // 3 boutons Story/Reel/TikTok forment une seule decision ("quoi
-        // poster, a qui le dire"), rangee dans une seule carte au lieu de
-        // 3 blocs empiles separement.
-        '<div class="ps-groupe">' +
-          '<span class="ps-groupe-titre">Format</span>' +
-          '<div class="ps-warn">' +
-            '<span class="ps-warn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 16.5h.01M10.6 3.7 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.4 3.7a2 2 0 0 0-3.4 0z"/></svg></span>' +
-            '<span class="ps-warn-txt"><strong>Mentionne le club</strong><span id="story-mention">' + texteMention(null) + "</span></span>" +
-          "</div>" +
-          '<div id="story-handle-chip">' + blocHandleCopiable(null) + "</div>" +
-          '<div class="reseaux-grille">' +
+    '<form id="story-form" class="st-form" novalidate>' +
+      '<section class="st-bloc">' +
+        '<h2 class="st-bloc-titre">Où tu es</h2>' +
+        // Le select natif est pose, invisible, sur toute la ligne : un tap
+        // n'importe ou ouvre la roue du telephone, "Changer" le dit.
+        '<div class="st-lieu">' +
+          '<span class="st-lieu-corps" id="st-lieu">' + blocLieu(cleChoisie) + "</span>" +
+          '<span class="st-lieu-changer">Changer</span>' +
+          '<select class="st-lieu-select" id="story-club" aria-label="Choisir l’établissement">' + options + "</select>" +
+        "</div>" +
+        '<button type="button" class="st-scan" id="story-scan-btn">' + ICONE_QR +
+          "<span>Scanner le QR sur place</span>" +
+          '<span class="st-scan-pts">+15</span>' +
+        "</button>" +
+        '<div class="st-scan-zone" id="story-scan-zone" hidden>' +
+          '<video id="story-scan-video" playsinline muted></video>' +
+          '<p id="story-scan-msg">Vise le QR affiché sur place…</p>' +
+        "</div>" +
+      "</section>" +
+
+      '<section class="st-bloc">' +
+        '<h2 class="st-bloc-titre">Format</h2>' +
+        '<div class="st-formats">' +
           KINDS_STORY.map(function (k, i) {
-            // Le gain vit directement sur le bouton (badge) plutot que dans
-            // un bloc separe en dessous -- plus compact, et l'info est
-            // exactement ou on la cherche : sur le choix lui-meme, pas a
-            // correler avec un texte a part.
             return '<button type="button" class="reseau-bouton' + (i === 0 ? " actif" : "") + '" id="sh-story-' + k.id + '" ' +
-              'data-kind="' + k.id + '" data-schema="' + k.schema + '" data-secours="' + k.secours + '">' +
+              'data-kind="' + k.id + '" aria-pressed="' + (i === 0) + '">' +
               '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
-              "<span>" + k.label + "</span>" +
+              '<span class="st-format-nom">' + k.label + "</span>" +
               '<span class="reseau-pts">' + BAREME_STORY[k.id].pts + "</span>" +
             "</button>";
           }).join("") +
-          "</div>" +
         "</div>" +
-        // GROUPE 3 -- Publier : ouvrir l'appli, la marche a suivre, le lien
-        // et le bouton d'envoi, rangee dans une seule carte plutot que 4
-        // blocs separes. "Ouvrir Instagram/TikTok" reste une action a
-        // part, separee du choix du format -- avant, chaque tap sur
-        // Story/Reel/TikTok relancait direct l'appli, meme en comparant
-        // les options, signale par Julien ("ca m'envoie sur Instagram,
-        // c'est chiant"). Choisir un format ne fait plus que le
-        // selectionner ; ce bouton est la seule action qui bascule
-        // reellement vers l'appli.
-        '<div class="ps-groupe">' +
-          '<span class="ps-groupe-titre">Publication</span>' +
-          '<div id="story-ouvrir">' + blocOuvrir("story") + "</div>" +
-          '<div id="story-etapes">' + blocEtapes("story", null) + "</div>" +
-          '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
-          '<p class="desc" id="story-msg" style="display:none;margin:0"></p>' +
-          // "Envoyer" n'envoyait rien : la story est deja sur Instagram
-          // quand on arrive ici. Le bouton DECLARE la publication -- la
-          // page s'appelle "Poster ma story" et l'etape 2 dit "Poste une
-          // story", le bouton final doit parler la meme langue.
-          '<button type="submit" class="sheet-cta" id="story-envoyer">J&rsquo;ai posté</button>' +
-          /* La regle du jeu, ecrite la ou on la joue. Julien, 06/09/2026 :
-             "il faut qu'on mette maximum une story par soiree, tu
-             l'ecris tout en dessous de quand ils veulent poster".
+      "</section>" +
 
-             Une regle qu'on ne decouvre qu'au refus est une regle
-             injuste : quelqu'un qui poste trois stories en pensant
-             tripler ses points a perdu sa soiree. Elle se lit AVANT le
-             geste, pas apres.
+      '<section class="st-bloc">' +
+        '<h2 class="st-bloc-titre">À écrire dans ta story</h2>' +
+        '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
+        '<p class="st-note" id="story-mention">Sans la mention, pas de points. #publicite est obligatoire quand une story rapporte des points.</p>' +
+      "</section>" +
 
-             Le verrou existe depuis la migration 0042 (base clubbeur) :
-             submit_story() leve `deja_ce_soir`, et story_du_soir() permet
-             de le savoir AVANT de remplir le formulaire -- voir
-             verifierStoryDuSoir() plus bas. Une soiree va de 6 h a 6 h,
-             heure de Bruxelles : une story de 2 h du matin appartient a
-             la veille. */
-          /* ⚠️ MENTION OBLIGATOIRE, PAS UN CONSEIL. Poster contre une
-             contrepartie -- des points echangeables contre une boisson en
-             est une -- releve de l'influence commerciale (loi du 9 juin
-             2023). Sans mention visible, la publication est une publicite
-             dissimulee : pratique commerciale trompeuse au sens de
-             l'art. L121-4 11° du code de la consommation, et le club comme
-             nous sommes exposes. Instagram et TikTok ont tous deux un
-             reglage natif pour ca, d'ou le renvoi au reglage plutot qu'a
-             un hashtag colle a la main. */
-          '<p class="ps-regle" id="ps-regle">Une seule story par soirée.</p>' +
-          '<p class="ps-mention" id="ps-mention">Le bouton copie <strong>#publicite</strong> avec le tag\u00a0: ' +
-          'garde-le dans ta publication. Une story qui rapporte des points est une publication ' +
-          'sponsorisée, et la loi demande de le dire.</p>' +
-        "</div>" +
-      "</form>" +
-    "</div>";
-  // Ouvre la vraie page Story plutot que la feuille du bas -- si on
-  // arrive ici depuis le bouton "Poster ma story" d'une fiche club, la
-  // feuille (fiche club) etait deja ouverte : on la ferme d'abord pour
-  // ne pas laisser les deux superposees.
+      '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
+      '<div class="st-actions">' +
+        '<div id="story-ouvrir">' + blocOuvrir("story") + "</div>" +
+        '<button type="submit" class="st-cta-second" id="story-envoyer">J’ai posté</button>' +
+        '<p class="st-msg" id="story-msg" hidden></p>' +
+        /* La regle du soir (migration 0042) et le delai des points, AVANT le
+           geste. verifierStoryDuSoir() corrige la ligne si la soiree est
+           deja prise. */
+        '<p class="ps-regle" id="ps-regle">Une story par soirée. Points crédités 24 h après.</p>' +
+      "</div>" +
+    "</form>";
+
+  // Ouvre la vraie page Story plutot que la feuille du bas : depuis une
+  // fiche club, la feuille etait ouverte, on la ferme d'abord.
   fermerFeuille();
   fermerAmis();
   fermerProfil();
   masquerCarteEtBoutique();
-  // masquerCarteEtBoutique() eteint les VUES carte/boutique mais pas
-  // leurs onglets (TAB_CARTE/TAB_BOUTIQUE) -- sans ce reset, un des
-  // deux restait allume en rouge en plus de Story, signale par Julien
-  // ("les deux restent illumines"). fermerAmis()/fermerProfil()
-  // s'occupent deja de leurs propres onglets, il ne manquait que
-  // celui-ci.
+  // masquerCarteEtBoutique() eteint les VUES carte/boutique mais pas leurs
+  // onglets : sans ce reset, un des deux restait allume avec Story.
   TAB_CARTE.classList.remove("on");
   TAB_CARTE.setAttribute("aria-current", "false");
   TAB_BOUTIQUE.classList.remove("on");
   TAB_BOUTIQUE.setAttribute("aria-current", "false");
-  // Story en blanc, comme la Boutique (demande de Julien) : on reutilise
-  // le theme clair .screen.boutique-pro plutot que d'en creer un
-  // troisieme. masquerCarteEtBoutique() vient de le retirer -- on le
-  // repose ici, apres coup, sinon Amis/Profil (qui appellent la meme
-  // fonction) heriteraient aussi du blanc.
+  // Theme clair de la boutique, repose apres masquerCarteEtBoutique().
   SCREEN.classList.add("boutique-pro");
   $("#story-page-corps").innerHTML = html;
   TAB_STORY.classList.add("on");
   TAB_STORY.setAttribute("aria-current", "page");
   VUE_STORY.hidden = false;
+  VUE_STORY.scrollTop = 0;
   history.replaceState(null, "", "#story");
-  $("#sh-story-story").focus();
 
-  // La regle du soir se lit AVANT de remplir : story_du_soir() dit si la
-  // soiree est deja prise. Pas d'await -- la page s'affiche tout de
-  // suite, la ligne se corrige au retour du serveur.
+  var hero = $("#st-hero-montant");
+  if (hero) hero.textContent = BAREME_STORY.story.pts;
+  majCagnotte(false);
   verifierStoryDuSoir();
 
-
-  // Met a jour la mention ("Tague @lehandle") et l'etape 2 des qu'on
-  // connait le vrai compte Instagram du club (clubs.ig_handle) -- avant,
-  // le nom du club suffisait a l'accueil, mais pas a dire QUOI taguer.
   function majHandle(handle) {
     handleActuel = handle || null;
-    var mentionEl = $("#story-mention");
-    if (mentionEl) mentionEl.innerHTML = texteMention(handleActuel);
-    var etapesEl = $("#story-etapes");
-    if (etapesEl) etapesEl.innerHTML = blocEtapes(kindChoisi, handleActuel);
-    var chipEl = $("#story-handle-chip");
-    if (chipEl) chipEl.innerHTML = blocHandleCopiable(handleActuel);
+    var chip = $("#story-handle-chip");
+    if (chip) chip.innerHTML = blocTag(handleActuel);
+    var autocollant = $("#st-apercu-mention");
+    if (autocollant) autocollant.textContent = handleActuel ? "@" + handleActuel : CLUBS[cleChoisie].nom;
   }
+  majHandle(handleActuel);
 
-  // Depuis une fiche club (nomClub connu) : on tente de retrouver son
-  // vrai compte Instagram pour dire QUOI taguer, pas juste "le club".
-  // Best-effort -- le nom affiche sur la carte (maquette) ne correspond
-  // pas toujours a une ligne reelle de la table clubs.
-  if (nomClub) {
-    supabaseClubbeur.from("clubs").select("ig_handle").eq("name", nomClub).maybeSingle()
+  // Le vrai compte Instagram quand la table clubs le connait. Best-effort :
+  // le nom de la maquette n'a pas toujours sa ligne en base.
+  function chercherHandle() {
+    var nom = CLUBS[cleChoisie] && CLUBS[cleChoisie].nom;
+    if (!nom) return;
+    supabaseClubbeur.from("clubs").select("ig_handle").eq("name", nom).maybeSingle()
       .then(function (res) { if (res.data && res.data.ig_handle) majHandle(res.data.ig_handle); })
       .catch(function () {});
   }
+  chercherHandle();
 
-  // Depuis l'onglet Story (pas de club dans le contexte, contrairement
-  // a un tap sur une fiche club) : liste des vrais clubs de la base,
-  // pour ne jamais soumettre a l'aveugle un nom invente.
-  if (!nomClub) {
-    /* La liste vient de CLUBS -- les deux vrais clubs, les memes que
-       sur la carte et dans la boutique. Elle etait lue dans la table
-       clubs, qui ne contient que "Mirage" : on proposait donc de poster
-       pour un club de demo qui n'existe nulle part ailleurs dans
-       l'appli. Le handle Instagram a taguer est ensuite complete depuis
-       la base quand le club y existe pour de vrai. */
-    var select = $("#story-club");
-    if (select) {
-      Object.keys(CLUBS).forEach(function (k) {
-        var option = document.createElement("option");
-        option.value = CLUBS[k].nom;
-        option.textContent = CLUBS[k].nom;
-        select.appendChild(option);
-      });
-      var handleParNom = {};
-      supabaseClubbeur.from("clubs").select("name, ig_handle").then(function (res) {
-        (res.data || []).forEach(function (c) { handleParNom[c.name] = c.ig_handle; });
-        if (select.value) majHandle(handleParNom[select.value]);
-      });
-      select.addEventListener("change", function () {
-        majHandle(handleParNom[select.value]);
-      });
-    }
+  $("#story-club").addEventListener("change", function () {
+    cleChoisie = this.value;
+    $("#st-lieu").innerHTML = blocLieu(cleChoisie);
+    majHandle(CLUBS[cleChoisie].ig || null);
+    chercherHandle();
+  });
 
-    activerScanClub();
-  }
+  activerScanClub();
 
-  // Scan de QR reel via la camera (jsQR), pas de simulation : le QR
-  // affiche dans le club encode son "slug" (ex: mirage-brussels, voir
-  // clubs.slug) -- une fois lu, on retrouve le vrai nom du club en
-  // base et on saute directement a l'etape suivante.
+  // Scan de QR reel via la camera (jsQR) : le QR affiche sur place encode
+  // le slug de l'etablissement. checkin_scan() le resout ET credite le
+  // bonus de scan, une fois par soiree (migration 0044).
   function activerScanClub() {
     var btn = $("#story-scan-btn"), zone = $("#story-scan-zone"),
         video = $("#story-scan-video"), msgScan = $("#story-scan-msg");
@@ -9029,14 +9356,10 @@ function ouvrirChoixReseau(nomClub) {
     var canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
 
     btn?.addEventListener("click", async function () {
-      /* LE SCANNER NATIF D'ABORD. Il ouvre la camera du systeme : mise au
-         point continue, correction de la lumiere, decodage materiel. La
-         boucle jsQR juste en dessous fait le meme travail en JavaScript sur
-         des images de <video> -- honnete en plein jour, mediocre dans un
-         club, qui est precisement l'endroit ou on s'en sert.
-
-         `undefined` = pas de scanner natif ici, on prend le chemin web.
-         `null` = le clubbeur a ferme le scanner, on ne fait rien de plus. */
+      /* LE SCANNER NATIF D'ABORD : mise au point continue, correction de la
+         lumiere, decodage materiel -- ce qui compte dans la penombre d'un
+         club. `undefined` = pas de scanner natif, on prend le chemin web ;
+         `null` = le scanner a ete ferme. */
       var luNatif = await natif.scannerQr();
       if (luNatif !== undefined) {
         if (luNatif) { natif.vibrer("succes"); traiterCode(luNatif); }
@@ -9075,124 +9398,104 @@ function ouvrirChoixReseau(nomClub) {
         var u = new URL(texte);
         slug = u.searchParams.get("club") || u.pathname.split("/").filter(Boolean).pop() || texte;
       } catch (e) {}
-      msgScan.textContent = "Vérification...";
-      // checkin_scan resout le club ET credite le bonus de scan (15
-      // pts, une fois par club toutes les 12h -- anti-abus cote
-      // fonction) en un seul aller-retour.
+      msgScan.textContent = "Vérification…";
       var res = await supabaseClubbeur.rpc("checkin_scan", { p_club_slug: slug.trim().toLowerCase() });
       arreterScan();
       var ligne = res.data && res.data[0];
       if (res.error || !ligne) {
         zone.hidden = true;
         btn.hidden = false;
-        var msg = $("#story-msg");
-        msg.style.display = "block";
-        msg.style.color = "var(--erreur-texte, var(--accent))";
-        msg.textContent = "QR non reconnu, choisis ton club dans la liste.";
+        direStory("QR non reconnu. Vérifie l'établissement au-dessus.", true);
         return;
       }
-      // Scanner le QR n'est pas juste une facon de remplir le champ
-      // "Club" : ca t'emmene direct dans la boutique de CE club, comme
-      // un vrai check-in (demande de Julien -- pas de redirection vers
-      // une page generique, direct dans l'appli). La boutique elle-meme
-      // reste pour l'instant la meme pour tous les clubs (maquette a
-      // donnees figees) -- un vrai catalogue par club est un chantier a
-      // part.
+      // Un scan est un check-in : direction la boutique de l'etablissement.
       fermerFeuille();
       activerVue("boutique");
       var session = (await supabaseClubbeur.auth.getSession()).data.session;
       if (session) chargerSoldeReel(session.user.id);
       pasEncore(ligne.deja_recupere
-        ? "Bienvenue à " + ligne.club_nom + " ! Bonus déjà récupéré ce soir."
-        : "+" + ligne.points + " pts pour ton arrivée à " + ligne.club_nom + " !");
+        ? "Bienvenue " + auClub(ligne.club_nom) + " ! Bonus déjà récupéré ce soir."
+        : "+" + ligne.points + " points pour ton arrivée " + auClub(ligne.club_nom) + " !");
     }
 
     function arreterScan() {
       cancelAnimationFrame(animation);
       if (flux) { flux.getTracks().forEach(function (t) { t.stop(); }); flux = null; }
     }
-    // Si on quitte la page Story en plein scan (autre onglet), la
-    // camera doit s'eteindre tout de suite -- jamais la laisser tourner
-    // en arriere-plan. fermerStory() appelle arreterScanActif() si elle
-    // est definie (voir plus haut).
+    // Quitter la page en plein scan eteint la camera (voir fermerStory).
     arreterScanActif = arreterScan;
   }
 
-  // Aucun format pre-choisi (voir template) : le clubbeur doit taper sur
-  // Story/Reel/TikTok pour avancer, ce qui revele l'etape 3 dans la
-  // foulee -- avant, "Story" etait deja marque actif au chargement, donc
-  // l'etape 3 aurait ete visible sans aucune action explicite.
-  var kindChoisi = "story";
   var boutonsReseau = $("#story-page-corps").querySelectorAll(".reseau-bouton");
   boutonsReseau.forEach(function (b) {
     b.addEventListener("click", function () {
-      boutonsReseau.forEach(function (x) { x.classList.toggle("actif", x === b); });
+      boutonsReseau.forEach(function (x) {
+        x.classList.toggle("actif", x === b);
+        x.setAttribute("aria-pressed", String(x === b));
+      });
       kindChoisi = b.dataset.kind;
-      // Marche a suivre, bouton "Ouvrir l'appli" et champ lien dependent
-      // du format choisi (seule une story n'a pas d'URL publique -- voir
-      // blocChamp()). Le gain, lui, est fixe sur chaque bouton (badge),
-      // rien a mettre a jour. Choisir un format ne fait QUE selectionner
-      // -- ouvrir Instagram/TikTok est une action separee, voir le
-      // listener sur #story-ouvrir-app plus haut.
+      // Choisir un format ne fait QUE selectionner : ouvrir l'appli reste
+      // l'action separee du bouton du bas.
       $("#story-ouvrir").innerHTML = blocOuvrir(kindChoisi);
-      $("#story-etapes").innerHTML = blocEtapes(kindChoisi, handleActuel);
       $("#story-champ-url").innerHTML = blocChamp(kindChoisi);
     });
   });
 
+  function direStory(texte, erreur) {
+    var msg = $("#story-msg");
+    if (!msg) return;
+    msg.hidden = false;
+    msg.classList.toggle("err", !!erreur);
+    msg.textContent = texte;
+  }
+
   $("#story-form").addEventListener("submit", async function (e) {
     e.preventDefault();
-    var champ = $("#story-url"), bouton = $("#story-envoyer"), msg = $("#story-msg");
-    var champClub = $("#story-club");
-    function dire(texte, erreur) {
-      msg.style.display = "block";
-      msg.style.color = erreur ? "var(--erreur-texte, var(--accent))" : "var(--succes-texte, #57d98a)";
-      msg.textContent = texte;
-    }
-    if (!kindChoisi) return dire("Choisis d'abord Story, Reel ou TikTok.", true);
-    // Une story n'a pas de lien public (voir blocChamp()) : ne pas
-    // exiger ce que le format ne permet pas de fournir.
+    var champ = $("#story-url"), bouton = $("#story-envoyer");
     var url = champ.value.trim();
-    var club = nomClub || (champClub && champClub.value);
-    if (kindChoisi !== "story" && !url) return dire("Colle le lien de ta publication.", true);
-    if (!club) return dire("Choisis d'abord un club.", true);
+    if (kindChoisi !== "story" && !url) { champ.focus(); return direStory("Colle le lien de ta publication.", true); }
 
     bouton.disabled = true;
     bouton.textContent = "Envoi…";
 
-    // submit_story est la VRAIE fonction deja construite en base (pas
-    // notre story_submit maison, redondante) : elle cree la ligne en
-    // attente de verification par le club, meme bareme que le reste du
-    // systeme (review_story_core, credit_story). Elle veut l'id du
-    // club, pas son nom -- petite resolution avant l'appel.
-    var clubRow = await supabaseClubbeur.from("clubs").select("id").eq("name", club).maybeSingle();
-    if (!clubRow.data) {
-      bouton.disabled = false;
-      bouton.textContent = "J'ai posté";
-      return dire("Ce club n'est pas encore répertorié.", true);
+    /* submit_story() veut l'id de l'etablissement. Meme resolution que la
+       boutique (idClubBoutique) : tant que la table clubs ne connait pas
+       le nom affiche, la ligne de demonstration tient sa place -- c'est
+       elle qui porte deja le catalogue affiche pour cet etablissement. */
+    var nom = CLUBS[cleChoisie].nom;
+    var idClub = IDS_CLUBS[cleChoisie];
+    if (!idClub) {
+      var ligne = await supabaseClubbeur.from("clubs").select("id").eq("name", nom).maybeSingle();
+      idClub = (ligne.data && ligne.data.id) || CLUB_ID_DEMO;
     }
 
     var res = await supabaseClubbeur.rpc("submit_story", {
-      p_club: clubRow.data.id, p_kind: kindChoisi, p_views: 0, p_proof: null, p_url: url,
+      p_club: idClub, p_kind: kindChoisi, p_views: 0, p_proof: null, p_url: url,
     });
     bouton.disabled = false;
-    bouton.textContent = "J'ai posté";
+    bouton.textContent = "J’ai posté";
 
     if (res.error) {
       var messages = {
         invalid_kind: "Ça n'a pas marché. Réessaie dans un instant.",
-        url_required: "Colle le lien de ta story ou vidéo.",
-        already_pending: "Tu as déjà une story en attente pour ce club, patiente un peu.",
-        // Leve par submit_story() depuis la migration 0042. Le message
-        // dit QUAND ca redevient possible, sinon "non" tout seul ressemble
-        // a une panne.
+        url_required: "Colle le lien de ta publication.",
+        already_pending: "Une story est déjà en attente ici. Elle est en cours de vérification.",
+        // Leve par submit_story() depuis la migration 0042.
         deja_ce_soir: "Tu as déjà posté ta story ce soir. La prochaine compte demain.",
         not_authenticated: "Ta session a expiré, reconnecte-toi.",
       };
-      return dire(messages[res.error.message] || "Ça n'a pas marché. Réessaie dans un instant.", true);
+      return direStory(messages[res.error.message] || "Ça n'a pas marché. Réessaie dans un instant.", true);
     }
     champ.value = "";
-    dire("Envoyé ! Le club vérifie ta publication, tes points arrivent ensuite.", false);
+    $("#story-form").classList.remove("st-revenu");
+    direStory("Envoyé. " + CLUBS[cleChoisie].nom + " vérifie ta story, tes points arrivent dans les 24 h.", false);
+    verifierStoryDuSoir();
+    /* LE MEILLEUR MOMENT POUR PROPOSER LES NOTIFICATIONS. Julien veut
+       pousser a les activer ; la personne attend maintenant une nouvelle
+       precise ("ma story est-elle validee ?"), la notification est la
+       reponse. proposerNotifications() ne se montre que si c'est encore
+       possible (permission jamais demandee, pas reportee). */
+    setTimeout(proposerNotifications, 1400);
   });
 }
 
@@ -9213,7 +9516,7 @@ async function verifierStoryDuSoir() {
     ligne.textContent = "Story déjà postée ce soir. La prochaine compte demain.";
     ligne.classList.add("faite");
   } else {
-    ligne.textContent = "Une seule story par soirée.";
+    ligne.textContent = "Une story par soirée. Points crédités 24 h après.";
     ligne.classList.remove("faite");
   }
 }
@@ -9317,7 +9620,12 @@ function majTailleMarqueurs() {
   // retrecir autant.
   // Plancher remonte encore (0.55 -> 0.70) : Julien ne voyait plus les
   // clubs en dezoomant ("on ne voit plus loin").
-  var s = Math.max(0.70, Math.pow(t, 1.6));
+  // ⚠️ PLANCHER A 0.85, ET PLUS AUCUN FONDU. Julien, 13/09/2026 : "juste
+  // mettre les etablissements, qu'on les voie meme depuis le ciel, meme
+  // quand c'est totalement dezoome". Le pin est desormais le SEUL objet de
+  // la carte (le verre "Toi" est parti) : il n'a plus rien a ne pas
+  // recouvrir, il doit juste se voir.
+  var s = Math.max(0.85, Math.pow(t, 1.6));
   // L'ecart ne doit JAMAIS deplacer un badge a l'echelle rue (chercher
   // un club precis exige une position exacte) : il ne s'applique qu'en
   // dessous d'un zoom moyen (t < .4), et disparait completement au-dela
@@ -9330,18 +9638,12 @@ function majTailleMarqueurs() {
   // les clubs restent visibles pratiquement partout (minZoom = 0.6), et
   // le fondu ne sert plus qu'a eviter la tache indistincte quand on est
   // vraiment a l'echelle du globe.
-  var fonduClubs = Math.max(0, Math.min(1, (z - 0.9) / 0.9));
+  // Le fondu (0.9 -> 1.8) est retire : vu de l'espace, le pin reste
+  // plein et touchable. Seule la face cachee du globe l'efface
+  // (opacityWhenCovered: 0, plus bas).
   marqueursEchelle.forEach(function (m) {
     var dx = (m.dx * portionEcart).toFixed(1), dy = (m.dy * portionEcart).toFixed(1);
     m.el.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + s.toFixed(3) + ")";
-    // Le marqueur "moi" n'est pas concerne : il est seul, il ne se
-    // superpose a rien, et c'est le seul repere utile vu de loin.
-    if (m.el.classList.contains("club-pin")) {
-      m.el.style.opacity = fonduClubs.toFixed(2);
-      // Invisible ne doit pas rester cliquable : sinon on ouvre une
-      // fiche club en tapant le vide au milieu de l'ocean.
-      m.el.style.pointerEvents = fonduClubs < 0.15 ? "none" : "auto";
-    }
   });
 }
 
@@ -9402,29 +9704,12 @@ map.on("load", function () {
      Sans ca, le club pouvait se cadrer juste dessous. */
   map.fitBounds(bounds, { padding: { top: 80, left: 64, right: 64, bottom: 120 }, pitch: 0, bearing: 0, maxZoom: 15, duration: 0 });
 
-  // Point "moi" -- position fixe pour cette maquette (pas de vraie
-  // geolocalisation branchee), juste pour garder un repere visuel de
-  // "je suis ici" pendant qu'on se deplace sur la carte -- demande de
-  // Julien apres le retrait des amis de la carte ("un verre qui est
-  // nous", pas un point generique). Le verre seul ne disait pas a QUI
-  // il appartenait : la legende en haut a gauche de la carte le dit
-  // (voir .carte-legende plus haut).
-  var porteurMoi = document.createElement("div");
-  porteurMoi.className = "marker-porteur";
-  var elMoi = document.createElement("div");
-  elMoi.className = "moi-marker";
-  // Silhouette par defaut : la maquette s'ouvre sans session, et un
-  // marqueur vide serait pire que pas de pastille du tout.
-  elMoi.innerHTML = pint(1);
-  elMoi.setAttribute("role", "img");
-  elMoi.setAttribute("aria-label", "Ma position");
-
-  porteurMoi.appendChild(elMoi);
-  new maplibregl.Marker({ element: porteurMoi, anchor: "bottom", opacityWhenCovered: 0 })
-    .setLngLat(MOI)
-    .addTo(map);
-  marqueursEchelle.push({ el: elMoi, dx: 0, dy: 0 });
-
+  /* ⚠️ PLUS DE VERRE "TOI". Julien, 13/09/2026 : "on peut retirer la biere
+     avec Toi et juste mettre les etablissements". Le verre etait pose sur
+     une position FIXE (MOI, pas de vraie geolocalisation) : vu de loin il
+     recouvrait le pin du Mirano, et de pres il pretendait savoir ou l'on
+     est. MOI reste l'origine des distances de la boutique tant que la
+     vraie position n'est pas connue. */
 
   majTailleMarqueurs();
   map.on("zoom", majTailleMarqueurs);
@@ -9711,8 +9996,12 @@ async function ouvrirPageAmis(session) {
     ? window.location.origin + window.location.pathname + "?parrain=" + encodeURIComponent(monHandle)
     : null;
 
+  var lienEl = document.getElementById("va-lien");
+  // Le debut du lien est toujours le meme ; ce qui le distingue, c'est la
+  // fin. On garde le domaine et le code, et on coupe le milieu.
+  if (lienEl) lienEl.textContent = lien ? window.location.host + "/…?parrain=" + monHandle : "Profil en cours de création…";
   if (monHandle) {
-    handleEl.textContent = "@" + monHandle;
+    handleEl.textContent = monHandle;
     afficherAvatar(profil.avatar_url, monHandle);
     // Meme librairie que les QR de retrait en boutique (qrBon) : locale,
     // sans limite ni cle a payer.
@@ -9767,16 +10056,34 @@ async function ouvrirPageAmis(session) {
   // Action secondaire : copier sans passer par la feuille de partage
   // native, utile sur ordinateur ou quand on veut coller le lien
   // quelque part de precis.
+  // Le retour se lit SUR le bouton : "Lien copie." partait dans #va-msg,
+  // qui appartient a la liste d'amis -- masquee sur cet ecran, donc le
+  // clic semblait ne rien faire.
   var boutonCopier = $("#va-copier");
   if (boutonCopier) {
     boutonCopier.onclick = async function () {
       if (!lien) return;
       try {
         await navigator.clipboard.writeText(lien);
-        montrer("Lien copié.", "ok");
+        boutonCopier.textContent = "Copié";
+        boutonCopier.classList.add("copie");
+        vibrer("leger");
+        setTimeout(function () { boutonCopier.textContent = "Copier"; boutonCopier.classList.remove("copie"); }, 1600);
       } catch {
         window.prompt("Copie ton lien :", lien);
       }
+    };
+  }
+  var basculeQr = $("#iv-qr-bascule"), zoneQr = $("#iv-qr-zone");
+  if (basculeQr && zoneQr) {
+    zoneQr.hidden = true;
+    basculeQr.textContent = "Afficher mon QR code";
+    basculeQr.setAttribute("aria-expanded", "false");
+    basculeQr.onclick = function () {
+      var ouvrir = zoneQr.hidden;
+      zoneQr.hidden = !ouvrir;
+      basculeQr.textContent = ouvrir ? "Masquer le QR code" : "Afficher mon QR code";
+      basculeQr.setAttribute("aria-expanded", String(ouvrir));
     };
   }
 
@@ -10047,10 +10354,6 @@ TAB_PROFIL?.addEventListener("click", async function () {
 
   $("#pf-fid-solde").textContent = nb(ETAT.solde);
 
-  // Le club dont on laisse l'avis Google : le club courant de la boutique.
-  var clubAvis = CLUBS[CLUB_BOUTIQUE];
-  var nomClubAvis = $("#pf-avis-google-club");
-  if (clubAvis && nomClubAvis) nomClubAvis.textContent = clubAvis.nom;
   // Le montant du parrainage vient de la base, comme sur l'onglet Amis.
   majMontantParrainage();
 
@@ -10248,11 +10551,13 @@ function lienAvisGoogle(c) {
     ? "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(c.googlePlaceId)
     : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((c && (c.googleQuery || c.nom)) || "");
 }
-$("#pf-avis-google")?.addEventListener("click", function () {
-  var url = lienAvisGoogle(CLUBS[CLUB_BOUTIQUE] || CLUBS[Object.keys(CLUBS)[0]]);
+// Appele depuis la fiche d'un etablissement (voir blocAvisGoogle), dans
+// le geste du tap : un window.open apres un await serait bloque.
+function ouvrirAvisGoogle(c) {
+  var url = lienAvisGoogle(c);
   if (natif.estNatif) { natif.ouvrirLien(url); return; }
   window.open(url, "_blank", "noopener");
-});
+}
 
 function pasEncore(texte) {
   $("#pf-msg-bientot") || document.body.insertAdjacentHTML("beforeend",
@@ -10352,12 +10657,12 @@ function ouvrirDevenirClub(src) {
   var html =
     '<div class="sheet-ok">' +
       '<div class="rond" style="background:var(--s2);border-color:var(--line2)">' +
-        '<svg viewBox="0 0 24 24" style="stroke:var(--ink)"><path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6"/><path d="M8 19h8"/></svg>' +
+        '<svg viewBox="0 0 24 24" style="stroke:var(--ink);stroke-width:1.8"><path d="M4 10v10h16V10"/><path d="M3 10 5 4h14l2 6"/><path d="M3 10c0 1.4 1.3 2.4 3 2.4s3-1 3-2.4c0 1.4 1.3 2.4 3 2.4s3-1 3-2.4c0 1.4 1.3 2.4 3 2.4s3-1 3-2.4"/><path d="M10 20v-4.5h4V20"/></svg>' +
       "</div>" +
-      '<h3 id="sh-titre">Vous gérez un club ?</h3>' +
-      '<p class="desc">Vous souhaitez faire apparaître votre établissement sur Noctify ? Laissez-nous vos coordonnées, on vous recontacte.</p>' +
+      '<h3 id="sh-titre">Vous gérez un établissement ?</h3>' +
+      '<p class="desc">Bar, boîte de nuit ou restaurant : laissez-nous vos coordonnées, on vous recontacte.</p>' +
       '<form id="dc-form" style="text-align:left;display:grid;gap:10px;margin-top:2px">' +
-        '<input class="va-input" id="dc-club" placeholder="Nom du club" autocomplete="organization" required />' +
+        '<input class="va-input" id="dc-club" placeholder="Nom de l’établissement" autocomplete="organization" required />' +
         '<input class="va-input" id="dc-phone" type="tel" placeholder="Numéro de téléphone" autocomplete="tel" required />' +
         '<input class="va-input" id="dc-email" type="email" placeholder="Adresse email" autocomplete="email" required />' +
         '<p class="desc" id="dc-msg" style="display:none;margin:0"></p>' +
@@ -10378,8 +10683,9 @@ function ouvrirDevenirClub(src) {
     var phone = $("#dc-phone").value.trim();
     var email = $("#dc-email").value.trim().toLowerCase();
 
-    if (!club) return dire("Indique le nom de ton club.", true);
-    if (!phone) return dire("Indique un numéro pour te recontacter.", true);
+    // Le vous du titre, jusqu'au bout : c'est un gerant qui remplit.
+    if (!club) return dire("Indiquez le nom de votre établissement.", true);
+    if (!phone) return dire("Indiquez un numéro pour vous recontacter.", true);
     if (!EMAIL_RE_CLUB.test(email)) return dire("Cette adresse email n'est pas valide.", true);
 
     bouton.disabled = true;
@@ -10393,7 +10699,7 @@ function ouvrirDevenirClub(src) {
       var data = await res.json().catch(function () { return {}; });
       if (!res.ok) throw new Error(data.message || "Impossible d'enregistrer la demande.");
       form.innerHTML = "";
-      dire("Merci ! On te recontacte très vite pour la suite.", false);
+      dire("Merci ! On vous recontacte très vite.", false);
     } catch (err) {
       bouton.disabled = false;
       bouton.textContent = "Envoyer ma demande";
@@ -10513,6 +10819,9 @@ function direNotif(texte) {
 }
 
 function peindreBasculeNotif(actif) {
+  // La carte du profil se replie sur une ligne une fois allumee.
+  var carteNotif = document.getElementById("pf-notif");
+  if (carteNotif) carteNotif.classList.toggle("actives", actif);
   BOUTONS_NOTIF.forEach(function (b) {
     b.classList.toggle("on", actif);
     if (b.getAttribute("role") === "switch") b.setAttribute("aria-checked", String(actif));
@@ -10644,7 +10953,10 @@ async function synchroniserBasculeNotif() {
    ========================================================== */
 var INVITE_NOTIF = $("#notif-invite");
 var CLE_REPORT_NOTIF = "vn_notif_report";
-var REPORT_NOTIF_MS = 7 * 24 * 60 * 60 * 1000;
+// Trois jours, plus sept (13/09/2026, "pousser plus a activer") : un "Plus
+// tard" n'est pas un refus, et une semaine laissait passer trop de soirees.
+// Le vrai refus, lui, reste celui du systeme -- on ne le provoque jamais.
+var REPORT_NOTIF_MS = 3 * 24 * 60 * 60 * 1000;
 
 function inviteNotifPossible() {
   if (!INVITE_NOTIF || !pushDisponible() || !CLE_VAPID) return false;
@@ -11228,6 +11540,38 @@ function auClub(nom) {
   if (/^L'/i.test(nom)) return "à l'" + nom.slice(2);
   return "au " + nom;
 }
+// Meme heuristique, pour "la fiche Google du Mirano".
+function duClub(nom) {
+  if (/^Les /i.test(nom)) return "des " + nom.slice(4);
+  if (/^Le /i.test(nom)) return "du " + nom.slice(3);
+  if (/^La /i.test(nom)) return "de la " + nom.slice(3);
+  if (/^L'/i.test(nom)) return "de l'" + nom.slice(2);
+  return "du " + nom;
+}
+
+/* Est-on deja passe dans cet etablissement ? La preuve la plus sure qu'on
+   ait : une ligne de point_grants a son nom (scan du QR, story, cadeau du
+   jour -- tous rattaches au club ou l'on est alle). Lecture de SES propres
+   lignes, deja permise par RLS (l'historique s'en sert). Sans session ou
+   en cas d'erreur : non, et la fiche garde son titre neutre.
+   Le repli sur CLUB_ID_DEMO est celui de la boutique (idClubBoutique) :
+   tant que "Mirano" n'existe pas dans la table clubs, ses points vivent
+   sur la ligne de demonstration. */
+var VISITES = null;
+async function aVisite(cle) {
+  try {
+    if (!VISITES) {
+      var session = (await supabaseClubbeur.auth.getSession()).data.session;
+      if (!session) return false;
+      var res = await supabaseClubbeur.from("point_grants").select("club_id").eq("user_id", session.user.id);
+      if (res.error) return false;
+      VISITES = new Set((res.data || []).map(function (g) { return g.club_id; }));
+    }
+    return VISITES.has(IDS_CLUBS[cle] || CLUB_ID_DEMO);
+  } catch (e) {
+    return false;
+  }
+}
 
 /* Les deux clubs en haut de la boutique. Redessine a chaque changement
    plutot que de manipuler les classes une par une : deux boutons, le
@@ -11280,16 +11624,92 @@ function memoriserClubPrincipal(cle) {
   try { localStorage.setItem(CLE_CLUB_PRINCIPAL, cle); } catch (e) {}
 }
 
-/* L'avis sur l'appli. Le sujet et le corps sont pre-remplis : un mail
-   vide devant lequel on doit trouver quoi ecrire ne part jamais. */
-$("#pf-avis")?.addEventListener("click", function () {
-  var corps = [
-    "Ce que j'aime :", "", "Ce qui manque :", "", "Ce qui ne marche pas :", "",
-  ].join("\n");
-  window.location.href = "mailto:viralnight001@gmail.com" +
-    "?subject=" + encodeURIComponent("Mon avis sur Noctify") +
-    "&body=" + encodeURIComponent(corps);
-});
+/* ⚠️ L'AVIS SUR L'APPLI SE DONNE DANS L'APPLI. Julien, 13/09/2026 : "ils
+   ne peuvent pas donner leur avis par email, c'est bizarre [...] il faut
+   qu'il puisse laisser un avis sur mon application a moi, depuis les
+   parametres". Le mailto sortait de l'appli vers une messagerie que
+   personne n'a configuree sur son telephone.
+
+   Une note sur cinq, un mot si on veut. L'avis part dans support_messages
+   -- la messagerie d'Aide & Support que l'admin lit deja depuis l'appli
+   (support_admin_conversations) : il le voit arriver dans le fil de la
+   personne et peut lui repondre. Pas de table de plus en base pour un
+   formulaire de deux champs. La premiere ligne commence toujours par
+   "Avis sur l'appli" : c'est ce qui permet de les retrouver d'un coup
+   (where message like 'Avis sur l''appli%'). */
+var LIBELLES_NOTE = ["", "Décevante", "Moyenne", "Correcte", "Bien", "Excellente"];
+
+function ouvrirAvisAppli(src) {
+  rendeur = src || null;
+  var etoiles = "";
+  for (var i = 1; i <= 5; i++) {
+    etoiles += '<button type="button" class="avis-etoile" data-note="' + i + '" role="radio" aria-checked="false" aria-label="' + i + (i > 1 ? " étoiles" : " étoile") + '">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>' +
+    "</button>";
+  }
+  var html =
+    '<div class="avis-appli">' +
+      '<h3 id="sh-titre">Ton avis sur Noctify</h3>' +
+      '<p class="avis-sous">Une note, et un mot si tu veux. On lit tout.</p>' +
+      '<div class="avis-etoiles" role="radiogroup" aria-label="Ta note">' + etoiles + "</div>" +
+      '<p class="avis-libelle" id="avis-libelle">&nbsp;</p>' +
+      '<textarea class="avis-texte" id="avis-texte" rows="4" maxlength="1000" placeholder="Ce qui te plaît, ce qui manque, ce qui ne marche pas…"></textarea>' +
+      '<p class="avis-msg" id="avis-msg" hidden></p>' +
+      '<button type="button" class="avis-envoyer" id="avis-envoyer" disabled>Envoyer</button>' +
+    "</div>";
+  ouvrirFeuille(html);
+  sheet.classList.add("clair");
+
+  var note = 0;
+  var boutons = corps.querySelectorAll(".avis-etoile");
+  var envoyer = $("#avis-envoyer"), msg = $("#avis-msg");
+  function peindre(n) {
+    boutons.forEach(function (b) {
+      var allumee = Number(b.dataset.note) <= n;
+      b.classList.toggle("on", allumee);
+      b.setAttribute("aria-checked", String(Number(b.dataset.note) === n));
+    });
+    $("#avis-libelle").textContent = n ? LIBELLES_NOTE[n] : " ";
+  }
+  boutons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      note = Number(b.dataset.note);
+      peindre(note);
+      envoyer.disabled = false;
+      vibrer("leger");
+    });
+  });
+
+  envoyer.addEventListener("click", async function () {
+    if (!note) return;
+    var session = (await supabaseClubbeur.auth.getSession()).data.session;
+    function dire(texte) { msg.textContent = texte; msg.hidden = false; }
+    if (!session) return dire("Connecte-toi pour envoyer ton avis.");
+    var texte = $("#avis-texte").value.trim();
+    envoyer.disabled = true;
+    envoyer.textContent = "Envoi…";
+    var res = await supabaseClubbeur.from("support_messages").insert({
+      user_id: session.user.id,
+      auteur: "client",
+      message: "Avis sur l'appli : " + "★".repeat(note) + "☆".repeat(5 - note) + " (" + note + "/5)" + (texte ? "\n" + texte : ""),
+    });
+    if (res.error) {
+      envoyer.disabled = false;
+      envoyer.textContent = "Envoyer";
+      return dire("Ça n'a pas marché. Réessaie dans un instant.");
+    }
+    corps.querySelector(".avis-appli").innerHTML =
+      '<div class="avis-merci">' +
+        '<span class="avis-merci-rond" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>' +
+        '<h3 id="sh-titre">Merci pour ton avis</h3>' +
+        '<p class="avis-sous">Il est bien arrivé. Si on te répond, ce sera dans Aide &amp; Support.</p>' +
+        '<button type="button" class="avis-envoyer" id="avis-fermer">Fermer</button>' +
+      "</div>";
+    $("#avis-fermer").addEventListener("click", fermerFeuille);
+    vibrer("moyen");
+  });
+}
+$("#pf-avis")?.addEventListener("click", function () { ouvrirAvisAppli(this); });
 
 /* ================= LE CADEAU DU JOUR =================
    Julien, 06/09/2026 : "chaque jour on se connecte, on recoit cinq
@@ -11893,16 +12313,30 @@ var OFFRE = {
   ]
 };
 
-/* Pas de nombre en dur : voir la note sur les imports, en haut du module.
-   Il n'y a volontairement PAS de ligne "vues de ta story" -- Meta ne rend
-   pas les statistiques d'une story qui ne vous appartient pas, donc une
-   story taguee vaut un forfait et rien d'autre. */
+/* ⚠️ CE QUE L'APPLI VERSE VRAIMENT, ligne par ligne (base clubbeur,
+   verifie le 13/09/2026) :
+     story / reel / tiktok  story_points()        -> BAREME_STORY
+     scan du QR             checkin_scan()        v_montant = 15, 1 fois par soiree
+     parrainage             montant_parrainage()  relu a l'ouverture
+     cadeau du jour         daily_gift_ladder     2 a 20, relu a l'ouverture
+   Pas de ligne "vues de ta story" : Meta ne rend pas les statistiques d'une
+   story qui ne vous appartient pas. Seul TikTok compte ses vues.
+   Chaque ligne MENE au geste : "Poster une story" ouvre Story, "Inviter un
+   ami" ouvre l'invitation. Un bareme qu'on lit sans pouvoir agir etait la
+   moitie du "bizarre". */
+var ICO_GAIN = {
+  story: '<rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/><path d="M8.6 6.5 10 4h4l1.4 2.5"/>',
+  video: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 9 5 3-5 3z"/>',
+  scan: '<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h2.6v2.6H14zM18 18h2.5v2.5H18zM14 20.5h2.6M20.5 14v2.6"/>',
+  ami: '<circle cx="10" cy="8" r="3.6"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/>',
+  cadeau: '<rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/>',
+};
 var GAINS = [
-  { t: "Scanner le QR au club",   s: "À l'entrée, une fois par soirée", v: DEFAULT_POINT_RULES.qrCheckin },
-  { t: "Poster ta story",         s: "Taguée avec le club",             v: FORFAIT_STORY_DEFAUT },
-  { t: "1 000 vues sur ta vidéo", s: "TikTok, Reel ou Short",           v: DEFAULT_POINT_RULES.videoViewsPerThousand },
-  { t: "Contenu qui décolle",     s: "Bonus au-delà de 10 000 vues",    v: DEFAULT_POINT_RULES.viralBonus },
-  { t: "Ambassadeur du mois",     s: "Le plus gros total du mois",      v: DEFAULT_POINT_RULES.monthlyAmbassador }
+  { id: "story", t: "Poster une story", s: "Qui mentionne l'établissement", v: BAREME_STORY.story.pts, ico: ICO_GAIN.story, agir: function () { ouvrirChoixReseau(null); } },
+  { id: "video", t: "Reel ou TikTok", s: "TikTok : plus 7 points par 100 vues", v: BAREME_STORY.reel.pts, ico: ICO_GAIN.video, agir: function () { ouvrirChoixReseau(null); } },
+  { id: "scan", t: "Scanner le QR sur place", s: "Une fois par soirée, par établissement", v: "+15", ico: ICO_GAIN.scan, agir: function () { ouvrirChoixReseau(null); } },
+  { id: "ami", t: "Inviter un ami", s: "Dès qu'il s'inscrit avec ton lien", v: '+<span class="js-montant-parrainage">100</span>', ico: ICO_GAIN.ami, agir: function () { ouvrirInvitation("boutique"); } },
+  { id: "cadeau", t: "Cadeau du jour", s: 'Il monte chaque jour d\'affilée, jusqu\'à <span id="gain-cadeau-max">20</span>', v: '<span id="gain-cadeau-min">2</span> à <span class="js-cadeau-max">20</span>', ico: ICO_GAIN.cadeau, agir: null },
 ];
 
 var OUVERTURE = 23, FERMETURE = 6;
@@ -11979,10 +12413,17 @@ var vientDeDebloquer = function () { return false; };
    item.demo dans ouvrirRecompense). Ils ne sont PAS dans CLUBS : ni pin sur
    la carte, ni choix de club, ni points. Tout s'eteint avec ce booleen. */
 var MONTRER_BARS_DEMO = true;
+/* Horaires INVENTES comme le reste, pour que l'en-tete de section montre
+   ce qu'il montrera pour un vrai etablissement (ouvert / ouvre a...). */
+function semaineDemo(jours, de, a) {
+  return ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"].map(function (j, i) {
+    return jours.indexOf(i) >= 0 ? { jour: j, de: de, a: a } : { jour: j, ferme: true };
+  });
+}
 var BARS_DEMO = [
-  { nom: "Velours", type: "bar", lngLat: [4.3503, 50.8468], quartier: "Bruxelles-Centre" },
-  { nom: "Minuit Douze", type: "bar", lngLat: [4.3452, 50.8331], quartier: "Saint-Gilles" },
-  { nom: "Néon 88", type: "club", lngLat: [4.3688, 50.8322], quartier: "Ixelles" },
+  { nom: "Velours", type: "bar", lngLat: [4.3503, 50.8468], quartier: "Bruxelles-Centre", horaires: semaineDemo([1, 2, 3, 4, 5, 6], "18:00", "02:00") },
+  { nom: "Minuit Douze", type: "bar", lngLat: [4.3452, 50.8331], quartier: "Saint-Gilles", horaires: semaineDemo([3, 4, 5], "21:00", "04:00") },
+  { nom: "Néon 88", type: "club", lngLat: [4.3688, 50.8322], quartier: "Ixelles", horaires: semaineDemo([4, 5], "23:00", "06:00") },
 ];
 BARS_DEMO.forEach(function (bar, i) {
   // Les MEMES dessins peints que le catalogue du vrai club (FOTOS) : les
@@ -11992,7 +12433,7 @@ BARS_DEMO.forEach(function (bar, i) {
     [["Pinte", "bar", 200, artPinte, "artPinte"], ["Cocktail signature", "bar", 350, artCocktail, "artCocktail"], ["Bouteille pour la table", "vip", 2200, artBouteille, "artBouteille"]],
     [["Vestiaire", "acces", 250, artShot, "artCintre"], ["Shot maison", "bar", 150, artShot, "artShot"], ["Table + bouteille", "vip", 3000, artBouteille, "artBouteille"]],
   ][i];
-  bar.club = { nom: bar.nom, type: bar.type, adr: bar.quartier };
+  bar.club = { nom: bar.nom, type: bar.type, adr: bar.quartier, horaires: bar.horaires };
   bar.recompenses = catalogues.map(function (c, j) {
     return { id: "demo-" + i + "-" + j, nom: c[0], fam: c[1], cout: c[2], art: c[3], foto: FOTOS[c[4]], stock: 20, code: "", demo: true, bar: bar.club };
   });
@@ -12008,6 +12449,40 @@ function nomRecompense(nom) {
   var brut = String(nom || "");
   var court = brut.replace(/\s+offert(e|s|es)?\b/gi, "").replace(/\s{2,}/g, " ").trim();
   return court || brut;
+}
+
+/* Ouvert maintenant, ou quand il ouvre -- calcule sur c.horaires (lundi en
+   premier, "a" avant "de" = la soiree deborde apres minuit). CLUBS portait
+   un statut ecrit a la main ("Ferme", "Ouvre jeudi a 21h00") qui mentait
+   des le jeudi soir. Heure du telephone : les etablissements sont a
+   Bruxelles, les clubbeurs aussi. */
+function heureCourte(hhmm) {
+  var p = String(hhmm).split(":");
+  return Number(p[0]) + "h" + (p[1] && p[1] !== "00" ? p[1] : "");
+}
+function etatOuverture(c) {
+  if (!c || !Array.isArray(c.horaires) || c.horaires.length !== 7) return null;
+  var d = new Date();
+  var jour = (d.getDay() + 6) % 7;
+  var m = d.getHours() * 60 + d.getMinutes();
+  function minutes(h) { var p = String(h).split(":"); return Number(p[0]) * 60 + Number(p[1] || 0); }
+  var hier = c.horaires[(jour + 6) % 7];
+  if (hier && !hier.ferme && minutes(hier.a) <= minutes(hier.de) && m < minutes(hier.a)) {
+    return { ouvert: true, texte: "Ouvert jusqu'à " + heureCourte(hier.a) };
+  }
+  var auj = c.horaires[jour];
+  if (auj && !auj.ferme) {
+    var de = minutes(auj.de), a = minutes(auj.a);
+    if (m >= de && (a <= de || m < a)) return { ouvert: true, texte: "Ouvert jusqu'à " + heureCourte(auj.a) };
+    if (m < de) return { ouvert: false, texte: "Ouvre à " + heureCourte(auj.de) };
+  }
+  for (var i = 1; i <= 7; i++) {
+    var j = c.horaires[(jour + i) % 7];
+    if (j && !j.ferme) {
+      return { ouvert: false, texte: "Ouvre " + (i === 1 ? "demain" : j.jour.toLowerCase()) + " à " + heureCourte(j.de) };
+    }
+  }
+  return { ouvert: false, texte: "Fermé" };
 }
 
 // "1210 Saint-Josse-ten-Noode" dans une adresse -> "Saint-Josse-ten-Noode".
@@ -12064,12 +12539,42 @@ function rendreListe() {
     // Pas de "Bar" / "Boite de nuit" devant : meme remarque de Julien que
     // pour les cartes ("bizarre de mettre bar en sous-titre").
     var ou = POSITION_MOI ? formaterDistance(bar.km) : bar.quartier;
+    /* ⚠️ L'EN-TETE DE L'ETABLISSEMENT. Julien, 13/09/2026 : "rendre le truc
+       recompense plus specifique, beaucoup plus attirant, avec des photos
+       de l'etablissement". Un pin et un nom en capitales ne disaient ni a
+       quoi ressemble le lieu, ni s'il est ouvert. Maintenant :
+       · ses PHOTOS en bandeau quand il en a (c.photos, deposees par le
+         gerant ou a la main dans CLUBS) -- jamais une image d'ambiance
+         prise ailleurs, voir galerieClub() ;
+       · sa tuile (logo, sinon la mascotte), son nom ;
+       · ouvert maintenant ou quand il ouvre, calcule sur ses horaires ;
+       · le quartier, ou la distance quand la position est vraie ;
+       · un tap ouvre sa fiche (etablissements reels seulement). */
+    var cle = null;
+    Object.keys(CLUBS).forEach(function (k) { if (CLUBS[k] === bar.club) cle = k; });
+    var etat = etatOuverture(bar.club);
+    var photos = Array.isArray(bar.club.photos) ? bar.club.photos.filter(Boolean) : [];
+    var balise = cle ? "button" : "div";
     section.innerHTML =
-      '<h2 class="drop-titre">' +
-        '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="10.5" r="3"/><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg>' +
-        "<span>" + escapeHtmlSupport(bar.nom) + "</span>" +
-      "</h2>" +
-      (ou ? '<p class="drop-sous">' + escapeHtmlSupport(ou) + "</p>" : "");
+      (photos.length
+        ? '<div class="bar-photos' + (photos.length === 1 ? " seule" : "") + '">' + photos.slice(0, 6).map(function (src) {
+            return '<img src="' + escapeHtmlSupport(src) + '" alt="" loading="lazy" />';
+          }).join("") + "</div>"
+        : "") +
+      "<" + balise + ' class="bar-tete"' + (cle ? ' type="button" data-cle="' + cle + '" aria-label="Voir la fiche de ' + escapeHtmlSupport(bar.nom) + '"' : "") + ">" +
+        '<span class="bar-tuile' + classeFoto(bar.club) + '" aria-hidden="true">' + imgClub(bar.club) + "</span>" +
+        '<span class="bar-tete-txt">' +
+          '<h2 class="drop-titre">' + escapeHtmlSupport(bar.nom) + "</h2>" +
+          '<span class="bar-meta">' +
+            (etat ? '<span class="bar-etat' + (etat.ouvert ? " ouvert" : "") + '">' + escapeHtmlSupport(etat.texte) + "</span>" : "") +
+            (etat && ou ? '<span class="bar-sep" aria-hidden="true">·</span>' : "") +
+            (ou ? "<span>" + escapeHtmlSupport(ou) + "</span>" : "") +
+          "</span>" +
+        "</span>" +
+        (cle ? '<svg class="bar-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>' : "") +
+      "</" + balise + ">";
+    var tete = section.querySelector("button.bar-tete");
+    if (tete) tete.addEventListener("click", function () { ouvrirClub(CLUBS[cle], tete, cle); });
     var rangee = document.createElement("div");
     rangee.className = "grille";
     section.appendChild(rangee);
@@ -12263,12 +12768,28 @@ async function ouvrirBon(bon, src) {
 
 (function rendreGains() {
   var z = $("#gains");
+  if (!z) return;
   GAINS.forEach(function (g) {
-    var e = document.createElement("div");
-    e.className = "gain";
-    e.innerHTML = "<p>" + g.t + "<span>" + g.s + "</span></p>" +
-      '<span class="val">+' + g.v + "</span>";
+    var e = document.createElement(g.agir ? "button" : "div");
+    if (g.agir) e.type = "button";
+    e.className = "gain" + (g.agir ? " gain-lien" : "");
+    e.innerHTML =
+      '<span class="gain-ico" aria-hidden="true"><svg viewBox="0 0 24 24">' + g.ico + "</svg></span>" +
+      '<span class="gain-txt"><strong>' + g.t + "</strong><span>" + g.s + "</span></span>" +
+      '<span class="gain-val">' + g.v + "</span>" +
+      (g.agir ? '<svg class="gain-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>' : "");
+    if (g.agir) e.addEventListener("click", g.agir);
     z.appendChild(e);
+  });
+  // Les marches du cadeau du jour vivent dans la base, pas dans le code.
+  supabaseClubbeur.from("daily_gift_ladder").select("points").then(function (res) {
+    var marches = (res.data || []).map(function (l) { return Number(l.points); }).filter(Boolean);
+    if (!marches.length) return;
+    var min = Math.min.apply(null, marches), max = Math.max.apply(null, marches);
+    var a = $("#gain-cadeau-min"), b = $("#gain-cadeau-max");
+    if (a) a.textContent = nb(min);
+    if (b) b.textContent = nb(max);
+    document.querySelectorAll(".js-cadeau-max").forEach(function (el) { el.textContent = nb(max); });
   });
 })();
 
@@ -12474,12 +12995,6 @@ async function echanger(item) {
 /* ==========================================================
    DEPART
    ========================================================== */
-
-// La legende de la carte ne depend pas de la carte : si les tuiles ne
-// repondent pas, map.on("load") ne se declenche jamais, et une legende
-// qui disparaitrait avec elle serait un piege de plus a diagnostiquer.
-var legendeCarte = document.getElementById("carte-legende");
-if (legendeCarte) legendeCarte.innerHTML = pint(1) + "<span>Toi</span>";
 
 majCagnotte(false);
 rendreOffre();

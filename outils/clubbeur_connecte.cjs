@@ -143,6 +143,17 @@ const HAUTEUR = 844;
     await pause(3000);
     await prendre("10-inviter", "Inviter des amis — depuis le profil");
 
+    // "Donner mon avis", dans l'appli depuis le 13/09/2026 (c'etait un
+    // mailto). Une note posee par le vrai geste ; RIEN n'est envoye.
+    await page.evaluate(() => document.querySelector("#va-back")?.click());
+    await pause(1200);
+    await page.evaluate(() => document.querySelector("#pf-avis").click());
+    await pause(1200);
+    await page.evaluate(() => document.querySelector('.avis-etoile[data-note="5"]')?.click());
+    await pause(500);
+    await prendre("11-avis", "Donner mon avis — dans l'appli");
+    await page.evaluate(() => window.noctifyFermerFeuille?.());
+
     // Ce que les deux ecrans affichent VRAIMENT, pour pouvoir juger sans
     // ouvrir l'image : une capture ne dit pas si un bloc est vide parce
     // qu'il n'y a rien ou parce qu'il a echoue.

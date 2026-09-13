@@ -88,6 +88,16 @@ const HAUTEUR = 844;
   await pause(700);
   await prendre("03-recompenses-cartes", "Récompenses — le catalogue du club");
 
+  // "Gagner des points" (13/09/2026) : une section ouverte en bas de la
+  // boutique, plus un accordeon replie.
+  await page.evaluate(() => {
+    const sec = document.querySelector(".sec-gagner");
+    const app = document.querySelector("#vue-boutique .app");
+    if (sec && app) app.scrollTop = sec.offsetTop - 60;
+  });
+  await pause(700);
+  await prendre("03b-gagner", "Récompenses — gagner des points");
+
   // La fiche d'une recompense : c'est la que le clubbeur decide.
   const ouverte = await page.evaluate(() => {
     const carte = document.querySelector("#vue-boutique .carte-reco, #vue-boutique [data-reward], #vue-boutique .reco");
@@ -117,6 +127,28 @@ const HAUTEUR = 844;
     // La carte charge ses tuiles depuis le reseau : plus lente que le reste.
     await pause(tab === "tab-carte" ? 4500 : 1600);
     await prendre(nom, titre);
+
+    if (tab === "tab-carte") {
+      // La fiche d'un etablissement, par le vrai geste : toucher son pin.
+      const pin = await page.evaluate(() => {
+        const b = document.querySelector("#vue-carte .club-pin");
+        if (!b) return false;
+        b.click();
+        return true;
+      });
+      if (pin) {
+        await pause(1600);
+        await prendre("05b-fiche", "La fiche d'un établissement");
+        await page.evaluate(() => window.noctifyFermerFeuille?.());
+        await pause(900);
+      }
+    }
+    if (tab === "tab-story") {
+      await page.evaluate(() => { document.querySelector("#vue-story").scrollTop = 99999; });
+      await pause(700);
+      await prendre("06b-story-bas", "Story — le bas de la page");
+      await page.evaluate(() => { document.querySelector("#vue-story").scrollTop = 0; });
+    }
   }
 
   fs.writeFileSync(`${DOSSIER}/ecrans.json`, JSON.stringify(faites, null, 2));
