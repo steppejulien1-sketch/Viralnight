@@ -91,6 +91,19 @@ check("meme tag que les points (ne s'empile pas)", cadeau.tag === "points");
 check("ne promet aucun montant", !/\d/.test(cadeau.corps), cadeau.corps);
 check("ne depend d'aucun club", construireMessage({ type: "cadeau_dispo", club: "" }) !== null);
 
+console.log("\nSupport");
+const support = construireMessage({ type: "support_nouveau", pseudo: "@camille_4", extrait: "Je n'ai pas eu mes points au Mirano hier soir" });
+check("un message pour l'admin", support !== null);
+check("dit qui ecrit, sans double @", support.corps.startsWith("@camille_4 : "), support.corps);
+check("donne le debut du message", support.corps.includes("mes points"), support.corps);
+check("tag support", support.tag === "support");
+const longMessage = construireMessage({ type: "support_nouveau", pseudo: "x", extrait: "a ".repeat(200) });
+check("un long message est coupe", longMessage.corps.length <= 120, String(longMessage.corps.length));
+check("sans pseudo ni texte : un corps quand meme", construireMessage({ type: "support_nouveau" }).corps.length > 0);
+const reponse = construireMessage({ type: "support_reponse" });
+check("une reponse pour le clubbeur", reponse !== null && reponse.titre.toLowerCase().includes("support"), reponse && reponse.titre);
+check("la reponse ne recopie rien du contenu", !/:/.test(reponse.corps), reponse.corps);
+
 console.log("\nType inconnu");
 check("rien pour un type non prevu", construireMessage({ type: "bidon" }) === null);
 

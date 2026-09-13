@@ -20,7 +20,7 @@
 //             SUPABASE_CLUBBEUR_URL, SUPABASE_CLUBBEUR_SERVICE_ROLE_KEY
 
 import { createClient } from "@supabase/supabase-js";
-import { notifierStory, notifierCadeauDuJour } from "../lib/notifications/envoyer.js";
+import { notifierStory, notifierCadeauDuJour, pousserA } from "../lib/notifications/envoyer.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 
@@ -337,6 +337,141 @@ function poserCors(request, response) {
   response.setHeader("Access-Control-Max-Age", "86400");
 }
 
+/* ================= LE SUPPORT PREVIENT (13/09/2026) =================
+   Julien : "creer un vrai systeme, que je recoive quelque chose quand
+   quelqu'un contacte le support". Le message est ecrit par l'appli dans
+   support_messages (RLS : chacun ses lignes) ; l'appli appelle ensuite
+   cette action, qui previent.
+
+   ?action=support-nouveau : un clubbeur vient d'ecrire -> e-mail a
+     NOTIFICATION_EMAIL (Resend, comme les demandes de demo) + notification
+     sur les telephones de l'admin.
+   ?action=support-reponse : l'admin vient de repondre -> notification au
+     clubbeur.
+
+   ⚠️ RIEN NE VIENT DU CORPS DE LA REQUETE, SAUF LE DESTINATAIRE D'UNE
+   REPONSE. Qui ecrit est relu du jeton ; CE qu'il a ecrit est relu en base
+   (le dernier message, de moins de deux minutes). Sans ca, n'importe qui
+   pourrait envoyer a Julien un e-mail au texte de son choix. Et une reponse
+   n'est notifiee que si le demandeur EST l'admin et qu'un message admin
+   vient bien d'etre pose dans ce fil.
+
+   ⚠️ PAS DE RAFALE. Trois messages en une minute ne font qu'un e-mail et
+   une notification : on ne previent que pour le premier message d'une
+   serie de dix minutes. */
+const ADMIN_SUPPORT_EMAIL = "julien.steppe123@gmail.com"; // = ADMIN_EMAIL_CLUBBEUR dans app-preview.html
+const FENETRE_FRAICHE_MS = 2 * 60 * 1000;
+const FENETRE_RAFALE_MS = 10 * 60 * 1000;
+
+function echapper(texte) {
+  return String(texte || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+async function idAdminSupport(clubbeur) {
+  const { data, error } = await clubbeur.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (error) return null;
+  const admin = (data?.users || []).find((u) => (u.email || "").toLowerCase() === ADMIN_SUPPORT_EMAIL);
+  return admin ? admin.id : null;
+}
+
+async function mailSupport({ pseudo, email, message }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const to = process.env.NOTIFICATION_EMAIL;
+  const from = process.env.NOTIFICATION_FROM || "Noctify <onboarding@resend.dev>";
+  if (!apiKey || !to) return false;
+  const qui = pseudo ? `@${pseudo}` : email || "un clubbeur";
+  const reponse = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject: `Support Noctify : message de ${qui}`,
+      html: `<h2>Nouveau message au support</h2>
+        <p><strong>De :</strong> ${echapper(qui)}${email ? " (" + echapper(email) + ")" : ""}</p>
+        <p style="white-space:pre-wrap">${echapper(message)}</p>
+        <p>Répondre depuis l'appli : Profil &gt; Aide &amp; Support.</p>`,
+      text: `Nouveau message au support\nDe : ${qui}${email ? " (" + email + ")" : ""}\n\n${message}\n\nRépondre depuis l'appli : Profil > Aide & Support.`,
+    }),
+  });
+  return reponse.ok;
+}
+
+async function actionSupport(request, response, sens) {
+  poserCors(request, response);
+  const token = (request.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  if (!token) return json(response, { error: "Session requise" }, 401);
+
+  let clubbeur;
+  try {
+    clubbeur = getSupabaseClubbeurAdmin();
+  } catch (e) {
+    return json(response, { error: "Configuration serveur incomplete" }, 500);
+  }
+
+  const { data: qui, error: erreurAuth } = await clubbeur.auth.getUser(token);
+  const moi = qui?.user;
+  if (erreurAuth || !moi?.id) return json(response, { error: "Session invalide" }, 401);
+
+  if (sens === "nouveau") {
+    const { data: derniers } = await clubbeur
+      .from("support_messages")
+      .select("message, created_at, auteur")
+      .eq("user_id", moi.id)
+      .order("created_at", { ascending: false })
+      .limit(6);
+    const dernier = derniers?.[0];
+    const age = dernier ? Date.now() - new Date(dernier.created_at).getTime() : Infinity;
+    if (!dernier || dernier.auteur !== "client" || age > FENETRE_FRAICHE_MS) {
+      return json(response, { ok: true, prevenu: false, raison: "aucun_message_frais" });
+    }
+    const rafale = (derniers || []).slice(1).some((m) =>
+      m.auteur === "client" &&
+      new Date(dernier.created_at).getTime() - new Date(m.created_at).getTime() < FENETRE_RAFALE_MS
+    );
+    if (rafale) return json(response, { ok: true, prevenu: false, raison: "rafale" });
+
+    const { data: profil } = await clubbeur.from("users").select("handle").eq("id", moi.id).maybeSingle();
+    const pseudo = profil?.handle || "";
+
+    let mail = false;
+    try {
+      mail = await mailSupport({ pseudo, email: moi.email, message: dernier.message });
+    } catch (e) {
+      console.error("[support] e-mail impossible", e.message);
+    }
+    const adminId = await idAdminSupport(clubbeur);
+    const push = adminId
+      ? await pousserA(adminId, { type: "support_nouveau", pseudo, extrait: dernier.message })
+      : { envoyees: 0, raison: "admin_introuvable" };
+    return json(response, { ok: true, prevenu: true, mail, push: push.envoyees || 0 });
+  }
+
+  // sens === "reponse"
+  if ((moi.email || "").toLowerCase() !== ADMIN_SUPPORT_EMAIL) {
+    return json(response, { error: "Reserve a l'admin" }, 403);
+  }
+  let corps = {};
+  try {
+    corps = await readBody(request);
+  } catch {}
+  const cible = String(corps.userId || "");
+  if (!/^[0-9a-f-]{36}$/i.test(cible)) return json(response, { error: "Destinataire invalide" }, 400);
+  const { data: reponses } = await clubbeur
+    .from("support_messages")
+    .select("created_at")
+    .eq("user_id", cible)
+    .eq("auteur", "admin")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const fraiche = reponses?.[0] && Date.now() - new Date(reponses[0].created_at).getTime() <= FENETRE_FRAICHE_MS;
+  if (!fraiche) return json(response, { ok: true, prevenu: false, raison: "aucune_reponse_fraiche" });
+  const push = await pousserA(cible, { type: "support_reponse" });
+  return json(response, { ok: true, prevenu: true, push: push.envoyees || 0 });
+}
+
 /* ?action=supprimer-compte — le clubbeur efface son propre compte.
 
    ⚠️ EXIGENCE APP STORE, PAS UN CONFORT. Depuis le 30 juin 2022, la regle
@@ -412,7 +547,7 @@ export default async function handler(request, response) {
 
   /* Le prevol arrive en OPTIONS : il doit passer avant le controle de
      methode, sinon le navigateur recoit un 405 et abandonne l'appel reel. */
-  if (action === "supprimer-compte" && request.method === "OPTIONS") {
+  if ((action === "supprimer-compte" || action === "support-nouveau" || action === "support-reponse") && request.method === "OPTIONS") {
     poserCors(request, response);
     response.statusCode = 204;
     return response.end();
@@ -425,6 +560,9 @@ export default async function handler(request, response) {
      action d'admin. C'est le clubbeur lui-meme qui efface son compte, et il
      s'authentifie avec SA session, cote base clubbeur. */
   if (action === "supprimer-compte") return actionSupprimerCompte(request, response);
+  // Le support : le clubbeur ou l'admin, chacun avec SA session (voir actionSupport).
+  if (action === "support-nouveau") return actionSupport(request, response, "nouveau");
+  if (action === "support-reponse") return actionSupport(request, response, "reponse");
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
