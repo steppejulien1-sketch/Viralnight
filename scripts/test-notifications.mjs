@@ -7,6 +7,8 @@ import {
   construireMessage,
   abonnementExpire,
   versAbonnementWebPush,
+  MOTIFS_DEPART,
+  libelleMotifDepart,
 } from "../lib/notifications/push.js";
 
 let passed = 0, failed = 0;
@@ -103,6 +105,16 @@ check("sans pseudo ni texte : un corps quand meme", construireMessage({ type: "s
 const reponse = construireMessage({ type: "support_reponse" });
 check("une reponse pour le clubbeur", reponse !== null && reponse.titre.toLowerCase().includes("support"), reponse && reponse.titre);
 check("la reponse ne recopie rien du contenu", !/:/.test(reponse.corps), reponse.corps);
+
+console.log("\nCompte supprime");
+const depart = construireMessage({ type: "compte_supprime", pseudo: "@camille_4", motif: "plus_utilise" });
+check("un message pour l'admin", depart !== null && depart.titre.toLowerCase().includes("supprim"), depart && depart.titre);
+check("dit qui et pourquoi", depart.corps === "@camille_4 : Ne l'utilise plus", depart.corps);
+check("tag a part (ne remplace pas une alerte support)", depart.tag === "depart");
+check("un code inconnu reste lisible", libelleMotifDepart("<b>n'importe quoi</b>") === "Raison non indiquée");
+check("pas de piege sur les proprietes heritees", libelleMotifDepart("toString") === "Raison non indiquée");
+check("sans pseudo ni motif : un corps quand meme", construireMessage({ type: "compte_supprime" }).corps.length > 0);
+check("cinq raisons, dont autre", Object.keys(MOTIFS_DEPART).length === 5 && "autre" in MOTIFS_DEPART);
 
 console.log("\nType inconnu");
 check("rien pour un type non prevu", construireMessage({ type: "bidon" }) === null);

@@ -5019,6 +5019,31 @@
       .sheet-sup .sup-hero { height: auto; aspect-ratio: 3 / 2; }
       .sheet-sup .sup-hero img { -webkit-mask-image: none; mask-image: none; object-position: center; }
 
+      /* La seconde marche : les raisons du depart dans une carte, comme DUSK. */
+      .sup-motifs { margin: 0 0 4px; padding: 6px 0 4px; border: 0; border-radius: 14px; background: var(--s1); min-width: 0; }
+      .sup-motifs legend {
+        float: left; width: 100%; padding: 12px 18px 8px;
+        font-size: calc(16 * var(--u)); font-weight: 750; letter-spacing: -.01em; color: var(--ink);
+      }
+      .sup-motif {
+        clear: both; display: flex; align-items: center; gap: 14px; min-height: 52px; margin: 0 18px; padding: 10px 0;
+        border-top: 1px solid var(--line); font-size: calc(15 * var(--u)); line-height: 1.35; color: var(--ink); cursor: pointer;
+      }
+      .sup-motif input {
+        flex: 0 0 auto; appearance: none; -webkit-appearance: none; width: 22px; height: 22px; margin: 0;
+        border: 1.5px solid var(--ink3); border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+      }
+      .sup-motif input::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--ink); transform: scale(0); transition: transform .12s ease; }
+      .sup-motif input:checked { border-color: var(--ink); }
+      .sup-motif input:checked::before { transform: scale(1); }
+      .sup-motif input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .sup-precision {
+        display: block; width: calc(100% - 36px); margin: 4px 18px 14px; padding: 12px 14px; border: 1px solid var(--line2); border-radius: 10px;
+        background: var(--bg); color: var(--ink); font-family: inherit; font-size: calc(15 * var(--u)); line-height: 1.4; resize: none; box-sizing: border-box;
+      }
+      .sup-precision[hidden] { display: none; }
+      .sup-etape2 .sup-confirmer:disabled { background: var(--s3); color: var(--ink3); opacity: 1; cursor: default; }
+
 
       /* ---------------- 13/09/2026, fin de soiree ---------------- */
       /* Donnees personnelles : la carte de suppression au pied de la page. */
@@ -11761,8 +11786,57 @@ function ouvrirSuppressionCompte(src) {
     VUE_DONNEES.hidden = true;
     $("#pf-aide")?.click();
   });
-  $("#sup-confirmer").addEventListener("click", async function () {
+  $("#sup-confirmer").addEventListener("click", etapeMotifDepart);
+}
+
+/* La seconde marche, copiee de DUSK (13/09/2026) : « Please let us know
+   why ». Deux effets voulus par Julien : un pas de plus avant l'irreversible,
+   et la raison du depart, qui lui est envoyee avec le profil du compte (voir
+   actionSupprimerCompte). Les codes sont ceux de MOTIFS_DEPART dans
+   lib/notifications/push.js : les garder alignes. Le bouton reste gris tant
+   qu'aucune raison n'est cochee. */
+var MOTIFS_DEPART = [
+  ["doublon", "J’ai déjà un autre compte"],
+  ["aucun_etablissement", "Il n’y a pas d’établissement près de chez moi"],
+  ["pas_de_story", "Je ne veux pas publier de stories"],
+  ["plus_utilise", "Je ne l’utilise plus"],
+  ["autre", "Une autre raison"],
+];
+
+function etapeMotifDepart() {
+  var boite = corps.querySelector(".sup");
+  if (!boite) return;
+  boite.classList.add("sup-etape2");
+  boite.innerHTML =
+    '<div class="sup-hero" aria-hidden="true"><img src="/ambiance/quitter.webp" alt="" width="780" height="520" /></div>' +
+    '<button type="button" class="sup-fermer" id="sup-fermer" aria-label="Garder mon compte"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
+    '<h3 class="sup-titre" id="sh-titre">Une dernière question</h3>' +
+    '<p class="sup-sous">Ton compte n’est pas encore supprimé.</p>' +
+    '<fieldset class="sup-motifs">' +
+      "<legend>Pourquoi veux-tu supprimer ton compte ?</legend>" +
+      MOTIFS_DEPART.map(function (m) {
+        return '<label class="sup-motif"><input type="radio" name="sup-motif" value="' + m[0] + '" /><span>' + m[1] + "</span></label>";
+      }).join("") +
+      '<textarea class="sup-precision" id="sup-precision" rows="3" maxlength="500" placeholder="Dis-nous en quelques mots (facultatif)" hidden></textarea>' +
+    "</fieldset>" +
+    '<button type="button" class="sup-confirmer" id="sup-supprimer" disabled>Supprimer mon compte</button>' +
+    '<p class="sup-msg" id="sup-msg" hidden></p>';
+  sheet.scrollTop = 0;
+  corps.scrollTop = 0;
+
+  $("#sup-fermer").addEventListener("click", fermerFeuille);
+  boite.querySelectorAll('input[name="sup-motif"]').forEach(function (radio) {
+    radio.addEventListener("change", function () {
+      $("#sup-supprimer").disabled = false;
+      $("#sup-precision").hidden = radio.value !== "autre";
+      if (radio.value === "autre") $("#sup-precision").focus();
+    });
+  });
+
+  $("#sup-supprimer").addEventListener("click", async function () {
     var bouton = this, msg = $("#sup-msg");
+    var coche = boite.querySelector('input[name="sup-motif"]:checked');
+    if (!coche) return;
     bouton.disabled = true;
     bouton.textContent = "Suppression…";
     try {
@@ -11770,7 +11844,11 @@ function ouvrirSuppressionCompte(src) {
       if (!session) throw new Error("session");
       var res = await fetch(BASE_API + "/api/credit-clubbeur?action=supprimer-compte", {
         method: "POST",
-        headers: { Authorization: "Bearer " + session.access_token },
+        headers: { Authorization: "Bearer " + session.access_token, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          motif: coche.value,
+          precision: coche.value === "autre" ? $("#sup-precision").value.trim().slice(0, 500) : "",
+        }),
       });
       if (!res.ok) throw new Error("api");
 

@@ -153,14 +153,53 @@ const HAUTEUR = 844;
     await page.evaluate(() => window.noctifyFermerFeuille?.());
     await pause(700);
 
-    // Donnees personnelles, et la feuille de suppression (13/09/2026). On
-    // ouvre la feuille, on ne touche PAS au bouton.
-    await page.evaluate(() => document.querySelector("#pf-donnees").click());
+    // Aide & Support et « Vous gerez un etablissement ? » (13/09/2026).
+    await page.evaluate(() => document.querySelector("#pf-aide").click());
+    await pause(2000);
+    await prendre("11b-aide", "Aide & Support — les sujets");
+    await page.evaluate(() => document.querySelector("#vue-aide .ai-retour, .ai-retour")?.click());
+    await pause(1000);
+    await page.evaluate(() => document.querySelector("#pf-devenir-club").click());
+    await pause(1500);
+    await prendre("11c-etablissement", "Vous gérez un établissement ?");
+    await page.evaluate(() => {
+      document.querySelector(".vue-profil-feuille:not([hidden]) .pg-fermer")?.click();
+      window.noctifyFermerFeuille?.();
+    });
+    await pause(1000);
+
+    // Le cycle de suppression, en entier (13/09/2026) : Donnees personnelles
+    // (Reglages fusionnes dedans), la feuille, puis la marche « pourquoi ».
+    // ⚠️ #sup-confirmer n'efface rien : il ouvre la seconde marche. Le
+    // vrai bouton est #sup-supprimer, JAMAIS touche ici.
+    await page.evaluate(() => document.querySelector("#pf-reglages").click());
     await pause(2000);
     await prendre("12-donnees", "Données personnelles");
+    await page.evaluate(() => {
+      const bas = document.querySelector("#rg-supprimer-compte");
+      bas.scrollIntoView({ block: "end" });
+    });
+    await pause(600);
+    await prendre("12b-donnees-bas", "Données personnelles — le bas de la page");
     await page.evaluate(() => document.querySelector("#rg-supprimer-compte").click());
     await pause(1500);
     await prendre("13-suppression", "Supprimer mon compte — la feuille");
+    const auFond = () => page.evaluate(() => {
+      const s = document.querySelector(".sheet.up");
+      s.scrollTop = s.scrollHeight;
+      s.querySelectorAll("*").forEach((el) => { if (el.scrollHeight > el.clientHeight + 4) el.scrollTop = el.scrollHeight; });
+    });
+    await auFond();
+    await pause(600);
+    await prendre("13b-suppression-bas", "Supprimer mon compte — le bas de la feuille");
+    await page.evaluate(() => document.querySelector("#sup-confirmer").click());
+    await pause(1200);
+    await prendre("14-pourquoi", "La seconde marche — pourquoi tu pars");
+    await page.evaluate(() => document.querySelector('input[name="sup-motif"][value="autre"]').click());
+    await page.type("#sup-precision", "Je change de ville");
+    await auFond();
+    await pause(700);
+    await prendre("14b-pourquoi-choisi", "Une raison cochée — le bouton s'allume");
     await page.evaluate(() => window.noctifyFermerFeuille?.());
 
     // Ce que les deux ecrans affichent VRAIMENT, pour pouvoir juger sans

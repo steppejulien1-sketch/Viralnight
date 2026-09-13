@@ -21,6 +21,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { notifierStory, notifierCadeauDuJour, pousserA } from "../lib/notifications/envoyer.js";
+import { libelleMotifDepart } from "../lib/notifications/push.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 
@@ -512,13 +513,130 @@ async function actionSupprimerCompte(request, response) {
   const userId = qui?.user?.id;
   if (erreurAuth || !userId) return json(response, { error: "Session invalide" }, 401);
 
+  let corps = {};
+  try {
+    corps = await readBody(request);
+  } catch {}
+  const motif = String(corps?.motif || "");
+  const precision = motif === "autre" ? String(corps?.precision || "").trim().slice(0, 500) : "";
+
+  // ⚠️ AVANT deleteUser : la cascade emporte le profil, les points et les
+  // stories. Apres, il n'y a plus rien a raconter a Julien.
+  const profil = await profilDuDepart(clubbeur, userId, qui.user);
+
   const { error } = await clubbeur.auth.admin.deleteUser(userId);
   if (error) {
     console.error("[supprimer-compte] echec", error.message);
     return json(response, { error: "La suppression a echoue" }, 500);
   }
 
-  return json(response, { ok: true });
+  // Le compte est parti : un e-mail ou une notification qui echoue ne doit
+  // pas faire croire au clubbeur que sa suppression a rate. Mais on attend
+  // l'envoi avant de repondre : une fonction Vercel peut etre gelee des que
+  // la reponse est partie.
+  let mail = false;
+  try {
+    mail = await mailDepart({ ...profil, motif, precision });
+  } catch (e) {
+    console.error("[supprimer-compte] e-mail impossible", e.message);
+  }
+  let push = 0;
+  try {
+    const adminId = await idAdminSupport(clubbeur);
+    if (adminId && adminId !== userId) {
+      push = (await pousserA(adminId, { type: "compte_supprime", pseudo: profil.pseudo, motif })).envoyees || 0;
+    }
+  } catch (e) {
+    console.error("[supprimer-compte] notification impossible", e.message);
+  }
+
+  return json(response, { ok: true, mail, push });
+}
+
+/* Ce que Julien recoit quand quelqu'un part (13/09/2026 : « que ca m'envoie
+   la data du client, ce que les gens choisissent »). Rien de plus que ce
+   que l'appli montrait deja au clubbeur lui-meme. Chaque lecture est
+   facultative : un profil incomplet ne bloque jamais la suppression. */
+async function profilDuDepart(clubbeur, userId, utilisateurAuth) {
+  const profil = {
+    pseudo: "",
+    email: utilisateurAuth?.email || "",
+    inscrit: utilisateurAuth?.created_at || null,
+    solde: null,
+    gagnes: null,
+    parraine: false,
+    stories: null,
+    etablissements: [],
+    dernierPassage: null,
+  };
+  try {
+    const [u, s, g] = await Promise.all([
+      clubbeur.from("users").select("handle, email, created_at, points_balance, lifetime_points, referred_by").eq("id", userId).maybeSingle(),
+      clubbeur.from("story_events").select("id", { count: "exact", head: true }).eq("user_id", userId),
+      clubbeur.from("point_grants").select("created_at, clubs(name)").eq("user_id", userId).order("created_at", { ascending: false }).limit(200),
+    ]);
+    if (u.data) {
+      profil.pseudo = u.data.handle || "";
+      profil.email = profil.email || u.data.email || "";
+      profil.inscrit = u.data.created_at || profil.inscrit;
+      profil.solde = u.data.points_balance;
+      profil.gagnes = u.data.lifetime_points;
+      profil.parraine = !!u.data.referred_by;
+    }
+    if (typeof s.count === "number") profil.stories = s.count;
+    const lignes = g.data || [];
+    profil.dernierPassage = lignes[0]?.created_at || null;
+    profil.etablissements = [...new Set(lignes.map((l) => l.clubs?.name).filter(Boolean))];
+  } catch (e) {
+    console.error("[supprimer-compte] profil incomplet", e.message);
+  }
+  return profil;
+}
+
+function dateFr(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
+}
+
+async function mailDepart(p) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const to = process.env.NOTIFICATION_EMAIL;
+  const from = process.env.NOTIFICATION_FROM || "Noctify <onboarding@resend.dev>";
+  if (!apiKey || !to) return false;
+  const qui = p.pseudo ? `@${p.pseudo}` : p.email || "un clubbeur";
+  const raison = libelleMotifDepart(p.motif);
+  const nombre = (n) => (typeof n === "number" ? n.toLocaleString("fr-FR") : "—");
+  const lignes = [
+    ["Raison", raison],
+    ...(p.precision ? [["En quelques mots", p.precision]] : []),
+    ["Pseudo", p.pseudo ? `@${p.pseudo}` : "—"],
+    ["E-mail", p.email || "—"],
+    ["Inscrit le", dateFr(p.inscrit)],
+    ["Venu par un ami", p.parraine ? "Oui" : "Non"],
+    ["Points perdus", nombre(p.solde)],
+    ["Points gagnés au total", nombre(p.gagnes)],
+    ["Stories envoyées", nombre(p.stories)],
+    ["Établissements", p.etablissements.length ? p.etablissements.join(", ") : "Aucun"],
+    ["Dernier gain de points", dateFr(p.dernierPassage)],
+  ];
+  const reponse = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject: `Compte supprimé : ${raison} (${qui})`,
+      html: `<h2>Un clubbeur a supprimé son compte</h2>
+        <table cellpadding="6" style="border-collapse:collapse;font-size:14px">
+        ${lignes.map(([k, v]) => `<tr><td style="color:#6a6d73;vertical-align:top">${echapper(k)}</td><td style="white-space:pre-wrap"><strong>${echapper(v)}</strong></td></tr>`).join("")}
+        </table>
+        <p style="color:#6a6d73">Le compte et ses données sont déjà effacés : ce message est la seule trace.</p>`,
+      text: `Un clubbeur a supprimé son compte\n\n${lignes.map(([k, v]) => `${k} : ${v}`).join("\n")}\n\nLe compte et ses données sont déjà effacés : ce message est la seule trace.`,
+    }),
+  });
+  return reponse.ok;
 }
 
 function json(response, body, status = 200) {
