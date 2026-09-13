@@ -4968,6 +4968,57 @@
       .sheet-sup .sup-hero { height: 250px; }
       .sheet-sup .sup-titre { font-size: calc(26 * var(--u)); }
 
+
+      /* ---------------- LES PAGES, FACON DUSK (13/09/2026, soir) ----------------
+         Ce qui fait leurs pages : l'icone du haut posee sur la ligne de la
+         fleche (pas une rangee de plus), des icones au trait avec un accent
+         rempli (jaune chez eux, BLANC ici -- Julien : "pas rouge, du blanc"),
+         des titres de section en gras, des lignes compactes. */
+      .pg-tete { display: grid; grid-template-columns: 38px 1fr 38px; align-items: center; }
+      .pg-tete > .pg-ico { grid-column: 2; justify-self: center; width: 44px; height: 44px; }
+      .pg-tete > .pg-ico svg { width: 36px; height: 36px; }
+      .pg-intro { padding-top: 0; margin-bottom: 20px; }
+      .pg-intro .pg-titre { margin-top: 6px; font-size: calc(24 * var(--u)); }
+      .pg-intro .pg-sous { font-size: calc(14 * var(--u)); margin-top: 8px; }
+      .pg-ico svg .a, .pf-item-ico .a { fill: #ffffff; }
+      .vue-donnees .pg-tete { position: sticky; top: 0; z-index: 3; margin: 0; background: var(--bg); padding: calc(12px + env(safe-area-inset-top)) 16px 8px; }
+      .vue-donnees .dp-corps { padding-top: 0; }
+      .vue-donnees .dp-titre { margin-top: 6px; font-size: calc(24 * var(--u)); }
+      .vue-devenir .sheet-ok .rond { display: none; }
+      .vue-profil-feuille .rg-section-titre, .vue-donnees .rg-section-titre {
+        margin: 26px 2px 10px; font-family: var(--titre); font-size: calc(18 * var(--u)); font-weight: 800;
+        letter-spacing: -.02em; color: var(--ink);
+      }
+      .vue-profil-feuille .rg-ligne { padding: 15px 0; }
+      .vue-profil-feuille .pf-gain { grid-template-columns: 28px 1fr auto 16px; }
+      .pf-gain .pf-item-txt > span { font-size: calc(12.5 * var(--u)); }
+      .pf-gain-val:empty { display: none; }
+
+      /* Inviter des amis : la croix et l'enveloppe, le titre, une phrase, le QR. */
+      .vue-amis .va-invite-head { display: grid; margin: -20px -24px 0; padding: calc(12px + env(safe-area-inset-top)) 16px 8px; }
+      .vue-amis .va-invite-titre { margin: 6px 0 0; font-size: calc(24 * var(--u)); }
+      .iv-sous { margin: 8px auto 20px; max-width: 30ch; text-align: center; font-size: calc(14 * var(--u)); line-height: 1.5; color: var(--ink2); }
+      .vue-amis .va-qr-cadre { max-width: 250px; margin: 0 auto 18px; padding: 14px; border: 0; border-radius: 18px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); }
+      .vue-amis .va-share { margin-top: 12px; }
+
+      /* Installer l'appli, sur l'ecran d'accueil. */
+      .ac-installer {
+        display: flex; align-items: center; gap: 12px; margin: 0 0 16px; padding: 10px 12px;
+        border-radius: 14px; background: #f3f3f5; text-align: left;
+      }
+      .ac-installer[hidden] { display: none; }
+      .ac-installer img { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; }
+      .ac-installer-txt { flex: 1; margin: 0; font-size: calc(13.5 * var(--u)); line-height: 1.4; color: #15181d; }
+      .ac-installer-btn {
+        flex: 0 0 auto; min-height: 36px; padding: 0 14px; border: 0; border-radius: 999px;
+        background: #15181d; color: #ffffff; font-family: inherit; font-size: calc(13.5 * var(--u)); font-weight: 700; cursor: pointer;
+      }
+      .ac-installer-btn[hidden] { display: none; }
+
+      /* La photo entiere, sans fondu : un rectangle net au rapport 3:2. */
+      .sheet-sup .sup-hero { height: auto; aspect-ratio: 3 / 2; }
+      .sheet-sup .sup-hero img { -webkit-mask-image: none; mask-image: none; object-position: center; }
+
       /* ============================================================
          MODE APPLI — classe posee par le script du <head> quand la page
          tourne installee sur l'ecran d'accueil, ou dans la coquille
@@ -5148,6 +5199,16 @@
              (activerVue), qui gere la navigation APRES l'accueil. -->
         <div class="vue-accueil" id="vue-accueil">
           <h2 class="ac-title">Bienvenue sur Noctify</h2>
+          <!-- INSTALLER L'APPLI DEPUIS UN LIEN (13/09/2026). Julien veut qu'un ami
+               qui ouvre le lien d'invitation puisse installer l'appli. C'est une
+               PWA : Android propose l'installation (beforeinstallprompt), iPhone
+               ne sait le faire que par Partager > Sur l'ecran d'accueil. Rien ne
+               s'affiche si l'appli est deja installee, ni sur ordinateur. -->
+          <div class="ac-installer" id="ac-installer" hidden>
+            <img src="/icones/icone-192.png" alt="" width="40" height="40" onerror="this.remove()" />
+            <p class="ac-installer-txt" id="ac-installer-txt">Installe Noctify sur ton téléphone.</p>
+            <button type="button" class="ac-installer-btn" id="ac-installer-btn" hidden>Installer</button>
+          </div>
 
           <!-- Logo Noctify, envoye par Julien le 2026-08-30. Il remplace
                le paresseux, qu'il a lui-meme juge sans rapport avec le
@@ -5415,73 +5476,43 @@
                  le lien lisible avec son bouton copier ; UN bouton plein.
                  Le QR passe derriere "Afficher mon QR code" : il ne sert
                  qu'en face a face, pas a chaque ouverture. -->
+            <!-- ⚠️ INVITER DES AMIS, SANS DETAIL. Julien, 13/09/2026 : "il y a trop
+                 de details, trop de trucs inutiles. Il faut juste qu'on puisse
+                 inviter nos amis avec un QR code ou avec un lien [...] et qu'avec
+                 ce lien on puisse installer l'application. Rien de complique."
+                 Partis : la mascotte, les gains cote a cote, les trois etapes, le
+                 code, le QR a deplier. Reste : le QR visible, le lien et Copier,
+                 Partager. Les elements que le JS alimente sans les montrer
+                 (avatar, montants, pseudo) restent dans le DOM, caches. -->
             <div class="va-invite" id="va-invite" hidden>
-              <div class="va-invite-head">
+              <div class="va-invite-head pg-tete">
                 <button type="button" class="va-back" id="va-back" aria-label="Fermer">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                </button>
-                <h2 class="va-invite-titre">Inviter des amis</h2>
+                </button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect class="a" x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6.5L20.5 7"/></svg></span>
               </div>
+              <h2 class="va-invite-titre">Inviter des amis</h2>
+              <p class="iv-sous">Ton ami scanne le QR code ou ouvre ton lien, et installe l’appli.</p>
               <div class="va-code">
-                <!-- Les deux nombres sont relus depuis la base a l'ouverture
-                     (montant_parrainage / montant_bienvenue, migration 0044) :
-                     ce qui est ecrit ici n'est qu'un repli. -->
-                <div class="iv-hero">
-                  <img class="iv-verre" src="/mascotte/verre-salut.webp" alt="" width="640" height="640" />
-                  <div class="iv-duo">
-                    <p class="iv-part"><span>Pour toi</span><strong>+<span id="va-gain-montant" class="js-montant-parrainage">100</span></strong><em>points par ami inscrit</em></p>
-                    <p class="iv-part"><span>Pour ton ami</span><strong>+<span id="va-gain-bienvenue">50</span></strong><em>points à sa première venue</em></p>
-                  </div>
+                <div class="va-qr-cadre">
+                  <div class="va-qr" id="va-qr" aria-hidden="true"></div>
                 </div>
-
-                <ol class="sheet-etapes iv-etapes">
-                  <li>
-                    <span class="sheet-etape-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5m0 0 4 4m-4-4-4 4"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg></span>
-                    <span class="sheet-etape-txt"><strong>Tu partages ton lien</strong><span>Par message, en story, ou avec ton QR code.</span></span>
-                  </li>
-                  <li>
-                    <span class="sheet-etape-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.6"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M16 11h6"/></svg></span>
-                    <span class="sheet-etape-txt"><strong>Ton ami s’inscrit avec ton lien</strong><span>Vous devenez amis dans l’appli.</span></span>
-                  </li>
-                  <li>
-                    <span class="sheet-etape-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m12 7.3 1.4 2.9 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z"/></svg></span>
-                    <span class="sheet-etape-txt"><strong>Tes points arrivent</strong><span>Dès son inscription, sur ton solde.</span></span>
-                  </li>
-                </ol>
-
-                <!-- L'avatar reste dans le DOM (le JS l'alimente et gere
-                     l'envoi de photo) mais ne s'affiche pas ici : la photo se
-                     change dans Reglages. -->
-                <button type="button" class="va-avatar" id="va-avatar" aria-label="Changer ma photo de profil">
-                  <span class="va-avatar-init" id="va-avatar-init"></span>
-                  <img class="va-avatar-img" id="va-avatar-img" alt="" hidden />
-                  <span class="va-avatar-edit" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/></svg>
-                  </span>
-                </button>
-                <input type="file" accept="image/*" id="va-avatar-file" hidden />
-
-                <p class="iv-label">Ton lien</p>
                 <div class="va-code-ligne">
                   <span class="iv-lien" id="va-lien">…</span>
                   <button type="button" class="va-copier" id="va-copier">Copier</button>
                 </div>
-                <!-- Le code, c'est le pseudo : claim_referral() le prend tel
-                     quel. Utile pour le dicter a quelqu'un a cote. -->
-                <p class="iv-code">Ton code : <span class="va-handle" id="va-handle">…</span></p>
-
                 <button type="button" class="va-share" id="va-share">Partager mon lien</button>
-                <button type="button" class="iv-qr-bascule" id="iv-qr-bascule" aria-expanded="false" aria-controls="iv-qr-zone">Afficher mon QR code</button>
-
-                <div class="iv-qr-zone" id="iv-qr-zone" hidden>
-                  <div class="va-qr-cadre">
-                    <div class="va-qr" id="va-qr" aria-hidden="true"></div>
-                  </div>
-                  <p class="iv-note">À faire scanner par ton ami, appareil photo ouvert.</p>
-                </div>
-
-                <!-- LE COMPTEUR. Masque a zero : "0 ami" n'apprend rien. -->
                 <p class="va-parrainages" id="va-parrainages" hidden></p>
+
+                <div hidden>
+                  <span id="va-gain-montant" class="js-montant-parrainage">100</span>
+                  <span id="va-gain-bienvenue">50</span>
+                  <span class="va-handle" id="va-handle"></span>
+                  <button type="button" class="va-avatar" id="va-avatar" tabindex="-1">
+                    <span class="va-avatar-init" id="va-avatar-init"></span>
+                    <img class="va-avatar-img" id="va-avatar-img" alt="" hidden />
+                  </button>
+                  <input type="file" accept="image/*" id="va-avatar-file" />
+                </div>
               </div>
             </div>
 
@@ -5606,7 +5637,7 @@
               <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.5l7 2.5 2.5 7z"/><path d="m21 3-11 10"/></svg>Partager</h2>
               <div class="pf-liste">
                 <button type="button" class="pf-item" id="pf-inviter">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6.5L20.5 7"/></svg>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect class="a" x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6.5L20.5 7"/></svg>
                   <span class="pf-item-txt"><strong>Inviter des amis</strong><span><span id="pf-inviter-montant">100</span> points par ami qui s’inscrit avec ton lien.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
@@ -5623,12 +5654,12 @@
               <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9.3a3 3 0 0 1 5.8 1c0 2-2.9 2.3-2.9 4.3"/><path d="M12 17.3h.01"/></svg>Aide</h2>
               <div class="pf-liste">
                 <button type="button" class="pf-item" id="pf-aide">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/><path d="m5.6 5.6 3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/></svg>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><circle class="a" cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/><path d="m5.6 5.6 3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/></svg>
                   <span class="pf-item-txt"><strong>Aide &amp; Support</strong><span>Une question sur tes points ou une récompense.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
                 <button type="button" class="pf-item" id="pf-avis">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-11.7 7.1L4 20l1-4.1A8 8 0 1 1 20 12z"/><path d="M9 10.5h6M9 13.5h4"/></svg>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="a" d="M20 12a8 8 0 0 1-11.7 7.1L4 20l1-4.1A8 8 0 1 1 20 12z"/><path d="M9 10.5h6M9 13.5h4"/></svg>
                   <span class="pf-item-txt"><strong>Donner mon avis</strong><span>Une note et un mot sur l’appli Noctify.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
@@ -5639,19 +5670,19 @@
               <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.4 20.2a7.6 7.6 0 0 1 15.2 0"/></svg>Compte</h2>
               <div class="pf-liste">
                 <button type="button" class="pf-item" id="pf-reglages">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle class="a" cx="16" cy="7" r="2.3"/><circle class="a" cx="8" cy="17" r="2.3"/></svg>
                   <span class="pf-item-txt"><strong>Réglages</strong><span>Nom, pseudo, e-mail, Instagram et sons.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
                 <!-- "Personal data" de DUSK : ce qu'on garde, et la suppression
                      du compte, qui ne vit plus que la. -->
                 <button type="button" class="pf-item" id="pf-donnees">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6z"/><circle cx="12" cy="10.2" r="2.4"/><path d="M8.3 16a4.3 4.3 0 0 1 7.4 0"/></svg>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="a" d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6z"/><circle cx="12" cy="10.2" r="2.4"/><path d="M8.3 16a4.3 4.3 0 0 1 7.4 0"/></svg>
                   <span class="pf-item-txt"><strong>Données personnelles</strong><span>Ce qu’on garde sur toi, et la suppression du compte.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
                 <button type="button" class="pf-item" id="pf-action-favoris">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1z"/></svg>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="a" d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1z"/><path d="M12 12.6c-1.9-1.3-3.2-2.3-3.2-3.6 0-1.7 2.2-2.3 3.2-.8 1-1.5 3.2-.9 3.2.8 0 1.3-1.3 2.3-3.2 3.6z"/></svg>
                   <span class="pf-item-txt"><strong>Favoris</strong><span>Les établissements que tu as gardés.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
@@ -5659,12 +5690,12 @@
                      pas faire seulement les boites de nuit". Bar, restaurant,
                      club : l'icone passe du verre a cocktail a la devanture. -->
                 <button type="button" class="pf-item" id="pf-devenir-club">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v10h16V10"/><path d="M3 10 5 4h14l2 6"/><path d="M3 10c0 1.4 1.3 2.4 3 2.4s3-1 3-2.4c0 1.4 1.3 2.4 3 2.4s3-1 3-2.4c0 1.4 1.3 2.4 3 2.4s3-1 3-2.4"/><path d="M10 20v-4.5h4V20"/></svg>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12v8h15v-8"/><path class="a" d="M3 10 5 4h14l2 6c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4S3 11.4 3 10z"/><path d="M10 20v-4.5h4V20"/></svg>
                   <span class="pf-item-txt"><strong>Vous gérez un établissement&nbsp;?</strong><span>Bar, boîte de nuit ou restaurant : rejoindre Noctify.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
                 <button type="button" class="pf-item" id="pf-apropos">
-                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/></svg>
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><circle class="a" cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/></svg>
                   <span class="pf-item-txt"><strong>À propos</strong><span>Comment marche Noctify, comment gagner des points.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
@@ -5681,8 +5712,8 @@
 
         <!-- ================= ECRAN REGLAGES ================= -->
         <div class="vue-profil vue-profil-feuille" id="vue-reglages" hidden>
-          <div class="pg-tete"><button type="button" class="pg-fermer" id="rg-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-          <div class="pg-intro"><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></span><h1 class="pg-titre">Réglages</h1><p class="pg-sous">Ton profil, tes notifications et les sons.</p></div>
+          <div class="pg-tete"><button type="button" class="pg-fermer" id="rg-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle class="a" cx="16" cy="7" r="2.3"/><circle class="a" cx="8" cy="17" r="2.3"/></svg></span></div>
+          <div class="pg-intro"><h1 class="pg-titre">Réglages</h1><p class="pg-sous">Ton profil, tes notifications et les sons.</p></div>
 
           <div class="rg-liste">
             <!-- Le nom du haut du profil se corrige ici : devine depuis
@@ -5780,13 +5811,12 @@
              vendu, rien de cede. Pas de date de naissance ni de genre comme
              chez DUSK : on ne les collecte pas. -->
         <div class="vue-profil vue-aide-page vue-donnees" id="vue-donnees" hidden>
-          <div class="dp-tete">
+          <div class="pg-tete">
             <button type="button" class="ai-retour" id="dp-retour" aria-label="Fermer">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
-            </button>
+            </button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="a" d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6z"/><circle cx="12" cy="10.2" r="2.4"/><path d="M8.3 16a4.3 4.3 0 0 1 7.4 0"/></svg></span>
           </div>
           <div class="dp-corps">
-            <span class="dp-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6z"/><circle cx="12" cy="10.2" r="2.4"/><path d="M8.3 16a4.3 4.3 0 0 1 7.4 0"/></svg></span>
             <h1 class="dp-titre">Données personnelles</h1>
             <p class="dp-intro">On garde ces données pour te créditer tes points et reconnaître tes stories. Elles ne sont ni vendues ni cédées à personne.</p>
 
@@ -5809,7 +5839,7 @@
              Une page, comme les autres lignes des parametres (13/09/2026).
              Le formulaire est construit par ouvrirDevenirClub(). -->
         <div class="vue-profil vue-profil-feuille vue-devenir" id="vue-devenir" hidden>
-          <div class="pg-tete"><button type="button" class="pg-fermer" id="dv-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          <div class="pg-tete"><button type="button" class="pg-fermer" id="dv-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 12v8h15v-8"/><path class="a" d="M3 10 5 4h14l2 6c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4S3 11.4 3 10z"/><path d="M10 20v-4.5h4V20"/></svg></span></div>
           <div id="dv-corps"></div>
         </div>
 
@@ -5841,13 +5871,19 @@
              la Boutique (qui ne montre que le catalogue et les bons
              encore valables). -->
         <div class="vue-profil vue-profil-feuille" id="vue-historique" hidden>
-          <div class="pg-tete"><button type="button" class="pg-fermer" id="hs-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-          <div class="pg-intro"><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m12 7.3 1.4 2.9 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z"/></svg></span><h1 class="pg-titre">Ma fidélité</h1></div>
+          <div class="pg-tete"><button type="button" class="pg-fermer" id="hs-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle class="a" cx="12" cy="12" r="9"/><path d="m12 7.3 1.4 2.9 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z"/></svg></span></div>
+          <div class="pg-intro"><h1 class="pg-titre">Ma fidélité</h1></div>
           <!-- Le solde en grand, sous le titre ; plus de pastille ni de DM Mono. -->
           <p class="pg-solde"><strong id="hs-solde">0</strong> points</p>
-          <p class="rg-section-titre">Historique</p>
+          <!-- "Poste ta premiere story pour gagner des points" etait trop peu
+               (Julien, 13/09/2026 : "il y a differentes manieres de gagner des
+               points, vaut mieux expliquer plus"). Toutes les facons, avec ce
+               qu'elles rapportent -- la meme liste que dans A propos. -->
+          <p class="rg-section-titre">Gagner des points</p>
+          <div class="pf-liste js-gains"></div>
+          <p class="rg-section-titre" id="hs-titre" hidden>Historique</p>
           <div id="hs-liste" class="hist-carte"></div>
-          <p class="pg-vide" id="hs-vide">Aucun mouvement pour l’instant.</p>
+          <p class="pg-vide" id="hs-vide" hidden></p>
         </div>
 
         <!-- ================= ECRAN FAVORIS =================
@@ -5855,8 +5891,8 @@
              FAVORIS_CLE) : le coeur sur la fiche club (cablerFavoriClub,
              fonction ouvrirClub) ajoute/retire de cette meme liste. -->
         <div class="vue-profil vue-profil-feuille" id="vue-favoris" hidden>
-          <div class="pg-tete"><button type="button" class="pg-fermer" id="fv-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-          <div class="pg-intro"><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1z"/></svg></span><h1 class="pg-titre">Favoris</h1><p class="pg-sous">Les établissements que tu as gardés.</p></div>
+          <div class="pg-tete"><button type="button" class="pg-fermer" id="fv-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="a" d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1z"/><path d="M12 12.6c-1.9-1.3-3.2-2.3-3.2-3.6 0-1.7 2.2-2.3 3.2-.8 1-1.5 3.2-.9 3.2.8 0 1.3-1.3 2.3-3.2 3.6z"/></svg></span></div>
+          <div class="pg-intro"><h1 class="pg-titre">Favoris</h1><p class="pg-sous">Les établissements que tu as gardés.</p></div>
           <div id="fv-liste"></div>
           <!-- Plus de rond rose avec un coeur rouge (le lavis refuse ailleurs). -->
           <p class="pg-vide" id="fv-vide">Aucun favori pour l’instant. Le cœur d’une fiche d’établissement le garde ici.</p>
@@ -5919,8 +5955,8 @@
 
         <!-- ================= ECRAN A PROPOS ================= -->
         <div class="vue-profil vue-profil-feuille" id="vue-apropos" hidden>
-          <div class="pg-tete"><button type="button" class="pg-fermer" id="ap-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-          <div class="pg-intro"><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/></svg></span><h1 class="pg-titre">À propos</h1><p class="pg-sous">Comment marche Noctify.</p></div>
+          <div class="pg-tete"><button type="button" class="pg-fermer" id="ap-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle class="a" cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/></svg></span></div>
+          <div class="pg-intro"><h1 class="pg-titre">À propos</h1><p class="pg-sous">Comment marche Noctify.</p></div>
 
           <div class="rg-carte">
             <p class="rg-carte-desc" style="border-top:0;padding-top:0;margin-top:0">
@@ -5939,7 +5975,7 @@
                fonctionnalites, qui disait la meme chose sans les montants,
                est retiree. -->
           <p class="rg-section-titre">Gagner des points</p>
-          <div class="pf-liste ap-gains" id="gains"></div>
+          <div class="pf-liste ap-gains js-gains"></div>
 
           <p class="rg-section-titre">Fonctionnalités</p>
           <div class="ap-feature">
@@ -5978,8 +6014,8 @@
              honnetement le fonctionnement reel ; une relecture par un
              juriste reste a faire. Meme avertissement que club-app. -->
         <div class="vue-profil vue-profil-feuille" id="vue-conditions" hidden>
-          <div class="pg-tete"><button type="button" class="pg-fermer" id="cg-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-          <div class="pg-intro"><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 17h6"/></svg></span><h1 class="pg-titre">Conditions d’utilisation</h1></div>
+          <div class="pg-tete"><button type="button" class="pg-fermer" id="cg-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="a" d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 17h6"/></svg></span></div>
+          <div class="pg-intro"><h1 class="pg-titre">Conditions d’utilisation</h1></div>
 
           <div class="legal legal-cgu">
             <p class="legal-chapo">
@@ -6222,8 +6258,8 @@
         </div>
 
         <div class="vue-profil vue-profil-feuille" id="vue-confidentialite" hidden>
-          <div class="pg-tete"><button type="button" class="pg-fermer" id="cf-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-          <div class="pg-intro"><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><path d="M12 14.5v2.5"/></svg></span><h1 class="pg-titre">Confidentialité</h1></div>
+          <div class="pg-tete"><button type="button" class="pg-fermer" id="cf-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect class="a" x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><path d="M12 14.5v2.5"/></svg></span></div>
+          <div class="pg-intro"><h1 class="pg-titre">Confidentialité</h1></div>
 
           <div class="legal">
             <h2>Ce qu'on garde sur toi</h2>
@@ -6702,6 +6738,43 @@ var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koi
   if (code && /^[a-z0-9._]{2,30}$/i.test(code)) {
     try { localStorage.setItem("vn.parrain", code.trim().toLowerCase()); } catch {}
   }
+})();
+
+/* L'installation de l'appli, proposee sur l'ecran d'accueil (voir
+   #ac-installer). */
+(function () {
+  var bloc = document.getElementById("ac-installer");
+  if (!bloc) return;
+  var installee =
+    (window.matchMedia && matchMedia("(display-mode: standalone)").matches) ||
+    window.navigator.standalone === true ||
+    typeof window.Capacitor !== "undefined";
+  var ua = navigator.userAgent || "";
+  var iphone = /iPhone|iPad|iPod/i.test(ua);
+  var android = /Android/i.test(ua);
+  if (installee || !(iphone || android)) return;
+  var txt = document.getElementById("ac-installer-txt");
+  var bouton = document.getElementById("ac-installer-btn");
+  if (iphone) {
+    txt.textContent = "Pour installer l’appli : touche Partager, puis « Sur l’écran d’accueil ».";
+    bloc.hidden = false;
+    return;
+  }
+  var demande = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    demande = e;
+    txt.textContent = "Installe Noctify sur ton téléphone.";
+    bouton.hidden = false;
+    bloc.hidden = false;
+  });
+  bouton.addEventListener("click", async function () {
+    if (!demande) return;
+    demande.prompt();
+    try { await demande.userChoice; } catch (e) {}
+    demande = null;
+    bloc.hidden = true;
+  });
 })();
 
 // Copie statique dans public/, servie telle quelle par Vite (dev et
@@ -10270,7 +10343,11 @@ async function ouvrirPageAmis(session) {
   var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).single()).data;
   var monHandle = profil && profil.handle;
   var lien = monHandle
-    ? window.location.origin + window.location.pathname + "?parrain=" + encodeURIComponent(monHandle)
+    /* ?app=1 : sans lui, un ami qui ouvre le lien dans son navigateur voyait
+       la page de demonstration (l'appli dans un cadre de telephone sur fond
+       sombre), pas l'appli. Son ecran d'accueil lui propose ensuite de
+       l'installer (voir #ac-installer). */
+    ? window.location.origin + window.location.pathname + "?app=1&parrain=" + encodeURIComponent(monHandle)
     : null;
 
   var lienEl = document.getElementById("va-lien");
@@ -10747,7 +10824,11 @@ async function chargerHistoriquePoints() {
   });
   mouvements.sort(function (a, b) { return new Date(b.quand) - new Date(a.quand); });
 
-  vide.hidden = mouvements.length > 0;
+  // Vide : pas de titre ni de message, la liste "Gagner des points" au-dessus
+  // dit deja comment remplir cette page.
+  vide.hidden = true;
+  var titreHisto = document.getElementById("hs-titre");
+  if (titreHisto) titreHisto.hidden = !mouvements.length;
   zone.innerHTML = mouvements.map(function (m) {
     var icone = m.gain
       ? '<path d="M12 19V5M5 12l7-7 7 7"/>'
@@ -11543,11 +11624,10 @@ $("#dp-retour")?.addEventListener("click", function () { VUE_DONNEES.hidden = tr
 
    L'image : la photo choisie par Julien le 13/09/2026, une terrasse de
    restaurant (Pexels 1846137, licence Pexels : usage commercial gratuit,
-   sans attribution, deja declaree dans les mentions legales). Recadree sur
-   les tables et les gens, SANS le nom du restaurant (auvent et vitrine) :
-   l'enseigne d'un vrai lieu dans l'appli laisserait croire a un partenaire.
-   Servie depuis notre domaine (/ambiance/quitter.webp) -- jamais chargee
-   depuis Pexels, qui recevrait l'adresse IP.
+   sans attribution, deja declaree dans les mentions legales). ENTIERE,
+   reduite au cadre (meme rapport 3:2) : il avait refuse le recadrage
+   ("pourquoi tu ne la mets pas au complet ?"). Servie depuis notre domaine
+   (/ambiance/quitter.webp) -- jamais chargee depuis Pexels.
 
    La suppression elle-meme n'a pas change : /api/credit-clubbeur?action=
    supprimer-compte, identifiant relu du jeton cote serveur (exigence App
@@ -12742,9 +12822,11 @@ var ICO_GAIN = {
   cadeau: '<rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/>',
 };
 var GAINS = [
-  { t: "Poster une story", v: BAREME_STORY.story.pts, ico: ICO_GAIN.story },
-  { t: "Reel ou TikTok", v: BAREME_STORY.reel.pts, ico: ICO_GAIN.video },
-  { t: "Scanner le QR sur place", v: "+15", ico: ICO_GAIN.scan },
+  { t: "Poster une story", s: "Mentionne l’établissement. Points crédités 24 h après.", v: BAREME_STORY.story.pts, ico: ICO_GAIN.story, geste: "story" },
+  { t: "Reel ou TikTok", s: "Mentionne l’établissement. Sur TikTok, 7 points de plus par 100 vues.", v: BAREME_STORY.reel.pts, ico: ICO_GAIN.video, geste: "story" },
+  { t: "Scanner le QR sur place", s: "À ton arrivée, une fois par soirée.", v: "+15", ico: ICO_GAIN.scan, geste: "story" },
+  { t: "Inviter un ami", s: "Dès qu’il s’inscrit avec ton lien.", v: '+<span class="js-montant-parrainage">100</span>', ico: ICO_GAIN.ami, geste: "ami" },
+  { t: "Cadeau du jour", s: "À récupérer chaque jour dans Récompenses.", v: "", ico: ICO_GAIN.cadeau, geste: "cadeau" },
 ];
 
 var OUVERTURE = 23, FERMETURE = 6;
@@ -13175,25 +13257,30 @@ async function ouvrirBon(bon, src) {
 }
 
 (function rendreGains() {
-  var z = $("#gains");
-  if (!z) return;
-  GAINS.forEach(function (g) {
-    var e = document.createElement("button");
-    e.type = "button";
-    e.className = "pf-item pf-gain";
-    e.innerHTML =
-      '<svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true">' + g.ico + "</svg>" +
-      '<span class="pf-item-txt"><strong>' + g.t + "</strong></span>" +
-      '<span class="pf-gain-val">' + g.v + "</span>" +
-      '<svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-    e.addEventListener("click", function () {
-      // La feuille A propos passerait sinon par-dessus la page Story.
-      var apropos = document.getElementById("vue-apropos");
-      if (apropos) apropos.hidden = true;
-      ouvrirChoixReseau(null);
+  // Les pages du profil ouvertes passeraient sinon par-dessus l'ecran vise.
+  function fermerPages() {
+    document.querySelectorAll(".vue-profil-feuille, .vue-aide-page").forEach(function (p) { p.hidden = true; });
+  }
+  document.querySelectorAll(".js-gains").forEach(function (z) {
+    GAINS.forEach(function (g) {
+      var e = document.createElement("button");
+      e.type = "button";
+      e.className = "pf-item pf-gain";
+      e.innerHTML =
+        '<svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true">' + g.ico + "</svg>" +
+        '<span class="pf-item-txt"><strong>' + g.t + "</strong><span>" + g.s + "</span></span>" +
+        '<span class="pf-gain-val">' + g.v + "</span>" +
+        '<svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+      e.addEventListener("click", function () {
+        fermerPages();
+        if (g.geste === "ami") { ouvrirInvitation("profil"); return; }
+        if (g.geste === "cadeau") { fermerProfil(); activerVue("boutique"); return; }
+        ouvrirChoixReseau(null);
+      });
+      z.appendChild(e);
     });
-    z.appendChild(e);
   });
+  majMontantParrainage();
 })();
 
 function ouvrirRecompense(item, src) {
