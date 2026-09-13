@@ -88,15 +88,8 @@ const HAUTEUR = 844;
   await pause(700);
   await prendre("03-recompenses-cartes", "Récompenses — le catalogue du club");
 
-  // "Gagner des points" (13/09/2026) : une section ouverte en bas de la
-  // boutique, plus un accordeon replie.
-  await page.evaluate(() => {
-    const sec = document.querySelector(".sec-gagner");
-    const app = document.querySelector("#vue-boutique .app");
-    if (sec && app) app.scrollTop = sec.offsetTop - 60;
-  });
-  await pause(700);
-  await prendre("03b-gagner", "Récompenses — gagner des points");
+  // "Gagner des points" est dans le Profil depuis le 13/09/2026 (capture
+  // 09b-profil-parametres de clubbeur_connecte.cjs).
 
   // La fiche d'une recompense : c'est la que le clubbeur decide.
   const ouverte = await page.evaluate(() => {

@@ -78,8 +78,6 @@ CLUBBEUR_APPLI = [
      "Chaque en-tête dit s’il est ouvert ou quand il ouvre (calculé sur ses horaires) et son quartier ; un tap ouvre sa fiche. Ses photos s’afficheront en bandeau dès qu’il en aura : aucune n’est déposée aujourd’hui. Velours, Minuit Douze et Néon 88 sont inventés.", "bars de démo"),
     (CLUBBEUR, "03-recompenses-cartes", "Onglet 1", "Plus bas dans la liste",
      "Sans position, chaque bar affiche son quartier ; avec la position, sa distance. Plus de petit logo du club sur chaque image.", "bars de d\u00e9mo"),
-    (CLUBBEUR, "03b-gagner", "Onglet 1", "Gagner des points",
-     "Plus un menu replié : une ligne par geste, et chaque ligne mène au geste. Les montants sont ceux que la base clubbeur verse vraiment (story 100, Reel/TikTok 60, QR 15, ami 100, cadeau 2 à 20).", "nouveau"),
     (CLUBBEUR, "04-recompense-fiche", "Onglet 1", "Une r\u00e9compense, ouverte",
      "La feuille qui d\u00e9cide de l\u2019\u00e9change. \u00c0 z\u00e9ro point, le bouton nomme ce qu\u2019il manque.", ""),
     (CLUBBEUR, "05-carte", "Onglet 3", "La carte des clubs",
@@ -123,7 +121,7 @@ CLUBBEUR_SESSION = [
     # Les deux seuls ecrans de cette planche pris avec un VRAI compte
     # (outils/clubbeur_connecte.cjs, compte jetable cree puis supprime).
     (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
-     "Tes motifs de verres, la carte des notifications plus fine dans la couleur inverse de l’appli (elle disparaît une fois acceptées), et « Mes points » rangé comme un bloc de réglages. Nom de la capture inventé.", "vrai compte"),
+     "Tes motifs de verres, la carte des notifications plus fine dans la couleur inverse de l’appli (elle disparaît une fois acceptées), « Mes points » puis « Gagner des points » rangés comme des blocs de réglages. Nom de la capture inventé.", "vrai compte"),
     (CLUBBEUR, "09b-profil-parametres", "Onglet 5", "Les paramètres, façon DUSK",
      "Plus de bouton « Se déconnecter » en bas : c’est une ligne de Réglages. « Données personnelles » ouvre la suppression du compte.", "vrai compte"),
     (CLUBBEUR, "10-inviter", "Profil > Partager", "Inviter des amis",
