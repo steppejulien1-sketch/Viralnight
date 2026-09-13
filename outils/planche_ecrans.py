@@ -121,7 +121,7 @@ CLUBBEUR_SESSION = [
     # Les deux seuls ecrans de cette planche pris avec un VRAI compte
     # (outils/clubbeur_connecte.cjs, compte jetable cree puis supprime).
     (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
-     "Tes motifs de verres, la carte des notifications plus fine dans la couleur inverse de l’appli (elle disparaît une fois acceptées), « Mes points » puis « Gagner des points » rangés comme des blocs de réglages. Nom de la capture inventé.", "vrai compte"),
+     "Tes motifs de verres, la carte des notifications plus fine dans la couleur inverse de l’appli (elle disparaît une fois acceptées), « Mes points » rangé comme un bloc de réglages ; « Gagner des points » est dans À propos. Nom de la capture inventé.", "vrai compte"),
     (CLUBBEUR, "09b-profil-parametres", "Onglet 5", "Les paramètres, façon DUSK",
      "Plus de bouton « Se déconnecter » en bas : c’est une ligne de Réglages. « Données personnelles » ouvre la suppression du compte.", "vrai compte"),
     (CLUBBEUR, "10-inviter", "Profil > Partager", "Inviter des amis",
