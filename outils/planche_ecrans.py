@@ -123,7 +123,7 @@ CLUBBEUR_SESSION = [
     # Les deux seuls ecrans de cette planche pris avec un VRAI compte
     # (outils/clubbeur_connecte.cjs, compte jetable cree puis supprime).
     (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
-     "L’entête DUSK, et la carte des notifications qui pousse à les activer : une cloche avec un point rouge tant qu’elles sont éteintes. Allumées, elle se replie sur une ligne. Nom de la capture inventé.", "vrai compte"),
+     "Tes motifs de verres (détourés, la version noire sert en mode sombre), et la carte des notifications dans la couleur inverse de l’appli, avec la phrase de DUSK. Une fois acceptées, la carte disparaît ; on les coupe dans Réglages. Nom de la capture inventé.", "vrai compte"),
     (CLUBBEUR, "09b-profil-parametres", "Onglet 5", "Les paramètres, façon DUSK",
      "Donner mon avis s’ouvre dans l’appli, l’avis Google est parti dans la fiche des établissements, « Vous gérez un établissement ? », et Se déconnecter entouré de rouge.", "vrai compte"),
     (CLUBBEUR, "10-inviter", "Profil > Partager", "Inviter des amis",
