@@ -524,6 +524,16 @@ async function actionSupprimerCompte(request, response) {
   // stories. Apres, il n'y a plus rien a raconter a Julien.
   const profil = await profilDuDepart(clubbeur, userId, qui.user);
 
+  /* ⚠️ LE SEUL LIEN QUI NE CASCADE PAS : users.referred_by (0032, sans
+     ON DELETE). Quiconque avait parraine un ami ne pouvait PAS supprimer
+     son compte -- la base refusait, et la feuille affichait « n'a pas
+     abouti ». Trouve le 13/09/2026 en listant les cles etrangeres. On
+     detache les filleuls avant : leurs points deja gagnes ne bougent pas.
+     Contrepartie acceptee : un filleul detache pourrait saisir un second
+     code de parrainage (claim_referral ne regarde que referred_by). */
+  const { error: erreurFilleuls } = await clubbeur.from("users").update({ referred_by: null }).eq("referred_by", userId);
+  if (erreurFilleuls) console.error("[supprimer-compte] filleuls non detaches", erreurFilleuls.message);
+
   const { error } = await clubbeur.auth.admin.deleteUser(userId);
   if (error) {
     console.error("[supprimer-compte] echec", error.message);
@@ -565,16 +575,19 @@ async function profilDuDepart(clubbeur, userId, utilisateurAuth) {
     solde: null,
     gagnes: null,
     parraine: false,
+    filleuls: null,
     stories: null,
     etablissements: [],
     dernierPassage: null,
   };
   try {
-    const [u, s, g] = await Promise.all([
+    const [u, s, g, f] = await Promise.all([
       clubbeur.from("users").select("handle, email, created_at, points_balance, lifetime_points, referred_by").eq("id", userId).maybeSingle(),
       clubbeur.from("story_events").select("id", { count: "exact", head: true }).eq("user_id", userId),
       clubbeur.from("point_grants").select("created_at, clubs(name)").eq("user_id", userId).order("created_at", { ascending: false }).limit(200),
+      clubbeur.from("users").select("id", { count: "exact", head: true }).eq("referred_by", userId),
     ]);
+    if (typeof f.count === "number") profil.filleuls = f.count;
     if (u.data) {
       profil.pseudo = u.data.handle || "";
       profil.email = profil.email || u.data.email || "";
@@ -615,6 +628,7 @@ async function mailDepart(p) {
     ["E-mail", p.email || "—"],
     ["Inscrit le", dateFr(p.inscrit)],
     ["Venu par un ami", p.parraine ? "Oui" : "Non"],
+    ["Amis invités", nombre(p.filleuls)],
     ["Points perdus", nombre(p.solde)],
     ["Points gagnés au total", nombre(p.gagnes)],
     ["Stories envoyées", nombre(p.stories)],
