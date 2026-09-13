@@ -1258,68 +1258,72 @@
       }
 
       /* ---- L'ENTETE DU PROFIL (modele DUSK) ----
-         Pleine largeur (marges negatives du padding de #vue-profil). Le
-         motif de verres vit dans ::before, et s'efface vers le bas par un
-         masque : le texte, lui, reste net. */
+         ⚠️ LE MOTIF EST CELUI DE JULIEN. 13/09/2026 : "copie le truc qu'ils
+         ont fait avec les verres [...] je t'en ai deux", une version blanche
+         et une noire, generees par lui. Detourees ici en fond transparent
+         (public/motifs/) : posees telles quelles, le blanc pur et le noir pur
+         des fichiers auraient fait un rectangle sur le fond chaud de l'appli.
+         Clair = traits d'encre ; sombre = traits blancs. Les sept verres
+         dessines en SVG avant sont retires.
+         Pleine largeur (marges negatives du padding de #vue-profil), et le
+         motif s'efface vers le bas par un masque : le texte reste net. */
       .pf-entete {
         position: relative; margin: -20px -20px 0;
-        /* 46 px au-dessus de la carte : les verres dessines doivent se voir
-           AU-DESSUS d'elle aussi, comme chez DUSK. */
-        padding: calc(46px + env(safe-area-inset-top)) 20px 34px;
+        padding: calc(50px + env(safe-area-inset-top)) 20px 40px;
       }
       .pf-entete::before {
         content: ""; position: absolute; inset: 0; pointer-events: none;
-        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240' fill='none' stroke='%23c9ccd3' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(14 22) rotate(-14 22 30)'%3E%3Cpath d='M2 6h40L22 30z'/%3E%3Cpath d='M22 30v24M12 54h20'/%3E%3Ccircle cx='29' cy='13' r='3.4'/%3E%3Cpath d='M27 16 17 1'/%3E%3C/g%3E%3Cg transform='translate(146 10) rotate(11 18 32)'%3E%3Cpath d='M4 12h26l-3 46H7z'/%3E%3Cpath d='M4 12c-1-5 4-8 8-6 2-4 9-4 11 0 4-2 8 1 7 6'/%3E%3Cpath d='M30 22h5a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4h-6'/%3E%3C/g%3E%3Cg transform='translate(92 92) rotate(-9 16 30)'%3E%3Cpath d='M4 2h24c0 18-5 26-12 26S4 20 4 2z'/%3E%3Cpath d='M16 28v24M7 52h18'/%3E%3Cpath d='M5 12h22'/%3E%3C/g%3E%3Cg transform='translate(186 104) rotate(13 18 28)'%3E%3Cpath d='M3 12h32l-4 38H7z'/%3E%3Crect x='10' y='24' width='9' height='9' rx='1.6' transform='rotate(-16 14 28)'/%3E%3Crect x='20' y='32' width='9' height='9' rx='1.6' transform='rotate(12 24 36)'/%3E%3Cpath d='M25 12 32 0h6'/%3E%3C/g%3E%3Cg transform='translate(30 150) rotate(17 10 32)'%3E%3Cpath d='M4 0h12l-1 26a5 5 0 0 1-10 0z'/%3E%3Cpath d='M10 31v22M3 53h14'/%3E%3Cpath d='M8 9v.01M12 15v.01M9 21v.01'/%3E%3C/g%3E%3Cg transform='translate(124 190) rotate(-15 12 14)'%3E%3Cpath d='M2 2h22l-3 26H5z'/%3E%3Cpath d='M4 13h18'/%3E%3C/g%3E%3Cg transform='translate(206 200)'%3E%3Ccircle cx='12' cy='12' r='11'/%3E%3Cpath d='M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4'/%3E%3C/g%3E%3C/svg%3E") -20px -10px / 300px 300px repeat;
-        -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
-        mask-image: linear-gradient(to bottom, #000 78%, transparent);
+        background: url("/motifs/verres-clair.webp") center top / 100% auto no-repeat;
+        opacity: .55;
+        -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent);
+        mask-image: linear-gradient(to bottom, #000 72%, transparent);
+      }
+      @media (prefers-color-scheme: dark) {
+        .pf-entete::before { background-image: url("/motifs/verres-sombre.webp"); opacity: .55; }
       }
       .pf-entete > * { position: relative; }
-      /* La carte : grise, coins presque droits comme chez DUSK.
-         ⚠️ PLUS FINE. Julien, 12/09/2026 : "le truc notification, rends-le
-         plus fin". Elle faisait 150 px de haut -- titre sur deux lignes,
-         phrase sur trois, gros interrupteur -- et masquait les dessins du
-         haut. Chez DUSK elle en fait une petite centaine : titre sur UNE
-         ligne, phrase sur deux, interrupteur au trait fin. */
+
+      /* ⚠️ LA CARTE DES NOTIFICATIONS, DANS L'AUTRE COULEUR. Julien,
+         13/09/2026 : chez DUSK "le truc notification [est] dans une autre
+         couleur que leur application de base, pour justement que ca attire
+         l'oeil". Leur appli est noire, leur carte claire. La notre est
+         claire : la carte est donc NOIRE -- et blanche en mode sombre. Coins
+         presque droits, titre, phrase, interrupteur au trait : la carte DUSK.
+         La cloche et le point rouge du matin sont retires (pas chez eux).
+         Une fois les notifications acceptees, la carte DISPARAIT (.actives,
+         pose par peindreBasculeNotif) : "une fois qu'on a accepte, [elle]
+         disparait". Pour les couper : Reglages > Notifications. */
       .pf-notif {
-        display: flex; align-items: center; gap: 14px;
-        padding: 13px 14px 13px 16px; border-radius: 6px;
-        background: #efeff1;
+        display: flex; align-items: center; gap: 16px;
+        padding: 14px 14px 14px 16px; border-radius: 6px;
+        background: #15181d;
+        box-shadow: 0 12px 26px -16px rgba(16,18,22,.6);
       }
       .pf-notif-txt { flex: 1; min-width: 0; }
-      .pf-notif-titre { margin: 0 0 3px; font-size: calc(14.5 * var(--u)); font-weight: 750; letter-spacing: -.01em; line-height: 1.25; color: #15181d; }
-      .pf-notif-desc { margin: 0; font-size: calc(12.5 * var(--u)); line-height: 1.4; color: #6a6f78; }
-      .pf-notif-msg { margin: 6px 0 0; font-size: calc(12.5 * var(--u)); line-height: 1.4; font-weight: 600; color: #15181d; }
+      .pf-notif-titre { margin: 0 0 3px; font-size: calc(15 * var(--u)); font-weight: 750; letter-spacing: -.01em; line-height: 1.25; color: #ffffff; }
+      .pf-notif-desc { margin: 0; font-size: calc(12.5 * var(--u)); line-height: 1.4; color: rgba(255,255,255,.72); }
+      .pf-notif-msg { margin: 6px 0 0; font-size: calc(12.5 * var(--u)); line-height: 1.4; font-weight: 600; color: #ffffff; }
       /* L'interrupteur DUSK : un contour fin, une bille pleine. */
       .pf-notif .rg-switch {
-        width: 40px; height: 24px; background: transparent;
-        box-shadow: inset 0 0 0 1.5px #15181d;
+        width: 42px; height: 26px; background: transparent;
+        box-shadow: inset 0 0 0 1.5px #ffffff;
       }
-      .pf-notif .rg-switch::after { top: 4px; left: 4px; width: 16px; height: 16px; background: #15181d; box-shadow: none; }
-      .pf-notif .rg-switch.on { background: #15181d; }
-      .pf-notif .rg-switch.on::after { background: #ffffff; transform: translateX(16px); }
+      .pf-notif .rg-switch::after { top: 5px; left: 5px; width: 16px; height: 16px; background: #ffffff; box-shadow: none; }
+      .pf-notif .rg-switch.on { background: #ffffff; }
+      .pf-notif .rg-switch.on::after { background: #15181d; transform: translateX(16px); }
       .pf-notif .rg-switch:disabled { opacity: .55; }
-      /* La cloche, dans une tuile blanche comme le paquet du cadeau du jour.
-         Le point rouge ne s'allume QUE notifications eteintes : c'est un
-         voyant qui a une raison d'etre allume, et qui s'eteint quand elle
-         disparait -- pas le point rouge permanent retire de la barre. */
-      .pf-notif-cloche {
-        position: relative; flex: 0 0 auto; width: 42px; height: 42px; border-radius: 10px;
-        display: grid; place-items: center; background: #ffffff;
+      .pf-notif.actives { display: none; }
+      /* Sans la carte, le nom garde sa place sous les dessins. */
+      .pf-notif.actives + .pf-head { padding-top: 96px; }
+      @media (prefers-color-scheme: dark) {
+        .pf-notif { background: #ffffff; box-shadow: none; }
+        .pf-notif-titre, .pf-notif-msg { color: #15181d; }
+        .pf-notif-desc { color: #5f646c; }
+        .pf-notif .rg-switch { box-shadow: inset 0 0 0 1.5px #15181d; }
+        .pf-notif .rg-switch::after { background: #15181d; }
+        .pf-notif .rg-switch.on { background: #15181d; }
+        .pf-notif .rg-switch.on::after { background: #ffffff; }
       }
-      .pf-notif-cloche svg { width: 22px; height: 22px; fill: none; stroke: #15181d; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-      .pf-notif-cloche::after {
-        content: ""; position: absolute; top: 9px; right: 10px; width: 8px; height: 8px; border-radius: 50%;
-        background: var(--marque); box-shadow: 0 0 0 2px #ffffff;
-      }
-      .pf-notif-on { display: none; }
-      .pf-notif.actives .pf-notif-on { display: inline; }
-      .pf-notif.actives .pf-notif-off,
-      .pf-notif.actives .pf-notif-desc,
-      .pf-notif.actives .pf-notif-cloche::after { display: none; }
-      .pf-notif.actives { padding-top: 9px; padding-bottom: 9px; }
-      .pf-notif.actives .pf-notif-cloche { width: 34px; height: 34px; }
-      .pf-notif.actives .pf-notif-cloche svg { width: 18px; height: 18px; }
-      .pf-notif.actives .pf-notif-titre { margin: 0; }
 
       /* Entete sobre. Le halo de marque rouge derriere l'entete et
          l'anneau rouge autour de la photo, essayes pendant la refonte,
@@ -5301,29 +5305,26 @@
                  capitales espacees et l'adresse dessous. Pas de photo.
                  L'essai d'avant (apercu de notification + gros bouton noir) est
                  abandonne pour ca.
-                 Les dessins sont les notres, pas ceux de DUSK : sept verres au
-                 trait gris clair, dans .pf-entete::before.
-                 La phrase ne promet que ce qui part vraiment (voir
-                 lib/notifications/push.js) : story validee, cadeau du jour.
+                 Les dessins sont ceux que Julien a generes (13/09/2026), pas
+                 ceux de DUSK : public/motifs/, dans .pf-entete::before.
                  La photo de profil se change desormais dans Reglages ; ses
                  elements restent dans le DOM, caches, parce que le code
                  d'envoi les alimente. -->
             <div class="pf-entete">
-              <!-- ⚠️ POUSSER A ACTIVER. Julien, 13/09/2026 : "essaye de pousser
-                   plus les gens a activer les notifications, ca peut etre plus
-                   interessant pour moi". On garde la carte DUSK a interrupteur
-                   (sa demande du 12/09), on lui donne de quoi accrocher l'oeil
-                   quand elle est eteinte : une cloche avec un point, et ce que
-                   la notification rapporte concretement. Allumee, elle se
-                   replie sur une ligne (.actives, pose par peindreBasculeNotif).
-                   Ne promet que ce qui part vraiment (lib/notifications/push.js). -->
+              <!-- ⚠️ LA PHRASE DE DUSK. Julien, 13/09/2026 : "ils ont ecrit be the
+                   first to know about new free drinks, rewards points and
+                   exclusive events". Adaptee sans masculin ("sois au courant en
+                   premier" plutot que "sois le premier").
+                   ⚠️ ELLE PROMET PLUS QUE CE QUI PART AUJOURD'HUI : seules la
+                   story validee (tes points) et le cadeau du jour envoient une
+                   notification (lib/notifications/push.js). "Nouvelles
+                   recompenses" et "soirees exclusives" restent a brancher --
+                   choix assume de Julien, a tenir le jour ou un club ajoute une
+                   recompense ou une soiree. -->
               <div class="pf-notif" id="pf-notif">
-                <span class="pf-notif-cloche" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>
-                </span>
                 <div class="pf-notif-txt">
-                  <p class="pf-notif-titre"><span class="pf-notif-off">Tes points en direct</span><span class="pf-notif-on">Notifications activées</span></p>
-                  <p class="pf-notif-desc">Dès qu’une story est validée ou qu’un cadeau t’attend.</p>
+                  <p class="pf-notif-titre">Des notifications faites pour toi</p>
+                  <p class="pf-notif-desc">Sois au courant en premier des nouvelles récompenses, de tes points et des soirées exclusives.</p>
                   <p class="pf-notif-msg js-msg-notif" hidden></p>
                 </div>
                 <button type="button" class="rg-switch js-bascule-notif" id="pf-notif-actif" role="switch" aria-checked="false" aria-label="Activer les notifications"></button>
@@ -5497,6 +5498,13 @@
                  sortie possible pour quelqu'un que ca derange. Actif par
                  defaut -- un son qu'il faut aller chercher n'est jamais
                  entendu. -->
+            <!-- La carte du profil disparait une fois les notifications
+                 acceptees : c'est ici qu'on les coupe. Meme classe
+                 js-bascule-notif, donc le meme etat que la carte. -->
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Notifications</strong><span>Points, cadeau du jour, nouveautés</span></span>
+              <button type="button" class="rg-switch js-bascule-notif" id="rg-notif-reglages" role="switch" aria-checked="false" aria-label="Notifications"></button>
+            </div>
             <div class="rg-ligne">
               <span class="rg-ligne-txt"><strong>Sons</strong><span>Points et récompenses</span></span>
               <button type="button" class="rg-switch" id="rg-son" role="switch" aria-checked="true" aria-label="Activer les sons"></button>
