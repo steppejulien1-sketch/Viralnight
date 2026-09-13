@@ -115,8 +115,9 @@ CLUBBEUR_SESSION = [
      "Avec un compte et des points. Les prix affichés (300 / 600 / 1 200) sont de la donnée de démonstration périmée : un vrai club est créé avec 40 · 60 · 90 · 130.", "prix périmés"),
     (CADEAU, "08-fiche-club", "Onglet 3", "La fiche d’un club",
      "Ce qui s’ouvre quand on touche un point sur la carte.", "valeurs posées"),
-    (CADEAU, "09-parrainage", "Onglet 5", "Inviter des amis",
-     "100 points, le gain d’abord, le code en gros. L’écran a longtemps annoncé 150 pendant que le serveur en versait 50.", "valeurs posées"),
+    # 09-parrainage retire le 13/09/2026 : pose a la main par cadeau_apercu,
+    # il montrait le nouvel ecran d'invitation sans son lien ("...") et avec
+    # l'onglet Carte allume. 10-inviter, pris avec un vrai compte, le remplace.
     (CADEAU, "10-historique", "Onglet 5", "Profil — l’historique",
      "D’où viennent les points, ligne par ligne : scan, story, cadeau, bienvenue, parrainage.", "valeurs posées"),
     # Les deux seuls ecrans de cette planche pris avec un VRAI compte
