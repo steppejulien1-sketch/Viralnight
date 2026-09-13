@@ -123,7 +123,7 @@ CLUBBEUR_SESSION = [
     (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
      "Tes motifs de verres, la carte des notifications plus fine dans la couleur inverse de l’appli (elle disparaît une fois acceptées), « Mes points » rangé comme un bloc de réglages ; « Gagner des points » est dans À propos. Nom de la capture inventé.", "vrai compte"),
     (CLUBBEUR, "09b-profil-parametres", "Onglet 5", "Les paramètres, façon DUSK",
-     "Plus de bouton « Se déconnecter » en bas : c’est une ligne de Réglages. « Données personnelles » ouvre la suppression du compte.", "vrai compte"),
+     "Chaque ligne ouvre une page pleine avec une croix en haut, comme chez DUSK. Plus de bouton « Se déconnecter » en bas : c’est une ligne de Réglages.", "vrai compte"),
     (CLUBBEUR, "10-inviter", "Profil > Partager", "Inviter des amis",
      "Refait : ce que chacun gagne côte à côte, comment ça marche en trois lignes, le lien et un seul bouton plein. Le QR se déplie.", "vrai compte"),
     (CLUBBEUR, "11-avis", "Profil > Aide", "Donner mon avis",
@@ -131,7 +131,7 @@ CLUBBEUR_SESSION = [
     (CLUBBEUR, "12-donnees", "Profil > Compte", "Données personnelles",
      "Le « Personal data » de DUSK : ce qu’on garde, pourquoi, et la suppression du compte.", "vrai compte"),
     (CLUBBEUR, "13-suppression", "Données personnelles", "Supprimer mon compte",
-     "Leur feuille « Sorry to see you go » : ce qu’on perd, une porte vers le support, puis le bouton. Le verre qui salue remplace leur photo. Le bouton n’a pas été touché.", "vrai compte"),
+     "Leur feuille « Sorry to see you go » : une vraie photo de soirée (Pexels, déjà dans le site), ce qu’on perd, une porte vers le support, puis le bouton. Le bouton n’a pas été touché.", "vrai compte"),
 ]
 
 
