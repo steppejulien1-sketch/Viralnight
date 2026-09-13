@@ -6,7 +6,7 @@
          barre d'onglets passe sous la barre de geste de l'iPhone une fois
          l'appli installee. Aucun effet sur la maquette au navigateur. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#120d0d" />
+    <meta name="theme-color" content="#ffffff" />
     <!-- Police de titrage. Inter reste en repli explicite : sur un
          reseau de club, le texte s'affiche d'abord en Inter et bascule
          ensuite. Il n'attend jamais. Un seul fichier, un seul axe de
@@ -16,16 +16,15 @@
          fonts.googleapis.com envoyait l'adresse IP de chaque visiteur
          a Google avant le premier pixel, sans consentement. -->
     <link rel="stylesheet" href="./assets/fonts/polices.css" />
-    <!-- Sans ca, le navigateur peint son fond BLANC par defaut le temps
-         que ce fichier (CSS inclus) charge, avant que --page/--bg
-         prennent le relais -- l'appli nait blanche puis devient noire,
-         signale par Julien ("parfois noire, parfois blanche"). "dark"
-         et pas "dark light" : Carte/Boutique (les premiers ecrans vus a
-         chaque ouverture) restent volontairement sombres quel que soit
-         le theme du telephone (voir .screen plus bas) -- ce n'est que
-         Profil/Amis/Story qui suivent le systeme, une fois l'appli deja
-         peinte, pas un choix a faire des la premiere peinture. -->
-    <meta name="color-scheme" content="dark" />
+    <!-- ⚠️ L'APPLI EST BLANCHE, TOUJOURS. Julien, 13/09/2026, sur son
+         telephone en mode sombre : "pourquoi l'app est en fond noir ? moi je
+         veux en blanc". Les neuf blocs @media (prefers-color-scheme: dark)
+         qui repeignaient Recompenses, Story, Profil et les feuilles en noir
+         brun sont retires, et le navigateur est prevenu que la page est
+         claire (champs, barres de defilement, fond avant le CSS).
+         Le motif de verres noir du profil est parti avec. Ne pas remettre
+         d'adaptation au mode sombre sans qu'il la redemande. -->
+    <meta name="color-scheme" content="light" />
     <meta name="robots" content="noindex" />
     <title>Noctify — preview appli</title>
 
@@ -427,9 +426,6 @@
          Le splash reste clair quel que soit le mode du telephone -- c'est
          l'image qui commande, pas la preference systeme.
          Seule la barre de progression garde son adaptation. */
-      @media (prefers-color-scheme: dark) {
-        .splash-piste { background: rgba(15,17,20,.12); }
-      }
 
       /* ============================================================
          ECRAN D'ACCUEIL — mascotte + connexion
@@ -1141,22 +1137,6 @@
         --erreur-texte: #d92e42;
         --succes-texte: #1f9d5c;
       }
-      @media (prefers-color-scheme: dark) {
-        .vue-profil, .vue-amis {
-          --ink: #ffffff;
-          --ink2: #b6a99e;
-          --ink3: #928378;
-          --bg: #120d0d;
-          --s1: #1c1512;
-          --s2: #261c17;
-          --s3: #30231c;
-          --line: rgba(255,235,220,.08);
-          --line2: rgba(255,235,220,.14);
-          --ambre: #ffb020;
-          --erreur-texte: #ff8290;
-          --succes-texte: #7fe0a3;
-        }
-      }
 
       /* Feuille du bas : suit le meme theme clair QUAND elle s'ouvre
          depuis Profil/Amis (classe posee par ouvrirFeuille()) -- reste
@@ -1188,23 +1168,6 @@
          fond/texte fixes en dur (pas des variables), invisibles ou
          illisibles une fois le fond de la feuille passe en blanc --
          corrige comme deja fait pour .screen.boutique-pro. */
-      @media (prefers-color-scheme: dark) {
-        .sheet.clair {
-          --ink: #ffffff;
-          --ink2: #b6a99e;
-          --ink3: #928378;
-          --bg: #120d0d;
-          --s1: #1c1512;
-          --s2: #261c17;
-          --s3: #30231c;
-          --line: rgba(255,235,220,.08);
-          --line2: rgba(255,235,220,.14);
-          --ambre: #ffb020;
-          --erreur-texte: #ff8290;
-          --succes-texte: #7fe0a3;
-          background: #1c1512;
-        }
-      }
 
       /* ============================================================
          MEME MECANIQUE, ETENDUE AUX TROIS DERNIERS ECRANS
@@ -1240,22 +1203,6 @@
         --erreur-texte: #d92e42;
         --succes-texte: #1f9d5c;
       }
-      @media (prefers-color-scheme: dark) {
-        .vue-profil, .vue-amis, .vue-story {
-          --ink: #ffffff;
-          --ink2: #b6a99e;
-          --ink3: #928378;
-          --bg: #120d0d;
-          --s1: #1c1512;
-          --s2: #261c17;
-          --s3: #30231c;
-          --line: rgba(255,235,220,.08);
-          --line2: rgba(255,235,220,.14);
-          --ambre: #ffb020;
-          --erreur-texte: #ff8290;
-          --succes-texte: #7fe0a3;
-        }
-      }
 
       /* ---- L'ENTETE DU PROFIL (modele DUSK) ----
          ⚠️ LE MOTIF EST CELUI DE JULIEN. 13/09/2026 : "copie le truc qu'ils
@@ -1277,9 +1224,6 @@
         opacity: .55;
         -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent);
         mask-image: linear-gradient(to bottom, #000 72%, transparent);
-      }
-      @media (prefers-color-scheme: dark) {
-        .pf-entete::before { background-image: url("/motifs/verres-sombre.webp"); opacity: .55; }
       }
       .pf-entete > * { position: relative; }
 
@@ -1315,15 +1259,6 @@
       .pf-notif.actives { display: none; }
       /* Sans la carte, le nom garde sa place sous les dessins. */
       .pf-notif.actives + .pf-head { padding-top: 96px; }
-      @media (prefers-color-scheme: dark) {
-        .pf-notif { background: #ffffff; box-shadow: none; }
-        .pf-notif-titre, .pf-notif-msg { color: #15181d; }
-        .pf-notif-desc { color: #5f646c; }
-        .pf-notif .rg-switch { box-shadow: inset 0 0 0 1.5px #15181d; }
-        .pf-notif .rg-switch::after { background: #15181d; }
-        .pf-notif .rg-switch.on { background: #15181d; }
-        .pf-notif .rg-switch.on::after { background: #ffffff; }
-      }
 
       /* Entete sobre. Le halo de marque rouge derriere l'entete et
          l'anneau rouge autour de la photo, essayes pendant la refonte,
@@ -1972,13 +1907,6 @@
       .club-pin svg { display: block; width: 34px; height: 44px; filter: drop-shadow(0 3px 4px rgba(16,18,22,.32)); }
       .club-pin .goutte { fill: var(--bouton, #ff2f45); stroke: #ffffff; stroke-width: 1.4; }
       .club-pin .picto { fill: none; stroke: #ffffff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-      .club-pin-nom {
-        position: absolute; top: calc(100% + 2px); left: 50%; transform: translateX(-50%);
-        white-space: nowrap; pointer-events: none;
-        font-family: var(--sans); font-size: calc(12.5 * var(--u)); font-weight: 700; line-height: 1.15;
-        color: #d0142c;
-        text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff, 0 0 5px #fff;
-      }
       .club-pin:active svg { transform: scale(.94); transform-origin: 50% 100%; }
       /* Le focus rendu au pin a la fermeture de la fiche (rendeur) dessinait
          un cadre noir autour de la goutte, visible de tres loin sur le globe.
@@ -3220,18 +3148,6 @@
          partout ou claire partout, jamais un melange. La demande de
          Julien -- qu'elle ne change pas d'un ecran a l'autre -- tient
          toujours. */
-      @media (prefers-color-scheme: dark) {
-        .tabs::before {
-          background: #141110;
-          box-shadow: 0 0 0 1px rgba(255,238,225,.10), 0 10px 26px -12px rgba(0,0,0,.6);
-        }
-        .tab.on { background: rgba(255,238,225,.10); }
-        .tab.on svg { stroke: var(--bouton, #ff2f45); }
-        .tab.on .lbl { color: var(--bouton, #ff2f45); }
-        .tab svg { stroke: #96887c; }
-        .tab .lbl { color: #96887c; }
-        .tab:focus-visible { outline-color: #fff; }
-      }
 
       /* ---- Invitation aux notifications ----
          Posee juste au-dessus de la barre d'onglets, sous elle en
@@ -4373,43 +4289,6 @@
             devient donc un creme chaud, celui du papier de la marque.
             L'illustration garde son trait, et le rectangle blanc devient
             une vignette imprimee. */
-      @media (prefers-color-scheme: dark) {
-        .screen.boutique-pro {
-          --ink: #ffffff; --ink2: #cabeb4; --ink3: #96887c;
-          --bg: #100c0b; --s1: #1e1815; --s2: #2a221d; --s3: #362c25;
-          --line: rgba(255,238,225,.09); --line2: rgba(255,238,225,.17);
-          /* Le socle des illustrations : creme, jamais blanc pur ni
-             sombre. Voir le commentaire ci-dessus. */
-          --socle: #efe6d6;
-          /* Meme repartition des roles qu'en clair : --accent porte les
-             points et les prix, --bouton le rouge de marque des CTA.
-             Le corail est juste eclairci pour tenir sur du sombre. */
-          --accent: #ff8577; --ambre: #ff8577; --bouton: #ff2f45;
-          /* Sur du sombre, le corail clair passe : il reprend sa valeur. */
-          --prix-encre: #ff8577;
-        }
-        .screen.boutique-pro .wallet { background: var(--s1); }
-        .screen.boutique-pro .sheet {
-          background: var(--s1); border-top-color: var(--line2);
-          box-shadow: var(--ombre-3);
-        }
-        /* La vignette est claire dans une carte sombre : un filet chaud
-           l'assoit au lieu de la laisser flotter comme un trou. */
-        .screen.boutique-pro .carte-reco .photo { border-bottom: 1px solid rgba(20,16,14,.10); }
-        /* Le vert de "Pret" vire au terne sur fond sombre : on le
-           remonte en clarte plutot que de le laisser tel quel. */
-        .screen.boutique-pro .bon-pret {
-          background: rgba(48,190,120,.18); color: #4fd493;
-        }
-        .screen.boutique-pro .solde-prog.pleine .solde-prog-txt strong { color: #4fd493; }
-        .screen.boutique-pro .solde-prog-piste { background: rgba(255,238,225,.14); }
-        /* L'ambre fonce est illisible sur du sombre : on remonte en
-           clarte plutot que de garder la meme valeur. */
-        .screen.boutique-pro .sec-soir .sub,
-        .screen.boutique-pro .carte-reco .badge-rarete {
-          background: var(--urgence-fond-nuit); color: var(--urgence-texte-nuit);
-        }
-      }
 
       @media (max-width: 430px) {
         .wrap { padding: 40px 12px 72px; }
@@ -4675,15 +4554,6 @@
          nom etait invisible, il ne restait que "250 points". Meme chose pour
          le chiffre de l'encadre de points (#efeff1) et le fond du cadeau du
          jour. En clair, --s1 / --s2 valent exactement ces blancs-la. */
-      @media (prefers-color-scheme: dark) {
-        .bar-etat.ouvert { color: #4fd493; }
-        .screen.boutique-pro .carte-reco .corps {
-          background: var(--s2);
-          box-shadow: 0 0 0 .5px rgba(255,238,225,.10), 0 8px 18px -10px rgba(0,0,0,.7);
-        }
-        .screen.boutique-pro .solde-chiffre,
-        .screen.boutique-pro .cadeau { background: var(--s2); }
-      }
 
       /* ---------------- BOUTIQUE : GAGNER DES POINTS ---------------- */
       .sec-gagner { margin-top: 12px; }
@@ -9839,8 +9709,11 @@ map.on("load", function () {
       '<svg viewBox="0 0 34 44" aria-hidden="true">' +
         '<path class="goutte" d="M17 43c-1-4.8-4.7-8.6-8.44-13A15.5 15.5 0 1 1 25.44 30C21.7 34.4 18 38.2 17 43z"/>' +
         '<path class="picto" d="M10.6 10.8h12.8L17 17.9zM17 17.9v5.4M13.9 23.6h6.2"/>' +
-      "</svg>" +
-      '<span class="club-pin-nom">' + escapeHtmlSupport(c.nom) + "</span>";
+      "</svg>";
+    /* ⚠️ PLUS DE NOM ECRIT SOUS LE PIN. Julien, 13/09/2026 : "il ne faut pas
+       que tu ecrives le nom de l'etablissement sur la terre en dessous de la
+       position". Le nom reste dit au lecteur d'ecran (aria-label) et dans la
+       fiche qui s'ouvre au toucher. */
     el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
     // Retour a notre propre fiche (pas l'iframe Google directement) :
     // Julien voulait "tomber direct sur la fiche" mais pas sur "Google
