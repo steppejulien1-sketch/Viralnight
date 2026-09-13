@@ -144,14 +144,23 @@ const HAUTEUR = 844;
     await prendre("10-inviter", "Inviter des amis — depuis le profil");
 
     // "Donner mon avis", dans l'appli depuis le 13/09/2026 (c'etait un
-    // mailto). Une note posee par le vrai geste ; RIEN n'est envoye.
+    // mailto). Premier temps seulement : toucher une etoile ENVOIE la note.
     await page.evaluate(() => document.querySelector("#va-back")?.click());
     await pause(1200);
     await page.evaluate(() => document.querySelector("#pf-avis").click());
     await pause(1200);
-    await page.evaluate(() => document.querySelector('.avis-etoile[data-note="5"]')?.click());
-    await pause(500);
-    await prendre("11-avis", "Donner mon avis — dans l'appli");
+    await prendre("11-avis", "Donner mon avis — les étoiles");
+    await page.evaluate(() => window.noctifyFermerFeuille?.());
+    await pause(700);
+
+    // Donnees personnelles, et la feuille de suppression (13/09/2026). On
+    // ouvre la feuille, on ne touche PAS au bouton.
+    await page.evaluate(() => document.querySelector("#pf-donnees").click());
+    await pause(2000);
+    await prendre("12-donnees", "Données personnelles");
+    await page.evaluate(() => document.querySelector("#rg-supprimer-compte").click());
+    await pause(1500);
+    await prendre("13-suppression", "Supprimer mon compte — la feuille");
     await page.evaluate(() => window.noctifyFermerFeuille?.());
 
     // Ce que les deux ecrans affichent VRAIMENT, pour pouvoir juger sans

@@ -431,3 +431,57 @@ embarquée étant lui-même un motif de rejet — plus un lien profond pour le
 retour dans l'app.
 
 Un argument de plus pour Capacitor le moment venu.
+
+---
+
+## 8. Deux choses que seule l'appli native sait faire (demandées le 13/09/2026)
+
+Julien les a vues chez DUSK. Aucune des deux n'existe en PWA : elles sont à
+brancher **au passage Capacitor**, pas avant.
+
+### La note sur l'App Store / le Play Store
+
+Ce que Julien voulait : « si je mets 5 étoiles, on voit direct le Store ».
+**C'est interdit tel quel** — c'est du *review gating* :
+
+- Google, [In-App Review API](https://developer.android.com/guide/playcore/in-app-review) :
+  *« Your app shouldn't ask the user any questions before or while presenting
+  the rating button or card, including questions about their opinion (such as
+  "Do you like the app?") or predictive questions (such as "Would you rate this
+  app 5 stars"). »*
+- Apple, [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/),
+  section 3 : un avis « filtered » (trié avant d'arriver au Store) peut valoir
+  l'exclusion du programme développeur.
+
+Ce qui est autorisé, et qui marche :
+
+1. **Garder « Donner mon avis »** tel qu'il est (étoiles puis commentaire,
+   envoyés dans Aide & Support). C'est du retour interne, pas une note Store.
+2. **Montrer la fenêtre de note DU SYSTÈME** (`SKStoreReviewController` sur
+   iOS, In-App Review sur Android) **à tout le monde**, sans question avant,
+   à un moment heureux : juste après un échange de récompense réussi, ou à la
+   troisième story validée. Plugin : `@capacitor-community/in-app-review`.
+   Le système décide s'il l'affiche (Apple : 3 fois par an maximum ; Google :
+   quota non publié) — donc **jamais derrière un bouton**, sinon le bouton ne
+   fait parfois rien.
+3. Une fonction `natif.demanderAvisStore()` dans `natif.js`, sans effet au
+   navigateur, appelée depuis `echanger()` et limitée à une fois tous les
+   deux mois côté appli.
+
+### Rester connecté après avoir désinstallé puis réinstallé
+
+Chez DUSK, Julien a désinstallé, réinstallé : l'accueil est revenu, mais pas
+l'écran de connexion. Leur jeton de session est rangé dans le **trousseau
+(Keychain)** d'iOS, qui survit à la désinstallation.
+
+- **PWA iPhone** : impossible. Retirer l'icône de l'écran d'accueil efface son
+  stockage, la session avec.
+- **PWA Android** : souvent déjà le cas — la PWA partage le stockage de Chrome
+  pour le site, qui ne part pas avec l'icône.
+- **Appli native iOS** : donner à Supabase un stockage de session qui écrit
+  dans le Keychain (`auth.storage` dans `createClient`, via un plugin de
+  stockage sécurisé type `@aparajita/capacitor-secure-storage`). C'est ce que
+  fait DUSK.
+- **Appli native Android** : le Keystore est effacé à la désinstallation. Seule
+  la sauvegarde automatique d'Android peut ramener la session, et pas les
+  données chiffrées : à tester, sans promettre.

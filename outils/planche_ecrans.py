@@ -123,13 +123,17 @@ CLUBBEUR_SESSION = [
     # Les deux seuls ecrans de cette planche pris avec un VRAI compte
     # (outils/clubbeur_connecte.cjs, compte jetable cree puis supprime).
     (CLUBBEUR, "09-profil-connecte", "Onglet 5", "Profil, pour de vrai",
-     "Tes motifs de verres (détourés, la version noire sert en mode sombre), et la carte des notifications dans la couleur inverse de l’appli, avec la phrase de DUSK. Une fois acceptées, la carte disparaît ; on les coupe dans Réglages. Nom de la capture inventé.", "vrai compte"),
+     "Tes motifs de verres, la carte des notifications plus fine dans la couleur inverse de l’appli (elle disparaît une fois acceptées), et « Mes points » rangé comme un bloc de réglages. Nom de la capture inventé.", "vrai compte"),
     (CLUBBEUR, "09b-profil-parametres", "Onglet 5", "Les paramètres, façon DUSK",
-     "Donner mon avis s’ouvre dans l’appli, l’avis Google est parti dans la fiche des établissements, « Vous gérez un établissement ? », et Se déconnecter entouré de rouge.", "vrai compte"),
+     "Plus de bouton « Se déconnecter » en bas : c’est une ligne de Réglages. « Données personnelles » ouvre la suppression du compte.", "vrai compte"),
     (CLUBBEUR, "10-inviter", "Profil > Partager", "Inviter des amis",
      "Refait : ce que chacun gagne côte à côte, comment ça marche en trois lignes, le lien et un seul bouton plein. Le QR se déplie.", "vrai compte"),
     (CLUBBEUR, "11-avis", "Profil > Aide", "Donner mon avis",
-     "Une note sur cinq et un mot. L’avis arrive dans ta messagerie Aide & Support, dans le fil de la personne : tu peux lui répondre. Rien n’a été envoyé pour la capture.", "vrai compte"),
+     "Comme DUSK : d’abord les étoiles, qui partent au toucher, puis un mot si on veut. Tout arrive dans ta messagerie Aide & Support. Pas d’envoi vers le Store selon la note : interdit par Apple et Google.", "vrai compte"),
+    (CLUBBEUR, "12-donnees", "Profil > Compte", "Données personnelles",
+     "Le « Personal data » de DUSK : ce qu’on garde, pourquoi, et la suppression du compte.", "vrai compte"),
+    (CLUBBEUR, "13-suppression", "Données personnelles", "Supprimer mon compte",
+     "Leur feuille « Sorry to see you go » : ce qu’on perd, une porte vers le support, puis le bouton. Le verre qui salue remplace leur photo. Le bouton n’a pas été touché.", "vrai compte"),
 ]
 
 
@@ -451,7 +455,7 @@ __CLUBBEUR__
     <div class="groupe">
       <div class="groupe-tete">
         <h3>Avec un compte</h3>
-        <span class="compte">13 écrans</span>
+        <span class="compte">15 écrans</span>
         <p>Le même code, une fois connecté : le cadeau du jour, la boutique remplie, le parrainage, l’historique. Seules les valeurs sont posées à la main.</p>
       </div>
       <div class="planche">
