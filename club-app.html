@@ -2703,6 +2703,10 @@
                         <label for="pa-ville">Ville</label>
                         <input class="ac-input" id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" />
                       </div>
+                      <div class="pa-champ pa-arrive">
+                        <label for="pa-tel">Ton numéro de téléphone</label>
+                        <input class="ac-input" id="pa-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0470 12 34 56" />
+                      </div>
 
                       <!-- La couverture pleine largeur, la galerie dessous.
                            Une vignette carrée de 58 px ne montrait rien d'une
@@ -6159,6 +6163,7 @@
         if (etab) {
           $("#pa-nom").value = etab.name || "";
           $("#pa-ville").value = etab.city || "";
+          $("#pa-tel").value = etab.phone || "";
           rendrePhotoParcours(etab.logo_url || null);
           construireChoixRecompenses();
           rendreChoixRecompenses();
@@ -6541,11 +6546,20 @@
           return false;
         }
 
+        // Le numero du gerant : il remplit la liste des etablissements du
+        // tableau de bord de Julien (pilotage.html), sans rien lui demander.
+        var telephone = $("#pa-tel").value.trim();
+        if (telephone.replace(/\D/g, "").length < 8) {
+          direParcours("Ton numéro de téléphone aussi : c'est celui qu'on appelle si ton club a besoin d'aide.", true);
+          $("#pa-tel").focus();
+          return false;
+        }
+
         // Le club n'existe pas encore : c'est ici qu'il nait, pas a
         // l'inscription. Le compte vient d'etre cree a l'etape 1, le nom
         // se saisit ici -- /api/create-client deduit le proprietaire du
         // jeton de session, jamais du corps de la requete.
-        if (!etab) return creerLeClub(nom, ville);
+        if (!etab) return creerLeClub(nom, ville, telephone);
 
         if (!etab.logo_url) {
           direParcours("Ajoute une photo de couverture : c'est la première chose que tes clients verront de ton club.", true);
@@ -6556,7 +6570,7 @@
           return false;
         }
 
-        var payload = { name: nom, city: ville, logo_url: etab.logo_url, photos: photosDuClub() };
+        var payload = { name: nom, city: ville, phone: telephone, logo_url: etab.logo_url, photos: photosDuClub() };
 
         var { error } = await supabase.from("establishments").update(payload).eq("id", etab.id);
         if (error) {
@@ -6580,6 +6594,7 @@
 
         etab.name = nom;
         etab.city = ville || null;
+        etab.phone = telephone;
         rendreDashboard();
         rendreQr();
         return true;
@@ -6588,7 +6603,7 @@
       /* La creation, quand le compte n'a pas encore de club. La photo est
          demandee au passage suivant : le bucket exige un dossier au nom
          de l'etablissement, qui n'existe pas avant cet appel. */
-      async function creerLeClub(nom, ville) {
+      async function creerLeClub(nom, ville, telephone) {
         try {
           var reponse = await fetch("/api/create-client", {
             method: "POST",
@@ -6596,7 +6611,7 @@
               "Content-Type": "application/json",
               Authorization: "Bearer " + ETAT.session.access_token,
             },
-            body: JSON.stringify({ establishment_name: nom, city: ville, invitation: invitationCourante() }),
+            body: JSON.stringify({ establishment_name: nom, city: ville, phone: telephone, invitation: invitationCourante() }),
           });
           var corps = await reponse.json().catch(function () { return {}; });
           if (!reponse.ok) throw new Error(corps && corps.error);

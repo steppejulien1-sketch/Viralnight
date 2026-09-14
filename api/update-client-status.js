@@ -232,7 +232,7 @@ async function actionPilotage(response, b2b) {
     etabs, proprios, recompensesB2B, contenus, scans, instas, demos, contenusSite, emails,
     comptesAuth, users, stories, grants, redemptions, cadeaux, installations, ouvertures, departs, support, abonnements, clubsCb,
   ] = await Promise.all([
-    lire("établissements", () => toutLire(() => b2b.from("establishments").select("id, name, city, category, subscription_status, created_at").order("created_at"))),
+    lire("établissements", () => toutLire(() => b2b.from("establishments").select("id, name, city, category, phone, subscription_status, created_at").order("created_at"))),
     lire("propriétaires", () => toutLire(() => b2b.from("establishment_owners").select("email, establishment_id, created_at").order("created_at"))),
     lire("récompenses des clubs", () => toutLire(() => b2b.from("rewards").select("establishment_id, active, created_at").order("created_at"))),
     lire("contenus", () => toutLire(() => b2b.from("submissions").select("establishment_id, submitted_at").order("submitted_at"))),
@@ -288,6 +288,12 @@ async function actionPilotage(response, b2b) {
     activiteParClub.set(s.club_id, a);
   }
   const plusRecent = (...dates) => dates.filter(Boolean).sort().pop() || null;
+  const telephoneParEmail = new Map();
+  for (const d of demos) {
+    const cle = String(d.email || "").toLowerCase();
+    if (cle && d.phone && !telephoneParEmail.has(cle)) telephoneParEmail.set(cle, d.phone);
+  }
+  const telephoneDemo = (emails) => emails.map((e) => telephoneParEmail.get(String(e).toLowerCase())).find(Boolean) || null;
   const listeClubs = etabs
     .map((e) => {
       const statut = statutClub(e.subscription_status);
@@ -304,6 +310,10 @@ async function actionPilotage(response, b2b) {
         statutLibelle: statut.libelle,
         depuis: e.created_at,
         proprietaire: proprios.filter((o) => o.establishment_id === e.id).map((o) => o.email).join(", ") || null,
+        // Le numero saisi par le gerant a l'installation ; a defaut, celui de
+        // sa demande de demo s'il en a fait une avec la meme adresse.
+        telephone: e.phone || telephoneDemo(proprios.filter((o) => o.establishment_id === e.id).map((o) => o.email)) || null,
+        telephoneDeLaDemo: !e.phone && !!telephoneDemo(proprios.filter((o) => o.establishment_id === e.id).map((o) => o.email)),
         recompenses: recompensesB2B.filter((r) => r.establishment_id === e.id && r.active !== false).length,
         instagram: instas.some((i) => i.establishment_id === e.id),
         stories: act?.stories || 0,

@@ -33,6 +33,16 @@ function getSiteUrl(request) {
  * recompenses par defaut. Un club doit marcher des sa premiere connexion,
  * pas etre une coquille vide a completer plus tard.
  */
+/* Le telephone du gerant (14/09/2026, Julien : « la liste de tous les
+   etablissements avec qui on travaille, leur mail et le numero du gerant,
+   que ca se remplisse automatiquement »). Saisi a l'etape « Ton club » de
+   club-app.html. Rien d'autorisant : le lire dans le corps est sans risque,
+   on garde seulement ce qui ressemble a un numero. */
+function nettoyerTelephone(valeur) {
+  const brut = String(valeur || "").replace(/[^0-9+().\s-]/g, "").replace(/\s+/g, " ").trim().slice(0, 30);
+  return brut.replace(/\D/g, "").length >= 8 ? brut : "";
+}
+
 async function provisionnerEtablissement(supabase, { name, city, phone, category, subscriptionStatus, ownerId, ownerEmail }) {
   const establishmentResult = await supabase
     .from("establishments")
@@ -295,7 +305,7 @@ export default async function handler(request, response) {
     const resultat = await provisionnerEtablissement(supabase, {
       name: establishmentName,
       city,
-      phone: "",
+      phone: nettoyerTelephone(payload.phone),
       category: "club",
       subscriptionStatus: "essai",
       ownerId: caller.id,

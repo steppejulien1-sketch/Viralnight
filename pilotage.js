@@ -287,7 +287,7 @@ function rendre() {
     kpi({ libelle: "Installations de l’appli", valeur: a.installations.periodes.total, detail: `Ce mois-ci : ${nb(a.installations.periodes.ceMois)}` }),
     kpi({ libelle: "Actifs aujourd’hui", valeur: a.actifs.jour, detail: `7 jours : ${nb(a.actifs.semaine)} · 30 jours : ${nb(a.actifs.mois)}` }),
     kpi({ libelle: "Comptes supprimés ce mois-ci", valeur: d.departs.periodes.ceMois, detail: `Depuis le début : ${nb(d.departs.periodes.total)}` }),
-    kpi({ libelle: "Clubs payants", valeur: cl.payant, suffixe: ` / ${nb(cl.total)}`, detail: `En essai : ${nb(cl.essai)} · suspendus : ${nb(cl.suspendu)}` }),
+    kpi({ libelle: "Établissements payants", valeur: cl.payant, suffixe: ` / ${nb(cl.total)}`, detail: `En essai : ${nb(cl.essai)} · suspendus : ${nb(cl.suspendu)}` }),
     kpi({ libelle: "Support à traiter", valeur: d.support.aRepondre, detail: pluriel(d.support.total, "conversation"), traiter: d.support.aRepondre > 0 }),
     kpi({
       libelle: "Note de l’appli",
@@ -387,7 +387,7 @@ function rendre() {
     kpi({ libelle: "Nouveaux ce mois-ci", valeur: d.clubs.nouveauxCeMois }),
   ].join("");
   $("#pl-table-clubs").innerHTML = tableau(
-    [{ t: "Établissement" }, { t: "Statut" }, { t: "Propriétaire" }, { t: "Depuis" }, { t: "Récompenses", n: true }, { t: "Stories", n: true }, { t: "Clubbeurs", n: true }, { t: "Instagram" }, { t: "Dernière activité" }],
+    [{ t: "Établissement" }, { t: "Statut" }, { t: "Contact du gérant" }, { t: "Depuis" }, { t: "Récompenses", n: true }, { t: "Stories", n: true }, { t: "Clubbeurs", n: true }, { t: "Instagram" }, { t: "Dernière activité" }],
     d.clubs.liste.map((x) => `<tr>
       <td><span class="pl-nom">${esc(x.nom)}</span><br><span class="pl-gris">${esc([x.ville, x.type].filter(Boolean).join(" · ") || "—")}</span></td>
       <td><select class="pl-select ${esc(x.statutCode)}" data-club="${esc(x.id)}" data-avant="${esc(x.statut)}" aria-label="Statut de ${esc(x.nom)}">
@@ -395,7 +395,10 @@ function rendre() {
         <option value="essai"${x.statut === "essai" ? " selected" : ""}>Essai gratuit</option>
         <option value="suspendu"${x.statut === "suspendu" ? " selected" : ""}>Suspendu</option>
       </select></td>
-      <td class="pl-gris">${esc(x.proprietaire || "Aucun")}</td>
+      <td><div class="pl-contact">
+        ${x.proprietaire ? x.proprietaire.split(", ").map((m) => `<a href="mailto:${esc(m)}">${esc(m)}</a>`).join("") : '<span class="pl-gris">Aucun compte gérant</span>'}
+        ${x.telephone ? `<a href="tel:${esc(x.telephone.replace(/[^0-9+]/g, ""))}">${esc(x.telephone)}</a>${x.telephoneDeLaDemo ? '<span class="pl-gris">numéro de sa demande de démo</span>' : ""}` : '<span class="pl-gris">Pas de numéro</span>'}
+      </div></td>
       <td class="pl-gris">${esc(dateCourte(x.depuis))}</td>
       <td class="n">${nb(x.recompenses)}</td>
       <td class="n">${nb(x.stories)}</td>
@@ -418,6 +421,29 @@ function rendre() {
     "Aucune demande de démo."
   );
 }
+
+/* ---------------- Export des etablissements ---------------- */
+
+// Point-virgule et BOM : c'est ce qu'Excel en francais ouvre sans melanger
+// les colonnes ni casser les accents.
+function exporterEtablissements() {
+  if (!donnees) return;
+  const cellule = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lignes = [["Établissement", "Ville", "Type", "Statut", "E-mail du gérant", "Téléphone", "Inscrit le", "Stories", "Clubbeurs"]]
+    .concat(donnees.clubs.liste.map((x) => [
+      x.nom, x.ville, x.type, x.statutLibelle, x.proprietaire, x.telephone,
+      x.depuis ? new Date(x.depuis).toLocaleDateString("fr-FR") : "", x.stories, x.clubbeurs,
+    ]));
+  const csv = "﻿" + lignes.map((l) => l.map(cellule).join(";")).join("\r\n");
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  lien.download = `etablissements-noctify-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.append(lien);
+  lien.click();
+  setTimeout(() => { URL.revokeObjectURL(lien.href); lien.remove(); }, 1000);
+}
+
+$("#pl-export-clubs").addEventListener("click", exporterEtablissements);
 
 /* ---------------- A valider ---------------- */
 
