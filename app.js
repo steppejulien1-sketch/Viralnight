@@ -1600,7 +1600,7 @@ if (supabase) {
   // Cas typique : connexion via Google OAuth qui redirige toujours vers app.html.
   supabase.auth.getSession().then(({ data: { session } }) => {
     if (session?.user?.email?.trim().toLowerCase() === "steppejulien1@gmail.com") {
-      window.location.replace("./admin.html");
+      window.location.replace("./pilotage.html");
     }
   });
 
@@ -1611,7 +1611,7 @@ if (supabase) {
       return;
     }
     if (session?.user?.email?.trim().toLowerCase() === "steppejulien1@gmail.com") {
-      window.location.replace("./admin.html");
+      window.location.replace("./pilotage.html");
       return;
     }
     refreshDashboard();

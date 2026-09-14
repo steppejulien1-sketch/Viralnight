@@ -43,7 +43,7 @@ async function rediriger() {
     // Idem : l'echec de memorisation ne doit pas empecher la redirection.
   }
 
-  const cible = String(email).trim().toLowerCase() === ADMIN_EMAIL ? "./admin.html" : "./app.html";
+  const cible = String(email).trim().toLowerCase() === ADMIN_EMAIL ? "./pilotage.html" : "./app.html";
   window.location.replace(cible);
 }
 
