@@ -61,9 +61,10 @@ const HAUTEUR = 844;
 
     // La ligne applicative, celle que l'API admin ne cree pas.
     const handle = "julien_" + compte.uid.slice(0, 4);
-    /* ⚠️ `profile_proof_path` EST POSE EXPRES. L'ecran "Relie ton compte
-       Instagram" (#vue-ig) prend la main juste apres la creation du
-       compte et ne se retire que quand cette colonne est remplie. C'est
+    /* ⚠️ `profile_proof_path` EST POSE EXPRES. La feuille d'inscription
+       (#ob-feuille, ecrans capture et pseudo) prend la main juste apres la
+       creation du compte et ne se retire que quand cette colonne est
+       remplie. Le nom pose plus bas lui fait sauter l'ecran « nom ». C'est
        voulu dans le produit -- mais il recouvre Profil ET Amis, donc
        sans ca cet outil ne photographie que lui, deux fois.
        On pose un chemin bidon : aucune capture n'est televersee, et le
