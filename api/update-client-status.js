@@ -36,7 +36,14 @@ const ALLOWED_STATUSES = new Set(["actif", "essai", "suspendu"]);
 
 // Les comptes de Julien et ceux de nos outils ne sont pas des clients : les
 // compter gonflerait les inscrits, les stories et le support.
-const COMPTES_INTERNES = new Set(["viralnight001@gmail.com", "julien.steppe123@gmail.com"]);
+// Adresses de Julien relevees en base le 13/09/2026 (dont une faute de frappe).
+const COMPTES_INTERNES = new Set([
+  "viralnight001@gmail.com",
+  "julien.steppe123@gmail.com",
+  "steppejulien1@gmail.com",
+  "steppejulien@gmail.com",
+  "steppejulirn1@gmail.com",
+]);
 const DOMAINES_INTERNES = ["@viralnight.test", "@demo.mirage", "@mirage.club", "@example.com"];
 
 function estInterne(email) {
