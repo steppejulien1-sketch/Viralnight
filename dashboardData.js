@@ -30,7 +30,7 @@ export const DEFAULT_REWARDS = [
 ];
 
 const now = new Date();
-const ADMIN_EMAIL = "viralnight001@gmail.com";
+const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
 const daysAgo = (days) => {
   const date = new Date(now);

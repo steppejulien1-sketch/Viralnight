@@ -3,7 +3,7 @@ import { computePoints, describePoints } from "./lib/points/computePoints.js";
 import { evaluerFiabilite, validationRapidePossible } from "./lib/verification/customerTrust.js";
 import { DEFAULT_POINT_RULES as BAREME_PAR_DEFAUT } from "./dashboardData.js";
 
-const ADMIN_EMAIL = "viralnight001@gmail.com";
+const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
 const demoSubmissions = [
   {
@@ -657,7 +657,7 @@ function updateAuthUi() {
   } else if (state.session) {
     setAuthStatus(`Connecté avec ${email}.`);
   } else {
-    setAuthStatus("Connecte-toi avec viralnight001@gmail.com pour charger les vraies validations.");
+    setAuthStatus("Connecte-toi avec steppejulien1@gmail.com pour charger les vraies validations.");
   }
 }
 

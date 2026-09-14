@@ -18,7 +18,7 @@
 
 import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
 
-const ADMIN_EMAIL = "viralnight001@gmail.com";
+const ADMIN_EMAIL = "steppejulien1@gmail.com";
 const CLE_DEJA_FAIT = "vn:redirection-connecte";
 
 async function rediriger() {

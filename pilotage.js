@@ -5,7 +5,7 @@ import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
    ⚠️ ADMIN_EMAIL est duplique dans admin.js, auth.js et
    api/update-client-status.js : les garder alignes. Le vrai verrou est cote
    serveur ; ici il sert seulement a ne pas montrer un ecran vide. */
-const ADMIN_EMAIL = "viralnight001@gmail.com";
+const ADMIN_EMAIL = "steppejulien1@gmail.com";
 const API = "/api/update-client-status";
 const RAFRAICHIR_MS = 2 * 60 * 1000;
 

@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-const ADMIN_EMAIL = "viralnight001@gmail.com";
+const ADMIN_EMAIL = "steppejulien1@gmail.com";
 const SOCIAL_PLATFORMS = ["instagram", "tiktok", "facebook", "linkedin", "youtube"];
 
 function json(response, body, status = 200) {

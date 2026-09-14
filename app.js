@@ -1599,7 +1599,7 @@ if (supabase) {
   // L'admin ne doit jamais rester sur app.html — il a son propre espace.
   // Cas typique : connexion via Google OAuth qui redirige toujours vers app.html.
   supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session?.user?.email?.trim().toLowerCase() === "viralnight001@gmail.com") {
+    if (session?.user?.email?.trim().toLowerCase() === "steppejulien1@gmail.com") {
       window.location.replace("./admin.html");
     }
   });
@@ -1610,7 +1610,7 @@ if (supabase) {
       setAuthFeedback("Enregistre ton nouveau mot de passe ci-dessous.", "connected");
       return;
     }
-    if (session?.user?.email?.trim().toLowerCase() === "viralnight001@gmail.com") {
+    if (session?.user?.email?.trim().toLowerCase() === "steppejulien1@gmail.com") {
       window.location.replace("./admin.html");
       return;
     }

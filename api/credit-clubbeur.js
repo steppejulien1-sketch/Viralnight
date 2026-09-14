@@ -26,7 +26,7 @@ import { joursEntre } from "../lib/admin/pilotage.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 
-const ADMIN_EMAIL = "viralnight001@gmail.com";
+const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
 /* Les deux bases ne nomment pas les memes choses de la meme facon.
    Cote gerants : bar / acces / vip, du texte libre.

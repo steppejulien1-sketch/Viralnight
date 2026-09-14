@@ -12,7 +12,7 @@ import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
 import { invitationCourante, oublierInvitation, avecInvitation } from "./invitationClub.js";
 
 /** Compte disposant du back-office complet. Doit rester aligne avec admin.js. */
-const ADMIN_EMAIL = "viralnight001@gmail.com";
+const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
 /** Identifiant du setInterval du compte a rebours rate limit. */
 let timerRateLimit = null;

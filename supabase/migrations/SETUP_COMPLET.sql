@@ -887,7 +887,7 @@ create index if not exists submissions_establishment_source_idx
 -- ============================================================
 -- 202608200001_lecture_admin_rls.sql
 -- ------------------------------------------------------------
--- Le compte admin (viralnight001@gmail.com) n'a jamais de ligne dans
+-- Le compte admin (steppejulien1@gmail.com) n'a jamais de ligne dans
 -- establishment_owners (ce n'est pas un club), donc current_establishment_id()
 -- lui renvoie NULL et les policies scopees par etablissement ne matchaient
 -- jamais rien pour lui : la file de validation d'admin.html renvoyait
@@ -905,26 +905,26 @@ drop policy if exists "submissions_select_admin" on public.submissions;
 create policy "submissions_select_admin"
   on public.submissions
   for select
-  using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
+  using (auth.jwt() ->> 'email' = 'steppejulien1@gmail.com');
 
 drop policy if exists "submissions_update_admin" on public.submissions;
 create policy "submissions_update_admin"
   on public.submissions
   for update
-  using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com')
-  with check (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
+  using (auth.jwt() ->> 'email' = 'steppejulien1@gmail.com')
+  with check (auth.jwt() ->> 'email' = 'steppejulien1@gmail.com');
 
 drop policy if exists "establishments_select_admin" on public.establishments;
 create policy "establishments_select_admin"
   on public.establishments
   for select
-  using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
+  using (auth.jwt() ->> 'email' = 'steppejulien1@gmail.com');
 
 drop policy if exists "establishment_owners_select_admin" on public.establishment_owners;
 create policy "establishment_owners_select_admin"
   on public.establishment_owners
   for select
-  using (auth.jwt() ->> 'email' = 'viralnight001@gmail.com');
+  using (auth.jwt() ->> 'email' = 'steppejulien1@gmail.com');
 
 -- ============================================================
 -- 202608200002_telephone_etablissement.sql

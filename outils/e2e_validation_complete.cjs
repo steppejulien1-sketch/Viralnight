@@ -50,7 +50,7 @@ async function lire(r) {
 const V = require("../../06-pwa-clubbeurs/outils/lib_vn.cjs");
 
 const MIRAGE_B2B = "128cfa6d-b8aa-4ff8-8598-79cb401c321e";
-const ADMIN = "viralnight001@gmail.com";
+const ADMIN = "steppejulien1@gmail.com";
 
 const trace = [];
 const dire = (ok, t) => { trace.push([ok, t]); console.log((ok ? "  OK  | " : " FAIL | ") + t); };

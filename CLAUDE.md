@@ -177,7 +177,7 @@ la lit. Le jeton est brule avant la creation (update conditionne a `used_at IS N
 et rendu si la creation echoue. L'admin fabrique les liens depuis `admin.html`
 (« Inviter un club » → `POST /api/create-client?action=inviter`).
 
-Le compte admin est `viralnight001@gmail.com` (constante `ADMIN_EMAIL`, dupliquee
+Le compte admin est `steppejulien1@gmail.com` depuis le 14/09/2026 (avant : `viralnight001@gmail.com`, qui reste l'adresse de CONTACT des pages legales) (constante `ADMIN_EMAIL`, dupliquee
 dans `admin.js` et `auth.js` — les garder alignes).
 
 ## 6. Regles de design

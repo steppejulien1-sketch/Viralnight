@@ -31,7 +31,7 @@ import {
    Les cles service_role des deux bases contournent RLS : sans ce controle,
    n'importe qui lirait tous les clubs et tous les clubbeurs. */
 
-const ADMIN_EMAIL = "viralnight001@gmail.com";
+const ADMIN_EMAIL = "steppejulien1@gmail.com";
 const ALLOWED_STATUSES = new Set(["actif", "essai", "suspendu"]);
 
 // Les comptes de Julien et ceux de nos outils ne sont pas des clients : les

@@ -18,7 +18,7 @@ const fs = require("fs");
 const puppeteer = require("puppeteer-core");
 const V = require("./lib_b2b.cjs");
 
-const ADMIN = "viralnight001@gmail.com";
+const ADMIN = "steppejulien1@gmail.com";
 const SITE = process.env.VN_URL || "http://127.0.0.1:5173";
 const DOSSIER = `${__dirname}/pages-admin`;
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));

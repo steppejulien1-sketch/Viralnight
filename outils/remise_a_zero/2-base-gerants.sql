@@ -15,14 +15,13 @@
 --     recompenses et leurs echanges, soirees et leurs chiffres, bareme,
 --     horaires, contenus, scans QR, comptes Instagram relies.
 --   - Les 2 demandes de demo « La house » et le lien d'invitation en attente.
---   - Les comptes gerants julien.steppe123@gmail.com et steppejulien1@gmail.com
---     (ceux qui ouvraient Mon Club Test et NEUIL dans l'appli club). Pour
---     retester l'appli club, il suffira de se reinscrire : l'inscription est
---     ouverte.
+--   - Le compte gerant julien.steppe123@gmail.com (celui de Mon Club Test) et
+--     l'ancien compte admin viralnight001@gmail.com.
 --
 -- CE QUI RESTE
 --   - Toute la structure et les fonctions.
---   - Le compte admin viralnight001@gmail.com (pilotage, validation).
+--   - Le compte admin steppejulien1@gmail.com (pilotage, validation) --
+--     admin depuis le 14/09/2026. Il perd seulement son lien avec NEUIL.
 --
 -- PAS DANS CE SCRIPT : 1 photo de recompense stockee. Supabase interdit de
 -- l'effacer en SQL. Pour l'enlever : Storage > reward-photos > Delete.
@@ -39,7 +38,7 @@ delete from public.demo_requests;
 delete from public.club_invitations;
 
 -- Tous les comptes sauf l'admin.
-delete from auth.users where lower(coalesce(email, '')) <> 'viralnight001@gmail.com';
+delete from auth.users where lower(coalesce(email, '')) <> 'steppejulien1@gmail.com';
 
 commit;
 

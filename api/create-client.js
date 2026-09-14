@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
-const ADMIN_EMAIL = "viralnight001@gmail.com";
+const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
 // Les titres sont ceux du catalogue du parcours d'installation
 // (club-app.html) : le gerant les retrouve deja coches, avec leur
