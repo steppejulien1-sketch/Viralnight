@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Noctify | Pilotage</title>
+    <meta name="description" content="Tableau de bord interne Noctify : clubs, clubbeurs, installations, départs, support." />
+    <meta name="robots" content="noindex" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="./assets/favicon-vn.svg" type="image/svg+xml" />
+    <link rel="preload" href="./assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./base.css" />
+    <link rel="stylesheet" href="./pilotage.css" />
+  </head>
+  <body>
+    <!-- Le tableau de bord de Julien (13/09/2026) : « un compte bien a moi ou
+         il y a tout ». Tout ce qui est affiche vient de
+         /api/update-client-status?action=pilotage, qui lit les DEUX bases
+         (gerants et clubbeurs) avec les cles serveur, apres avoir verifie que
+         la session est celle du compte admin. Cette page ne lit rien en
+         direct : la cle anon ne voit presque rien, et c'est voulu. -->
+    <header class="pl-tete">
+      <a class="pl-marque" href="./pilotage.html">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/></svg>
+        <span>Noctify</span>
+      </a>
+      <nav class="pl-nav" aria-label="Navigation admin">
+        <a class="actif" href="./pilotage.html" aria-current="page">Tableau de bord</a>
+        <a href="./admin.html">Validation</a>
+        <a href="./admin-prospection.html">Prospection</a>
+      </nav>
+      <div class="pl-compte" id="pl-compte" hidden>
+        <span class="pl-maj" id="pl-maj"></span>
+        <button type="button" class="pl-bouton-leger" id="pl-actualiser">Actualiser</button>
+        <button type="button" class="pl-bouton-leger" id="pl-deconnexion">Se déconnecter</button>
+      </div>
+    </header>
+
+    <!-- ================= CONNEXION ================= -->
+    <main class="pl-connexion" id="pl-connexion" hidden>
+      <form class="pl-carte pl-connexion-carte" id="pl-form">
+        <h1>Pilotage</h1>
+        <p class="pl-sous">Réservé au compte administrateur de Noctify.</p>
+        <label class="pl-champ">
+          <span>E-mail</span>
+          <input id="pl-email" type="email" autocomplete="email" required />
+        </label>
+        <label class="pl-champ" id="pl-champ-mdp">
+          <span>Mot de passe</span>
+          <input id="pl-mdp" type="password" autocomplete="current-password" />
+        </label>
+        <label class="pl-champ" id="pl-champ-nouveau" hidden>
+          <span>Nouveau mot de passe</span>
+          <input id="pl-nouveau" type="password" autocomplete="new-password" minlength="8" />
+        </label>
+        <button type="submit" class="pl-bouton" id="pl-valider">Se connecter</button>
+        <button type="button" class="pl-lien" id="pl-oubli">Mot de passe oublié ?</button>
+        <p class="pl-message" id="pl-message" role="status"></p>
+      </form>
+    </main>
+
+    <!-- ================= TABLEAU DE BORD ================= -->
+    <main class="pl-page" id="pl-page" hidden>
+      <div class="pl-titre-ligne">
+        <h1>Tableau de bord</h1>
+        <p class="pl-sous">Toutes les données de Noctify, au même endroit. Les comptes de test et les tiens ne sont pas comptés.</p>
+      </div>
+
+      <nav class="pl-rubriques" aria-label="Rubriques">
+        <a href="#bref">En bref</a>
+        <a href="#clubbeurs">Clubbeurs</a>
+        <a href="#appli">Appli</a>
+        <a href="#activite">Activité</a>
+        <a href="#departs">Départs</a>
+        <a href="#support">Support <b class="pl-pastille" id="pl-pastille-support" hidden></b></a>
+        <a href="#avis">Avis</a>
+        <a href="#clubs">Clubs</a>
+        <a href="#demos">Démos</a>
+      </nav>
+
+      <p class="pl-alerte" id="pl-erreurs" hidden></p>
+      <p class="pl-chargement" id="pl-chargement">Chargement des données…</p>
+
+      <section class="pl-section" id="bref" aria-labelledby="t-bref">
+        <h2 id="t-bref">En bref</h2>
+        <div class="pl-kpis" id="pl-kpis"></div>
+      </section>
+
+      <section class="pl-section" id="clubbeurs" aria-labelledby="t-clubbeurs">
+        <h2 id="t-clubbeurs">Clubbeurs</h2>
+        <div class="pl-grille-2">
+          <div class="pl-carte">
+            <div class="pl-carte-tete"><h3>Inscriptions</h3><span>30 derniers jours</span></div>
+            <div class="pl-graphe" id="pl-graphe-inscrits"></div>
+            <div class="pl-chiffres" id="pl-chiffres-inscrits"></div>
+          </div>
+          <div class="pl-carte">
+            <div class="pl-carte-tete"><h3>Derniers inscrits</h3></div>
+            <ul class="pl-liste" id="pl-derniers-inscrits"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="pl-section" id="appli" aria-labelledby="t-appli">
+        <h2 id="t-appli">Appli</h2>
+        <div class="pl-grille-2">
+          <div class="pl-carte">
+            <div class="pl-carte-tete"><h3>Appareils actifs</h3><span>par jour, 30 derniers jours</span></div>
+            <div class="pl-graphe" id="pl-graphe-actifs"></div>
+            <div class="pl-chiffres" id="pl-chiffres-actifs"></div>
+          </div>
+          <div class="pl-carte">
+            <div class="pl-carte-tete"><h3>Installations</h3><span>sur l’écran d’accueil</span></div>
+            <div class="pl-chiffres" id="pl-chiffres-installations"></div>
+            <div class="pl-barres" id="pl-plateformes"></div>
+            <p class="pl-note">L’appli n’est pas encore sur l’App Store ni sur Google Play : on compte les téléphones qui l’ont ajoutée à leur écran d’accueil. Une désinstallation ne se voit pas. Comptage actif depuis le 13 septembre 2026.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="pl-section" id="activite" aria-labelledby="t-activite">
+        <h2 id="t-activite">Activité</h2>
+        <div class="pl-kpis" id="pl-activite"></div>
+      </section>
+
+      <section class="pl-section" id="departs" aria-labelledby="t-departs">
+        <h2 id="t-departs">Départs</h2>
+        <div class="pl-grille-2">
+          <div class="pl-carte">
+            <div class="pl-carte-tete"><h3>Pourquoi ils partent</h3><span id="pl-departs-total"></span></div>
+            <div class="pl-barres" id="pl-motifs"></div>
+          </div>
+          <div class="pl-carte">
+            <div class="pl-carte-tete"><h3>Derniers comptes supprimés</h3></div>
+            <div class="pl-defile"><table class="pl-table" id="pl-table-departs"></table></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="pl-section" id="support" aria-labelledby="t-support">
+        <h2 id="t-support">Support</h2>
+        <div class="pl-carte pl-carte-flush">
+          <div class="pl-carte-tete pl-pad"><h3>Conversations</h3><span id="pl-support-resume"></span></div>
+          <div id="pl-fils"></div>
+        </div>
+      </section>
+
+      <section class="pl-section" id="avis" aria-labelledby="t-avis">
+        <h2 id="t-avis">Avis sur l’appli</h2>
+        <div class="pl-grille-2">
+          <div class="pl-carte" id="pl-avis-note"></div>
+          <div class="pl-carte">
+            <div class="pl-carte-tete"><h3>Commentaires</h3></div>
+            <ul class="pl-liste" id="pl-commentaires"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="pl-section" id="clubs" aria-labelledby="t-clubs">
+        <h2 id="t-clubs">Clubs</h2>
+        <div class="pl-kpis pl-kpis-serres" id="pl-clubs-resume"></div>
+        <div class="pl-carte pl-carte-flush">
+          <div class="pl-defile"><table class="pl-table" id="pl-table-clubs"></table></div>
+        </div>
+        <p class="pl-note">« Payant » correspond au statut « actif » posé dans l’admin : aucun paiement en ligne n’est encore branché. Change le statut directement dans la liste.</p>
+      </section>
+
+      <section class="pl-section" id="demos" aria-labelledby="t-demos">
+        <h2 id="t-demos">Demandes de démo</h2>
+        <div class="pl-carte pl-carte-flush">
+          <div class="pl-defile"><table class="pl-table" id="pl-table-demos"></table></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./pilotage.js"></script>
+  </body>
+</html>

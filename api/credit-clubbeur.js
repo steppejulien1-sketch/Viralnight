@@ -21,7 +21,8 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { notifierStory, notifierCadeauDuJour, pousserA } from "../lib/notifications/envoyer.js";
-import { libelleMotifDepart } from "../lib/notifications/push.js";
+import { libelleMotifDepart, MOTIFS_DEPART } from "../lib/notifications/push.js";
+import { joursEntre } from "../lib/admin/pilotage.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 
@@ -544,6 +545,26 @@ async function actionSupprimerCompte(request, response) {
   // pas faire croire au clubbeur que sa suppression a rate. Mais on attend
   // l'envoi avant de repondre : une fonction Vercel peut etre gelee des que
   // la reponse est partie.
+  //
+  // La raison est aussi gardee pour le tableau de bord (migration 0045),
+  // SANS rien qui identifie la personne : ni id, ni pseudo, ni e-mail.
+  try {
+    const { error: erreurDepart } = await clubbeur.from("departs").insert({
+      motif: Object.prototype.hasOwnProperty.call(MOTIFS_DEPART, motif) ? motif : "inconnu",
+      commentaire: precision || null,
+      anciennete_jours: joursEntre(profil.inscrit),
+      points_perdus: typeof profil.solde === "number" ? profil.solde : null,
+      points_gagnes: typeof profil.gagnes === "number" ? profil.gagnes : null,
+      stories: profil.stories,
+      etablissements: profil.etablissements.length,
+      amis_invites: profil.filleuls,
+      venu_par_ami: profil.parraine,
+    });
+    if (erreurDepart) console.error("[supprimer-compte] depart non garde", erreurDepart.message);
+  } catch (e) {
+    console.error("[supprimer-compte] depart non garde", e.message);
+  }
+
   let mail = false;
   try {
     mail = await mailDepart({ ...profil, motif, precision });

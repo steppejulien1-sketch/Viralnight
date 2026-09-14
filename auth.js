@@ -84,7 +84,7 @@ function destination(email) {
   // est un etat legitime ; une demo presentee comme son espace, non.
   // simulateur.html reste accessible directement : c'est un outil de
   // vente, il n'est simplement plus la destination d'une connexion.
-  return String(email).trim().toLowerCase() === ADMIN_EMAIL ? "./admin.html" : "./app.html";
+  return String(email).trim().toLowerCase() === ADMIN_EMAIL ? "./pilotage.html" : "./app.html";
 }
 
 /**

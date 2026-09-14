@@ -6856,6 +6856,56 @@ var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koi
   });
 })();
 
+/* ---- Ce que Julien lit dans son tableau de bord (13/09/2026) ----
+   « Le nombre de telechargements, le nombre de personnes arrivees ce jour,
+   ce mois ». Deux evenements, ranges par la migration 0045 :
+   - ouverture : une par appareil et par jour, EN MODE APPLI seulement --
+     la maquette posee dans un cadre sur un ordinateur n'est pas l'appli ;
+   - installation : la premiere fois que l'appli tourne en plein ecran, ou
+     l'evenement appinstalled d'Android (qui tombe dans l'onglet du
+     navigateur, d'ou son ecoute AVANT le test du mode appli).
+   Le jeton vn_stat est tire au hasard et DISTINCT de vn_appareil (bonus de
+   bienvenue) : une statistique ne doit pas servir a relier un telephone a
+   un bonus. La base ignore les doublons ; le localStorage evite seulement
+   de la solliciter a chaque ouverture. Rien ne bloque jamais l'appli. */
+(function () {
+  function jetonStat() {
+    try {
+      var j = localStorage.getItem("vn_stat");
+      if (!j) {
+        j = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
+        localStorage.setItem("vn_stat", j);
+      }
+      return j;
+    } catch (e) {
+      return null;
+    }
+  }
+  var ua = navigator.userAgent || "";
+  var plateforme = /iPhone|iPad|iPod/i.test(ua) ? "iphone" : /Android/i.test(ua) ? "android" : /Windows|Macintosh|Linux|CrOS/i.test(ua) ? "ordinateur" : "autre";
+  var installee =
+    (window.matchMedia && (matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches)) ||
+    window.navigator.standalone === true ||
+    typeof window.Capacitor !== "undefined";
+
+  function noter(type, cle, valeur) {
+    var jeton = jetonStat();
+    if (!jeton) return;
+    try { if (localStorage.getItem(cle) === valeur) return; } catch (e) { return; }
+    supabaseClubbeur
+      .rpc("noter_evenement", { p_type: type, p_appareil: jeton, p_plateforme: plateforme, p_installee: installee || type === "installation" })
+      .then(function (res) {
+        // Retenu seulement si la base a bien recu : hors ligne, on reessaiera.
+        if (!res.error) { try { localStorage.setItem(cle, valeur); } catch (e) {} }
+      }, function () {});
+  }
+
+  window.addEventListener("appinstalled", function () { noter("installation", "vn_stat_installe", "1"); });
+  if (!document.documentElement.classList.contains("mode-appli")) return;
+  noter("ouverture", "vn_stat_jour", new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Paris" }));
+  if (installee) noter("installation", "vn_stat_installe", "1");
+})();
+
 // Copie statique dans public/, servie telle quelle par Vite (dev et
 // prod) sans passer par sa chaine de transformation JS — voir la note
 // dans carte-preview.html pour le detail du probleme que ca evite.
@@ -11858,10 +11908,16 @@ function etapeMotifDepart() {
          l'emportait avec le reste : le telephone redevenait "neuf", et un
          compte recree reprenait le bonus de bienvenue -- le contraire de ce
          que la feuille vient d'annoncer. On le repose apres le menage. */
-      var appareil = null;
-      try { appareil = localStorage.getItem("vn_appareil"); } catch (e) {}
+      // Les jetons de statistiques aussi : c'est le meme telephone, il ne
+      // doit pas compter pour une installation de plus dans le tableau de bord.
+      var garder = {};
+      ["vn_appareil", "vn_stat", "vn_stat_installe"].forEach(function (k) {
+        try { garder[k] = localStorage.getItem(k); } catch (e) {}
+      });
       try { localStorage.clear(); } catch (e) {}
-      try { if (appareil) localStorage.setItem("vn_appareil", appareil); } catch (e) {}
+      Object.keys(garder).forEach(function (k) {
+        try { if (garder[k]) localStorage.setItem(k, garder[k]); } catch (e) {}
+      });
       fermerFeuille();
       VUE_DONNEES.hidden = true;
       fermerProfil();

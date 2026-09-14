@@ -14,6 +14,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
         app: resolve(__dirname, "app.html"),
+        // Tableau de bord de pilotage de l'admin (13/09/2026) : les deux bases reunies.
+        pilotage: resolve(__dirname, "pilotage.html"),
         admin: resolve(__dirname, "admin.html"),
         adminProspection: resolve(__dirname, "admin-prospection.html"),
         simulateur: resolve(__dirname, "simulateur.html"),
