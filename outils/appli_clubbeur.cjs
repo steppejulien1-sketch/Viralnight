@@ -29,7 +29,10 @@ const puppeteer = require("puppeteer-core");
 const PROD = "https://viralnight-koif.vercel.app";
 const SITE = process.env.VN_URL || PROD;
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const DOSSIER = `${__dirname}/pages-clubbeur`;
+// VN_THEME=noir|blanc : force le theme (?theme=, 15/09/2026). Sans lui,
+// celui du Chrome de capture.
+const THEME = process.env.VN_THEME || "";
+const DOSSIER = `${__dirname}/pages-clubbeur${THEME ? "-" + THEME : ""}`;
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // iPhone 14 : la taille pour laquelle --u a ete calibre (voir la regle
@@ -64,7 +67,7 @@ const HAUTEUR = 844;
 
   console.log(`\nAppli clubbeur — ${SITE}\n`);
 
-  await page.goto(`${SITE}/app-preview.html?app=1&cb=${Date.now()}`, { waitUntil: "networkidle2" });
+  await page.goto(`${SITE}/app-preview.html?app=1${THEME ? "&theme=" + THEME : ""}&cb=${Date.now()}`, { waitUntil: "networkidle2" });
   await pause(3500);
   await prendre("01-accueil", "L'accueil, sans compte");
 

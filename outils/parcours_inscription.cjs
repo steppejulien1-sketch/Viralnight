@@ -2,8 +2,9 @@
 //
 //   node outils/parcours_inscription.cjs
 //   VN_URL=http://127.0.0.1:5173 node outils/parcours_inscription.cjs
+//   VN_THEME=noir node outils/parcours_inscription.cjs      (ou blanc)
 //
-// Sortie : outils/pages-inscription/*.png (retine) + *.jpg (1x)
+// Sortie : outils/pages-inscription[-noir|-blanc]/*.png (retine) + *.jpg (1x)
 //
 // Deux choses a la fois, parce qu'elles passent par les memes ecrans :
 //   1. les captures de chaque ecran (les trois temps de l'accueil, puis
@@ -29,7 +30,8 @@ const V = require("../../06-pwa-clubbeurs/outils/lib_vn.cjs");
 
 const PROD = "https://viralnight-koif.vercel.app";
 const SITE = process.env.VN_URL || PROD;
-const DOSSIER = `${__dirname}/pages-inscription`;
+const THEME = process.env.VN_THEME || "";
+const DOSSIER = `${__dirname}/pages-inscription${THEME ? "-" + THEME : ""}`;
 // Chemin resolu : avec un « .. » dedans, Chrome accepte le fichier (l'apercu
 // s'affiche) mais ne sait plus le relire ensuite -- l'envoi echouait.
 const CAPTURE = require("path").resolve(__dirname, "../public/story-exemples/exemple-profil-sombre.webp");
@@ -83,12 +85,17 @@ const HAUTEUR = 844;
     }
 
     console.log(`\nParcours d'inscription — ${SITE}\n`);
-    await page.goto(`${SITE}/app-preview.html?app=1&cb=${Date.now()}`, { waitUntil: "networkidle2" });
-    await pause(3000);
-    await prendre("01-accueil-qr", "Accueil — 1. le QR");
-    for (const [nom, titre] of [["02-accueil-story", "Accueil — 2. la story"], ["03-accueil-bar", "Accueil — 3. au bar"]]) {
-      await page.evaluate(() => document.querySelector("#ob-scene").click());
-      await pause(2600);
+    await page.goto(`${SITE}/app-preview.html?app=1${THEME ? "&theme=" + THEME : ""}&cb=${Date.now()}`, { waitUntil: "domcontentloaded" });
+    // L'ecran de lancement : les lettres en train d'apparaitre, puis le mot.
+    await pause(650);
+    await prendre("00a-lancement", "Lancement — les lettres arrivent");
+    await pause(900);
+    await prendre("00b-lancement", "Lancement — le mot et son point");
+    await pause(2600);
+    await prendre("01-accueil-1", "Accueil — 1er temps");
+    for (const [nom, titre] of [["02-accueil-2", "Accueil — 2e temps"], ["03-accueil-3", "Accueil — 3e temps"]]) {
+      await page.evaluate(() => document.querySelector("#vue-accueil").click());
+      await pause(1200);
       await prendre(nom, titre);
     }
 
@@ -136,6 +143,15 @@ const HAUTEUR = 844;
     await prendre("09-pseudo", "Ton pseudo Instagram");
     await page.click('.ob-etape.actif [type="submit"]');
 
+    // Le cadeau de bienvenue ferme la marche. Un compte jetable n'a scanne
+    // aucun etablissement : l'ecran annonce que les points attendent.
+    const cadeau = await page.waitForFunction(() => document.querySelector('.ob-etape.actif[data-etape="cadeau"]') || document.querySelector("#ob-feuille").hidden, { timeout: 20000 }).then(() => ecranActif()).catch(() => null);
+    if (cadeau === "cadeau") {
+      await pause(700);
+      await prendre("09b-cadeau", "Le cadeau de bienvenue");
+      bilan.cadeau = await page.$eval("#ob-cadeau-btn", (b) => b.textContent);
+      await page.click("#ob-cadeau-btn");
+    }
     await page.waitForFunction(() => document.querySelector("#ob-feuille").hidden, { timeout: 20000 }).catch(async (e) => {
       // Ce que dit l'ecran quand ca coince : sans ca, un « timeout » ne
       // dit pas si c'est le pseudo, l'envoi ou l'enregistrement qui a echoue.

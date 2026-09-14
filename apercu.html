@@ -202,6 +202,16 @@
         <div id="appareils" class="groupe"></div>
       </div>
 
+      <!-- Blanc / Noir : Julien, 15/09/2026 -- « mets une version ou je peux
+           la mettre en blanc et une ou je peux la mettre en noir ». Passe
+           ?theme= a l'appli, qui force son theme (voir le script apres la
+           feuille de style d'app-preview.html). -->
+      <div class="groupe" role="group" aria-label="Thème de l'appli">
+        <span class="groupe-titre">Thème</span>
+        <button type="button" class="puce" data-theme="blanc" aria-pressed="false">Blanc</button>
+        <button type="button" class="puce" data-theme="noir" aria-pressed="false">Noir</button>
+      </div>
+
       <div class="groupe">
         <button type="button" class="puce" id="recharger" title="Recharger l'appli dans le cadre">Recharger</button>
         <button type="button" class="puce" id="ouvrir" title="Ouvrir l'appli seule, dans un nouvel onglet">Ouvrir à part</button>
@@ -218,7 +228,7 @@
                echouent en silence -- on croirait a un bug de l'appli. -->
           <iframe
             id="ecran"
-            src="/app-preview.html?app=1"
+            src="/app-preview.html?app=1&amp;theme=noir"
             title="Aperçu de l'appli Noctify"
             allow="camera; geolocation; clipboard-write"
           ></iframe>
@@ -228,7 +238,7 @@
 
     <p class="aide">
       La <b>vraie</b> appli, pas une copie : l'iframe a son propre viewport.
-      Sur ton téléphone → <code>/app-preview.html?app=1</code>
+      Sur ton téléphone → <code>/app-preview.html?app=1&amp;theme=noir</code> (ou <code>blanc</code>)
     </p>
 
     <script>
@@ -244,6 +254,12 @@
       ];
 
       var CLE_CHOIX = "noctify_apercu_appareil";
+      var CLE_THEME = "noctify_apercu_theme";
+      var theme = "noir";
+      try {
+        var themeGarde = localStorage.getItem(CLE_THEME);
+        if (themeGarde === "blanc" || themeGarde === "noir") theme = themeGarde;
+      } catch (e) {}
       var conteneur = document.getElementById("appareils");
       var echelle = document.getElementById("cadre-echelle");
       var telephone = document.getElementById("telephone");
@@ -301,6 +317,29 @@
           (facteur < 0.999 ? " · affiché à " + Math.round(facteur * 100) + " %" : " · taille réelle");
       }
 
+      function adresseAppli() {
+        return "/app-preview.html?app=1&theme=" + theme;
+      }
+
+      var boutonsTheme = document.querySelectorAll("[data-theme]");
+      function peindreTheme() {
+        [].forEach.call(boutonsTheme, function (b) {
+          b.setAttribute("aria-pressed", String(b.dataset.theme === theme));
+        });
+      }
+      [].forEach.call(boutonsTheme, function (b) {
+        b.addEventListener("click", function () {
+          if (theme === b.dataset.theme) return;
+          theme = b.dataset.theme;
+          try { localStorage.setItem(CLE_THEME, theme); } catch (e) {}
+          peindreTheme();
+          // Le theme se pose avant la premiere peinture : l'appli repart.
+          ecran.src = adresseAppli();
+        });
+      });
+      peindreTheme();
+      if (ecran.getAttribute("src") !== adresseAppli()) ecran.src = adresseAppli();
+
       document.getElementById("recharger").addEventListener("click", function () {
         // On reassigne src plutot que d'appeler reload() sur le document
         // interne : ca repart de l'ecran de chargement, comme une vraie
@@ -309,7 +348,7 @@
       });
 
       document.getElementById("ouvrir").addEventListener("click", function () {
-        window.open("/app-preview.html?app=1", "_blank", "noopener");
+        window.open(adresseAppli(), "_blank", "noopener");
       });
 
       window.addEventListener("resize", appliquer);
