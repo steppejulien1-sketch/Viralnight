@@ -2395,6 +2395,50 @@
          faute. Corail, comme la barre d'onglets de l'appli clubbeur. */
       .tab.on svg { stroke: var(--accent-fort); stroke-width: 2.3; }
       .tab.on .lbl { color: var(--accent-fort); }
+
+      /* ============================================================
+         PLUS DE MASCOTTE, LE MOT NOCTIFY (15/09/2026)
+         Meme decision que cote clubbeur (voir .mot dans app-preview.html) :
+         la mascotte « fait trop gamin », le logo devient le mot, Archivo
+         800, point du i en rouge #de3131. Pose en fin de feuille pour
+         gagner sur les regles d'origine sans les reecrire. */
+      .mot {
+        display: inline-flex; align-items: baseline;
+        font-family: var(--titre); font-weight: 800; letter-spacing: -.045em; line-height: 1;
+        white-space: nowrap; font-synthesis: none; color: #0b0b0c;
+      }
+      .mot > span { display: inline-block; }
+      .mot-i { position: relative; }
+      .mot-i i {
+        position: absolute; left: calc(50% + .0225em); top: -.03em;
+        width: .205em; height: .205em; margin-left: -.1025em; border-radius: 50%;
+        background: #de3131;
+      }
+      /* L'ecran de lancement : les lettres une par une, puis le point. */
+      .splash .mot { font-size: 40px; }
+      .splash .mot > span { opacity: 0; filter: blur(5px); animation: mot-lettre .5s cubic-bezier(.23, 1, .32, 1) forwards; }
+      .splash .mot > span:nth-child(1) { animation-delay: .1s; }
+      .splash .mot > span:nth-child(2) { animation-delay: .17s; }
+      .splash .mot > span:nth-child(3) { animation-delay: .24s; }
+      .splash .mot > span:nth-child(4) { animation-delay: .31s; }
+      .splash .mot > span:nth-child(5) { animation-delay: .38s; }
+      .splash .mot > span:nth-child(6) { animation-delay: .45s; }
+      .splash .mot > span:nth-child(7) { animation-delay: .52s; }
+      .splash .mot-i i { scale: 0; animation: mot-point .45s cubic-bezier(.34, 1.56, .64, 1) .85s forwards; }
+      @keyframes mot-lettre { to { opacity: 1; filter: blur(0); } }
+      @keyframes mot-point { to { scale: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .splash .mot > span { opacity: 1; filter: none; animation: none; }
+        .splash .mot-i i { scale: 1; animation: none; }
+      }
+      /* L'accueil du gerant : le mot a la place du logo au verre. */
+      .pa-logo { width: auto; aspect-ratio: auto; overflow: visible; text-align: center; }
+      .pa-logo .mot { font-size: 46px; }
+      /* Le parcours d'installation : le bandeau creme n'existait que pour la
+         mascotte. Il ne reste que le compteur, sur la page. */
+      .pa-mascotte { display: none; }
+      .pa-bandeau { height: 40px; background: none; border: 0; }
+      .pa-compteur { bottom: 4px; }
     </style>
   </head>
   <body>
@@ -2435,10 +2479,7 @@
                  partout ailleurs (aucun nouveau systeme de comptes), juste
                  le formulaire vit dans cette page. -->
             <div class="splash" id="splash" aria-hidden="true">
-              <span class="splash-logo">
-                <img src="/noctify-logo-verre-detoure.webp" alt="" width="640" height="640" />
-              </span>
-              <div class="splash-piste"><span class="splash-barre"></span></div>
+              <span class="mot"><span>N</span><span>o</span><span>c</span><span>t</span><span class="mot-i">ı<i></i></span><span>f</span><span>y</span></span>
             </div>
 
             <!-- Le filtre qui blanchit le fond du logo. Hors flux,
@@ -2626,7 +2667,7 @@
                       <h1 class="pa-titre">Bienvenue sur Noctify</h1>
 
                       <p class="pa-logo">
-                        <img src="/noctify-logo-verre-detoure.webp" alt="Noctify" width="640" height="640">
+                        <span class="mot" role="img" aria-label="Noctify"><span>N</span><span>o</span><span>c</span><span>t</span><span class="mot-i">ı<i></i></span><span>f</span><span>y</span></span>
                       </p>
 
                       <!-- ⚠️ ECRIT POUR UN PATRON DE BOITE, PAS POUR UN
@@ -6110,24 +6151,11 @@
          photographier les six ecrans, et il en avait recopie une copie
          qui a aussitot pris du retard. Un attribut se lit des deux
          cotes. */
-      function rendreMascotte(pas) {
-        var zone = $("#pa-mascotte");
-        var etape = document.querySelector('.pa-etape[data-pas="' + pas + '"]');
-        var voulue = (etape && etape.dataset.mascotte) || MASCOTTE_REPLI;
-        var source = POSES_ABSENTES[voulue] ? MASCOTTE_REPLI : voulue;
-        zone.innerHTML = '<img src="' + source + '" alt="" />';
-
-        var img = zone.firstElementChild;
-        img.addEventListener("error", function () {
-          // Le drapeau evite la boucle si le repli manque lui aussi.
-          if (img.dataset.repli) return;
-          POSES_ABSENTES[voulue] = true;
-          img.dataset.repli = "1";
-          img.src = MASCOTTE_REPLI;
-        });
-
-        relancerAnimation(zone, "pa-entre");
-      }
+      // La mascotte est retiree des deux applis le 15/09/2026 (Julien :
+      // « ca fait trop gamin [...] je ne la veux plus ») : le bandeau ne porte
+      // plus que le compteur d'etape. La fonction reste, appelee a chaque
+      // etape, pour ne pas toucher au deroule du parcours.
+      function rendreMascotte() {}
 
       /* Retirer puis remettre une classe d'animation ne suffit pas : le
          navigateur groupe les deux changements dans le meme calcul et
