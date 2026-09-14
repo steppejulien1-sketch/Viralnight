@@ -307,6 +307,7 @@ function rendre() {
   pastilleValider.textContent = d.validation.aValider || "";
 
   rendreValidation();
+  rendreMentionsInstagram();
   rendreEmails();
 
   // --- Clubbeurs ---
@@ -513,7 +514,7 @@ function rendreValidation() {
   $("#pl-site-carte").hidden = !v.site.length;
   $("#pl-site").innerHTML = v.site.map((x) => ligneContenu(x, "site")).join("");
   $("#pl-decisions").innerHTML = v.decisions.length
-    ? v.decisions.map((x) => `<li><span class="pl-texte"><span class="pl-decision ${x.decision}">${x.decision === "refusee" ? "Refusée" : `${x.auto ? "Validée automatiquement" : "Validée"} · +${nb(x.pointsAccordes)}`}</span> — ${esc(x.type)} de ${x.pseudo ? "@" + esc(x.pseudo) : "sans pseudo"}${x.club ? " · " + esc(x.club) : ""}</span><span class="pl-meta">${esc(dateCourte(x.decideLe || x.date))}</span></li>`).join("")
+    ? v.decisions.map((x) => `<li><span class="pl-texte"><span class="pl-decision ${x.decision}">${x.decision === "refusee" ? "Refusée" : `${x.instagram ? "Vérifiée par Instagram" : x.auto ? "Validée automatiquement" : "Validée"} · +${nb(x.pointsAccordes)}`}</span> — ${esc(x.type)} de ${x.pseudo ? "@" + esc(x.pseudo) : "sans pseudo"}${x.club ? " · " + esc(x.club) : ""}</span><span class="pl-meta">${esc(dateCourte(x.decideLe || x.date))}</span></li>`).join("")
     : `<li>${vide("Aucune décision pour l’instant.")}</li>`;
 }
 
@@ -550,6 +551,28 @@ document.addEventListener("click", async (evenement) => {
     ligne.querySelectorAll("button").forEach((b) => { b.disabled = false; });
   }
 });
+
+/* Ce qu'est devenue chaque mention recue (table instagram_story_mentions,
+   migration clubbeur 0048) : une story non creditee s'explique ici. */
+const STATUTS_MENTION = {
+  validee: "Story validée",
+  deja_validee: "Déjà validée ce soir-là",
+  deja_refusee: "Story refusée ce soir-là : pas de points",
+  aucun_clubbeur_avec_ce_pseudo: "Aucun compte Noctify avec ce pseudo Instagram",
+  pseudo_illisible: "Instagram n’a pas donné le pseudo",
+  compte_non_relie: "Établissement non relié",
+  club_absent_de_l_appli: "Établissement absent de l’appli",
+  lecture_clubbeur_impossible: "Erreur de lecture, à revoir",
+  detection_impossible: "Erreur, à revoir",
+  recue: "En cours",
+};
+
+function rendreMentionsInstagram() {
+  const liste = donnees.validation.mentionsInstagram || [];
+  $("#pl-mentions-ig").innerHTML = liste.length
+    ? liste.map((m) => `<li><span class="pl-texte"><span class="pl-decision${m.statut === "validee" ? "" : " refusee"}">${esc(STATUTS_MENTION[m.statut] || m.statut)}</span> — ${m.pseudo ? "@" + esc(m.pseudo) : "pseudo inconnu"}${m.club ? " · " + esc(m.club) : ""}</span><span class="pl-meta">${esc(dateCourte(m.date))}</span></li>`).join("")
+    : `<li>${vide("Aucune mention reçue. Elles arrivent dès qu’un établissement a relié son Instagram.")}</li>`;
+}
 
 /* ---------------- E-mails ---------------- */
 

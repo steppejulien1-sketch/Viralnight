@@ -9,10 +9,11 @@ process.env.INSTAGRAM_APP_SECRET = "app-secret-test";
 process.env.INSTAGRAM_REDIRECT_URI = "https://viralnight-koif.vercel.app/api/instagram?action=callback";
 
 const { signerState, verifierState } = await import("../lib/instagram/state.js");
-const { urlAutorisation, echangerCode, prolongerJeton, trouverCompteInstagram, MissingConfigError } = await import(
-  "../lib/instagram/oauth.js"
-);
-const { verifierChallengeWebhook, extraireMentions } = await import("../lib/instagram/webhook.js");
+const {
+  urlAutorisation, echangerCode, prolongerJeton, rafraichirJeton, trouverCompteInstagram,
+  recupererAbonnes, lirePseudoExpediteur, MissingConfigError,
+} = await import("../lib/instagram/oauth.js");
+const { verifierChallengeWebhook, extraireMentionsStory, signatureValide } = await import("../lib/instagram/webhook.js");
 
 let passed = 0, failed = 0;
 const check = (label, cond, detail = "") => {
@@ -63,13 +64,14 @@ check("un retour trafique invalide la signature",
 check("une cle inconnue ressort telle quelle, a charge du callback de la rejeter",
   verifierState(signerState(ETABLISSEMENT, "site-externe")).retour === "site-externe");
 
-console.log("\nURL d'autorisation");
+console.log("\nURL d'autorisation (connexion Instagram directe, 14/09/2026)");
 const url = new URL(urlAutorisation(state));
-check("domaine Facebook", url.origin === "https://www.facebook.com");
+check("domaine Instagram, plus Facebook", url.origin === "https://www.instagram.com" && url.pathname === "/oauth/authorize");
 check("client_id transmis", url.searchParams.get("client_id") === "123456789");
 check("redirect_uri transmise", url.searchParams.get("redirect_uri") === process.env.INSTAGRAM_REDIRECT_URI);
 check("state transmis tel quel", url.searchParams.get("state") === state);
-check("le scope demande les mentions", url.searchParams.get("scope").includes("instagram_manage_insights"));
+check("la messagerie est demandee (c'est par la qu'arrivent les stories)", url.searchParams.get("scope").includes("instagram_business_manage_messages"));
+check("aucune permission Facebook Page demandee", !/pages_/.test(url.searchParams.get("scope")));
 
 console.log("\nConfiguration manquante");
 delete process.env.INSTAGRAM_APP_ID;
@@ -82,40 +84,39 @@ try {
 process.env.INSTAGRAM_APP_ID = "123456789";
 
 console.log("\nEchange de jeton (fetch simule)");
-const fauxFetchOk = async () => ({ ok: true, json: async () => ({ access_token: "jeton-abc", expires_in: 5184000 }) });
-check("le jeton court est extrait", (await echangerCode("code-recu", fauxFetchOk)) === "jeton-abc");
-const prolonge = await prolongerJeton("jeton-abc", fauxFetchOk);
-check("le jeton longue duree est extrait", prolonge.accessToken === "jeton-abc" && prolonge.dureeSecondes === 5184000);
+let requeteEchange = null;
+const fauxFetchEchange = async (adresse, options) => {
+  requeteEchange = { adresse, options };
+  return { ok: true, json: async () => ({ access_token: "jeton-court", user_id: 17841400000000000, permissions: ["instagram_business_basic"] }) };
+};
+check("le jeton court est extrait", (await echangerCode("code-recu#_", fauxFetchEchange)) === "jeton-court");
+check("echange en POST sur api.instagram.com", requeteEchange.adresse === "https://api.instagram.com/oauth/access_token" && requeteEchange.options.method === "POST");
+check("le « #_ » colle par Instagram est retire du code", new URLSearchParams(requeteEchange.options.body).get("code") === "code-recu");
+const fauxFetchData = async () => ({ ok: true, json: async () => ({ data: [{ access_token: "jeton-data" }] }) });
+check("reponse au format data[0] aussi comprise", (await echangerCode("x", fauxFetchData)) === "jeton-data");
 
-const fauxFetchErreur = async () => ({ ok: false, status: 400, json: async () => ({ error: { message: "code invalide" } }) });
+const fauxFetchLong = async () => ({ ok: true, json: async () => ({ access_token: "jeton-long", expires_in: 5184000 }) });
+const prolonge = await prolongerJeton("jeton-court", fauxFetchLong);
+check("le jeton longue duree est extrait", prolonge.accessToken === "jeton-long" && prolonge.dureeSecondes === 5184000);
+const rafraichi = await rafraichirJeton("jeton-long", fauxFetchLong);
+check("le renouvellement rend un jeton et sa duree", rafraichi.accessToken === "jeton-long" && rafraichi.dureeSecondes === 5184000);
+
+const fauxFetchErreur = async () => ({ ok: false, status: 400, json: async () => ({ error_message: "code invalide" }) });
 try {
   await echangerCode("code-perime", fauxFetchErreur);
-  check("erreur Graph API propagee", false);
+  check("erreur Instagram propagee", false);
 } catch (error) {
-  check("erreur Graph API propagee", error.message === "code invalide");
+  check("erreur Instagram propagee", error.message === "code invalide");
 }
 
-console.log("\nRecherche du compte Instagram lie a la page");
-const fauxFetchPages = async (url) => {
-  if (url.includes("/me/accounts")) {
-    return { ok: true, json: async () => ({ data: [{ id: "page-1", name: "Mirage", access_token: "jeton-page" }] }) };
-  }
-  return {
-    ok: true,
-    json: async () => ({ instagram_business_account: { id: "ig-42", username: "mirage.club" } }),
-  };
-};
-const compte = await trouverCompteInstagram("jeton-user", fauxFetchPages);
-check("compte Instagram trouve", compte?.igUserId === "ig-42" && compte?.igUsername === "mirage.club", JSON.stringify(compte));
-check("jeton de page conserve", compte?.pageAccessToken === "jeton-page");
-
-const fauxFetchSansInstagram = async (url) => {
-  if (url.includes("/me/accounts")) {
-    return { ok: true, json: async () => ({ data: [{ id: "page-1", name: "Sans IG", access_token: "jeton-page" }] }) };
-  }
-  return { ok: true, json: async () => ({}) };
-};
-check("null si aucune page n'a de compte Instagram", (await trouverCompteInstagram("jeton-user", fauxFetchSansInstagram)) === null);
+console.log("\nLe compte connecte");
+const fauxFetchMoi = async (adresse) => ({ ok: true, json: async () => (adresse.includes("fields=user_id") ? { user_id: "17841400000000042", username: "mirage.club" } : { followers_count: 1234 }) });
+const compte = await trouverCompteInstagram("jeton", fauxFetchMoi);
+check("user_id (celui des webhooks) et pseudo lus", compte?.igUserId === "17841400000000042" && compte?.igUsername === "mirage.club", JSON.stringify(compte));
+check("null si Instagram ne rend pas de user_id", (await trouverCompteInstagram("jeton", async () => ({ ok: true, json: async () => ({}) }))) === null);
+check("abonnes lus", (await recupererAbonnes("jeton", fauxFetchMoi)) === 1234);
+check("pseudo de l'expediteur lu", (await lirePseudoExpediteur("igsid-1", "jeton", async () => ({ ok: true, json: async () => ({ username: "camille_4" }) }))) === "camille_4");
+check("pseudo illisible -> null, jamais d'exception", (await lirePseudoExpediteur("igsid-1", "jeton", fauxFetchErreur)) === null);
 
 console.log("\nVerification d'URL de webhook (handshake Meta)");
 process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN = "jeton-verif-test";
@@ -138,23 +139,41 @@ check(
   verifierChallengeWebhook({ "hub.mode": "autre", "hub.verify_token": "jeton-verif-test" }, "jeton-verif-test") === null,
 );
 
-console.log("\nExtraction des mentions du payload webhook");
-const payloadMention = {
+console.log("\nMentions en story (messagerie Instagram)");
+const payloadStory = {
   object: "instagram",
   entry: [
-    { id: "ig-42", time: 123, changes: [{ field: "mentions", value: { media_id: "media-1" } }] },
-    { id: "ig-42", time: 124, changes: [{ field: "comments", value: {} }] },
-    { id: "ig-99", time: 125, changes: [{ field: "mentions", value: { media_id: "media-2" } }] },
+    {
+      id: "ig-42",
+      time: 1789400000,
+      messaging: [
+        { sender: { id: "client-1" }, recipient: { id: "ig-42" }, timestamp: 1789400000123, message: { mid: "mid-1", attachments: [{ type: "story_mention", payload: { url: "https://cdn/x" } }] } },
+        { sender: { id: "client-2" }, recipient: { id: "ig-42" }, timestamp: 1789400000456, message: { mid: "mid-2", text: "salut" } },
+        { sender: { id: "ig-42" }, recipient: { id: "client-1" }, timestamp: 1789400000789, message: { mid: "mid-3", is_echo: true, attachments: [{ type: "story_mention" }] } },
+      ],
+    },
+    { id: "ig-99", time: 1789400001, messaging: [{ sender: { id: "client-3" }, recipient: { id: "ig-99" }, timestamp: 1789400001, message: { mid: "mid-4", attachments: [{ type: "story_mention" }] } }] },
+    { id: "ig-42", time: 1789400002, changes: [{ field: "mentions", value: { media_id: "media-1" } }] },
   ],
 };
-const mentions = extraireMentions(payloadMention);
-check("deux mentions extraites (le commentaire est ignore)", mentions.length === 2, JSON.stringify(mentions));
-check("igUserId correct sur la premiere", mentions[0].igUserId === "ig-42" && mentions[0].mediaId === "media-1");
-check("igUserId correct sur la seconde", mentions[1].igUserId === "ig-99" && mentions[1].mediaId === "media-2");
+const stories = extraireMentionsStory(payloadStory);
+check("deux mentions en story (un simple message, un echo et une mention en commentaire ignores)", stories.length === 2, JSON.stringify(stories));
+check("compte, expediteur et identifiant du message", stories[0].igCompte === "ig-42" && stories[0].expediteur === "client-1" && stories[0].mid === "mid-1");
+check("horodatage en millisecondes converti", stories[0].recuA === new Date(1789400000123).toISOString());
+check("horodatage en secondes converti aussi", stories[1].recuA === new Date(1789400001 * 1000).toISOString());
+check("payload d'un autre objet ignore", extraireMentionsStory({ object: "page", entry: [] }).length === 0);
+check("payload vide ignore", extraireMentionsStory(null).length === 0);
+check("payload sans entry ignore", extraireMentionsStory({ object: "instagram" }).length === 0);
 
-check("payload d'un autre objet ignore", extraireMentions({ object: "page", entry: [] }).length === 0);
-check("payload vide ignore", extraireMentions(null).length === 0);
-check("payload sans entry ignore", extraireMentions({ object: "instagram" }).length === 0);
+console.log("\nSignature Meta (X-Hub-Signature-256)");
+const { createHmac } = await import("node:crypto");
+const corps = JSON.stringify(payloadStory);
+const bonne = "sha256=" + createHmac("sha256", "app-secret-test").update(corps).digest("hex");
+check("signature valide reconnue", signatureValide(corps, bonne, "app-secret-test") === true);
+check("corps modifie -> refusee", signatureValide(corps + " ", bonne, "app-secret-test") === false);
+check("mauvais secret -> refusee", signatureValide(corps, bonne, "autre-secret") === false);
+check("en-tete malforme -> refusee", signatureValide(corps, "sha256=zz", "app-secret-test") === false);
+check("rien pour trancher -> null", signatureValide(corps, undefined, "app-secret-test") === null && signatureValide("", bonne, "x") === null);
 
 console.log(`\n${passed} test(s) OK, ${failed} echec(s).`);
 if (failed > 0) process.exit(1);

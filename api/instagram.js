@@ -23,16 +23,18 @@ import {
   urlAutorisation,
   echangerCode,
   prolongerJeton,
+  rafraichirJeton,
   trouverCompteInstagram,
-  inscrireWebhookMentions,
+  inscrireWebhook,
   recupererAbonnes,
-  lireAuteurMention,
+  lirePseudoExpediteur,
   verifierMediaExiste,
   MissingConfigError,
   InstagramApiError,
 } from "../lib/instagram/oauth.js";
-import { verifierChallengeWebhook, extraireMentions } from "../lib/instagram/webhook.js";
-import { deciderCreditMention, normaliserHandle } from "../lib/points/mentionAutomatique.js";
+import { verifierChallengeWebhook, extraireMentionsStory, signatureValide } from "../lib/instagram/webhook.js";
+import { normaliserHandle } from "../lib/points/mentionAutomatique.js";
+import { deciderStory } from "../lib/admin/deciderContenu.js";
 import { deciderSortStory, SORTS } from "../lib/points/verificationStory.js";
 
 function json(response, body, status = 200) {
@@ -192,14 +194,13 @@ async function actionCallback(request, response) {
 
     const compte = await trouverCompteInstagram(jetonLong);
     if (!compte) {
-      // Cas le plus probable en pratique : le compte Instagram n'est pas en
-      // mode Business/Creator, ou n'est relie a aucune Page Facebook.
+      // Le compte n'est pas un compte professionnel (Entreprise ou Createur).
       return redirigerCallback(response, "aucun_compte_pro", retour);
     }
 
     let webhookInscrit = false;
     try {
-      await inscrireWebhookMentions(compte.pageId, compte.pageAccessToken);
+      await inscrireWebhook(jetonLong);
       webhookInscrit = true;
     } catch (error) {
       // Non bloquant : la connexion reste utile (statut affiche, jeton
@@ -213,8 +214,11 @@ async function actionCallback(request, response) {
       .upsert(
         {
           establishment_id: verifie.establishmentId,
-          page_id: compte.pageId,
-          page_access_token: compte.pageAccessToken,
+          // Plus de Page Facebook avec la connexion Instagram directe : les
+          // deux colonnes, NOT NULL, portent l'identifiant et le jeton du
+          // compte Instagram lui-meme. Le reste du code lit page_access_token.
+          page_id: compte.igUserId,
+          page_access_token: jetonLong,
           ig_user_id: compte.igUserId,
           ig_username: compte.igUsername,
           user_access_token: jetonLong,
@@ -338,15 +342,22 @@ async function actionWebhook(request, response) {
 
   if (request.method !== "POST") return texte(response, "Methode non supportee.", 405);
 
-  // Meta considere tout code != 2xx comme un echec et redeliv­re le meme
-  // evenement plus tard : on repond 200 tres tot, meme si le traitement
-  // interne echoue partiellement, pour ne jamais provoquer de tempete de
-  // redelivrance sur un payload qu'on ne saura de toute facon pas mieux
-  // traiter la fois suivante.
+  // Meta considere tout code != 2xx comme un echec et redelivre le meme
+  // evenement plus tard : on repond 200 meme si le traitement interne echoue
+  // partiellement. La table instagram_story_mentions (cle = mid) empeche
+  // de traiter deux fois une redelivrance.
   let mentions = [];
+  let signatureOk = null;
   try {
-    const payload = await lireBody(request);
-    mentions = extraireMentions(payload);
+    const brut = await lireCorpsBrut(request);
+    // ⚠️ SIGNATURE NOTEE, PAS ENCORE BLOQUANTE (14/09/2026). Meta signe avec
+    // la cle secrete de l'app ; tant qu'on n'a pas vu un vrai evenement passer
+    // avec signature_ok = true, bloquer risquerait de jeter toutes les
+    // mentions. Le vrai garde-fou en attendant : l'expediteur est RELU par
+    // l'API Instagram avec le jeton du club -- un evenement fabrique, avec un
+    // identifiant invente, ne donne aucun pseudo et donc aucun point.
+    signatureOk = signatureValide(brut, request.headers["x-hub-signature-256"], process.env.INSTAGRAM_APP_SECRET);
+    mentions = extraireMentionsStory(brut ? JSON.parse(brut) : null);
   } catch (error) {
     console.error("[instagram:webhook] payload illisible:", error.message);
     return texte(response, "EVENT_RECEIVED");
@@ -355,202 +366,149 @@ async function actionWebhook(request, response) {
   if (!mentions.length) return texte(response, "EVENT_RECEIVED");
 
   try {
-    const supabase = getSupabaseAdmin();
-
-    // Un igUserId peut correspondre a plusieurs mentions dans le meme
-    // payload : on ne resout la table qu'une fois par identifiant distinct.
-    const igUserIds = [...new Set(mentions.map((m) => m.igUserId))];
-    const { data: comptes } = await supabase
-      .from("establishment_instagram_accounts")
-      .select("establishment_id, ig_user_id")
-      .in("ig_user_id", igUserIds);
-
-    const etablissementParIgUserId = new Map((comptes || []).map((c) => [c.ig_user_id, c.establishment_id]));
-
-    const lignes = mentions
-      .map((m) => ({ establishment_id: etablissementParIgUserId.get(m.igUserId), media_id: m.mediaId }))
-      .filter((ligne) => ligne.establishment_id);
-
-    if (lignes.length) {
-      // ignoreDuplicates : Meta redeliv­re parfois le meme evenement, et
-      // l'index unique (establishment_id, media_id) sert exactement a ca.
-      await supabase.from("instagram_mentions").upsert(lignes, { onConflict: "establishment_id,media_id", ignoreDuplicates: true });
-    }
-
-    // Le pont vers la base clubbeur. Volontairement APRES l'enregistrement
-    // de la mention : si le credit automatique echoue (base clubbeur non
-    // configuree, App Review pas encore passee), la mention reste comptee
-    // comme avant. Aucune regression sur ce qui marche deja.
-    await crediterMentions(mentions, etablissementParIgUserId, supabase);
+    await traiterMentionsStory(mentions, signatureOk);
   } catch (error) {
-    console.error("[instagram:webhook] enregistrement echoue:", error.message);
+    console.error("[instagram:webhook] traitement echoue:", error.message);
   }
 
   return texte(response, "EVENT_RECEIVED");
 }
 
-/* Transforme les mentions recues en points chez les clubbeurs.
+/* Le corps BRUT, pour verifier la signature : un JSON re-serialise ne
+   donnerait pas le meme HMAC. On lit le flux avant tout acces a
+   request.body, que Vercel analyse a la demande. */
+async function lireCorpsBrut(request) {
+  let brut = "";
+  try {
+    for await (const morceau of request) brut += morceau;
+  } catch {
+    // flux deja consomme (serveur de dev) : repli ci-dessous
+  }
+  if (brut) return brut;
+  if (typeof request.body === "string") return request.body;
+  if (request.body && typeof request.body === "object") return JSON.stringify(request.body);
+  return "";
+}
+
+/* Une mention en story -> la story du clubbeur validee (14/09/2026).
  *
- * Quatre informations doivent se rejoindre, et elles vivent a quatre
- * endroits : l'etablissement (base gerants), le club correspondant (base
- * clubbeur, colonne clubs.establishment_id ajoutee par
- * supabase/clubbeur_pont_points_automatiques.sql), l'auteur de la
- * publication (Graph API, absent de l'evenement), et son compte clubbeur
- * (users.handle -- exactement le pseudo saisi dans la page "Poster ma
- * story"). Il manque un maillon, il n'y a pas de points : la raison est
- * journalisee, jamais silencieuse.
+ * Il faut rejoindre cinq faits, qui vivent a cinq endroits : le compte
+ * Instagram mentionne (webhook), l'etablissement (base gerants), le club
+ * de l'appli (base clubbeur, par le code public), le pseudo de l'auteur
+ * (API Instagram, absent du webhook) et son compte clubbeur (users.handle,
+ * le pseudo saisi dans l'appli). Chaque mention garde son statut dans
+ * instagram_story_mentions : un credit qui n'arrive pas se comprend en
+ * une requete, au lieu de rester silencieux.
  *
- * La DECISION vit dans lib/points/mentionAutomatique.js, testable en Node.
- * Ici, on ne fait que rassembler les faits et appliquer le verdict. */
-async function crediterMentions(mentions, etablissementParIgUserId, supabaseGerants) {
+ * Plus de credit parallele : la story est trouvee (ou creee) par
+ * story_detectee_instagram, puis validee par le meme chemin que le bouton
+ * du pilotage et la validation a 24 h (lib/admin/deciderContenu.js).
+ * Meme prix, et « une story par soiree » tient. */
+async function traiterMentionsStory(mentions, signatureOk) {
+  const gerants = getSupabaseAdmin();
   let clubbeur;
   try {
     clubbeur = getSupabaseClubbeurAdmin();
   } catch (error) {
-    console.error("[instagram:credit] base clubbeur indisponible:", error.message);
+    console.error("[instagram:story] base clubbeur indisponible:", error.message);
     return;
   }
 
-  const forfait = Number(process.env.INSTAGRAM_FORFAIT_STORY) || undefined;
+  const idsComptes = [...new Set(mentions.map((m) => m.igCompte))];
+  const { data: comptes, error: erreurComptes } = await gerants
+    .from("establishment_instagram_accounts")
+    .select("establishment_id, ig_user_id, page_access_token")
+    .in("ig_user_id", idsComptes);
+  if (erreurComptes) console.error("[instagram:story] comptes illisibles:", erreurComptes.message);
+  const compteParId = new Map((comptes || []).map((c) => [c.ig_user_id, c]));
 
   for (const mention of mentions) {
-    const etablissementId = etablissementParIgUserId.get(mention.igUserId) || null;
-
+    const noter = (champs) => clubbeur.from("instagram_story_mentions").update(champs).eq("mid", mention.mid);
     try {
-      // 1. L'etablissement gerant -> le club clubbeur.
-      //
-      // ⚠️ LA JOINTURE PASSE PAR LE CODE PUBLIC, PAS PAR UN establishment_id.
-      //
-      // Ce code cherchait `clubs.establishment_id`. Cette colonne n'existe
-      // pas dans la vraie base clubbeur -- verifie le 02/09/2026, `clubs`
-      // porte : id, slug, name, city, primary_color, logo_url, ig_handle,
-      // created_at, leaderboard_enabled, b2b_public_code, points_lock_hours,
-      // lat, lng. La requete partait donc en erreur a chaque mention,
-      // clubId restait null, et AUCUN credit automatique n'a jamais pu
-      // aboutir. Le bug etait invisible : maybeSingle() sans lecture de
-      // l'erreur rend simplement `data: null`, exactement comme un club
-      // introuvable.
-      //
-      // La vraie cle commune est le code public du club, present des deux
-      // cotes et identique : establishments.public_code cote gerants,
-      // clubs.b2b_public_code cote clubbeur (Mirage = 6VAUMQB5 dans les
-      // deux bases).
-      let clubId = null;
-      let jeton = null;
-      if (etablissementId) {
-        const { data: etab, error: erreurEtab } = await supabaseGerants
-          .from("establishments")
-          .select("public_code")
-          .eq("id", etablissementId)
-          .maybeSingle();
-
-        if (erreurEtab) {
-          console.error("[instagram:webhook] code public illisible:", erreurEtab.message);
-        }
-
-        if (etab?.public_code) {
-          // L'erreur est LUE cette fois : une jointure qui casse doit se
-          // voir dans les journaux, pas se confondre avec "pas de club".
-          const { data: club, error: erreurClub } = await clubbeur
-            .from("clubs")
-            .select("id")
-            .eq("b2b_public_code", etab.public_code)
-            .maybeSingle();
-
-          if (erreurClub) {
-            console.error("[instagram:webhook] club clubbeur introuvable:", erreurClub.message);
-          }
-          clubId = club?.id || null;
-        }
-
-        const { data: compte } = await supabaseGerants
-          .from("establishment_instagram_accounts")
-          .select("page_access_token")
-          .eq("establishment_id", etablissementId)
-          .maybeSingle();
-        jeton = compte?.page_access_token || null;
+      // Premier arrive, seul traite : Meta redelivre ses evenements.
+      const { data: nouvelle, error: erreurTrace } = await clubbeur
+        .from("instagram_story_mentions")
+        .upsert(
+          { mid: mention.mid, ig_compte: mention.igCompte, expediteur: mention.expediteur, signature_ok: signatureOk },
+          { onConflict: "mid", ignoreDuplicates: true },
+        )
+        .select("mid");
+      if (erreurTrace) {
+        // Sans trace, on s'abstient : mieux vaut ne pas crediter qu'en double.
+        console.error("[instagram:story] trace impossible, on s'abstient:", erreurTrace.message);
+        continue;
       }
+      if (!nouvelle?.length) continue;
 
-      // 2. Qui a publie. Seul appel reseau du lot, et seul moyen d'obtenir
-      //    l'auteur : l'evenement ne le porte pas.
-      const auteur = jeton ? await lireAuteurMention(mention.mediaId, jeton) : null;
-      const handle = normaliserHandle(auteur?.username);
-
-      // 3. Le clubbeur derriere ce pseudo. ilike : Instagram renvoie le
-      //    username dans sa casse d'origine, le clubbeur a tape la sienne.
-      let clubbeurId = null;
-      if (handle) {
-        // L'erreur est LUE. Sans ca, une panne de lecture ressemble trait
-        // pour trait a "ce pseudo n'a pas de compte Noctify" : dans les
-        // deux cas la valeur est null et personne n'est credite. C'est
-        // exactement de cette facon que la jointure cassee sur les clubs
-        // est restee invisible pendant des semaines.
-        const { data: utilisateur, error: erreurUtilisateur } = await clubbeur
-          .from("users")
-          .select("id")
-          .ilike("handle", handle)
-          .maybeSingle();
-        if (erreurUtilisateur) {
-          console.error("[instagram:webhook] lecture du clubbeur impossible:", erreurUtilisateur.message);
-        }
-        clubbeurId = utilisateur?.id || null;
-      }
-
-      // 4. Deja credite ? La table tranche, et la cle primaire garantit de
-      //    toute facon l'idempotence cote base.
-      let dejaCredite = false;
-      if (clubId) {
-        const { data: trace, error: erreurTrace } = await clubbeur
-          .from("instagram_mention_credits")
-          .select("media_id")
-          .eq("club_id", clubId)
-          .eq("media_id", mention.mediaId)
-          .maybeSingle();
-
-        // ⚠️ CELLE-CI COUTE DE L'ARGENT. Une erreur de lecture donnait
-        // dejaCredite = false, donc "jamais credite", donc un nouveau
-        // credit -- et Meta REDELIVRE ses evenements. Le meme clubbeur
-        // pouvait etre paye plusieurs fois pour une seule story, sans
-        // que rien ne l'indique. La table n'existait meme pas avant le
-        // 03/09/2026 : cette lecture echouait donc a tous les coups.
-        //
-        // En cas de doute, on s'abstient : mieux vaut ne pas crediter une
-        // fois que crediter deux fois. La cle primaire de la table reste
-        // le dernier garde-fou.
-        if (erreurTrace) {
-          console.error("[instagram:webhook] trace de credit illisible, on s'abstient:", erreurTrace.message);
-          continue;
-        }
-        dejaCredite = !!trace;
-      }
-
-      const decision = deciderCreditMention({
-        mention: { ...mention, publieeA: auteur?.publieeA },
-        etablissementId,
-        clubId,
-        clubbeurId,
-        dejaCredite,
-        forfaitStory: forfait,
-      });
-
-      if (!decision.crediter) {
-        console.log(`[instagram:credit] ${mention.mediaId} non credite: ${decision.raison}`);
+      const compte = compteParId.get(mention.igCompte);
+      if (!compte) {
+        await noter({ statut: "compte_non_relie" });
         continue;
       }
 
-      const { data: grant, error } = await clubbeur.rpc("crediter_mention_instagram", {
-        p_club: decision.clubId,
-        p_user: decision.clubbeurId,
-        p_media: decision.mediaId,
-        p_points: decision.points,
-      });
+      // Le compteur de mentions de l'appli club (action=status).
+      await gerants
+        .from("instagram_mentions")
+        .upsert({ establishment_id: compte.establishment_id, media_id: mention.mid, field: "story_mention" }, { onConflict: "establishment_id,media_id", ignoreDuplicates: true });
 
-      if (error) console.error(`[instagram:credit] ${mention.mediaId} echec:`, error.message);
-      else if (grant) console.log(`[instagram:credit] ${mention.mediaId} -> ${decision.points} pts`);
-      else console.log(`[instagram:credit] ${mention.mediaId} deja credite (course)`);
+      const { data: etab } = await gerants.from("establishments").select("public_code").eq("id", compte.establishment_id).maybeSingle();
+      const { data: club } = etab?.public_code
+        ? await clubbeur.from("clubs").select("id").eq("b2b_public_code", etab.public_code).maybeSingle()
+        : { data: null };
+      if (!club?.id) {
+        await noter({ statut: "club_absent_de_l_appli" });
+        continue;
+      }
+
+      const username = await lirePseudoExpediteur(mention.expediteur, compte.page_access_token);
+      const handle = normaliserHandle(username);
+      if (!handle) {
+        await noter({ club_id: club.id, statut: "pseudo_illisible" });
+        continue;
+      }
+
+      // ilike pour la casse ; « _ » et « % » echappes, sinon « julien_6d1f »
+      // repondrait aussi pour « julienX6d1f ».
+      const { data: utilisateur, error: erreurUtilisateur } = await clubbeur
+        .from("users")
+        .select("id")
+        .ilike("handle", handle.replace(/[\\%_]/g, (c) => `\\${c}`))
+        .maybeSingle();
+      if (erreurUtilisateur) {
+        await noter({ club_id: club.id, username, statut: "lecture_clubbeur_impossible" });
+        continue;
+      }
+      if (!utilisateur?.id) {
+        await noter({ club_id: club.id, username, statut: "aucun_clubbeur_avec_ce_pseudo" });
+        continue;
+      }
+
+      const { data: detection, error: erreurDetection } = await clubbeur.rpc("story_detectee_instagram", {
+        p_user: utilisateur.id,
+        p_club: club.id,
+        p_at: mention.recuA,
+      });
+      const ligne = Array.isArray(detection) ? detection[0] : detection;
+      if (erreurDetection || !ligne?.story_id) {
+        await noter({ club_id: club.id, username, user_id: utilisateur.id, statut: "detection_impossible" });
+        continue;
+      }
+      if (ligne.statut !== "a_valider" && ligne.statut !== "creee") {
+        await noter({ club_id: club.id, username, user_id: utilisateur.id, story_event_id: ligne.story_id, statut: ligne.statut });
+        continue;
+      }
+
+      const decision = await deciderStory({ clubbeur, gerants, storyId: ligne.story_id, approve: true });
+      await noter({
+        club_id: club.id,
+        username,
+        user_id: utilisateur.id,
+        story_event_id: ligne.story_id,
+        statut: decision.ok ? "validee" : `validation_${decision.code}`,
+      });
     } catch (error) {
       // Une mention qui echoue ne doit pas emporter les suivantes.
-      console.error(`[instagram:credit] ${mention.mediaId} erreur:`, error.message);
+      console.error(`[instagram:story] ${mention.mid}:`, error.message);
     }
   }
 }
@@ -595,7 +553,7 @@ async function actionCollecterAbonnes(request, response) {
 
   const { data: comptes, error: erreurLecture } = await supabase
     .from("establishment_instagram_accounts")
-    .select("establishment_id, ig_user_id, page_access_token");
+    .select("establishment_id, ig_user_id, page_access_token, token_expires_at");
 
   if (erreurLecture) {
     console.error("[instagram:collecter-abonnes] lecture comptes:", erreurLecture.message);
@@ -607,7 +565,29 @@ async function actionCollecterAbonnes(request, response) {
 
   for (const compte of comptes || []) {
     try {
-      const abonnes = await recupererAbonnes(compte.ig_user_id, compte.page_access_token);
+      // Un jeton Instagram vit 60 jours : renouvele quand il en reste moins
+      // de 15, sinon la connexion d'un club tomberait sans bruit.
+      let jeton = compte.page_access_token;
+      const expire = new Date(compte.token_expires_at).getTime();
+      if (!Number.isFinite(expire) || expire - Date.now() < 15 * 86400000) {
+        try {
+          const neuf = await rafraichirJeton(jeton);
+          jeton = neuf.accessToken;
+          await supabase
+            .from("establishment_instagram_accounts")
+            .update({
+              page_access_token: jeton,
+              user_access_token: jeton,
+              token_expires_at: new Date(Date.now() + (neuf.dureeSecondes || 5184000) * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("establishment_id", compte.establishment_id);
+        } catch (error) {
+          console.error("[instagram:collecter-abonnes] renouvellement du jeton:", compte.establishment_id, error.message);
+        }
+      }
+
+      const abonnes = await recupererAbonnes(jeton);
       if (abonnes === null) { echecs++; continue; }
 
       // upsert (pas insert) : le cron peut se redeclencher le meme jour

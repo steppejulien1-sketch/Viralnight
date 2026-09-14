@@ -233,7 +233,7 @@ async function actionPilotage(response, b2b) {
 
   const [
     etabs, proprios, recompensesB2B, contenus, scans, instas, demos, contenusSite, emails,
-    comptesAuth, users, stories, grants, redemptions, cadeaux, installations, ouvertures, departs, support, abonnements, clubsCb,
+    comptesAuth, users, stories, mentionsInstagram, grants, redemptions, cadeaux, installations, ouvertures, departs, support, abonnements, clubsCb,
   ] = await Promise.all([
     lire("établissements", () => toutLire(() => b2b.from("establishments").select("id, name, city, category, phone, subscription_status, created_at").order("created_at"))),
     lire("propriétaires", () => toutLire(() => b2b.from("establishment_owners").select("email, establishment_id, created_at").order("created_at"))),
@@ -251,7 +251,8 @@ async function actionPilotage(response, b2b) {
     lire("e-mails", () => lecture(b2b.from("journal_emails").select("*").order("created_at", { ascending: false }).limit(100))),
     cote("comptes", () => tousLesComptesAuth(cb)),
     cote("clubbeurs", () => toutLire(() => cb.from("users").select("id, handle, email, created_at, points_balance, referred_by").order("created_at"))),
-    cote("stories", () => toutLire(() => cb.from("story_events").select("id, user_id, club_id, mentioned_at, verified, kind, url, awarded_points, verified_views, views_source, review_status, reviewed_at, review_auto").order("mentioned_at"))),
+    cote("stories", () => toutLire(() => cb.from("story_events").select("id, user_id, club_id, mentioned_at, verified, kind, url, awarded_points, verified_views, views_source, review_status, reviewed_at, review_auto, verifie_instagram").order("mentioned_at"))),
+    cote("mentions Instagram", () => lecture(cb.from("instagram_story_mentions").select("mid, club_id, username, statut, signature_ok, recu_le").order("recu_le", { ascending: false }).limit(15))),
     cote("points", () => toutLire(() => cb.from("point_grants").select("user_id, amount, created_at").order("created_at"))),
     cote("récompenses échangées", () => toutLire(() => cb.from("redemptions").select("user_id, redeemed_at").order("redeemed_at"))),
     cote("cadeaux du jour", () => toutLire(() => cb.from("daily_gifts").select("user_id, created_at").order("created_at"))),
@@ -365,7 +366,7 @@ async function actionPilotage(response, b2b) {
     .filter((s) => s.review_status || s.verified)
     .sort((x, y) => String(y.reviewed_at || y.mentioned_at).localeCompare(String(x.reviewed_at || x.mentioned_at)))
     .slice(0, 15)
-    .map((s) => ({ ...contenuAppli(s), decision: s.review_status === "refusee" ? "refusee" : "validee", auto: !!s.review_auto, pointsAccordes: s.awarded_points, decideLe: s.reviewed_at }));
+    .map((s) => ({ ...contenuAppli(s), decision: s.review_status === "refusee" ? "refusee" : "validee", auto: !!s.review_auto, instagram: !!s.verifie_instagram, pointsAccordes: s.awarded_points, decideLe: s.reviewed_at }));
   const liensSite = contenusSite.map((c) => ({
     id: c.id,
     type: libelleContenu(c.content_type === "story" ? "story" : c.content_type === "reel" ? "reel" : c.platform === "tiktok" ? "tiktok" : ""),
@@ -389,6 +390,7 @@ async function actionPilotage(response, b2b) {
       appli: enAttente,
       site: liensSite,
       decisions,
+      mentionsInstagram: mentionsInstagram.map((m) => ({ club: nomClubCb.get(m.club_id) || null, pseudo: m.username || null, statut: m.statut, date: m.recu_le })),
     },
     emails: {
       total: emails.length,
