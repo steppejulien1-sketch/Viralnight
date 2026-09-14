@@ -568,7 +568,7 @@
         --ob-roue: #ffffff; --ob-roue-fond: rgba(255,255,255,.3);
         --ob-erreur: #c8102e;
         --ob-glisse: cubic-bezier(.32, .72, 0, 1);
-        --ob-rebond: cubic-bezier(.34, 1.5, .64, 1);
+        --ob-rebond: cubic-bezier(.16, 1, .3, 1);
         position: absolute; left: -3px; right: -3px; bottom: -3px; z-index: 37;
         top: calc(10px + env(safe-area-inset-top, 0px));
         overflow: hidden; background: var(--ob-fond); color: var(--ink); text-align: center;
@@ -743,6 +743,46 @@
       }
       .ob-etape-code .ob-lien, .ob-etape[data-etape="code"] .ob-lien { display: block; margin-top: 18px; }
 
+      /* ---- Bienvenue : le cadeau ----
+         Un seul moment anime, la recompense de fin de parcours : la photo se
+         pose (leger recul), le paquet arrive par-dessus son bord et se
+         secoue, le titre et le montant montent, le chiffre compte jusqu'a 50.
+         Au « Recuperer » : la salve de confettis de l'appli part du paquet et
+         le chiffre bat une fois. Rien en boucle. */
+      .ob-etape-bienvenue { padding: 0; }
+      .ob-bv-photo { position: relative; height: 56%; min-height: 250px; overflow: hidden; background: #1c1612; }
+      .ob-bv-photo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 36%; }
+      .ob-bv-corps { padding: 0 26px 150px; text-align: center; }
+      .ob-bv-cadeau {
+        position: relative; z-index: 1; display: grid; place-items: center;
+        width: 112px; height: 112px; margin: -56px auto 14px; border-radius: 30px;
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(16,18,22,.08), 0 20px 36px -16px rgba(16,18,22,.45);
+      }
+      .ob-bv-cadeau img { display: block; width: 80px; height: 80px; }
+      .ob-bv-points { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin: 12px 0 0; }
+      .ob-bv-points strong {
+        font-family: var(--chiffre); font-variant-numeric: tabular-nums;
+        font-size: calc(58 * var(--u)); font-weight: 800; letter-spacing: -.04em; line-height: 1;
+        color: var(--marque);
+      }
+      .ob-bv-points span { font-size: calc(17 * var(--u)); font-weight: 700; color: var(--ink); }
+      .ob-etape-bienvenue .ob-sous { margin-top: 10px; }
+      .ob-bv-cadeau .confettis { inset: 0; scale: 2.6; }
+
+      .ob-etape-bienvenue.joue .ob-bv-photo img { animation: ob-bv-recul 1.8s cubic-bezier(.23, 1, .32, 1) both; }
+      .ob-etape-bienvenue.joue .ob-bv-cadeau { animation: ob-bv-arrive .8s cubic-bezier(.16, 1, .3, 1) .25s both; }
+      .ob-etape-bienvenue.joue .ob-bv-cadeau img { animation: ob-bv-secoue .6s ease-in-out 1.05s both; }
+      .ob-etape-bienvenue.joue .ob-titre { animation: ob-bv-monte .6s cubic-bezier(.23, 1, .32, 1) .45s both; }
+      .ob-etape-bienvenue.joue .ob-bv-points { animation: ob-bv-monte .6s cubic-bezier(.23, 1, .32, 1) .58s both; }
+      .ob-etape-bienvenue.joue .ob-sous { animation: ob-bv-monte .6s cubic-bezier(.23, 1, .32, 1) .7s both; }
+      .ob-etape-bienvenue.gagne .ob-bv-points strong { animation: ob-bv-bat .5s cubic-bezier(.16, 1, .3, 1); }
+      @keyframes ob-bv-recul { from { scale: 1.12; } }
+      @keyframes ob-bv-arrive { from { opacity: 0; scale: .4; rotate: -12deg; } }
+      @keyframes ob-bv-secoue { 0%, 100% { rotate: 0deg; } 25% { rotate: -9deg; } 50% { rotate: 7deg; } 75% { rotate: -3deg; } }
+      @keyframes ob-bv-monte { from { opacity: 0; translate: 0 12px; } }
+      @keyframes ob-bv-bat { 50% { scale: 1.16; } }
+
       @media (prefers-reduced-motion: reduce) {
         .vue-accueil { transition: none; }
         .ob-feuille { translate: none; opacity: 0; transition: opacity .2s ease; }
@@ -750,6 +790,7 @@
         .ob-etape, .ob-etape.actif { transition: none; }
         .ob-etape:not(.actif) { translate: 0 0; }
         .ob-code.faux { animation: none; }
+        .ob-etape-bienvenue.joue *, .ob-etape-bienvenue.gagne * { animation: none !important; }
       }
 
       /* ============================================================
@@ -5400,14 +5441,17 @@
           </p>
 
           <div class="ac-hero">
-            <p class="ac-lead">Transforme tes soirées en récompenses.</p>
+            <!-- « Sorties » et plus « soirees » (Julien, 15/09/2026) : bars et
+                 restaurants arrivent, plus seulement des boites de nuit. -->
+            <p class="ac-lead">Transforme tes sorties en récompenses.</p>
           </div>
 
           <div class="ac-actions">
-            <!-- Apple sur iPhone, Google ailleurs (Julien, 15/09/2026). Apple
-                 ne s'affiche qu'une fois active dans Supabase : en attendant,
-                 l'iPhone voit Google, qui marche. -->
-            <button type="button" class="ac-btn ac-btn-apple" id="ac-apple" hidden>
+            <!-- Apple ET Google, comme l'accueil d'avant (Julien, 15/09/2026 :
+                 « j'ai oublie de remettre continuer avec Apple »). Tant qu'Apple
+                 n'est pas active dans Supabase, son bouton dit pourquoi il ne
+                 marche pas encore (brancherConnexion). -->
+            <button type="button" class="ac-btn ac-btn-apple" id="ac-apple">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.462 2.15-1.213 2.94-.822.86-2.17 1.53-3.29 1.44-.14-1.09.45-2.24 1.19-2.99.83-.86 2.28-1.5 3.31-1.39zm4.29 16.6c-.4.93-.6 1.34-1.12 2.16-.72 1.15-1.74 2.58-3 2.59-1.12.01-1.41-.73-2.93-.72-1.52.01-1.84.73-2.96.72-1.26-.01-2.23-1.31-2.95-2.46-2.02-3.2-2.23-6.95-.99-8.95.88-1.42 2.27-2.25 3.58-2.25 1.33 0 2.17.73 3.27.73 1.07 0 1.72-.73 3.27-.73 1.17 0 2.4.64 3.28 1.74-2.88 1.58-2.41 5.7.55 6.97-.32.9-.72 1.5-.99 2.2z"/></svg>
               Continuer avec Apple
             </button>
@@ -5463,7 +5507,6 @@
           <form class="ob-etape" data-etape="nom" novalidate>
             <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
             <h2 class="ob-titre" id="ob-titre-nom">Comment tu t’appelles ?</h2>
-            <p class="ob-sous">Il s’affiche sur ton profil.</p>
             <label class="ob-champ">
               <span class="ob-invisible">Prénom et nom</span>
               <input type="text" id="ob-nom" name="name" autocomplete="name" autocapitalize="words" enterkeyhint="next" placeholder="Prénom et nom" maxlength="60" required />
@@ -5520,15 +5563,38 @@
                 <li id="ob-etape-ajout">
                   <span class="ob-num">3</span>
                   <span class="ob-preuve-txt">Ajoute-la ici</span>
-                  <span class="ob-vignette-mini" id="ob-capture-vignette" hidden><img id="ob-capture-apercu" alt="Ta capture" /></span>
+                  <span class="ob-vignette-mini" id="ob-capture-vignette" hidden></span>
                   <button type="button" class="ob-mini" id="ob-capture-choisir">Ajouter</button>
                 </li>
               </ol>
               <input type="file" accept="image/*" id="ob-capture" hidden />
             </div>
             <p class="ob-msg" role="alert" hidden></p>
-            <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Terminer</button></div>
+            <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Continuer</button></div>
           </form>
+
+          <!-- Le dernier ecran : bienvenue, et le cadeau (Julien, 15/09/2026 :
+               « un petit cadeau de bienvenue a la fin, une belle image
+               derriere, bienvenue sur Noctify, un beau paquet cadeau, +50
+               points, vraiment beau »). La photo est la sienne (Pexels,
+               Gizem Erol). Le bonus existait deja (migration clubbeur 0041,
+               welcome_bonus) ; il faut un etablissement scanne pour le verser,
+               sinon l'ecran dit qu'il attend le premier scan. -->
+          <div class="ob-etape ob-etape-bienvenue" data-etape="bienvenue">
+            <div class="ob-bv-photo" aria-hidden="true">
+              <img id="ob-bv-photo" data-src="/ambiance/bienvenue.webp" alt="" width="1080" height="1920" decoding="async" />
+            </div>
+            <div class="ob-bv-corps">
+              <span class="ob-bv-cadeau" id="ob-bv-cadeau" aria-hidden="true">
+                <img src="/recompenses/art-cadeau.webp" alt="" width="512" height="512" />
+              </span>
+              <h2 class="ob-titre" id="ob-titre-bienvenue">Bienvenue sur Noctify</h2>
+              <p class="ob-bv-points"><strong id="ob-bv-montant">+50</strong><span>points</span></p>
+              <p class="ob-sous" id="ob-bv-sous">Ton cadeau de bienvenue.</p>
+              <p class="ob-msg" role="alert" hidden></p>
+              <div class="ob-bas"><button type="button" class="ob-btn ob-btn-encre" id="ob-bv-btn">Récupérer mes points</button></div>
+            </div>
+          </div>
         </section>
 
         <!-- ================= ECRAN AMIS =================
@@ -7519,15 +7585,9 @@ fetch(URL_SUPABASE_CLUBBEUR + "/auth/v1/settings", {
     var externes = (r && r.external) || {};
     fournisseursActifs.google = Boolean(externes.google);
     fournisseursActifs.apple = Boolean(externes.apple);
-    // Apple sur un iPhone, Google ailleurs (Julien, 15/09/2026 : « quand on
-    // a un telephone Apple [...] quand on n'en a pas, juste Google »). Un
-    // fournisseur non active dans Supabase ne s'affiche pas : tant qu'Apple
-    // ne l'est pas, l'iPhone voit Google, qui marche.
-    var iphone = /iPhone|iPad|iPod/i.test(navigator.userAgent || "") ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    var avecApple = iphone && fournisseursActifs.apple;
-    if (BOUTON_APPLE) BOUTON_APPLE.hidden = !avecApple;
-    if (BOUTON_GOOGLE) BOUTON_GOOGLE.hidden = !fournisseursActifs.google || avecApple;
+    // Google disparait s'il est coupe dans Supabase. Apple reste affiche,
+    // comme sur l'accueil d'avant : non active, il le dit au toucher.
+    if (BOUTON_GOOGLE) BOUTON_GOOGLE.hidden = !fournisseursActifs.google;
   })
   .catch(function () { /* reseau indisponible : on retente au clic */ });
 
@@ -7764,7 +7824,8 @@ function majNavigationOb() {
   // n'aurait aucun sens, le compte est deja ouvert.
   var retour = Boolean(precedente) &&
     (AVANT_CONNEXION.indexOf(precedente) !== -1) === (AVANT_CONNEXION.indexOf(OB.etape) !== -1);
-  $("#ob-retour").hidden = !retour;
+  // L'ecran de bienvenue est une arrivee, pas une etape : ni retour ni croix.
+  $("#ob-retour").hidden = !retour || OB.etape === "bienvenue";
   // La croix ne ferme que ce qui n'a encore rien cree : l'ecran du code,
   // pour revenir a l'accueil et corriger l'adresse. Apres la connexion, le
   // compte Instagram est exige : sans lui, aucune story n'est reconnue.
@@ -7807,6 +7868,7 @@ function placerEtapeOb(nom, sens) {
   OB.etape = nom;
   FEUILLE.setAttribute("aria-labelledby", "ob-titre-" + nom);
   majNavigationOb();
+  if (nom === "bienvenue") jouerBienvenueOb();
 }
 
 function allerOb(nom) {
@@ -7868,8 +7930,107 @@ function finirParcoursOb() {
 function etapeSuivanteOb() {
   var i = OB.suite.indexOf(OB.etape);
   var prochaine = i === -1 ? OB.suite[0] : OB.suite[i + 1];
+  // Relu en y arrivant : le scan du QR qui a amene la personne a pu se
+  // crediter pendant le parcours, et rendre le cadeau disponible.
+  if (prochaine === "bienvenue") lireCadeauOb();
   if (prochaine) allerOb(prochaine);
   else finirParcoursOb();
+}
+
+/* ---- Le cadeau de bienvenue ----
+   L'etat du bonus (migration clubbeur 0041), en lecture : rien n'est
+   consomme. Deux etats donnent l'ecran :
+   - disponible : un etablissement a deja ete scanne, les points se prennent ;
+   - aucun_club : la base ne verse rien encore, ils attendent le premier scan.
+   Deja pris, ou telephone deja servi : pas d'ecran. */
+async function lireCadeauOb() {
+  try {
+    var res = await supabaseClubbeur.rpc("welcome_bonus_status", { p_device: jetonAppareil() });
+    var d = !res.error && res.data;
+    if (!d || (d.etat !== "disponible" && d.etat !== "aucun_club")) return null;
+    OB.cadeau = d;
+    // La photo ne se charge que pour ceux qui verront l'ecran, et des
+    // maintenant : a l'arrivee, elle doit etre la avant que le paquet se pose.
+    var photo = $("#ob-bv-photo");
+    if (photo && !photo.getAttribute("src")) photo.src = photo.dataset.src;
+    var points = d.points || 50;
+    if (OB.etape !== "bienvenue") $("#ob-bv-montant").textContent = "+" + points;
+    $("#ob-bv-sous").textContent = d.etat === "disponible"
+      ? "Ton cadeau de bienvenue."
+      : "Ton cadeau de bienvenue t’attend : il arrive à ton premier scan dans un établissement.";
+    $("#ob-bv-btn").textContent = d.etat === "disponible" ? "Récupérer mes " + points + " points" : "Découvrir l’appli";
+    return d;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Le moment : les animations CSS (.joue) et le chiffre qui compte jusqu'au
+// montant, une fois le paquet pose.
+function jouerBienvenueOb() {
+  var etape = etapeOb("bienvenue");
+  etape.classList.remove("joue", "gagne");
+  void etape.offsetWidth;
+  etape.classList.add("joue");
+  var cible = (OB.cadeau && OB.cadeau.points) || 50;
+  var chiffre = $("#ob-bv-montant");
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    chiffre.textContent = "+" + cible;
+    return;
+  }
+  chiffre.textContent = "+0";
+  setTimeout(function () {
+    var debut = null;
+    requestAnimationFrame(function pas(t) {
+      if (debut === null) debut = t;
+      var k = Math.min(1, (t - debut) / 900);
+      chiffre.textContent = "+" + Math.round(cible * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(pas);
+    });
+  }, 650);
+}
+
+async function prendreCadeauOb() {
+  var bouton = $("#ob-bv-btn");
+  if (bouton.classList.contains("charge") || bouton.disabled) return;
+  if (!OB.cadeau || OB.cadeau.etat !== "disponible") return finirParcoursOb();
+
+  chargementOb(bouton, true);
+  var res = await supabaseClubbeur.rpc("welcome_bonus", { p_device: jetonAppareil() })
+    .catch(function (erreur) { return { error: erreur }; });
+  chargementOb(bouton, false);
+  var d = (!res.error && res.data) || { etat: "erreur" };
+
+  if (d.etat !== "ok") {
+    var phrases = {
+      deja_pris: "Ce cadeau est déjà sur ton compte.",
+      appareil_deja_servi: "Un seul cadeau de bienvenue par téléphone.",
+      aucun_club: "Il arrive à ton premier scan dans un établissement.",
+    };
+    direOb("bienvenue", phrases[d.etat] || "Ça n’a pas marché. Tu le retrouveras dans Récompenses.", true);
+    OB.cadeau = null;
+    bouton.textContent = "Découvrir l’appli";
+    return;
+  }
+
+  // La salve part du paquet, le chiffre bat, le solde monte : c'est la
+  // confirmation. Puis l'appli.
+  var paquet = $("#ob-bv-cadeau");
+  var ancienne = paquet.querySelector(".confettis");
+  if (ancienne) ancienne.remove();
+  paquet.insertAdjacentHTML("beforeend", confettis());
+  etapeOb("bienvenue").classList.add("gagne");
+  $("#ob-bv-sous").textContent = "Ajoutés à ton solde.";
+  bouton.disabled = true;
+  natif.vibrer("succes");
+  jouer("points");
+  OB.cadeau = null;
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (session) chargerSoldeReel(session.user.id);
+  setTimeout(function () {
+    bouton.disabled = false;
+    finirParcoursOb();
+  }, 1400);
 }
 
 /* Ce qui manque au compte, lu une fois par compte (onAuthStateChange repasse
@@ -7912,6 +8073,9 @@ async function poursuivreParcours(session) {
     // Lecture impossible : on ne bloque pas l'entree dans l'appli pour une
     // etape administrative.
   }
+  // Le cadeau de bienvenue ferme la marche -- dans un parcours neuf
+  // seulement : un compte ancien le retrouve dans Recompenses.
+  if ((OB.ouverte || age < 30 * 60 * 1000) && (await lireCadeauOb())) suite.push("bienvenue");
 
   OB.suite = suite;
   if (!suite.length) {
@@ -7982,6 +8146,8 @@ function preparerCodeOb(adresse) {
 window.noctifyParcours = function (nom, adresse) {
   if (!FEUILLE || !etapeOb(nom)) return;
   if (adresse) preparerCodeOb(adresse);
+  var photo = $("#ob-bv-photo");
+  if (nom === "bienvenue" && photo && !photo.getAttribute("src")) photo.src = photo.dataset.src;
   if (OB.ouverte) allerOb(nom);
   else ouvrirFeuilleOb(nom);
 };
@@ -8224,8 +8390,12 @@ async function retenirCaptureOb(fichier) {
 
   if (OB.urlCapture) URL.revokeObjectURL(OB.urlCapture);
   OB.urlCapture = URL.createObjectURL(OB.capture);
-  $("#ob-capture-apercu").src = OB.urlCapture;
-  $("#ob-capture-vignette").hidden = false;
+  // La vignette naît avec la capture : pas d'image vide dans la page avant.
+  var vignette = $("#ob-capture-vignette");
+  var apercu = vignette.querySelector("img") || vignette.appendChild(document.createElement("img"));
+  apercu.alt = "Ta capture";
+  apercu.src = OB.urlCapture;
+  vignette.hidden = false;
   $("#ob-etape-ajout").classList.add("faite");
   $("#ob-etape-capture").classList.add("faite");
   choisir.textContent = "Changer";
@@ -8303,6 +8473,7 @@ if (FEUILLE) {
   cablerCodeOb();
   cablerNomOb();
   cablerInstagramOb();
+  $("#ob-bv-btn").addEventListener("click", prendreCadeauOb);
 }
 
 supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {

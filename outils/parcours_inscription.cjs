@@ -126,6 +126,16 @@ const HAUTEUR = 844;
     bilan.lienProfil = await page.$eval("#ob-ouvrir-instagram", (a) => a.href);
     await page.click('.ob-etape.actif [type="submit"]');
 
+    // L'ecran de bienvenue et son cadeau. Un compte jetable n'a scanne aucun
+    // etablissement : les 50 points y sont annonces, pas verses.
+    const fin = await page.waitForFunction(() => document.querySelector('.ob-etape.actif[data-etape="bienvenue"]') || document.querySelector("#ob-feuille").hidden, { timeout: 20000 }).then(() => ecranActif()).catch(() => null);
+    if (fin === "bienvenue") {
+      await pause(2600); // le paquet se pose, le chiffre compte
+      await prendre("06-bienvenue", "Bienvenue — le cadeau");
+      bilan.bienvenue = await page.$eval("#ob-bv-btn", (b) => b.textContent);
+      await page.click("#ob-bv-btn");
+    }
+
     await page.waitForFunction(() => document.querySelector("#ob-feuille").hidden, { timeout: 20000 }).catch(async (e) => {
       // Ce que dit l'ecran quand ca coince : sans ca, un « timeout » ne
       // dit pas si c'est le pseudo, l'envoi ou l'enregistrement qui a echoue.
