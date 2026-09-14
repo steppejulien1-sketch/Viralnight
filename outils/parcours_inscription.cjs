@@ -120,7 +120,7 @@ const HAUTEUR = 844;
     await page.type("#ob-pseudo", pseudo);
     const champ = await page.$("#ob-capture");
     await champ.uploadFile(CAPTURE);
-    await page.waitForFunction(() => !document.querySelector("#ob-capture-vignette").hidden, { timeout: 10000 });
+    await page.waitForFunction(() => document.querySelector("#ob-exemple").classList.contains("rempli"), { timeout: 10000 });
     await pause(300);
     await prendre("05-instagram-rempli", "Instagram — pseudo et capture");
     bilan.lienProfil = await page.$eval("#ob-ouvrir-instagram", (a) => a.href);
