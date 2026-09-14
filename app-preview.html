@@ -661,7 +661,7 @@
         font-family: var(--chiffre); font-size: calc(22 * var(--u)); font-weight: 700; color: var(--ink);
         transition: border-color .15s ease;
       }
-      .ob-case:nth-of-type(4) { margin-right: 11px; }
+      .ob-case:nth-of-type(3) { margin-right: 11px; }
       .ob-case.rempli { border-color: var(--ink); }
       .ob-case i { font-style: normal; animation: ob-chiffre .2s var(--sortie); }
       .ob-code:focus-within .ob-case.curseur::after {
@@ -685,103 +685,88 @@
         40%, 60% { translate: 6px 0; }
       }
 
-      /* ---- Instagram : pseudo et capture sur la meme page ----
-         Le pourquoi en tete, le pseudo, puis la capture en trois gestes
-         numerotes -- la sequence porte l'information (ouvrir, capturer,
-         ajouter), dont le premier mene directement au profil. */
-      .ob-etape-ig .ob-sous { max-width: 34ch; }
-      .ob-preuve {
-        margin: 22px 0 0; padding: 14px 14px 4px; border-radius: 14px;
-        background: var(--gris); text-align: left;
+      /* ---- Instagram : pseudo, puis la capture montree par l'exemple ----
+         L'exemple dit ce qu'on attend mieux qu'une phrase : le haut d'un
+         profil, le pseudo entoure de rouge. Une fois la capture choisie, elle
+         prend sa place, cochee. */
+      .ob-etape-ig .ob-sous { max-width: 33ch; }
+      .ob-champ-ok {
+        display: none; place-items: center; flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+        background: #12874d;
       }
-      .ob-preuve-titre { margin: 0; font-size: calc(14.5 * var(--u)); font-weight: 700; color: var(--ink); }
-      .ob-preuve-sous { margin: 3px 0 6px; font-size: calc(12.5 * var(--u)); line-height: 1.4; color: var(--ink2); }
-      .ob-preuve-etapes { list-style: none; margin: 0; padding: 0; }
-      .ob-preuve-etapes li {
-        display: flex; align-items: center; gap: 11px; min-height: 52px; padding: 7px 0;
-        border-top: 1px solid var(--line);
+      .ob-champ-ok svg { width: 13px; height: 13px; fill: none; stroke: #ffffff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .ob-champ.valide .ob-champ-ok { display: grid; }
+      .ob-preuve { margin: 22px 0 0; padding: 16px; border-radius: 16px; background: var(--gris); text-align: left; }
+      .ob-preuve-titre { margin: 0; font-size: calc(15 * var(--u)); font-weight: 700; color: var(--ink); }
+      .ob-preuve-sous { margin: 4px 0 12px; font-size: calc(13 * var(--u)); line-height: 1.4; color: var(--ink2); }
+      /* Le cadre ne montre que le haut du profil (rapport 360/150) : c'est la
+         que se lit le pseudo. La cible est placee sur le pseudo de l'image
+         d'exemple (x 108-255, y 52-82 sur 360 de large). */
+      .ob-exemple {
+        position: relative; aspect-ratio: 360 / 150; overflow: hidden; border-radius: 12px;
+        background: #ffffff; box-shadow: 0 0 0 1px var(--line);
       }
-      .ob-preuve-etapes li:first-child { border-top: 0; }
-      .ob-num {
-        flex: 0 0 auto; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
-        background: var(--ob-fond); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line2);
-        font-family: var(--chiffre); font-size: calc(11.5 * var(--u)); font-weight: 800;
-        transition: background-color .2s ease, color .2s ease;
+      .ob-exemple img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+      .ob-exemple-cible {
+        position: absolute; left: 27%; top: 30%; width: 47%; height: 28%;
+        border: 2px solid var(--marque); border-radius: 999px;
+        animation: ob-cible 2.4s cubic-bezier(.16, 1, .3, 1) .6s 3;
       }
-      .ob-preuve-etapes li.faite .ob-num { background: #12874d; color: #ffffff; box-shadow: none; }
-      .ob-preuve-txt { flex: 1; min-width: 0; font-size: calc(13.5 * var(--u)); font-weight: 600; line-height: 1.3; color: var(--ink); }
-      .ob-preuve-txt small { display: block; margin-top: 1px; font-size: calc(11.5 * var(--u)); font-weight: 500; color: var(--ink3); }
-      .ob-mini {
-        flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
-        min-height: 34px; min-width: 76px; padding: 0 14px; border: 0; border-radius: 999px;
-        background: var(--ob-action); color: var(--ob-action-ink);
-        font-family: var(--sans); font-size: calc(13 * var(--u)); font-weight: 700;
-        text-decoration: none; cursor: pointer; position: relative;
-        transition: scale .16s var(--sortie);
+      @keyframes ob-cible { 0%, 60%, 100% { scale: 1; opacity: 1; } 30% { scale: 1.08; opacity: .75; } }
+      .ob-exemple-etiquette {
+        position: absolute; left: 8px; bottom: 8px; padding: 3px 8px; border-radius: 999px;
+        background: rgba(0,0,0,.72); color: #ffffff; font-size: calc(10.5 * var(--u)); font-weight: 700;
       }
-      .ob-mini:active { scale: .95; }
-      .ob-mini:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-      .ob-mini.secondaire { background: var(--ob-fond); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line2); }
-      .ob-mini.charge { color: transparent; pointer-events: none; }
-      .ob-mini.charge::after {
-        content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px;
-        border-radius: 50%; border: 2px solid var(--ob-roue-fond); border-top-color: var(--ob-roue);
-        animation: ob-tourne .7s linear infinite;
+      .ob-exemple.rempli .ob-exemple-cible, .ob-exemple.rempli .ob-exemple-etiquette { display: none; }
+      .ob-exemple.rempli::after {
+        content: ""; position: absolute; right: 8px; top: 8px; width: 26px; height: 26px; border-radius: 50%;
+        background: #12874d url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 14px no-repeat;
       }
-      /* L'exemple (etape 2) et la capture choisie (etape 3) : le haut d'un
-         profil, en vignette. */
-      .ob-vignette-mini {
-        flex: 0 0 auto; width: 58px; height: 40px; border-radius: 7px; overflow: hidden;
-        background: var(--ob-fond); box-shadow: 0 0 0 1px var(--line);
-      }
-      .ob-vignette-mini[hidden] { display: none; }
-      .ob-vignette-mini img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
-      .ob-exemple-sombre { display: none !important; }
-      @media (prefers-color-scheme: dark) {
-        .ob-exemple-clair { display: none !important; }
-        .ob-exemple-sombre { display: block !important; }
-      }
-      .ob-etape-code .ob-lien, .ob-etape[data-etape="code"] .ob-lien { display: block; margin-top: 18px; }
+      .ob-preuve-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+      .ob-preuve-boutons .ob-btn { min-height: 44px; padding: 0 10px; font-size: calc(13.5 * var(--u)); }
+      .ob-btn-contour { background: var(--ob-fond); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line2); }
 
-      /* ---- Bienvenue : le cadeau ----
-         Un seul moment anime, la recompense de fin de parcours : la photo se
-         pose (leger recul), le paquet arrive par-dessus son bord et se
-         secoue, le titre et le montant montent, le chiffre compte jusqu'a 50.
-         Au « Recuperer » : la salve de confettis de l'appli part du paquet et
-         le chiffre bat une fois. Rien en boucle. */
-      .ob-etape-bienvenue { padding: 0; }
-      .ob-bv-photo { position: relative; height: 56%; min-height: 250px; overflow: hidden; background: #1c1612; }
-      .ob-bv-photo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 36%; }
-      .ob-bv-corps { padding: 0 26px 150px; text-align: center; }
-      .ob-bv-cadeau {
-        position: relative; z-index: 1; display: grid; place-items: center;
-        width: 112px; height: 112px; margin: -56px auto 14px; border-radius: 30px;
-        background: #ffffff;
-        box-shadow: 0 1px 2px rgba(16,18,22,.08), 0 20px 36px -16px rgba(16,18,22,.45);
+      /* ---- Bienvenue : la photo en grand, un gros bouton ----
+         Plein ecran (la feuille perd son retrait du haut, .plein). La photo se
+         pose en reculant doucement, le texte et le bouton montent. Au toucher
+         du bouton, la salve de confettis de l'appli part de lui, puis l'appli
+         s'ouvre. Rien en boucle. */
+      .ob-feuille.plein { top: -3px; border-radius: 0; }
+      .ob-feuille { transition: translate .52s var(--ob-glisse), top .45s var(--ob-glisse), border-radius .45s var(--ob-glisse); }
+      .ob-etape-bienvenue { padding: 0; background: #14100d; }
+      .ob-bv-fond { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+      /* Un voile pour LIRE, pas pour teinter : transparent sur la photo,
+         noir sous le texte. */
+      .ob-bv-voile {
+        position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(to bottom, rgba(0,0,0,0) 38%, rgba(0,0,0,.55) 66%, rgba(0,0,0,.86) 100%);
       }
-      .ob-bv-cadeau img { display: block; width: 80px; height: 80px; }
-      .ob-bv-points { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin: 12px 0 0; }
-      .ob-bv-points strong {
-        font-family: var(--chiffre); font-variant-numeric: tabular-nums;
-        font-size: calc(58 * var(--u)); font-weight: 800; letter-spacing: -.04em; line-height: 1;
-        color: var(--marque);
+      .ob-bv-contenu {
+        position: absolute; left: 0; right: 0; bottom: 0; text-align: center; color: #ffffff;
+        padding: 0 22px calc(22px + env(safe-area-inset-bottom, 0px));
       }
-      .ob-bv-points span { font-size: calc(17 * var(--u)); font-weight: 700; color: var(--ink); }
-      .ob-etape-bienvenue .ob-sous { margin-top: 10px; }
-      .ob-bv-cadeau .confettis { inset: 0; scale: 2.6; }
+      .ob-etape-bienvenue .ob-titre { color: #ffffff; font-size: calc(30 * var(--u)); letter-spacing: -.03em; }
+      .ob-bv-points { margin: 8px 0 22px; font-size: calc(16 * var(--u)); font-weight: 600; color: rgba(255,255,255,.86); }
+      .ob-bv-points strong { font-family: var(--chiffre); font-variant-numeric: tabular-nums; font-weight: 800; color: #ffffff; }
+      .ob-bv-btn {
+        position: relative; min-height: 58px; border-radius: 16px;
+        background: #ffffff; color: #0b0b0c; font-size: calc(16.5 * var(--u)); font-weight: 750;
+        box-shadow: 0 14px 30px -14px rgba(0,0,0,.6);
+      }
+      .ob-bv-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .ob-bv-btn .confettis { inset: -10px 30%; scale: 2.2; }
+      .ob-bv-btn.charge { color: transparent; }
+      .ob-bv-btn.charge svg { opacity: 0; }
+      .ob-bv-btn.charge::after { border-color: rgba(0,0,0,.18); border-top-color: #0b0b0c; }
+      .ob-bv-btn.gagne { background: #12874d; color: #ffffff; }
 
-      .ob-etape-bienvenue.joue .ob-bv-photo img { animation: ob-bv-recul 1.8s cubic-bezier(.23, 1, .32, 1) both; }
-      .ob-etape-bienvenue.joue .ob-bv-cadeau { animation: ob-bv-arrive .8s cubic-bezier(.16, 1, .3, 1) .25s both; }
-      .ob-etape-bienvenue.joue .ob-bv-cadeau img { animation: ob-bv-secoue .6s ease-in-out 1.05s both; }
-      .ob-etape-bienvenue.joue .ob-titre { animation: ob-bv-monte .6s cubic-bezier(.23, 1, .32, 1) .45s both; }
-      .ob-etape-bienvenue.joue .ob-bv-points { animation: ob-bv-monte .6s cubic-bezier(.23, 1, .32, 1) .58s both; }
-      .ob-etape-bienvenue.joue .ob-sous { animation: ob-bv-monte .6s cubic-bezier(.23, 1, .32, 1) .7s both; }
-      .ob-etape-bienvenue.gagne .ob-bv-points strong { animation: ob-bv-bat .5s cubic-bezier(.16, 1, .3, 1); }
+      .ob-etape-bienvenue.joue .ob-bv-fond { animation: ob-bv-recul 2.4s cubic-bezier(.16, 1, .3, 1) both; }
+      .ob-etape-bienvenue.joue .ob-titre { animation: ob-bv-monte .7s cubic-bezier(.16, 1, .3, 1) .35s both; }
+      .ob-etape-bienvenue.joue .ob-bv-points { animation: ob-bv-monte .7s cubic-bezier(.16, 1, .3, 1) .5s both; }
+      .ob-etape-bienvenue.joue .ob-bv-btn { animation: ob-bv-monte .7s cubic-bezier(.16, 1, .3, 1) .7s both; }
       @keyframes ob-bv-recul { from { scale: 1.12; } }
-      @keyframes ob-bv-arrive { from { opacity: 0; scale: .4; rotate: -12deg; } }
-      @keyframes ob-bv-secoue { 0%, 100% { rotate: 0deg; } 25% { rotate: -9deg; } 50% { rotate: 7deg; } 75% { rotate: -3deg; } }
-      @keyframes ob-bv-monte { from { opacity: 0; translate: 0 12px; } }
-      @keyframes ob-bv-bat { 50% { scale: 1.16; } }
+      @keyframes ob-bv-monte { from { opacity: 0; translate: 0 14px; } }
+      .ob-etape[data-etape="code"] .ob-lien { display: block; margin-top: 18px; }
 
       @media (prefers-reduced-motion: reduce) {
         .vue-accueil { transition: none; }
@@ -790,7 +775,8 @@
         .ob-etape, .ob-etape.actif { transition: none; }
         .ob-etape:not(.actif) { translate: 0 0; }
         .ob-code.faux { animation: none; }
-        .ob-etape-bienvenue.joue *, .ob-etape-bienvenue.gagne * { animation: none !important; }
+        .ob-etape-bienvenue.joue * { animation: none !important; }
+        .ob-exemple-cible { animation: none; }
       }
 
       /* ============================================================
@@ -5490,12 +5476,12 @@
           <form class="ob-etape" data-etape="code" novalidate>
             <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="16" height="12.5" rx="2.5"/><path d="m3.5 8 7.5 5.5L18.5 8"/><circle class="plein" cx="19.5" cy="5.5" r="3"/></svg></span>
             <h2 class="ob-titre" id="ob-titre-code">Regarde tes mails</h2>
-            <p class="ob-sous">On vient d’écrire à <strong class="js-ob-adresse"></strong>. Saisis le code à <span class="js-ob-longueur">8</span> chiffres.</p>
+            <p class="ob-sous">On vient d’écrire à <strong class="js-ob-adresse"></strong>. Saisis le code à <span class="js-ob-longueur">6</span> chiffres.</p>
             <!-- UN seul vrai champ, pose sur les cases : autocomplete
                  "one-time-code" fait proposer le code recu par l'iPhone
                  au-dessus du clavier, et un collage remplit tout d'un coup. -->
             <div class="ob-code" id="ob-code-cases">
-              <input id="ob-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8" enterkeyhint="done" aria-label="Code reçu par e-mail" />
+              <input id="ob-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" enterkeyhint="done" aria-label="Code reçu par e-mail" />
             </div>
             <p class="ob-msg" role="alert" hidden></p>
             <button type="button" class="ob-lien js-ob-renvoyer">Renvoyer l’e-mail</button>
@@ -5507,6 +5493,10 @@
           <form class="ob-etape" data-etape="nom" novalidate>
             <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
             <h2 class="ob-titre" id="ob-titre-nom">Comment tu t’appelles ?</h2>
+            <!-- « C'est un peu intrusif, il faut quand meme expliquer » (Julien).
+                 Verifie : le nom ne sert qu'au profil de la personne ; ni les
+                 etablissements ni les autres utilisateurs ne le voient. -->
+            <p class="ob-sous">Ton prénom suffit. Il n’apparaît que sur ton profil, jamais auprès des établissements.</p>
             <label class="ob-champ">
               <span class="ob-invisible">Prénom et nom</span>
               <input type="text" id="ob-nom" name="name" autocomplete="name" autocapitalize="words" enterkeyhint="next" placeholder="Prénom et nom" maxlength="60" required />
@@ -5515,17 +5505,18 @@
             <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Continuer</button></div>
           </form>
 
-          <!-- Instagram, en UNE page (Julien : « les deux au meme endroit, et
-               explique un peu plus pourquoi, sinon les mecs ne vont pas le
-               faire [...] les rediriger vers Instagram pour qu'ils puissent
-               direct prendre une capture de leur profil »).
+          <!-- Instagram, en UNE page. 15/09/2026, deuxieme version (Julien :
+               « relie ton compte Instagram, fais un truc mieux ») : la liste
+               de trois gestes numerotes etait lourde. Ce qui la remplace : le
+               pseudo, puis l'exemple de capture avec le pseudo ENTOURE -- on
+               voit ce qu'on attend au lieu de le lire -- et deux boutons cote a
+               cote, Ouvrir Instagram et Ajouter la capture.
 
                Un vrai « Se connecter avec Instagram » n'existe plus pour un
                compte personnel (API fermee par Meta le 04/12/2024) : le pseudo
                relie une story a un clubbeur (api/instagram.js cherche
                users.handle), la capture prouve qu'il est a lui. Le pseudo
-               passe AVANT la capture : le bouton « Ouvrir » en a besoin pour
-               mener au bon profil. -->
+               passe AVANT la capture : « Ouvrir Instagram » mene a son profil. -->
           <form class="ob-etape ob-etape-ig" data-etape="instagram" novalidate>
             <span class="ob-ico ob-ico-ig" aria-hidden="true">
               <svg viewBox="0 0 24 24">
@@ -5536,63 +5527,48 @@
               </svg>
             </span>
             <h2 class="ob-titre" id="ob-titre-instagram">Relie ton Instagram</h2>
-            <p class="ob-sous">Quand tu postes une story qui mentionne l’établissement, c’est ton pseudo qui nous permet de la reconnaître et de te donner tes points.</p>
-            <label class="ob-champ ob-champ-arobase">
+            <p class="ob-sous">C’est ton pseudo qui nous permet de reconnaître tes stories et de te donner tes points.</p>
+            <label class="ob-champ ob-champ-arobase" id="ob-pseudo-champ">
               <span aria-hidden="true">@</span>
               <span class="ob-invisible">Pseudo Instagram</span>
               <input type="text" id="ob-pseudo" name="instagram" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="ton pseudo" maxlength="80" required />
+              <span class="ob-champ-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
             </label>
 
             <div class="ob-preuve">
-              <p class="ob-preuve-titre">Une capture de ton profil</p>
-              <p class="ob-preuve-sous">Elle prouve que ce compte est bien le tien. Personne d’autre ne peut récupérer tes points.</p>
-              <ol class="ob-preuve-etapes">
-                <li id="ob-etape-profil">
-                  <span class="ob-num">1</span>
-                  <span class="ob-preuve-txt">Ouvre ton profil Instagram</span>
-                  <a class="ob-mini" id="ob-ouvrir-instagram" href="https://www.instagram.com/" target="_blank" rel="noopener">Ouvrir</a>
-                </li>
-                <li id="ob-etape-capture">
-                  <span class="ob-num">2</span>
-                  <span class="ob-preuve-txt">Fais une capture d’écran<small>Ton pseudo doit se lire en haut.</small></span>
-                  <span class="ob-vignette-mini" aria-hidden="true">
-                    <img class="ob-exemple-clair" src="/story-exemples/exemple-profil-clair.webp" alt="" width="360" height="276" />
-                    <img class="ob-exemple-sombre" src="/story-exemples/exemple-profil-sombre.webp" alt="" width="360" height="234" loading="lazy" />
-                  </span>
-                </li>
-                <li id="ob-etape-ajout">
-                  <span class="ob-num">3</span>
-                  <span class="ob-preuve-txt">Ajoute-la ici</span>
-                  <span class="ob-vignette-mini" id="ob-capture-vignette" hidden></span>
-                  <button type="button" class="ob-mini" id="ob-capture-choisir">Ajouter</button>
-                </li>
-              </ol>
+              <p class="ob-preuve-titre">Puis une capture de ton profil</p>
+              <p class="ob-preuve-sous">Elle prouve que le compte est à toi. Ton pseudo doit se lire en haut, comme ici.</p>
+              <div class="ob-exemple" id="ob-exemple">
+                <img class="ob-exemple-img" src="/story-exemples/exemple-profil-clair.webp" alt="Exemple : le haut d’un profil Instagram, le pseudo entouré" width="360" height="276" />
+                <span class="ob-exemple-cible" aria-hidden="true"></span>
+                <span class="ob-exemple-etiquette" aria-hidden="true">Exemple</span>
+              </div>
+              <div class="ob-preuve-boutons">
+                <a class="ob-btn ob-btn-contour" id="ob-ouvrir-instagram" href="https://www.instagram.com/" target="_blank" rel="noopener">Ouvrir Instagram</a>
+                <button type="button" class="ob-btn ob-btn-encre" id="ob-capture-choisir">Ajouter</button>
+              </div>
               <input type="file" accept="image/*" id="ob-capture" hidden />
             </div>
             <p class="ob-msg" role="alert" hidden></p>
             <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Continuer</button></div>
           </form>
 
-          <!-- Le dernier ecran : bienvenue, et le cadeau (Julien, 15/09/2026 :
-               « un petit cadeau de bienvenue a la fin, une belle image
-               derriere, bienvenue sur Noctify, un beau paquet cadeau, +50
-               points, vraiment beau »). La photo est la sienne (Pexels,
-               Gizem Erol). Le bonus existait deja (migration clubbeur 0041,
-               welcome_bonus) ; il faut un etablissement scanne pour le verser,
-               sinon l'ecran dit qu'il attend le premier scan. -->
+          <!-- Le dernier ecran : la photo en grand, un gros bouton (Julien,
+               15/09/2026 : « tu ne mets pas vraiment en valeur l'image [...]
+               le cadeau est moche [...] une image grande avec un gros bouton
+               Recuperer mon cadeau, tu recuperes les 50 points, et ca t'ouvre
+               directement l'appli »). La photo est la sienne (Pexels, Gizem
+               Erol). Le bonus : welcome_bonus (migration clubbeur 0041). -->
           <div class="ob-etape ob-etape-bienvenue" data-etape="bienvenue">
-            <div class="ob-bv-photo" aria-hidden="true">
-              <img id="ob-bv-photo" data-src="/ambiance/bienvenue.webp" alt="" width="1080" height="1920" decoding="async" />
-            </div>
-            <div class="ob-bv-corps">
-              <span class="ob-bv-cadeau" id="ob-bv-cadeau" aria-hidden="true">
-                <img src="/recompenses/art-cadeau.webp" alt="" width="512" height="512" />
-              </span>
+            <img class="ob-bv-fond" id="ob-bv-photo" data-src="/ambiance/bienvenue.webp" alt="" width="1080" height="1920" decoding="async" />
+            <div class="ob-bv-voile" aria-hidden="true"></div>
+            <div class="ob-bv-contenu">
               <h2 class="ob-titre" id="ob-titre-bienvenue">Bienvenue sur Noctify</h2>
-              <p class="ob-bv-points"><strong id="ob-bv-montant">+50</strong><span>points</span></p>
-              <p class="ob-sous" id="ob-bv-sous">Ton cadeau de bienvenue.</p>
-              <p class="ob-msg" role="alert" hidden></p>
-              <div class="ob-bas"><button type="button" class="ob-btn ob-btn-encre" id="ob-bv-btn">Récupérer mes points</button></div>
+              <p class="ob-bv-points"><strong id="ob-bv-montant">+50</strong> points offerts</p>
+              <button type="button" class="ob-btn ob-bv-btn" id="ob-bv-btn">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M2.5 9h19v3.5h-19zM12 9v11.5"/><path d="M12 9c-1.6-3.6-5.6-4.3-5.6-2 0 1.7 3 2 5.6 2zm0 0c1.6-3.6 5.6-4.3 5.6-2 0 1.7-3 2-5.6 2z"/></svg>
+                <span id="ob-bv-libelle">Récupérer mon cadeau</span>
+              </button>
             </div>
           </div>
         </section>
@@ -7786,7 +7762,7 @@ var FEUILLE = $("#ob-feuille");
 var VOILE = $("#ob-voile");
 // = mailer_otp_length de la base clubbeur (Authentication > Providers >
 // Email). Les deux doivent bouger ensemble, sinon aucun code ne passe.
-var LONGUEUR_CODE = 8;
+var LONGUEUR_CODE = 6;
 var AVANT_CONNEXION = ["code"];
 
 // Les deux textes legaux, depuis Reglages comme depuis ici.
@@ -7868,6 +7844,7 @@ function placerEtapeOb(nom, sens) {
   OB.etape = nom;
   FEUILLE.setAttribute("aria-labelledby", "ob-titre-" + nom);
   majNavigationOb();
+  FEUILLE.classList.toggle("plein", nom === "bienvenue");
   if (nom === "bienvenue") jouerBienvenueOb();
 }
 
@@ -7903,6 +7880,7 @@ function ouvrirFeuilleOb(nom) {
 
 function fermerFeuilleOb() {
   OB.ouverte = false;
+  FEUILLE.classList.remove("plein");
   FEUILLE.classList.remove("ouverte");
   VOILE.classList.remove("ouvert");
   if (document.activeElement && FEUILLE.contains(document.activeElement)) document.activeElement.blur();
@@ -7950,87 +7928,75 @@ async function lireCadeauOb() {
     if (!d || (d.etat !== "disponible" && d.etat !== "aucun_club")) return null;
     OB.cadeau = d;
     // La photo ne se charge que pour ceux qui verront l'ecran, et des
-    // maintenant : a l'arrivee, elle doit etre la avant que le paquet se pose.
+    // maintenant : a l'arrivee, elle doit etre la.
     var photo = $("#ob-bv-photo");
     if (photo && !photo.getAttribute("src")) photo.src = photo.dataset.src;
-    var points = d.points || 50;
-    if (OB.etape !== "bienvenue") $("#ob-bv-montant").textContent = "+" + points;
-    $("#ob-bv-sous").textContent = d.etat === "disponible"
-      ? "Ton cadeau de bienvenue."
-      : "Ton cadeau de bienvenue t’attend : il arrive à ton premier scan dans un établissement.";
-    $("#ob-bv-btn").textContent = d.etat === "disponible" ? "Récupérer mes " + points + " points" : "Découvrir l’appli";
+    $("#ob-bv-montant").textContent = "+" + (d.points || 50);
     return d;
   } catch (e) {
     return null;
   }
 }
 
-// Le moment : les animations CSS (.joue) et le chiffre qui compte jusqu'au
-// montant, une fois le paquet pose.
+// Le moment : la photo recule, le texte et le bouton montent (.joue).
 function jouerBienvenueOb() {
   var etape = etapeOb("bienvenue");
-  etape.classList.remove("joue", "gagne");
+  var bouton = $("#ob-bv-btn");
+  etape.classList.remove("joue");
+  bouton.classList.remove("gagne");
+  bouton.disabled = false;
+  $("#ob-bv-libelle").textContent = "Récupérer mon cadeau";
   void etape.offsetWidth;
   etape.classList.add("joue");
-  var cible = (OB.cadeau && OB.cadeau.points) || 50;
-  var chiffre = $("#ob-bv-montant");
-  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    chiffre.textContent = "+" + cible;
-    return;
-  }
-  chiffre.textContent = "+0";
-  setTimeout(function () {
-    var debut = null;
-    requestAnimationFrame(function pas(t) {
-      if (debut === null) debut = t;
-      var k = Math.min(1, (t - debut) / 900);
-      chiffre.textContent = "+" + Math.round(cible * (1 - Math.pow(1 - k, 3)));
-      if (k < 1) requestAnimationFrame(pas);
-    });
-  }, 650);
 }
 
+/* « Recuperer mon cadeau » : les points, puis l'appli, directement (Julien :
+   « une fois que tu as recupere ton cadeau, ca t'ouvre directement
+   l'appli »). Sans etablissement scanne, la base ne verse rien : le bouton
+   le dit un instant, puis l'appli s'ouvre quand meme -- les points
+   arriveront au premier scan, par la carte de Recompenses. */
 async function prendreCadeauOb() {
   var bouton = $("#ob-bv-btn");
+  var libelle = $("#ob-bv-libelle");
   if (bouton.classList.contains("charge") || bouton.disabled) return;
-  if (!OB.cadeau || OB.cadeau.etat !== "disponible") return finirParcoursOb();
+  function puisAppli(ms) {
+    bouton.disabled = true;
+    setTimeout(finirParcoursOb, ms);
+  }
+  if (!OB.cadeau) return finirParcoursOb();
+  if (OB.cadeau.etat !== "disponible") {
+    libelle.textContent = "Tes points arrivent à ton premier scan";
+    return puisAppli(1600);
+  }
 
   chargementOb(bouton, true);
   var res = await supabaseClubbeur.rpc("welcome_bonus", { p_device: jetonAppareil() })
     .catch(function (erreur) { return { error: erreur }; });
   chargementOb(bouton, false);
   var d = (!res.error && res.data) || { etat: "erreur" };
+  OB.cadeau = null;
 
   if (d.etat !== "ok") {
     var phrases = {
-      deja_pris: "Ce cadeau est déjà sur ton compte.",
-      appareil_deja_servi: "Un seul cadeau de bienvenue par téléphone.",
-      aucun_club: "Il arrive à ton premier scan dans un établissement.",
+      deja_pris: "Cadeau déjà récupéré",
+      appareil_deja_servi: "Un seul cadeau par téléphone",
+      aucun_club: "Tes points arrivent à ton premier scan",
     };
-    direOb("bienvenue", phrases[d.etat] || "Ça n’a pas marché. Tu le retrouveras dans Récompenses.", true);
-    OB.cadeau = null;
-    bouton.textContent = "Découvrir l’appli";
-    return;
+    libelle.textContent = phrases[d.etat] || "Tu le retrouveras dans Récompenses";
+    return puisAppli(1600);
   }
 
-  // La salve part du paquet, le chiffre bat, le solde monte : c'est la
-  // confirmation. Puis l'appli.
-  var paquet = $("#ob-bv-cadeau");
-  var ancienne = paquet.querySelector(".confettis");
+  // Le bouton passe au vert, la salve part de lui, le solde monte.
+  bouton.classList.add("gagne");
+  libelle.textContent = "+" + (d.points || 50) + " points ajoutés";
+  var ancienne = bouton.querySelector(".confettis");
   if (ancienne) ancienne.remove();
-  paquet.insertAdjacentHTML("beforeend", confettis());
-  etapeOb("bienvenue").classList.add("gagne");
-  $("#ob-bv-sous").textContent = "Ajoutés à ton solde.";
-  bouton.disabled = true;
+  bouton.insertAdjacentHTML("beforeend", confettis());
   natif.vibrer("succes");
   jouer("points");
-  OB.cadeau = null;
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (session) chargerSoldeReel(session.user.id);
-  setTimeout(function () {
-    bouton.disabled = false;
-    finirParcoursOb();
-  }, 1400);
+  puisAppli(1100);
 }
 
 /* Ce qui manque au compte, lu une fois par compte (onAuthStateChange repasse
@@ -8354,11 +8320,11 @@ function cablerInstagramOb() {
   });
 
   // Le pseudo n'est reecrit qu'a la sortie du champ : le nettoyer a chaque
-  // frappe deplacerait le curseur.
+  // frappe deplacerait le curseur. La coche verte dit qu'il a la bonne forme.
   champPseudo.addEventListener("input", function () {
     direOb("instagram", "");
     majLienProfilOb();
-    $("#ob-etape-profil").classList.toggle("faite", PSEUDO_IG_RE.test(nettoyerPseudoIg(champPseudo.value)));
+    $("#ob-pseudo-champ").classList.toggle("valide", PSEUDO_IG_RE.test(nettoyerPseudoIg(champPseudo.value)));
   });
   champPseudo.addEventListener("blur", function () {
     var propre = nettoyerPseudoIg(champPseudo.value);
@@ -8388,18 +8354,17 @@ async function retenirCaptureOb(fichier) {
   OB.capture = capture;
   chargementOb(choisir, false);
 
+  // La capture prend la place de l'exemple, cochee ; le bouton sert
+  // desormais a en changer.
   if (OB.urlCapture) URL.revokeObjectURL(OB.urlCapture);
   OB.urlCapture = URL.createObjectURL(OB.capture);
-  // La vignette naît avec la capture : pas d'image vide dans la page avant.
-  var vignette = $("#ob-capture-vignette");
-  var apercu = vignette.querySelector("img") || vignette.appendChild(document.createElement("img"));
-  apercu.alt = "Ta capture";
-  apercu.src = OB.urlCapture;
-  vignette.hidden = false;
-  $("#ob-etape-ajout").classList.add("faite");
-  $("#ob-etape-capture").classList.add("faite");
+  var exemple = $("#ob-exemple");
+  var img = exemple.querySelector("img");
+  img.src = OB.urlCapture;
+  img.alt = "Ta capture";
+  exemple.classList.add("rempli");
   choisir.textContent = "Changer";
-  choisir.classList.add("secondaire");
+  choisir.classList.replace("ob-btn-encre", "ob-btn-contour");
 }
 
 async function enregistrerInstagramOb(ev) {
