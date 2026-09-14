@@ -284,13 +284,11 @@
          d'un objet. Le ticket de la boutique a montre ce que gagne un
          rayon court. */
       --r1: 6px; --r2: 9px; --r3: 13px; --r4: 18px; --r-pill: 999px;
-        /* Le badge d'un etablissement sans photo. C'etait le verre de la
-           mascotte jusqu'au 15/09/2026, retiree de toute l'appli (Julien :
-           « ca fait trop gamin »). Ce qui le remplace : la marque courte,
-           un N blanc et le point rouge du logo, sur une tuile noire. Un
-           seul endroit la nomme : badge de la carte, fiche, favoris, tuiles
-           de la story et de la boutique s'en servent tous. */
-        --badge-noctify: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23fff' d='M29 31h11l20 27V31h11v38H60L40 42v27H29z'/%3E%3Ccircle cx='80' cy='64.5' r='4.6' fill='%23de3131'/%3E%3C/svg%3E");
+        /* Le verre de la mascotte, tel que Julien l'a genere et tel qu'il
+           a ete detoure -- PAS un dessin refait ici. Un seul endroit le
+           nomme : le badge de club sur la carte, sa pastille dans le rail
+           et l'entete de sa fiche s'en servent tous. */
+        --verre-noctify: url("/mascotte/verre-salut.webp");
         --ombre-1: 0 1px 2px rgba(0,0,0,.35);
         --ombre-2: 0 6px 20px rgba(0,0,0,.45);
         --ombre-3: 0 18px 48px rgba(0,0,0,.55);
@@ -340,148 +338,184 @@
       @media (prefers-reduced-motion: reduce) { .vue { transition: none; } }
 
       /* ============================================================
-         LE MOT NOCTIFY (15/09/2026)
-         La mascotte est retiree de l'appli (Julien : « ca fait trop
-         gamin [...] cette mascotte, je ne la veux plus »), et le logo
-         devient le mot seul, blanc sur noir, sur la base d'une image qu'il
-         a envoyee. Affine pour ne pas etre « simpliste » : Archivo 800 --
-         la police des titres de l'appli, donc la marque et l'interface
-         parlent la meme langue -- serre, et le point du i en rouge, le
-         seul souvenir garde de l'ancien logo.
-
-         Ecrit en TEXTE et non en image : les lettres doivent pouvoir
-         apparaitre une par une (l'ecran de lancement de DUSK), et un texte
-         reste net a toutes les tailles. Le i est un i sans point (U+0131),
-         present dans le sous-ensemble latin d'Archivo servi par
-         polices.css ; le point est un rond pose dessus. */
-      .mot {
-        display: inline-flex; align-items: baseline;
-        font-family: var(--titre); font-weight: 800; letter-spacing: -.045em; line-height: 1;
-        white-space: nowrap; font-synthesis: none;
-      }
-      .mot > span { display: inline-block; }
-      .mot-i { position: relative; }
-      /* L'espacement negatif est compte dans la largeur de la lettre : le
-         centre du i est donc decale d'une demi-valeur a gauche. */
-      .mot-i i {
-        position: absolute; left: calc(50% + .0225em); top: -.03em;
-        width: .205em; height: .205em; margin-left: -.1025em; border-radius: 50%;
-        background: var(--marque);
-      }
-
-      /* ============================================================
-         ECRAN DE LANCEMENT -- le temps de savoir si un compte existe deja
-         (getSession() est asynchrone). Au-dessus de tout (z-index 40).
-
-         15/09/2026, sur l'ouverture de DUSK filmee par Julien (« leur logo
-         qui apparait petit a petit, ca c'est vraiment style ») : fond noir,
-         leur photo en fondu, puis les lettres une par une. Ici : les
-         lettres, puis le point rouge. La video de lancement se glissera
-         dessous (.avec-media) quand Julien l'aura generee.
-
-         Suit le theme : noir en sombre, blanc en clair. Valeurs en dur,
-         jamais var(--bg) : ce calque est pose sur .screen, qui porte
-         parfois un autre theme. */
+         ECRAN DE CHARGEMENT — le temps de savoir si un compte existe
+         deja (getSession() est asynchrone : sans ca, un client deja
+         connecte revoyait une bascule brute de l'ecran de connexion
+         vers la carte, une fois la session confirmee). Au-dessus de
+         tout (z-index 40, .vue-accueil est a 30), disparait des que la
+         session est connue -- ou apres COUPE_CHARGEMENT_MS en secours
+         si Supabase tarde a repondre. */
       .splash {
-        position: absolute; inset: -3px; z-index: 40;
-        display: grid; place-items: center;
-        background: #ffffff; color: #0b0b0c;
-        transition: opacity .45s ease, visibility .45s ease;
+        /* Valeurs en dur, jamais var(--bg) : ce calque est pose sur
+           .screen, qui porte deja parfois le theme clair .boutique-pro
+           quand on arrive directement sur #boutique -- le splash doit
+           garder son apparence quel que soit l'onglet vise. */
+        position: absolute; inset: -3px; z-index: 40; background: #ffffff;
+        display: flex; align-items: center; justify-content: center;
+        transition: opacity .35s ease;
       }
-      .splash.masque { opacity: 0; visibility: hidden; pointer-events: none; }
-      .splash-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-      .splash.avec-media { background: #000000; color: #ffffff; }
-      .splash .mot { position: relative; font-size: calc(40 * var(--u)); }
-      .splash .mot > span { opacity: 0; filter: blur(5px); animation: mot-lettre .5s var(--sortie) forwards; }
-      .splash .mot > span:nth-child(1) { animation-delay: .15s; }
-      .splash .mot > span:nth-child(2) { animation-delay: .22s; }
-      .splash .mot > span:nth-child(3) { animation-delay: .29s; }
-      .splash .mot > span:nth-child(4) { animation-delay: .36s; }
-      .splash .mot > span:nth-child(5) { animation-delay: .43s; }
-      .splash .mot > span:nth-child(6) { animation-delay: .50s; }
-      .splash .mot > span:nth-child(7) { animation-delay: .57s; }
-      .splash .mot-i i { scale: 0; animation: mot-point .45s cubic-bezier(.34, 1.56, .64, 1) .95s forwards; }
-      @keyframes mot-lettre { to { opacity: 1; filter: blur(0); } }
-      @keyframes mot-point { to { scale: 1; } }
-      @media (prefers-color-scheme: dark) {
-        .splash { background: #000000; color: #ffffff; }
+      .splash.masque { opacity: 0; pointer-events: none; }
+      /* Le bloc de marque du splash. Le N arrondi a laisse la place au
+         logo au verre (demande de Julien : "ce logo-la, partout") --
+         c'est le meme que l'ecran d'accueil, donc la marque ne change
+         plus entre le chargement et la premiere page.
+
+         Le PNG ne remplit que sa bande verticale 22%-72% : on ne montre
+         que celle-la, sinon le logo occupe deux fois la hauteur utile.
+         Le filtre blanchit son fond creme, invisible sur le blanc du
+         splash. */
+      .splash-brand {
+        display: flex; flex-direction: column; align-items: center; gap: var(--e3);
       }
+      .splash-mark {
+        width: 190px; aspect-ratio: 1 / .53; display: block; overflow: hidden;
+        animation: splash-pouls 2.2s ease-in-out infinite;
+      }
+      /* Le PNG est detoure : ni filtre ni mode de fusion. Voir le
+         commentaire de .ac-mascot plus bas. */
+      .splash-mark img {
+        display: block; width: 100%; height: auto; margin-top: -21%;
+      }
+      /* .splash-mot retire : le logo au verre PORTE deja le mot
+         "Noctify". Ecrit une seconde fois juste en dessous, le nom
+         apparaissait deux fois a l'ouverture (signale par Julien). */
+      /* Respiration lente du halo plutot qu'un clignotement : le logo
+         garde sa taille (pas de scale, qui faisait "sauter" le mot
+         dessous), seule l'intensite du rouge bouge. */
+      /* Respiration du halo plutot qu'un clignotement : le logo garde sa
+         taille (pas de scale, qui faisait "sauter" le mot dessous),
+         seule l'intensite du rouge bouge. */
+      /* Le halo rouge n'avait de sens que sur le N monochrome. Sur un
+         dessin en couleur il salissait le trait : une respiration
+         d'opacite, plus discrete, suffit a dire "ca charge". */
+      @keyframes splash-pouls {
+        0%, 100% { opacity: 1; }
+        50%      { opacity: .82; }
+      }
+      /* Petite barre de progression sous le logo -- fausse (on ne sait
+         pas vraiment combien de temps Supabase va prendre), mais remplie
+         par une animation CSS calee sur la duree minimale d'affichage du
+         splash (voir le JS, MIN_AFFICHAGE_MS) : elle donne un vrai
+         retour "ca charge" plutot que le seul logo qui pulse sur place.
+         Le JS la complete a 100% juste avant de faire disparaitre tout
+         l'ecran (voir cacherSplash()). */
+      .splash-piste {
+        position: absolute; left: 40px; right: 40px; bottom: 54px;
+        height: 3px; border-radius: var(--r-pill); background: rgba(15,17,20,.12); overflow: hidden;
+      }
+      .splash-barre {
+        display: block; height: 100%; width: 6%; border-radius: var(--r-pill);
+        background: linear-gradient(135deg, var(--marque), var(--marque-2));
+        box-shadow: none;
+        animation: splash-charge .6s cubic-bezier(.3,.6,.4,1) forwards;
+      }
+      @keyframes splash-charge { from { width: 6%; } to { width: 88%; } }
       @media (prefers-reduced-motion: reduce) {
         .splash { transition: none; }
-        .splash .mot > span { opacity: 1; filter: none; animation: none; }
-        .splash .mot-i i { scale: 1; animation: none; }
+        .splash-mark { animation: none; filter: drop-shadow(0 6px 14px rgba(255,47,69,.28)); }
+        .splash-barre { animation: none; width: 88%; }
+      }
+
+      /* Bascule automatique : si le telephone est en mode sombre, le
+         splash reprend le noir de marque. Demande de Julien -- "mets
+         tout en blanc, et si les gens ont un telephone en mode sombre
+         ca va etre en noir". Seules les couleurs changent, aucune
+         structure n'est dupliquee. */
+      /* Le fond sombre est retire : depuis que le splash porte le logo au
+         verre et non le N vectoriel, un fond noir ferait apparaitre le
+         fond creme du PNG comme un rectangle blanc au milieu de l'ecran.
+         Le splash reste clair quel que soit le mode du telephone -- c'est
+         l'image qui commande, pas la preference systeme.
+         Seule la barre de progression garde son adaptation. */
+      @media (prefers-color-scheme: dark) {
+        .splash-piste { background: rgba(15,17,20,.12); }
       }
 
       /* ============================================================
-         ACCUEIL (15/09/2026) -- la structure de DUSK : une image plein
-         cadre, trois legendes courtes qui se relaient sous des barres de
-         story, le mot, deux boutons, une ligne de mentions.
-
-         Toujours NOIR, quel que soit le theme : c'est un ecran d'image,
-         comme chez DUSK. Sans video (MEDIAS_ACCUEIL vide), il reste noir et
-         les legendes portent seules l'ecran.
-
-         Premiere version du 14/09 retiree le lendemain : trois scenes a la
-         mascotte, jugees « trop gamin », « trop gros », « le meme personnage
-         a chaque fois ». Rien de dessine ici : de l'image, ou rien. */
+         ECRAN D'ACCUEIL — mascotte + connexion
+         L'ecran d'avant, retabli le 15/09/2026 apres une journee d'essai d'un
+         accueil plein cadre facon DUSK (Julien : « remets la landing page
+         qu'on avait d'avant, on avait beaucoup travaille dedans »). BLANC,
+         quel que soit le theme du telephone (« remets l'application en
+         blanc ») : c'est aussi ce qu'exige le trait noir du logo au verre.
+         ============================================================ */
       .vue-accueil {
-        position: absolute; inset: -3px; z-index: 30; overflow: hidden;
-        display: flex; flex-direction: column; justify-content: space-between;
-        padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(14px + env(safe-area-inset-bottom, 0px));
-        background: #000000; color: #ffffff; text-align: center;
+        /* Un seul calque responsable du rayon : celui de .screen
+           (overflow: hidden). Celui-ci deborde de -3px, donc rien ne
+           depasse du coin arrondi. */
+        position: absolute; inset: -3px; border-radius: 0; z-index: 30;
+        display: flex; flex-direction: column; align-items: stretch;
+        justify-content: flex-start;
+        padding: calc(40px + env(safe-area-inset-top, 0px)) 28px calc(32px + env(safe-area-inset-bottom, 0px));
+        text-align: left;
+        --ink: #15181d; --ink2: #5c6370; --ink3: #71767f;
+        --line2: rgba(15,17,20,.14); --champ: rgba(0,0,0,.04);
+        --btn-apple: #000000; --btn-apple-ink: #ffffff;
+        --btn-google: #ffffff; --btn-google-ink: #1a1a1a; --btn-google-bord: rgba(0,0,0,.16);
+        --btn-email: #15181d; --btn-email-ink: #ffffff;
+        background: #ffffff; color: var(--ink);
         transition: opacity .35s ease, visibility .35s ease;
-        -webkit-tap-highlight-color: transparent;
       }
-      html:not(.mode-appli) .vue-accueil { padding-top: 40px; padding-bottom: 22px; }
       .vue-accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
-      .ac-medias { position: absolute; inset: 0; }
-      .ac-medias video {
-        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        opacity: 0; transition: opacity .9s ease;
-      }
-      .ac-medias video.on { opacity: 1; }
-      /* Le degrade ne sert qu'a lire : leger en haut sous les barres,
-         franc en bas sous le texte. Noir pur, aucune teinte. */
-      .ac-voile {
-        position: absolute; inset: 0; pointer-events: none;
-        background: linear-gradient(to bottom, rgba(0,0,0,.45) 0, rgba(0,0,0,0) 16%, rgba(0,0,0,0) 44%, rgba(0,0,0,.82) 72%, #000 92%);
-      }
-      .ac-haut, .ac-bas { position: relative; z-index: 1; }
-      .vue-accueil .ac-installer { margin: 12px 0 0; background: rgba(255,255,255,.1); }
-      .vue-accueil .ac-installer-txt { color: #ffffff; }
-      .vue-accueil .ac-installer-btn { background: #ffffff; color: #000000; }
 
-      .ob-barres { display: flex; gap: 4px; padding: 0 2px; }
-      .ob-barres i { flex: 1; height: 2.5px; border-radius: 3px; background: rgba(255,255,255,.26); overflow: hidden; }
-      .ob-barres b { display: block; width: 0; height: 100%; border-radius: inherit; background: #ffffff; }
-      .ob-barres i.fait b { width: 100%; }
-      .ob-barres i.encours b { animation: ob-remplir var(--ob-duree, 4.2s) linear forwards; }
-      .vue-accueil.en-pause .ob-barres i.encours b { animation-play-state: paused; }
-      @keyframes ob-remplir { from { width: 0; } to { width: 100%; } }
-
-      /* Les legendes : celle qui part monte et s'efface, la suivante arrive
-         d'en dessous. Superposees dans une seule cellule de grille, pour
-         que la hauteur ne saute pas d'une phrase a l'autre. */
-      .ob-legendes { display: grid; margin: 0 0 18px; }
-      .ob-legende {
-        grid-area: 1 / 1; margin: 0; padding: 0 20px;
-        font-size: calc(15.5 * var(--u)); font-weight: 600; letter-spacing: -.01em; line-height: 1.35;
-        text-wrap: balance; text-shadow: 0 1px 14px rgba(0,0,0,.55);
-        opacity: 0; translate: 0 10px;
-        transition: opacity .25s ease, translate .3s ease;
+      /* Le logo au verre. Dans le PNG, l'illustration n'occupe que la bande
+         verticale 22%-72% : le conteneur ne montre que cette bande (le
+         pourcentage d'un margin-top se calcule sur la LARGEUR, et l'image est
+         carree). Le PNG est detoure (outils/detourer_logo.py). */
+      .ac-mascot {
+        width: min(292px, 100%); aspect-ratio: 1 / .53;
+        margin: auto auto 0; align-self: center; overflow: hidden;
       }
-      .ob-legende.on { opacity: 1; translate: 0 0; transition: opacity .45s ease .12s, translate .6s var(--sortie) .12s; }
-      .ob-legende.sort { translate: 0 -8px; }
+      .ac-mascot img { display: block; width: 100%; height: auto; margin-top: -21%; }
 
-      .ob-marque { margin: 0 0 16px; }
-      .ob-marque .mot { font-size: calc(30 * var(--u)); color: #ffffff; }
-
-      .ob-actions { display: grid; gap: 9px; }
-      .ob-legal { margin: 3px 12px 0; font-size: calc(11 * var(--u)); line-height: 1.45; color: rgba(255,255,255,.52); }
-      .ob-legal button {
-        padding: 0; border: 0; background: none; cursor: pointer;
-        font: inherit; font-weight: 600; color: rgba(255,255,255,.8);
+      /* ⚠️ UN SEUL `auto` DANS CETTE COLONNE : celui du logo. Deux `auto`
+         laissaient deux vides de 250 px, le logo flottant au milieu. */
+      .ac-hero { margin: 22px 0 20px; }
+      .ac-title {
+        margin: 0; font-size: calc(22 * var(--u)); font-weight: 800; letter-spacing: -.03em;
+        line-height: 1.2; color: var(--ink); text-align: center;
       }
+      .ac-lead {
+        margin: 0; font-size: calc(15 * var(--u)); font-weight: 500;
+        letter-spacing: -.01em; line-height: 1.45; color: var(--ink2); text-align: center;
+      }
+
+      .ac-actions { width: 100%; display: grid; gap: 12px; }
+      .ac-btn {
+        display: flex; align-items: center; justify-content: center; gap: 12px;
+        width: 100%; min-height: 50px; padding: 0 20px; border: 0;
+        border-radius: var(--r-pill);
+        font-family: var(--sans); font-size: calc(14.5 * var(--u)); font-weight: 700;
+        letter-spacing: -.01em; cursor: pointer;
+        transition: transform var(--tr-court), filter var(--tr-court), background var(--tr-court);
+      }
+      .ac-btn[hidden] { display: none; }
+      /* Etat presse visible : sur mobile le :hover ne sert a rien. */
+      .ac-btn:active { transform: scale(.965); }
+      .ac-btn:disabled { opacity: .6; cursor: default; transform: none; }
+      .ac-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+      .ac-btn svg { width: 18px; height: 18px; flex: none; }
+      .ac-btn-apple  { background: var(--btn-apple); color: var(--btn-apple-ink); }
+      .ac-btn-google { background: var(--btn-google); color: var(--btn-google-ink); box-shadow: inset 0 0 0 1px var(--btn-google-bord); }
+      .ac-btn-marque { background: var(--btn-email); color: var(--btn-email-ink); }
+      /* Separateur ligne-texte-ligne (Julien : "prends ca plus propre"). */
+      .ac-sep {
+        display: flex; align-items: center; gap: 12px; margin: 12px 0 4px;
+        font-size: calc(11.5 * var(--u)); font-weight: 600; color: var(--ink3);
+      }
+      .ac-sep::before, .ac-sep::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line2); }
+      /* 16 px au moins : en dessous, l'iPhone zoome sur le champ. */
+      .ac-input {
+        width: 100%; min-height: 48px; padding: 0 20px; border: 0; border-radius: var(--r-pill);
+        background: var(--champ); box-shadow: inset 0 0 0 1px var(--line2);
+        color: var(--ink); font-size: max(16px, calc(14 * var(--u))); font-family: var(--sans);
+        transition: box-shadow var(--tr-court), background var(--tr-court);
+      }
+      .ac-input::placeholder { color: var(--ink3); }
+      .ac-input:focus { outline: none; box-shadow: inset 0 0 0 1px #de3131, 0 0 0 3px rgba(222,49,49,.18); }
+      .ac-msg { margin: 0; font-size: calc(12 * var(--u)); line-height: 1.4; color: var(--ink2); text-align: center; }
+      .ac-msg[hidden] { display: none; }
+      .ac-msg.err { color: #c8102e; }
 
       /* ---- Les boutons ----
          Pleins, rayon court, comme chez DUSK. Sur l'accueil noir : gris
@@ -498,8 +532,6 @@
       .ob-btn:active { scale: .97; }
       .ob-btn svg { width: 17px; height: 17px; flex: none; }
       .ob-btn:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
-      .ob-btn-sombre { background: #1c1c1e; color: #ffffff; }
-      .ob-btn-blanc { background: #ffffff; color: #000000; }
       .ob-btn-encre { background: var(--ob-action); color: var(--ob-action-ink); }
       .ob-btn-gris { background: var(--gris); color: var(--ink); }
       .ob-btn:disabled { background: var(--ob-eteint); color: var(--ob-eteint-ink); cursor: default; scale: 1; }
@@ -521,11 +553,10 @@
       .ob-msg { margin: 12px 0 0; font-size: calc(13 * var(--u)); line-height: 1.4; color: var(--ob-erreur); }
       .ob-msg[hidden] { display: none; }
       .ob-msg.info { color: var(--ink2); }
-      .ob-actions .ob-msg { margin: 0; color: #ff8a8a; }
 
       /* ============================================================
-         LA FEUILLE D'INSCRIPTION -- une question par ecran. Blanche en
-         clair, noire en sombre (la feuille de DUSK). Plus petite que la
+         LA FEUILLE D'INSCRIPTION -- une question par ecran. Blanche, comme
+         l'accueil, quel que soit le theme du telephone. Plus petite que la
          version du 14/09 (« trop de trucs gros ») : titre a 21, icones a
          30, boutons a 48. */
       .ob-feuille {
@@ -544,18 +575,6 @@
         border-radius: 14px 14px 0 0;
         translate: 0 102%;
         transition: translate .52s var(--ob-glisse);
-      }
-      @media (prefers-color-scheme: dark) {
-        .ob-feuille {
-          --ink: #ffffff; --ink2: #a3a3a8; --ink3: #75757b;
-          --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.24);
-          --gris: #1c1c1e; --ob-fond: #000000;
-          --ob-action: #ffffff; --ob-action-ink: #000000;
-          --ob-eteint: #2a2a2d; --ob-eteint-ink: #6e6e73;
-          --ob-roue: #000000; --ob-roue-fond: rgba(0,0,0,.25);
-          --ob-erreur: #ff7070;
-          box-shadow: 0 0 0 1px rgba(255,255,255,.08);
-        }
       }
       .ob-btn-gris.charge::after { border-color: rgba(128,128,128,.3); border-top-color: var(--ink); }
       html:not(.mode-appli) .ob-feuille { top: 38px; }
@@ -666,60 +685,66 @@
         40%, 60% { translate: 6px 0; }
       }
 
-      /* ---- La capture ---- */
-      .ob-depot {
-        position: relative; display: block; width: 210px; margin: 22px auto 0;
-        border-radius: 12px; overflow: hidden; cursor: pointer; background: var(--gris);
-        box-shadow: 0 0 0 1px var(--line);
+      /* ---- Instagram : pseudo et capture sur la meme page ----
+         Le pourquoi en tete, le pseudo, puis la capture en trois gestes
+         numerotes -- la sequence porte l'information (ouvrir, capturer,
+         ajouter), dont le premier mene directement au profil. */
+      .ob-etape-ig .ob-sous { max-width: 34ch; }
+      .ob-preuve {
+        margin: 22px 0 0; padding: 14px 14px 4px; border-radius: 14px;
+        background: var(--gris); text-align: left;
+      }
+      .ob-preuve-titre { margin: 0; font-size: calc(14.5 * var(--u)); font-weight: 700; color: var(--ink); }
+      .ob-preuve-sous { margin: 3px 0 6px; font-size: calc(12.5 * var(--u)); line-height: 1.4; color: var(--ink2); }
+      .ob-preuve-etapes { list-style: none; margin: 0; padding: 0; }
+      .ob-preuve-etapes li {
+        display: flex; align-items: center; gap: 11px; min-height: 52px; padding: 7px 0;
+        border-top: 1px solid var(--line);
+      }
+      .ob-preuve-etapes li:first-child { border-top: 0; }
+      .ob-num {
+        flex: 0 0 auto; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+        background: var(--ob-fond); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line2);
+        font-family: var(--chiffre); font-size: calc(11.5 * var(--u)); font-weight: 800;
+        transition: background-color .2s ease, color .2s ease;
+      }
+      .ob-preuve-etapes li.faite .ob-num { background: #12874d; color: #ffffff; box-shadow: none; }
+      .ob-preuve-txt { flex: 1; min-width: 0; font-size: calc(13.5 * var(--u)); font-weight: 600; line-height: 1.3; color: var(--ink); }
+      .ob-preuve-txt small { display: block; margin-top: 1px; font-size: calc(11.5 * var(--u)); font-weight: 500; color: var(--ink3); }
+      .ob-mini {
+        flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+        min-height: 34px; min-width: 76px; padding: 0 14px; border: 0; border-radius: 999px;
+        background: var(--ob-action); color: var(--ob-action-ink);
+        font-family: var(--sans); font-size: calc(13 * var(--u)); font-weight: 700;
+        text-decoration: none; cursor: pointer; position: relative;
         transition: scale .16s var(--sortie);
       }
-      .ob-depot:active, .ob-depot.survol { scale: .98; }
-      .ob-depot img { display: block; width: 100%; height: auto; }
-      .ob-depot-choisie { aspect-ratio: 360 / 276; object-fit: cover; object-position: top; }
-      .ob-depot img[hidden] { display: none; }
-      /* L'exemple suit le theme : une capture claire dans une feuille noire
-         se lit comme un trou. En CSS et pas en <picture> : le ?theme= de
-         l'apercu reecrit les regles CSS, pas les attributs media. */
+      .ob-mini:active { scale: .95; }
+      .ob-mini:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .ob-mini.secondaire { background: var(--ob-fond); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line2); }
+      .ob-mini.charge { color: transparent; pointer-events: none; }
+      .ob-mini.charge::after {
+        content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px;
+        border-radius: 50%; border: 2px solid var(--ob-roue-fond); border-top-color: var(--ob-roue);
+        animation: ob-tourne .7s linear infinite;
+      }
+      /* L'exemple (etape 2) et la capture choisie (etape 3) : le haut d'un
+         profil, en vignette. */
+      .ob-vignette-mini {
+        flex: 0 0 auto; width: 58px; height: 40px; border-radius: 7px; overflow: hidden;
+        background: var(--ob-fond); box-shadow: 0 0 0 1px var(--line);
+      }
+      .ob-vignette-mini[hidden] { display: none; }
+      .ob-vignette-mini img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
       .ob-exemple-sombre { display: none !important; }
       @media (prefers-color-scheme: dark) {
         .ob-exemple-clair { display: none !important; }
         .ob-exemple-sombre { display: block !important; }
       }
-      .ob-depot.rempli .ob-depot-exemple { display: none !important; }
-      .ob-depot::before, .ob-depot::after { position: absolute; z-index: 1; }
-      .ob-depot::before {
-        content: "Exemple"; left: 8px; bottom: 8px; padding: 3px 8px; border-radius: 999px;
-        background: rgba(0,0,0,.72); color: #ffffff;
-        font-size: calc(10.5 * var(--u)); font-weight: 700;
-      }
-      .ob-depot.rempli::before { content: none; }
-      .ob-depot.rempli::after {
-        content: ""; right: 8px; top: 8px; width: 26px; height: 26px; border-radius: 50%;
-        background: #000000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 14px no-repeat;
-        animation: ob-pop .45s var(--ob-rebond) both;
-      }
-      @keyframes ob-pop { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
-      .ob-vignette {
-        display: block; width: 170px; margin: 0 auto 14px; border-radius: 10px; overflow: hidden; background: var(--gris);
-        box-shadow: 0 0 0 1px var(--line);
-      }
-      .ob-vignette img { display: block; width: 100%; aspect-ratio: 360 / 150; object-fit: cover; object-position: top; }
-      .ob-vignette img:not([src]) { visibility: hidden; }
-
-      /* ---- Le cadeau de bienvenue ---- */
-      .ob-cadeau-pts { margin: 16px 0 0; font-size: calc(15 * var(--u)); font-weight: 600; color: var(--ink2); }
-      .ob-cadeau-pts strong {
-        display: block; margin-bottom: 2px;
-        font-family: var(--chiffre); font-variant-numeric: tabular-nums;
-        font-size: calc(46 * var(--u)); font-weight: 800; letter-spacing: -.04em; line-height: 1; color: var(--ink);
-      }
-      .ob-cadeau-pts.gagne strong { color: var(--marque); animation: ob-pop .5s var(--ob-rebond); }
+      .ob-etape-code .ob-lien, .ob-etape[data-etape="code"] .ob-lien { display: block; margin-top: 18px; }
 
       @media (prefers-reduced-motion: reduce) {
         .vue-accueil { transition: none; }
-        .ob-barres i.encours b { animation: none; }
-        .ob-legende, .ob-legende.on { translate: none; transition: opacity .2s ease; }
-        .ac-medias video { transition: none; }
         .ob-feuille { translate: none; opacity: 0; transition: opacity .2s ease; }
         .ob-feuille.ouverte { opacity: 1; }
         .ob-etape, .ob-etape.actif { transition: none; }
@@ -2067,7 +2092,7 @@
          parti avec le reste -- un badge par club n'etait plus un badge. */
       .fr .bub-club {
         position: relative; border: 0; border-radius: 16px;
-        background: #0b0b0c var(--badge-noctify) center / 100% no-repeat;
+        background: #f7efe6 var(--verre-noctify) center 58% / 78% no-repeat;
         box-shadow: 0 0 0 2.5px #fff, 0 6px 14px -7px rgba(16,18,22,.5);
       }
       .fr .bub-club img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
@@ -3443,7 +3468,7 @@
          recompense. Une photo deposee le remplit toujours (img en cover). */
       .club-entete-rond {
         flex: 0 0 auto; width: 64px; height: 64px; border-radius: 18px;
-        background: #0b0b0c var(--badge-noctify) center / 100% no-repeat;
+        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
         box-shadow: 0 0 0 1px var(--line);
         display: grid; place-items: center; overflow: hidden;
       }
@@ -3554,7 +3579,7 @@
          `--s2` vaut #1c1c1e : le badge etait un DISQUE NOIR au milieu
          d'un plan clair -- lu comme une image qui n'a pas charge.
          Sans photo, tous portent maintenant le meme badge Noctify. */
-      .fv-foto.sans-photo { background: #0b0b0c var(--badge-noctify) center / 100% no-repeat; }
+      .fv-foto.sans-photo { background: #f7efe6 var(--verre-noctify) center 58% / 76% no-repeat; }
 
       .club-statut { margin: 0 0 16px; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
       .club-statut .ouvert { color: var(--succes-texte, #57d98a); font-weight: 700; }
@@ -4022,7 +4047,7 @@
       .sheet-club-tuile {
         position: absolute; left: 14px; bottom: -22px; z-index: 2;
         width: 46px; height: 46px; border-radius: 13px; overflow: hidden;
-        background: #0b0b0c var(--badge-noctify) center / 100% no-repeat;
+        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
         box-shadow: 0 0 0 3px #ffffff, 0 8px 16px -8px rgba(16,18,22,.5);
       }
       .sheet-club-tuile img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -4464,22 +4489,21 @@
         padding: 14px 18px 14px 14px; margin: 0 0 8px;
         border-radius: var(--r4); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
       }
-      /* La story dessinee : une story de nuit, sombre, et sa mention. Le
-         verre de la mascotte qui la remplissait est parti le 15/09/2026. */
       .st-apercu {
         position: relative; flex: 0 0 auto; width: 104px; height: 176px; border-radius: 14px; overflow: hidden;
-        background: #141416;
-        box-shadow: 0 0 0 4px #0b0b0c, 0 14px 24px -14px rgba(16,18,22,.55);
+        background: #f7efe6;
+        box-shadow: 0 0 0 4px #15181d, 0 14px 24px -14px rgba(16,18,22,.55);
         margin: 4px 4px 4px 4px;
       }
       .st-apercu-barres { position: absolute; top: 7px; left: 7px; right: 7px; display: flex; gap: 3px; }
-      .st-apercu-barres i { flex: 1; height: 2px; border-radius: 2px; background: rgba(255,255,255,.22); }
-      .st-apercu-barres i:first-child { background: rgba(255,255,255,.85); }
+      .st-apercu-barres i { flex: 1; height: 2px; border-radius: 2px; background: rgba(21,24,29,.18); }
+      .st-apercu-barres i:first-child { background: rgba(21,24,29,.7); }
       .st-apercu-profil {
         position: absolute; top: 15px; left: 7px; width: 14px; height: 14px; border-radius: 50%;
         background: linear-gradient(45deg, #f9a13a, #e1306c 60%, #8a3ab9);
-        box-shadow: inset 0 0 0 1.5px #141416;
+        box-shadow: inset 0 0 0 1.5px #f7efe6;
       }
+      .st-apercu-verre { position: absolute; left: 50%; top: 32px; width: 94px; height: auto; transform: translateX(-50%); }
       /* L'autocollant de mention d'Instagram : blanc, texte en degrade,
          capitales. C'est lui qu'on reconnait d'un coup d'oeil. */
       .st-apercu-mention {
@@ -4521,7 +4545,7 @@
       .st-lieu-corps { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
       .st-lieu-tuile, .bar-tuile {
         flex: 0 0 auto; width: 46px; height: 46px; border-radius: 12px; overflow: hidden;
-        background: #0b0b0c var(--badge-noctify) center / 100% no-repeat;
+        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
       }
       .st-lieu-tuile img, .bar-tuile img { display: block; width: 100%; height: 100%; object-fit: cover; }
       .st-lieu-txt { min-width: 0; }
@@ -4620,8 +4644,8 @@
         transition: transform var(--tr-court);
       }
       .st-inviter:active { transform: scale(.985); }
-      .st-inviter-tuile { flex: 0 0 auto; width: 54px; height: 54px; border-radius: 13px; background: #0b0b0c; display: grid; place-items: center; overflow: hidden; }
-      .st-inviter-tuile svg { width: 26px; height: 26px; fill: none; stroke: #ffffff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .st-inviter-tuile { flex: 0 0 auto; width: 54px; height: 54px; border-radius: 13px; background: #f7efe6; display: grid; place-items: center; overflow: hidden; }
+      .st-inviter-tuile img { width: 50px; height: 50px; object-fit: contain; }
       .st-inviter-txt { flex: 1; min-width: 0; }
       .st-inviter-txt strong { display: block; font-size: calc(15.5 * var(--u)); font-weight: 750; letter-spacing: -.01em; }
       .st-inviter-txt > span { display: block; margin-top: 2px; font-size: calc(13 * var(--u)); color: var(--ink2); }
@@ -5191,11 +5215,6 @@
         overscroll-behavior: none;
         -webkit-tap-highlight-color: transparent;
       }
-      /* En sombre, l'ecran de lancement est noir : le fond dessous aussi,
-         sinon un eclair blanc passe avant lui. */
-      @media (prefers-color-scheme: dark) {
-        html.mode-appli, html.mode-appli body { background: #000000; }
-      }
       html.mode-appli .wrap { max-width: none; margin: 0; padding: 0; }
       html.mode-appli .wrap > *:not(.stage) { display: none; }
       html.mode-appli .stage { display: block; padding: 0; }
@@ -5321,157 +5340,126 @@
     <div class="phone">
       <div class="screen">
 
-        <!-- L'ecran de lancement : le mot Noctify, lettre par lettre (voir
-             .splash). La video de lancement viendra dessous (#splash-media). -->
         <div class="splash" id="splash" aria-hidden="true">
-          <video class="splash-media" id="splash-media" muted playsinline preload="auto" hidden></video>
-          <span class="mot"><span>N</span><span>o</span><span>c</span><span>t</span><span class="mot-i">ı<i></i></span><span>f</span><span>y</span></span>
+          <div class="splash-brand">
+            <span class="splash-mark" aria-hidden="true">
+              <img src="/noctify-logo-verre-detoure.webp" alt="" width="640" height="640" />
+            </span>
+          </div>
+          <div class="splash-piste"><span class="splash-barre" id="splash-barre"></span></div>
         </div>
 
-        <!-- Degrade officiel Instagram, defini une seule fois : l'icone de
-             l'etape Instagram et les boutons de format le referencent. -->
+        <!-- Filtre qui blanchit le fond creme du logo (voir .ac-mascot
+             img). Hors flux, invisible : il ne sert qu'a etre reference
+             par le CSS. color-interpolation-filters="sRGB" est
+             indispensable -- par defaut les filtres SVG travaillent en
+             lineaire, ce qui donnerait des gains faux. -->
         <svg width="0" height="0" aria-hidden="true" focusable="false"
              style="position:absolute;pointer-events:none">
+          <!-- Degrade officiel Instagram, defini une seule fois : les
+               trois boutons de format le referencent par son id. -->
           <linearGradient id="ig-g" x1="0" y1="1" x2="1" y2="0">
             <stop offset="0%" stop-color="#ffdd55"/><stop offset="25%" stop-color="#ff8a3d"/>
             <stop offset="50%" stop-color="#ff2b6b"/><stop offset="75%" stop-color="#d92bbd"/>
             <stop offset="100%" stop-color="#8a3ab9"/>
           </linearGradient>
+          <filter id="logo-blanc" color-interpolation-filters="sRGB">
+            <feComponentTransfer>
+              <feFuncR type="linear" slope="1.0324"/>
+              <feFuncG type="linear" slope="1.0944"/>
+              <feFuncB type="linear" slope="1.1435"/>
+            </feComponentTransfer>
+          </filter>
         </svg>
 
-        <!-- ================= ACCUEIL ET INSCRIPTION =================
-             14/09/2026 : refaits sur le parcours de DUSK filme par Julien.
-             15/09/2026 : la mascotte en est retiree (« trop gamin », « le
-             meme personnage a chaque fois »), l'accueil devient un ecran
-             d'image plein cadre, et le logo le mot seul.
+        <!-- ================= ECRAN D'ACCUEIL =================
+             L'ecran d'avant, retabli le 15/09/2026 (Julien : « remets la
+             landing page qu'on avait d'avant [...] le logo d'avant avec le
+             verre »), apres une journee d'essai d'un accueil plein cadre facon
+             DUSK. Titre, logo, une phrase, Apple ou Google, l'email.
 
-             Ce qu'on garde de DUSK : les legendes courtes qui se relaient sur
-             une image, le mot au-dessus de deux boutons, puis une feuille qui
-             monte et ne pose qu'UNE question par ecran. Ce qu'on laisse : la
-             date de naissance et le genre. Ce qu'on ajoute : le compte
-             Instagram, et le cadeau de bienvenue a la fin.
-
-             Les images sont des videos que Julien genere (brief envoye le
-             15/09, noctify-videos-a-generer.md) : MEDIAS_ACCUEIL. Tant qu'elles
-             manquent, l'ecran est noir.
-
-             #vue-accueil garde son nom et sa classe .masque : la deconnexion
-             et plusieurs ecrans « connecte-toi » le rouvrent par la. -->
+             Email : un code arrive dans la feuille d'inscription. Google (et
+             Apple sur iPhone, une fois active) : connexion directe.
+             #vue-accueil garde sa classe .masque : la deconnexion et plusieurs
+             ecrans « connecte-toi » le rouvrent par la. -->
         <div class="vue-accueil" id="vue-accueil">
-          <div class="ac-medias" id="ac-medias" aria-hidden="true"></div>
-          <div class="ac-voile" aria-hidden="true"></div>
-
-          <div class="ac-haut">
-            <div class="ob-barres" id="ac-barres" aria-hidden="true"><i><b></b></i><i><b></b></i><i><b></b></i></div>
-            <!-- INSTALLER L'APPLI DEPUIS UN LIEN (13/09/2026). Android propose
-                 l'installation (beforeinstallprompt), iPhone ne sait le faire
-                 que par Partager > Sur l'ecran d'accueil. Rien ne s'affiche si
-                 l'appli est deja installee, ni sur ordinateur. -->
-            <div class="ac-installer" id="ac-installer" hidden>
-              <img src="/icones/icone-192.png" alt="" width="40" height="40" onerror="this.remove()" />
-              <p class="ac-installer-txt" id="ac-installer-txt">Installe Noctify sur ton téléphone.</p>
-              <button type="button" class="ac-installer-btn" id="ac-installer-btn" hidden>Installer</button>
-            </div>
+          <h2 class="ac-title">Bienvenue sur Noctify</h2>
+          <!-- INSTALLER L'APPLI DEPUIS UN LIEN (13/09/2026). Android propose
+               l'installation (beforeinstallprompt), iPhone ne sait le faire que
+               par Partager > Sur l'ecran d'accueil. Rien ne s'affiche si l'appli
+               est deja installee, ni sur ordinateur. -->
+          <div class="ac-installer" id="ac-installer" hidden>
+            <img src="/icones/icone-192.png" alt="" width="40" height="40" onerror="this.remove()" />
+            <p class="ac-installer-txt" id="ac-installer-txt">Installe Noctify sur ton téléphone.</p>
+            <button type="button" class="ac-installer-btn" id="ac-installer-btn" hidden>Installer</button>
           </div>
 
-          <div class="ac-bas">
-            <div class="ob-legendes">
-              <p class="ob-legende">1. Scanne le QR sur place</p>
-              <p class="ob-legende">2. Poste une story qui mentionne l’établissement</p>
-              <p class="ob-legende">3. Échange tes points au bar</p>
-            </div>
+          <!-- Logo Noctify, envoye par Julien le 2026-08-30. -->
+          <p class="ac-mascot">
+            <img src="/noctify-logo-verre-detoure.webp" alt="Noctify" width="640" height="640">
+          </p>
 
-            <p class="ob-marque"><span class="mot" role="img" aria-label="Noctify"><span>N</span><span>o</span><span>c</span><span>t</span><span class="mot-i">ı<i></i></span><span>f</span><span>y</span></span></p>
+          <div class="ac-hero">
+            <p class="ac-lead">Transforme tes soirées en récompenses.</p>
+          </div>
 
-            <div class="ob-actions">
-              <!-- Gris fonce pour l'email, blanc pour le fournisseur, comme
-                   « Continue with email » / « Sign in with Apple » chez DUSK.
-                   Google et Apple ne s'affichent que s'ils sont actives dans
-                   Supabase (fournisseursActifs) ; seul, l'email passe en blanc. -->
-              <button type="button" class="ob-btn ob-btn-sombre" id="ac-email">Continuer avec l’email</button>
-              <button type="button" class="ob-btn ob-btn-blanc" id="ac-apple" hidden>
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.462 2.15-1.213 2.94-.822.86-2.17 1.53-3.29 1.44-.14-1.09.45-2.24 1.19-2.99.83-.86 2.28-1.5 3.31-1.39zm4.29 16.6c-.4.93-.6 1.34-1.12 2.16-.72 1.15-1.74 2.58-3 2.59-1.12.01-1.41-.73-2.93-.72-1.52.01-1.84.73-2.96.72-1.26-.01-2.23-1.31-2.95-2.46-2.02-3.2-2.23-6.95-.99-8.95.88-1.42 2.27-2.25 3.58-2.25 1.33 0 2.17.73 3.27.73 1.07 0 1.72-.73 3.27-.73 1.17 0 2.4.64 3.28 1.74-2.88 1.58-2.41 5.7.55 6.97-.32.9-.72 1.5-.99 2.2z"/></svg>
-                Continuer avec Apple
-              </button>
-              <button type="button" class="ob-btn ob-btn-blanc" id="ac-google">
-                <svg viewBox="0 0 48 48" aria-hidden="true">
+          <div class="ac-actions">
+            <!-- Apple sur iPhone, Google ailleurs (Julien, 15/09/2026). Apple
+                 ne s'affiche qu'une fois active dans Supabase : en attendant,
+                 l'iPhone voit Google, qui marche. -->
+            <button type="button" class="ac-btn ac-btn-apple" id="ac-apple" hidden>
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.462 2.15-1.213 2.94-.822.86-2.17 1.53-3.29 1.44-.14-1.09.45-2.24 1.19-2.99.83-.86 2.28-1.5 3.31-1.39zm4.29 16.6c-.4.93-.6 1.34-1.12 2.16-.72 1.15-1.74 2.58-3 2.59-1.12.01-1.41-.73-2.93-.72-1.52.01-1.84.73-2.96.72-1.26-.01-2.23-1.31-2.95-2.46-2.02-3.2-2.23-6.95-.99-8.95.88-1.42 2.27-2.25 3.58-2.25 1.33 0 2.17.73 3.27.73 1.07 0 1.72-.73 3.27-.73 1.17 0 2.4.64 3.28 1.74-2.88 1.58-2.41 5.7.55 6.97-.32.9-.72 1.5-.99 2.2z"/></svg>
+              Continuer avec Apple
+            </button>
+            <button type="button" class="ac-btn ac-btn-google" id="ac-google">
+              <svg viewBox="0 0 48 48" aria-hidden="true">
                 <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
                 <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
                 <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
               </svg>
-                Continuer avec Google
-              </button>
-              <p class="ob-msg" id="ac-msg" role="alert" hidden></p>
-              <p class="ob-legal">En continuant, tu acceptes les <button type="button" id="ac-conditions">conditions</button> et la <button type="button" id="ac-confidentialite">politique de confidentialité</button>.</p>
-            </div>
+              Continuer avec Google
+            </button>
+
+            <p class="ac-sep">ou par email</p>
+            <input type="email" class="ac-input" id="ac-email" name="email" placeholder="ton@email.com" autocomplete="username" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" />
+            <button type="button" class="ac-btn ac-btn-marque" id="ac-email-submit">Continuer avec l’email</button>
+            <p class="ac-msg" id="ac-msg" role="alert" hidden></p>
           </div>
         </div>
 
         <!-- ================= LA FEUILLE D'INSCRIPTION =================
-             Hors de #vue-accueil, a dessein : apres un retour de Google, ou
-             pour un compte a qui il manque son Instagram, elle monte
-             par-dessus l'appli, l'accueil deja efface.
-
-             Tous les ecrans sont dans le DOM et glissent lateralement (voir
-             .ob-etape) ; ceux qui ne sont pas a l'ecran sont `inert`. Trois
-             ecrans AVANT la connexion (email, boite, code), les autres APRES
-             (nom, capture, pseudo, cadeau) : on ne revient jamais en arriere
-             d'un cote a l'autre. -->
+             Trois ecrans au plus, dans cet ordre, chacun saute s'il n'a rien a
+             demander : le code (avant la connexion), le nom et Instagram
+             (apres). Hors de #vue-accueil, a dessein : apres un retour de
+             Google, ou pour un compte a qui il manque son Instagram, elle
+             monte par-dessus l'appli. Les ecrans absents de l'ecran sont
+             `inert`. -->
         <div class="ob-voile" id="ob-voile" hidden></div>
-        <section class="ob-feuille" id="ob-feuille" role="dialog" aria-modal="true" aria-labelledby="ob-titre-email" hidden>
+        <section class="ob-feuille" id="ob-feuille" role="dialog" aria-modal="true" aria-labelledby="ob-titre-code" hidden>
           <button type="button" class="ob-nav" id="ob-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
           <button type="button" class="ob-nav" id="ob-retour" aria-label="Retour" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5M11 5l-7 7 7 7"/></svg></button>
 
-          <form class="ob-etape" data-etape="email" novalidate>
-            <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m4 7.5 8 6 8-6"/></svg></span>
-            <h2 class="ob-titre" id="ob-titre-email">Ton adresse email</h2>
-            <p class="ob-sous">Elle sert à te connecter. Jamais de publicité.</p>
-            <label class="ob-champ">
-              <span class="ob-invisible">Adresse email</span>
-              <input type="email" id="ob-email" name="email" autocomplete="username" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Adresse email" required />
-            </label>
-            <p class="ob-msg" role="alert" hidden></p>
-            <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Continuer</button></div>
-          </form>
-
-          <!-- Chez DUSK : « Open your email app » ET « Enter login code
-               manually ». Le lien de l'e-mail marche au navigateur ; dans
-               l'appli installee sur iPhone il s'ouvre dans Safari, qui n'a
-               pas le meme stockage. Le code, lui, se tape la ou on est. -->
-          <div class="ob-etape ob-etape-centre" data-etape="boite">
-            <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="16" height="12.5" rx="2.5"/><path d="m3.5 8 7.5 5.5L18.5 8"/><circle class="plein" cx="19.5" cy="5.5" r="3"/></svg></span>
-            <h2 class="ob-titre" id="ob-titre-boite">Regarde tes mails</h2>
-            <p class="ob-sous">On vient d’écrire à <strong class="js-ob-adresse"></strong>.</p>
-            <div class="ob-duo">
-              <a class="ob-btn ob-btn-encre" id="ob-ouvrir-mails" href="#" rel="noopener" hidden>Ouvrir mes mails</a>
-              <button type="button" class="ob-btn ob-btn-gris" id="ob-saisir-code">Saisir le code</button>
-            </div>
-            <button type="button" class="ob-lien js-ob-renvoyer">Renvoyer l’e-mail</button>
-            <p class="ob-msg" role="alert" hidden></p>
-          </div>
-
+          <!-- « Regarde tes mails » ET le code, sur la meme page (Julien : « on
+               arrive directement sur un truc pour saisir son code [...] et en
+               dessous renvoyer un mail, on economise deja une page »). -->
           <form class="ob-etape" data-etape="code" novalidate>
-            <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10" rx="3"/><path d="M7.5 12h.01M12 12h.01M16.5 12h.01" stroke-width="2.6"/></svg></span>
-            <h2 class="ob-titre" id="ob-titre-code">Entre le code</h2>
-            <p class="ob-sous">Reçu à <strong class="js-ob-adresse"></strong>.</p>
+            <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="16" height="12.5" rx="2.5"/><path d="m3.5 8 7.5 5.5L18.5 8"/><circle class="plein" cx="19.5" cy="5.5" r="3"/></svg></span>
+            <h2 class="ob-titre" id="ob-titre-code">Regarde tes mails</h2>
+            <p class="ob-sous">On vient d’écrire à <strong class="js-ob-adresse"></strong>. Saisis le code à <span class="js-ob-longueur">8</span> chiffres.</p>
             <!-- UN seul vrai champ, pose sur les cases : autocomplete
                  "one-time-code" fait proposer le code recu par l'iPhone
-                 au-dessus du clavier, et un collage remplit tout d'un coup.
-                 Les cases ne sont qu'un dessin de sa valeur. -->
+                 au-dessus du clavier, et un collage remplit tout d'un coup. -->
             <div class="ob-code" id="ob-code-cases">
               <input id="ob-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8" enterkeyhint="done" aria-label="Code reçu par e-mail" />
             </div>
             <p class="ob-msg" role="alert" hidden></p>
-            <div class="ob-bas">
-              <button type="submit" class="ob-btn ob-btn-encre" disabled>Valider</button>
-              <button type="button" class="ob-lien js-ob-renvoyer">Renvoyer le code</button>
-            </div>
+            <button type="button" class="ob-lien js-ob-renvoyer">Renvoyer l’e-mail</button>
+            <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre" disabled>Valider</button></div>
           </form>
 
-          <!-- Le nom : un seul champ (il se range en un seul morceau,
-               user_metadata.full_name). Pre-rempli par nomAffiche() quand
-               l'adresse le laisse deviner. -->
+          <!-- Le nom : un seul champ (user_metadata.full_name), pre-rempli par
+               nomAffiche() quand l'adresse le laisse deviner. -->
           <form class="ob-etape" data-etape="nom" novalidate>
             <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
             <h2 class="ob-titre" id="ob-titre-nom">Comment tu t’appelles ?</h2>
@@ -5484,14 +5472,18 @@
             <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Continuer</button></div>
           </form>
 
-          <!-- Instagram. Un vrai « Se connecter avec Instagram » n'existe plus
-               pour un compte personnel (Meta a ferme l'API qui le permettait
-               le 04/12/2024 ; celle qui reste exige un compte professionnel).
-               Le pseudo reste donc ce qui relie une story a un clubbeur
-               (api/instagram.js cherche users.handle), et la capture prouve
-               qu'il est a lui. La capture AVANT le pseudo, comme l'avait
-               tranche Julien (« mettre direct le pseudo, c'est stupide »). -->
-          <div class="ob-etape" data-etape="capture">
+          <!-- Instagram, en UNE page (Julien : « les deux au meme endroit, et
+               explique un peu plus pourquoi, sinon les mecs ne vont pas le
+               faire [...] les rediriger vers Instagram pour qu'ils puissent
+               direct prendre une capture de leur profil »).
+
+               Un vrai « Se connecter avec Instagram » n'existe plus pour un
+               compte personnel (API fermee par Meta le 04/12/2024) : le pseudo
+               relie une story a un clubbeur (api/instagram.js cherche
+               users.handle), la capture prouve qu'il est a lui. Le pseudo
+               passe AVANT la capture : le bouton « Ouvrir » en a besoin pour
+               mener au bon profil. -->
+          <form class="ob-etape ob-etape-ig" data-etape="instagram" novalidate>
             <span class="ob-ico ob-ico-ig" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <rect x="0" y="0" width="24" height="24" rx="6" fill="url(#ig-g)"/>
@@ -5500,50 +5492,43 @@
                 <circle cx="16.9" cy="7.1" r="1.15" fill="#fff"/>
               </svg>
             </span>
-            <h2 class="ob-titre" id="ob-titre-capture">Une capture de ton profil Instagram</h2>
-            <p class="ob-sous">Ton pseudo doit se lire en haut.</p>
-            <label class="ob-depot" id="ob-depot" for="ob-capture">
-              <input type="file" accept="image/*" id="ob-capture" hidden />
-              <img class="ob-depot-exemple ob-exemple-clair" src="/story-exemples/exemple-profil-clair.webp" alt="Exemple : le haut d’un profil Instagram, pseudo visible" width="360" height="276" />
-              <img class="ob-depot-exemple ob-exemple-sombre" src="/story-exemples/exemple-profil-sombre.webp" alt="Exemple : le haut d’un profil Instagram, pseudo visible" width="360" height="234" loading="lazy" />
-              <img class="ob-depot-choisie" id="ob-capture-apercu" alt="Ta capture" hidden />
-            </label>
-            <p class="ob-msg" role="alert" hidden></p>
-            <div class="ob-bas">
-              <button type="button" class="ob-btn ob-btn-encre" id="ob-capture-choisir">Choisir la capture</button>
-              <button type="button" class="ob-btn ob-btn-encre" id="ob-capture-suite" hidden>Continuer</button>
-              <a class="ob-btn ob-btn-gris" id="ob-ouvrir-instagram" href="https://www.instagram.com/" target="_blank" rel="noopener">Ouvrir Instagram</a>
-            </div>
-          </div>
-
-          <form class="ob-etape" data-etape="pseudo" novalidate>
-            <span class="ob-vignette" aria-hidden="true"><img id="ob-pseudo-vignette" alt="" /></span>
-            <h2 class="ob-titre" id="ob-titre-pseudo">Ton pseudo Instagram</h2>
-            <p class="ob-sous">Celui qu’on lit sur ta capture.</p>
+            <h2 class="ob-titre" id="ob-titre-instagram">Relie ton Instagram</h2>
+            <p class="ob-sous">Quand tu postes une story qui mentionne l’établissement, c’est ton pseudo qui nous permet de la reconnaître et de te donner tes points.</p>
             <label class="ob-champ ob-champ-arobase">
               <span aria-hidden="true">@</span>
               <span class="ob-invisible">Pseudo Instagram</span>
-              <input type="text" id="ob-pseudo" name="instagram" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="pseudo" maxlength="80" required />
+              <input type="text" id="ob-pseudo" name="instagram" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="ton pseudo" maxlength="80" required />
             </label>
-            <p class="ob-msg" role="alert" hidden></p>
-            <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Continuer</button></div>
-          </form>
 
-          <!-- Le cadeau de bienvenue, a prendre tout de suite (Julien,
-               15/09/2026 : « qu'on peut recuperer directement en se
-               connectant, un par telephone »). Le bonus existait deja
-               (migration clubbeur 0041, welcome_bonus) mais n'attendait que
-               dans Recompenses. Sans etablissement scanne, la base ne verse
-               rien encore : l'ecran le dit, et les points attendent le
-               premier scan. -->
-          <div class="ob-etape ob-etape-centre" data-etape="cadeau">
-            <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M2.5 9h19v3.5h-19zM12 9v11.5"/><path d="M12 9c-1.6-3.6-5.6-4.3-5.6-2 0 1.7 3 2 5.6 2zm0 0c1.6-3.6 5.6-4.3 5.6-2 0 1.7-3 2-5.6 2z"/></svg></span>
-            <h2 class="ob-titre" id="ob-titre-cadeau">Ton cadeau de bienvenue</h2>
-            <p class="ob-cadeau-pts" id="ob-cadeau-pts"><strong id="ob-cadeau-montant">50</strong>points</p>
-            <p class="ob-sous" id="ob-cadeau-sous">Un seul par téléphone.</p>
-            <div class="ob-duo"><button type="button" class="ob-btn ob-btn-encre" id="ob-cadeau-btn">Récupérer</button></div>
+            <div class="ob-preuve">
+              <p class="ob-preuve-titre">Une capture de ton profil</p>
+              <p class="ob-preuve-sous">Elle prouve que ce compte est bien le tien. Personne d’autre ne peut récupérer tes points.</p>
+              <ol class="ob-preuve-etapes">
+                <li id="ob-etape-profil">
+                  <span class="ob-num">1</span>
+                  <span class="ob-preuve-txt">Ouvre ton profil Instagram</span>
+                  <a class="ob-mini" id="ob-ouvrir-instagram" href="https://www.instagram.com/" target="_blank" rel="noopener">Ouvrir</a>
+                </li>
+                <li id="ob-etape-capture">
+                  <span class="ob-num">2</span>
+                  <span class="ob-preuve-txt">Fais une capture d’écran<small>Ton pseudo doit se lire en haut.</small></span>
+                  <span class="ob-vignette-mini" aria-hidden="true">
+                    <img class="ob-exemple-clair" src="/story-exemples/exemple-profil-clair.webp" alt="" width="360" height="276" />
+                    <img class="ob-exemple-sombre" src="/story-exemples/exemple-profil-sombre.webp" alt="" width="360" height="234" loading="lazy" />
+                  </span>
+                </li>
+                <li id="ob-etape-ajout">
+                  <span class="ob-num">3</span>
+                  <span class="ob-preuve-txt">Ajoute-la ici</span>
+                  <span class="ob-vignette-mini" id="ob-capture-vignette" hidden><img id="ob-capture-apercu" alt="Ta capture" /></span>
+                  <button type="button" class="ob-mini" id="ob-capture-choisir">Ajouter</button>
+                </li>
+              </ol>
+              <input type="file" accept="image/*" id="ob-capture" hidden />
+            </div>
             <p class="ob-msg" role="alert" hidden></p>
-          </div>
+            <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Terminer</button></div>
+          </form>
         </section>
 
         <!-- ================= ECRAN AMIS =================
@@ -5595,6 +5580,7 @@
             <div class="st-apercu" aria-hidden="true">
               <span class="st-apercu-barres"><i></i><i></i><i></i></span>
               <span class="st-apercu-profil"></span>
+              <img class="st-apercu-verre" src="/mascotte/verre-salut.webp" alt="" width="640" height="640" />
               <span class="st-apercu-mention" id="st-apercu-mention">@mirano</span>
             </div>
             <div class="st-hero-txt">
@@ -5610,7 +5596,7 @@
                mais en carte : la ligne grise a enveloppe et coeur rouge
                faisait "pas esthetique". -->
           <button type="button" class="st-inviter" id="story-inviter">
-            <span class="st-inviter-tuile" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.3"/><path d="M2.8 19.5a6.2 6.2 0 0 1 12.4 0"/><circle cx="17" cy="9.5" r="2.4"/><path d="M16 14.6a5.2 5.2 0 0 1 5.2 4.9"/></svg></span>
+            <span class="st-inviter-tuile" aria-hidden="true"><img src="/mascotte/verre-salut.webp" alt="" width="640" height="640" /></span>
             <span class="st-inviter-txt">
               <strong>Inviter des amis</strong>
               <span><span class="js-montant-parrainage">100</span> points par ami qui s’inscrit</span>
@@ -6925,31 +6911,26 @@ var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koi
 // millisecondes et l'ecran de chargement n'etait qu'un flash, trop bref
 // pour etre vu. On force donc un minimum visible.
 //
-// 600 ms le 30/08 (Julien : "arriver sur la page d'accueil directement"),
-// 1,45 s depuis le 15/09 : le temps que les lettres de Noctify apparaissent
-// et que le point rouge se pose -- l'ouverture de DUSK, qu'il a demandee
-// (« leur logo qui apparait petit a petit, c'est vraiment style »). Couper
-// avant, c'est montrer un mot a moitie ecrit.
-//
-// La video de lancement (MEDIA_LANCEMENT) : une fois generee par Julien,
-// elle se pose sous les lettres, qui passent en blanc.
-var MEDIA_LANCEMENT = null; // ex. "/accueil/noctify-lancement.mp4"
+// Ramene de 1,1 s a 600 ms : Julien veut "arriver sur la page d'accueil
+// directement". 600 ms laisse voir le logo et la barre partir, sans
+// faire attendre devant une animation qui n'attend rien -- la session
+// est deja connue bien avant. L'animation de la barre est raccourcie
+// d'autant, sinon elle serait coupee au milieu de sa course.
 (function () {
   var splash = document.getElementById("splash");
+  var barre = document.getElementById("splash-barre");
   var cachee = false;
-  var MIN_AFFICHAGE_MS = 1450;
+  var MIN_AFFICHAGE_MS = 600;
   function attendre(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-  var media = document.getElementById("splash-media");
-  if (MEDIA_LANCEMENT && media) {
-    media.src = MEDIA_LANCEMENT;
-    media.hidden = false;
-    splash.classList.add("avec-media");
-    media.play().catch(function () {});
-  }
   function cacherSplash() {
     if (cachee || !splash) return;
     cachee = true;
-    splash.classList.add("masque");
+    if (barre) {
+      barre.style.animation = "none";
+      barre.style.transition = "width .25s ease";
+      barre.style.width = "100%";
+    }
+    setTimeout(function () { splash.classList.add("masque"); }, 220);
     /* Et l'ecran de lancement NATIF avec lui : sinon il reste par-dessus
        une appli deja prete, et le demarrage parait deux fois plus long
        qu'il ne l'est. Sans effet au navigateur. */
@@ -7538,18 +7519,15 @@ fetch(URL_SUPABASE_CLUBBEUR + "/auth/v1/settings", {
     var externes = (r && r.external) || {};
     fournisseursActifs.google = Boolean(externes.google);
     fournisseursActifs.apple = Boolean(externes.apple);
-    // Un bouton par fournisseur REELLEMENT active. Apple apparait tout seul
-    // le jour ou Julien le configure ; Google disparait s'il est coupe.
-    if (BOUTON_GOOGLE) BOUTON_GOOGLE.hidden = !fournisseursActifs.google;
-    if (BOUTON_APPLE) BOUTON_APPLE.hidden = !fournisseursActifs.apple;
-    // Seul, l'email prend le blanc : un bouton gris fonce isole sur du noir
-    // se lit comme desactive.
-    var seul = !fournisseursActifs.google && !fournisseursActifs.apple;
-    var email = $("#ac-email");
-    if (email) {
-      email.classList.toggle("ob-btn-blanc", seul);
-      email.classList.toggle("ob-btn-sombre", !seul);
-    }
+    // Apple sur un iPhone, Google ailleurs (Julien, 15/09/2026 : « quand on
+    // a un telephone Apple [...] quand on n'en a pas, juste Google »). Un
+    // fournisseur non active dans Supabase ne s'affiche pas : tant qu'Apple
+    // ne l'est pas, l'iPhone voit Google, qui marche.
+    var iphone = /iPhone|iPad|iPod/i.test(navigator.userAgent || "") ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var avecApple = iphone && fournisseursActifs.apple;
+    if (BOUTON_APPLE) BOUTON_APPLE.hidden = !avecApple;
+    if (BOUTON_GOOGLE) BOUTON_GOOGLE.hidden = !fournisseursActifs.google || avecApple;
   })
   .catch(function () { /* reseau indisponible : on retente au clic */ });
 
@@ -7710,26 +7688,28 @@ brancherConnexion(
   "Connexion Apple bientôt disponible. Utilise Google ou ton email en attendant."
 );
 
-// Les deux textes legaux s'ouvrent dans l'appli (memes pages que depuis
-// Reglages) : leur z-index passe au-dessus de l'accueil.
-$("#ac-conditions")?.addEventListener("click", function () { $("#vue-conditions").hidden = false; });
-$("#ac-confidentialite")?.addEventListener("click", function () { $("#vue-confidentialite").hidden = false; });
-
 /* ==========================================================
-   PARCOURS D'INSCRIPTION (14/09/2026)
+   PARCOURS D'INSCRIPTION (14-15/09/2026)
 
-   Sur le modele de DUSK (voir #vue-accueil). Six ecrans dans une
-   feuille, dans cet ordre, chacun saute s'il n'a rien a demander :
+   L'accueil d'avant, puis une feuille qui monte et ne pose qu'une question
+   par ecran, les ecrans glissant de l'un a l'autre -- et le moins d'ecrans
+   possible. Julien, 15/09 : « il y a trop d'etapes, les gens ne vont pas
+   tout faire [...] simple, efficace ». Il en reste trois, chacun saute s'il
+   n'a rien a demander :
 
-     email -> boite -> code        avant la connexion
-     nom -> capture -> pseudo      apres, seulement ce qui manque
+     code        « Regarde tes mails » : l'adresse, les cases, renvoyer
+     nom         seulement pour un compte neuf, sans nom donne par Google
+     instagram   pseudo ET capture sur la meme page, avec le pourquoi
+
+   Partis le meme jour : l'ecran email (le champ est sur l'accueil), « Regarde
+   tes mails » separe du code (et son « Ouvrir mes mails »), la capture
+   separee du pseudo, et le cadeau de bienvenue en ecran (la carte de
+   Recompenses le propose des l'arrivee dans l'appli).
 
    ⚠️ LA SUITE NE PART PAS DU CODE, ELLE PART DE LA SESSION.
    Le code valide, le lien de l'e-mail touche dans un autre onglet et le
-   retour de Google aboutissent tous a onAuthStateChange. C'est la, et
-   la seulement, que poursuivreParcours() lit ce qui manque au compte.
-   Un seul chemin : on ne peut pas oublier une etape selon la porte
-   d'entree.
+   retour de Google aboutissent tous a onAuthStateChange. C'est la, et la
+   seulement, que poursuivreParcours() lit ce qui manque au compte.
    ========================================================== */
 var OB = {
   ouverte: false,
@@ -7747,8 +7727,9 @@ var VOILE = $("#ob-voile");
 // = mailer_otp_length de la base clubbeur (Authentication > Providers >
 // Email). Les deux doivent bouger ensemble, sinon aucun code ne passe.
 var LONGUEUR_CODE = 8;
-var AVANT_CONNEXION = ["email", "boite", "code"];
+var AVANT_CONNEXION = ["code"];
 
+// Les deux textes legaux, depuis Reglages comme depuis ici.
 function etapeOb(nom) { return FEUILLE.querySelector('[data-etape="' + nom + '"]'); }
 
 function direOb(nom, texte, info) {
@@ -7764,14 +7745,13 @@ function chargementOb(bouton, oui) {
   bouton.setAttribute("aria-busy", oui ? "true" : "false");
 }
 
-/* Le champ de l'ecran recoit le focus. Appele DANS un geste (le toucher
-   de « Continuer avec l'email », de « Saisir le code »), il ouvre le
-   clavier de l'iPhone ; appele apres une attente reseau, iOS l'ignore et
-   la personne touche le champ elle-meme. preventScroll : sans lui, le
-   navigateur fait defiler la feuille pour montrer un champ qui est encore
-   en train d'entrer par la droite. */
+/* Le champ de l'ecran recoit le focus. Appele dans un geste, il ouvre le
+   clavier de l'iPhone ; apres une attente reseau, iOS l'ignore et la
+   personne touche le champ elle-meme. preventScroll : sans lui, le
+   navigateur fait defiler la feuille vers un champ encore en train
+   d'entrer par la droite. */
 function focaliserOb(nom) {
-  var el = { email: "#ob-email", code: "#ob-code", nom: "#ob-nom", pseudo: "#ob-pseudo" }[nom];
+  var el = { code: "#ob-code", nom: "#ob-nom", instagram: "#ob-pseudo" }[nom];
   el = el ? $(el) : $("#ob-titre-" + nom);
   if (!el) return;
   if (!/INPUT/.test(el.tagName)) el.tabIndex = -1;
@@ -7785,10 +7765,10 @@ function majNavigationOb() {
   var retour = Boolean(precedente) &&
     (AVANT_CONNEXION.indexOf(precedente) !== -1) === (AVANT_CONNEXION.indexOf(OB.etape) !== -1);
   $("#ob-retour").hidden = !retour;
-  // La croix ne ferme que ce qui n'a encore rien cree. Apres la
-  // connexion, le compte Instagram est exige comme avant (#vue-ig n'avait
-  // pas de croix non plus) : sans lui, aucune story n'est reconnue.
-  $("#ob-fermer").hidden = retour || OB.etape !== "email";
+  // La croix ne ferme que ce qui n'a encore rien cree : l'ecran du code,
+  // pour revenir a l'accueil et corriger l'adresse. Apres la connexion, le
+  // compte Instagram est exige : sans lui, aucune story n'est reconnue.
+  $("#ob-fermer").hidden = retour || OB.etape !== "code";
 }
 
 /* Place l'ecran `nom`. sens = "avant" (il arrive par la droite),
@@ -7856,7 +7836,6 @@ function ouvrirFeuilleOb(nom) {
   void FEUILLE.offsetWidth;
   FEUILLE.classList.add("ouverte");
   VOILE.classList.add("ouvert");
-  VUE_ACCUEIL.classList.add("en-pause");
   focaliserOb(nom);
 }
 
@@ -7864,7 +7843,6 @@ function fermerFeuilleOb() {
   OB.ouverte = false;
   FEUILLE.classList.remove("ouverte");
   VOILE.classList.remove("ouvert");
-  VUE_ACCUEIL.classList.remove("en-pause");
   if (document.activeElement && FEUILLE.contains(document.activeElement)) document.activeElement.blur();
   // hidden APRES la descente, sinon la feuille disparait d'un coup.
   setTimeout(function () {
@@ -7874,35 +7852,32 @@ function fermerFeuilleOb() {
   }, 540);
 }
 
-/* La feuille est finie : l'appli apparait. */
+/* La feuille est finie : l'appli apparait, sur Recompenses -- ou la carte du
+   bonus de bienvenue attend, s'il y en a un a prendre. */
 function finirParcoursOb() {
   OB.suite = [];
   fermerFeuilleOb();
   VUE_ACCUEIL.classList.add("masque");
   if (typeof chargerReglages === "function") chargerReglages();
-  // La proposition de notifications attend que l'ecran principal soit
-  // libre (ecranPrincipalVisible) : elle a pu passer son tour pendant le
-  // parcours.
+  verifierCadeau();
+  // La proposition de notifications attend que l'ecran principal soit libre
+  // (ecranPrincipalVisible) : elle a pu passer son tour pendant le parcours.
   setTimeout(proposerNotifications, 1800);
 }
 
 function etapeSuivanteOb() {
   var i = OB.suite.indexOf(OB.etape);
   var prochaine = i === -1 ? OB.suite[0] : OB.suite[i + 1];
-  // Relu en y arrivant : le scan du QR qui a amene la personne a pu se
-  // crediter pendant le parcours, et rendre le cadeau disponible.
-  if (prochaine === "cadeau") lireCadeauOb();
   if (prochaine) allerOb(prochaine);
   else finirParcoursOb();
 }
 
-/* Ce qui manque au compte, lu une fois par compte (onAuthStateChange
-   repasse ici a chaque rafraichissement de jeton).
-   - nom : seulement pour un compte qui vient de naitre. On ne va pas
-     reclamer son nom a quelqu'un qui utilise l'appli depuis un mois.
-     Google et Apple le donnent deja : l'ecran saute.
-   - capture + pseudo : tant que users.profile_proof_path est vide, comme
-     l'ancien #vue-ig. */
+/* Ce qui manque au compte, lu une fois par compte (onAuthStateChange repasse
+   ici a chaque rafraichissement de jeton).
+   - nom : seulement pour un compte qui vient de naitre. Google et Apple le
+     donnent deja : l'ecran saute.
+   - instagram : tant que users.profile_proof_path est vide, comme l'ancien
+     #vue-ig. */
 async function poursuivreParcours(session) {
   if (!session || !FEUILLE) return;
   var uid = session.user.id;
@@ -7924,21 +7899,19 @@ async function poursuivreParcours(session) {
       .eq("id", uid)
       .maybeSingle()).data;
     if (!(profil && profil.profile_proof_path)) {
-      suite.push("capture", "pseudo");
+      suite.push("instagram");
       // Le pseudo deja choisi, mais pas celui fabrique depuis l'adresse
       // (assurerProfil) : « steppejulien1 » n'est pas un compte Instagram.
       var repli = String(session.user.email || "").split("@")[0].toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 30);
       if (profil && profil.handle && profil.handle !== repli && !$("#ob-pseudo").value) {
         $("#ob-pseudo").value = profil.handle;
+        majLienProfilOb();
       }
     }
   } catch (erreur) {
-    // Lecture impossible : on ne bloque pas l'entree dans l'appli pour
-    // une etape administrative.
+    // Lecture impossible : on ne bloque pas l'entree dans l'appli pour une
+    // etape administrative.
   }
-  // Le cadeau de bienvenue ferme la marche -- dans un parcours neuf
-  // seulement : un compte ancien le retrouve dans Recompenses.
-  if ((OB.ouverte || age < 30 * 60 * 1000) && (await lireCadeauOb())) suite.push("cadeau");
 
   OB.suite = suite;
   if (!suite.length) {
@@ -7953,110 +7926,10 @@ async function poursuivreParcours(session) {
   }
 }
 
-/* ---- L'accueil : trois legendes sur trois videos ----
-   MEDIAS_ACCUEIL : les videos generees par Julien (brief du 15/09/2026,
-   noctify-videos-a-generer.md), une par temps, dans public/accueil/. Une
-   case vide laisse le fond noir : l'ecran marche sans elles. */
-var MEDIAS_ACCUEIL = [
-  null, // "/accueil/noctify-1-qr.mp4"
-  null, // "/accueil/noctify-2-story.mp4"
-  null, // "/accueil/noctify-3-bar.mp4"
-];
-
-(function animerAccueil() {
-  var barres = document.querySelectorAll("#ac-barres i");
-  var legendes = document.querySelectorAll(".ob-legende");
-  var boite = $("#ac-medias");
-  if (!barres.length || !legendes.length) return;
-  var DUREE_MS = 4200;
-  // Sans animation, pas de defilement automatique non plus : un contenu qui
-  // change tout seul, en boucle, sans pause possible, c'est ce que la
-  // preference « reduire les animations » demande d'eviter. Un toucher fait
-  // avancer.
-  var calme = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var n = -1;
-  var minuteur = null;
-  VUE_ACCUEIL.style.setProperty("--ob-duree", DUREE_MS + "ms");
-
-  // Les videos : creees une fois, muettes et en ligne (sinon l'iPhone les
-  // ouvre en plein ecran), seule celle du temps courant joue.
-  var videos = MEDIAS_ACCUEIL.map(function (src) {
-    if (!src || !boite) return null;
-    var v = document.createElement("video");
-    v.muted = true;
-    v.loop = true;
-    v.playsInline = true;
-    v.setAttribute("playsinline", "");
-    v.preload = "auto";
-    v.src = src;
-    // Une video absente ou illisible : le noir reste, sans erreur a l'ecran.
-    v.addEventListener("error", function () { v.remove(); });
-    boite.appendChild(v);
-    return v;
-  });
-
-  function enPause() {
-    return VUE_ACCUEIL.classList.contains("masque") || OB.ouverte || document.hidden;
-  }
-
-  function montrer(i) {
-    n = i;
-    videos.forEach(function (v, k) {
-      if (!v) return;
-      v.classList.toggle("on", k === i);
-      if (k === i) { v.currentTime = 0; v.play().catch(function () {}); }
-      else v.pause();
-    });
-    barres.forEach(function (b, k) {
-      b.classList.remove("encours");
-      b.classList.toggle("fait", k < i || (calme && k === i));
-    });
-    // Relancer la barre du temps courant : retirer la classe ne suffit pas
-    // a rejouer une animation CSS, il faut un recalcul entre les deux.
-    void VUE_ACCUEIL.offsetWidth;
-    if (!calme) barres[i].classList.add("encours");
-    legendes.forEach(function (l, k) {
-      if (k === i) {
-        // Toujours d'en dessous : sans ce saut sans transition, une legende
-        // deja passee reviendrait par le haut.
-        l.style.transition = "none";
-        l.classList.remove("sort");
-        void l.offsetWidth;
-        l.style.transition = "";
-        l.classList.add("on");
-      } else if (l.classList.contains("on")) {
-        l.classList.remove("on");
-        l.classList.add("sort");
-      }
-    });
-  }
-
-  function planifier() {
-    clearTimeout(minuteur);
-    if (calme) return;
-    minuteur = setTimeout(function () {
-      if (!enPause()) montrer((n + 1) % legendes.length);
-      planifier();
-    }, DUREE_MS);
-  }
-
-  // Un toucher sur l'image fait avancer ; pas sur les boutons ni sur
-  // l'invitation a installer.
-  VUE_ACCUEIL.addEventListener("click", function (ev) {
-    if (ev.target.closest("button, a, .ac-installer")) return;
-    montrer((n + 1) % legendes.length);
-    planifier();
-  });
-  // Apres l'ecran de lancement : le premier temps se jouait sinon dessous.
-  setTimeout(function () { montrer(0); planifier(); }, 1500);
-})();
-
 /* Le clavier du telephone recouvre le bas de l'ecran sans le redimensionner
    (iOS, et Chrome Android depuis la v108). visualViewport dit ce qui reste
    visible : la difference, c'est le clavier, et les boutons remontent
-   d'autant (.ob-bas). Pas dans le cadre de demonstration, ou le clavier
-   d'un ordinateur n'existe pas et ou un telephone verrait un cadre mis a
-   l'echelle. */
+   d'autant (.ob-bas). Pas dans le cadre de demonstration. */
 (function suivreClavier() {
   var vv = window.visualViewport;
   if (!vv || !FEUILLE || !document.documentElement.classList.contains("mode-appli")) return;
@@ -8067,94 +7940,6 @@ var MEDIAS_ACCUEIL = [
   vv.addEventListener("resize", maj);
   vv.addEventListener("scroll", maj);
 })();
-
-/* ---- Les ecrans ---- */
-if (FEUILLE) {
-  FEUILLE.querySelectorAll(".ob-etape").forEach(function (el) { el.inert = true; });
-
-  $("#ac-email").addEventListener("click", function () {
-    MESSAGE_ACCUEIL.hidden = true;
-    ouvrirFeuilleOb("email");
-  });
-  $("#ob-fermer").addEventListener("click", fermerFeuilleOb);
-  $("#ob-retour").addEventListener("click", retourOb);
-  VOILE.addEventListener("click", function () {
-    if (!$("#ob-fermer").hidden) fermerFeuilleOb();
-  });
-  document.addEventListener("keydown", function (ev) {
-    if (ev.key !== "Escape" || !OB.ouverte) return;
-    if (!$("#ob-retour").hidden) retourOb();
-    else if (!$("#ob-fermer").hidden) fermerFeuilleOb();
-  });
-
-  cablerEmailOb();
-  cablerCodeOb();
-  cablerNomOb();
-  cablerInstagramOb();
-  $("#ob-cadeau-btn").addEventListener("click", prendreCadeauOb);
-}
-
-/* L'etat du bonus de bienvenue (migration clubbeur 0041). Une lecture qui
-   ne consomme rien. Deux etats donnent un ecran :
-   - disponible : un etablissement a deja ete scanne, les points se prennent ;
-   - aucun_club : rien a verser encore, les points attendent le premier scan.
-   Les autres (deja pris, telephone deja servi) n'en donnent pas. */
-async function lireCadeauOb() {
-  try {
-    var res = await supabaseClubbeur.rpc("welcome_bonus_status", { p_device: jetonAppareil() });
-    var d = !res.error && res.data;
-    if (!d || (d.etat !== "disponible" && d.etat !== "aucun_club")) return null;
-    OB.cadeau = d;
-    var pts = $("#ob-cadeau-pts");
-    pts.classList.remove("gagne");
-    $("#ob-cadeau-montant").textContent = nb(d.points || 50);
-    $("#ob-cadeau-sous").textContent = d.etat === "disponible"
-      ? "Un seul par téléphone."
-      : "Ils arrivent sur ton compte au premier scan du QR d’un établissement.";
-    $("#ob-cadeau-btn").textContent = d.etat === "disponible" ? "Récupérer" : "Continuer";
-    return d;
-  } catch (e) {
-    return null;
-  }
-}
-
-async function prendreCadeauOb() {
-  var bouton = $("#ob-cadeau-btn");
-  if (bouton.classList.contains("charge")) return;
-  if (!OB.cadeau || OB.cadeau.etat !== "disponible") return finirParcoursOb();
-
-  chargementOb(bouton, true);
-  var res = await supabaseClubbeur.rpc("welcome_bonus", { p_device: jetonAppareil() })
-    .catch(function (erreur) { return { error: erreur }; });
-  chargementOb(bouton, false);
-  var d = (!res.error && res.data) || { etat: "erreur" };
-
-  if (d.etat !== "ok") {
-    var phrases = {
-      deja_pris: "Ce cadeau est déjà sur ton compte.",
-      appareil_deja_servi: "Un seul cadeau de bienvenue par téléphone.",
-      aucun_club: "Il arrive au premier scan du QR d’un établissement.",
-    };
-    direOb("cadeau", phrases[d.etat] || "Ça n’a pas marché. Tu le retrouveras dans Récompenses.", true);
-    OB.cadeau = null;
-    bouton.textContent = "Continuer";
-    return;
-  }
-
-  // Le chiffre passe au rouge et le solde monte : c'est la confirmation.
-  // Puis l'appli.
-  $("#ob-cadeau-pts").classList.add("gagne");
-  $("#ob-cadeau-sous").textContent = "Ajoutés à ton solde.";
-  bouton.disabled = true;
-  natif.vibrer("succes");
-  if (typeof jouer === "function") jouer("points");
-  var session = (await supabaseClubbeur.auth.getSession()).data.session;
-  if (session) chargerSoldeReel(session.user.id);
-  // La carte de Recompenses proposait le meme bonus : elle se remet a jour.
-  verifierCadeau();
-  OB.cadeau = null;
-  setTimeout(function () { bouton.disabled = false; finirParcoursOb(); }, 1100);
-}
 
 var REBOURS_RENVOI_S = 60; // Supabase refuse un second e-mail avant 60 s
 var finReboursOb = 0;
@@ -8181,49 +7966,22 @@ function messageAuthOb(erreur) {
   return "Ça n’a pas marché. Réessaie.";
 }
 
-/* L'application de mail, quand on sait laquelle ouvrir. Sur iPhone,
-   « message:// » ouvre Mail et « googlegmail:// » l'appli Gmail. Ailleurs,
-   la messagerie web du domaine. Domaine inconnu hors iPhone : pas de
-   bouton, et « Saisir le code » devient l'action de l'ecran. */
-function lienBoiteMailOb(adresse) {
-  var domaine = (adresse.split("@")[1] || "").toLowerCase();
-  var gmail = /^(gmail|googlemail)\.com$/.test(domaine);
-  if (/iPhone|iPad|iPod/i.test(navigator.userAgent || "")) return gmail ? "googlegmail://" : "message://";
-  if (gmail) return "https://mail.google.com/mail/";
-  if (/^(outlook|hotmail|live|msn)\./.test(domaine)) return "https://outlook.live.com/mail/";
-  if (/^yahoo\./.test(domaine)) return "https://mail.yahoo.com/";
-  if (/^(icloud|me|mac)\.com$/.test(domaine)) return "https://www.icloud.com/mail/";
-  if (/^(proton\.me|protonmail\.com|pm\.me)$/.test(domaine)) return "https://mail.proton.me/";
-  return null;
-}
-
-// L'adresse retenue, ecrite dans les ecrans qui la citent, et le bouton
-// « Ouvrir mes mails » qui va avec.
-function preparerBoiteOb(adresse) {
+// L'adresse retenue, ecrite telle que la personne l'a tapee dans l'ecran
+// « Regarde tes mails ».
+function preparerCodeOb(adresse) {
   OB.email = adresse;
   document.querySelectorAll(".js-ob-adresse").forEach(function (el) { el.textContent = adresse; });
-  var lien = lienBoiteMailOb(adresse);
-  var ouvrir = $("#ob-ouvrir-mails");
-  var saisir = $("#ob-saisir-code");
-  ouvrir.hidden = !lien;
-  if (lien) {
-    ouvrir.href = lien;
-    if (/^https:/.test(lien)) ouvrir.target = "_blank"; else ouvrir.removeAttribute("target");
-  }
-  saisir.classList.toggle("ob-btn-encre", !lien);
-  saisir.classList.toggle("ob-btn-gris", Boolean(lien));
   $("#ob-code").value = "";
   $("#ob-code").dispatchEvent(new Event("input"));
-  direOb("boite", "");
   direOb("code", "");
 }
 
-// Pour les captures de la planche (outils/appli_clubbeur.cjs) : poser la
+// Pour les captures de la planche (outils/parcours_inscription.cjs) : poser la
 // feuille sur un ecran precis SANS envoyer d'e-mail. De l'affichage
 // seulement -- aucune donnee, aucun droit que la page n'ait deja.
 window.noctifyParcours = function (nom, adresse) {
   if (!FEUILLE || !etapeOb(nom)) return;
-  if (adresse) preparerBoiteOb(adresse);
+  if (adresse) preparerCodeOb(adresse);
   if (OB.ouverte) allerOb(nom);
   else ouvrirFeuilleOb(nom);
 };
@@ -8245,46 +8003,52 @@ function demarrerReboursOb() {
   majReboursOb();
 }
 
-function cablerEmailOb() {
-  var form = etapeOb("email");
-  var champ = $("#ob-email");
-  var bouton = form.querySelector('[type="submit"]');
+/* ---- L'email, depuis l'accueil ----
+   Julien : « si le mec met email, ca envoie un code ; si le mec met Google,
+   ca le connecte directement ». Le code arrive dans la feuille. */
+function cablerEmailAccueil() {
+  var champ = $("#ac-email");
+  var bouton = $("#ac-email-submit");
+  if (!champ || !bouton) return;
 
-  champ.addEventListener("input", function () { direOb("email", ""); });
-
-  form.addEventListener("submit", async function (ev) {
-    ev.preventDefault();
-    if (bouton.classList.contains("charge")) return;
+  async function envoyer() {
+    if (bouton.disabled) return;
     var adresse = champ.value.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(adresse)) {
-      direOb("email", adresse ? "Cette adresse email n’est pas complète." : "Écris ton adresse email.");
+      afficherMessageAccueil(adresse ? "Cette adresse email n’est pas complète." : "Écris ton adresse email.", true);
       champ.focus();
       return;
     }
-    direOb("email", "");
-    chargementOb(bouton, true);
+    MESSAGE_ACCUEIL.hidden = true;
+    var libelle = bouton.textContent;
+    bouton.disabled = true;
+    bouton.textContent = "Envoi du code…";
     var res = await envoyerEmailOb(adresse);
-    chargementOb(bouton, false);
-    if (res.error) return direOb("email", messageAuthOb(res.error));
+    bouton.disabled = false;
+    bouton.textContent = libelle;
+    if (res.error) return afficherMessageAccueil(messageAuthOb(res.error), true);
 
-    preparerBoiteOb(adresse);
+    preparerCodeOb(adresse);
     demarrerReboursOb();
-    allerOb("boite");
-  });
+    ouvrirFeuilleOb("code");
+  }
 
-  $("#ob-saisir-code").addEventListener("click", function () { allerOb("code"); });
+  bouton.addEventListener("click", envoyer);
+  champ.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" && !ev.isComposing) { ev.preventDefault(); envoyer(); }
+  });
+  champ.addEventListener("input", function () { MESSAGE_ACCUEIL.hidden = true; });
 
   document.querySelectorAll(".js-ob-renvoyer").forEach(function (b) {
     b.addEventListener("click", async function () {
       if (b.disabled || !OB.email) return;
-      var ecran = OB.etape;
       b.disabled = true;
       var res = await envoyerEmailOb(OB.email);
       if (res.error) {
         b.disabled = false;
-        return direOb(ecran, messageAuthOb(res.error));
+        return direOb("code", messageAuthOb(res.error));
       }
-      direOb(ecran, "Nouvel e-mail envoyé.", true);
+      direOb("code", "Nouvel e-mail envoyé.", true);
       demarrerReboursOb();
     });
   });
@@ -8307,8 +8071,8 @@ function cablerCodeOb() {
   var avant = "";
 
   function peindre() {
-    // Un collage apporte parfois des espaces ou un tiret : on ne garde
-    // que les chiffres.
+    // Un collage apporte parfois des espaces ou un tiret : on ne garde que
+    // les chiffres.
     var v = champ.value.replace(/\D/g, "").slice(0, LONGUEUR_CODE);
     if (v !== champ.value) champ.value = v;
     cases.forEach(function (c, k) {
@@ -8319,8 +8083,7 @@ function cablerCodeOb() {
     });
     bouton.disabled = v.length !== LONGUEUR_CODE;
     if (v.length !== avant.length) direOb("code", "");
-    // Le dernier chiffre valide tout seul, comme chez DUSK : il n'y a rien
-    // d'autre a faire sur cet ecran.
+    // Le dernier chiffre valide tout seul, comme chez DUSK.
     if (v.length === LONGUEUR_CODE && avant.length !== LONGUEUR_CODE) verifierCodeOb();
     avant = v;
   }
@@ -8360,8 +8123,8 @@ async function verifierCodeOb() {
     champ.focus();
     return;
   }
-  // La roue reste : c'est onAuthStateChange -> poursuivreParcours qui
-  // emmene a l'ecran suivant, une fois le compte lu.
+  // La roue reste : c'est onAuthStateChange -> poursuivreParcours qui emmene
+  // a l'ecran suivant, une fois le compte lu.
 }
 
 function cablerNomOb() {
@@ -8386,12 +8149,23 @@ function cablerNomOb() {
   });
 }
 
+/* ---- Instagram, en un seul ecran ---- */
+// Le bouton « Ouvrir » mene au profil de la personne, dans l'appli Instagram
+// quand elle est installee (le lien instagram.com l'ouvre directement).
+function majLienProfilOb() {
+  var pseudo = nettoyerPseudoIg($("#ob-pseudo").value).toLowerCase();
+  $("#ob-ouvrir-instagram").href = PSEUDO_IG_RE.test(pseudo)
+    ? "https://www.instagram.com/" + encodeURIComponent(pseudo) + "/"
+    : "https://www.instagram.com/";
+}
+
 function cablerInstagramOb() {
+  var form = etapeOb("instagram");
   var champFichier = $("#ob-capture");
-  var depot = $("#ob-depot");
+  var champPseudo = $("#ob-pseudo");
 
   // Le champ se vide AVANT d'ouvrir le selecteur : choisir deux fois la meme
-  // image doit redeclencher `change`. Pas apres, pendant que l'image se lit.
+  // image doit redeclencher `change`.
   $("#ob-capture-choisir").addEventListener("click", function () {
     champFichier.value = "";
     champFichier.click();
@@ -8399,11 +8173,10 @@ function cablerInstagramOb() {
   champFichier.addEventListener("change", function () {
     retenirCaptureOb(champFichier.files && champFichier.files[0]);
   });
-  $("#ob-capture-suite").addEventListener("click", etapeSuivanteOb);
 
   // Sur ordinateur, une capture d'ecran ne vit que dans le presse-papier.
   document.addEventListener("paste", function (ev) {
-    if (!OB.ouverte || OB.etape !== "capture") return;
+    if (!OB.ouverte || OB.etape !== "instagram") return;
     var items = (ev.clipboardData && ev.clipboardData.items) || [];
     for (var i = 0; i < items.length; i++) {
       if (items[i].type && items[i].type.indexOf("image/") === 0) {
@@ -8413,81 +8186,55 @@ function cablerInstagramOb() {
       }
     }
   });
-  ["dragenter", "dragover"].forEach(function (n) {
-    depot.addEventListener(n, function (ev) { ev.preventDefault(); depot.classList.add("survol"); });
-  });
-  ["dragleave", "dragend"].forEach(function (n) {
-    depot.addEventListener(n, function () { depot.classList.remove("survol"); });
-  });
-  depot.addEventListener("drop", function (ev) {
-    ev.preventDefault();
-    depot.classList.remove("survol");
-    retenirCaptureOb(ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]);
-  });
 
   // Le pseudo n'est reecrit qu'a la sortie du champ : le nettoyer a chaque
   // frappe deplacerait le curseur.
-  var champPseudo = $("#ob-pseudo");
-  champPseudo.addEventListener("input", function () { direOb("pseudo", ""); });
+  champPseudo.addEventListener("input", function () {
+    direOb("instagram", "");
+    majLienProfilOb();
+    $("#ob-etape-profil").classList.toggle("faite", PSEUDO_IG_RE.test(nettoyerPseudoIg(champPseudo.value)));
+  });
   champPseudo.addEventListener("blur", function () {
     var propre = nettoyerPseudoIg(champPseudo.value);
     if (propre !== champPseudo.value) champPseudo.value = propre;
   });
-  etapeOb("pseudo").addEventListener("submit", enregistrerInstagramOb);
+  form.addEventListener("submit", enregistrerInstagramOb);
 }
 
 async function retenirCaptureOb(fichier) {
   if (!fichier) return;
-  if (!/^image\//.test(fichier.type || "")) return direOb("capture", "Ce fichier n’est pas une image.");
-  direOb("capture", "");
+  if (!/^image\//.test(fichier.type || "")) return direOb("instagram", "Ce fichier n’est pas une image.");
+  direOb("instagram", "");
   var choisir = $("#ob-capture-choisir");
   chargementOb(choisir, true);
   var capture = await compresserCapture(fichier);
   /* Copiee en memoire TOUT DE SUITE. Quand la compression ne gagne rien,
-     compresserCapture rend le fichier d'origine, qui n'est qu'une
-     reference au disque, relue seulement a l'envoi. Si le telephone ne sait
-     plus la relire (photo d'une galerie en ligne sur Android), l'echec
-     tombait a la toute fin, en « Failed to fetch », apres le pseudo. Lu
-     ici, il se voit au moment du choix, sur l'ecran ou on peut en changer.
-     (Constate le 14/09/2026 avec un fichier que Chrome affichait mais ne
-     relisait pas.) */
+     compresserCapture rend le fichier d'origine, qui n'est qu'une reference
+     au disque, relue seulement a l'envoi. Si le telephone ne sait plus la
+     relire (photo d'une galerie en ligne sur Android), l'echec tombait a la
+     toute fin, en « Failed to fetch ». Lu ici, il se voit au moment du choix. */
   try {
     capture = new Blob([await capture.arrayBuffer()], { type: capture.type || "image/jpeg" });
   } catch (e) {
     chargementOb(choisir, false);
-    return direOb("capture", "Cette image n’a pas pu être lue. Choisis-en une autre.");
+    return direOb("instagram", "Cette image n’a pas pu être lue. Choisis-en une autre.");
   }
   OB.capture = capture;
   chargementOb(choisir, false);
 
   if (OB.urlCapture) URL.revokeObjectURL(OB.urlCapture);
   OB.urlCapture = URL.createObjectURL(OB.capture);
-  var apercu = $("#ob-capture-apercu");
-  apercu.src = OB.urlCapture;
-  apercu.hidden = false;
-  etapeOb("capture").querySelector(".ob-depot-exemple").hidden = true;
-  $("#ob-depot").classList.add("rempli");
-  $("#ob-pseudo-vignette").src = OB.urlCapture;
-
-  // La capture est la : l'action de l'ecran devient « Continuer », et
-  // « Choisir » passe au second plan pour en changer.
-  choisir.textContent = "Changer de capture";
-  choisir.classList.replace("ob-btn-encre", "ob-btn-gris");
-  $("#ob-capture-suite").hidden = false;
-  $("#ob-ouvrir-instagram").hidden = true;
-  var bas = etapeOb("capture").querySelector(".ob-bas");
-  bas.insertBefore($("#ob-capture-suite"), bas.firstChild);
-
-  // Choisir la capture EST la reponse a cet ecran : on avance, apres un
-  // temps pour voir la coche se poser.
-  setTimeout(function () {
-    if (OB.ouverte && OB.etape === "capture") etapeSuivanteOb();
-  }, 650);
+  $("#ob-capture-apercu").src = OB.urlCapture;
+  $("#ob-capture-vignette").hidden = false;
+  $("#ob-etape-ajout").classList.add("faite");
+  $("#ob-etape-capture").classList.add("faite");
+  choisir.textContent = "Changer";
+  choisir.classList.add("secondaire");
 }
 
 async function enregistrerInstagramOb(ev) {
   ev.preventDefault();
-  var bouton = etapeOb("pseudo").querySelector('[type="submit"]');
+  var bouton = etapeOb("instagram").querySelector('[type="submit"]');
   if (bouton.classList.contains("charge")) return;
   var champ = $("#ob-pseudo");
   // Instagram ne distingue pas les majuscules, et api/instagram.js compare
@@ -8496,12 +8243,13 @@ async function enregistrerInstagramOb(ev) {
   champ.value = pseudo;
 
   if (!PSEUDO_IG_RE.test(pseudo)) {
-    return direOb("pseudo", pseudo ? "Un pseudo Instagram n’a que des lettres, des chiffres, des points et des tirets bas." : "Écris ton pseudo Instagram.");
+    champ.focus();
+    return direOb("instagram", pseudo ? "Un pseudo Instagram n’a que des lettres, des chiffres, des points et des tirets bas." : "Écris ton pseudo Instagram.");
   }
-  if (!OB.capture) return direOb("pseudo", "La capture manque : reviens en arrière pour l’ajouter.");
+  if (!OB.capture) return direOb("instagram", "Ajoute la capture de ton profil (étape 3).");
 
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
-  if (!session) return direOb("pseudo", "Ta session a expiré. Reconnecte-toi.");
+  if (!session) return direOb("instagram", "Ta session a expiré. Reconnecte-toi.");
   var uid = session.user.id;
   chargementOb(bouton, true);
 
@@ -8510,12 +8258,12 @@ async function enregistrerInstagramOb(ev) {
   var erreurHandle = (await supabaseClubbeur.from("users").update({ handle: pseudo }).eq("id", uid)).error;
   if (erreurHandle) {
     chargementOb(bouton, false);
-    return direOb("pseudo", /duplicate|unique/i.test(erreurHandle.message) ? "Ce pseudo est déjà pris." : "Ton pseudo n’a pas pu être enregistré. Réessaie.");
+    return direOb("instagram", /duplicate|unique/i.test(erreurHandle.message) ? "Ce pseudo est déjà pris." : "Ton pseudo n’a pas pu être enregistré. Réessaie.");
   }
 
-  /* Le premier segment du chemin reste un id de club, comme dans le
-     parcours d'origine : c'est la forme que le bucket story-proofs
-     accepte aujourd'hui, et l'inscription n'a pas de club en main. */
+  /* Le premier segment du chemin reste un id de club, comme dans le parcours
+     d'origine : c'est la forme que le bucket story-proofs accepte
+     aujourd'hui, et l'inscription n'a pas de club en main. */
   var chemin = CLUB_ID_DEMO + "/" + uid + "/profil-" + Date.now() + ".jpg";
   var erreurEnvoi = (await supabaseClubbeur.storage
     .from("story-proofs")
@@ -8523,18 +8271,38 @@ async function enregistrerInstagramOb(ev) {
   if (erreurEnvoi) {
     console.warn("[inscription] capture refusee :", erreurEnvoi.message);
     chargementOb(bouton, false);
-    return direOb("pseudo", "La capture n’a pas pu être envoyée. Réessaie.");
+    return direOb("instagram", "La capture n’a pas pu être envoyée. Réessaie.");
   }
 
   var erreurProfil = (await supabaseClubbeur.rpc("set_profile_proof", { p_path: chemin })).error;
   if (erreurProfil) {
     chargementOb(bouton, false);
-    return direOb("pseudo", "La capture n’a pas pu être enregistrée. Réessaie.");
+    return direOb("instagram", "La capture n’a pas pu être enregistrée. Réessaie.");
   }
 
   chargementOb(bouton, false);
-  // Le cadeau de bienvenue suit, s'il y en a un ; sinon l'appli.
   etapeSuivanteOb();
+}
+
+/* ---- Branchements ---- */
+// Les deux textes legaux s'ouvrent dans l'appli (memes pages que depuis
+// Reglages).
+if (FEUILLE) {
+  FEUILLE.querySelectorAll(".ob-etape").forEach(function (el) { el.inert = true; });
+  $("#ob-fermer").addEventListener("click", fermerFeuilleOb);
+  $("#ob-retour").addEventListener("click", retourOb);
+  VOILE.addEventListener("click", function () {
+    if (!$("#ob-fermer").hidden) fermerFeuilleOb();
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Escape" || !OB.ouverte) return;
+    if (!$("#ob-retour").hidden) retourOb();
+    else if (!$("#ob-fermer").hidden) fermerFeuilleOb();
+  });
+  cablerEmailAccueil();
+  cablerCodeOb();
+  cablerNomOb();
+  cablerInstagramOb();
 }
 
 supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
@@ -8544,15 +8312,13 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
     return;
   }
   /* L'accueil s'efface des qu'une session existe -- sauf si la feuille
-     d'inscription est a l'ecran : c'est elle qui decide du moment ou
-     l'appli apparait (finirParcoursOb), sinon l'appli se montrerait
-     derriere une feuille qui n'a pas fini.
+     d'inscription est a l'ecran : c'est elle qui decide du moment ou l'appli
+     apparait (finirParcoursOb).
 
      J'avais essaye deux autres choses, toutes deux mauvaises : remplacer
      Apple/Google/email par un seul bouton "Entrer" (ca vidait l'ecran que
-     Julien avait valide), puis garder l'accueil sans fermeture
-     automatique -- et la, un utilisateur deja connecte restait BLOQUE
-     dessus. */
+     Julien avait valide), puis garder l'accueil sans fermeture automatique
+     -- et la, un utilisateur deja connecte restait BLOQUE dessus. */
   if (!OB.ouverte) VUE_ACCUEIL.classList.add("masque");
   // Y a-t-il un cadeau a prendre ? Une lecture, pas une tentative :
   // demander le cadeau pour savoir s'il existe le consommerait.
@@ -8560,15 +8326,11 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
   assurerProfil(session.user);
   chargerSoldeReel(session.user.id);
   creditScanUrl();
-  // Un abonnement push cree AVANT la connexion n'a pas de proprietaire
-  // en base. On le rattache des qu'une session existe, sinon la
-  // personne a bien autorise les notifications mais n'en recoit
-  // aucune -- panne silencieuse, invisible depuis l'appli.
+  // Un abonnement push cree AVANT la connexion n'a pas de proprietaire en
+  // base. On le rattache des qu'une session existe, sinon la personne a bien
+  // autorise les notifications mais n'en recoit aucune.
   synchroniserBasculeNotif();
-  // La proposition d'activer les notifications, quelques secondes plus
-  // tard : le temps que l'ecran d'accueil s'efface et que l'appli soit
-  // vraiment sous les yeux. Poser la question pendant l'animation
-  // d'ouverture, c'est la poser a quelqu'un qui ne regarde pas encore.
+  // La proposition d'activer les notifications, quelques secondes plus tard.
   setTimeout(proposerNotifications, 6000);
   // Ce qui manque au compte (nom, Instagram) : une fois, puis plus jamais.
   poursuivreParcours(session);

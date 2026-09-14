@@ -7,8 +7,8 @@
 // Sortie : outils/pages-inscription[-noir|-blanc]/*.png (retine) + *.jpg (1x)
 //
 // Deux choses a la fois, parce qu'elles passent par les memes ecrans :
-//   1. les captures de chaque ecran (les trois temps de l'accueil, puis
-//      les six ecrans de la feuille) ;
+//   1. les captures de chaque ecran (l'accueil, puis les trois ecrans de la
+//      feuille : code, nom, Instagram) ;
 //   2. un vrai test : un code valide, puis le nom, la capture et le pseudo
 //      ENREGISTRES, relus en base a la fin.
 //
@@ -85,28 +85,12 @@ const HAUTEUR = 844;
     }
 
     console.log(`\nParcours d'inscription — ${SITE}\n`);
-    await page.goto(`${SITE}/app-preview.html?app=1${THEME ? "&theme=" + THEME : ""}&cb=${Date.now()}`, { waitUntil: "domcontentloaded" });
-    // L'ecran de lancement : les lettres en train d'apparaitre, puis le mot.
-    await pause(650);
-    await prendre("00a-lancement", "Lancement — les lettres arrivent");
-    await pause(900);
-    await prendre("00b-lancement", "Lancement — le mot et son point");
-    await pause(2600);
-    await prendre("01-accueil-1", "Accueil — 1er temps");
-    for (const [nom, titre] of [["02-accueil-2", "Accueil — 2e temps"], ["03-accueil-3", "Accueil — 3e temps"]]) {
-      await page.evaluate(() => document.querySelector("#vue-accueil").click());
-      await pause(1200);
-      await prendre(nom, titre);
-    }
-
-    console.log("\nLa feuille, avant la connexion");
-    await page.evaluate(() => document.querySelector("#ac-email").click());
-    await attendreEcran("email");
-    await page.type("#ob-email", "ton.adresse@gmail.com");
-    await prendre("04-email", "Ton adresse email");
-    await page.evaluate(() => window.noctifyParcours("boite", "ton.adresse@gmail.com"));
-    await attendreEcran("boite");
-    await prendre("05-boite", "Regarde tes mails");
+    await page.goto(`${SITE}/app-preview.html?app=1${THEME ? "&theme=" + THEME : ""}&cb=${Date.now()}`, { waitUntil: "networkidle2" });
+    await pause(1500);
+    // L'adresse est tapee mais pas envoyee : l'envoi ferait partir un vrai
+    // e-mail vers une adresse jetable.
+    await page.type("#ac-email", "ton.adresse@gmail.com");
+    await prendre("01-accueil", "Accueil");
 
     console.log("\nCompte jetable…");
     compte = await V.compteJetable("inscription", `${SITE}/app-preview.html`);
@@ -120,38 +104,28 @@ const HAUTEUR = 844;
     await attendreEcran("code");
     await page.type("#ob-code", code.slice(0, 4));
     await pause(400);
-    await prendre("06-code", "Entre le code — à moitié");
+    await prendre("02-code", "Regarde tes mails — le code");
     await page.type("#ob-code", code.slice(4));
 
     console.log("\nLa feuille, apres la connexion");
     await attendreEcran("nom");
     bilan.nomPreRempli = await page.$eval("#ob-nom", (el) => el.value);
     await page.type("#ob-nom", "Camille Durand");
-    await prendre("07-nom", "Comment tu t'appelles ?");
+    await prendre("03-nom", "Comment tu t'appelles ?");
     await page.click('.ob-etape.actif [type="submit"]');
 
-    await attendreEcran("capture");
-    await prendre("08-capture", "Une capture de ton profil");
-    const champ = await page.$("#ob-capture");
-    await champ.uploadFile(CAPTURE);
-    await pause(250);
-    await prendre("08b-capture-choisie", "La capture, choisie");
-
-    await attendreEcran("pseudo");
+    await attendreEcran("instagram");
+    await prendre("04-instagram", "Relie ton Instagram");
     const pseudo = "e2e_" + compte.uid.slice(0, 8);
     await page.type("#ob-pseudo", pseudo);
-    await prendre("09-pseudo", "Ton pseudo Instagram");
+    const champ = await page.$("#ob-capture");
+    await champ.uploadFile(CAPTURE);
+    await page.waitForFunction(() => !document.querySelector("#ob-capture-vignette").hidden, { timeout: 10000 });
+    await pause(300);
+    await prendre("05-instagram-rempli", "Instagram — pseudo et capture");
+    bilan.lienProfil = await page.$eval("#ob-ouvrir-instagram", (a) => a.href);
     await page.click('.ob-etape.actif [type="submit"]');
 
-    // Le cadeau de bienvenue ferme la marche. Un compte jetable n'a scanne
-    // aucun etablissement : l'ecran annonce que les points attendent.
-    const cadeau = await page.waitForFunction(() => document.querySelector('.ob-etape.actif[data-etape="cadeau"]') || document.querySelector("#ob-feuille").hidden, { timeout: 20000 }).then(() => ecranActif()).catch(() => null);
-    if (cadeau === "cadeau") {
-      await pause(700);
-      await prendre("09b-cadeau", "Le cadeau de bienvenue");
-      bilan.cadeau = await page.$eval("#ob-cadeau-btn", (b) => b.textContent);
-      await page.click("#ob-cadeau-btn");
-    }
     await page.waitForFunction(() => document.querySelector("#ob-feuille").hidden, { timeout: 20000 }).catch(async (e) => {
       // Ce que dit l'ecran quand ca coince : sans ca, un « timeout » ne
       // dit pas si c'est le pseudo, l'envoi ou l'enregistrement qui a echoue.
