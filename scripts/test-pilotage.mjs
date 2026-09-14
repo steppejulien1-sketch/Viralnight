@@ -19,6 +19,9 @@ import {
   joursEntre,
   forfaitContenu,
   libelleContenu,
+  echeanceAutoValidation,
+  libelleEcheance,
+  seuilAutoValidation,
 } from "../lib/admin/pilotage.js";
 
 let passed = 0, failed = 0;
@@ -126,6 +129,15 @@ check("tiktok : 7 points par tranche de 100 vues", forfaitContenu("tiktok", 1250
 check("tiktok : bonus plafonne a 2000", forfaitContenu("tiktok", 10_000_000) === 2060);
 check("type inconnu -> null (la base refuse aussi)", forfaitContenu("youtube") === null);
 check("libelles", libelleContenu("story") === "Story Instagram" && libelleContenu("tiktok") === "TikTok");
+
+console.log("\nValidation automatique a 24 h");
+const envoye = "2026-09-13T20:00:00Z";
+check("echeance = envoi + 24 h", echeanceAutoValidation(envoye) === "2026-09-14T20:00:00.000Z");
+check("il reste 22 h 30 -> « dans 22 h » (arrondi vers le bas)", libelleEcheance(envoye, MAINTENANT) === "Validation automatique dans 22 h", libelleEcheance(envoye, MAINTENANT));
+check("moins d'une heure -> en minutes", libelleEcheance("2026-09-12T21:50:00Z", MAINTENANT) === "Validation automatique dans 20 min", libelleEcheance("2026-09-12T21:50:00Z", MAINTENANT));
+check("echeance depassee -> dans l'heure (la tache passe chaque heure)", libelleEcheance("2026-09-11T10:00:00Z", MAINTENANT) === "Validation automatique dans l'heure");
+check("date invalide -> null", libelleEcheance("pas une date", MAINTENANT) === null && echeanceAutoValidation(undefined) === null);
+check("seuil de la tache = maintenant - 24 h", seuilAutoValidation(MAINTENANT) === "2026-09-12T21:30:00.000Z");
 
 console.log("\nAnciennete");
 check("jours entiers", joursEntre("2026-09-01T10:00:00Z", MAINTENANT) === 12);

@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from "./supabaseClient.js";
+import { libelleEcheance } from "./lib/admin/pilotage.js";
 
 /* Le tableau de bord de pilotage (13/09/2026). Voir pilotage.html.
    Tout vient d'UNE route admin : /api/update-client-status?action=pilotage.
@@ -464,7 +465,9 @@ function ligneContenu(x, source) {
   if (x.pseudo) liens.push(`<a href="https://www.instagram.com/${encodeURIComponent(x.pseudo)}/" target="_blank" rel="noreferrer">Instagram de ${pseudo}</a>`);
   const url = x.url && lienSur(x.url);
   if (url) liens.push(`<a href="${esc(url)}" target="_blank" rel="noreferrer">Voir la publication</a>`);
-  const meta = [x.club, dateCourte(x.date)].filter(Boolean).map(esc).join(" · ") + (liens.length ? ` · ${liens.join(" · ")}` : "");
+  // Dans la liste de l'appli, l'etablissement est deja le titre du groupe.
+  const meta = [source === "site" ? x.club : null, dateCourte(x.date)].filter(Boolean).map(esc).join(" · ") + (liens.length ? ` · ${liens.join(" · ")}` : "");
+  const echeance = source === "appli" ? libelleEcheance(x.date) : null;
   const expiree = x.kind === "story" && Date.now() - new Date(x.date).getTime() > JOUR_MS;
   const points = source === "site"
     ? (typeof x.vuesAnnoncees === "number" ? `${nb(x.vuesAnnoncees)} vues annoncées` : "")
@@ -474,6 +477,7 @@ function ligneContenu(x, source) {
       <p class="pl-contenu-titre"><span class="pl-sujet">${esc(x.type)}</span> <strong>${pseudo}</strong>${x.interne ? "<em>ton compte</em>" : ""}</p>
       <p class="pl-contenu-meta">${meta}${source === "site" && points ? ` · ${esc(points)}` : ""}</p>
       ${expiree ? '<p class="pl-contenu-alerte">Plus de 24 h : la story n’est plus visible sur Instagram.</p>' : ""}
+      ${echeance ? `<p class="pl-contenu-auto">${esc(echeance)}</p>` : ""}
     </div>
     <div class="pl-contenu-actions">
       <button type="button" class="pl-bouton" data-decision="valider">Valider${source === "site" ? "" : esc(points)}</button>
@@ -486,13 +490,30 @@ function ligneContenu(x, source) {
 function rendreValidation() {
   const v = donnees.validation;
   $("#pl-valider-resume").textContent = v.appli.length ? pluriel(v.appli.length, "contenu") + " en attente" : "";
+  // Une liste par etablissement (Julien, 14/09/2026 : « a chaque etablissement
+  // qui arrive, qu'il y ait une liste differente »), le plus charge en haut.
+  const groupes = new Map();
+  for (const x of v.appli) {
+    const cle = x.clubId || "sans";
+    if (!groupes.has(cle)) groupes.set(cle, { club: x.club || "Sans établissement", instagram: x.instagramRelie, contenus: [] });
+    groupes.get(cle).contenus.push(x);
+  }
   $("#pl-a-valider").innerHTML = v.appli.length
-    ? v.appli.map((x) => ligneContenu(x, "appli")).join("")
+    ? [...groupes.values()]
+        .sort((a, b) => b.contenus.length - a.contenus.length || a.club.localeCompare(b.club, "fr"))
+        .map((g) => `<div class="pl-groupe">
+          <div class="pl-groupe-tete">
+            <strong>${esc(g.club)}</strong>
+            <span>${esc(pluriel(g.contenus.length, "contenu"))} · ${g.instagram ? "Instagram relié : les mentions arrivent toutes seules" : "Instagram non relié : vérifie à la main"}</span>
+          </div>
+          ${g.contenus.map((x) => ligneContenu(x, "appli")).join("")}
+        </div>`)
+        .join("")
     : vide("Aucune story ni publication à valider.");
   $("#pl-site-carte").hidden = !v.site.length;
   $("#pl-site").innerHTML = v.site.map((x) => ligneContenu(x, "site")).join("");
   $("#pl-decisions").innerHTML = v.decisions.length
-    ? v.decisions.map((x) => `<li><span class="pl-texte"><span class="pl-decision ${x.decision}">${x.decision === "refusee" ? "Refusée" : `Validée · +${nb(x.pointsAccordes)}`}</span> — ${esc(x.type)} de ${x.pseudo ? "@" + esc(x.pseudo) : "sans pseudo"}${x.club ? " · " + esc(x.club) : ""}</span><span class="pl-meta">${esc(dateCourte(x.decideLe || x.date))}</span></li>`).join("")
+    ? v.decisions.map((x) => `<li><span class="pl-texte"><span class="pl-decision ${x.decision}">${x.decision === "refusee" ? "Refusée" : `${x.auto ? "Validée automatiquement" : "Validée"} · +${nb(x.pointsAccordes)}`}</span> — ${esc(x.type)} de ${x.pseudo ? "@" + esc(x.pseudo) : "sans pseudo"}${x.club ? " · " + esc(x.club) : ""}</span><span class="pl-meta">${esc(dateCourte(x.decideLe || x.date))}</span></li>`).join("")
     : `<li>${vide("Aucune décision pour l’instant.")}</li>`;
 }
 

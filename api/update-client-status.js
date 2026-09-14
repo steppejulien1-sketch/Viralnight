@@ -1,12 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
-import { pousserA, notifierStory } from "../lib/notifications/envoyer.js";
+import { pousserA } from "../lib/notifications/envoyer.js";
+import { deciderStory } from "../lib/admin/deciderContenu.js";
 import { libelleMotifDepart } from "../lib/notifications/push.js";
 import { computePoints } from "../lib/points/computePoints.js";
 import { DEFAULT_POINT_RULES } from "../dashboardData.js";
 import {
   forfaitContenu,
   libelleContenu,
+  echeanceAutoValidation,
   jourLocal,
   decalerJour,
   resumePeriodes,
@@ -44,6 +46,7 @@ const ALLOWED_STATUSES = new Set(["actif", "essai", "suspendu"]);
 // Adresses de Julien relevees en base le 13/09/2026 (dont une faute de frappe).
 const COMPTES_INTERNES = new Set([
   "viralnight001@gmail.com",
+  "noctify.support@gmail.com",
   "julien.steppe123@gmail.com",
   "steppejulien1@gmail.com",
   "steppejulien@gmail.com",
@@ -248,7 +251,7 @@ async function actionPilotage(response, b2b) {
     lire("e-mails", () => lecture(b2b.from("journal_emails").select("*").order("created_at", { ascending: false }).limit(100))),
     cote("comptes", () => tousLesComptesAuth(cb)),
     cote("clubbeurs", () => toutLire(() => cb.from("users").select("id, handle, email, created_at, points_balance, referred_by").order("created_at"))),
-    cote("stories", () => toutLire(() => cb.from("story_events").select("id, user_id, club_id, mentioned_at, verified, kind, url, awarded_points, verified_views, views_source, review_status, reviewed_at").order("mentioned_at"))),
+    cote("stories", () => toutLire(() => cb.from("story_events").select("id, user_id, club_id, mentioned_at, verified, kind, url, awarded_points, verified_views, views_source, review_status, reviewed_at, review_auto").order("mentioned_at"))),
     cote("points", () => toutLire(() => cb.from("point_grants").select("user_id, amount, created_at").order("created_at"))),
     cote("récompenses échangées", () => toutLire(() => cb.from("redemptions").select("user_id, redeemed_at").order("redeemed_at"))),
     cote("cadeaux du jour", () => toutLire(() => cb.from("daily_gifts").select("user_id, created_at").order("created_at"))),
@@ -337,8 +340,14 @@ async function actionPilotage(response, b2b) {
   // file de travail, pas une statistique : Julien doit voir ses propres tests.
   const nomClubCb = new Map(clubsCb.map((c) => [c.id, c.name]));
   const nomEtab = new Map(etabs.map((e) => [e.id, e.name]));
+  // Instagram relie : la base des gerants le sait par l'etablissement.
+  const etabParClubCb = new Map(clubsCb.map((c) => [c.id, c.establishment_id]));
+  const etabsInstagram = new Set(instas.map((i) => i.establishment_id));
   const contenuAppli = (s) => ({
     id: s.id,
+    clubId: s.club_id,
+    instagramRelie: etabsInstagram.has(etabParClubCb.get(s.club_id)),
+    autoLe: echeanceAutoValidation(s.mentioned_at),
     type: libelleContenu(s.kind),
     kind: s.kind,
     url: s.url || null,
@@ -356,7 +365,7 @@ async function actionPilotage(response, b2b) {
     .filter((s) => s.review_status || s.verified)
     .sort((x, y) => String(y.reviewed_at || y.mentioned_at).localeCompare(String(x.reviewed_at || x.mentioned_at)))
     .slice(0, 15)
-    .map((s) => ({ ...contenuAppli(s), decision: s.review_status === "refusee" ? "refusee" : "validee", pointsAccordes: s.awarded_points, decideLe: s.reviewed_at }));
+    .map((s) => ({ ...contenuAppli(s), decision: s.review_status === "refusee" ? "refusee" : "validee", auto: !!s.review_auto, pointsAccordes: s.awarded_points, decideLe: s.reviewed_at }));
   const liensSite = contenusSite.map((c) => ({
     id: c.id,
     type: libelleContenu(c.content_type === "story" ? "story" : c.content_type === "reel" ? "reel" : c.platform === "tiktok" ? "tiktok" : ""),
@@ -549,25 +558,8 @@ async function actionValider(request, response, b2b) {
     return json(response, { error: "Configuration serveur incomplete" }, 500);
   }
 
-  const { data, error } = await cb.rpc("pilotage_review_story", { p_story: id, p_approve: approve, p_points: null });
-  if (error) {
-    if (/already_reviewed/.test(error.message)) return json(response, { error: "Ce contenu a déjà été traité." }, 409);
-    if (/unknown_story/.test(error.message)) return json(response, { error: "Contenu introuvable." }, 404);
-    return json(response, { error: error.message }, 500);
-  }
-  const ligne = Array.isArray(data) ? data[0] : data;
-  const points = ligne?.awarded ?? 0;
-
-  // Sans ca, un Reel valide ici resterait « en attente » dans le tableau de
-  // bord du club, qui lit la base des gerants.
-  const { error: erreurB2B } = await b2b
-    .from("submissions")
-    .update(approve ? { status: "validated", points_awarded: points } : { status: "rejected" })
-    .eq("external_story_id", id)
-    .eq("status", "pending");
-  if (erreurB2B) console.error("[pilotage-valider] contenu gerants non mis a jour", erreurB2B.message);
-
-  // Apres la decision, jamais avant : on n'annonce que ce qui est acquis.
-  const notif = await notifierStory({ storyId: id, type: approve ? "story_validee" : "story_refusee", points });
-  return json(response, { ok: true, points, notifie: notif?.envoyees || 0 });
+  // La meme decision que la validation automatique a 24 h (lib/admin/deciderContenu.js).
+  const r = await deciderStory({ clubbeur: cb, gerants: b2b, storyId: id, approve });
+  if (!r.ok) return json(response, { error: r.message }, r.code === "deja" ? 409 : r.code === "introuvable" ? 404 : 500);
+  return json(response, { ok: true, points: r.points, notifie: r.notifie });
 }

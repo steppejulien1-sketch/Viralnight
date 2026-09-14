@@ -1,7 +1,7 @@
 # Registre des activités de traitement — Noctify
 
 **Responsable de traitement :** Julien Steppe, personne physique
-**Contact :** viralnight001@gmail.com
+**Contact :** noctify.support@gmail.com
 **Dernière mise à jour :** 8 septembre 2026
 
 ---
@@ -169,7 +169,7 @@ sort du domaine au chargement d'une page.
 
 ## Droits des personnes
 
-Exercice à `viralnight001@gmail.com`, réponse sous 30 jours.
+Exercice à `noctify.support@gmail.com`, réponse sous 30 jours.
 
 | Droit | État |
 |---|---|

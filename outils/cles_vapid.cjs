@@ -29,7 +29,7 @@ console.log("  ------------------------------------------------------------");
 console.log("");
 console.log("  VAPID_PUBLIC_KEY   = " + cles.publicKey);
 console.log("  VAPID_PRIVATE_KEY  = " + cles.privateKey);
-console.log("  VAPID_SUBJECT      = mailto:viralnight001@gmail.com");
+console.log("  VAPID_SUBJECT      = mailto:noctify.support@gmail.com");
 console.log("");
 console.log("  Et la MEME cle publique, en VITE_ pour que l'appli la lise :");
 console.log("");

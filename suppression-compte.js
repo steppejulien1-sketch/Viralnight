@@ -127,7 +127,7 @@ SUPPRIMER.addEventListener("click", async () => {
     SUPPRIMER.disabled = false;
     SUPPRIMER.textContent = "Supprimer définitivement mon compte";
     message(
-      "La suppression n'a pas abouti. Réessaie, ou écris-nous à viralnight001@gmail.com " +
+      "La suppression n'a pas abouti. Réessaie, ou écris-nous à noctify.support@gmail.com " +
       "depuis l'adresse de ton compte.",
       "err"
     );

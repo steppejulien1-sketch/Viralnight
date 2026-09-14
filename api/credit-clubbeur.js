@@ -22,7 +22,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { notifierStory, notifierCadeauDuJour, pousserA } from "../lib/notifications/envoyer.js";
 import { libelleMotifDepart, MOTIFS_DEPART } from "../lib/notifications/push.js";
-import { joursEntre } from "../lib/admin/pilotage.js";
+import { joursEntre, seuilAutoValidation } from "../lib/admin/pilotage.js";
+import { deciderStory } from "../lib/admin/deciderContenu.js";
+import { getSupabaseAdmin } from "../lib/db/supabaseAdmin.js";
+import { timingSafeEqual } from "node:crypto";
 import { envoyerEmail } from "../lib/notifications/email.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
@@ -312,6 +315,70 @@ async function actionNotifierCadeau(request, response) {
     console.error("[credit-clubbeur:notifier-cadeau]", erreur);
     return json(response, { error: "Envoi impossible." }, 500);
   }
+}
+
+/* ?action=auto-valider — la validation automatique a 24 h (14/09/2026).
+   Julien : « que ca se valide automatiquement au bout de vingt-quatre
+   heures ». Appelee chaque heure par pg_cron dans la base clubbeur (migration
+   0047), pas par Vercel : sur Hobby, un cron Vercel ne tourne qu'une fois par
+   jour et une story aurait pu attendre 47 h.
+
+   Authentifiee par l'en-tete x-noctify-auto (secret AUTO_VALIDATION_SECRET,
+   le meme que dans Vault), ou par CRON_SECRET si un jour Vercel l'appelle.
+   Comparaison a temps constant. Ne valide QUE ce qui attend depuis plus de
+   24 h sans avoir ete refuse : l'appeler plus souvent n'avance rien. */
+function secretEgal(fourni, attendu) {
+  const a = Buffer.from(String(fourni || ""));
+  const b = Buffer.from(String(attendu || ""));
+  return a.length > 0 && a.length === b.length && timingSafeEqual(a, b);
+}
+
+async function actionAutoValider(request, response) {
+  const autorise =
+    (process.env.AUTO_VALIDATION_SECRET && secretEgal(request.headers["x-noctify-auto"], process.env.AUTO_VALIDATION_SECRET)) ||
+    (process.env.CRON_SECRET && secretEgal(request.headers.authorization, `Bearer ${process.env.CRON_SECRET}`));
+  if (!autorise) return json(response, { error: "Non autorise." }, 401);
+
+  let clubbeur;
+  let gerants;
+  try {
+    clubbeur = getSupabaseClubbeurAdmin();
+    gerants = getSupabaseAdmin();
+  } catch {
+    return json(response, { error: "Configuration serveur incomplete" }, 500);
+  }
+
+  // 40 par passage, par paquets de 5 : large pour l'heure, et loin du
+  // delai maximal d'une fonction Vercel. Le reste passe l'heure suivante.
+  const { data: aValider, error } = await clubbeur
+    .from("story_events")
+    .select("id")
+    .eq("verified", false)
+    .is("review_status", null)
+    .lte("mentioned_at", seuilAutoValidation())
+    .order("mentioned_at")
+    .limit(40);
+  if (error) return json(response, { error: error.message }, 500);
+
+  const bilan = { examines: aValider.length, valides: 0, points: 0, notifies: 0, deja: 0, erreurs: 0 };
+  for (let i = 0; i < aValider.length; i += 5) {
+    const resultats = await Promise.all(
+      aValider.slice(i, i + 5).map((s) => deciderStory({ clubbeur, gerants, storyId: s.id, approve: true, auto: true }))
+    );
+    for (const r of resultats) {
+      if (r.ok) {
+        bilan.valides += 1;
+        bilan.points += r.points;
+        bilan.notifies += r.notifie;
+      } else if (r.code === "deja") {
+        bilan.deja += 1;
+      } else {
+        bilan.erreurs += 1;
+        console.error("[auto-valider]", r.message);
+      }
+    }
+  }
+  return json(response, { ok: true, ...bilan });
 }
 
 /* Les origines de la coquille mobile. Une appli Capacitor ne s'execute pas
@@ -681,6 +748,7 @@ export default async function handler(request, response) {
      le plan Hobby plafonne a 12 fonctions serverless et api/ y est deja
      -- une treizieme ferait echouer tous les deploiements. */
   if (action === "notifier-cadeau") return actionNotifierCadeau(request, response);
+  if (action === "auto-valider") return actionAutoValider(request, response);
 
   /* Le prevol arrive en OPTIONS : il doit passer avant le controle de
      methode, sinon le navigateur recoit un 405 et abandonne l'appel reel. */
