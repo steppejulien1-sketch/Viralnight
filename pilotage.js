@@ -175,8 +175,16 @@ async function appelApi(chemin, options = {}) {
   return corps;
 }
 
+// Une actualisation demandee pendant qu'une autre tourne n'est pas perdue :
+// sans ca, deux decisions coup sur coup laissaient la seconde a l'ecran,
+// comme si elle n'avait pas ete prise.
+let aRecharger = false;
+
 async function charger() {
-  if (chargement) return;
+  if (chargement) {
+    aRecharger = true;
+    return;
+  }
   chargement = true;
   $("#pl-actualiser").disabled = true;
   $("#pl-actualiser").textContent = "Actualisation…";
@@ -194,6 +202,10 @@ async function charger() {
     $("#pl-chargement").hidden = true;
     $("#pl-actualiser").disabled = false;
     $("#pl-actualiser").textContent = "Actualiser";
+    if (aRecharger) {
+      aRecharger = false;
+      charger();
+    }
   }
 }
 
@@ -475,7 +487,17 @@ document.addEventListener("click", async (evenement) => {
     etat.textContent = approuver
       ? `Validé : +${nb(r.points)} points.${r.notifie ? " Clubbeur prévenu." : ""}`
       : `Refusé.${r.notifie ? " Clubbeur prévenu." : ""}`;
-    setTimeout(charger, 1200);
+    // La ligne part tout de suite (le temps de lire le resultat) ; le reste
+    // de la page -- decisions, points, compteurs -- suit a l'actualisation.
+    setTimeout(() => {
+      ligne.remove();
+      const pastille = $("#pl-pastille-valider");
+      const reste = document.querySelectorAll("[data-contenu]").length;
+      pastille.hidden = !reste;
+      pastille.textContent = reste || "";
+      if (!document.querySelector("#pl-a-valider [data-contenu]")) $("#pl-a-valider").innerHTML = vide("Aucune story ni publication à valider.");
+    }, 1400);
+    charger();
   } catch (e) {
     etat.textContent = `Pas fait : ${e.message}`;
     ligne.querySelectorAll("button").forEach((b) => { b.disabled = false; });
