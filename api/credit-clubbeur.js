@@ -23,6 +23,7 @@ import { createClient } from "@supabase/supabase-js";
 import { notifierStory, notifierCadeauDuJour, pousserA } from "../lib/notifications/envoyer.js";
 import { libelleMotifDepart, MOTIFS_DEPART } from "../lib/notifications/push.js";
 import { joursEntre } from "../lib/admin/pilotage.js";
+import { envoyerEmail } from "../lib/notifications/email.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 
@@ -378,27 +379,20 @@ async function idAdminSupport(clubbeur) {
   return admin ? admin.id : null;
 }
 
+// Le lien du tableau de bord : c'est la que Julien repond desormais.
+const LIEN_PILOTAGE = "https://viralnight-koif.vercel.app/pilotage.html";
+
 async function mailSupport({ pseudo, email, message }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.NOTIFICATION_EMAIL;
-  const from = process.env.NOTIFICATION_FROM || "Noctify <onboarding@resend.dev>";
-  if (!apiKey || !to) return false;
   const qui = pseudo ? `@${pseudo}` : email || "un clubbeur";
-  const reponse = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject: `Support Noctify : message de ${qui}`,
-      html: `<h2>Nouveau message au support</h2>
-        <p><strong>De :</strong> ${echapper(qui)}${email ? " (" + echapper(email) + ")" : ""}</p>
-        <p style="white-space:pre-wrap">${echapper(message)}</p>
-        <p>Répondre depuis l'appli : Profil &gt; Aide &amp; Support.</p>`,
-      text: `Nouveau message au support\nDe : ${qui}${email ? " (" + email + ")" : ""}\n\n${message}\n\nRépondre depuis l'appli : Profil > Aide & Support.`,
-    }),
+  return envoyerEmail({
+    type: "support",
+    sujet: `Support Noctify : message de ${qui}`,
+    html: `<h2>Nouveau message au support</h2>
+      <p><strong>De :</strong> ${echapper(qui)}${email ? " (" + echapper(email) + ")" : ""}</p>
+      <p style="white-space:pre-wrap">${echapper(message)}</p>
+      <p><a href="${LIEN_PILOTAGE}#support">Répondre depuis le tableau de bord</a></p>`,
+    texte: `Nouveau message au support\nDe : ${qui}${email ? " (" + email + ")" : ""}\n\n${message}\n\nRépondre depuis le tableau de bord : ${LIEN_PILOTAGE}#support`,
   });
-  return reponse.ok;
 }
 
 async function actionSupport(request, response, sens) {
@@ -635,10 +629,6 @@ function dateFr(iso) {
 }
 
 async function mailDepart(p) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.NOTIFICATION_EMAIL;
-  const from = process.env.NOTIFICATION_FROM || "Noctify <onboarding@resend.dev>";
-  if (!apiKey || !to) return false;
   const qui = p.pseudo ? `@${p.pseudo}` : p.email || "un clubbeur";
   const raison = libelleMotifDepart(p.motif);
   const nombre = (n) => (typeof n === "number" ? n.toLocaleString("fr-FR") : "—");
@@ -656,22 +646,16 @@ async function mailDepart(p) {
     ["Établissements", p.etablissements.length ? p.etablissements.join(", ") : "Aucun"],
     ["Dernier gain de points", dateFr(p.dernierPassage)],
   ];
-  const reponse = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject: `Compte supprimé : ${raison} (${qui})`,
-      html: `<h2>Un clubbeur a supprimé son compte</h2>
-        <table cellpadding="6" style="border-collapse:collapse;font-size:14px">
-        ${lignes.map(([k, v]) => `<tr><td style="color:#6a6d73;vertical-align:top">${echapper(k)}</td><td style="white-space:pre-wrap"><strong>${echapper(v)}</strong></td></tr>`).join("")}
-        </table>
-        <p style="color:#6a6d73">Le compte et ses données sont déjà effacés : ce message est la seule trace.</p>`,
-      text: `Un clubbeur a supprimé son compte\n\n${lignes.map(([k, v]) => `${k} : ${v}`).join("\n")}\n\nLe compte et ses données sont déjà effacés : ce message est la seule trace.`,
-    }),
+  return envoyerEmail({
+    type: "compte_supprime",
+    sujet: `Compte supprimé : ${raison} (${qui})`,
+    html: `<h2>Un clubbeur a supprimé son compte</h2>
+      <table cellpadding="6" style="border-collapse:collapse;font-size:14px">
+      ${lignes.map(([k, v]) => `<tr><td style="color:#6a6d73;vertical-align:top">${echapper(k)}</td><td style="white-space:pre-wrap"><strong>${echapper(v)}</strong></td></tr>`).join("")}
+      </table>
+      <p style="color:#6a6d73">Le compte et ses données sont déjà effacés : ce message est la seule trace.</p>`,
+    texte: `Un clubbeur a supprimé son compte\n\n${lignes.map(([k, v]) => `${k} : ${v}`).join("\n")}\n\nLe compte et ses données sont déjà effacés : ce message est la seule trace.`,
   });
-  return reponse.ok;
 }
 
 function json(response, body, status = 200) {

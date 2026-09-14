@@ -1,3 +1,4 @@
+import { envoyerEmail } from "../lib/notifications/email.js";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function sendJson(response, statusCode, body) {
@@ -126,50 +127,29 @@ async function insertDemoRequest(payload) {
   }
 }
 
+// Passe par lib/notifications/email.js : l'e-mail est aussi range dans le
+// tableau de bord (pilotage.html, rubrique E-mails), qu'il parte ou non.
 async function sendNotificationEmail(payload) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.NOTIFICATION_EMAIL;
-  const from = process.env.NOTIFICATION_FROM || "Noctify <onboarding@resend.dev>";
-
-  if (!apiKey || !to) {
-    return false;
-  }
-
   const safeClub = escapeHtml(payload.club);
   const safeEmail = escapeHtml(payload.email);
   const safePhone = escapeHtml(payload.phone);
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject: `Nouvelle demande Noctify - ${payload.club}`,
-      html: `
-        <h2>Nouvelle demande de démo Noctify</h2>
-        <p><strong>Club :</strong> ${safeClub}</p>
-        <p><strong>Email :</strong> ${safeEmail}</p>
-        <p><strong>Téléphone :</strong> ${safePhone}</p>
-      `,
-      text: [
-        "Nouvelle demande de démo Noctify",
-        `Club : ${payload.club}`,
-        `Email : ${payload.email}`,
-        `Téléphone : ${payload.phone}`,
-      ].join("\n"),
-    }),
+  return envoyerEmail({
+    type: "demo",
+    sujet: `Nouvelle demande Noctify - ${payload.club}`,
+    html: `
+      <h2>Nouvelle demande de démo Noctify</h2>
+      <p><strong>Club :</strong> ${safeClub}</p>
+      <p><strong>Email :</strong> ${safeEmail}</p>
+      <p><strong>Téléphone :</strong> ${safePhone}</p>
+    `,
+    texte: [
+      "Nouvelle demande de démo Noctify",
+      `Club : ${payload.club}`,
+      `Email : ${payload.email}`,
+      `Téléphone : ${payload.phone}`,
+    ].join("\n"),
   });
-
-  if (!response.ok) {
-    const details = await response.text();
-    throw new Error(details || "Resend n'a pas pu envoyer l'email.");
-  }
-
-  return true;
 }
 
 export default async function handler(request, response) {

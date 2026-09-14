@@ -1,8 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
-import { pousserA } from "../lib/notifications/envoyer.js";
+import { pousserA, notifierStory } from "../lib/notifications/envoyer.js";
 import { libelleMotifDepart } from "../lib/notifications/push.js";
+import { computePoints } from "../lib/points/computePoints.js";
+import { DEFAULT_POINT_RULES } from "../dashboardData.js";
 import {
+  forfaitContenu,
+  libelleContenu,
   jourLocal,
   decalerJour,
   resumePeriodes,
@@ -16,11 +20,12 @@ import {
   resumeClubs,
 } from "../lib/admin/pilotage.js";
 
-/* LA ROUTE ADMIN. Trois choses, toutes reservees a ADMIN_EMAIL :
+/* LA ROUTE ADMIN. Tout est reserve a ADMIN_EMAIL :
 
    POST                         changer le statut d'un club (actif / essai / suspendu)
    GET  ?action=pilotage        le tableau de bord de pilotage.html : les DEUX bases
    POST ?action=pilotage-repondre  repondre a un clubbeur depuis le tableau de bord
+   POST ?action=pilotage-valider   valider ou refuser une story / un post
 
    Greffe ici plutot que dans un nouveau fichier : le plan Hobby plafonne a
    12 fonctions serverless et api/ y est deja (voir CLAUDE.md). Ce fichier
@@ -88,12 +93,14 @@ async function verifierAdmin(request) {
 export default async function handler(request, response) {
   const action = new URL(request.url, "http://localhost").searchParams.get("action");
 
-  if (action === "pilotage" || action === "pilotage-repondre") {
+  if (action === "pilotage" || action === "pilotage-repondre" || action === "pilotage-valider") {
     const attendu = action === "pilotage" ? "GET" : "POST";
     if (request.method !== attendu) return json(response, { error: "Method not allowed" }, 405);
     const admin = await verifierAdmin(request);
     if (admin.error) return json(response, { error: admin.error }, admin.status);
-    return action === "pilotage" ? actionPilotage(response, admin.supabase) : actionRepondre(request, response);
+    if (action === "pilotage") return actionPilotage(response, admin.supabase);
+    if (action === "pilotage-valider") return actionValider(request, response, admin.supabase);
+    return actionRepondre(request, response);
   }
 
   if (request.method !== "POST") {
@@ -215,8 +222,14 @@ async function actionPilotage(response, b2b) {
   }
   const cote = (nom, fn, defaut = []) => (cb ? lire(nom, fn, defaut) : Promise.resolve(defaut));
 
+  const lecture = async (requete) => {
+    const { data, error } = await requete;
+    if (error) throw new Error(error.message);
+    return data || [];
+  };
+
   const [
-    etabs, proprios, recompensesB2B, contenus, scans, instas, demos,
+    etabs, proprios, recompensesB2B, contenus, scans, instas, demos, contenusSite, emails,
     comptesAuth, users, stories, grants, redemptions, cadeaux, installations, ouvertures, departs, support, abonnements, clubsCb,
   ] = await Promise.all([
     lire("établissements", () => toutLire(() => b2b.from("establishments").select("id, name, city, category, subscription_status, created_at").order("created_at"))),
@@ -226,9 +239,16 @@ async function actionPilotage(response, b2b) {
     lire("scans", () => toutLire(() => b2b.from("qr_scans").select("establishment_id, scanned_at").order("scanned_at"))),
     lire("comptes Instagram", () => toutLire(() => b2b.from("establishment_instagram_accounts").select("establishment_id").order("establishment_id"))),
     lire("demandes de démo", () => toutLire(() => b2b.from("demo_requests").select("club, email, phone, created_at").order("created_at", { ascending: false }))),
+    // Les liens envoyes depuis la page QR du site (scan.html) : sans story
+    // d'origine dans l'appli, ils n'existent que cote gerants.
+    lire("liens envoyés depuis le site", () => lecture(
+      b2b.from("submissions").select("id, establishment_id, platform, content_type, url, declared_views, submitted_at")
+        .eq("status", "pending").is("external_story_id", null).order("submitted_at", { ascending: false }).limit(200)
+    )),
+    lire("e-mails", () => lecture(b2b.from("journal_emails").select("*").order("created_at", { ascending: false }).limit(100))),
     cote("comptes", () => tousLesComptesAuth(cb)),
     cote("clubbeurs", () => toutLire(() => cb.from("users").select("id, handle, email, created_at, points_balance, referred_by").order("created_at"))),
-    cote("stories", () => toutLire(() => cb.from("story_events").select("user_id, club_id, mentioned_at, verified").order("mentioned_at"))),
+    cote("stories", () => toutLire(() => cb.from("story_events").select("id, user_id, club_id, mentioned_at, verified, kind, url, awarded_points, verified_views, views_source, review_status, reviewed_at").order("mentioned_at"))),
     cote("points", () => toutLire(() => cb.from("point_grants").select("user_id, amount, created_at").order("created_at"))),
     cote("récompenses échangées", () => toutLire(() => cb.from("redemptions").select("user_id, redeemed_at").order("redeemed_at"))),
     cote("cadeaux du jour", () => toutLire(() => cb.from("daily_gifts").select("user_id, created_at").order("created_at"))),
@@ -237,7 +257,7 @@ async function actionPilotage(response, b2b) {
     cote("départs", () => toutLire(() => cb.from("departs").select("*").order("created_at", { ascending: false }))),
     cote("support", () => toutLire(() => cb.from("support_messages").select("user_id, message, auteur, created_at").order("created_at"))),
     cote("notifications", () => toutLire(() => cb.from("push_subscriptions").select("user_id").order("user_id"))),
-    cote("établissements de l'appli", () => toutLire(() => cb.from("clubs").select("id, establishment_id").order("id"))),
+    cote("établissements de l'appli", () => toutLire(() => cb.from("clubs").select("id, name, establishment_id").order("id"))),
   ]);
 
   // Qui est interne : par l'e-mail du compte Auth (public.users.email peut
@@ -302,6 +322,40 @@ async function actionPilotage(response, b2b) {
       return ordre[x.statutCode] - ordre[y.statutCode] || String(x.nom).localeCompare(String(y.nom), "fr");
     });
 
+  // --- A valider : TOUTES les stories et publications de l'appli, lues a la
+  // source (story_events), y compris celles des comptes internes -- c'est une
+  // file de travail, pas une statistique : Julien doit voir ses propres tests.
+  const nomClubCb = new Map(clubsCb.map((c) => [c.id, c.name]));
+  const nomEtab = new Map(etabs.map((e) => [e.id, e.name]));
+  const contenuAppli = (s) => ({
+    id: s.id,
+    type: libelleContenu(s.kind),
+    kind: s.kind,
+    url: s.url || null,
+    date: s.mentioned_at,
+    club: nomClubCb.get(s.club_id) || null,
+    pseudo: profils[s.user_id]?.pseudo || null,
+    interne: internes.has(s.user_id),
+    points: forfaitContenu(s.kind, s.views_source === "tiktok_api" ? s.verified_views : null),
+  });
+  const enAttente = stories
+    .filter((s) => !s.verified && !s.review_status)
+    .sort((x, y) => String(y.mentioned_at).localeCompare(String(x.mentioned_at)))
+    .map(contenuAppli);
+  const decisions = stories
+    .filter((s) => s.review_status || s.verified)
+    .sort((x, y) => String(y.reviewed_at || y.mentioned_at).localeCompare(String(x.reviewed_at || x.mentioned_at)))
+    .slice(0, 15)
+    .map((s) => ({ ...contenuAppli(s), decision: s.review_status === "refusee" ? "refusee" : "validee", pointsAccordes: s.awarded_points, decideLe: s.reviewed_at }));
+  const liensSite = contenusSite.map((c) => ({
+    id: c.id,
+    type: libelleContenu(c.content_type === "story" ? "story" : c.content_type === "reel" ? "reel" : c.platform === "tiktok" ? "tiktok" : ""),
+    url: c.url || null,
+    date: c.submitted_at,
+    club: nomEtab.get(c.establishment_id) || null,
+    vuesAnnoncees: c.declared_views,
+  }));
+
   const supportClients = support.filter(externe);
   const avis = syntheseAvis(supportClients);
   const fils = filsSupport(supportClients, profils);
@@ -311,6 +365,17 @@ async function actionPilotage(response, b2b) {
   return json(response, {
     genereLe: maintenant.toISOString(),
     erreurs,
+    validation: {
+      aValider: enAttente.length + liensSite.length,
+      appli: enAttente,
+      site: liensSite,
+      decisions,
+    },
+    emails: {
+      total: emails.length,
+      nonEnvoyes: emails.filter((e) => !e.envoye).length,
+      derniers: emails.map((e) => ({ id: e.id, type: e.type, sujet: e.sujet, texte: e.texte, envoye: e.envoye, erreur: e.erreur, date: e.created_at })),
+    },
     clubbeurs: {
       periodes: resumePeriodes(clients.map((u) => u.created_at), maintenant),
       serie: serieParJour(clients.map((u) => u.created_at), 30, maintenant),
@@ -408,4 +473,91 @@ async function actionRepondre(request, response) {
 
   const push = await pousserA(userId, { type: "support_reponse" });
   return json(response, { ok: true, push: push.envoyees || 0 });
+}
+
+/* ?action=pilotage-valider — valider ou refuser un contenu depuis le tableau
+   de bord (Julien, 14/09/2026 : « que je puisse valider des stories ici »).
+
+   { source: "appli", id: story, approve }
+     Base clubbeur, RPC pilotage_review_story (migration 0046) : points au
+     forfait de story_points, verrou contre le double credit, trace du refus.
+     Le contenu remonte cote gerants (Reel / TikTok avec lien) suit la meme
+     decision, et le clubbeur est notifie.
+   { source: "site", id: submission, approve }
+     Lien envoye depuis scan.html : base des gerants seulement, points au
+     bareme du club sur les vues annoncees -- ce que faisait admin.html. */
+async function actionValider(request, response, b2b) {
+  let corps = {};
+  try {
+    corps = await readBody(request);
+  } catch {
+    return json(response, { error: "Invalid JSON body" }, 400);
+  }
+  const id = String(corps.id || "");
+  const approve = corps.approve === true ? true : corps.approve === false ? false : null;
+  if (!/^[0-9a-f-]{36}$/i.test(id) || approve === null) {
+    return json(response, { error: "Contenu ou décision manquant" }, 400);
+  }
+
+  if (corps.source === "site") {
+    const { data: contenu, error } = await b2b
+      .from("submissions")
+      .select("id, establishment_id, content_type, declared_views, status, external_story_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) return json(response, { error: error.message }, 500);
+    if (!contenu) return json(response, { error: "Contenu introuvable." }, 404);
+    if (contenu.external_story_id) return json(response, { error: "Ce contenu vient de l'appli : valide-le dans la liste de l'appli." }, 409);
+    if (contenu.status !== "pending") return json(response, { error: "Ce contenu a déjà été traité." }, 409);
+
+    const miseAJour = { status: approve ? "validated" : "rejected" };
+    if (approve) {
+      const { data: regles } = await b2b
+        .from("establishment_point_rules")
+        .select("video_views_per_thousand, story_views_per_thousand, viral_bonus")
+        .eq("establishment_id", contenu.establishment_id)
+        .maybeSingle();
+      const rules = {
+        videoViewsPerThousand: Number(regles?.video_views_per_thousand ?? DEFAULT_POINT_RULES.videoViewsPerThousand),
+        storyViewsPerThousand: Number(regles?.story_views_per_thousand ?? DEFAULT_POINT_RULES.storyViewsPerThousand),
+        viralBonus: Number(regles?.viral_bonus ?? DEFAULT_POINT_RULES.viralBonus),
+      };
+      const vues = Number(contenu.declared_views) || 0;
+      miseAJour.views_count = vues;
+      miseAJour.points_awarded = computePoints({ views: vues, contentType: contenu.content_type, rules }).points;
+    }
+    // .eq("status", "pending") : deux clics simultanes ne decident pas deux fois.
+    const { error: erreurMaj } = await b2b.from("submissions").update(miseAJour).eq("id", id).eq("status", "pending");
+    if (erreurMaj) return json(response, { error: erreurMaj.message }, 500);
+    return json(response, { ok: true, points: miseAJour.points_awarded || 0, notifie: 0 });
+  }
+
+  let cb;
+  try {
+    cb = getSupabaseClubbeurAdmin();
+  } catch {
+    return json(response, { error: "Configuration serveur incomplete" }, 500);
+  }
+
+  const { data, error } = await cb.rpc("pilotage_review_story", { p_story: id, p_approve: approve, p_points: null });
+  if (error) {
+    if (/already_reviewed/.test(error.message)) return json(response, { error: "Ce contenu a déjà été traité." }, 409);
+    if (/unknown_story/.test(error.message)) return json(response, { error: "Contenu introuvable." }, 404);
+    return json(response, { error: error.message }, 500);
+  }
+  const ligne = Array.isArray(data) ? data[0] : data;
+  const points = ligne?.awarded ?? 0;
+
+  // Sans ca, un Reel valide ici resterait « en attente » dans le tableau de
+  // bord du club, qui lit la base des gerants.
+  const { error: erreurB2B } = await b2b
+    .from("submissions")
+    .update(approve ? { status: "validated", points_awarded: points } : { status: "rejected" })
+    .eq("external_story_id", id)
+    .eq("status", "pending");
+  if (erreurB2B) console.error("[pilotage-valider] contenu gerants non mis a jour", erreurB2B.message);
+
+  // Apres la decision, jamais avant : on n'annonce que ce qui est acquis.
+  const notif = await notifierStory({ storyId: id, type: approve ? "story_validee" : "story_refusee", points });
+  return json(response, { ok: true, points, notifie: notif?.envoyees || 0 });
 }

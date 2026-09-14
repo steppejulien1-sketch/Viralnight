@@ -263,6 +263,12 @@ function rendre() {
   const cl = d.clubs.resume;
 
   $("#pl-kpis").innerHTML = [
+    kpi({
+      libelle: "À valider",
+      valeur: d.validation.aValider,
+      detail: d.validation.aValider ? "stories et publications en attente" : "Rien en attente",
+      traiter: d.validation.aValider > 0,
+    }),
     kpi({ libelle: "Inscrits aujourd’hui", valeur: c.periodes.aujourdhui, detail: `7 derniers jours : ${nb(c.periodes.septJours)}` }),
     kpi({ libelle: "Inscrits ce mois-ci", valeur: c.periodes.ceMois, detail: `Mois dernier : ${nb(c.periodes.moisDernier)}` }),
     kpi({ libelle: "Clubbeurs au total", valeur: c.periodes.total, detail: `${nb(c.parraines)} venus par un ami` }),
@@ -283,6 +289,12 @@ function rendre() {
   const pastille = $("#pl-pastille-support");
   pastille.hidden = !d.support.aRepondre;
   pastille.textContent = d.support.aRepondre || "";
+  const pastilleValider = $("#pl-pastille-valider");
+  pastilleValider.hidden = !d.validation.aValider;
+  pastilleValider.textContent = d.validation.aValider || "";
+
+  rendreValidation();
+  rendreEmails();
 
   // --- Clubbeurs ---
   $("#pl-graphe-inscrits").innerHTML = graphe(c.serie);
@@ -394,6 +406,117 @@ function rendre() {
     "Aucune demande de démo."
   );
 }
+
+/* ---------------- A valider ---------------- */
+
+const JOUR_MS = 86400000;
+
+function lienSur(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function ligneContenu(x, source) {
+  const pseudo = x.pseudo ? `@${esc(x.pseudo)}` : source === "site" ? "Client du site" : "Sans pseudo";
+  const liens = [];
+  if (x.pseudo) liens.push(`<a href="https://www.instagram.com/${encodeURIComponent(x.pseudo)}/" target="_blank" rel="noreferrer">Instagram de ${pseudo}</a>`);
+  const url = x.url && lienSur(x.url);
+  if (url) liens.push(`<a href="${esc(url)}" target="_blank" rel="noreferrer">Voir la publication</a>`);
+  const meta = [x.club, dateCourte(x.date)].filter(Boolean).map(esc).join(" · ") + (liens.length ? ` · ${liens.join(" · ")}` : "");
+  const expiree = x.kind === "story" && Date.now() - new Date(x.date).getTime() > JOUR_MS;
+  const points = source === "site"
+    ? (typeof x.vuesAnnoncees === "number" ? `${nb(x.vuesAnnoncees)} vues annoncées` : "")
+    : (typeof x.points === "number" ? ` · +${nb(x.points)}` : "");
+  return `<div class="pl-contenu" data-contenu="${esc(x.id)}" data-source="${source}">
+    <div>
+      <p class="pl-contenu-titre"><span class="pl-sujet">${esc(x.type)}</span> <strong>${pseudo}</strong>${x.interne ? "<em>ton compte</em>" : ""}</p>
+      <p class="pl-contenu-meta">${meta}${source === "site" && points ? ` · ${esc(points)}` : ""}</p>
+      ${expiree ? '<p class="pl-contenu-alerte">Plus de 24 h : la story n’est plus visible sur Instagram.</p>' : ""}
+    </div>
+    <div class="pl-contenu-actions">
+      <button type="button" class="pl-bouton" data-decision="valider">Valider${source === "site" ? "" : esc(points)}</button>
+      <button type="button" class="pl-bouton-leger" data-decision="refuser">Refuser</button>
+      <span class="pl-contenu-etat" role="status"></span>
+    </div>
+  </div>`;
+}
+
+function rendreValidation() {
+  const v = donnees.validation;
+  $("#pl-valider-resume").textContent = v.appli.length ? pluriel(v.appli.length, "contenu") + " en attente" : "";
+  $("#pl-a-valider").innerHTML = v.appli.length
+    ? v.appli.map((x) => ligneContenu(x, "appli")).join("")
+    : vide("Aucune story ni publication à valider.");
+  $("#pl-site-carte").hidden = !v.site.length;
+  $("#pl-site").innerHTML = v.site.map((x) => ligneContenu(x, "site")).join("");
+  $("#pl-decisions").innerHTML = v.decisions.length
+    ? v.decisions.map((x) => `<li><span class="pl-texte"><span class="pl-decision ${x.decision}">${x.decision === "refusee" ? "Refusée" : `Validée · +${nb(x.pointsAccordes)}`}</span> — ${esc(x.type)} de ${x.pseudo ? "@" + esc(x.pseudo) : "sans pseudo"}${x.club ? " · " + esc(x.club) : ""}</span><span class="pl-meta">${esc(dateCourte(x.decideLe || x.date))}</span></li>`).join("")
+    : `<li>${vide("Aucune décision pour l’instant.")}</li>`;
+}
+
+document.addEventListener("click", async (evenement) => {
+  const bouton = evenement.target.closest("[data-decision]");
+  if (!bouton) return;
+  const ligne = bouton.closest("[data-contenu]");
+  const approuver = bouton.dataset.decision === "valider";
+  if (!approuver && !window.confirm("Refuser ce contenu ? Le clubbeur ne recevra pas de points, et c’est définitif.")) return;
+  const etat = ligne.querySelector(".pl-contenu-etat");
+  ligne.querySelectorAll("button").forEach((b) => { b.disabled = true; });
+  etat.textContent = approuver ? "Validation…" : "Refus…";
+  try {
+    const r = await appelApi(`${API}?action=pilotage-valider`, {
+      method: "POST",
+      body: JSON.stringify({ source: ligne.dataset.source, id: ligne.dataset.contenu, approve: approuver }),
+    });
+    etat.textContent = approuver
+      ? `Validé : +${nb(r.points)} points.${r.notifie ? " Clubbeur prévenu." : ""}`
+      : `Refusé.${r.notifie ? " Clubbeur prévenu." : ""}`;
+    setTimeout(charger, 1200);
+  } catch (e) {
+    etat.textContent = `Pas fait : ${e.message}`;
+    ligne.querySelectorAll("button").forEach((b) => { b.disabled = false; });
+  }
+});
+
+/* ---------------- E-mails ---------------- */
+
+const TYPES_EMAIL = { support: "Support", compte_supprime: "Compte supprimé", demo: "Démo" };
+const mailsOuverts = new Set();
+
+function rendreEmails() {
+  const m = donnees.emails;
+  $("#pl-emails-resume").textContent = m.total
+    ? `${pluriel(m.total, "e-mail")}${m.nonEnvoyes ? ` · ${nb(m.nonEnvoyes)} pas parti${m.nonEnvoyes > 1 ? "s" : ""}` : ""}`
+    : "";
+  $("#pl-emails").innerHTML = m.derniers.length
+    ? m.derniers.map((e) => {
+        const ouvert = mailsOuverts.has(String(e.id));
+        return `<div class="pl-mail">
+          <button type="button" class="pl-mail-tete" data-mail="${esc(e.id)}" aria-expanded="${ouvert}">
+            <span class="pl-mail-sujet"><span class="pl-sujet">${esc(TYPES_EMAIL[e.type] || e.type)}</span>${esc(e.sujet)}</span>
+            <span class="pl-mail-date">${esc(dateCourte(e.date))}</span>
+            <span class="pl-mail-statut${e.envoye ? "" : " echec"}">${e.envoye ? "Envoyé dans ta boîte mail" : `Pas envoyé : ${esc(e.erreur || "raison inconnue")}`}</span>
+          </button>
+          <div class="pl-mail-corps"${ouvert ? "" : " hidden"}>${esc(e.texte || "")}</div>
+        </div>`;
+      }).join("")
+    : vide("Aucun e-mail pour l’instant.");
+}
+
+document.addEventListener("click", (evenement) => {
+  const tete = evenement.target.closest(".pl-mail-tete");
+  if (!tete) return;
+  const corps = tete.nextElementSibling;
+  const ouvrir = corps.hidden;
+  corps.hidden = !ouvrir;
+  tete.setAttribute("aria-expanded", String(ouvrir));
+  if (ouvrir) mailsOuverts.add(tete.dataset.mail);
+  else mailsOuverts.delete(tete.dataset.mail);
+});
 
 function rendreSupport() {
   const s = donnees.support;

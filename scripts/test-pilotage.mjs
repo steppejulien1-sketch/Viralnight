@@ -17,6 +17,8 @@ import {
   statutClub,
   resumeClubs,
   joursEntre,
+  forfaitContenu,
+  libelleContenu,
 } from "../lib/admin/pilotage.js";
 
 let passed = 0, failed = 0;
@@ -115,6 +117,15 @@ check("actif = payant", statutClub("actif").code === "payant");
 check("statut vide ou inconnu = essai", statutClub(null).code === "essai" && statutClub("bidon").code === "essai");
 const rc = resumeClubs([{ subscription_status: "actif" }, { subscription_status: "essai" }, { subscription_status: "suspendu" }, {}]);
 check("resume des clubs", rc.total === 4 && rc.payant === 1 && rc.essai === 2 && rc.suspendu === 1, JSON.stringify(rc));
+
+console.log("\nForfait d'un contenu (miroir de story_points)");
+check("story = 100", forfaitContenu("story") === 100);
+check("reel = 60", forfaitContenu("Reel") === 60);
+check("tiktok sans vues verifiees = 60", forfaitContenu("tiktok", null) === 60);
+check("tiktok : 7 points par tranche de 100 vues", forfaitContenu("tiktok", 1250) === 60 + 12 * 7);
+check("tiktok : bonus plafonne a 2000", forfaitContenu("tiktok", 10_000_000) === 2060);
+check("type inconnu -> null (la base refuse aussi)", forfaitContenu("youtube") === null);
+check("libelles", libelleContenu("story") === "Story Instagram" && libelleContenu("tiktok") === "TikTok");
 
 console.log("\nAnciennete");
 check("jours entiers", joursEntre("2026-09-01T10:00:00Z", MAINTENANT) === 12);
