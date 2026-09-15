@@ -6117,7 +6117,6 @@
             <div class="st-hero-txt">
               <p class="st-hero-pts"><strong id="st-hero-montant">+100</strong><span>points</span></p>
               <p class="st-hero-sous">par story qui mentionne l’établissement</p>
-              <p class="st-hero-autres">Reel ou TikTok : <b>+60</b></p>
             </div>
           </div>
 
@@ -6741,7 +6740,7 @@
           <p class="rg-section-titre">Fonctionnalités</p>
           <div class="ap-feature">
             <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><circle cx="12" cy="13.2" r="3.9"/></svg></span>
-            <span><strong>Poster ma story</strong><br>Instagram ou TikTok, avec la mention de l'établissement.</span>
+            <span><strong>Poster ma story</strong><br>Sur Instagram, avec la mention de l'établissement.</span>
           </div>
           <div class="ap-feature">
             <span class="ap-feature-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/></svg></span>
@@ -11084,35 +11083,16 @@ var BAREME_STORY = {
   tiktok: { pts: "+60", texte: "+ 7 pts par 100 vues." },
 };
 
-// Story et Reel s'ouvrent tous deux dans Instagram (meme icone dégradée),
-// seul le geste differe une fois l'appli ouverte -- TikTok reste a part.
+// La story Instagram, seule. Reel et TikTok retires le 15/09/2026 (Julien :
+// « retire le Reel et TikTok, laisse juste les storys dans les trucs qu'on
+// peut faire pour gagner des points »). La base les accepte toujours
+// (story_points) : il suffirait de remettre leur entree ici.
 var KINDS_STORY = [
   {
     id: "story", label: "Story", classe: "ig",
     schema: "instagram://story-camera", secours: "https://www.instagram.com/",
     verbe: "une story",
     icone: '<rect x="1.6" y="1.6" width="20.8" height="20.8" rx="6.2" fill="url(#ig-g)"/><rect x="5.1" y="5.1" width="13.8" height="13.8" rx="4.3" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="16.9" cy="7.1" r="1.15" fill="#fff"/>',
-  },
-  {
-    id: "reel", label: "Reel", classe: "ig",
-    schema: "instagram://", secours: "https://www.instagram.com/",
-    verbe: "un Reel", url: true,
-    // Meme icone que "story" (demande de Julien : Story et Reel sont
-    // tous deux Instagram, un seul logo, pas deux traces differents).
-    // L'id du degrade est reutilise : deux <svg> peuvent partager la meme
-    // definition dans le document, le second la retrouve par son id.
-    icone: '<rect x="1.6" y="1.6" width="20.8" height="20.8" rx="6.2" fill="url(#ig-g)"/><rect x="5.1" y="5.1" width="13.8" height="13.8" rx="4.3" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="16.9" cy="7.1" r="1.15" fill="#fff"/>',
-  },
-  {
-    id: "tiktok", label: "TikTok", classe: "tk",
-    schema: "tiktok://", secours: "https://www.tiktok.com/upload",
-    verbe: "un TikTok", url: true,
-    // Vrai logo TikTok (le trace "note" officiel), pas une approximation
-    // maison -- signale par Julien ("ce n'est pas le bon logo").
-    // Le trace officiel a trois couches : la note blanche, son decalage
-    // rouge et son decalage cyan. Sans les deux decalages, c'est une
-    // note de musique blanche -- pas le logo TikTok.
-    icone: '<path d="M13.6 2.2h2.7c.2 1.5 1 2.8 2.2 3.6.8.5 1.7.8 2.7.9v2.8c-1.8-.05-3.5-.6-4.9-1.6v6.6c0 3.3-2.7 6-6 6s-6-2.7-6-6 2.7-6 6-6c.3 0 .6 0 .9.06v2.9a3.2 3.2 0 1 0 2.4 3.1V2.2z" fill="#fff"/><path d="M12.4 2.2h1.2v12.3a3.2 3.2 0 0 1-5.6 2.1 3.2 3.2 0 0 0 4.4-3V2.2z" fill="#ff2c55" opacity=".9"/><path d="M10.3 11.3v1.4a3.2 3.2 0 0 0-1.9 5.7 3.2 3.2 0 0 1 1.9-5.8v-1.3z" fill="#25f4ee" opacity=".9"/>',
   },
 ];
 
@@ -11237,20 +11217,6 @@ function ouvrirChoixReseau(nomClub) {
         '<div class="st-scan-zone" id="story-scan-zone" hidden>' +
           '<video id="story-scan-video" playsinline muted></video>' +
           '<p id="story-scan-msg">Vise le QR affiché sur place…</p>' +
-        "</div>" +
-      "</section>" +
-
-      '<section class="st-bloc">' +
-        '<h2 class="st-bloc-titre">Format</h2>' +
-        '<div class="st-formats">' +
-          KINDS_STORY.map(function (k, i) {
-            return '<button type="button" class="reseau-bouton' + (i === 0 ? " actif" : "") + '" id="sh-story-' + k.id + '" ' +
-              'data-kind="' + k.id + '" aria-pressed="' + (i === 0) + '">' +
-              '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
-              '<span class="st-format-nom">' + k.label + "</span>" +
-              '<span class="reseau-pts">' + BAREME_STORY[k.id].pts + "</span>" +
-            "</button>";
-          }).join("") +
         "</div>" +
       "</section>" +
 
