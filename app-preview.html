@@ -975,14 +975,122 @@
       .ob-capture-etape .ob-bas { gap: 2px; }
       .ob-cap-lien { justify-self: center; padding: 10px 14px; color: rgba(255,255,255,.82); text-decoration: none; }
 
-      .ob-capture-etape.entre .ob-cap-visuel { animation: ob-cap-arrive .9s cubic-bezier(.16, 1, .3, 1) both; }
-      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) { animation: ob-cap-clic 3.6s ease-in-out 1s 3; }
-      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-flash { animation: ob-cap-flash 3.6s ease-out 1s 3; }
-      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-cercle { animation: ob-cap-cercle 3.6s cubic-bezier(.16, 1, .3, 1) 1s 3 forwards; }
-      @keyframes ob-cap-arrive { from { opacity: 0; translate: 0 36px; scale: .9; filter: blur(8px); } }
-      @keyframes ob-cap-clic { 0%, 34% { scale: 1; } 38% { scale: .95; } 46%, 100% { scale: 1; } }
-      @keyframes ob-cap-flash { 0%, 36% { opacity: 0; } 39% { opacity: .95; } 56%, 100% { opacity: 0; } }
-      @keyframes ob-cap-cercle { 0%, 44% { opacity: 0; scale: 1.25; } 58%, 100% { opacity: 1; scale: 1; } }
+      /* ---- La sequence (Julien : « le tel qui arrive, ouvre Insta, prend
+         une capture d'ecran, fais une vraie animation ») ----
+         Le telephone arrive, puis UNE SEULE FOIS (« ne la fais pas tourner en
+         boucle »), sur 6 s, et l'image finale reste :
+           0-16 %  ecran d'accueil, un doigt vient sur l'icone Instagram
+          18 %     il appuie, l'icone s'enfonce
+          20-30 %  l'appli s'ouvre en grandissant DEPUIS l'icone (--ox --oy,
+                   poses par placerDoigtCaptureOb)
+          34-42 %  le pseudo s'entoure de rouge
+          48-52 %  les deux boutons du cote s'enfoncent, flash
+          52-64 %  la capture retrecit dans le coin, comme sur iPhone, coche
+          fin      le profil, le pseudo entoure, la miniature cochee */
+      .ob-cap-cadre { position: relative; }
+      .ob-cap-cote { position: absolute; z-index: 0; width: 4px; border-radius: 2px; background: #2a2a2e; }
+      .ob-cap-cote.gauche { left: -9px; top: 22%; height: 11%; }
+      .ob-cap-cote.droite { right: -9px; top: 26%; height: 16%; }
+      .ob-cap-tel { --ox: 62%; --oy: 52%; z-index: 1; }
+
+      .ob-cap-accueil {
+        position: absolute; inset: 0; display: flex; flex-direction: column; padding-top: 8px; color: #ffffff;
+        background:
+          radial-gradient(90% 55% at 15% 8%, rgba(222,49,49,.55), rgba(222,49,49,0) 70%),
+          radial-gradient(80% 60% at 95% 85%, rgba(120,40,160,.55), rgba(120,40,160,0) 70%),
+          linear-gradient(170deg, #2a1420, #0e0a12 70%);
+      }
+      .ob-cap-accueil .ob-cap-barre { color: #ffffff; }
+      .ob-cap-accueil .ob-cap-icones i { background: #ffffff; }
+      .ob-cap-apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px 0; margin: 22px 8px 0; }
+      .ob-cap-app { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 6.5px; color: rgba(255,255,255,.92); }
+      .ob-cap-app i {
+        position: relative; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      }
+      .ob-cap-app svg { width: 21px; height: 21px; fill: none; stroke: #ffffff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .ob-cap-app img { width: 100%; height: 100%; display: block; }
+      .a-msg i { background: linear-gradient(#6af57f, #1dc93f); }
+      .a-photo i { background: #ffffff; }
+      .a-photo .fleur { width: 22px; height: 22px; border-radius: 50%; background: conic-gradient(#f5a623, #f8e71c, #7ed321, #50e3c2, #4a90e2, #9013fe, #e0217a, #f5a623); -webkit-mask: radial-gradient(circle, transparent 3px, #000 3.5px); mask: radial-gradient(circle, transparent 3px, #000 3.5px); }
+      .a-cam i { background: linear-gradient(#d9d9de, #9c9ca3); }
+      .a-meteo i { background: linear-gradient(#4aa8ff, #1c6fd8); }
+      .a-carte i { background: linear-gradient(135deg, #7ddc86, #f3e27a 60%, #f0f0f0); }
+      .a-carte svg { stroke: #e0332f; }
+      .a-horloge i { background: #111114; }
+      .a-musique i { background: linear-gradient(#ff5f7e, #fa2d48); }
+      .a-reglages i { background: linear-gradient(#a3a3aa, #6c6c73); }
+      .a-mail i { background: linear-gradient(#4bb3ff, #1a82f5); }
+      .a-notes i { background: linear-gradient(#fff 0 26%, #fff6c9 26%); }
+      .a-notes svg { stroke: #b8a24a; }
+      .a-tel i { background: linear-gradient(#6af57f, #1dc93f); }
+      .a-safari i { background: linear-gradient(#e9f3ff, #bcd7f6); }
+      .a-safari svg { stroke: #1a82f5; }
+      .a-insta i { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%); }
+      .a-insta svg .point { fill: #ffffff; stroke: none; }
+      .ob-cap-dock {
+        display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center; margin: auto 7px 8px; padding: 7px 0;
+        border-radius: 20px; background: rgba(255,255,255,.18); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      }
+      .ob-cap-dock .ob-cap-app { gap: 0; }
+
+      .ob-cap-ecran { transform-origin: var(--ox) var(--oy); }
+      .ob-cap-doigt {
+        position: absolute; left: var(--ox); top: var(--oy); width: 30px; height: 30px; margin: -15px 0 0 -15px;
+        border-radius: 50%; background: rgba(255,255,255,.55); box-shadow: 0 0 0 1.5px rgba(255,255,255,.9), 0 4px 14px rgba(0,0,0,.35);
+        opacity: 0; pointer-events: none;
+      }
+      .ob-cap-mini {
+        position: absolute; inset: 0; opacity: 0; overflow: hidden; pointer-events: none;
+        border: 7px solid #ffffff; border-radius: 30px; transform-origin: 14px calc(100% - 46px);
+        box-shadow: 0 30px 60px rgba(0,0,0,.45);
+      }
+      .ob-cap-mini > .ob-cap-ecran { opacity: 1; scale: 1; animation: none !important; }
+      .ob-cap-mini-ok {
+        position: absolute; z-index: 2; right: 16px; top: 16px; display: grid; place-items: center;
+        width: 60px; height: 60px; border-radius: 50%; background: #12874d; scale: 0;
+      }
+      .ob-cap-mini-ok svg { width: 34px; height: 34px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+
+      /* Etat de repos (sans animation) : le profil ouvert, le pseudo entoure. */
+      .ob-cap-accueil { opacity: 0; }
+      .ob-cap-cercle { opacity: 1; }
+
+      .ob-capture-etape.entre .ob-cap-visuel { animation: ob-cap-arrive 1.1s cubic-bezier(.2, 1.1, .3, 1) both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) { animation: ob-cap-appui 6s ease-in-out 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-accueil { animation: ob-cap-accueil 6s ease-in-out 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .a-insta i { animation: ob-cap-icone 6s ease-in-out 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-doigt { animation: ob-cap-doigt 6s ease-in-out 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) > .ob-cap-ecran { animation: ob-cap-ouvre 6s cubic-bezier(.3, .7, .2, 1) 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) > .ob-cap-ecran .ob-cap-cercle { animation: ob-cap-cercle 6s cubic-bezier(.16, 1, .3, 1) 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-flash { animation: ob-cap-flash 6s ease-out 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-mini { animation: ob-cap-mini 6s cubic-bezier(.3, .8, .25, 1) 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-mini-ok { animation: ob-cap-mini-ok 6s cubic-bezier(.34, 1.56, .64, 1) 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-cadre:has(.ob-cap-tel:not(.rempli)) .ob-cap-cote.gauche { animation: ob-cap-cote-g 6s ease-in-out 1s 1 both; }
+      .ob-capture-etape.entre .ob-cap-cadre:has(.ob-cap-tel:not(.rempli)) .ob-cap-cote.droite { animation: ob-cap-cote-d 6s ease-in-out 1s 1 both; }
+      .ob-cap-tel.rempli .ob-cap-accueil, .ob-cap-tel.rempli .ob-cap-doigt, .ob-cap-tel.rempli .ob-cap-mini { display: none; }
+
+      @keyframes ob-cap-arrive { from { opacity: 0; translate: 0 140px; rotate: 9deg; scale: .86; } 60% { opacity: 1; } }
+      @keyframes ob-cap-accueil { 0%, 19% { opacity: 1; scale: 1; } 28%, 100% { opacity: 0; scale: 1.08; } }
+      @keyframes ob-cap-icone { 0%, 16% { scale: 1; filter: brightness(1); } 18.5% { scale: .84; filter: brightness(.7); } 22%, 100% { scale: 1; filter: brightness(1); } }
+      @keyframes ob-cap-doigt {
+        0%, 6% { opacity: 0; translate: 34px 60px; scale: 1.3; }
+        13% { opacity: 1; translate: 0 0; scale: 1; }
+        17% { opacity: 1; scale: 1; } 18.5% { opacity: 1; scale: .72; } 21% { opacity: .9; scale: 1.1; }
+        25%, 100% { opacity: 0; translate: 0 0; scale: 1.4; }
+      }
+      @keyframes ob-cap-ouvre { 0%, 19% { opacity: 0; scale: .1; border-radius: 40px; } 21% { opacity: 1; } 30%, 100% { opacity: 1; scale: 1; border-radius: 0; } }
+      @keyframes ob-cap-cercle { 0%, 33% { opacity: 0; scale: 1.3; } 41%, 100% { opacity: 1; scale: 1; } }
+      @keyframes ob-cap-appui { 0%, 47% { scale: 1; } 49.5% { scale: .972; } 54%, 100% { scale: 1; } }
+      @keyframes ob-cap-cote-g { 0%, 47% { translate: 0 0; } 49.5% { translate: 3px 0; } 53%, 100% { translate: 0 0; } }
+      @keyframes ob-cap-cote-d { 0%, 47% { translate: 0 0; } 49.5% { translate: -3px 0; } 53%, 100% { translate: 0 0; } }
+      @keyframes ob-cap-flash { 0%, 48.5% { opacity: 0; } 50% { opacity: .92; } 60%, 100% { opacity: 0; } }
+      @keyframes ob-cap-mini {
+        0%, 49.5% { opacity: 0; scale: 1; translate: 0 0; }
+        51% { opacity: 1; scale: 1; }
+        63%, 100% { opacity: 1; scale: .32; translate: 0 0; }
+      }
+      @keyframes ob-cap-mini-ok { 0%, 64% { scale: 0; } 69%, 100% { scale: 1; } }
       @keyframes ob-cap-ok { from { scale: 0; } }
 
       /* Les barres du haut, comme une story : un segment par ecran du
@@ -1167,8 +1275,7 @@
         .ob-exemple-cible { animation: none; }
         .ob-photo-etape.entre .ob-photo, .ob-photo-etape.entre .ob-photo-contenu > *, .ob-photo-etape.entre .ob-bas { animation: none; }
         .ob-progres i::after { transition: none; }
-        .ob-capture-etape.entre .ob-cap-visuel, .ob-cap-tel, .ob-cap-flash { animation: none !important; }
-        .ob-cap-cercle { animation: none !important; opacity: 1; }
+        .ob-capture-etape.entre .ob-cap-visuel, .ob-cap-tel, .ob-cap-tel *, .ob-cap-cote { animation: none !important; }
       }
 
       /* ============================================================
@@ -5949,7 +6056,14 @@
                prend la place de l'ecran du telephone. -->
           <form class="ob-etape ob-photo-etape ob-capture-etape ob-plein" data-etape="capture" novalidate>
             <div class="ob-cap-visuel" aria-hidden="true">
+              <div class="ob-cap-cadre">
+              <span class="ob-cap-cote gauche"></span><span class="ob-cap-cote droite"></span>
               <div class="ob-cap-tel" id="ob-cap-tel">
+                <div class="ob-cap-accueil">
+                  <div class="ob-cap-barre"><b>21:47</b><span class="ob-cap-icones"><i class="sig"></i><i class="wifi"></i><i class="bat"></i></span></div>
+                  <div class="ob-cap-apps"><span class="ob-cap-app a-msg"><i><svg viewBox="0 0 24 24"><path d="M5 6.5h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-8l-4 3v-3H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"/></svg></i>Messages</span><span class="ob-cap-app a-photo"><i><b class="fleur"></b></i>Photos</span><span class="ob-cap-app a-cam"><i><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12" rx="2.5"/><circle cx="12" cy="13" r="3.3"/><path d="M8.5 7l1.5-2.5h4L15.5 7"/></svg></i>Appareil</span><span class="ob-cap-app a-meteo"><i><svg viewBox="0 0 24 24"><circle cx="9" cy="10" r="3.5"/><path d="M8 18h9a3.5 3.5 0 0 0 0-7 5 5 0 0 0-1 .1"/></svg></i>Météo</span><span class="ob-cap-app a-carte"><i><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.6-6-10.5a6 6 0 0 1 12 0C18 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.2"/></svg></i>Plans</span><span class="ob-cap-app a-horloge"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg></i>Horloge</span><span class="ob-cap-app a-musique"><i><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg></i>Musique</span><span class="ob-cap-app a-reglages"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></i>Réglages</span><span class="ob-cap-app a-mail"><i><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12.5" rx="2"/><path d="m3.5 7 8.5 6.5L20.5 7"/></svg></i>Mail</span><span class="ob-cap-app a-noctify"><i><img src="/icones/icone-192.png" alt="" loading="lazy" /></i>Noctify</span><span class="ob-cap-app a-insta"><i><svg viewBox="0 0 24 24" class="ig"><rect x="5" y="5" width="14" height="14" rx="4.2"/><circle cx="12" cy="12" r="3.3"/><circle cx="16.3" cy="7.7" r=".9" class="point"/></svg></i>Instagram</span><span class="ob-cap-app a-notes"><i><svg viewBox="0 0 24 24"><path d="M7 8h10M7 12h10M7 16h6"/></svg></i>Notes</span></div>
+                  <div class="ob-cap-dock"><span class="ob-cap-app a-tel"><i><svg viewBox="0 0 24 24"><path d="M6.5 3.5h3l1.5 4.5-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 4.5 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/></svg></i></span><span class="ob-cap-app a-safari"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8z"/></svg></i></span><span class="ob-cap-app a-msg"><i><svg viewBox="0 0 24 24"><path d="M5 6.5h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-8l-4 3v-3H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"/></svg></i></span><span class="ob-cap-app a-musique"><i><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg></i></span></div>
+                </div>
                 <div class="ob-cap-ecran">
                   <div class="ob-cap-barre">
                     <b>21:47</b>
@@ -6003,8 +6117,11 @@
                   </div>
                 </div>
                 <img class="ob-cap-image" id="ob-cap-image" alt="" hidden />
+                <span class="ob-cap-doigt"></span>
                 <span class="ob-cap-flash"></span>
+                <span class="ob-cap-mini" id="ob-cap-mini"><span class="ob-cap-mini-ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></span>
                 <span class="ob-cap-ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+              </div>
               </div>
             </div>
             <div class="ob-photo-contenu">
@@ -8913,12 +9030,30 @@ function ouvrirProfilInstagramOb(ev) {
   }, 1400);
 }
 
+/* Le point d'ou l'appli s'ouvre et ou le doigt appuie : le centre de
+   l'icone Instagram, en % du telephone. */
+function placerDoigtCaptureOb() {
+  var tel = $("#ob-cap-tel"), icone = tel && tel.querySelector(".a-insta i");
+  if (!icone) return;
+  var t = tel.getBoundingClientRect(), i = icone.getBoundingClientRect();
+  if (!t.width) return;
+  tel.style.setProperty("--ox", ((i.left + i.width / 2 - t.left) / t.width * 100).toFixed(1) + "%");
+  tel.style.setProperty("--oy", ((i.top + i.height / 2 - t.top) / t.height * 100).toFixed(1) + "%");
+}
+
 // Le pseudo tape s'ecrit dans le profil dessine de l'ecran capture.
 function majVisuelCaptureOb() {
   var pseudo = nettoyerPseudoIg($("#ob-pseudo").value).toLowerCase();
   $("#ob-cap-pseudo").textContent = PSEUDO_IG_RE.test(pseudo) ? pseudo : "ton.pseudo";
   var prenom = ($("#ob-nom").value || "").trim().split(/\s+/)[0];
   $("#ob-cap-nom").textContent = prenom || "Camille";
+  // La miniature de la capture est une copie de l'ecran, pseudo compris.
+  var mini = $("#ob-cap-mini");
+  mini.querySelectorAll(".ob-cap-ecran").forEach(function (e) { e.remove(); });
+  var copie = $("#ob-cap-tel > .ob-cap-ecran").cloneNode(true);
+  copie.querySelectorAll("[id]").forEach(function (e) { e.removeAttribute("id"); });
+  mini.insertBefore(copie, mini.firstChild);
+  requestAnimationFrame(placerDoigtCaptureOb);
   majLienProfilOb();
 }
 
