@@ -24,7 +24,7 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
   const erreurs = [];
   try {
     const page = await navigateur.newPage();
-    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await page.setViewport({ width: 390, height: Number(process.env.VN_HAUTEUR || 844), deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     page.on("pageerror", (e) => erreurs.push(e.message));
     // Un vrai iPhone : Safari iOS, pas Chrome de bureau.
     await page.setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1");
