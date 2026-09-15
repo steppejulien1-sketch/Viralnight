@@ -8719,11 +8719,19 @@ function ajusterTailleTelCaptureOb() {
   var etape = etapeOb("capture");
   var visuel = etape && etape.querySelector(".ob-cap-visuel");
   var cadre = visuel && visuel.querySelector(".ob-cap-cadre");
-  if (!cadre || !etape.classList.contains("actif") || etape.classList.contains("avec-pseudo")) return;
+  var tel = cadre && cadre.querySelector(".ob-cap-tel");
+  if (!tel || !etape.classList.contains("actif")) return;
+  // Capture ajoutee : taille gelee. Sans ca, le telephone grandissait sur le
+  // deuxieme ecran (Julien, 16/09/2026 : « le deuxieme est trop grand ») : sa
+  // hauteur suit 100dvh, et dans Safari les barres se replient quand la page
+  // defile, donc l'ecran « grandit ».
+  if (tel.classList.contains("rempli") || etape.classList.contains("avec-pseudo")) return;
+  tel.style.height = "";
   cadre.style.zoom = "1";
   var style = getComputedStyle(visuel);
   var hauteur = cadre.offsetHeight, largeur = cadre.offsetWidth;
   if (!hauteur || !largeur) return;
+  tel.style.height = tel.offsetHeight + "px";
   var libre = visuel.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - hauteur;
   // +10 % au plus (Julien, 16/09/2026 : « la taille de base etait bonne,
   // augmente de 10 %, pas 25 »), moins si l'ecran manque de place.
