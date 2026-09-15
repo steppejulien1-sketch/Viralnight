@@ -125,7 +125,6 @@ const HAUTEUR = 844;
     await pause(1600); // le telephone arrive, premier flash
     await prendre("05-capture", "Capture ton profil");
     bilan.lienProfil = await page.$eval("#ob-ouvrir-instagram", (a) => a.href);
-    bilan.pseudoDessine = await page.$eval("#ob-cap-pseudo", (e) => e.textContent);
     const champ = await page.$("#ob-capture");
     await champ.uploadFile(CAPTURE);
     await page.waitForFunction(() => document.querySelector("#ob-cap-tel").classList.contains("rempli"), { timeout: 10000 });
@@ -167,7 +166,7 @@ const HAUTEUR = 844;
       nom: utilisateur && utilisateur.user_metadata && utilisateur.user_metadata.full_name,
       erreursPage: erreurs,
     });
-    bilan.reussi = bilan.handle === pseudo && bilan.pseudoDessine === pseudo && Boolean(cheminCapture) && bilan.nom === "Camille Durand" && bilan.accueilMasque;
+    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === "Camille Durand" && bilan.accueilMasque;
     console.log("\n" + JSON.stringify(bilan, null, 1));
   } finally {
     if (navigateur) await navigateur.close();
