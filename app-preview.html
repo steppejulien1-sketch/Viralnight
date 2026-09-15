@@ -5162,6 +5162,71 @@
       .st-inviter-txt { flex: 1; min-width: 0; }
       .st-inviter-txt strong { display: block; font-size: calc(15.5 * var(--u)); font-weight: 750; letter-spacing: -.01em; }
       .st-inviter-txt > span { display: block; margin-top: 2px; font-size: calc(13 * var(--u)); color: var(--ink2); }
+      /* L'en-tete : le scan rond, puis le solde. */
+      .st-tete-droite { display: flex; align-items: center; gap: 10px; }
+      .st-scan-rond {
+        position: relative; display: grid; place-items: center; width: 50px; height: 50px; padding: 0;
+        border: 0; border-radius: 15px; background: var(--s2); color: var(--ink); cursor: pointer;
+        transition: transform var(--tr-court);
+      }
+      .st-scan-rond:active { transform: scale(.94); }
+      .st-scan-rond svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .st-scan-badge {
+        position: absolute; top: -6px; right: -8px; padding: 2px 6px; border-radius: 999px;
+        background: var(--marque, #de3131); color: #ffffff; box-shadow: 0 0 0 2px var(--bg);
+        font-family: var(--chiffre); font-size: 10.5px; font-weight: 800; line-height: 1.3;
+      }
+
+      /* Le viseur plein ecran. Pose sur .screen (position absolue), il
+         recouvre l'appli ; le cadre aux coins respire doucement, et devient
+         vert quand un QR est lu. */
+      .screen > .st-scan-zone {
+        position: absolute; inset: 0; z-index: 80; margin: 0; border-radius: 0; aspect-ratio: auto;
+        background: #000; overflow: hidden;
+      }
+      .screen > .st-scan-zone[hidden] { display: none; }
+      .screen > .st-scan-zone video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .st-viseur {
+        position: absolute; left: 50%; top: 46%; width: 250px; height: 250px; translate: -50% -50%;
+        border-radius: 30px; box-shadow: 0 0 0 200vmax rgba(0,0,0,.55);
+        animation: st-viseur 2.2s ease-in-out infinite;
+      }
+      .st-viseur i { position: absolute; width: 54px; height: 54px; border: 4px solid #ffffff; transition: border-color .2s ease; }
+      .st-viseur i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 30px; }
+      .st-viseur i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 30px; }
+      .st-viseur i:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 30px; }
+      .st-viseur i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 30px; }
+      .st-scan-zone.trouve .st-viseur { animation: none; scale: .96; }
+      .st-scan-zone.trouve .st-viseur i { border-color: #2ecc71; }
+      @keyframes st-viseur { 50% { scale: .96; } }
+      .st-scan-haut {
+        position: absolute; left: 0; right: 0; top: calc(14px + env(safe-area-inset-top, 0px));
+        display: flex; align-items: center; justify-content: center; height: 44px; color: #ffffff;
+        font-size: calc(16 * var(--u)); font-weight: 700;
+      }
+      html:not(.mode-appli) .st-scan-haut { top: 48px; }
+      .st-scan-fermer {
+        position: absolute; left: 16px; top: 0; display: grid; place-items: center; width: 44px; height: 44px;
+        border: 0; border-radius: 50%; background: rgba(255,255,255,.18); color: #ffffff; cursor: pointer;
+        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      }
+      .st-scan-fermer svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+      .screen > .st-scan-zone .st-scan-msg {
+        position: absolute; left: 0; right: 0; bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+        width: max-content; max-width: calc(100% - 40px); margin: 0 auto; padding: 10px 16px; border-radius: 999px; text-align: center;
+        background: rgba(20,20,22,.7); color: #ffffff; font-size: calc(14 * var(--u)); font-weight: 600;
+        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      }
+      .st-scan-zone.erreur .st-scan-msg { background: rgba(200,16,46,.85); }
+      @media (prefers-reduced-motion: reduce) { .st-viseur { animation: none; } }
+
+      /* « J'ai poste » : un lien discret tant qu'on n'est pas revenu d'Instagram. */
+      .vue-story .st-form:not(.st-revenu) #story-envoyer {
+        min-height: 0; padding: 8px; background: none; color: var(--ink2);
+        font-size: calc(14 * var(--u)); font-weight: 600; text-decoration: underline; text-underline-offset: 3px;
+      }
+      .vue-story .st-carte .ps-copier { background: var(--s2); color: var(--ink); min-height: 34px; padding: 0 12px; }
+
       /* La carte unique de la page Story : la mention en grand, le lieu dessous. */
       .st-carte {
         margin: 18px 0 0; padding: 16px 16px 8px; border-radius: 20px; background: var(--s1);
@@ -6202,7 +6267,12 @@
                Un seul bouton plein a la fois (voir .st-cta). -->
           <header class="st-tete">
             <h1 class="st-titre">Story</h1>
-            <p class="solde-chiffre"><strong class="carte-solde-num js-solde">0</strong><span>points</span></p>
+            <span class="st-tete-droite">
+              <!-- Le scan du QR, rond, a cote du solde (15/09/2026 : « le truc du
+                   QR je le trouve vieillot »). Il ouvre un viseur plein ecran. -->
+              <button type="button" class="st-scan-rond" id="story-scan-btn" aria-label="Scanner le QR sur place, +15 points"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><rect x="8" y="8" width="3" height="3" rx=".6"/><rect x="13" y="8" width="3" height="3" rx=".6"/><rect x="8" y="13" width="3" height="3" rx=".6"/><path d="M13 13h3v3"/></svg><span class="st-scan-badge">+15</span></button>
+              <p class="solde-chiffre"><strong class="carte-solde-num js-solde">0</strong><span>points</span></p>
+            </span>
           </header>
 
           <!-- 15/09/2026 (Julien : « fais un truc plus sympa, plus beau, inspire-toi
@@ -6237,6 +6307,18 @@
           </div>
 
           <div id="story-page-corps"></div>
+
+          <!-- Le viseur du scan, plein ecran : pose sur .screen a l'ouverture
+               (activerScanClub), camera, cadre aux coins, fermer. -->
+          <div class="st-scan-zone" id="story-scan-zone" hidden>
+            <video id="story-scan-video" playsinline muted></video>
+            <div class="st-viseur" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="st-scan-haut">
+              <button type="button" class="st-scan-fermer" id="story-scan-fermer" aria-label="Fermer le scan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+              <strong>Scanner le QR</strong>
+            </div>
+            <p class="st-scan-msg" id="story-scan-msg">Place le QR du club dans le cadre</p>
+          </div>
 
           <!-- « Inviter des amis » a quitte Story (15/09/2026, page allegee) : la
                ligne vit dans les reglages. -->
@@ -8037,6 +8119,10 @@ var partiPublier = false;
 $("#story-page-corps")?.addEventListener("click", function (e) {
   var bouton = e.target.closest("#story-ouvrir-app");
   if (!bouton) return;
+  // La mention part dans le presse-papier dans le meme geste : il n'y a
+  // plus qu'a la coller dans la story.
+  var copie = document.querySelector("#story-page-corps .ps-copier");
+  if (copie && navigator.clipboard) navigator.clipboard.writeText(copie.dataset.copie).catch(function () {});
   partiPublier = true;
   ouvrirAppOuWeb(bouton.dataset.schema, bouton.dataset.secours);
 });
@@ -8083,6 +8169,7 @@ $("#story-page-corps")?.addEventListener("click", async function (e) {
 // activerScanClub() plus bas) au moment ou on quitte la page, elle doit
 // s'eteindre tout de suite -- jamais la laisser tourner en arriere-plan.
 var arreterScanActif = null;
+var fermerViseurStory = null;
 function fermerStory() {
   VUE_STORY.hidden = true;
   TAB_STORY.classList.remove("on");
@@ -11327,7 +11414,7 @@ function ouvrirChoixReseau(nomClub) {
     return '<button type="button" class="st-cta" id="story-ouvrir-app" ' +
       'data-schema="' + k.schema + '" data-secours="' + k.secours + '">' +
       '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
-      "Ouvrir " + (kindId === "tiktok" ? "TikTok" : "Instagram") +
+      "Copier et ouvrir " + (kindId === "tiktok" ? "TikTok" : "Instagram") +
     "</button>";
   }
 
@@ -11364,22 +11451,15 @@ function ouvrirChoixReseau(nomClub) {
           '<select class="st-lieu-select" id="story-club" aria-label="Choisir l’établissement">' + options + "</select>" +
         "</div>" +
       "</section>" +
-
       '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
+      /* UN bouton plein : il copie la mention ET ouvre Instagram. « J'ai
+         poste » reste un lien discret ; au retour d'Instagram (.st-revenu),
+         il devient le bouton plein. */
       '<div class="st-actions">' +
         '<div id="story-ouvrir">' + blocOuvrir("story") + "</div>" +
         '<button type="submit" class="st-cta-second" id="story-envoyer">J’ai posté</button>' +
         '<p class="st-msg" id="story-msg" hidden></p>' +
         '<p class="ps-regle" id="ps-regle">Une story par soirée. Points crédités 24 h après.</p>' +
-      "</div>" +
-
-      '<button type="button" class="st-scan" id="story-scan-btn">' + ICONE_QR +
-        "<span>Scanner le QR sur place</span>" +
-        '<span class="st-scan-pts">+15</span>' +
-      "</button>" +
-      '<div class="st-scan-zone" id="story-scan-zone" hidden>' +
-        '<video id="story-scan-video" playsinline muted></video>' +
-        '<p id="story-scan-msg">Vise le QR affiché sur place…</p>' +
       "</div>" +
     "</form>";
 
@@ -11447,10 +11527,21 @@ function ouvrirChoixReseau(nomClub) {
   function activerScanClub() {
     var btn = $("#story-scan-btn"), zone = $("#story-scan-zone"),
         video = $("#story-scan-video"), msgScan = $("#story-scan-msg");
+    // Le bouton et le viseur sont fixes dans la page : on ne les cable qu'une
+    // fois, mais fermerStory doit toujours savoir eteindre la camera.
+    if (!btn) return;
+    if (btn.dataset.cable) { arreterScanActif = fermerViseurStory; return; }
+    btn.dataset.cable = "1";
     var flux = null, animation = null;
-    var canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
+    var canvas = document.createElement("canvas"), ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-    btn?.addEventListener("click", async function () {
+    function fermerViseur() {
+      arreterScan();
+      zone.hidden = true;
+    }
+    $("#story-scan-fermer").addEventListener("click", fermerViseur);
+
+    btn.addEventListener("click", async function () {
       /* LE SCANNER NATIF D'ABORD : mise au point continue, correction de la
          lumiere, decodage materiel -- ce qui compte dans la penombre d'un
          club. `undefined` = pas de scanner natif, on prend le chemin web ;
@@ -11461,12 +11552,16 @@ function ouvrirChoixReseau(nomClub) {
         return;
       }
 
+      // Plein ecran : le viseur se pose sur l'ecran de l'appli, au-dessus de tout.
+      SCREEN.appendChild(zone);
+      msgScan.textContent = "Place le QR du club dans le cadre";
+      zone.classList.remove("erreur");
       zone.hidden = false;
-      btn.hidden = true;
       try {
         flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
       } catch (err) {
-        msgScan.textContent = "Impossible d'accéder à la caméra.";
+        zone.classList.add("erreur");
+        msgScan.textContent = "Autorise la caméra pour scanner le QR.";
         return;
       }
       video.srcObject = flux;
@@ -11482,7 +11577,7 @@ function ouvrirChoixReseau(nomClub) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         var image = ctx.getImageData(0, 0, canvas.width, canvas.height);
         var code = jsQR(image.data, image.width, image.height);
-        if (code) { natif.vibrer("succes"); traiterCode(code.data); return; }
+        if (code) { natif.vibrer("succes"); zone.classList.add("trouve"); traiterCode(code.data); return; }
       }
       animation = requestAnimationFrame(boucleScan);
     }
@@ -11496,13 +11591,14 @@ function ouvrirChoixReseau(nomClub) {
       msgScan.textContent = "Vérification…";
       var res = await supabaseClubbeur.rpc("checkin_scan", { p_club_slug: slug.trim().toLowerCase() });
       arreterScan();
+      zone.classList.remove("trouve");
       var ligne = res.data && res.data[0];
       if (res.error || !ligne) {
         zone.hidden = true;
-        btn.hidden = false;
-        direStory("QR non reconnu. Vérifie l'établissement au-dessus.", true);
+        direStory("QR non reconnu. Vérifie l'établissement.", true);
         return;
       }
+      zone.hidden = true;
       // Un scan est un check-in : direction la boutique de l'etablissement.
       fermerFeuille();
       activerVue("boutique");
@@ -11518,7 +11614,8 @@ function ouvrirChoixReseau(nomClub) {
       if (flux) { flux.getTracks().forEach(function (t) { t.stop(); }); flux = null; }
     }
     // Quitter la page en plein scan eteint la camera (voir fermerStory).
-    arreterScanActif = arreterScan;
+    fermerViseurStory = fermerViseur;
+    arreterScanActif = fermerViseur;
   }
 
   var boutonsReseau = $("#story-page-corps").querySelectorAll(".reseau-bouton");
