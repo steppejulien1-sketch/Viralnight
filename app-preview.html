@@ -806,20 +806,32 @@
       .ob-photo-contenu { position: relative; flex: none; }
       .ob-photo-etape .ob-titre { font-size: calc(34 * var(--u)); letter-spacing: -.035em; line-height: 1.05; text-shadow: 0 2px 22px rgba(0,0,0,.55); }
       .ob-photo-etape .ob-sous { margin: 8px 0 0; max-width: none; font-size: calc(15 * var(--u)); }
-      .ob-photo-etape .ob-champ { margin-top: 24px; }
+      /* Champs en cases arrondies, pas en simples traits (Julien : « change
+         les bords carres en bords arrondis »). */
+      .ob-photo-etape .ob-champ {
+        margin-top: 24px; padding: 0 14px; min-height: 56px; border: 0; border-radius: 16px;
+        background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.16);
+        -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+        transition: box-shadow .2s ease, background-color .2s ease;
+      }
+      .ob-photo-etape .ob-champ:focus-within { background: rgba(255,255,255,.14); box-shadow: inset 0 0 0 2px #ffffff; }
+      .ob-photo-etape .ob-champ input { padding: 14px 2px; }
       .ob-photo-etape .ob-code { margin: 26px 0 0; }
-      .ob-photo-etape .ob-case { width: 40px; height: 52px; font-size: calc(26 * var(--u)); border-bottom-width: 2px; border-color: rgba(255,255,255,.5); }
-      .ob-photo-etape .ob-case.rempli { border-color: #ffffff; }
-      .ob-photo-etape .ob-case:nth-of-type(3) { margin-right: 14px; }
+      .ob-photo-etape .ob-case {
+        width: 44px; height: 56px; border: 0; border-radius: 14px; font-size: calc(26 * var(--u));
+        background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.18);
+        -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+        transition: box-shadow .15s ease, background-color .15s ease;
+      }
+      .ob-photo-etape .ob-case.rempli { background: rgba(255,255,255,.16); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.5); }
+      .ob-photo-etape .ob-code:focus-within .ob-case.curseur { box-shadow: inset 0 0 0 2px #ffffff; }
+      .ob-photo-etape .ob-code { gap: 7px; }
+      .ob-photo-etape .ob-case:nth-of-type(3) { margin-right: 7px; }
       .ob-photo-etape[data-etape="code"] .ob-lien { justify-self: start; margin: 12px 0 0 -14px; }
       .ob-photo-etape .ob-bas { left: 22px; right: 22px; bottom: max(calc(22px + env(safe-area-inset-bottom, 0px)), calc(var(--clavier, 0px) + 12px)); }
       .ob-photo-etape .ob-bas .ob-btn { min-height: 58px; border-radius: 16px; font-size: calc(16.5 * var(--u)); font-weight: 750; }
       /* Eteint mais lisible : du blanc voile, pas du gris sur noir. */
       .ob-photo-etape .ob-bas .ob-btn:disabled { background: rgba(255,255,255,.2); color: rgba(255,255,255,.62); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-      .ob-photo-etape .ob-preuve {
-        margin-top: 22px; background: rgba(28,28,30,.72); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
-        -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-      }
       /* Sur la photo, les boutons retour et fermer se detachent sur un rond. */
       .ob-feuille.plein .ob-nav {
         top: calc(22px + env(safe-area-inset-top, 0px)); left: 12px; width: 40px; height: 40px; border-radius: 50%;
@@ -846,6 +858,83 @@
       .ob-photo-etape.entre .ob-bas { animation: ob-ph-monte .8s cubic-bezier(.16, 1, .3, 1) .45s both; }
       @keyframes ob-ph-photo { from { opacity: 0; scale: 1.16; filter: brightness(.35); } 40% { opacity: 1; } }
       @keyframes ob-ph-monte { from { opacity: 0; translate: 0 22px; filter: blur(8px); } }
+
+      /* ---- L'ecran de la capture : un telephone qui montre le geste ----
+         L'ecran dessine est un profil Instagram CLAIR (ce que la personne va
+         photographier), avec son pseudo. Toutes les 3,6 s, trois fois : le
+         telephone s'enfonce, flash blanc, le pseudo s'entoure de rouge --
+         le geste d'une capture d'ecran, sans une phrase de plus. */
+      .ob-capture-etape { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px) + var(--clavier, 0px)); background: #0b0b0c; }
+      .ob-cap-visuel {
+        position: relative; flex: 1 0 auto; display: grid; place-items: center;
+        padding: calc(52px + env(safe-area-inset-top, 0px)) 0 26px;
+      }
+      html:not(.mode-appli) .ob-cap-visuel { padding-top: 76px; }
+      .ob-cap-visuel::before {
+        content: ""; position: absolute; left: -24px; right: -24px; top: 0; bottom: 0; pointer-events: none;
+        background: radial-gradient(60% 45% at 50% 52%, rgba(222,49,49,.3), rgba(222,49,49,0) 70%);
+      }
+      .ob-cap-tel {
+        position: relative; height: min(400px, calc(100dvh - 350px)); min-height: 250px; aspect-ratio: 9 / 17;
+        border-radius: 30px; overflow: hidden; background: #ffffff;
+        box-shadow: 0 0 0 6px #1c1c1f, 0 0 0 7px rgba(255,255,255,.14), 0 40px 70px -24px rgba(222,49,49,.45);
+      }
+      .ob-cap-ecran { position: absolute; inset: 0; padding: 9px 11px 0; color: #0b0b0c; font-family: var(--sans); text-align: left; }
+      .ob-cap-barre { display: flex; justify-content: space-between; align-items: center; padding: 1px 9px 0; font-size: 10px; }
+      .ob-cap-barre span { width: 17px; height: 8px; border-radius: 2.5px; background: #0b0b0c; }
+      .ob-cap-entete {
+        position: relative; display: flex; align-items: center; gap: 3px; width: max-content; margin: 13px auto 0;
+        font-size: 12.5px; font-weight: 700; letter-spacing: -.01em;
+      }
+      .ob-cap-entete svg { width: 11px; height: 11px; fill: none; stroke: #0b0b0c; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .ob-cap-pseudo { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ob-cap-cercle { position: absolute; inset: -5px -9px; border: 2px solid var(--marque); border-radius: 999px; opacity: 0; }
+      .ob-cap-profil { display: grid; grid-template-columns: 50px 1fr 1fr 1fr; align-items: center; gap: 2px; margin-top: 13px; }
+      .ob-cap-avatar {
+        width: 46px; height: 46px; border-radius: 50%; border: 2.5px solid transparent;
+        background: linear-gradient(160deg, #3a2b33, #b4555a) padding-box, linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5) border-box;
+      }
+      .ob-cap-stat { font-size: 7.5px; line-height: 1.2; text-align: center; color: #333; }
+      .ob-cap-stat b { display: block; font-size: 11px; color: #0b0b0c; }
+      .ob-cap-ligne { display: block; height: 6px; margin-top: 7px; border-radius: 3px; background: #e8e8eb; }
+      .ob-cap-ligne.l1 { width: 42%; margin-top: 11px; background: #cfcfd4; }
+      .ob-cap-ligne.l2 { width: 72%; }
+      .ob-cap-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 11px; }
+      .ob-cap-boutons span { height: 20px; border-radius: 6px; background: #efeff2; }
+      .ob-cap-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5px; margin: 11px -11px 0; }
+      .ob-cap-grille i { aspect-ratio: 1; background: #e4e4e8; }
+      .ob-cap-grille i:nth-child(1) { background: linear-gradient(150deg, #2c1d24, #a8343a); }
+      .ob-cap-grille i:nth-child(2) { background: linear-gradient(150deg, #d9a35c, #6b3b25); }
+      .ob-cap-grille i:nth-child(3) { background: linear-gradient(150deg, #21203a, #5d3f8a); }
+      .ob-cap-grille i:nth-child(4) { background: linear-gradient(150deg, #6d1d25, #de3131); }
+      .ob-cap-grille i:nth-child(5) { background: linear-gradient(150deg, #1d2a33, #3f7c86); }
+      .ob-cap-grille i:nth-child(6) { background: linear-gradient(150deg, #3b2a1a, #c78a3c); }
+      .ob-cap-flash { position: absolute; inset: 0; background: #ffffff; opacity: 0; pointer-events: none; }
+      .ob-cap-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #000; }
+      .ob-cap-image[hidden] { display: none; }
+      .ob-cap-ok {
+        position: absolute; right: 10px; top: 10px; display: none; place-items: center;
+        width: 30px; height: 30px; border-radius: 50%; background: #12874d; box-shadow: 0 4px 12px rgba(0,0,0,.35);
+      }
+      .ob-cap-ok svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .ob-cap-tel.rempli .ob-cap-ok { display: grid; animation: ob-cap-ok .5s cubic-bezier(.34, 1.56, .64, 1) both; }
+      .ob-cap-tel.rempli .ob-cap-ecran { visibility: hidden; }
+
+      .ob-capture-etape .ob-photo-contenu { text-align: center; }
+      .ob-capture-etape .ob-titre { font-size: calc(30 * var(--u)); }
+      .ob-capture-etape .ob-sous { max-width: 29ch; margin: 8px auto 0; }
+      .ob-capture-etape .ob-bas { gap: 2px; }
+      .ob-cap-lien { justify-self: center; padding: 10px 14px; color: rgba(255,255,255,.82); text-decoration: none; }
+
+      .ob-capture-etape.entre .ob-cap-visuel { animation: ob-cap-arrive .9s cubic-bezier(.16, 1, .3, 1) both; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) { animation: ob-cap-clic 3.6s ease-in-out 1s 3; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-flash { animation: ob-cap-flash 3.6s ease-out 1s 3; }
+      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-cercle { animation: ob-cap-cercle 3.6s cubic-bezier(.16, 1, .3, 1) 1s 3 forwards; }
+      @keyframes ob-cap-arrive { from { opacity: 0; translate: 0 36px; scale: .9; filter: blur(8px); } }
+      @keyframes ob-cap-clic { 0%, 34% { scale: 1; } 38% { scale: .95; } 46%, 100% { scale: 1; } }
+      @keyframes ob-cap-flash { 0%, 36% { opacity: 0; } 39% { opacity: .95; } 56%, 100% { opacity: 0; } }
+      @keyframes ob-cap-cercle { 0%, 44% { opacity: 0; scale: 1.25; } 58%, 100% { opacity: 1; scale: 1; } }
+      @keyframes ob-cap-ok { from { scale: 0; } }
 
       /* Les barres du haut, comme une story : un segment par ecran du
          parcours, celui en cours se remplit. */
@@ -1028,6 +1117,8 @@
         .ob-exemple-cible { animation: none; }
         .ob-photo-etape.entre .ob-photo, .ob-photo-etape.entre .ob-photo-contenu > *, .ob-photo-etape.entre .ob-bas { animation: none; }
         .ob-progres i::after { transition: none; }
+        .ob-capture-etape.entre .ob-cap-visuel, .ob-cap-tel, .ob-cap-flash { animation: none !important; }
+        .ob-cap-cercle { animation: none !important; opacity: 1; }
       }
 
       /* ============================================================
@@ -5787,27 +5878,59 @@
               <label class="ob-champ ob-champ-arobase" id="ob-pseudo-champ">
                 <span aria-hidden="true">@</span>
                 <span class="ob-invisible">Pseudo Instagram</span>
-                <input type="text" id="ob-pseudo" name="instagram" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="ton pseudo" maxlength="80" required />
+                <input type="text" id="ob-pseudo" name="instagram" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="ton pseudo" maxlength="80" required />
                 <span class="ob-champ-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
               </label>
-
-              <div class="ob-preuve">
-                <p class="ob-preuve-titre">Une capture de ton profil</p>
-                <p class="ob-preuve-sous">Ton pseudo doit se lire en haut, comme ici.</p>
-                <div class="ob-exemple" id="ob-exemple">
-                  <img class="ob-exemple-img" src="/story-exemples/exemple-profil-clair.webp" alt="Exemple : le haut d’un profil Instagram, le pseudo entouré" width="360" height="276" />
-                  <span class="ob-exemple-cible" aria-hidden="true"></span>
-                  <span class="ob-exemple-etiquette" aria-hidden="true">Exemple</span>
-                </div>
-                <div class="ob-preuve-boutons">
-                  <a class="ob-btn ob-btn-contour" id="ob-ouvrir-instagram" href="https://www.instagram.com/" target="_blank" rel="noopener">Ouvrir Instagram</a>
-                  <button type="button" class="ob-btn ob-btn-encre" id="ob-capture-choisir">Ajouter</button>
-                </div>
-                <input type="file" accept="image/*" id="ob-capture" hidden />
-              </div>
               <p class="ob-msg" role="alert" hidden></p>
             </div>
             <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Continuer</button></div>
+          </form>
+
+          <!-- La capture du profil, SEULE sur son ecran (Julien, 15/09/2026 :
+               « la page insta est degueulasse, on n'y comprend rien, trop
+               d'elements, on ne sait meme pas qu'il faut ajouter une capture »).
+               Comme les applis qui demandent une preuve : un visuel qui MONTRE
+               le geste, une phrase, un gros bouton. Le visuel est un profil
+               Instagram dessine avec le pseudo qu'on vient de taper, et le
+               flash d'une capture d'ecran. Une fois l'image choisie, elle
+               prend la place de l'ecran du telephone. -->
+          <form class="ob-etape ob-photo-etape ob-capture-etape ob-plein" data-etape="capture" novalidate>
+            <div class="ob-cap-visuel" aria-hidden="true">
+              <div class="ob-cap-tel" id="ob-cap-tel">
+                <div class="ob-cap-ecran">
+                  <div class="ob-cap-barre"><b>21:47</b><span></span></div>
+                  <div class="ob-cap-entete">
+                    <svg viewBox="0 0 24 24"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>
+                    <b class="ob-cap-pseudo" id="ob-cap-pseudo">ton.pseudo</b>
+                    <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
+                    <span class="ob-cap-cercle"></span>
+                  </div>
+                  <div class="ob-cap-profil">
+                    <span class="ob-cap-avatar"></span>
+                    <span class="ob-cap-stat"><b>12</b>publications</span>
+                    <span class="ob-cap-stat"><b>486</b>followers</span>
+                    <span class="ob-cap-stat"><b>351</b>suivis</span>
+                  </div>
+                  <span class="ob-cap-ligne l1"></span>
+                  <span class="ob-cap-ligne l2"></span>
+                  <div class="ob-cap-boutons"><span></span><span></span></div>
+                  <div class="ob-cap-grille"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                </div>
+                <img class="ob-cap-image" id="ob-cap-image" alt="" hidden />
+                <span class="ob-cap-flash"></span>
+                <span class="ob-cap-ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+              </div>
+            </div>
+            <div class="ob-photo-contenu">
+              <h2 class="ob-titre" id="ob-titre-capture">Capture ton profil</h2>
+              <p class="ob-sous" id="ob-cap-sous">Fais une capture d’écran de ton profil Instagram, puis ajoute-la ici.</p>
+              <p class="ob-msg" role="alert" hidden></p>
+            </div>
+            <input type="file" accept="image/*" id="ob-capture" hidden />
+            <div class="ob-bas">
+              <button type="submit" class="ob-btn ob-btn-encre" id="ob-cap-btn">Ajouter la capture</button>
+              <a class="ob-lien ob-cap-lien" id="ob-ouvrir-instagram" href="https://www.instagram.com/" target="_blank" rel="noopener">Ouvrir mon profil Instagram</a>
+            </div>
           </form>
 
           <!-- Le dernier ecran : la photo en grand, un gros bouton (Julien,
@@ -8094,6 +8217,7 @@ function chargementOb(bouton, oui) {
    d'entrer par la droite. */
 function focaliserOb(nom) {
   var el = { code: "#ob-code", nom: "#ob-nom", instagram: "#ob-pseudo" }[nom];
+  if (nom === "capture") majVisuelCaptureOb();
   el = el ? $(el) : $("#ob-titre-" + nom);
   if (!el) return;
   if (!/INPUT/.test(el.tagName)) el.tabIndex = -1;
@@ -8167,7 +8291,7 @@ function majProgresOb() {
   if (!barres) return;
   var liste = OB.suite && OB.suite.length
     ? (OB.etape === "code" || OB.historique.indexOf("code") !== -1 ? ["code"] : []).concat(OB.suite)
-    : ["code", "nom", "instagram", "bienvenue"];
+    : ["code", "nom", "instagram", "capture", "bienvenue"];
   var ici = liste.indexOf(OB.etape);
   if (barres.children.length !== liste.length) {
     barres.innerHTML = liste.map(function () { return "<i></i>"; }).join("");
@@ -8406,7 +8530,7 @@ async function poursuivreParcours(session) {
       .eq("id", uid)
       .maybeSingle()).data;
     if (!(profil && profil.profile_proof_path)) {
-      suite.push("instagram");
+      suite.push("instagram", "capture");
       // Le pseudo deja choisi, mais pas celui fabrique depuis l'adresse
       // (assurerProfil) : « steppejulien1 » n'est pas un compte Instagram.
       var repli = String(session.user.email || "").split("@")[0].toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 30);
@@ -8682,6 +8806,8 @@ function majLienProfilOb() {
    instagram://user ; si rien ne s'est ouvert (page toujours visible), le
    lien web prend le relais. Sans pseudo valide, le lien web normal. */
 function ouvrirProfilInstagramOb(ev) {
+  // Une fois la capture ajoutee, le lien sert a en changer.
+  if (ev.currentTarget.dataset.changer) { ev.preventDefault(); return choisirCaptureOb(); }
   var pseudo = nettoyerPseudoIg($("#ob-pseudo").value).toLowerCase();
   // Deja tente sans succes (appli absente) : le lien web, tout simplement.
   if (OB.igSansAppli || !PSEUDO_IG_RE.test(pseudo) || !/iphone|ipad|ipod|android/i.test(navigator.userAgent)) return;
@@ -8701,25 +8827,35 @@ function ouvrirProfilInstagramOb(ev) {
   }, 1400);
 }
 
+// Le pseudo tape s'ecrit dans le profil dessine de l'ecran capture.
+function majVisuelCaptureOb() {
+  var pseudo = nettoyerPseudoIg($("#ob-pseudo").value).toLowerCase();
+  $("#ob-cap-pseudo").textContent = PSEUDO_IG_RE.test(pseudo) ? pseudo : "ton.pseudo";
+  majLienProfilOb();
+}
+
+function choisirCaptureOb() {
+  // Le champ se vide AVANT d'ouvrir le selecteur : choisir deux fois la meme
+  // image doit redeclencher `change`.
+  var champFichier = $("#ob-capture");
+  champFichier.value = "";
+  champFichier.click();
+}
+
 function cablerInstagramOb() {
   var form = etapeOb("instagram");
   $("#ob-ouvrir-instagram").addEventListener("click", ouvrirProfilInstagramOb);
   var champFichier = $("#ob-capture");
   var champPseudo = $("#ob-pseudo");
-
-  // Le champ se vide AVANT d'ouvrir le selecteur : choisir deux fois la meme
-  // image doit redeclencher `change`.
-  $("#ob-capture-choisir").addEventListener("click", function () {
-    champFichier.value = "";
-    champFichier.click();
-  });
+  // Le visuel aussi ouvre le selecteur : c'est la que l'oeil se pose.
+  $("#ob-cap-tel").addEventListener("click", choisirCaptureOb);
   champFichier.addEventListener("change", function () {
     retenirCaptureOb(champFichier.files && champFichier.files[0]);
   });
 
   // Sur ordinateur, une capture d'ecran ne vit que dans le presse-papier.
   document.addEventListener("paste", function (ev) {
-    if (!OB.ouverte || OB.etape !== "instagram") return;
+    if (!OB.ouverte || OB.etape !== "capture") return;
     var items = (ev.clipboardData && ev.clipboardData.items) || [];
     for (var i = 0; i < items.length; i++) {
       if (items[i].type && items[i].type.indexOf("image/") === 0) {
@@ -8741,14 +8877,15 @@ function cablerInstagramOb() {
     var propre = nettoyerPseudoIg(champPseudo.value);
     if (propre !== champPseudo.value) champPseudo.value = propre;
   });
-  form.addEventListener("submit", enregistrerInstagramOb);
+  form.addEventListener("submit", enregistrerPseudoOb);
+  etapeOb("capture").addEventListener("submit", enregistrerCaptureOb);
 }
 
 async function retenirCaptureOb(fichier) {
   if (!fichier) return;
-  if (!/^image\//.test(fichier.type || "")) return direOb("instagram", "Ce fichier n’est pas une image.");
-  direOb("instagram", "");
-  var choisir = $("#ob-capture-choisir");
+  if (!/^image\//.test(fichier.type || "")) return direOb("capture", "Ce fichier n’est pas une image.");
+  direOb("capture", "");
+  var choisir = $("#ob-cap-btn");
   chargementOb(choisir, true);
   var capture = await compresserCapture(fichier);
   /* Copiee en memoire TOUT DE SUITE. Quand la compression ne gagne rien,
@@ -8760,25 +8897,29 @@ async function retenirCaptureOb(fichier) {
     capture = new Blob([await capture.arrayBuffer()], { type: capture.type || "image/jpeg" });
   } catch (e) {
     chargementOb(choisir, false);
-    return direOb("instagram", "Cette image n’a pas pu être lue. Choisis-en une autre.");
+    return direOb("capture", "Cette image n’a pas pu être lue. Choisis-en une autre.");
   }
   OB.capture = capture;
   chargementOb(choisir, false);
 
-  // La capture prend la place de l'exemple, cochee ; le bouton sert
-  // desormais a en changer.
+  // La capture prend la place de l'ecran du telephone, cochee. Le gros
+  // bouton devient « Continuer », le lien du dessous sert a en changer.
   if (OB.urlCapture) URL.revokeObjectURL(OB.urlCapture);
   OB.urlCapture = URL.createObjectURL(OB.capture);
-  var exemple = $("#ob-exemple");
-  var img = exemple.querySelector("img");
+  var img = $("#ob-cap-image");
   img.src = OB.urlCapture;
   img.alt = "Ta capture";
-  exemple.classList.add("rempli");
-  choisir.textContent = "Changer";
-  choisir.classList.replace("ob-btn-encre", "ob-btn-contour");
+  img.hidden = false;
+  $("#ob-cap-tel").classList.add("rempli");
+  $("#ob-titre-capture").textContent = "C’est ajouté";
+  $("#ob-cap-sous").textContent = "Vérifie que ton pseudo se lit bien en haut.";
+  choisir.textContent = "Continuer";
+  var lien = $("#ob-ouvrir-instagram");
+  lien.textContent = "Changer de capture";
+  lien.dataset.changer = "1";
 }
 
-async function enregistrerInstagramOb(ev) {
+async function enregistrerPseudoOb(ev) {
   ev.preventDefault();
   var bouton = etapeOb("instagram").querySelector('[type="submit"]');
   if (bouton.classList.contains("charge")) return;
@@ -8792,20 +8933,33 @@ async function enregistrerInstagramOb(ev) {
     champ.focus();
     return direOb("instagram", pseudo ? "Un pseudo Instagram n’a que des lettres, des chiffres, des points et des tirets bas." : "Écris ton pseudo Instagram.");
   }
-  if (!OB.capture) return direOb("instagram", "Ajoute la capture de ton profil (étape 3).");
 
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) return direOb("instagram", "Ta session a expiré. Reconnecte-toi.");
-  var uid = session.user.id;
   chargementOb(bouton, true);
 
-  // Le pseudo AVANT la capture : il peut etre refuse (deja pris), autant
-  // s'arreter avant d'avoir televerse une image pour rien.
-  var erreurHandle = (await supabaseClubbeur.from("users").update({ handle: pseudo }).eq("id", uid)).error;
+  // Le pseudo AVANT la capture : il peut etre refuse (deja pris), autant le
+  // dire avant de demander une image.
+  var erreurHandle = (await supabaseClubbeur.from("users").update({ handle: pseudo }).eq("id", session.user.id)).error;
+  chargementOb(bouton, false);
   if (erreurHandle) {
-    chargementOb(bouton, false);
     return direOb("instagram", /duplicate|unique/i.test(erreurHandle.message) ? "Ce pseudo est déjà pris." : "Ton pseudo n’a pas pu être enregistré. Réessaie.");
   }
+  etapeSuivanteOb();
+}
+
+// Le gros bouton de l'ecran capture : choisir l'image tant qu'il n'y en a
+// pas, l'envoyer ensuite.
+async function enregistrerCaptureOb(ev) {
+  ev.preventDefault();
+  var bouton = $("#ob-cap-btn");
+  if (bouton.classList.contains("charge")) return;
+  if (!OB.capture) return choisirCaptureOb();
+
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return direOb("capture", "Ta session a expiré. Reconnecte-toi.");
+  var uid = session.user.id;
+  chargementOb(bouton, true);
 
   /* Le premier segment du chemin reste un id de club, comme dans le parcours
      d'origine : c'est la forme que le bucket story-proofs accepte
@@ -8817,13 +8971,13 @@ async function enregistrerInstagramOb(ev) {
   if (erreurEnvoi) {
     console.warn("[inscription] capture refusee :", erreurEnvoi.message);
     chargementOb(bouton, false);
-    return direOb("instagram", "La capture n’a pas pu être envoyée. Réessaie.");
+    return direOb("capture", "La capture n’a pas pu être envoyée. Réessaie.");
   }
 
   var erreurProfil = (await supabaseClubbeur.rpc("set_profile_proof", { p_path: chemin })).error;
   if (erreurProfil) {
     chargementOb(bouton, false);
-    return direOb("instagram", "La capture n’a pas pu être enregistrée. Réessaie.");
+    return direOb("capture", "La capture n’a pas pu être enregistrée. Réessaie.");
   }
 
   chargementOb(bouton, false);

@@ -115,15 +115,22 @@ const HAUTEUR = 844;
     await page.click('.ob-etape.actif [type="submit"]');
 
     await attendreEcran("instagram");
-    await prendre("04-instagram", "Relie ton Instagram");
     const pseudo = "e2e_" + compte.uid.slice(0, 8);
     await page.type("#ob-pseudo", pseudo);
+    await prendre("04-instagram", "Ton Instagram — le pseudo");
+    await page.click('.ob-etape.actif [type="submit"]');
+
+    // La capture a son propre ecran depuis le 15/09/2026.
+    await attendreEcran("capture");
+    await pause(1600); // le telephone arrive, premier flash
+    await prendre("05-capture", "Capture ton profil");
+    bilan.lienProfil = await page.$eval("#ob-ouvrir-instagram", (a) => a.href);
+    bilan.pseudoDessine = await page.$eval("#ob-cap-pseudo", (e) => e.textContent);
     const champ = await page.$("#ob-capture");
     await champ.uploadFile(CAPTURE);
-    await page.waitForFunction(() => document.querySelector("#ob-exemple").classList.contains("rempli"), { timeout: 10000 });
-    await pause(300);
-    await prendre("05-instagram-rempli", "Instagram — pseudo et capture");
-    bilan.lienProfil = await page.$eval("#ob-ouvrir-instagram", (a) => a.href);
+    await page.waitForFunction(() => document.querySelector("#ob-cap-tel").classList.contains("rempli"), { timeout: 10000 });
+    await pause(500);
+    await prendre("05b-capture-ajoutee", "Capture ajoutee");
     await page.click('.ob-etape.actif [type="submit"]');
 
     // L'ecran de bienvenue et son cadeau. Un compte jetable n'a scanne aucun
@@ -160,7 +167,7 @@ const HAUTEUR = 844;
       nom: utilisateur && utilisateur.user_metadata && utilisateur.user_metadata.full_name,
       erreursPage: erreurs,
     });
-    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === "Camille Durand" && bilan.accueilMasque;
+    bilan.reussi = bilan.handle === pseudo && bilan.pseudoDessine === pseudo && Boolean(cheminCapture) && bilan.nom === "Camille Durand" && bilan.accueilMasque;
     console.log("\n" + JSON.stringify(bilan, null, 1));
   } finally {
     if (navigateur) await navigateur.close();
