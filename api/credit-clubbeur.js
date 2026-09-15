@@ -535,6 +535,55 @@ async function actionSupport(request, response, sens) {
   return json(response, { ok: true, prevenu: true, push: push.envoyees || 0 });
 }
 
+/* ?action=parrainage — un nouvel inscrit arrive par le lien d'un ami.
+
+   Julien, 15/09/2026 : « le parrainage a l'air douteux, j'ai essaye et je
+   n'ai pas recu de points ». Les points arrivaient (claim_referral, appele
+   par l'appli), mais sans rien pour le dire. La reclamation passe donc ici :
+   on credite (claim_referral_pour, migration clubbeur 0051, qui refuse les
+   comptes anciens, les doublons et soi-meme), PUIS on previent le parrain.
+
+   Le filleul vient du jeton de session, jamais du corps : sinon n'importe
+   qui ferait parrainer le compte d'un autre. L'appli retombe sur la RPC
+   claim_referral si cette route ne repond pas (memes regles, pas de push). */
+async function actionParrainage(request, response) {
+  poserCors(request, response);
+  const token = (request.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  if (!token) return json(response, { error: "Session requise" }, 401);
+
+  let clubbeur;
+  try {
+    clubbeur = getSupabaseClubbeurAdmin();
+  } catch (e) {
+    return json(response, { error: "Configuration serveur incomplete" }, 500);
+  }
+  const { data: qui, error: erreurAuth } = await clubbeur.auth.getUser(token);
+  const filleul = qui?.user?.id;
+  if (erreurAuth || !filleul) return json(response, { error: "Session invalide" }, 401);
+
+  let corps = {};
+  try {
+    corps = await readBody(request);
+  } catch {}
+  const code = String(corps?.code || "").trim().toLowerCase().slice(0, 40);
+  if (!code) return json(response, { ok: false, raison: "code_manquant" });
+
+  const { data, error } = await clubbeur.rpc("claim_referral_pour", { p_filleul: filleul, p_code: code });
+  if (error) {
+    // deja_parraine, compte_ancien, introuvable, soi_meme : des refus normaux.
+    const raison = /deja_parraine|compte_ancien|introuvable|soi_meme|code_manquant/.exec(error.message || "");
+    if (raison) return json(response, { ok: false, raison: raison[0] });
+    console.error("[parrainage]", error.message);
+    return json(response, { error: "Parrainage impossible" }, 500);
+  }
+  const ligne = Array.isArray(data) ? data[0] : data;
+  if (!ligne?.referrer_id) return json(response, { ok: false, raison: "introuvable" });
+
+  const { data: profil } = await clubbeur.from("users").select("handle").eq("id", filleul).maybeSingle();
+  const notif = await pousserA(ligne.referrer_id, { type: "parrainage", pseudo: profil?.handle || "", points: ligne.awarded });
+  return json(response, { ok: true, awarded: ligne.awarded, parrain: ligne.referrer_handle, notifications: notif });
+}
+
 /* ?action=supprimer-compte — le clubbeur efface son propre compte.
 
    ⚠️ EXIGENCE APP STORE, PAS UN CONFORT. Depuis le 30 juin 2022, la regle
@@ -752,7 +801,7 @@ export default async function handler(request, response) {
 
   /* Le prevol arrive en OPTIONS : il doit passer avant le controle de
      methode, sinon le navigateur recoit un 405 et abandonne l'appel reel. */
-  if ((action === "supprimer-compte" || action === "support-nouveau" || action === "support-reponse") && request.method === "OPTIONS") {
+  if ((action === "supprimer-compte" || action === "support-nouveau" || action === "support-reponse" || action === "parrainage") && request.method === "OPTIONS") {
     poserCors(request, response);
     response.statusCode = 204;
     return response.end();
@@ -767,6 +816,7 @@ export default async function handler(request, response) {
   if (action === "supprimer-compte") return actionSupprimerCompte(request, response);
   // Le support : le clubbeur ou l'admin, chacun avec SA session (voir actionSupport).
   if (action === "support-nouveau") return actionSupport(request, response, "nouveau");
+  if (action === "parrainage") return actionParrainage(request, response);
   if (action === "support-reponse") return actionSupport(request, response, "reponse");
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;

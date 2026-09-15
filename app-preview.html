@@ -6,7 +6,7 @@
          barre d'onglets passe sous la barre de geste de l'iPhone une fois
          l'appli installee. Aucun effet sur la maquette au navigateur. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#ffffff" />
     <!-- Police de titrage. Inter reste en repli explicite : sur un
          reseau de club, le texte s'affiche d'abord en Inter et bascule
          ensuite. Il n'attend jamais. Un seul fichier, un seul axe de
@@ -25,9 +25,17 @@
          le theme du telephone (voir .screen plus bas) -- ce n'est que
          Profil/Amis/Story qui suivent le systeme, une fois l'appli deja
          peinte, pas un choix a faire des la premiere peinture. -->
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light" />
     <meta name="robots" content="noindex" />
-    <title>Noctify — preview appli</title>
+    <title>Noctify</title>
+    <!-- L'apercu quand on partage un lien (WhatsApp, iMessage, Instagram) :
+         sans ces balises, le lien de parrainage arrivait avec l'ancienne
+         etoile rouge. -->
+    <meta property="og:title" content="Noctify" />
+    <meta property="og:description" content="Transforme tes sorties en récompenses." />
+    <meta property="og:image" content="https://viralnight-koif.vercel.app/icones/partage.png" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
 
     <!-- ============================================================
          INSTALLATION SUR LE TELEPHONE (PWA)
@@ -53,8 +61,8 @@
     <!-- Sans ca, le navigateur reclame /favicon.ico tout seul et prend un
          404 a chaque ouverture -- visible dans la console, et l'onglet
          reste sans icone. -->
-    <link rel="icon" href="/icones/icone-192.png" type="image/png" />
-    <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png" />
+    <link rel="icon" href="/icones/favicon-64.png?v=verre" type="image/png" />
+    <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png?v=verre" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Noctify" />
@@ -485,11 +493,14 @@
       }
 
       .ac-actions { width: 100%; display: grid; gap: 12px; }
+      /* Memes coins et meme hauteur que les boutons de l'inscription (16 px,
+         .ob-photo-etape .ob-btn) : Julien, 15/09/2026 : « a l'accueil c'est tres
+         arrondi, apres beaucoup moins, uniformise avec ceux de la deuxieme page ». */
       .ac-btn {
         display: flex; align-items: center; justify-content: center; gap: 12px;
-        width: 100%; min-height: 50px; padding: 0 20px; border: 0;
-        border-radius: var(--r-pill);
-        font-family: var(--sans); font-size: calc(14.5 * var(--u)); font-weight: 700;
+        width: 100%; min-height: 56px; padding: 0 20px; border: 0;
+        border-radius: 16px;
+        font-family: var(--sans); font-size: calc(16 * var(--u)); font-weight: 750;
         letter-spacing: -.01em; cursor: pointer;
         transition: transform var(--tr-court), filter var(--tr-court), background var(--tr-court);
       }
@@ -510,7 +521,7 @@
       .ac-sep::before, .ac-sep::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line2); }
       /* 16 px au moins : en dessous, l'iPhone zoome sur le champ. */
       .ac-input {
-        width: 100%; min-height: 48px; padding: 0 20px; border: 0; border-radius: var(--r-pill);
+        width: 100%; min-height: 56px; padding: 0 18px; border: 0; border-radius: 16px;
         background: var(--champ); box-shadow: inset 0 0 0 1px var(--line2);
         color: var(--ink); font-size: max(16px, calc(14 * var(--u))); font-family: var(--sans);
         transition: box-shadow var(--tr-court), background var(--tr-court);
@@ -963,10 +974,12 @@
         filter: drop-shadow(0 2px 8px rgba(0,0,0,.14));
       }
       .ob-cap-flash { position: absolute; inset: 0; background: #ffffff; opacity: 0; pointer-events: none; }
-      .ob-cap-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #000; }
+      /* La capture remplit l'ecran, calee en haut comme un vrai ecran de
+         telephone ; fond blanc derriere, comme le profil dessine. */
+      .ob-cap-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; background: #ffffff; }
       .ob-cap-image[hidden] { display: none; }
       .ob-cap-ok {
-        position: absolute; right: 10px; top: 10px; display: none; place-items: center;
+        position: absolute; right: 12px; bottom: 14px; display: none; place-items: center;
         width: 30px; height: 30px; border-radius: 50%; background: #12874d; box-shadow: 0 4px 12px rgba(0,0,0,.35);
       }
       .ob-cap-ok svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
@@ -992,8 +1005,9 @@
       .ob-cap-cadre.secoue { animation: ob-secoue .5s cubic-bezier(.36,.07,.19,.97); }
       .ob-cap-pseudo-bloc .ob-champ { margin-top: 16px; text-align: left; }
       .ob-cap-pseudo-bloc.lecture .ob-champ { opacity: .55; }
-      /* Avec le champ du pseudo, le telephone cede un peu de hauteur. */
-      .ob-capture-etape.avec-pseudo .ob-cap-tel { height: min(330px, calc(100dvh - 440px)); min-height: 200px; }
+      /* Avec la capture, le telephone GARDE sa taille (Julien, 15/09/2026 : « le
+         telephone du premier est parfait, laisse le meme, la meme taille,
+         centre bien la capture ») : c'est la page qui defile si besoin. */
       .ob-capture-etape.avec-pseudo .ob-cap-visuel { padding-bottom: 16px; }
       .ob-capture-etape .ob-bas { gap: 2px; }
       .ob-cap-lien { justify-self: center; padding: 10px 14px; color: rgba(255,255,255,.82); text-decoration: none; }
@@ -1610,6 +1624,37 @@
       }
       .ai-footer button[type="submit"] svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .ai-footer button[type="submit"][disabled] { opacity: .55; cursor: default; }
+      /* ---- Le fil du support, refait le 15/09/2026 ---- */
+      #vue-aide { background: #ffffff; }
+      #vue-aide .ai-header { background: #ffffff; }
+      #vue-aide #ai-chat, #vue-aide #ai-admin-chat { gap: 14px; padding-bottom: 8px; }
+      #vue-aide .chat-sujet {
+        display: table; margin: 0 0 6px; padding: 3px 9px; border-radius: 999px;
+        background: rgba(255,255,255,.16); font-size: calc(12 * var(--u)); font-weight: 700; letter-spacing: .01em;
+      }
+      #vue-aide .chat-bulle.autre .chat-sujet { background: rgba(0,0,0,.07); }
+      #vue-aide .chat-ligne { display: flex; align-items: flex-end; gap: 8px; max-width: 86%; }
+      #vue-aide .chat-ligne.moi { align-self: flex-end; justify-content: flex-end; }
+      #vue-aide .chat-ligne.autre { align-self: flex-start; }
+      #vue-aide .chat-av { flex: none; width: 28px; height: 28px; margin-bottom: 20px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px var(--line); object-fit: cover; }
+      #vue-aide .chat-col { display: flex; flex-direction: column; min-width: 0; }
+      #vue-aide .chat-ligne.moi .chat-col { align-items: flex-end; }
+      #vue-aide .chat-bulle {
+        max-width: 100%; padding: 11px 15px; border-radius: 20px; white-space: pre-wrap; overflow-wrap: anywhere;
+        font-size: calc(15 * var(--u)); line-height: 1.4;
+      }
+      #vue-aide .chat-bulle.moi { background: #0b0b0c; color: #ffffff; border-bottom-right-radius: 6px; }
+      #vue-aide .chat-bulle.autre { background: #f0f0f2; color: #0b0b0c; border-bottom-left-radius: 6px; }
+      #vue-aide .chat-heure { margin: 5px 6px 0; font-size: calc(11.5 * var(--u)); font-weight: 500; color: var(--ink3); }
+      #vue-aide .ai-footer { gap: 10px; padding: 10px 14px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 0; background: #ffffff; box-shadow: 0 -1px 0 rgba(0,0,0,.06); }
+      #vue-aide .ai-footer textarea {
+        min-height: 48px; padding: 13px 18px; border: 0; border-radius: 24px; background: #f0f0f2; box-shadow: none;
+        color: #0b0b0c; font-size: max(16px, calc(15 * var(--u)));
+      }
+      #vue-aide .ai-footer textarea:focus { outline: none; box-shadow: inset 0 0 0 1.5px #0b0b0c; }
+      #vue-aide .ai-footer button[type="submit"] { width: 48px; height: 48px; margin-bottom: 0; background: #0b0b0c; }
+      #vue-aide .ai-footer button[type="submit"] svg { width: 20px; height: 20px; stroke-width: 2.4; }
+      #vue-aide .ai-reponse { background: #f6f6f7; box-shadow: none; border-radius: 20px; }
 
       /* Profil/Reglages/Amis en clair par defaut, sombre seulement si le
          telephone du clubbeur est deja en mode sombre (prefers-color-
@@ -5054,8 +5099,8 @@
       /* Le gain, pose en bas du telephone. */
       .st-gain {
         position: relative; margin-top: 18px; display: inline-flex; align-items: baseline; gap: 6px;
-        padding: 9px 18px 10px; border-radius: 999px; background: var(--marque, #de3131); color: #ffffff; white-space: nowrap;
-        font-size: calc(14 * var(--u)); font-weight: 700; box-shadow: 0 12px 24px -12px rgba(222,49,49,.6);
+        padding: 9px 18px 10px; border-radius: 999px; background: #0b0b0c; color: #ffffff; white-space: nowrap;
+        font-size: calc(14 * var(--u)); font-weight: 700; box-shadow: 0 12px 24px -12px rgba(0,0,0,.45);
       }
       .st-gain strong { font-family: var(--chiffre); font-size: calc(26 * var(--u)); font-weight: 800; letter-spacing: -.03em; line-height: 1; }
       .st-hero-sous { margin: 8px 0 6px; text-align: center; font-size: calc(14 * var(--u)); line-height: 1.35; color: var(--ink2); }
@@ -5072,12 +5117,14 @@
       .st-scene.joue .st-tel-sticker { animation: st-colle .6s cubic-bezier(.34, 1.56, .64, 1) 1.2s both; }
       .st-scene.joue .st-tel-appui { animation: st-appui-rond .55s ease-out 2.25s both; }
       .st-scene.joue .st-tel-photo, .st-scene.joue .st-tel-sticker, .st-scene.joue .st-tel-voile { animation-fill-mode: both; }
-      .st-scene.joue .st-tel-contenu { animation: st-envoye .5s cubic-bezier(.4, 0, .2, 1) 2.55s both; }
-      .st-scene.joue .st-tel-partage { animation: st-partage-reste .5s cubic-bezier(.16, 1, .3, 1) 2.75s both; }
+      /* « Story partagee » passe puis s'en va (Julien : « plus propre »), et la
+         story reprend sa lumiere derriere. */
+      .st-scene.joue .st-tel-contenu { animation: st-envoye 2.2s cubic-bezier(.4, 0, .2, 1) 2.55s both; }
+      .st-scene.joue .st-tel-partage { animation: st-partage 1.9s cubic-bezier(.16, 1, .3, 1) 2.75s both; }
       .st-scene.joue .st-tel-pub { animation: st-monte .5s cubic-bezier(.16, 1, .3, 1) 1.9s both; }
       .st-scene.joue .st-gain { animation: st-gain .7s cubic-bezier(.34, 1.56, .64, 1) 3.15s both; }
       @keyframes st-appui-rond { 0% { opacity: 0; scale: .4; } 35% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.6; } }
-      @keyframes st-envoye { to { scale: .96; filter: brightness(.82); } }
+      @keyframes st-envoye { 20%, 70% { scale: .96; filter: brightness(.82); } 100% { scale: 1; filter: none; } }
       @keyframes st-partage-reste { from { opacity: 0; visibility: visible; translate: -50% 10px; scale: .9; } to { opacity: 1; visibility: visible; translate: -50% 0; scale: 1; } }
       @keyframes st-arrive { from { opacity: 0; translate: 0 60px; rotate: 6deg; scale: .92; } 60% { opacity: 1; } }
       @keyframes st-recul { from { scale: 1.15; } }
@@ -5605,6 +5652,15 @@
       }
       .sup-confirmer:disabled { opacity: .6; }
       .sup-confirmer:not(:disabled):active { transform: scale(.985); }
+      /* Ce qu'on perdrait, en grand : c'est ce qui fait rester. */
+      .sup-solde { display: flex; align-items: baseline; gap: 10px; margin: 0 0 18px; padding: 16px 18px; border-radius: 16px; background: var(--s2); }
+      .sup-solde strong { font-family: var(--chiffre); font-size: calc(40 * var(--u)); font-weight: 800; letter-spacing: -.04em; line-height: 1; color: var(--ink); }
+      .sup-solde span { font-size: calc(15 * var(--u)); font-weight: 650; color: var(--ink2); }
+      .sup-partir {
+        display: block; width: 100%; margin: 6px 0 0; padding: 14px 0; border: 0; background: none; cursor: pointer;
+        font-family: inherit; font-size: calc(15 * var(--u)); font-weight: 700; color: var(--marque, #de3131);
+      }
+      .sup-partir:disabled { opacity: .6; cursor: default; }
       .sup-msg { margin: 10px 0 0; text-align: center; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--erreur-texte, #d92e42); }
       .sup-msg[hidden] { display: none; }
 
@@ -5968,8 +6024,12 @@
          apres la feuille et avant la premiere peinture : aucun ecran ne
          s'affiche dans le mauvais theme. Sans parametre, rien ne change. */
       (function () {
-        var voulu = new URLSearchParams(location.search).get("theme");
-        if (voulu !== "noir" && voulu !== "blanc") return;
+        /* BLANC PAR DEFAUT (15/09/2026). Un ami de Julien, telephone en mode
+           sombre, est arrive par le lien de parrainage sur « une version en
+           noir, sans tous les details » : tout ce qui a ete refait ces jours-ci
+           (inscription, cadeau, story) est dessine en blanc. Le noir ne vient
+           plus que sur demande, ?theme=noir. */
+        var voulu = new URLSearchParams(location.search).get("theme") === "noir" ? "noir" : "blanc";
         var sombre = voulu === "noir";
         document.documentElement.setAttribute("data-theme", voulu);
         var VRAI = "(min-width: 0px)", FAUX = "(max-width: 0px)";
@@ -6884,7 +6944,7 @@
 
           <!-- "Supprimer mon compte", la carte de la capture DUSK "Personal data". -->
           <button type="button" class="dp-supprimer" id="rg-supprimer-compte">
-            <svg class="dp-supprimer-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.6"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16.5 11h5"/></svg>
+            <svg class="dp-supprimer-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>
             <span class="dp-supprimer-txt"><strong>Supprimer mon compte</strong></span>
             <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </button>
@@ -7019,9 +7079,9 @@
           </div>
 
           <form id="ai-form" class="ai-footer">
-            <textarea class="va-input" id="ai-message" rows="1" placeholder="Écris ton message..." required></textarea>
+            <textarea class="va-input" id="ai-message" rows="1" placeholder="Écris ton message…" required></textarea>
             <button type="submit" id="ai-envoyer" aria-label="Envoyer">
-              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg>
             </button>
           </form>
           <p class="desc" id="ai-form-msg" style="display:none;margin:0 16px 10px"></p>
@@ -7029,7 +7089,7 @@
           <form id="ai-admin-form" class="ai-footer" hidden>
             <textarea class="va-input" id="ai-admin-message" rows="1" placeholder="Ta réponse..." required></textarea>
             <button type="submit" id="ai-admin-envoyer" aria-label="Répondre">
-              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg>
             </button>
           </form>
         </div>
@@ -8958,6 +9018,7 @@ async function poursuivreParcours(session) {
       .select("profile_proof_path, handle")
       .eq("id", uid)
       .maybeSingle()).data;
+    if (profil && profil.profile_proof_path) reclamerParrainage();
     if (!(profil && profil.profile_proof_path)) {
       suite.push("capture");
       // Le pseudo deja choisi, mais pas celui fabrique depuis l'adresse
@@ -9572,6 +9633,8 @@ async function enregistrerCaptureOb(ev) {
   }
 
   chargementOb(bouton, false);
+  // Inscription complete : si ce compte vient du lien d'un ami, l'ami gagne ses points.
+  reclamerParrainage();
   etapeSuivanteOb();
 }
 
@@ -9738,29 +9801,51 @@ function assurerProfil(user) {
     .upsert({ id: user.id, handle: repli, email: user.email || null }, { onConflict: "id", ignoreDuplicates: true })
     .then(function (res) {
       if (res.error) console.warn("[amis] profil non cree :", res.error.message);
-      reclamerParrainage();
     });
 }
 
-// Credite le parrain si ce compte est arrive via un lien ?parrain=.
-// claim_referral() (migration 0032) refuse toute seule un deuxieme
-// appel pour le meme compte (colonne referred_by deja posee) : on peut
-// donc tenter sans risquer de crediter deux fois, mais on efface quand
-// meme la trace locale pour ne pas rappeler l'API a chaque connexion.
-function reclamerParrainage() {
+/* Credite le parrain si ce compte est arrive via un lien ?parrain=<code>.
+   Julien, 15/09/2026 : « le parrainage a l'air douteux, je n'ai pas recu de
+   points ». Trois changements :
+   - on reclame APRES la capture Instagram (poursuivreParcours et
+     enregistrerCaptureOb) : c'est la qu'un ami est vraiment inscrit, et son
+     pseudo est alors le vrai pour la notification du parrain ;
+   - par le serveur (?action=parrainage), qui previent le parrain par
+     notification ; la RPC claim_referral en repli, memes regles ;
+   - la trace locale n'est effacee que sur une reponse definitive : une
+     coupure reseau ne fait plus perdre le parrainage. */
+var parrainageEnCours = false;
+async function reclamerParrainage() {
   var code;
   try { code = localStorage.getItem("vn.parrain"); } catch { code = null; }
-  if (!code) return;
-  try { localStorage.removeItem("vn.parrain"); } catch {}
-  supabaseClubbeur.rpc("claim_referral", { p_code: code }).then(function (res) {
-    if (res.error) {
-      // "soi_meme"/"deja_parraine"/"introuvable" : pas d'erreur a
-      // montrer, ce compte n'a juste pas gagne le bonus a quelqu'un.
-      console.info("[parrainage]", res.error.message);
+  if (!code || parrainageEnCours) return;
+  parrainageEnCours = true;
+  function oublier() { try { localStorage.removeItem("vn.parrain"); } catch {} }
+  try {
+    var session = (await supabaseClubbeur.auth.getSession()).data.session;
+    if (!session) return;
+    var reponse = null;
+    try {
+      var r = await fetch(BASE_API + "/api/credit-clubbeur?action=parrainage", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + session.access_token, "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code }),
+      });
+      if (r.ok) reponse = await r.json();
+    } catch (e) { /* serveur injoignable : repli */ }
+    if (reponse) {
+      oublier();
+      console.info("[parrainage]", reponse.ok ? "parrain credite : " + reponse.parrain : reponse.raison);
       return;
     }
-    console.info("[parrainage] parrain credite :", res.data && res.data[0]);
-  });
+    var res = await Promise.resolve(supabaseClubbeur.rpc("claim_referral", { p_code: code })).catch(function (e) { return { error: e }; });
+    if (!res.error) { oublier(); console.info("[parrainage] parrain credite (repli)"); return; }
+    // Refus normal (deja parraine, compte ancien, code inconnu, soi-meme) : on oublie.
+    if (/deja_parraine|compte_ancien|introuvable|soi_meme|code_manquant/.test(res.error.message || "")) oublier();
+    console.info("[parrainage]", res.error.message);
+  } finally {
+    parrainageEnCours = false;
+  }
 }
 
 /* ==========================================================
@@ -12365,20 +12450,27 @@ async function ouvrirPageAmis(session) {
   })();
 
   // --- Mon code : pseudo + photo + QR, generes une fois a l'ouverture -
-  var profil = (await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).single()).data;
+  /* Le lien porte le CODE de parrainage (migration clubbeur 0051), unique,
+     et plus le pseudo : trois comptes peuvent porter le meme pseudo
+     Instagram, et les points tombaient sur l'un des trois au hasard. Tant
+     que la colonne n'existe pas, on retombe sur le pseudo. */
+  var lecture = await supabaseClubbeur.from("users").select("handle, avatar_url, referral_code").eq("id", session.user.id).single();
+  if (lecture.error) lecture = await supabaseClubbeur.from("users").select("handle, avatar_url").eq("id", session.user.id).single();
+  var profil = lecture.data;
   var monHandle = profil && profil.handle;
-  var lien = monHandle
+  var monCode = profil && (profil.referral_code || profil.handle);
+  var lien = monCode
     /* ?app=1 : sans lui, un ami qui ouvre le lien dans son navigateur voyait
        la page de demonstration (l'appli dans un cadre de telephone sur fond
        sombre), pas l'appli. Son ecran d'accueil lui propose ensuite de
        l'installer (voir #ac-installer). */
-    ? window.location.origin + window.location.pathname + "?app=1&parrain=" + encodeURIComponent(monHandle)
+    ? window.location.origin + window.location.pathname + "?app=1&parrain=" + encodeURIComponent(monCode)
     : null;
 
   var lienEl = document.getElementById("va-lien");
   // Le debut du lien est toujours le meme ; ce qui le distingue, c'est la
   // fin. On garde le domaine et le code, et on coupe le milieu.
-  if (lienEl) lienEl.textContent = lien ? window.location.host + "/…?parrain=" + monHandle : "Profil en cours de création…";
+  if (lienEl) lienEl.textContent = lien ? window.location.host + "/…?parrain=" + monCode : "Profil en cours de création…";
   if (monHandle) {
     handleEl.textContent = monHandle;
     afficherAvatar(profil.avatar_url, monHandle);
@@ -12835,7 +12927,23 @@ async function chargerHistoriquePoints() {
     .eq("user_id", session.user.id)
     .is("club_id", null)).catch(function () { return { data: [] }; });
 
+  /* Les amis parraines (migration clubbeur 0051) : credites directement au
+     solde, comme le cadeau sans club. Le pseudo vient d'une fonction, la
+     table users des autres comptes n'etant pas lisible. */
+  var filleuls = await Promise.resolve(supabaseClubbeur.rpc("mes_parrainages_recents", { p_jours: 400 }))
+    .catch(function () { return { data: [] }; });
+
   var mouvements = [];
+  (filleuls.data || []).forEach(function (f) {
+    mouvements.push({
+      quand: f.created_at,
+      titre: LIBELLE_SOURCE.parrainage,
+      detail: (f.pseudo ? "@" + f.pseudo + " · " : "") + dateCourte(f.created_at),
+      pts: f.points,
+      gain: true,
+      source: "parrainage",
+    });
+  });
   (gagnes.data || []).forEach(function (g) {
     mouvements.push({
       quand: g.created_at,
@@ -13718,6 +13826,10 @@ var VUE_DONNEES = $("#vue-reglages");
    La suppression elle-meme n'a pas change : /api/credit-clubbeur?action=
    supprimer-compte, identifiant relu du jeton cote serveur (exigence App
    Store 5.1.1(v)). */
+/* Deux pages seulement (Julien, 15/09/2026) : la ligne des parametres, puis
+   cette feuille. La page des raisons est partie : « de la data inutile ». La
+   feuille pousse a rester : ce qu'on perd en grand (les points), « Garder mon
+   compte » en gros bouton, la suppression en lien rouge dessous. */
 function ouvrirSuppressionCompte(src) {
   rendeur = src || null;
   var solde = ETAT.solde || 0;
@@ -13725,22 +13837,21 @@ function ouvrirSuppressionCompte(src) {
     '<div class="sup">' +
       '<div class="sup-hero" aria-hidden="true"><img src="/ambiance/quitter.webp" alt="" width="780" height="520" /></div>' +
       '<button type="button" class="sup-fermer" id="sup-fermer" aria-label="Garder mon compte"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
-      /* Texte sobre. Julien, 13/09/2026 : "le deja tu pars fait beaucoup IA".
-         Plus d'emoji, plus de question rhetorique : ce qui se passe, dit
-         simplement. */
-      '<h3 class="sup-titre" id="sh-titre">Supprimer ton compte</h3>' +
+      '<h3 class="sup-titre" id="sh-titre">Supprimer ton compte ?</h3>' +
       '<p class="sup-sous">C’est définitif : ton compte ne pourra pas être récupéré.</p>' +
+      (solde > 0
+        ? '<div class="sup-solde"><strong>' + nb(solde) + "</strong><span>point" + (solde > 1 ? "s" : "") + " que tu perdrais</span></div>"
+        : "") +
       '<ul class="sup-pertes">' +
+        '<li><svg viewBox="0 0 24 24" aria-hidden="true">' + ICO_GAIN.cadeau + "</svg>Tes bons en cours et ton historique seront perdus.</li>" +
         '<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6z"/><circle cx="12" cy="10.5" r="2.3"/></svg>Tes données personnelles seront effacées.</li>' +
-        '<li><svg viewBox="0 0 24 24" aria-hidden="true">' + ICO_GAIN.cadeau + "</svg>" +
-          // Au futur (Julien, 13/09/2026) : c'est ce qui ARRIVERA si on confirme.
-          (solde > 0 ? "Tes " + nb(solde) + " points, tes bons en cours et ton historique seront perdus." : "Tes points, tes bons en cours et ton historique seront perdus.") + "</li>" +
       "</ul>" +
       '<button type="button" class="sup-souci" id="sup-souci">' +
         '<span><strong>Un problème avec l’appli ?</strong><span>Écris-nous, on te répond dans Aide &amp; Support.</span></span>' +
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>' +
       "</button>" +
-      '<button type="button" class="sup-confirmer" id="sup-confirmer">Supprimer mon compte</button>' +
+      '<button type="button" class="sup-confirmer" id="sup-garder">Garder mon compte</button>' +
+      '<button type="button" class="sup-partir" id="sup-supprimer">Supprimer mon compte</button>' +
       '<p class="sup-msg" id="sup-msg" hidden></p>' +
     "</div>";
   ouvrirFeuille(html);
@@ -13750,103 +13861,52 @@ function ouvrirSuppressionCompte(src) {
   voile.classList.add("au-dessus");
 
   $("#sup-fermer").addEventListener("click", fermerFeuille);
+  $("#sup-garder").addEventListener("click", fermerFeuille);
   $("#sup-souci").addEventListener("click", function () {
     fermerFeuille();
     VUE_DONNEES.hidden = true;
     $("#pf-aide")?.click();
   });
-  $("#sup-confirmer").addEventListener("click", etapeMotifDepart);
+  $("#sup-supprimer").addEventListener("click", supprimerCompteMaintenant);
 }
 
-/* La seconde marche, copiee de DUSK (13/09/2026) : « Please let us know
-   why ». Deux effets voulus par Julien : un pas de plus avant l'irreversible,
-   et la raison du depart, qui lui est envoyee avec le profil du compte (voir
-   actionSupprimerCompte). Les codes sont ceux de MOTIFS_DEPART dans
-   lib/notifications/push.js : les garder alignes. Le bouton reste gris tant
-   qu'aucune raison n'est cochee. */
-var MOTIFS_DEPART = [
-  ["doublon", "J’ai déjà un autre compte"],
-  ["aucun_etablissement", "Il n’y a pas d’établissement près de chez moi"],
-  ["pas_de_story", "Je ne veux pas publier de stories"],
-  ["plus_utilise", "Je ne l’utilise plus"],
-  ["autre", "Une autre raison"],
-];
-
-function etapeMotifDepart() {
-  var boite = corps.querySelector(".sup");
-  if (!boite) return;
-  boite.classList.add("sup-etape2");
-  boite.innerHTML =
-    '<div class="sup-hero" aria-hidden="true"><img src="/ambiance/quitter.webp" alt="" width="780" height="520" /></div>' +
-    '<button type="button" class="sup-fermer" id="sup-fermer" aria-label="Garder mon compte"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
-    '<h3 class="sup-titre" id="sh-titre">Une dernière question</h3>' +
-    '<p class="sup-sous">Ton compte n’est pas encore supprimé.</p>' +
-    '<fieldset class="sup-motifs">' +
-      "<legend>Dis-nous pourquoi</legend>" +
-      MOTIFS_DEPART.map(function (m) {
-        return '<label class="sup-motif"><input type="radio" name="sup-motif" value="' + m[0] + '" /><span>' + m[1] + "</span></label>";
-      }).join("") +
-      '<textarea class="sup-precision" id="sup-precision" rows="3" maxlength="500" placeholder="Dis-nous en quelques mots (facultatif)" hidden></textarea>' +
-    "</fieldset>" +
-    '<button type="button" class="sup-confirmer" id="sup-supprimer" disabled>Supprimer mon compte</button>' +
-    '<p class="sup-msg" id="sup-msg" hidden></p>';
-  sheet.scrollTop = 0;
-  corps.scrollTop = 0;
-
-  $("#sup-fermer").addEventListener("click", fermerFeuille);
-  boite.querySelectorAll('input[name="sup-motif"]').forEach(function (radio) {
-    radio.addEventListener("change", function () {
-      $("#sup-supprimer").disabled = false;
-      $("#sup-precision").hidden = radio.value !== "autre";
-      if (radio.value === "autre") $("#sup-precision").focus();
+async function supprimerCompteMaintenant() {
+  var bouton = $("#sup-supprimer"), msg = $("#sup-msg");
+  bouton.disabled = true;
+  $("#sup-garder").disabled = true;
+  bouton.textContent = "Suppression…";
+  try {
+    var session = (await supabaseClubbeur.auth.getSession()).data.session;
+    if (!session) throw new Error("session");
+    var res = await fetch(BASE_API + "/api/credit-clubbeur?action=supprimer-compte", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + session.access_token, "Content-Type": "application/json" },
+      body: JSON.stringify({}),
     });
-  });
+    if (!res.ok) throw new Error("api");
 
-  $("#sup-supprimer").addEventListener("click", async function () {
-    var bouton = this, msg = $("#sup-msg");
-    var coche = boite.querySelector('input[name="sup-motif"]:checked');
-    if (!coche) return;
-    bouton.disabled = true;
-    bouton.textContent = "Suppression…";
-    try {
-      var session = (await supabaseClubbeur.auth.getSession()).data.session;
-      if (!session) throw new Error("session");
-      var res = await fetch(BASE_API + "/api/credit-clubbeur?action=supprimer-compte", {
-        method: "POST",
-        headers: { Authorization: "Bearer " + session.access_token, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          motif: coche.value,
-          precision: coche.value === "autre" ? $("#sup-precision").value.trim().slice(0, 500) : "",
-        }),
-      });
-      if (!res.ok) throw new Error("api");
-
-      await supabaseClubbeur.auth.signOut();
-      /* ⚠️ LE JETON D'APPAREIL SURVIT A LA SUPPRESSION. localStorage.clear()
-         l'emportait avec le reste : le telephone redevenait "neuf", et un
-         compte recree reprenait le bonus de bienvenue -- le contraire de ce
-         que la feuille vient d'annoncer. On le repose apres le menage. */
-      // Les jetons de statistiques aussi : c'est le meme telephone, il ne
-      // doit pas compter pour une installation de plus dans le tableau de bord.
-      var garder = {};
-      ["vn_appareil", "vn_stat", "vn_stat_installe", "vn_parcours_fini"].forEach(function (k) {
-        try { garder[k] = localStorage.getItem(k); } catch (e) {}
-      });
-      try { localStorage.clear(); } catch (e) {}
-      Object.keys(garder).forEach(function (k) {
-        try { if (garder[k]) localStorage.setItem(k, garder[k]); } catch (e) {}
-      });
-      fermerFeuille();
-      VUE_DONNEES.hidden = true;
-      fermerProfil();
-      VUE_ACCUEIL.classList.remove("masque");
-    } catch (e) {
-      bouton.disabled = false;
-      bouton.textContent = "Supprimer mon compte";
-      msg.hidden = false;
-      msg.textContent = "La suppression n'a pas abouti. Réessaie dans un moment, ou écris-nous dans Aide & Support.";
-    }
-  });
+    await supabaseClubbeur.auth.signOut();
+    // Les jetons de statistiques survivent : c'est le meme telephone, il ne
+    // doit pas compter pour une installation de plus dans le tableau de bord.
+    var garder = {};
+    ["vn_stat", "vn_stat_installe", "vn_parcours_fini"].forEach(function (k) {
+      try { garder[k] = localStorage.getItem(k); } catch (e) {}
+    });
+    try { localStorage.clear(); } catch (e) {}
+    Object.keys(garder).forEach(function (k) {
+      try { if (garder[k]) localStorage.setItem(k, garder[k]); } catch (e) {}
+    });
+    fermerFeuille();
+    VUE_DONNEES.hidden = true;
+    fermerProfil();
+    VUE_ACCUEIL.classList.remove("masque");
+  } catch (e) {
+    bouton.disabled = false;
+    $("#sup-garder").disabled = false;
+    bouton.textContent = "Supprimer mon compte";
+    msg.hidden = false;
+    msg.textContent = "La suppression n'a pas abouti. Réessaie dans un moment, ou écris-nous dans Aide & Support.";
+  }
 }
 $("#rg-supprimer-compte")?.addEventListener("click", function () { ouvrirSuppressionCompte(this); });
 
@@ -13892,10 +13952,30 @@ $("#pf-aide")?.addEventListener("click", async function () {
 // pas un glisser -- meme esprit que fermerAmis()/fermerProfil().
 $("#ai-retour")?.addEventListener("click", function () { VUE_AIDE.hidden = true; });
 
+/* Le fil du support (15/09/2026, Julien : « le chat est encore dans les
+   couleurs d'avant, pas tres beau ») : mes messages en noir, ceux de Noctify
+   en gris clair avec le verre, l'heure sous la bulle. */
 function bulleChat(auteur, moi, message, quand) {
-  return '<div class="chat-bulle ' + (auteur === moi ? "moi" : "autre") + '">' +
-    escapeHtmlSupport(message) +
-    '<time>' + dateCourte(quand) + "</time>" +
+  var mien = auteur === moi;
+  var heure = "";
+  try {
+    var d = new Date(quand), maintenant = new Date();
+    var jour = maintenant.toDateString() === d.toDateString() ? ""
+      : d.toLocaleDateString("fr-FR", d.getFullYear() === maintenant.getFullYear() ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "numeric" }) + " · ";
+    heure = jour + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  } catch (e) { heure = dateCourte(quand); }
+  // Le sujet choisi part entre crochets (« [Points] ... ») : une etiquette, pas du texte brut.
+  var texte = String(message || ""), sujet = "";
+  var m = /^\[([^\]]{1,30})\]\s*/.exec(texte);
+  if (m) { sujet = m[1]; texte = texte.slice(m[0].length); }
+  return '<div class="chat-ligne ' + (mien ? "moi" : "autre") + '">' +
+    (mien || moi !== "client" ? "" : '<img class="chat-av" src="/icones/favicon-64.png?v=verre" alt="" />') +
+    '<div class="chat-col">' +
+      '<div class="chat-bulle ' + (mien ? "moi" : "autre") + '">' +
+        (sujet ? '<span class="chat-sujet">' + escapeHtmlSupport(sujet) + "</span>" : "") +
+        escapeHtmlSupport(texte) + "</div>" +
+      '<time class="chat-heure">' + (mien || moi !== "client" ? "" : "Noctify · ") + heure + "</time>" +
+    "</div>" +
   "</div>";
 }
 // Les messages, pseudos et avatars viennent de la base, mais restent du
@@ -14236,16 +14316,18 @@ function idClubBoutique() {
    fenetre de 7 jours evite de feter de vieilles stories a la premiere
    ouverture. */
 var STORIES_FETEES_CLE = "vn_stories_fetees";
+var PARRAINAGES_FETES_CLE = "vn_parrainages_fetes";
 var verificationValideesEnCours = false;
-function storiesFetees() {
-  try { return JSON.parse(localStorage.getItem(STORIES_FETEES_CLE) || "[]"); } catch (e) { return []; }
+// Les fetes qui attendent leur tour : la story d'abord, l'ami ensuite.
+var FETES_EN_ATTENTE = [];
+function dejaFetes(cle) {
+  try { return JSON.parse(localStorage.getItem(cle) || "[]"); } catch (e) { return []; }
 }
-function noterStoriesFetees(ids) {
-  try {
-    var liste = storiesFetees().concat(ids).slice(-200);
-    localStorage.setItem(STORIES_FETEES_CLE, JSON.stringify(liste));
-  } catch (e) { /* stockage refuse */ }
+function noterFetes(cle, ids) {
+  try { localStorage.setItem(cle, JSON.stringify(dejaFetes(cle).concat(ids).slice(-200))); } catch (e) { /* stockage refuse */ }
 }
+function storiesFetees() { return dejaFetes(STORIES_FETEES_CLE); }
+function noterStoriesFetees(ids) { noterFetes(STORIES_FETEES_CLE, ids); }
 
 async function verifierStoriesValidees() {
   if (verificationValideesEnCours || !supabaseClubbeur) return;
@@ -14267,16 +14349,33 @@ async function verifierStoriesValidees() {
       .gt("awarded_points", 0)
       .gte("reviewed_at", depuis)
       .order("reviewed_at", { ascending: true });
-    if (res.error || !res.data) return;
     var dejaFetees = storiesFetees();
-    var nouvelles = res.data.filter(function (st) { return dejaFetees.indexOf(st.id) === -1; });
-    if (!nouvelles.length) return;
-    var total = nouvelles.reduce(function (t, st) { return t + (st.awarded_points || 0); }, 0);
-    // Le nom du club seulement si toutes les stories sont du meme club.
-    var clubs = nouvelles.map(function (st) { return (st.clubs && st.clubs.name) || ""; });
-    var club = clubs.every(function (c) { return c && c === clubs[0]; }) ? clubs[0] : "";
-    noterStoriesFetees(nouvelles.map(function (st) { return st.id; }));
-    montrerStoryValidee(total, club, nouvelles.length);
+    var nouvelles = (res.error ? [] : res.data || []).filter(function (st) { return dejaFetees.indexOf(st.id) === -1; });
+    if (nouvelles.length) {
+      var total = nouvelles.reduce(function (t, st) { return t + (st.awarded_points || 0); }, 0);
+      // Le nom du club seulement si toutes les stories sont du meme club.
+      var clubs = nouvelles.map(function (st) { return (st.clubs && st.clubs.name) || ""; });
+      var club = clubs.every(function (c) { return c && c === clubs[0]; }) ? clubs[0] : "";
+      noterStoriesFetees(nouvelles.map(function (st) { return st.id; }));
+      FETES_EN_ATTENTE.push({ genre: "story", points: total, club: club, combien: nouvelles.length });
+    }
+
+    // Les amis inscrits avec mon lien (migration clubbeur 0051).
+    var amis = await Promise.resolve(supabaseClubbeur.rpc("mes_parrainages_recents", { p_jours: 7 }))
+      .catch(function () { return { data: [] }; });
+    var dejaAmis = dejaFetes(PARRAINAGES_FETES_CLE);
+    var nouveauxAmis = (amis.error ? [] : amis.data || []).filter(function (f) { return dejaAmis.indexOf(f.id) === -1; });
+    if (nouveauxAmis.length) {
+      noterFetes(PARRAINAGES_FETES_CLE, nouveauxAmis.map(function (f) { return f.id; }));
+      FETES_EN_ATTENTE.push({
+        genre: "ami",
+        points: nouveauxAmis.reduce(function (t, f) { return t + (f.points || 0); }, 0),
+        pseudo: nouveauxAmis[nouveauxAmis.length - 1].pseudo || "",
+        combien: nouveauxAmis.length,
+      });
+    }
+    if (!FETES_EN_ATTENTE.length) return;
+    montrerFeteSuivante();
     chargerSoldeReel(session.user.id);
   } catch (e) {
     console.warn("[story validee]", e && e.message);
@@ -14285,11 +14384,37 @@ async function verifierStoriesValidees() {
   }
 }
 
+function montrerFeteSuivante() {
+  var fete = FETES_EN_ATTENTE.shift();
+  if (!fete) return false;
+  if (fete.genre === "ami") montrerAmiInscrit(fete.points, fete.pseudo, fete.combien);
+  else montrerStoryValidee(fete.points, fete.club, fete.combien);
+  return true;
+}
+
+/* Un ami s'est inscrit avec mon lien : la meme page, d'autres mots. */
+function montrerAmiInscrit(points, pseudo, combien) {
+  montrerFete(
+    combien > 1 ? "Bravo, " + combien + " amis ont rejoint Noctify grâce à toi !"
+      : (pseudo ? "Bravo, @" + pseudo + " a rejoint Noctify grâce à toi !" : "Bravo, ton ami a rejoint Noctify !"),
+    points,
+    points > 1 ? "points" : "point"
+  );
+}
+
 function montrerStoryValidee(points, club, combien) {
+  montrerFete(
+    combien > 1 ? "Bravo, tes " + combien + " stories sont validées !" : "Bravo, ta story est validée !",
+    points,
+    (points > 1 ? "points" : "point") + (club ? " " + auClub(club) : "")
+  );
+}
+
+function montrerFete(titre, points, sous) {
   var vue = $("#vue-validee"), chiffre = $("#vv-gain");
   if (!vue) return;
-  $("#vv-titre").textContent = combien > 1 ? "Bravo, tes " + combien + " stories sont validées !" : "Bravo, ta story est validée !";
-  $("#vv-sous").textContent = (points > 1 ? "points" : "point") + (club ? " " + auClub(club) : "");
+  $("#vv-titre").textContent = titre;
+  $("#vv-sous").textContent = sous;
   var calme = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   chiffre.classList.remove("tic", "fini");
   chiffre.textContent = calme ? "+" + nb(points) : "+0";
@@ -14320,6 +14445,8 @@ function montrerStoryValidee(points, club, combien) {
 }
 
 $("#vv-btn")?.addEventListener("click", function () {
+  // Une autre bonne nouvelle attend (un ami apres la story) : elle suit.
+  if (montrerFeteSuivante()) return;
   $("#vue-validee").hidden = true;
   activerVue("boutique");
 });
@@ -14331,6 +14458,7 @@ if (/[?&]apercu_validee=1(&|$)/.test(location.search)) {
   setTimeout(function () { montrerStoryValidee(100, "Mirano", 1); }, 1800);
 }
 window.noctifyStoryValidee = function (points, club, combien) { montrerStoryValidee(points || 100, club || "", combien || 1); };
+window.noctifyAmiInscrit = function (points, pseudo, combien) { montrerAmiInscrit(points || 100, pseudo || "", combien || 1); };
 
 /* "Ce soir au Le Trebuchet" : les noms de clubs portent deja leur
    article, il faut donc le contracter au lieu de coller "au " devant.

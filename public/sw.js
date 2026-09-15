@@ -144,10 +144,10 @@ self.addEventListener("push", function (evenement) {
   var titre = contenu.titre || "Noctify";
   var options = {
     body: contenu.corps || "Ouvre l'appli pour voir ce qui a changé.",
-    icon: "/icones/icone-192.png",
+    icon: "/icones/icone-192.png?v=verre",
     // Silhouette monochrome affichee dans la barre d'etat Android. Une
     // icone en couleur y apparait comme une tache grise informe.
-    badge: "/icones/badge-96.png",
+    badge: "/icones/badge-96.png?v=verre",
     // Meme tag = la nouvelle notification remplace la precedente. Sans
     // lui, trois stories validees d'affilee donnent trois lignes.
     tag: contenu.tag || "noctify",

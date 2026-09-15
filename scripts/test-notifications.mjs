@@ -40,6 +40,13 @@ check("points negatifs -> aucune notification", construireMessage({ type: "story
 check("points illisibles -> aucune notification",
   construireMessage({ type: "story_validee", points: "beaucoup" }) === null);
 check("type inconnu -> aucune notification", construireMessage({ type: "anniversaire" }) === null);
+
+console.log("\nParrainage");
+const parrain = construireMessage({ type: "parrainage", points: 100, pseudo: "@nina.b" });
+check("parrainage : titre", parrain && parrain.titre === "Ton ami s'est inscrit", parrain && parrain.titre);
+check("parrainage : pseudo et points", parrain && parrain.corps.includes("@nina.b") && parrain.corps.includes("+100 points"), parrain && parrain.corps);
+check("parrainage sans pseudo : Un ami", construireMessage({ type: "parrainage", points: 100 }).corps.startsWith("Un ami"));
+check("parrainage a 0 point -> rien", construireMessage({ type: "parrainage", points: 0 }) === null);
 check("evenement vide -> aucune notification", construireMessage({}) === null);
 check("evenement absent -> aucune notification", construireMessage(undefined) === null);
 
