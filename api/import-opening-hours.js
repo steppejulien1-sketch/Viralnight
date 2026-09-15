@@ -1,5 +1,6 @@
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 import { importOpeningHoursFromGoogle } from "../lib/google/openingHours.js";
+import { LIEUX_AUTORISES, listerPhotos, lirePhoto } from "../lib/google/photosLieu.js";
 
 function json(response, body, status = 200) {
   response.statusCode = status;
@@ -36,7 +37,45 @@ function isGoogleUrl(value) {
   }
 }
 
+/* GET ?action=photo&place=<id>&i=<rang>   -> l'image
+   GET ?action=photos&place=<id>           -> { total, auteurs } pour l'attribution
+   Les photos de la fiche Google d'un lieu (lib/google/photosLieu.js). Greffe
+   ici plutot qu'une route de plus : le plan Vercel plafonne a 12 fonctions. */
+async function servirPhotos(request, response) {
+  const url = new URL(request.url, "http://local");
+  const action = url.searchParams.get("action");
+  const place = url.searchParams.get("place") || "";
+  if (!LIEUX_AUTORISES.has(place)) return json(response, { error: "Lieu inconnu." }, 404);
+  const cle = process.env.GOOGLE_PLACES_API_KEY;
+  if (!cle) return json(response, { error: "Configuration serveur incomplete." }, 503);
+
+  try {
+    const photos = await listerPhotos(place, cle);
+    if (action === "photos") {
+      response.statusCode = 200;
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
+      response.setHeader("Cache-Control", "public, s-maxage=86400, max-age=3600");
+      return response.end(JSON.stringify({
+        total: photos.length,
+        auteurs: [...new Set(photos.flatMap((p) => p.auteurs.map((a) => a.nom)).filter(Boolean))].slice(0, 6),
+      }));
+    }
+    const rang = Math.max(0, Math.min(photos.length - 1, Number(url.searchParams.get("i")) || 0));
+    if (!photos[rang]) return json(response, { error: "Aucune photo." }, 404);
+    const image = await lirePhoto(photos[rang].nom, cle);
+    response.statusCode = 200;
+    response.setHeader("Content-Type", image.type);
+    // Une semaine au CDN : la fiche change rarement, et chaque appel Places se paie.
+    response.setHeader("Cache-Control", "public, s-maxage=604800, max-age=86400, stale-while-revalidate=86400");
+    return response.end(image.octets);
+  } catch (error) {
+    console.error("[photos-lieu]", error.message);
+    return json(response, { error: "Photo indisponible." }, 502);
+  }
+}
+
 export default async function handler(request, response) {
+  if (request.method === "GET") return servirPhotos(request, response);
   if (request.method !== "POST") {
     return json(response, { error: "Methode non supportee." }, 405);
   }

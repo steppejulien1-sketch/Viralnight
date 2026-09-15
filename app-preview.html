@@ -289,6 +289,10 @@
            nomme : le badge de club sur la carte, sa pastille dans le rail
            et l'entete de sa fiche s'en servent tous. */
         --verre-noctify: url("/mascotte/verre-salut.webp");
+        /* Un lieu sans photo : un repere de lieu gris sur fond neutre. Plus le
+           verre Noctify (Julien, 15/09/2026 : « mets pas mon logo partout
+           alors que c'est un club, c'est stupide »). */
+        --lieu-sans-photo: #ececef url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9ea6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z'/%3E%3Ccircle cx='12' cy='10' r='2.6'/%3E%3C/svg%3E") center / 44% no-repeat;
         --ombre-1: 0 1px 2px rgba(0,0,0,.35);
         --ombre-2: 0 6px 20px rgba(0,0,0,.45);
         --ombre-3: 0 18px 48px rgba(0,0,0,.55);
@@ -778,6 +782,10 @@
       .ob-etape-bienvenue.recupere .ob-bv-fond { animation: ob-bv-avance 1.4s cubic-bezier(.16, 1, .3, 1) both; }
       .ob-etape-bienvenue.recupere .ob-bv-voile { opacity: 1; transition: background .6s ease; background: linear-gradient(to bottom, rgba(0,0,0,.05) 30%, rgba(0,0,0,.6) 62%, rgba(0,0,0,.9) 100%); }
       @keyframes ob-bv-part { to { opacity: 0; translate: 0 -16px; filter: blur(6px); } }
+
+      /* Le chiffre tressaute a chaque « tic » du bruitage. */
+      .ob-bv-gain.tic { animation: ob-bv-tic .12s ease-out; }
+      @keyframes ob-bv-tic { 50% { scale: 1.05; } }
       @keyframes ob-bv-pop { 40% { scale: 1.08; } }
       @keyframes ob-bv-avance { from { scale: 1; } to { scale: 1.05; } }
       .ob-etape-bienvenue.joue .ob-bv-fond { animation: ob-bv-recul 2.4s cubic-bezier(.16, 1, .3, 1) both; }
@@ -2472,14 +2480,16 @@
         transform-origin: 50% 100%;
       }
       .club-pin svg { display: block; width: 24px; height: 34px; overflow: visible; filter: drop-shadow(0 1.5px 2px rgba(0,0,0,.25)); }
-      .club-pin .goutte { fill: #8e8e93; stroke: #0b0b0c; stroke-width: 1.6; stroke-linejoin: round; }
-      .club-pin .point { fill: #0b0b0c; }
+      /* Rouge de la marque (Julien, 15/09/2026 : « mets des pins rouges comme
+         la couleur de la marque ») ; la forme DUSK reste, liseré et point blancs. */
+      .club-pin .goutte { fill: var(--marque, #de3131); stroke: #ffffff; stroke-width: 1.5; stroke-linejoin: round; }
+      .club-pin .point { fill: #ffffff; }
       .club-pin:active svg { transform: scale(.94); transform-origin: 50% 100%; }
       /* Le focus rendu au pin a la fermeture de la fiche (rendeur) dessinait
          un cadre noir autour de la goutte, visible de tres loin sur le globe.
          Le clavier garde son repere : la goutte se cerne d'encre. */
       .club-pin:focus { outline: none; }
-      .club-pin:focus-visible .goutte { stroke: #0b0b0c; stroke-width: 2.4; }
+      .club-pin:focus-visible .goutte { stroke: #15181d; stroke-width: 2.4; }
 
       /* Le verre "moi" et sa legende "Toi" sont retires (13/09/2026) :
          la carte ne porte plus que les pins des etablissements. */
@@ -2537,7 +2547,7 @@
          parti avec le reste -- un badge par club n'etait plus un badge. */
       .fr .bub-club {
         position: relative; border: 0; border-radius: 16px;
-        background: #f7efe6 var(--verre-noctify) center 58% / 78% no-repeat;
+        background: var(--lieu-sans-photo);
         box-shadow: 0 0 0 2.5px #fff, 0 6px 14px -7px rgba(16,18,22,.5);
       }
       .fr .bub-club img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
@@ -3895,6 +3905,8 @@
         scroll-snap-type: x proximity;
       }
       .club-galerie::-webkit-scrollbar { display: none; }
+      .club-galerie-credit { margin: -6px 2px 14px; font-size: calc(11 * var(--u)); color: var(--ink3); }
+      .club-galerie-credit[hidden] { display: none; }
       .club-galerie img {
         flex: 0 0 auto; width: 132px; height: 96px; object-fit: cover;
         border-radius: 12px; background: var(--s2);
@@ -3913,7 +3925,7 @@
          recompense. Une photo deposee le remplit toujours (img en cover). */
       .club-entete-rond {
         flex: 0 0 auto; width: 64px; height: 64px; border-radius: 18px;
-        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
+        background: var(--lieu-sans-photo);
         box-shadow: 0 0 0 1px var(--line);
         display: grid; place-items: center; overflow: hidden;
       }
@@ -4024,7 +4036,7 @@
          `--s2` vaut #1c1c1e : le badge etait un DISQUE NOIR au milieu
          d'un plan clair -- lu comme une image qui n'a pas charge.
          Sans photo, tous portent maintenant le meme badge Noctify. */
-      .fv-foto.sans-photo { background: #f7efe6 var(--verre-noctify) center 58% / 76% no-repeat; }
+      .fv-foto.sans-photo { background: var(--lieu-sans-photo); }
 
       .club-statut { margin: 0 0 16px; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
       .club-statut .ouvert { color: var(--succes-texte, #57d98a); font-weight: 700; }
@@ -4492,7 +4504,7 @@
       .sheet-club-tuile {
         position: absolute; left: 14px; bottom: -22px; z-index: 2;
         width: 46px; height: 46px; border-radius: 13px; overflow: hidden;
-        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
+        background: var(--lieu-sans-photo);
         box-shadow: 0 0 0 3px #ffffff, 0 8px 16px -8px rgba(16,18,22,.5);
       }
       .sheet-club-tuile img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -5048,7 +5060,7 @@
       .st-lieu-corps { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
       .st-lieu-tuile, .bar-tuile {
         flex: 0 0 auto; width: 46px; height: 46px; border-radius: 12px; overflow: hidden;
-        background: #f7efe6 var(--verre-noctify) center 56% / 84% no-repeat;
+        background: var(--lieu-sans-photo);
       }
       .st-lieu-tuile img, .bar-tuile img { display: block; width: 100%; height: 100%; object-fit: cover; }
       .st-lieu-txt { min-width: 0; }
@@ -8667,14 +8679,22 @@ function montrerCadeauOb(points) {
 
   minuteursCadeauOb.push(setTimeout(function () {
     natif.vibrer("succes");
-    jouer("points");
-    if (calme) return;
-    var debut = performance.now(), duree = 850;
+    if (calme) { jouer("points"); return; }
+    var duree = 900;
+    jouerPointsQuiTombent(duree);
+    var debut = performance.now(), dernier = 0;
     (function compter(t) {
       var p = Math.min(1, (t - debut) / duree);
-      chiffre.textContent = "+" + nb(Math.round(points * (1 - Math.pow(1 - p, 3))));
+      var valeur = Math.round(points * (1 - Math.pow(1 - p, 3)));
+      if (valeur !== dernier) {
+        dernier = valeur;
+        chiffre.textContent = "+" + nb(valeur);
+        chiffre.classList.remove("tic");
+        void chiffre.offsetWidth;
+        chiffre.classList.add("tic");
+      }
       if (p < 1) requestAnimationFrame(compter);
-      else chiffre.classList.add("fini");
+      else { chiffre.classList.remove("tic"); chiffre.classList.add("fini"); }
     })(debut);
   }, calme ? 0 : 320));
 }
@@ -9597,13 +9617,13 @@ function contexteAudio() {
 /* Une note : sinus, attaque immediate, extinction exponentielle. Le
    volume plafonne a .07 -- un bruitage d'interface qu'on entend est un
    bruitage trop fort, et celui-la se joue plusieurs fois par soiree. */
-function note(freq, depart, duree, volume) {
+function note(freq, depart, duree, volume, forme) {
   var ctx = contexteAudio();
   if (!ctx) return;
   var t = ctx.currentTime + depart;
   var osc = ctx.createOscillator();
   var gain = ctx.createGain();
-  osc.type = "sine";
+  osc.type = forme || "sine";
   osc.frequency.setValueAtTime(freq, t);
   gain.gain.setValueAtTime(0, t);
   gain.gain.linearRampToValueAtTime(volume === undefined ? 0.07 : volume, t + 0.012);
@@ -9633,6 +9653,31 @@ var SONS = {
     [1046.5, 0.21, 0.12], [1318.5, 0.3, 0.34],
   ],
 };
+
+/* Les points qui tombent, au cadeau de bienvenue (Julien, 15/09/2026 : « juste
+   le bruitage, un bruitage satisfaisant »). Une cascade de petites pieces --
+   chaque « tic » est une note breve et son octave, qui monte d'un cran --,
+   calee sur le compteur : serree au debut quand le chiffre file, espacee a la
+   fin quand il ralentit. Puis le « ka-ching » : deux notes claires, la
+   seconde tenue. Volume bas, comme le reste des sons de l'appli. */
+function jouerPointsQuiTombent(dureeMs) {
+  if (!sonActif) return;
+  var ctx = contexteAudio();
+  if (!ctx) return;
+  if (ctx.state === "suspended") { try { ctx.resume(); } catch (e) { /* refuse */ } }
+  var d = dureeMs / 1000, TICS = 16;
+  for (var k = 1; k <= TICS; k++) {
+    // Le moment ou le compteur (courbe en 1-(1-p)^3) passe k/TICS.
+    var quand = d * (1 - Math.pow(1 - k / TICS, 1 / 3));
+    var f = 1180 + k * 34 + (k % 2 ? 0 : 18);
+    note(f, quand, 0.07, 0.035);
+    note(f * 2, quand, 0.035, 0.009);
+  }
+  var fin = d + 0.02;
+  note(987.77, fin, 0.09, 0.055);
+  note(1318.51, fin + 0.075, 0.55, 0.065);
+  note(2637.02, fin + 0.075, 0.28, 0.012);
+}
 
 function jouer(nom) {
   if (!sonActif) return;
@@ -9944,7 +9989,13 @@ var CLUBS = {
        api/import-opening-hours.js sait deja parler a Google Places, qui
        fournit des photos utilisables avec attribution si on prefere
        les tirer de la fiche du club plutot que de les deposer a la main. */
-    photo: null, avatar: null,
+    /* 15/09/2026 : les photos de la FICHE GOOGLE du club, relayees par
+       /api/import-opening-hours?action=photo (lib/google/photosLieu.js,
+       liste blanche). Leurs auteurs s'affichent sous la galerie. */
+    photo: "/api/import-opening-hours?action=photo&place=ChIJpwov02LDw0cRA9JgUbYb7jc&i=0",
+    photos: [0, 1, 2, 3, 4, 5].map(function (i) { return "/api/import-opening-hours?action=photo&place=ChIJpwov02LDw0cRA9JgUbYb7jc&i=" + i; }),
+    photosGoogle: true,
+    avatar: null,
     /* Du jeudi au samedi : l'exploitant (artblanc.be) annonce le Cafe
        Afro le jeudi des 21h, en plus des vendredis et samedis a 23h.
        D'autres sources ne citent que le week-end -- on suit celle qui
@@ -10791,7 +10842,7 @@ function visuelClub(c) {
 // pire que le rond vide qu'on cherche.
 function imgClub(c) {
   var v = visuelClub(c);
-  return v.src ? '<img src="' + v.src + '" alt="" />' : "";
+  return v.src ? '<img src="' + v.src + '" alt="" onerror="this.remove()" />' : "";
 }
 
 // Garde son nom : quatre endroits l'appellent, et une photo reste une
@@ -10895,9 +10946,34 @@ function galerieClub(c) {
   var liste = Array.isArray(c.photos) ? c.photos.filter(Boolean) : [];
   if (!liste.length && c.photo) liste = [c.photo];
   if (!liste.length) return "";
+  var credit = "";
+  if (c.photosGoogle && c.googlePlaceId) {
+    credit = '<p class="club-galerie-credit" data-place="' + escapeHtmlSupport(c.googlePlaceId) + '" hidden>Photos : Google</p>';
+    // L'attribution exigee par Google : les auteurs des photos, lus apres
+    // l'insertion de la fiche.
+    setTimeout(function () {
+      document.querySelectorAll(".club-galerie-credit[data-place]:not([data-lu])").forEach(function (p) {
+        p.dataset.lu = "1";
+        fetch("/api/import-opening-hours?action=photos&place=" + encodeURIComponent(p.dataset.place))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            // Pas de photo servie (cle absente, fiche vide) : ni credit, ni galerie vide.
+            if (!d || !d.total) {
+              var g = p.previousElementSibling;
+              if (g && g.classList.contains("club-galerie")) g.remove();
+              p.remove();
+              return;
+            }
+            if (d.auteurs && d.auteurs.length) p.textContent = "Photos : " + d.auteurs.join(", ") + " · Google";
+            p.hidden = false;
+          })
+          .catch(function () { p.remove(); });
+      });
+    }, 0);
+  }
   return '<div class="club-galerie">' + liste.slice(0, 8).map(function (src) {
-    return '<img src="' + escapeHtmlSupport(src) + '" alt="" loading="lazy" />';
-  }).join("") + "</div>";
+    return '<img src="' + escapeHtmlSupport(src) + '" alt="" loading="lazy" onerror="this.remove()" />';
+  }).join("") + "</div>" + credit;
 }
 
 function ouvrirClub(c, src, id) {
@@ -14813,7 +14889,11 @@ BARS_DEMO.forEach(function (bar, i) {
     [["Pinte", "bar", 200, artPinte, "artPinte"], ["Cocktail signature", "bar", 350, artCocktail, "artCocktail"], ["Bouteille pour la table", "vip", 2200, artBouteille, "artBouteille"]],
     [["Vestiaire", "acces", 250, artShot, "artCintre"], ["Shot maison", "bar", 150, artShot, "artShot"], ["Table + bouteille", "vip", 3000, artBouteille, "artBouteille"]],
   ][i];
-  bar.club = { nom: bar.nom, type: bar.type, adr: bar.quartier, horaires: bar.horaires };
+  bar.club = {
+    nom: bar.nom, type: bar.type, adr: bar.quartier, horaires: bar.horaires,
+    // Bars INVENTES : une photo de bar libre de droits (Pexels), plus le logo.
+    photo: ["/ambiance/profil/3.webp", "/ambiance/profil/1.webp", "/ambiance/hero-nightclub.webp"][i],
+  };
   bar.recompenses = catalogues.map(function (c, j) {
     return { id: "demo-" + i + "-" + j, nom: c[0], fam: c[1], cout: c[2], art: c[3], foto: FOTOS[c[4]], stock: 20, code: "", demo: true, bar: bar.club };
   });

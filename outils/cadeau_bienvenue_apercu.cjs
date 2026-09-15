@@ -36,7 +36,7 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
     await pause(2600);
     await page.screenshot({ path: `${DOSSIER}/0-bienvenue.png` });
     await page.evaluate(() => window.noctifyCadeau(50));
-    const instants = [[250, "1-titre-part"], [600, "2-chiffre-monte"], [1000, "3-compte"], [2000, "4-fini"]];
+    const instants = [[500, "1-premieres-pieces"], [900, "2-pluie"], [1300, "3-rafale"], [2600, "4-fini"]];
     let ecoule = 0;
     for (const [t, nom] of instants) {
       await pause(t - ecoule);
