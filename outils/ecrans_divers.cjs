@@ -51,7 +51,9 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
     await page.type("#ob-code", code);
 
     await page.waitForFunction(() => document.querySelector('.ob-etape.actif[data-etape="capture"]'), { timeout: 20000 });
-    await pause(7000);
+    await pause(1750); // l'ecran d'accueil du telephone dessine, avant l'ouverture d'Instagram
+    await prendre("03a-accueil-iphone");
+    await pause(5250);
     await prendre("03-capture-avant");
     const taille = () => page.evaluate(() => { const r = document.querySelector("#ob-cap-tel").getBoundingClientRect(); return Math.round(r.width) + "x" + Math.round(r.height); });
     const tailles = { avant: await taille() };
