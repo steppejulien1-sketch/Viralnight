@@ -4,7 +4,7 @@
 //   VN_URL=http://127.0.0.1:5173 node outils/cadeau_bienvenue_apercu.cjs
 //
 // Sortie : outils/pages-cadeau-bienvenue/*.png, a plusieurs instants du
-// deroule (paquet, ouverture, medaille, page finie). Rien n'est verse :
+// deroule (le titre part, le chiffre monte et compte, fin). Rien n'est verse :
 // window.noctifyCadeau pose la page sans appeler welcome_bonus.
 
 const fs = require("fs");
@@ -36,7 +36,7 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
     await pause(2600);
     await page.screenshot({ path: `${DOSSIER}/0-bienvenue.png` });
     await page.evaluate(() => window.noctifyCadeau(50));
-    const instants = [[500, "1-paquet"], [950, "2-tremble"], [1350, "3-ouverture"], [1750, "4-medaille"], [3400, "5-page"]];
+    const instants = [[250, "1-titre-part"], [600, "2-chiffre-monte"], [1000, "3-compte"], [2000, "4-fini"]];
     let ecoule = 0;
     for (const [t, nom] of instants) {
       await pause(t - ecoule);
@@ -45,7 +45,7 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
       console.log("  " + nom);
     }
     const debord = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-    console.log(JSON.stringify({ erreurs, debord, chiffre: await page.$eval("#ob-cd-chiffre", (e) => e.textContent) }));
+    console.log(JSON.stringify({ erreurs, debord, chiffre: await page.$eval("#ob-bv-gain", (e) => e.textContent) }));
   } finally {
     await navigateur.close();
   }

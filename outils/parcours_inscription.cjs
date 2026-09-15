@@ -144,11 +144,12 @@ const HAUTEUR = 844;
       await page.click("#ob-bv-btn");
       // Depuis la migration clubbeur 0049, le cadeau se prend sans scan :
       // la page « Cadeau recupere » se pose, puis « Continuer ».
-      bilan.pageCadeau = await page.waitForFunction(() => !document.querySelector("#ob-cadeau").hidden, { timeout: 20000 }).then(() => true).catch(() => false);
+      bilan.pageCadeau = await page.waitForFunction(() => document.querySelector(".ob-etape-bienvenue.recupere"), { timeout: 20000 }).then(() => true).catch(() => false);
       if (bilan.pageCadeau) {
-        await pause(3400);
+        await pause(1800);
         await prendre("07-cadeau-recupere", "Cadeau recupere");
-        await page.click("#ob-cd-btn");
+        bilan.gain = await page.$eval("#ob-bv-gain", (e) => e.textContent);
+        await page.click("#ob-bv-btn"); // devenu « Continuer »
       }
     }
 
