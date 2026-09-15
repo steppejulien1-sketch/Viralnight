@@ -2472,17 +2472,21 @@
       /* 15/09/2026 : les pins de DUSK (capture IMG_5083 de Julien : « trop
          larges, je veux les memes ») -- goutte grise etroite, contour noir,
          point noir au centre. */
-      .marker-club { width: 24px; height: 34px; }
+      .marker-club { width: 27px; height: 35px; }
       .club-pin {
-        position: relative; display: block; width: 24px; height: 34px;
+        position: relative; display: block; width: 27px; height: 35px;
         padding: 0; border: 0; background: none; cursor: pointer;
         transform-origin: 50% 100%;
       }
-      .club-pin svg { display: block; width: 24px; height: 34px; overflow: visible; filter: drop-shadow(0 1.5px 2px rgba(0,0,0,.25)); }
+      .club-pin svg { display: block; width: 27px; height: 35px; overflow: visible; filter: drop-shadow(0 1.5px 2px rgba(0,0,0,.22)); }
       /* Rouge de la marque (Julien, 15/09/2026 : « mets des pins rouges comme
          la couleur de la marque ») ; la forme DUSK reste, liseré et point blancs. */
-      .club-pin .goutte { fill: var(--marque, #de3131); stroke: #ffffff; stroke-width: 1.5; stroke-linejoin: round; }
-      .club-pin .point { fill: #ffffff; }
+      /* La forme exacte du pin de DUSK (capture IMG_5085, relevee au pixel) :
+         tete ronde, flancs droits tangents jusqu'a une pointe fine, contour
+         noir epais, gros point noir un peu au-dessus du centre. Remplissage
+         au rouge de la marque. */
+      .club-pin .goutte { fill: var(--marque, #de3131); stroke: #0b0b0c; stroke-width: 2.6; stroke-linejoin: round; }
+      .club-pin .point { fill: #0b0b0c; }
       .club-pin:active svg { transform: scale(.94); transform-origin: 50% 100%; }
       /* Le focus rendu au pin a la fermeture de la fiche (rendeur) dessinait
          un cadre noir autour de la goutte, visible de tres loin sur le globe.
@@ -3904,6 +3908,21 @@
         scroll-snap-type: x proximity;
       }
       .club-galerie::-webkit-scrollbar { display: none; }
+      .club-galerie.maps {
+        display: flex; gap: 4px; height: 176px; margin: 2px -18px 18px; padding: 0 18px;
+        overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+      }
+      .club-galerie.maps::-webkit-scrollbar { display: none; }
+      .club-galerie.maps img {
+        display: block; flex: none; height: 100%; object-fit: cover; scroll-snap-align: start;
+        border-radius: 0; background: var(--s2);
+      }
+      .club-galerie.maps .grande { width: 64%; border-radius: 16px 0 0 16px; }
+      .club-galerie.maps .colonne { flex: none; display: grid; grid-template-rows: 1fr 1fr; gap: 4px; width: 38%; height: 100%; }
+      .club-galerie.maps .colonne img { width: 100%; height: 100%; }
+      .club-galerie.maps .colonne:last-child img:first-child { border-top-right-radius: 16px; }
+      .club-galerie.maps .colonne:last-child img:last-child { border-bottom-right-radius: 16px; }
+      .club-galerie.maps.seule .grande { width: 100%; border-radius: 16px; }
       .club-galerie-credit { margin: -6px 2px 14px; font-size: calc(11 * var(--u)); color: var(--ink3); }
       .club-galerie-credit[hidden] { display: none; }
       .club-galerie img {
@@ -10055,6 +10074,8 @@ var CLUBS = {
     note: null, avis: null, prix: null,
     tel: "+32 456 68 88 52", site: "miranobrussels.com",
     ig: "miranobrussels",
+    // Compte TikTok officiel, verifie le 15/09/2026 (tiktok.com/@miranobrussels).
+    tiktok: "miranobrussels",
     /* Les vraies photos du club. Tant qu'elles sont nulles, l'entete
        retombe sur une image d'ambiance generique (fotoClub) et sur un
        monogramme -- volontairement, plutot qu'une photo prise ailleurs :
@@ -10069,9 +10090,11 @@ var CLUBS = {
     /* 15/09/2026 : les photos de la FICHE GOOGLE du club, relayees par
        /api/import-opening-hours?action=photo (lib/google/photosLieu.js,
        liste blanche). Leurs auteurs s'affichent sous la galerie. */
-    photo: "/api/import-opening-hours?action=photo&place=ChIJpwov02LDw0cRA9JgUbYb7jc&i=0",
-    photos: [0, 1, 2, 3, 4, 5].map(function (i) { return "/api/import-opening-hours?action=photo&place=ChIJpwov02LDw0cRA9JgUbYb7jc&i=" + i; }),
-    photosGoogle: true,
+    /* Pas de photos pour le moment (Julien, 15/09/2026). Pour les brancher :
+       photos: ["/clubs/mirano-1.webp", ...] -- la galerie facon Maps (voir
+       galerieClub) et le badge se remplissent seuls. Les photos de la fiche
+       Google restent possibles via /api/import-opening-hours?action=photo. */
+    photo: null, photos: null,
     avatar: null,
     /* Du jeudi au samedi : l'exploitant (artblanc.be) annonce le Cafe
        Afro le jeudi des 21h, en plus des vendredis et samedis a 23h.
@@ -10133,6 +10156,14 @@ var CLUBS = {
     ]
   }
 };
+
+/* APERCU (15/09/2026) : ?apercu_photo=1 montre la fiche du Mirano avec UNE
+   photo d'exemple, pour voir ou iront les photos que les clubs deposeront.
+   Rien ne change sans ce parametre. */
+if (/[?&]apercu_photo=1(&|$)/.test(location.search)) {
+  CLUBS.mirano.photo = "/ambiance/bienvenue.webp";
+  CLUBS.mirano.photos = ["/ambiance/bienvenue.webp"];
+}
 // "club" -> "Boîte de nuit", "bar" -> "Bar" : juste en texte lisible
 // pour la ligne meta de la fiche.
 function libelleType(type) {
@@ -11048,9 +11079,20 @@ function galerieClub(c) {
       });
     }, 0);
   }
-  return '<div class="club-galerie">' + liste.slice(0, 8).map(function (src) {
-    return '<img src="' + escapeHtmlSupport(src) + '" alt="" loading="lazy" onerror="this.remove()" />';
-  }).join("") + "</div>" + credit;
+  /* Comme la fiche Google Maps : une grande photo, puis des colonnes de deux
+     petites, qu'on fait defiler. Avec UNE seule photo, elle prend toute la
+     largeur. (Julien, 15/09/2026 : « laisse-leur la possibilite de mettre des
+     photos comme sur Maps ».) */
+  var photos = liste.slice(0, 9);
+  var html = '<div class="club-galerie maps' + (photos.length === 1 ? " seule" : "") + '">' +
+    '<img class="grande" src="' + escapeHtmlSupport(photos[0]) + '" alt="" loading="lazy" onerror="this.remove()" />';
+  for (var k = 1; k < photos.length; k += 2) {
+    html += '<span class="colonne">' +
+      '<img src="' + escapeHtmlSupport(photos[k]) + '" alt="" loading="lazy" onerror="this.remove()" />' +
+      (photos[k + 1] ? '<img src="' + escapeHtmlSupport(photos[k + 1]) + '" alt="" loading="lazy" onerror="this.remove()" />' : "") +
+    "</span>";
+  }
+  return html + "</div>" + credit;
 }
 
 function ouvrirClub(c, src, id) {
@@ -11172,6 +11214,14 @@ function ouvrirClub(c, src, id) {
           '" target="_blank" rel="noopener noreferrer" style="text-decoration:none">@' + escapeHtmlSupport(c.ig) + "</a>" +
       "</div>"
     : "";
+  // Son TikTok, sous l'Instagram (Julien, 15/09/2026).
+  var ligneTiktok = c.tiktok
+    ? '<div class="club-info-ligne lien">' +
+        '<span class="club-info-ico"><svg viewBox="0 0 24 24" style="fill:var(--ink3);stroke:none;width:18px;height:18px"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></span>' +
+        '<a class="club-info-txt club-info-principal" href="https://www.tiktok.com/@' + encodeURIComponent(c.tiktok) +
+          '" target="_blank" rel="noopener noreferrer" style="text-decoration:none">@' + escapeHtmlSupport(c.tiktok) + "</a>" +
+      "</div>"
+    : "";
 
   /* ⚠️ L'AVIS GOOGLE VIT ICI. Julien, 13/09/2026 : "qu'ils puissent donner
      un avis Google depuis la carte, aux etablissements ou ils ont ete".
@@ -11201,7 +11251,7 @@ function ouvrirClub(c, src, id) {
       '<span class="club-adresse-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
       '<span class="club-adresse-txt">' + c.adr + "</span>" +
     "</div>" +
-    blocHoraires + ligneIg;
+    blocHoraires + ligneIg + ligneTiktok;
   // Retires (Julien) : la note "300 pts pour un cocktail offert, tu en as
   // 0" repetait la boutique en pointant un solde vide, et "Avis et photos
   // : voir sur Google" renvoyait chez Google depuis notre propre fiche.
@@ -11854,9 +11904,9 @@ map.on("load", function () {
     // photo dedans -- une epingle porte un pictogramme ; la photo est dans
     // la fiche qui s'ouvre au toucher.
     el.innerHTML =
-      '<svg viewBox="0 0 24 34" aria-hidden="true">' +
-        '<path class="goutte" d="M12 32.6c-.9-4-3.3-6.8-6.1-10.2A10.3 10.3 0 1 1 18.1 22.4c-2.8 3.4-5.2 6.2-6.1 10.2z"/>' +
-        '<circle class="point" cx="12" cy="12.2" r="2.9"/>' +
+      '<svg viewBox="-1.6 -1.6 43.2 55.2" aria-hidden="true">' +
+        '<path class="goutte" d="M20 51 4.93 31.88A19.2 19.2 0 1 1 35.07 31.88Z"/>' +
+        '<circle class="point" cx="20" cy="18.4" r="6"/>' +
       "</svg>";
     /* ⚠️ PLUS DE NOM ECRIT SOUS LE PIN. Julien, 13/09/2026 : "il ne faut pas
        que tu ecrives le nom de l'etablissement sur la terre en dessous de la
