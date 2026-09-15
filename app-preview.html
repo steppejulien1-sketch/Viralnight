@@ -4949,6 +4949,39 @@
          le mode sombre automatique suit sans regle de plus.
          ============================================================ */
 
+      /* ---------------- STORY VALIDEE ---------------- */
+      .vue-validee {
+        position: absolute; inset: -3px; z-index: 90; overflow: hidden; background: #14100d; color: #ffffff; text-align: center;
+      }
+      .vue-validee[hidden] { display: none; }
+      .vv-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+      .vv-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.1) 25%, rgba(0,0,0,.6) 58%, rgba(0,0,0,.9) 100%); }
+      .vv-contenu {
+        position: absolute; left: 0; right: 0; bottom: 0;
+        padding: 0 22px calc(24px + env(safe-area-inset-bottom, 0px));
+      }
+      .vv-titre { margin: 0 auto; max-width: 13ch; font-size: calc(32 * var(--u)); font-weight: 800; letter-spacing: -.035em; line-height: 1.08; text-wrap: balance; }
+      .vv-avant { margin: 22px 0 0; font-size: calc(16 * var(--u)); font-weight: 600; color: rgba(255,255,255,.86); }
+      .vv-gain {
+        margin: 2px 0 0; font-family: var(--chiffre); font-size: calc(80 * var(--u)); font-weight: 800; line-height: .95;
+        letter-spacing: -.045em; font-variant-numeric: tabular-nums;
+      }
+      .vv-gain.tic { animation: ob-bv-tic .12s ease-out; }
+      .vv-gain.fini { animation: ob-bv-pop .45s cubic-bezier(.34, 1.56, .64, 1); }
+      .vv-sous { margin: 4px auto 26px; max-width: 28ch; font-size: calc(16 * var(--u)); font-weight: 600; color: rgba(255,255,255,.86); }
+      .vv-btn {
+        width: 100%; min-height: 58px; border: 0; border-radius: 16px; background: #ffffff; color: #0b0b0c; cursor: pointer;
+        font-family: inherit; font-size: calc(16.5 * var(--u)); font-weight: 750;
+      }
+      .vv-btn:active { transform: scale(.98); }
+      .vue-validee.joue .vv-photo { animation: ob-bv-recul 2.2s cubic-bezier(.16, 1, .3, 1) both; }
+      .vue-validee.joue .vv-titre { animation: ob-bv-monte .7s cubic-bezier(.16, 1, .3, 1) .25s both; }
+      .vue-validee.joue .vv-avant { animation: ob-bv-monte .7s cubic-bezier(.16, 1, .3, 1) .4s both; }
+      .vue-validee.joue .vv-gain { animation: ob-bv-monte .7s cubic-bezier(.16, 1, .3, 1) .45s both; }
+      .vue-validee.joue .vv-sous { animation: ob-bv-monte .7s cubic-bezier(.16, 1, .3, 1) .55s both; }
+      .vue-validee.joue .vv-btn { animation: ob-bv-monte .7s cubic-bezier(.16, 1, .3, 1) .8s both; }
+      @media (prefers-reduced-motion: reduce) { .vue-validee.joue * { animation: none !important; } }
+
       /* ---------------- ONGLET STORY ---------------- */
       .vue-story { text-align: left; padding: 16px 20px 120px; }
       .st-tete { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 18px; }
@@ -6401,6 +6434,26 @@
 
           <!-- « Inviter des amis » a quitte Story (15/09/2026, page allegee) : la
                ligne vit dans les reglages. -->
+        </div>
+
+        <!-- ================= STORY VALIDEE =================
+             Julien, 15/09/2026 : « des qu'on ouvre l'application, une page :
+             bravo, votre story a ete validee, vous avez gagne N points, avec
+             un petit son satisfaisant ». La notification part deja a la
+             validation (lib/notifications/push.js, story_validee) ; cette page
+             est ce qu'on voit en ouvrant l'appli ensuite. Une fois par story
+             (verifierStoriesValidees). Meme langage que le cadeau de bienvenue :
+             la photo, le texte en blanc, le chiffre qui compte. -->
+        <div class="vue-validee" id="vue-validee" role="dialog" aria-modal="true" aria-labelledby="vv-titre" hidden>
+          <img class="vv-photo" src="/ambiance/inscription-prenom.webp" alt="" />
+          <div class="vv-voile" aria-hidden="true"></div>
+          <div class="vv-contenu">
+            <h2 class="vv-titre" id="vv-titre">Bravo, ta story est validée !</h2>
+            <p class="vv-avant">Tu as gagné</p>
+            <p class="vv-gain" id="vv-gain">+100</p>
+            <p class="vv-sous" id="vv-sous">points</p>
+            <button type="button" class="vv-btn" id="vv-btn">Continuer</button>
+          </div>
         </div>
 
         <!-- ECRAN FICHE GOOGLE -- ouvre la fiche Google du club en
@@ -8716,6 +8769,7 @@ function finirParcoursOb() {
   // La proposition de notifications attend que l'ecran principal soit libre
   // (ecranPrincipalVisible) : elle a pu passer son tour pendant le parcours.
   setTimeout(proposerNotifications, 1800);
+  setTimeout(verifierStoriesValidees, 900);
 }
 
 async function etapeSuivanteOb() {
@@ -9570,6 +9624,8 @@ supabaseClubbeur.auth.onAuthStateChange(function (evenement, session) {
   synchroniserBasculeNotif();
   // La proposition d'activer les notifications, quelques secondes plus tard.
   setTimeout(proposerNotifications, 6000);
+  // Une story validee depuis la derniere visite ? La page de fete.
+  setTimeout(verifierStoriesValidees, 1500);
   // Ce qui manque au compte (nom, Instagram) : une fois, puis plus jamais.
   poursuivreParcours(session);
 });
@@ -13380,6 +13436,8 @@ function inviteNotifPossible() {
 // feuille d'inscription : ces deux-la attendent une action precise, et une
 // proposition qui arrive au milieu ne fait que gener.
 function ecranPrincipalVisible() {
+  var validee = document.getElementById("vue-validee");
+  if (validee && !validee.hidden) return false;
   var accueil = $("#vue-accueil");
   var feuille = $("#ob-feuille");
   if (accueil && !accueil.classList.contains("masque")) return false;
@@ -14169,6 +14227,110 @@ async function resoudreIdsClubs() {
 function idClubBoutique() {
   return (CLUB_BOUTIQUE && IDS_CLUBS[CLUB_BOUTIQUE]) || CLUB_ID_DEMO;
 }
+
+/* ================= STORY VALIDEE =================
+   A l'ouverture de l'appli (et au retour au premier plan) : les stories
+   validees depuis la derniere visite, jamais montrees sur CE telephone.
+   Plusieurs d'un coup : une seule page, les points additionnes. La liste
+   des stories deja fetees vit dans le telephone (vn_stories_fetees) ; la
+   fenetre de 7 jours evite de feter de vieilles stories a la premiere
+   ouverture. */
+var STORIES_FETEES_CLE = "vn_stories_fetees";
+var verificationValideesEnCours = false;
+function storiesFetees() {
+  try { return JSON.parse(localStorage.getItem(STORIES_FETEES_CLE) || "[]"); } catch (e) { return []; }
+}
+function noterStoriesFetees(ids) {
+  try {
+    var liste = storiesFetees().concat(ids).slice(-200);
+    localStorage.setItem(STORIES_FETEES_CLE, JSON.stringify(liste));
+  } catch (e) { /* stockage refuse */ }
+}
+
+async function verifierStoriesValidees() {
+  if (verificationValideesEnCours || !supabaseClubbeur) return;
+  var vue = $("#vue-validee");
+  if (!vue || !vue.hidden) return;
+  // Jamais par-dessus l'accueil ou l'inscription : on repassera a la fin du parcours.
+  var accueil = $("#vue-accueil"), feuille = $("#ob-feuille");
+  if ((accueil && !accueil.classList.contains("masque")) || (feuille && !feuille.hidden)) return;
+  verificationValideesEnCours = true;
+  try {
+    var session = (await supabaseClubbeur.auth.getSession()).data.session;
+    if (!session) return;
+    var depuis = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+    var res = await supabaseClubbeur
+      .from("story_events")
+      .select("id, awarded_points, reviewed_at, clubs(name)")
+      .eq("user_id", session.user.id)
+      .eq("review_status", "validee")
+      .gt("awarded_points", 0)
+      .gte("reviewed_at", depuis)
+      .order("reviewed_at", { ascending: true });
+    if (res.error || !res.data) return;
+    var dejaFetees = storiesFetees();
+    var nouvelles = res.data.filter(function (st) { return dejaFetees.indexOf(st.id) === -1; });
+    if (!nouvelles.length) return;
+    var total = nouvelles.reduce(function (t, st) { return t + (st.awarded_points || 0); }, 0);
+    // Le nom du club seulement si toutes les stories sont du meme club.
+    var clubs = nouvelles.map(function (st) { return (st.clubs && st.clubs.name) || ""; });
+    var club = clubs.every(function (c) { return c && c === clubs[0]; }) ? clubs[0] : "";
+    noterStoriesFetees(nouvelles.map(function (st) { return st.id; }));
+    montrerStoryValidee(total, club, nouvelles.length);
+    chargerSoldeReel(session.user.id);
+  } catch (e) {
+    console.warn("[story validee]", e && e.message);
+  } finally {
+    verificationValideesEnCours = false;
+  }
+}
+
+function montrerStoryValidee(points, club, combien) {
+  var vue = $("#vue-validee"), chiffre = $("#vv-gain");
+  if (!vue) return;
+  $("#vv-titre").textContent = combien > 1 ? "Bravo, tes " + combien + " stories sont validées !" : "Bravo, ta story est validée !";
+  $("#vv-sous").textContent = (points > 1 ? "points" : "point") + (club ? " " + auClub(club) : "");
+  var calme = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  chiffre.classList.remove("tic", "fini");
+  chiffre.textContent = calme ? "+" + nb(points) : "+0";
+  vue.classList.remove("joue");
+  vue.hidden = false;
+  void vue.offsetWidth;
+  vue.classList.add("joue");
+  try { $("#vv-btn").focus({ preventScroll: true }); } catch (e) { /* ancien navigateur */ }
+  setTimeout(function () {
+    natif.vibrer("succes");
+    jouer("points");
+    if (calme) return;
+    var debut = performance.now(), duree = 900, dernier = -1;
+    (function compter(t) {
+      var p = Math.min(1, (t - debut) / duree);
+      var valeur = Math.round(points * (1 - Math.pow(1 - p, 3)));
+      if (valeur !== dernier) {
+        dernier = valeur;
+        chiffre.textContent = "+" + nb(valeur);
+        chiffre.classList.remove("tic");
+        void chiffre.offsetWidth;
+        chiffre.classList.add("tic");
+      }
+      if (p < 1) requestAnimationFrame(compter);
+      else { chiffre.classList.remove("tic"); chiffre.classList.add("fini"); }
+    })(debut);
+  }, calme ? 0 : 650);
+}
+
+$("#vv-btn")?.addEventListener("click", function () {
+  $("#vue-validee").hidden = true;
+  activerVue("boutique");
+});
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible") setTimeout(verifierStoriesValidees, 400);
+});
+/* Apercu : ?apercu_validee=1 montre la page avec 100 points, sans rien lire. */
+if (/[?&]apercu_validee=1(&|$)/.test(location.search)) {
+  setTimeout(function () { montrerStoryValidee(100, "Mirano", 1); }, 1800);
+}
+window.noctifyStoryValidee = function (points, club, combien) { montrerStoryValidee(points || 100, club || "", combien || 1); };
 
 /* "Ce soir au Le Trebuchet" : les noms de clubs portent deja leur
    article, il faut donc le contracter au lieu de coller "au " devant.
