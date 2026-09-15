@@ -114,22 +114,21 @@ const HAUTEUR = 844;
     await prendre("03-nom", "Comment tu t'appelles ?");
     await page.click('.ob-etape.actif [type="submit"]');
 
-    await attendreEcran("instagram");
-    const pseudo = "e2e_" + compte.uid.slice(0, 8);
-    await page.type("#ob-pseudo", pseudo);
-    await prendre("04-instagram", "Ton Instagram — le pseudo");
-    await page.click('.ob-etape.actif [type="submit"]');
-
-    // La capture a son propre ecran depuis le 15/09/2026.
+    // Plus d'ecran pseudo (15/09/2026) : la capture, puis le pseudo LU dessus.
     await attendreEcran("capture");
-    await pause(1600); // le telephone arrive, premier flash
-    await prendre("05-capture", "Capture ton profil");
+    const pseudo = "e2e_" + compte.uid.slice(0, 8);
+    await pause(1600); // le telephone arrive
+    await prendre("04-capture", "Capture ton profil");
     bilan.lienProfil = await page.$eval("#ob-ouvrir-instagram", (a) => a.href);
     const champ = await page.$("#ob-capture");
     await champ.uploadFile(CAPTURE);
-    await page.waitForFunction(() => document.querySelector("#ob-cap-tel").classList.contains("rempli"), { timeout: 10000 });
-    await pause(500);
-    await prendre("05b-capture-ajoutee", "Capture ajoutee");
+    await page.waitForFunction(() => document.querySelector("#ob-pseudo").dataset.lecture === "fini", { timeout: 60000 });
+    bilan.pseudoLu = await page.$eval("#ob-pseudo", (e) => e.dataset.lu);
+    await prendre("05-capture-pseudo-lu", "Capture ajoutee, pseudo lu");
+    // Le pseudo lu est celui de l'image d'exemple : on le remplace par un
+    // pseudo unique au compte jetable.
+    await page.$eval("#ob-pseudo", (e) => { e.value = ""; });
+    await page.type("#ob-pseudo", pseudo);
     await page.click('.ob-etape.actif [type="submit"]');
 
     // L'ecran de bienvenue et son cadeau. Un compte jetable n'a scanne aucun
