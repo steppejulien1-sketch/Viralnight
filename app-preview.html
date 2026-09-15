@@ -439,52 +439,68 @@
          quel que soit le theme du telephone (« remets l'application en
          blanc ») : c'est aussi ce qu'exige le trait noir du logo au verre.
          ============================================================ */
+      /* 15/09/2026, le soir : « fais pareil pour la page d'accueil » -- comme
+         les ecrans de l'inscription, une grande photo, le titre en blanc
+         dessus, puis un panneau BLANC aux coins arrondis qui monte du bas.
+         Blanc parce que le logo au verre est un trait noir : sur la photo il
+         disparaitrait. Memes animations que la feuille : la photo sort du
+         noir, le titre et le panneau montent. */
       .vue-accueil {
-        /* Un seul calque responsable du rayon : celui de .screen
-           (overflow: hidden). Celui-ci deborde de -3px, donc rien ne
-           depasse du coin arrondi. */
         position: absolute; inset: -3px; border-radius: 0; z-index: 30;
-        display: flex; flex-direction: column; align-items: stretch;
-        justify-content: flex-start;
-        padding: calc(40px + env(safe-area-inset-top, 0px)) 28px calc(32px + env(safe-area-inset-bottom, 0px));
-        text-align: left;
+        display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
+        padding: 0; text-align: left;
         --ink: #15181d; --ink2: #5c6370; --ink3: #71767f;
-        --line2: rgba(15,17,20,.14); --champ: rgba(0,0,0,.04);
+        --line2: rgba(15,17,20,.14); --champ: #f3f3f5;
         --btn-apple: #000000; --btn-apple-ink: #ffffff;
-        --btn-google: #ffffff; --btn-google-ink: #1a1a1a; --btn-google-bord: rgba(0,0,0,.16);
+        --btn-google: #ffffff; --btn-google-ink: #1a1a1a; --btn-google-bord: rgba(0,0,0,.14);
         --btn-email: #15181d; --btn-email-ink: #ffffff;
-        background: #ffffff; color: var(--ink);
+        background: #0b0b0c; color: var(--ink);
         transition: opacity .35s ease, visibility .35s ease;
       }
       .vue-accueil.masque { opacity: 0; visibility: hidden; pointer-events: none; }
+      .ac-photo {
+        position: absolute; left: 0; right: 0; top: 0; width: 100%; height: 72%;
+        object-fit: cover; object-position: 40% 50%;
+        animation: ob-ph-photo 1.6s cubic-bezier(.16, 1, .3, 1) both;
+      }
+      .ac-voile {
+        position: absolute; left: 0; right: 0; top: 0; height: 72%; pointer-events: none;
+        background: linear-gradient(to bottom, rgba(11,11,12,.45) 0%, rgba(11,11,12,0) 22%, rgba(11,11,12,0) 50%, rgba(11,11,12,.75) 100%);
+      }
+      .ac-title {
+        position: relative; margin: 0 24px 22px;
+        font-size: calc(30 * var(--u)); font-weight: 800; letter-spacing: -.035em; line-height: 1.05;
+        color: #ffffff; text-align: left; text-shadow: 0 2px 22px rgba(0,0,0,.5);
+        animation: ob-ph-monte .8s cubic-bezier(.16, 1, .3, 1) .25s both;
+      }
+      .ac-panneau {
+        position: relative; display: flex; flex-direction: column;
+        padding: 6px 22px calc(24px + env(safe-area-inset-bottom, 0px));
+        border-radius: 28px 28px 0 0; background: #ffffff;
+        box-shadow: 0 -18px 40px -20px rgba(0,0,0,.5);
+        animation: ac-panneau .9s cubic-bezier(.16, 1, .3, 1) .1s both;
+      }
+      .ac-panneau > * { animation: ob-ph-monte .7s cubic-bezier(.16, 1, .3, 1) both; }
+      .ac-panneau > :nth-child(1) { animation-delay: .35s; }
+      .ac-panneau > :nth-child(2) { animation-delay: .42s; }
+      .ac-panneau > :nth-child(3) { animation-delay: .5s; }
+      @keyframes ac-panneau { from { translate: 0 100%; } }
 
       /* Le logo au verre. Dans le PNG, l'illustration n'occupe que la bande
          verticale 22%-72% : le conteneur ne montre que cette bande (le
          pourcentage d'un margin-top se calcule sur la LARGEUR, et l'image est
          carree). Le PNG est detoure (outils/detourer_logo.py). */
       .ac-mascot {
-        width: min(292px, 100%); aspect-ratio: 1 / .53;
-        margin: auto auto 0; align-self: center; overflow: hidden;
+        width: min(210px, 70%); aspect-ratio: 1 / .53;
+        margin: 0 auto 14px; align-self: center; overflow: hidden;
       }
       .ac-mascot img { display: block; width: 100%; height: auto; margin-top: -21%; }
 
-      /* ⚠️ UN SEUL `auto` DANS CETTE COLONNE : celui du logo. Deux `auto`
-         laissaient deux vides de 250 px, le logo flottant au milieu. */
-      .ac-hero { margin: 22px 0 20px; }
-      .ac-title {
-        margin: 0; font-size: calc(22 * var(--u)); font-weight: 800; letter-spacing: -.03em;
-        line-height: 1.2; color: var(--ink); text-align: center;
-      }
-      .ac-lead {
-        margin: 0; font-size: calc(15 * var(--u)); font-weight: 500;
-        letter-spacing: -.01em; line-height: 1.45; color: var(--ink2); text-align: center;
-      }
-
-      .ac-actions { width: 100%; display: grid; gap: 12px; }
+      .ac-actions { width: 100%; display: grid; gap: 10px; }
       .ac-btn {
         display: flex; align-items: center; justify-content: center; gap: 12px;
-        width: 100%; min-height: 50px; padding: 0 20px; border: 0;
-        border-radius: var(--r-pill);
+        width: 100%; min-height: 52px; padding: 0 20px; border: 0;
+        border-radius: 16px;
         font-family: var(--sans); font-size: calc(14.5 * var(--u)); font-weight: 700;
         letter-spacing: -.01em; cursor: pointer;
         transition: transform var(--tr-court), filter var(--tr-court), background var(--tr-court);
@@ -500,13 +516,13 @@
       .ac-btn-marque { background: var(--btn-email); color: var(--btn-email-ink); }
       /* Separateur ligne-texte-ligne (Julien : "prends ca plus propre"). */
       .ac-sep {
-        display: flex; align-items: center; gap: 12px; margin: 12px 0 4px;
+        display: flex; align-items: center; gap: 12px; margin: 6px 0 0;
         font-size: calc(11.5 * var(--u)); font-weight: 600; color: var(--ink3);
       }
       .ac-sep::before, .ac-sep::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line2); }
       /* 16 px au moins : en dessous, l'iPhone zoome sur le champ. */
       .ac-input {
-        width: 100%; min-height: 48px; padding: 0 20px; border: 0; border-radius: var(--r-pill);
+        width: 100%; min-height: 52px; padding: 0 18px; border: 0; border-radius: 16px;
         background: var(--champ); box-shadow: inset 0 0 0 1px var(--line2);
         color: var(--ink); font-size: max(16px, calc(14 * var(--u))); font-family: var(--sans);
         transition: box-shadow var(--tr-court), background var(--tr-court);
@@ -879,36 +895,69 @@
         border-radius: 30px; overflow: hidden; background: #ffffff;
         box-shadow: 0 0 0 6px #1c1c1f, 0 0 0 7px rgba(255,255,255,.14), 0 40px 70px -24px rgba(222,49,49,.45);
       }
-      .ob-cap-ecran { position: absolute; inset: 0; padding: 9px 11px 0; color: #0b0b0c; font-family: var(--sans); text-align: left; }
-      .ob-cap-barre { display: flex; justify-content: space-between; align-items: center; padding: 1px 9px 0; font-size: 10px; }
-      .ob-cap-barre span { width: 17px; height: 8px; border-radius: 2.5px; background: #0b0b0c; }
+      /* Le dessin reprend l'ecran de profil Instagram (clair, 2026) :
+         barre d'etat, pseudo au centre, photo, nom et compteurs, bio,
+         deux boutons, stories a la une, onglets, grille, barre du bas.
+         Les photos sont libres (Pexels) ; aucun vrai compte n'est imite. */
+      .ob-cap-ecran {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        padding-top: 8px; background: #ffffff; color: #0b0b0c; font-family: var(--sans); text-align: left; overflow: hidden;
+      }
+      .ob-cap-ecran svg { fill: none; stroke: #0b0b0c; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .ob-cap-barre { display: flex; justify-content: space-between; align-items: center; padding: 0 16px; font-size: 9.5px; }
+      .ob-cap-icones { display: flex; align-items: center; gap: 3px; }
+      .ob-cap-icones i { display: block; background: #0b0b0c; }
+      .ob-cap-icones .sig { width: 10px; height: 6px; clip-path: polygon(0 100%, 25% 100%, 25% 70%, 37% 70%, 37% 100%, 50% 100%, 50% 45%, 62% 45%, 62% 100%, 75% 100%, 75% 15%, 87% 15%, 87% 100%, 100% 100%, 100% 0, 0 100%); }
+      .ob-cap-icones .wifi { width: 9px; height: 7px; border-radius: 9px 9px 0 0; clip-path: polygon(50% 100%, 0 25%, 100% 25%); }
+      .ob-cap-icones .bat { width: 15px; height: 7px; border-radius: 2px; }
+      .ob-cap-haut { display: grid; grid-template-columns: 16px 1fr 16px; align-items: center; margin: 9px 10px 0; }
+      .ob-cap-haut > svg { width: 14px; height: 14px; }
       .ob-cap-entete {
-        position: relative; display: flex; align-items: center; gap: 3px; width: max-content; margin: 13px auto 0;
-        font-size: 12.5px; font-weight: 700; letter-spacing: -.01em;
+        position: relative; display: flex; align-items: center; gap: 2px; justify-self: center; max-width: 100%;
+        font-size: 11.5px; font-weight: 750; letter-spacing: -.01em;
       }
-      .ob-cap-entete svg { width: 11px; height: 11px; fill: none; stroke: #0b0b0c; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-      .ob-cap-pseudo { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .ob-cap-cercle { position: absolute; inset: -5px -9px; border: 2px solid var(--marque); border-radius: 999px; opacity: 0; }
-      .ob-cap-profil { display: grid; grid-template-columns: 50px 1fr 1fr 1fr; align-items: center; gap: 2px; margin-top: 13px; }
+      .ob-cap-entete svg { flex: none; width: 10px; height: 10px; stroke-width: 2.3; }
+      .ob-cap-pseudo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ob-cap-cercle { position: absolute; inset: -5px -8px; border: 2px solid var(--marque); border-radius: 999px; opacity: 0; }
+      .ob-cap-profil { display: flex; align-items: center; gap: 10px; margin: 11px 12px 0; }
       .ob-cap-avatar {
-        width: 46px; height: 46px; border-radius: 50%; border: 2.5px solid transparent;
-        background: linear-gradient(160deg, #3a2b33, #b4555a) padding-box, linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5) border-box;
+        flex: none; width: 50px; height: 50px; padding: 2px; border-radius: 50%;
+        background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
       }
-      .ob-cap-stat { font-size: 7.5px; line-height: 1.2; text-align: center; color: #333; }
-      .ob-cap-stat b { display: block; font-size: 11px; color: #0b0b0c; }
-      .ob-cap-ligne { display: block; height: 6px; margin-top: 7px; border-radius: 3px; background: #e8e8eb; }
-      .ob-cap-ligne.l1 { width: 42%; margin-top: 11px; background: #cfcfd4; }
-      .ob-cap-ligne.l2 { width: 72%; }
-      .ob-cap-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 11px; }
-      .ob-cap-boutons span { height: 20px; border-radius: 6px; background: #efeff2; }
-      .ob-cap-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5px; margin: 11px -11px 0; }
-      .ob-cap-grille i { aspect-ratio: 1; background: #e4e4e8; }
-      .ob-cap-grille i:nth-child(1) { background: linear-gradient(150deg, #2c1d24, #a8343a); }
-      .ob-cap-grille i:nth-child(2) { background: linear-gradient(150deg, #d9a35c, #6b3b25); }
-      .ob-cap-grille i:nth-child(3) { background: linear-gradient(150deg, #21203a, #5d3f8a); }
-      .ob-cap-grille i:nth-child(4) { background: linear-gradient(150deg, #6d1d25, #de3131); }
-      .ob-cap-grille i:nth-child(5) { background: linear-gradient(150deg, #1d2a33, #3f7c86); }
-      .ob-cap-grille i:nth-child(6) { background: linear-gradient(150deg, #3b2a1a, #c78a3c); }
+      .ob-cap-avatar img { display: block; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #fff; object-fit: cover; }
+      .ob-cap-droite { flex: 1; min-width: 0; }
+      .ob-cap-nom { display: block; font-size: 10.5px; font-weight: 700; }
+      .ob-cap-stats { display: flex; justify-content: space-between; margin-top: 3px; }
+      .ob-cap-stats span { font-size: 7px; line-height: 1.15; color: #262626; }
+      .ob-cap-stats b { display: block; font-size: 10px; font-weight: 700; color: #0b0b0c; }
+      .ob-cap-bio { margin: 7px 12px 0; font-size: 8px; line-height: 1.3; color: #262626; }
+      .ob-cap-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 8px 12px 0; }
+      .ob-cap-boutons span {
+        display: grid; place-items: center; height: 18px; border-radius: 5px; background: #efefef;
+        font-size: 7.5px; font-weight: 650; white-space: nowrap;
+      }
+      .ob-cap-une { display: flex; gap: 9px; margin: 9px 12px 0; }
+      .ob-cap-une span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 6.5px; color: #262626; }
+      .ob-cap-une i {
+        display: block; width: 30px; height: 30px; border-radius: 50%; background: #ddd center / cover;
+        box-shadow: 0 0 0 1.5px #fff, 0 0 0 2.5px #dbdbdb;
+      }
+      .ob-cap-une i.nouveau { background: #fff; box-shadow: inset 0 0 0 1px #dbdbdb; position: relative; }
+      .ob-cap-une i.nouveau::before, .ob-cap-une i.nouveau::after { content: ""; position: absolute; left: 50%; top: 50%; background: #0b0b0c; translate: -50% -50%; }
+      .ob-cap-une i.nouveau::before { width: 10px; height: 1.5px; }
+      .ob-cap-une i.nouveau::after { width: 1.5px; height: 10px; }
+      .ob-cap-onglets { display: grid; grid-template-columns: repeat(3, 1fr); justify-items: center; margin-top: 9px; }
+      .ob-cap-onglets svg { width: 13px; height: 13px; padding-bottom: 5px; stroke: #8e8e8e; box-sizing: content-box; width: 100%; }
+      .ob-cap-onglets svg.actif { stroke: #0b0b0c; box-shadow: inset 0 -1.5px 0 #0b0b0c; }
+      .ob-cap-grille { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); align-content: start; gap: 1.5px; overflow: hidden; }
+      .ob-cap-grille i { aspect-ratio: 1; background: #e4e4e8 center / cover; }
+      .ob-cap-nav {
+        display: flex; justify-content: space-around; align-items: center; height: 30px; padding-bottom: 4px;
+        background: #ffffff; box-shadow: 0 -1px 0 #efefef;
+      }
+      .ob-cap-nav svg { width: 13px; height: 13px; }
+      .ob-cap-nav span { width: 14px; height: 14px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 1px #0b0b0c; }
+      .ob-cap-nav img { display: block; width: 100%; height: 100%; object-fit: cover; }
       .ob-cap-flash { position: absolute; inset: 0; background: #ffffff; opacity: 0; pointer-events: none; }
       .ob-cap-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #000; }
       .ob-cap-image[hidden] { display: none; }
@@ -1104,6 +1153,7 @@
 
       @media (prefers-reduced-motion: reduce) {
         .vue-accueil { transition: none; }
+        .ac-photo, .ac-title, .ac-panneau, .ac-panneau > * { animation: none; }
         .ob-feuille { translate: none; opacity: 0; transition: opacity .2s ease; }
         .ob-feuille.ouverte { opacity: 1; }
         .ob-etape, .ob-etape.actif { transition: none; }
@@ -5752,7 +5802,12 @@
              #vue-accueil garde sa classe .masque : la deconnexion et plusieurs
              ecrans « connecte-toi » le rouvrent par la. -->
         <div class="vue-accueil" id="vue-accueil">
-          <h2 class="ac-title">Bienvenue sur Noctify</h2>
+          <img class="ac-photo" src="/ambiance/accueil.webp" alt="" width="1400" height="933" decoding="async" fetchpriority="high" />
+          <div class="ac-voile" aria-hidden="true"></div>
+          <!-- La phrase passe en titre, en blanc sur la photo ; le logo au
+               verre (noir sur blanc) reste lisible dans le panneau blanc. -->
+          <h2 class="ac-title">Transforme<br />tes sorties<br />en récompenses.</h2>
+          <div class="ac-panneau">
           <!-- INSTALLER L'APPLI DEPUIS UN LIEN (13/09/2026). Android propose
                l'installation (beforeinstallprompt), iPhone ne sait le faire que
                par Partager > Sur l'ecran d'accueil. Rien ne s'affiche si l'appli
@@ -5765,14 +5820,11 @@
 
           <!-- Logo Noctify, envoye par Julien le 2026-08-30. -->
           <p class="ac-mascot">
-            <img src="/noctify-logo-verre-detoure.webp" alt="Noctify" width="640" height="640">
+            <img src="/noctify-logo-accueil.webp" alt="Noctify" width="640" height="640">
           </p>
 
-          <div class="ac-hero">
-            <!-- « Sorties » et plus « soirees » (Julien, 15/09/2026) : bars et
-                 restaurants arrivent, plus seulement des boites de nuit. -->
-            <p class="ac-lead">Transforme tes sorties en récompenses.</p>
-          </div>
+          <!-- « Sorties » et plus « soirees » (Julien, 15/09/2026) : bars et
+               restaurants arrivent, plus seulement des boites de nuit. -->
 
           <div class="ac-actions">
             <!-- Apple ET Google, comme l'accueil d'avant (Julien, 15/09/2026 :
@@ -5797,6 +5849,7 @@
             <input type="email" class="ac-input" id="ac-email" name="email" placeholder="ton@email.com" autocomplete="username" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" />
             <button type="button" class="ac-btn ac-btn-marque" id="ac-email-submit">Continuer avec l’email</button>
             <p class="ac-msg" id="ac-msg" role="alert" hidden></p>
+          </div>
           </div>
         </div>
 
@@ -5898,23 +5951,56 @@
             <div class="ob-cap-visuel" aria-hidden="true">
               <div class="ob-cap-tel" id="ob-cap-tel">
                 <div class="ob-cap-ecran">
-                  <div class="ob-cap-barre"><b>21:47</b><span></span></div>
-                  <div class="ob-cap-entete">
-                    <svg viewBox="0 0 24 24"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>
-                    <b class="ob-cap-pseudo" id="ob-cap-pseudo">ton.pseudo</b>
-                    <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
-                    <span class="ob-cap-cercle"></span>
+                  <div class="ob-cap-barre">
+                    <b>21:47</b>
+                    <span class="ob-cap-icones"><i class="sig"></i><i class="wifi"></i><i class="bat"></i></span>
+                  </div>
+                  <div class="ob-cap-haut">
+                    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    <div class="ob-cap-entete">
+                      <svg viewBox="0 0 24 24"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>
+                      <b class="ob-cap-pseudo" id="ob-cap-pseudo">ton.pseudo</b>
+                      <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
+                      <span class="ob-cap-cercle"></span>
+                    </div>
+                    <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
                   </div>
                   <div class="ob-cap-profil">
-                    <span class="ob-cap-avatar"></span>
-                    <span class="ob-cap-stat"><b>12</b>publications</span>
-                    <span class="ob-cap-stat"><b>486</b>followers</span>
-                    <span class="ob-cap-stat"><b>351</b>suivis</span>
+                    <span class="ob-cap-avatar"><img src="/ambiance/profil/avatar.webp" alt="" loading="lazy" /></span>
+                    <div class="ob-cap-droite">
+                      <b class="ob-cap-nom" id="ob-cap-nom">Camille</b>
+                      <div class="ob-cap-stats">
+                        <span><b>48</b>publications</span>
+                        <span><b>1 284</b>followers</span>
+                        <span><b>612</b>suivi(e)s</span>
+                      </div>
+                    </div>
                   </div>
-                  <span class="ob-cap-ligne l1"></span>
-                  <span class="ob-cap-ligne l2"></span>
-                  <div class="ob-cap-boutons"><span></span><span></span></div>
-                  <div class="ob-cap-grille"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                  <p class="ob-cap-bio">Bruxelles · toujours partante pour un verre</p>
+                  <div class="ob-cap-boutons"><span>Modifier</span><span>Partager le profil</span></div>
+                  <div class="ob-cap-une">
+                    <span><i style="background-image:url(/ambiance/profil/5.webp)"></i>Soirées</span>
+                    <span><i style="background-image:url(/ambiance/profil/3.webp)"></i>Bars</span>
+                    <span><i style="background-image:url(/ambiance/profil/2.webp)"></i>Amis</span>
+                    <span><i class="nouveau"></i>Nouveau</span>
+                  </div>
+                  <div class="ob-cap-onglets">
+                    <svg class="actif" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16"/></svg>
+                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></svg>
+                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="10.5" r="2.6"/><path d="M7.5 20c.8-2.6 2.4-4 4.5-4s3.7 1.4 4.5 4"/></svg>
+                  </div>
+                  <div class="ob-cap-grille">
+                    <i style="background-image:url(/ambiance/profil/1.webp)"></i><i style="background-image:url(/ambiance/profil/2.webp)"></i><i style="background-image:url(/ambiance/profil/3.webp)"></i>
+                    <i style="background-image:url(/ambiance/profil/4.webp)"></i><i style="background-image:url(/ambiance/profil/5.webp)"></i><i style="background-image:url(/ambiance/profil/6.webp)"></i>
+                    <i style="background-image:url(/ambiance/profil/7.webp)"></i><i style="background-image:url(/ambiance/profil/8.webp)"></i><i style="background-image:url(/ambiance/profil/9.webp)"></i>
+                  </div>
+                  <div class="ob-cap-nav">
+                    <svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/></svg>
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>
+                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>
+                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></svg>
+                    <span><img src="/ambiance/profil/avatar.webp" alt="" loading="lazy" /></span>
+                  </div>
                 </div>
                 <img class="ob-cap-image" id="ob-cap-image" alt="" hidden />
                 <span class="ob-cap-flash"></span>
@@ -8831,6 +8917,8 @@ function ouvrirProfilInstagramOb(ev) {
 function majVisuelCaptureOb() {
   var pseudo = nettoyerPseudoIg($("#ob-pseudo").value).toLowerCase();
   $("#ob-cap-pseudo").textContent = PSEUDO_IG_RE.test(pseudo) ? pseudo : "ton.pseudo";
+  var prenom = ($("#ob-nom").value || "").trim().split(/\s+/)[0];
+  $("#ob-cap-nom").textContent = prenom || "Camille";
   majLienProfilOb();
 }
 
