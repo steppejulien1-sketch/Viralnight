@@ -762,6 +762,7 @@
         padding: 0 22px calc(22px + env(safe-area-inset-bottom, 0px));
       }
       .ob-etape-bienvenue .ob-titre { color: #ffffff; font-size: calc(30 * var(--u)); letter-spacing: -.03em; }
+      .ob-bv-points[hidden] { display: block; visibility: hidden; height: 0; margin: 0 0 22px; }
       .ob-bv-points { margin: 8px 0 22px; font-size: calc(16 * var(--u)); font-weight: 600; color: rgba(255,255,255,.86); }
       .ob-bv-points strong { font-family: var(--chiffre); font-variant-numeric: tabular-nums; font-weight: 800; color: #ffffff; }
       .ob-bv-btn {
@@ -907,7 +908,7 @@
       /* La barre d'etat vient d'une vraie capture d'iPhone (Julien, IMG_5082) :
          heure, reseau, wifi, batterie, en noir sur le profil, en blanc sur l'accueil. */
       .ob-cap-barre { display: block; flex: none; width: 100%; height: auto; }
-      .ob-cap-haut { display: grid; grid-template-columns: 16px 1fr 16px; align-items: center; margin: 10px 11px 0; }
+      .ob-cap-haut { display: block; flex: none; width: 100%; height: auto; margin-top: 4px; }
       .ob-cap-haut > svg { width: 14px; height: 14px; stroke-width: 2; }
       .ob-cap-entete {
         position: relative; display: flex; align-items: center; gap: 2px; justify-self: center; max-width: 100%;
@@ -2559,21 +2560,24 @@
          il ne compte pas dans sa hauteur, et ne decale pas la pointe.
          Le scale de majTailleMarqueurs pivote autour de cette pointe
          (transform-origin 50% 100%) : le pin ne glisse pas en zoomant. */
-      .marker-club { width: 34px; height: 44px; }
+      /* 15/09/2026 : les pins de DUSK (capture IMG_5083 de Julien : « trop
+         larges, je veux les memes ») -- goutte grise etroite, contour noir,
+         point noir au centre. */
+      .marker-club { width: 24px; height: 34px; }
       .club-pin {
-        position: relative; display: block; width: 34px; height: 44px;
+        position: relative; display: block; width: 24px; height: 34px;
         padding: 0; border: 0; background: none; cursor: pointer;
         transform-origin: 50% 100%;
       }
-      .club-pin svg { display: block; width: 34px; height: 44px; filter: drop-shadow(0 3px 4px rgba(16,18,22,.32)); }
-      .club-pin .goutte { fill: var(--bouton, #de3131); stroke: #ffffff; stroke-width: 1.4; }
-      .club-pin .picto { fill: none; stroke: #ffffff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .club-pin svg { display: block; width: 24px; height: 34px; overflow: visible; filter: drop-shadow(0 1.5px 2px rgba(0,0,0,.25)); }
+      .club-pin .goutte { fill: #8e8e93; stroke: #0b0b0c; stroke-width: 1.6; stroke-linejoin: round; }
+      .club-pin .point { fill: #0b0b0c; }
       .club-pin:active svg { transform: scale(.94); transform-origin: 50% 100%; }
       /* Le focus rendu au pin a la fermeture de la fiche (rendeur) dessinait
          un cadre noir autour de la goutte, visible de tres loin sur le globe.
          Le clavier garde son repere : la goutte se cerne d'encre. */
       .club-pin:focus { outline: none; }
-      .club-pin:focus-visible .goutte { stroke: #15181d; stroke-width: 2.2; }
+      .club-pin:focus-visible .goutte { stroke: #0b0b0c; stroke-width: 2.4; }
 
       /* Le verre "moi" et sa legende "Toi" sont retires (13/09/2026) :
          la carte ne porte plus que les pins des etablissements. */
@@ -6062,16 +6066,9 @@
                 </div>
                 <div class="ob-cap-ecran">
                   <img class="ob-cap-barre" src="/ambiance/profil/barre-etat-noire.png" alt="" />
-                  <div class="ob-cap-haut">
-                    <svg viewBox="0 0 24 24"><path d="M12 4.5v15M4.5 12h15"/></svg>
-                    <div class="ob-cap-entete">
-                      <svg viewBox="0 0 24 24"><rect x="6.5" y="11" width="11" height="9" rx="2"/><path d="M9 11V8.2a3 3 0 0 1 6 0V11"/></svg>
-                      <b class="ob-cap-pseudo">julien.stpt</b>
-                      <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
-                      <i class="ob-cap-pastille"></i>
-                    </div>
-                    <svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>
-                  </div>
+                  <!-- La barre du pseudo, decoupee dans la capture de Julien : le
+                       texte redessine « bugait » a cette taille. -->
+                  <img class="ob-cap-haut" src="/ambiance/profil/entete-profil.png" alt="" />
                   <div class="ob-cap-profil">
                     <span class="ob-cap-avatar">
                       <i class="ob-cap-plus"></i>
@@ -7550,7 +7547,7 @@ import * as natif from "./natif.js";
    pendant que la meme boutique disait "Poster ta story +50" -- Julien,
    13/09/2026 : "c'est bizarre". Voir GAINS pour les sources exactes. */
 import { nomAffiche } from "./lib/profil/nomDepuisEmail.js";
-import { zonePseudo, pseudoDepuisTexteOcr } from "./lib/profil/pseudoDepuisCapture.js";
+import { zonePseudo, pseudoDepuisTexteOcr, estProfilInstagram } from "./lib/profil/pseudoDepuisCapture.js";
 
 // Connexion reelle sur la BONNE base : celle des clients de club
 // (gcopwgmqjiufemapamek), pas celle des gerants qu'utilise le reste du
@@ -8565,12 +8562,13 @@ function finirParcoursOb() {
   setTimeout(proposerNotifications, 1800);
 }
 
-function etapeSuivanteOb() {
+async function etapeSuivanteOb() {
   var i = OB.suite.indexOf(OB.etape);
   var prochaine = i === -1 ? OB.suite[0] : OB.suite[i + 1];
   // Relu en y arrivant : le scan du QR qui a amene la personne a pu se
-  // crediter pendant le parcours, et rendre le cadeau disponible.
-  if (prochaine === "bienvenue") lireCadeauOb();
+  // crediter pendant le parcours, et rendre le cadeau disponible. Attendu :
+  // l'ecran se regle sur la reponse (avec ou sans cadeau).
+  if (prochaine === "bienvenue") await lireCadeauOb();
   if (prochaine) allerOb(prochaine);
   else finirParcoursOb();
 }
@@ -8582,6 +8580,7 @@ function etapeSuivanteOb() {
    - aucun_club : la base ne verse rien encore, ils attendent le premier scan.
    Deja pris, ou telephone deja servi : pas d'ecran. */
 async function lireCadeauOb() {
+  OB.cadeau = null;
   try {
     var res = await supabaseClubbeur.rpc("welcome_bonus_status", { p_device: jetonAppareil() });
     var d = !res.error && res.data;
@@ -8605,7 +8604,14 @@ function jouerBienvenueOb() {
   etape.classList.remove("joue");
   bouton.classList.remove("gagne");
   bouton.disabled = false;
-  $("#ob-bv-libelle").textContent = "Récupérer mon cadeau";
+  // Sans bonus a prendre (deja pris sur ce telephone), la meme page, sans la
+  // promesse : on entre dans l'appli.
+  var avecCadeau = Boolean(OB.cadeau);
+  $("#ob-bv-libelle").textContent = avecCadeau ? "Récupérer mon cadeau" : "Ouvrir l’appli";
+  $(".ob-bv-points").hidden = !avecCadeau;
+  bouton.querySelector("svg").style.display = avecCadeau ? "" : "none";
+  var photo = $("#ob-bv-photo");
+  if (photo && !photo.getAttribute("src")) photo.src = photo.dataset.src;
   (minuteursCadeauOb || []).forEach(clearTimeout);
   $("#ob-cadeau").hidden = true;
   $("#ob-cadeau").classList.remove("joue");
@@ -8724,11 +8730,9 @@ async function poursuivreParcours(session) {
   var meta = session.user.user_metadata || {};
   var age = Date.now() - new Date(session.user.created_at).getTime();
   var suite = [];
-  if ((OB.ouverte || age < 30 * 60 * 1000) && !String(meta.full_name || meta.name || "").trim()) {
-    suite.push("nom");
-    var devine = nomAffiche({ metadata: meta, email: session.user.email });
-    if (devine && !$("#ob-nom").value) $("#ob-nom").value = devine;
-  }
+  // Plus d'ecran « prenom » (Julien, 15/09/2026 : « pas besoin de taper son
+  // nom, on utilisera le meme nom que le pseudo Insta, ca reduit la
+  // friction ») : le nom est pose a l'envoi de la capture.
   try {
     var profil = (await supabaseClubbeur
       .from("users")
@@ -8749,9 +8753,13 @@ async function poursuivreParcours(session) {
     // Lecture impossible : on ne bloque pas l'entree dans l'appli pour une
     // etape administrative.
   }
-  // Le cadeau de bienvenue ferme la marche -- dans un parcours neuf
-  // seulement : un compte ancien le retrouve dans Recompenses.
-  if ((OB.ouverte || age < 30 * 60 * 1000) && (await lireCadeauOb())) suite.push("bienvenue");
+  // La page de bienvenue ferme la marche : TOUJOURS pour un compte neuf
+  // (Julien, 15/09/2026 : la derniere page n'etait pas venue -- le bonus
+  // etait deja pris sur ce telephone, et sans bonus l'ecran sautait) ; pour
+  // un compte ancien, seulement s'il a encore un bonus a prendre.
+  var neuf = age < 30 * 60 * 1000;
+  var cadeau = (OB.ouverte || neuf) ? await lireCadeauOb() : null;
+  if (neuf || cadeau) suite.push("bienvenue");
 
   OB.suite = suite;
   if (!suite.length) {
@@ -9148,9 +9156,9 @@ async function remplirPseudoOb(capture) {
   $("#ob-titre-capture").textContent = "C’est ajouté";
   $("#ob-cap-sous").textContent = "Lecture de ton pseudo…";
 
-  var lu = null;
+  var analyse = null;
   try {
-    lu = await Promise.race([
+    analyse = await Promise.race([
       lirePseudoCaptureOb(capture),
       new Promise(function (ok) { setTimeout(function () { ok(null); }, 15000); }),
     ]);
@@ -9159,6 +9167,16 @@ async function remplirPseudoOb(capture) {
   }
   // Une autre capture a ete choisie entre-temps : cette lecture est perimee.
   if (capture !== OB.capture) return;
+
+  /* Pas un profil Instagram (Julien : « qu'on doive envoyer d'office une
+     capture d'ecran d'Insta et pas une autre ») : l'image est refusee, on
+     revient a l'ecran de depart. Si la lecture n'a PAS PU se faire (reseau,
+     vieux telephone), on ne bloque pas l'inscription : le pseudo se tape. */
+  if (analyse && !analyse.profil) {
+    refuserCaptureOb();
+    return;
+  }
+  var lu = analyse ? analyse.pseudo : null;
 
   bloc.classList.remove("lecture");
   champ.dataset.lecture = "fini";
@@ -9178,21 +9196,43 @@ async function remplirPseudoOb(capture) {
   }
 }
 
-/* La lecture, sur le telephone, sans serveur : la barre du haut de la
-   capture (zonePseudo), en niveaux de gris, inversee si le mode est sombre,
-   contraste etire, agrandie a 1 200 px, puis Tesseract (charge a la demande :
-   seuls ceux qui arrivent ici le telechargent). */
-async function lirePseudoCaptureOb(capture) {
-  var image = await createImageBitmap(capture);
-  var z = zonePseudo(image.width, image.height);
-  if (!z) return null;
-  var toile = document.createElement("canvas");
-  toile.width = 1200;
-  toile.height = Math.max(1, Math.round(z.hauteur * 1200 / z.largeur));
-  var g = toile.getContext("2d", { willReadFrequently: true });
-  g.drawImage(image, z.x, z.y, z.largeur, z.hauteur, 0, 0, toile.width, toile.height);
-  if (image.close) image.close();
+// Remet l'ecran capture comme a l'arrivee, avec la raison du refus.
+function refuserCaptureOb() {
+  OB.capture = null;
+  if (OB.urlCapture) { URL.revokeObjectURL(OB.urlCapture); OB.urlCapture = null; }
+  var img = $("#ob-cap-image");
+  img.hidden = true;
+  img.removeAttribute("src");
+  $("#ob-cap-tel").classList.remove("rempli");
+  etapeOb("capture").classList.remove("avec-pseudo");
+  var bloc = $("#ob-cap-pseudo-bloc");
+  bloc.hidden = true;
+  bloc.classList.remove("lecture");
+  var champ = $("#ob-pseudo");
+  champ.dataset.lecture = "refusee";
+  if (OB.pseudoLu) { champ.value = ""; OB.pseudoLu = false; }
+  $("#ob-cap-btn").textContent = "Ajouter la capture";
+  var lien = $("#ob-ouvrir-instagram");
+  lien.textContent = "Ouvrir Instagram";
+  delete lien.dataset.changer;
+  $("#ob-titre-capture").textContent = "Ce n’est pas ton profil";
+  $("#ob-cap-sous").textContent = "Envoie une capture d’écran de ta page de profil Instagram, avec ton pseudo en haut.";
+  natif.vibrer("erreur");
+}
 
+/* La lecture, sur le telephone, sans serveur. Deux passes du meme lecteur
+   Tesseract (charge a la demande : seuls ceux qui arrivent ici le
+   telechargent) :
+   - l'image entiere, reduite : est-ce un profil Instagram ? (estProfilInstagram) ;
+   - la barre du haut (zonePseudo), agrandie : le pseudo.
+   Chaque passe : niveaux de gris, inversee si le mode est sombre, contraste
+   etire. Rend { profil, pseudo }, ou null si la lecture n'a pas pu se faire. */
+function preparerToileOb(image, zone, largeur) {
+  var toile = document.createElement("canvas");
+  toile.width = largeur;
+  toile.height = Math.max(1, Math.round(zone.hauteur * largeur / zone.largeur));
+  var g = toile.getContext("2d", { willReadFrequently: true });
+  g.drawImage(image, zone.x, zone.y, zone.largeur, zone.hauteur, 0, 0, toile.width, toile.height);
   var donnees = g.getImageData(0, 0, toile.width, toile.height);
   var px = donnees.data, somme = 0, bas = 255, haut = 0, i, l;
   for (i = 0; i < px.length; i += 4) {
@@ -9214,13 +9254,27 @@ async function lirePseudoCaptureOb(capture) {
     px[i + 3] = 255;
   }
   g.putImageData(donnees, 0, 0);
+  return toile;
+}
+
+async function lirePseudoCaptureOb(capture) {
+  var image = await createImageBitmap(capture);
+  var z = zonePseudo(image.width, image.height);
+  if (!z) return null;
+  var entiere = preparerToileOb(image, { x: 0, y: 0, largeur: image.width, hauteur: image.height }, 1000);
+  var barre = preparerToileOb(image, z, 1200);
+  if (image.close) image.close();
 
   var T = await import("tesseract.js");
   var creer = T.createWorker || (T.default && T.default.createWorker);
   var lecteur = await creer("eng");
   try {
-    var resultat = await lecteur.recognize(toile);
-    return pseudoDepuisTexteOcr(resultat.data.text);
+    var texteEntier = (await lecteur.recognize(entiere)).data.text;
+    var texteBarre = (await lecteur.recognize(barre)).data.text;
+    return {
+      profil: estProfilInstagram(texteEntier),
+      pseudo: pseudoDepuisTexteOcr(texteBarre) || pseudoDepuisTexteOcr(texteEntier.split("\n").slice(0, 3).join("\n")),
+    };
   } finally {
     lecteur.terminate();
   }
@@ -9275,6 +9329,15 @@ async function enregistrerCaptureOb(ev) {
   if (erreurProfil) {
     chargementOb(bouton, false);
     return direOb("capture", "La capture n’a pas pu être enregistrée. Réessaie.");
+  }
+
+  // Le nom affiche = le pseudo Instagram, sauf si Google ou Apple en ont
+  // donne un. Un echec ici ne bloque pas l'entree.
+  var meta = session.user.user_metadata || {};
+  if (!String(meta.full_name || meta.name || "").trim()) {
+    await supabaseClubbeur.auth.updateUser({ data: { full_name: pseudo } }).catch(function () {});
+    var nomProfil = $("#pf-nom");
+    if (nomProfil) nomProfil.textContent = pseudo;
   }
 
   chargementOb(bouton, false);
@@ -10904,11 +10967,8 @@ function ouvrirClub(c, src, id) {
   // cle et son cout : pas quelque chose a improviser. Ce bouton fait donc
   // ce qui est reellement faisable ici et le dit honnetement -- il ferme
   // la fiche et amene la carte Noctify sur le club.
-  if (c.lngLat) {
-    actions += '<button type="button" class="club-action-btn" id="sh-carte">' +
-      '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>' +
-      "<span>Sur la carte</span></button>";
-  }
+  // « Sur la carte » retire le 15/09/2026 (Julien : « c'est bugue, retire
+  // ce truc »).
   actions += '<button type="button" class="club-action-btn" id="sh-partager">' +
     '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0 4 4m-4-4L8 7"/><path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg></span>' +
     "<span>Partager</span></button>";
@@ -11689,9 +11749,9 @@ map.on("load", function () {
     // photo dedans -- une epingle porte un pictogramme ; la photo est dans
     // la fiche qui s'ouvre au toucher.
     el.innerHTML =
-      '<svg viewBox="0 0 34 44" aria-hidden="true">' +
-        '<path class="goutte" d="M17 43c-1-4.8-4.7-8.6-8.44-13A15.5 15.5 0 1 1 25.44 30C21.7 34.4 18 38.2 17 43z"/>' +
-        '<path class="picto" d="M10.6 10.8h12.8L17 17.9zM17 17.9v5.4M13.9 23.6h6.2"/>' +
+      '<svg viewBox="0 0 24 34" aria-hidden="true">' +
+        '<path class="goutte" d="M12 32.6c-.9-4-3.3-6.8-6.1-10.2A10.3 10.3 0 1 1 18.1 22.4c-2.8 3.4-5.2 6.2-6.1 10.2z"/>' +
+        '<circle class="point" cx="12" cy="12.2" r="2.9"/>' +
       "</svg>";
     /* ⚠️ PLUS DE NOM ECRIT SOUS LE PIN. Julien, 13/09/2026 : "il ne faut pas
        que tu ecrives le nom de l'etablissement sur la terre en dessous de la

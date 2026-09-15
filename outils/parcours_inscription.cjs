@@ -35,6 +35,7 @@ const DOSSIER = `${__dirname}/pages-inscription${THEME ? "-" + THEME : ""}`;
 // Chemin resolu : avec un « .. » dedans, Chrome accepte le fichier (l'apercu
 // s'affiche) mais ne sait plus le relire ensuite -- l'envoi echouait.
 const CAPTURE = require("path").resolve(__dirname, "../public/story-exemples/exemple-profil-sombre.webp");
+const PAS_UN_PROFIL = require("path").resolve(__dirname, "../public/ambiance/bienvenue.webp");
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 const LARGEUR = 390;
 const HAUTEUR = 844;
@@ -107,12 +108,7 @@ const HAUTEUR = 844;
     await prendre("02-code", "Regarde tes mails — le code");
     await page.type("#ob-code", code.slice(4));
 
-    console.log("\nLa feuille, apres la connexion");
-    await attendreEcran("nom");
-    bilan.nomPreRempli = await page.$eval("#ob-nom", (el) => el.value);
-    await page.type("#ob-nom", "Camille Durand");
-    await prendre("03-nom", "Comment tu t'appelles ?");
-    await page.click('.ob-etape.actif [type="submit"]');
+    console.log("\nLa feuille, apres la connexion (plus d'ecran prenom)");
 
     // Plus d'ecran pseudo (15/09/2026) : la capture, puis le pseudo LU dessus.
     await attendreEcran("capture");
@@ -121,6 +117,11 @@ const HAUTEUR = 844;
     await prendre("04-capture", "Capture ton profil");
     bilan.lienProfil = await page.$eval("#ob-ouvrir-instagram", (a) => a.href);
     const champ = await page.$("#ob-capture");
+    // Une photo qui n'est pas un profil Instagram : refusee.
+    await champ.uploadFile(PAS_UN_PROFIL);
+    await page.waitForFunction(() => document.querySelector("#ob-pseudo").dataset.lecture === "refusee", { timeout: 60000 }).catch(() => {});
+    bilan.photoRefusee = await page.$eval("#ob-pseudo", (e) => e.dataset.lecture === "refusee");
+    await prendre("04b-capture-refusee", "Pas un profil : refusee");
     await champ.uploadFile(CAPTURE);
     await page.waitForFunction(() => document.querySelector("#ob-pseudo").dataset.lecture === "fini", { timeout: 60000 });
     bilan.pseudoLu = await page.$eval("#ob-pseudo", (e) => e.dataset.lu);
@@ -134,6 +135,7 @@ const HAUTEUR = 844;
     // L'ecran de bienvenue et son cadeau. Un compte jetable n'a scanne aucun
     // etablissement : les 50 points y sont annonces, pas verses.
     const fin = await page.waitForFunction(() => document.querySelector('.ob-etape.actif[data-etape="bienvenue"]') || document.querySelector("#ob-feuille").hidden, { timeout: 20000 }).then(() => ecranActif()).catch(() => null);
+    bilan.pageBienvenue = fin === "bienvenue";
     if (fin === "bienvenue") {
       await pause(2600); // le paquet se pose, le chiffre compte
       await prendre("06-bienvenue", "Bienvenue — le cadeau");
@@ -165,7 +167,7 @@ const HAUTEUR = 844;
       nom: utilisateur && utilisateur.user_metadata && utilisateur.user_metadata.full_name,
       erreursPage: erreurs,
     });
-    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === "Camille Durand" && bilan.accueilMasque;
+    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === pseudo && bilan.photoRefusee && bilan.pageBienvenue && bilan.accueilMasque;
     console.log("\n" + JSON.stringify(bilan, null, 1));
   } finally {
     if (navigateur) await navigateur.close();

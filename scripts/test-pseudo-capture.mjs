@@ -1,7 +1,7 @@
 // Tests du pseudo lu sur une capture de profil Instagram. Les textes sont
 // ceux qu'a rendus Tesseract sur de vraies captures (15/09/2026).
 
-import { pseudoDepuisTexteOcr, zonePseudo } from "../lib/profil/pseudoDepuisCapture.js";
+import { pseudoDepuisTexteOcr, zonePseudo, estProfilInstagram } from "../lib/profil/pseudoDepuisCapture.js";
 
 let passed = 0;
 let failed = 0;
@@ -35,6 +35,14 @@ console.log("\nzonePseudo");
 check("capture iPhone", zonePseudo(1170, 2532), { x: 140, y: 89, largeur: 889, hauteur: 203 });
 check("recadrage trapu : le haut", zonePseudo(360, 276), { x: 43, y: 0, largeur: 274, hauteur: 124 });
 check("sans taille", zonePseudo(0, 0), null);
+
+console.log("\nestProfilInstagram");
+check("profil, mode clair", estProfilInstagram("17:14\n+ 8 julien.stpt\n0 75 192\no publications followers suivi(e)s\nModifier Partager le profil +2"), true);
+check("profil lu de travers", estProfilInstagram("fl¥ 7+) 0 399 217\n“publications followers  suivi(e)s"), true);
+check("profil en anglais", estProfilInstagram("12 posts 480 followers 350 following Edit profile"), true);
+check("le fil « Pour vous »", estProfilInstagram("17:35\nPour vous v\nVotre story mae.cmf loistoleez\nJ'AI FAIT 247K LE MOIS DERNIER"), false);
+check("une photo quelconque", estProfilInstagram(""), false);
+check("un seul mot au hasard", estProfilInstagram("merci pour les followers"), false);
 
 console.log(`\n${passed} OK, ${failed} en echec`);
 if (failed) process.exit(1);
