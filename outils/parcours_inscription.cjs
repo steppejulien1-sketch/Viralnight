@@ -139,8 +139,16 @@ const HAUTEUR = 844;
     if (fin === "bienvenue") {
       await pause(2600); // le paquet se pose, le chiffre compte
       await prendre("06-bienvenue", "Bienvenue — le cadeau");
-      bilan.bienvenue = await page.$eval("#ob-bv-btn", (b) => b.textContent);
+      bilan.bienvenue = (await page.$eval("#ob-bv-btn", (b) => b.textContent)).trim();
       await page.click("#ob-bv-btn");
+      // Depuis la migration clubbeur 0049, le cadeau se prend sans scan :
+      // la page « Cadeau recupere » se pose, puis « Continuer ».
+      bilan.pageCadeau = await page.waitForFunction(() => !document.querySelector("#ob-cadeau").hidden, { timeout: 20000 }).then(() => true).catch(() => false);
+      if (bilan.pageCadeau) {
+        await pause(3400);
+        await prendre("07-cadeau-recupere", "Cadeau recupere");
+        await page.click("#ob-cd-btn");
+      }
     }
 
     await page.waitForFunction(() => document.querySelector("#ob-feuille").hidden, { timeout: 20000 }).catch(async (e) => {
@@ -156,18 +164,19 @@ const HAUTEUR = 844;
     bilan.accueilMasque = await page.evaluate(() => document.querySelector("#vue-accueil").classList.contains("masque"));
 
     // Ce qui est VRAIMENT en base.
-    const lignes = V.sql(`select handle, profile_proof_path from public.users where id='${compte.uid}'`);
+    const lignes = V.sql(`select handle, profile_proof_path, points_balance from public.users where id='${compte.uid}'`);
     const ligne = Array.isArray(lignes) ? lignes[0] : null;
     cheminCapture = ligne && ligne.profile_proof_path;
     const [, utilisateur] = await V.admin(`/auth/v1/admin/users/${compte.uid}`, "GET");
     Object.assign(bilan, {
       handle: ligne && ligne.handle,
       handleAttendu: pseudo,
+      solde: ligne && Number(ligne.points_balance),
       capture: cheminCapture,
       nom: utilisateur && utilisateur.user_metadata && utilisateur.user_metadata.full_name,
       erreursPage: erreurs,
     });
-    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === pseudo && bilan.photoRefusee && bilan.pageBienvenue && bilan.accueilMasque;
+    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === pseudo && bilan.photoRefusee && bilan.pageBienvenue && bilan.pageCadeau && bilan.solde === 50 && bilan.accueilMasque;
     console.log("\n" + JSON.stringify(bilan, null, 1));
   } finally {
     if (navigateur) await navigateur.close();

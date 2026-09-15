@@ -5969,7 +5969,6 @@
         <div class="ob-voile" id="ob-voile" hidden></div>
         <section class="ob-feuille" id="ob-feuille" role="dialog" aria-modal="true" aria-labelledby="ob-titre-code" hidden>
           <button type="button" class="ob-nav" id="ob-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-          <div class="ob-progres" id="ob-progres" aria-hidden="true"></div>
           <button type="button" class="ob-nav" id="ob-retour" aria-label="Retour" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5M11 5l-7 7 7 7"/></svg></button>
 
           <!-- « Regarde tes mails » ET le code, sur la meme page (Julien : « on
@@ -8459,7 +8458,9 @@ function placerEtapeOb(nom, sens) {
   if (nom === "bienvenue") jouerBienvenueOb();
 }
 
-/* Les barres du haut. Avant la connexion, la suite n'est pas encore connue :
+/* Les barres du haut : retirees le 15/09/2026 (Julien : « la ligne bizarre
+   au-dessus »). La fonction ne trouve plus #ob-progres et s'arrete.
+   Avant la connexion, la suite n'est pas encore connue :
    on compte le parcours complet. Apres, le code (s'il a ete vu) puis ce que
    poursuivreParcours a retenu. Sous deux ecrans, pas de barres. */
 function majProgresOb() {
@@ -8606,13 +8607,15 @@ async function prendreCadeauOb() {
     setTimeout(finirParcoursOb, ms);
   }
   if (!OB.cadeau) return finirParcoursOb();
-  if (OB.cadeau.etat !== "disponible") {
-    libelle.textContent = "Tes points arrivent à ton premier scan";
-    return puisAppli(1600);
-  }
+  // Depuis la migration clubbeur 0049, plus d'attente du premier scan : le
+  // bonus se prend des l'inscription (Julien : « faut que les gens puissent
+  // recuperer direct, ca donne de la dopamine »).
 
   chargementOb(bouton, true);
-  var res = await supabaseClubbeur.rpc("welcome_bonus", { p_device: jetonAppareil() })
+  // ⚠️ Promise.resolve : un appel rpc() de supabase-js est un « thenable »
+  // SANS .catch -- l'ancien `.rpc(...).catch(...)` levait une TypeError au
+  // toucher du bouton, et le cadeau ne se prenait jamais.
+  var res = await Promise.resolve(supabaseClubbeur.rpc("welcome_bonus", { p_device: jetonAppareil() }))
     .catch(function (erreur) { return { error: erreur }; });
   chargementOb(bouton, false);
   var d = (!res.error && res.data) || { etat: "erreur" };
@@ -8622,7 +8625,6 @@ async function prendreCadeauOb() {
     var phrases = {
       deja_pris: "Cadeau déjà récupéré",
       appareil_deja_servi: "Un seul cadeau par téléphone",
-      aucun_club: "Tes points arrivent à ton premier scan",
     };
     libelle.textContent = phrases[d.etat] || "Tu le retrouveras dans Récompenses";
     return puisAppli(1600);
