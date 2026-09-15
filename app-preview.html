@@ -768,6 +768,64 @@
       @keyframes ob-bv-monte { from { opacity: 0; translate: 0 14px; } }
       .ob-etape[data-etape="code"] .ob-lien { display: block; margin-top: 18px; }
 
+      /* ---- Les ecrans du parcours sur photo, comme la bienvenue ----
+         Julien, 15/09/2026 : « la derniere page avec la recompense c'est
+         propre grace a la photo, fais ca pour tout ». Plein ecran, la photo
+         en haut qui se fond dans le noir, la question en gros dessous, le
+         champ, le gros bouton blanc en bas. La photo est un fond : elle
+         cede la place quand le clavier monte (l'espace qui la porte se
+         resserre, --clavier). Les jetons de couleur de la feuille sont
+         repris en clair sur sombre : champs, code et boutons suivent seuls. */
+      .ob-photo-etape {
+        --ink: #ffffff; --ink2: rgba(255,255,255,.72); --ink3: rgba(255,255,255,.46);
+        --line: rgba(255,255,255,.14); --line2: rgba(255,255,255,.34);
+        --gris: rgba(255,255,255,.08); --ob-fond: #0b0b0c;
+        --ob-action: #ffffff; --ob-action-ink: #0b0b0c;
+        --ob-eteint: rgba(255,255,255,.14); --ob-eteint-ink: rgba(255,255,255,.42);
+        --ob-roue: #0b0b0c; --ob-roue-fond: rgba(0,0,0,.18);
+        --ob-erreur: #ff7a7a;
+        display: flex; flex-direction: column; text-align: left;
+        padding: 0 24px calc(100px + env(safe-area-inset-bottom, 0px) + var(--clavier, 0px));
+        background: var(--ob-fond); color: var(--ink);
+      }
+      .ob-photo {
+        position: absolute; left: 0; right: 0; top: 0; width: 100%; height: 100%;
+        object-fit: cover; object-position: center 30%; pointer-events: none;
+      }
+      .ob-photo-voile {
+        position: absolute; left: 0; right: 0; top: 0; height: 100%; pointer-events: none;
+        background: linear-gradient(to bottom, rgba(11,11,12,.35) 0%, rgba(11,11,12,0) 20%, rgba(11,11,12,.3) 44%, rgba(11,11,12,.82) 64%, rgba(11,11,12,.96) 82%);
+      }
+      /* Instagram porte plus de contenu : il monte plus haut sur la photo,
+         le voile fonce plus tot. */
+      .ob-etape-ig .ob-photo-voile {
+        background: linear-gradient(to bottom, rgba(11,11,12,.35) 0%, rgba(11,11,12,0) 16%, rgba(11,11,12,.55) 34%, rgba(11,11,12,.9) 52%, #0b0b0c 70%);
+      }
+      .ob-photo-espace { flex: 1 0 auto; min-height: calc(64px + env(safe-area-inset-top, 0px)); }
+      .ob-photo-contenu { position: relative; flex: none; }
+      .ob-photo-etape .ob-titre { font-size: calc(32 * var(--u)); letter-spacing: -.03em; line-height: 1.1; text-shadow: 0 2px 18px rgba(0,0,0,.45); }
+      .ob-photo-etape .ob-sous { margin: 8px 0 0; max-width: none; font-size: calc(15 * var(--u)); }
+      .ob-photo-etape .ob-champ { margin-top: 24px; }
+      .ob-photo-etape .ob-code { margin: 26px 0 0; }
+      .ob-photo-etape .ob-case { width: 38px; height: 50px; font-size: calc(26 * var(--u)); }
+      .ob-photo-etape .ob-case:nth-of-type(3) { margin-right: 14px; }
+      .ob-photo-etape[data-etape="code"] .ob-lien { justify-self: start; margin: 12px 0 0 -14px; }
+      .ob-photo-etape .ob-bas { left: 22px; right: 22px; bottom: max(calc(22px + env(safe-area-inset-bottom, 0px)), calc(var(--clavier, 0px) + 12px)); }
+      .ob-photo-etape .ob-bas .ob-btn { min-height: 58px; border-radius: 16px; font-size: calc(16.5 * var(--u)); font-weight: 750; }
+      .ob-photo-etape .ob-preuve {
+        margin-top: 22px; background: rgba(28,28,30,.72); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+        -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+      }
+      /* Sur la photo, les boutons retour et fermer se detachent sur un rond. */
+      .ob-feuille.plein .ob-nav {
+        top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; width: 40px; height: 40px; border-radius: 50%;
+        color: #ffffff; background: rgba(0,0,0,.38);
+        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      }
+      .ob-feuille.plein .ob-nav svg { width: 20px; height: 20px; }
+      .ob-photo-etape.actif .ob-photo { animation: ob-bv-recul 2.4s cubic-bezier(.16, 1, .3, 1) both; }
+      .ob-photo-etape.actif .ob-photo-contenu { animation: ob-bv-monte .6s cubic-bezier(.16, 1, .3, 1) .12s both; }
+
       /* ---- Le cadeau recupere : la page qui suit le bouton ----
          Julien, 15/09/2026 : « une page sympa pour quand il recupere le
          cadeau [...] vraiment design premium ». Elle se pose PAR-DESSUS la
@@ -926,6 +984,7 @@
         .ob-cd-boite, .ob-cd-gerbe, .ob-cd-flash { display: none; }
         .ob-cd-medaille, .ob-cd-halo, .ob-cd-rayons { opacity: 1; }
         .ob-exemple-cible { animation: none; }
+        .ob-photo-etape.actif .ob-photo, .ob-photo-etape.actif .ob-photo-contenu { animation: none; }
       }
 
       /* ============================================================
@@ -5622,35 +5681,43 @@
           <!-- « Regarde tes mails » ET le code, sur la meme page (Julien : « on
                arrive directement sur un truc pour saisir son code [...] et en
                dessous renvoyer un mail, on economise deja une page »). -->
-          <form class="ob-etape" data-etape="code" novalidate>
-            <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="16" height="12.5" rx="2.5"/><path d="m3.5 8 7.5 5.5L18.5 8"/><circle class="plein" cx="19.5" cy="5.5" r="3"/></svg></span>
-            <h2 class="ob-titre" id="ob-titre-code">Regarde tes mails</h2>
-            <p class="ob-sous">On vient d’écrire à <strong class="js-ob-adresse"></strong>. Saisis le code à <span class="js-ob-longueur">6</span> chiffres.</p>
-            <!-- UN seul vrai champ, pose sur les cases : autocomplete
-                 "one-time-code" fait proposer le code recu par l'iPhone
-                 au-dessus du clavier, et un collage remplit tout d'un coup. -->
-            <div class="ob-code" id="ob-code-cases">
-              <input id="ob-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" enterkeyhint="done" aria-label="Code reçu par e-mail" />
+          <form class="ob-etape ob-photo-etape ob-plein" data-etape="code" novalidate>
+            <!-- Photos : public/ambiance/, voir .ob-photo-etape. -->
+            <img class="ob-photo" data-src="/ambiance/inscription-code.webp" alt="" width="1400" height="933" decoding="async" />
+            <div class="ob-photo-voile" aria-hidden="true"></div>
+            <div class="ob-photo-espace"></div>
+            <div class="ob-photo-contenu">
+              <h2 class="ob-titre" id="ob-titre-code">Ton code</h2>
+              <p class="ob-sous">Envoyé à <strong class="js-ob-adresse"></strong></p>
+              <!-- UN seul vrai champ, pose sur les cases : autocomplete
+                   "one-time-code" fait proposer le code recu par l'iPhone
+                   au-dessus du clavier, et un collage remplit tout d'un coup. -->
+              <div class="ob-code" id="ob-code-cases">
+                <input id="ob-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" enterkeyhint="done" aria-label="Code reçu par e-mail" />
+              </div>
+              <p class="ob-msg" role="alert" hidden></p>
+              <button type="button" class="ob-lien js-ob-renvoyer">Renvoyer l’e-mail</button>
             </div>
-            <p class="ob-msg" role="alert" hidden></p>
-            <button type="button" class="ob-lien js-ob-renvoyer">Renvoyer l’e-mail</button>
             <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre" disabled>Valider</button></div>
           </form>
 
           <!-- Le nom : un seul champ (user_metadata.full_name), pre-rempli par
-               nomAffiche() quand l'adresse le laisse deviner. -->
-          <form class="ob-etape" data-etape="nom" novalidate>
-            <span class="ob-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
-            <h2 class="ob-titre" id="ob-titre-nom">Comment tu t’appelles ?</h2>
-            <!-- « C'est un peu intrusif, il faut quand meme expliquer » (Julien).
-                 Verifie : le nom ne sert qu'au profil de la personne ; ni les
-                 etablissements ni les autres utilisateurs ne le voient. -->
-            <p class="ob-sous">Ton prénom suffit. Il n’apparaît que sur ton profil, jamais auprès des établissements.</p>
-            <label class="ob-champ">
-              <span class="ob-invisible">Prénom et nom</span>
-              <input type="text" id="ob-nom" name="name" autocomplete="name" autocapitalize="words" enterkeyhint="next" placeholder="Prénom et nom" maxlength="60" required />
-            </label>
-            <p class="ob-msg" role="alert" hidden></p>
+               nomAffiche() quand l'adresse le laisse deviner. Plus de phrase
+               d'explication (Julien, 15/09/2026 : « ton prenom suffit etc., la
+               description est vraiment bizarre »). Photo : Pexels, cottonbro
+               studio (5530172). -->
+          <form class="ob-etape ob-photo-etape ob-plein" data-etape="nom" novalidate>
+            <img class="ob-photo" data-src="/ambiance/inscription-prenom.webp" alt="" width="1080" height="1620" decoding="async" />
+            <div class="ob-photo-voile" aria-hidden="true"></div>
+            <div class="ob-photo-espace"></div>
+            <div class="ob-photo-contenu">
+              <h2 class="ob-titre" id="ob-titre-nom">Ton prénom</h2>
+              <label class="ob-champ">
+                <span class="ob-invisible">Prénom</span>
+                <input type="text" id="ob-nom" name="name" autocomplete="given-name" autocapitalize="words" enterkeyhint="next" placeholder="Prénom" maxlength="60" required />
+              </label>
+              <p class="ob-msg" role="alert" hidden></p>
+            </div>
             <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Continuer</button></div>
           </form>
 
@@ -5666,39 +5733,36 @@
                relie une story a un clubbeur (api/instagram.js cherche
                users.handle), la capture prouve qu'il est a lui. Le pseudo
                passe AVANT la capture : « Ouvrir Instagram » mene a son profil. -->
-          <form class="ob-etape ob-etape-ig" data-etape="instagram" novalidate>
-            <span class="ob-ico ob-ico-ig" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <rect x="0" y="0" width="24" height="24" rx="6" fill="url(#ig-g)"/>
-                <rect x="5.1" y="5.1" width="13.8" height="13.8" rx="4.3" fill="none" stroke="#fff" stroke-width="1.7"/>
-                <circle cx="12" cy="12" r="3.6" fill="none" stroke="#fff" stroke-width="1.7"/>
-                <circle cx="16.9" cy="7.1" r="1.15" fill="#fff"/>
-              </svg>
-            </span>
-            <h2 class="ob-titre" id="ob-titre-instagram">Relie ton Instagram</h2>
-            <p class="ob-sous">C’est ton pseudo qui nous permet de reconnaître tes stories et de te donner tes points.</p>
-            <label class="ob-champ ob-champ-arobase" id="ob-pseudo-champ">
-              <span aria-hidden="true">@</span>
-              <span class="ob-invisible">Pseudo Instagram</span>
-              <input type="text" id="ob-pseudo" name="instagram" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="ton pseudo" maxlength="80" required />
-              <span class="ob-champ-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
-            </label>
+          <form class="ob-etape ob-etape-ig ob-photo-etape ob-plein" data-etape="instagram" novalidate>
+            <img class="ob-photo" data-src="/ambiance/hero-nightclub.webp" alt="" width="1874" height="839" decoding="async" />
+            <div class="ob-photo-voile" aria-hidden="true"></div>
+            <div class="ob-photo-espace"></div>
+            <div class="ob-photo-contenu">
+              <h2 class="ob-titre" id="ob-titre-instagram">Ton Instagram</h2>
+              <p class="ob-sous">Pour reconnaître tes stories.</p>
+              <label class="ob-champ ob-champ-arobase" id="ob-pseudo-champ">
+                <span aria-hidden="true">@</span>
+                <span class="ob-invisible">Pseudo Instagram</span>
+                <input type="text" id="ob-pseudo" name="instagram" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="ton pseudo" maxlength="80" required />
+                <span class="ob-champ-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+              </label>
 
-            <div class="ob-preuve">
-              <p class="ob-preuve-titre">Puis une capture de ton profil</p>
-              <p class="ob-preuve-sous">Elle prouve que le compte est à toi. Ton pseudo doit se lire en haut, comme ici.</p>
-              <div class="ob-exemple" id="ob-exemple">
-                <img class="ob-exemple-img" src="/story-exemples/exemple-profil-clair.webp" alt="Exemple : le haut d’un profil Instagram, le pseudo entouré" width="360" height="276" />
-                <span class="ob-exemple-cible" aria-hidden="true"></span>
-                <span class="ob-exemple-etiquette" aria-hidden="true">Exemple</span>
+              <div class="ob-preuve">
+                <p class="ob-preuve-titre">Une capture de ton profil</p>
+                <p class="ob-preuve-sous">Ton pseudo doit se lire en haut, comme ici.</p>
+                <div class="ob-exemple" id="ob-exemple">
+                  <img class="ob-exemple-img" src="/story-exemples/exemple-profil-clair.webp" alt="Exemple : le haut d’un profil Instagram, le pseudo entouré" width="360" height="276" />
+                  <span class="ob-exemple-cible" aria-hidden="true"></span>
+                  <span class="ob-exemple-etiquette" aria-hidden="true">Exemple</span>
+                </div>
+                <div class="ob-preuve-boutons">
+                  <a class="ob-btn ob-btn-contour" id="ob-ouvrir-instagram" href="https://www.instagram.com/" target="_blank" rel="noopener">Ouvrir Instagram</a>
+                  <button type="button" class="ob-btn ob-btn-encre" id="ob-capture-choisir">Ajouter</button>
+                </div>
+                <input type="file" accept="image/*" id="ob-capture" hidden />
               </div>
-              <div class="ob-preuve-boutons">
-                <a class="ob-btn ob-btn-contour" id="ob-ouvrir-instagram" href="https://www.instagram.com/" target="_blank" rel="noopener">Ouvrir Instagram</a>
-                <button type="button" class="ob-btn ob-btn-encre" id="ob-capture-choisir">Ajouter</button>
-              </div>
-              <input type="file" accept="image/*" id="ob-capture" hidden />
+              <p class="ob-msg" role="alert" hidden></p>
             </div>
-            <p class="ob-msg" role="alert" hidden></p>
             <div class="ob-bas"><button type="submit" class="ob-btn ob-btn-encre">Continuer</button></div>
           </form>
 
@@ -8042,7 +8106,7 @@ function placerEtapeOb(nom, sens) {
   OB.etape = nom;
   FEUILLE.setAttribute("aria-labelledby", "ob-titre-" + nom);
   majNavigationOb();
-  FEUILLE.classList.toggle("plein", nom === "bienvenue");
+  FEUILLE.classList.toggle("plein", nom === "bienvenue" || cible.classList.contains("ob-plein"));
   if (nom === "bienvenue") jouerBienvenueOb();
 }
 
@@ -8061,6 +8125,8 @@ function retourOb() {
 
 function ouvrirFeuilleOb(nom) {
   OB.ouverte = true;
+  // Les photos du parcours ne se chargent que pour qui l'ouvre.
+  FEUILLE.querySelectorAll(".ob-photo[data-src]:not([src])").forEach(function (img) { img.src = img.dataset.src; });
   OB.historique = [];
   OB.etape = null;
   FEUILLE.querySelectorAll(".ob-etape").forEach(function (el) {
