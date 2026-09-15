@@ -8555,9 +8555,11 @@ async function etapeSuivanteOb() {
    Deja pris, ou telephone deja servi : pas d'ecran. */
 async function lireCadeauOb() {
   OB.cadeau = null;
+  OB.cadeauEtat = null;
   try {
     var res = await supabaseClubbeur.rpc("welcome_bonus_status", { p_device: jetonAppareil() });
     var d = !res.error && res.data;
+    OB.cadeauEtat = d ? d.etat : null;
     if (!d || (d.etat !== "disponible" && d.etat !== "aucun_club")) return null;
     OB.cadeau = d;
     // La photo ne se charge que pour ceux qui verront l'ecran, et des
@@ -8582,7 +8584,19 @@ function jouerBienvenueOb() {
   // promesse : on entre dans l'appli.
   var avecCadeau = Boolean(OB.cadeau);
   $("#ob-bv-libelle").textContent = avecCadeau ? "Récupérer mon cadeau" : "Ouvrir l’appli";
-  $(".ob-bv-points").hidden = !avecCadeau;
+  /* Sans cadeau, on DIT pourquoi (Julien, 15/09/2026 : un second compte sur
+     le meme telephone voyait « Ouvrir l'appli » sans explication, et
+     croyait a un bug). */
+  var raison = {
+    deja_pris: "Tu as déjà récupéré ton cadeau de bienvenue",
+  }[OB.cadeauEtat];
+  var ligne = $(".ob-bv-points");
+  if (avecCadeau) {
+    ligne.innerHTML = '<strong id="ob-bv-montant">+' + ((OB.cadeau && OB.cadeau.points) || 50) + "</strong> points offerts";
+  } else if (raison) {
+    ligne.textContent = raison;
+  }
+  ligne.hidden = !avecCadeau && !raison;
   bouton.querySelector("svg").style.display = avecCadeau ? "" : "none";
   var photo = $("#ob-bv-photo");
   if (photo && !photo.getAttribute("src")) photo.src = photo.dataset.src;
@@ -8624,7 +8638,6 @@ async function prendreCadeauOb() {
   if (d.etat !== "ok") {
     var phrases = {
       deja_pris: "Cadeau déjà récupéré",
-      appareil_deja_servi: "Un seul cadeau par téléphone",
     };
     libelle.textContent = phrases[d.etat] || "Tu le retrouveras dans Récompenses";
     return puisAppli(1600);
@@ -13410,7 +13423,6 @@ function ouvrirSuppressionCompte(src) {
         '<li><svg viewBox="0 0 24 24" aria-hidden="true">' + ICO_GAIN.cadeau + "</svg>" +
           // Au futur (Julien, 13/09/2026) : c'est ce qui ARRIVERA si on confirme.
           (solde > 0 ? "Tes " + nb(solde) + " points, tes bons en cours et ton historique seront perdus." : "Tes points, tes bons en cours et ton historique seront perdus.") + "</li>" +
-        '<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16l-8 9-8-9z"/><path d="M12 13v6M8 19h8"/></svg>Un nouveau compte sur ce téléphone n’aura pas de bonus de bienvenue.</li>' +
       "</ul>" +
       '<button type="button" class="sup-souci" id="sup-souci">' +
         '<span><strong>Un problème avec l’appli ?</strong><span>Écris-nous, on te répond dans Aide &amp; Support.</span></span>' +
@@ -14163,20 +14175,11 @@ var CADEAU = $("#cadeau"), CADEAU_SCENE = $("#cadeau-scene"), CADEAU_BTN = $("#c
    recommencer veut dire retourner physiquement dans le club (voir
    migration 0041). */
 function jetonAppareil() {
-  try {
-    var j = localStorage.getItem("vn_appareil");
-    if (!j) {
-      j = (window.crypto && crypto.randomUUID)
-        ? crypto.randomUUID()
-        : String(Date.now()) + Math.random().toString(36).slice(2);
-      localStorage.setItem("vn_appareil", j);
-    }
-    return j;
-  } catch (e) {
-    // Navigation privee, stockage refuse : on envoie null plutot que de
-    // bloquer quelqu'un qui n'a rien fait de mal.
-    return null;
-  }
+  // Migration clubbeur 0050 : un cadeau de bienvenue par COMPTE, plus par
+  // telephone. Le jeton ne sert plus a rien : on ne le fabrique plus, et on
+  // efface celui qu'un ancien passage aurait laisse.
+  try { localStorage.removeItem("vn_appareil"); } catch (e) { /* stockage refuse */ }
+  return null;
 }
 
 // Ce que la carte propose en ce moment : "bienvenue" ou "jour".
@@ -14256,7 +14259,6 @@ CADEAU_BTN?.addEventListener("click", async function () {
     var phrases = {
       aucun_club: ["Scanne un club d'abord", "Les points vont dans la boutique de ton dernier club."],
       deja_pris: ["Déjà pris", ""],
-      appareil_deja_servi: ["Bonus déjà utilisé", "Un seul bonus de bienvenue par téléphone."],
     };
     var dit = phrases[d.etat] || ["Réessaie plus tard", ""];
     natif.vibrer("erreur");

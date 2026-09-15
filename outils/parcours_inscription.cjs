@@ -140,6 +140,7 @@ const HAUTEUR = 844;
       await pause(2600); // le paquet se pose, le chiffre compte
       await prendre("06-bienvenue", "Bienvenue — le cadeau");
       bilan.bienvenue = (await page.$eval("#ob-bv-btn", (b) => b.textContent)).trim();
+      bilan.ligneBienvenue = await page.$eval(".ob-bv-points", (e) => (e.hidden ? "" : e.textContent.trim()));
       await page.click("#ob-bv-btn");
       // Depuis la migration clubbeur 0049, le cadeau se prend sans scan :
       // la page « Cadeau recupere » se pose, puis « Continuer ».
