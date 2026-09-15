@@ -2277,6 +2277,9 @@
       .hist-carte { background: var(--s1); border: 1px solid var(--line); border-radius: 18px; padding: 4px 16px; }
       .hist-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
       .hist-ligne:last-child { border-bottom: 0; }
+      .hs-vide { text-align: center; }
+      .hs-vide[hidden] { display: none; }
+      .hs-vide .rg-lien { margin: 2px auto 0; }
       .hist-ico {
         flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; background: var(--s2);
         display: grid; place-items: center;
@@ -5443,6 +5446,11 @@
       .vue-profil-feuille .hist-ico, .vue-profil-feuille .hist-ico.gain, .vue-profil-feuille .hist-ico.perte { background: var(--s2); }
       .vue-profil-feuille .hist-ico svg, .vue-profil-feuille .hist-ico.gain svg, .vue-profil-feuille .hist-ico.perte svg { stroke: var(--ink); }
       .vue-profil-feuille .hist-pts { color: var(--ink); font-family: var(--chiffre); font-variant-numeric: tabular-nums; }
+      /* Une regle generale des pages du profil ecrasait l'icone a 2 px de large
+         et posait un filet au-dessus du montant : on les fixe ici. */
+      #hs-liste .hist-ico { display: flex; align-items: center; justify-content: center; padding: 0; }
+      #hs-liste .hist-ico svg { flex: none; width: 17px; min-width: 17px; height: 17px; margin: 0; position: static; transform: none; }
+      #hs-liste .hist-pts { border: 0; padding: 0; margin: 0; }
       .vue-profil-feuille .fv-item { border: 0; box-shadow: inset 0 0 0 1px var(--line); padding: 14px; }
       .vue-profil-feuille .ap-feature { margin-bottom: 18px; }
       .vue-profil-feuille .legal { padding: 0 2px; }
@@ -6347,10 +6355,19 @@
               <div class="pf-liste">
                 <button type="button" class="pf-item pf-points" id="pf-fidelite">
                   <span class="pf-points-tuile" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m12 7.3 1.4 2.9 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z"/></svg></span>
-                  <span class="pf-item-txt"><strong><span id="pf-fid-solde">0</span> points</strong><span>Ton solde, et d’où viennent tes points.</span></span>
+                  <span class="pf-item-txt"><strong><span id="pf-fid-solde">0</span> points</strong><span>Ton solde et ton historique.</span></span>
                   <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   <span class="pf-fid-piste"><span class="pf-fid-barre" id="pf-fid-barre"></span></span>
                   <span class="pf-fid-txt" id="pf-fid-txt"></span>
+                </button>
+                <!-- Les facons de gagner des points ont leur ligne a elles (Julien,
+                     15/09/2026 : « quand on tape dans les points, on tombe sur les
+                     manieres de gagner et non sur notre historique, ca n'a aucun
+                     sens, mets ca a un autre endroit »). -->
+                <button type="button" class="pf-item" id="pf-gagner">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+                  <span class="pf-item-txt"><strong>Gagner des points</strong><span>Toutes les façons d’en gagner.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
               </div>
             </section>
@@ -6593,15 +6610,21 @@
           <div class="pg-intro"><h1 class="pg-titre">Ma fidélité</h1></div>
           <!-- Le solde en grand, sous le titre ; plus de pastille ni de DM Mono. -->
           <p class="pg-solde"><strong id="hs-solde">0</strong> points</p>
-          <!-- "Poste ta premiere story pour gagner des points" etait trop peu
-               (Julien, 13/09/2026 : "il y a differentes manieres de gagner des
-               points, vaut mieux expliquer plus"). Toutes les facons, avec ce
-               qu'elles rapportent -- la meme liste que dans A propos. -->
-          <p class="rg-section-titre">Gagner des points</p>
-          <div class="pf-liste js-gains"></div>
-          <p class="rg-section-titre" id="hs-titre" hidden>Historique</p>
+          <!-- L'historique, et seulement lui : les facons de gagner ont leur page
+               (#vue-gains), ouverte depuis les reglages ou depuis la page vide. -->
+          <p class="rg-section-titre" id="hs-titre">Historique</p>
           <div id="hs-liste" class="hist-carte"></div>
-          <p class="pg-vide" id="hs-vide" hidden></p>
+          <div class="hs-vide" id="hs-vide" hidden>
+            <p class="pg-vide">Aucun point pour l’instant.</p>
+            <button type="button" class="rg-lien" id="hs-gagner">Voir comment en gagner</button>
+          </div>
+        </div>
+
+        <!-- ================= ECRAN GAGNER DES POINTS ================= -->
+        <div class="vue-profil vue-profil-feuille" id="vue-gains" hidden>
+          <div class="pg-tete"><button type="button" class="pg-fermer" id="gn-poignee" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="pg-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle class="a" cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span></div>
+          <div class="pg-intro"><h1 class="pg-titre">Gagner des points</h1></div>
+          <div class="pf-liste js-gains"></div>
         </div>
 
         <!-- ================= ECRAN FAVORIS =================
@@ -12198,7 +12221,7 @@ var LIBELLE_SOURCE = {
   scan: "Scan du QR",
   story: "Story validée",
   cadeau: "Cadeau du jour",
-  bienvenue: "Bienvenue",
+  bienvenue: "Cadeau de bienvenue",
   parrainage: "Ami parrainé",
   instagram: "Mention Instagram",
 };
@@ -12404,22 +12427,42 @@ async function chargerHistoriquePoints() {
   var [gagnes, depenses] = await Promise.all([
     supabaseClubbeur
       .from("point_grants")
-      .select("amount, created_at, clubs(name)")
+      .select("amount, created_at, source, clubs(name)")
       .eq("user_id", session.user.id),
     supabaseClubbeur
       .from("redemptions")
       .select("redeemed_at, rewards(title, cost_points)")
       .eq("user_id", session.user.id),
   ]);
+  /* Le cadeau de bienvenue pris SANS club (migration clubbeur 0049) ne passe
+     pas par point_grants : le solde est credite directement. Sans cette
+     lecture, les 50 points comptaient dans le solde mais n'apparaissaient
+     nulle part. Avec un club, il a sa ligne point_grants (source bienvenue). */
+  var bienvenue = await Promise.resolve(supabaseClubbeur
+    .from("welcome_bonuses")
+    .select("amount, created_at, club_id")
+    .eq("user_id", session.user.id)
+    .is("club_id", null)).catch(function () { return { data: [] }; });
 
   var mouvements = [];
   (gagnes.data || []).forEach(function (g) {
     mouvements.push({
       quand: g.created_at,
-      titre: "+" + nb(g.amount) + " pts",
+      titre: LIBELLE_SOURCE[g.source] || "Points gagnés",
       detail: (g.clubs && g.clubs.name ? g.clubs.name + " · " : "") + dateCourte(g.created_at),
       pts: g.amount,
       gain: true,
+      source: g.source,
+    });
+  });
+  (bienvenue.data || []).forEach(function (b) {
+    mouvements.push({
+      quand: b.created_at,
+      titre: LIBELLE_SOURCE.bienvenue,
+      detail: dateCourte(b.created_at),
+      pts: b.amount,
+      gain: true,
+      source: "bienvenue",
     });
   });
   (depenses.data || []).forEach(function (r) {
@@ -12435,14 +12478,15 @@ async function chargerHistoriquePoints() {
   });
   mouvements.sort(function (a, b) { return new Date(b.quand) - new Date(a.quand); });
 
-  // Vide : pas de titre ni de message, la liste "Gagner des points" au-dessus
-  // dit deja comment remplir cette page.
-  vide.hidden = true;
+  // Vide : un mot, et le chemin vers les facons de gagner.
+  vide.hidden = mouvements.length > 0;
   var titreHisto = document.getElementById("hs-titre");
   if (titreHisto) titreHisto.hidden = !mouvements.length;
   zone.innerHTML = mouvements.map(function (m) {
+    // L'icone dit d'ou vient le gain (cadeau, scan, story...), une fleche
+    // vers le bas une depense.
     var icone = m.gain
-      ? '<path d="M12 19V5M5 12l7-7 7 7"/>'
+      ? (ICONES_SOURCE[m.source] || '<path d="M12 19V5M5 12l7-7 7 7"/>')
       : '<path d="M12 5v14M5 12l7 7 7-7"/>';
     return '<div class="hist-ligne">' +
       '<span class="hist-ico ' + (m.gain ? "gain" : "perte") + '"><svg viewBox="0 0 24 24">' + icone + "</svg></span>" +
@@ -13664,6 +13708,12 @@ $("#ai-admin-form")?.addEventListener("submit", async function (e) {
   chargerThreadAdmin(userId);
 });
 
+var VUE_GAINS = $("#vue-gains");
+function ouvrirGains() { VUE_GAINS.hidden = false; }
+$("#pf-gagner")?.addEventListener("click", ouvrirGains);
+$("#hs-gagner")?.addEventListener("click", ouvrirGains);
+activerGlisserPourFermer(VUE_GAINS, $("#gn-poignee"), function () { VUE_GAINS.hidden = true; });
+
 var VUE_APROPOS = $("#vue-apropos");
 $("#pf-apropos")?.addEventListener("click", function () { VUE_APROPOS.hidden = false; });
 activerGlisserPourFermer(VUE_APROPOS, $("#ap-poignee"), function () { VUE_APROPOS.hidden = true; });
@@ -14613,7 +14663,6 @@ var ICO_GAIN = {
 };
 var GAINS = [
   { t: "Poster une story", s: "Mentionne l’établissement. Points crédités 24 h après.", v: BAREME_STORY.story.pts, ico: ICO_GAIN.story, geste: "story" },
-  { t: "Reel ou TikTok", s: "Mentionne l’établissement. Sur TikTok, 7 points de plus par 100 vues.", v: BAREME_STORY.reel.pts, ico: ICO_GAIN.video, geste: "story" },
   { t: "Scanner le QR sur place", s: "À ton arrivée, une fois par soirée.", v: "+15", ico: ICO_GAIN.scan, geste: "story" },
   { t: "Inviter un ami", s: "Dès qu’il s’inscrit avec ton lien.", v: '+<span class="js-montant-parrainage">100</span>', ico: ICO_GAIN.ami, geste: "ami" },
   { t: "Cadeau du jour", s: "À récupérer chaque jour dans Récompenses.", v: "", ico: ICO_GAIN.cadeau, geste: "cadeau" },

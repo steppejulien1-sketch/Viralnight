@@ -180,6 +180,22 @@ const HAUTEUR = 844;
     }));
     await prendre("11-apres-rechargement", "Rouverte : l'appli, rien d'autre");
 
+    // Profil > Mes points : l'HISTORIQUE (le cadeau de bienvenue y est), pas
+    // les facons de gagner. Profil > Gagner des points : la liste, sans TikTok.
+    await page.evaluate(() => document.querySelector(".invite-notif-plus-tard, #invite-notif-plus-tard")?.click());
+    await page.click("#tab-profil");
+    await pause(900);
+    await page.click("#pf-fidelite");
+    await page.waitForFunction(() => document.querySelectorAll("#hs-liste .hist-ligne").length > 0, { timeout: 15000 }).catch(() => {});
+    await pause(600);
+    await prendre("12-mes-points", "Mes points : l'historique");
+    bilan.historique = await page.$$eval("#hs-liste .hist-ligne strong", (l) => l.map((e) => e.textContent));
+    await page.evaluate(() => { document.querySelector("#vue-historique").hidden = true; });
+    await page.click("#pf-gagner");
+    await pause(700);
+    await prendre("13-gagner-des-points", "Gagner des points");
+    bilan.gains = await page.$$eval("#vue-gains .pf-gain strong", (l) => l.map((e) => e.textContent));
+
     // Ce qui est VRAIMENT en base.
     const lignes = V.sql(`select handle, profile_proof_path, points_balance from public.users where id='${compte.uid}'`);
     const ligne = Array.isArray(lignes) ? lignes[0] : null;
@@ -193,7 +209,8 @@ const HAUTEUR = 844;
       nom: utilisateur && utilisateur.user_metadata && utilisateur.user_metadata.full_name,
       erreursPage: erreurs,
     });
-    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === pseudo && bilan.photoRefusee && bilan.pageBienvenue && bilan.pageCadeau && bilan.solde === 50 && bilan.accueilMasque && !bilan.apresRechargement.accueil && !bilan.apresRechargement.feuille;
+    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === pseudo && bilan.photoRefusee && bilan.pageBienvenue && bilan.pageCadeau && bilan.solde === 50 && bilan.accueilMasque && !bilan.apresRechargement.accueil && !bilan.apresRechargement.feuille
+      && bilan.historique.includes("Cadeau de bienvenue") && bilan.gains.length > 0 && !bilan.gains.some((g) => /tiktok|reel/i.test(g));
     console.log("\n" + JSON.stringify(bilan, null, 1));
   } finally {
     if (navigateur) await navigateur.close();
