@@ -794,37 +794,79 @@
       }
       .ob-photo-voile {
         position: absolute; left: 0; right: 0; top: 0; height: 100%; pointer-events: none;
-        background: linear-gradient(to bottom, rgba(11,11,12,.35) 0%, rgba(11,11,12,0) 20%, rgba(11,11,12,.3) 44%, rgba(11,11,12,.82) 64%, rgba(11,11,12,.96) 82%);
+        background: linear-gradient(to bottom, rgba(11,11,12,.45) 0%, rgba(11,11,12,0) 14%, rgba(11,11,12,0) 46%, rgba(11,11,12,.6) 62%, rgba(11,11,12,.94) 78%, #0b0b0c 90%);
       }
-      /* Instagram porte plus de contenu : il monte plus haut sur la photo,
-         le voile fonce plus tot. */
+      /* Instagram porte plus de contenu : il monte plus haut sur la photo.
+         La carte de la capture a son propre fond flou, le voile peut
+         attendre. Premier essai trop sombre (Julien : « il est eteint »). */
       .ob-etape-ig .ob-photo-voile {
-        background: linear-gradient(to bottom, rgba(11,11,12,.35) 0%, rgba(11,11,12,0) 16%, rgba(11,11,12,.55) 34%, rgba(11,11,12,.9) 52%, #0b0b0c 70%);
+        background: linear-gradient(to bottom, rgba(11,11,12,.45) 0%, rgba(11,11,12,0) 14%, rgba(11,11,12,.1) 24%, rgba(11,11,12,.7) 40%, rgba(11,11,12,.95) 58%, #0b0b0c 72%);
       }
       .ob-photo-espace { flex: 1 0 auto; min-height: calc(64px + env(safe-area-inset-top, 0px)); }
       .ob-photo-contenu { position: relative; flex: none; }
-      .ob-photo-etape .ob-titre { font-size: calc(32 * var(--u)); letter-spacing: -.03em; line-height: 1.1; text-shadow: 0 2px 18px rgba(0,0,0,.45); }
+      .ob-photo-etape .ob-titre { font-size: calc(34 * var(--u)); letter-spacing: -.035em; line-height: 1.05; text-shadow: 0 2px 22px rgba(0,0,0,.55); }
       .ob-photo-etape .ob-sous { margin: 8px 0 0; max-width: none; font-size: calc(15 * var(--u)); }
       .ob-photo-etape .ob-champ { margin-top: 24px; }
       .ob-photo-etape .ob-code { margin: 26px 0 0; }
-      .ob-photo-etape .ob-case { width: 38px; height: 50px; font-size: calc(26 * var(--u)); }
+      .ob-photo-etape .ob-case { width: 40px; height: 52px; font-size: calc(26 * var(--u)); border-bottom-width: 2px; border-color: rgba(255,255,255,.5); }
+      .ob-photo-etape .ob-case.rempli { border-color: #ffffff; }
       .ob-photo-etape .ob-case:nth-of-type(3) { margin-right: 14px; }
       .ob-photo-etape[data-etape="code"] .ob-lien { justify-self: start; margin: 12px 0 0 -14px; }
       .ob-photo-etape .ob-bas { left: 22px; right: 22px; bottom: max(calc(22px + env(safe-area-inset-bottom, 0px)), calc(var(--clavier, 0px) + 12px)); }
       .ob-photo-etape .ob-bas .ob-btn { min-height: 58px; border-radius: 16px; font-size: calc(16.5 * var(--u)); font-weight: 750; }
+      /* Eteint mais lisible : du blanc voile, pas du gris sur noir. */
+      .ob-photo-etape .ob-bas .ob-btn:disabled { background: rgba(255,255,255,.2); color: rgba(255,255,255,.62); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
       .ob-photo-etape .ob-preuve {
         margin-top: 22px; background: rgba(28,28,30,.72); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
         -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
       }
       /* Sur la photo, les boutons retour et fermer se detachent sur un rond. */
       .ob-feuille.plein .ob-nav {
-        top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; width: 40px; height: 40px; border-radius: 50%;
+        top: calc(22px + env(safe-area-inset-top, 0px)); left: 12px; width: 40px; height: 40px; border-radius: 50%;
         color: #ffffff; background: rgba(0,0,0,.38);
         -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
       }
       .ob-feuille.plein .ob-nav svg { width: 20px; height: 20px; }
-      .ob-photo-etape.actif .ob-photo { animation: ob-bv-recul 2.4s cubic-bezier(.16, 1, .3, 1) both; }
-      .ob-photo-etape.actif .ob-photo-contenu { animation: ob-bv-monte .6s cubic-bezier(.16, 1, .3, 1) .12s both; }
+      /* Dans le cadre de demonstration, la feuille garde 38 px en haut pour la
+         fausse barre d'etat : en plein ecran, elle la recouvre aussi. */
+      html:not(.mode-appli) .ob-feuille.plein { top: -3px; }
+
+      /* ---- Les animations, sur le modele de DUSK (sa video du 14/09) ----
+         La photo sort du noir en reculant ; le texte monte ligne apres
+         ligne, avec un flou qui se dissipe ; le bouton arrive en dernier.
+         .entre est pose A L'ARRIVEE et laisse en place au depart : l'ecran
+         qui s'en va ne saute pas au milieu de son animation. */
+      .ob-photo-etape.entre .ob-photo { animation: ob-ph-photo 1.5s cubic-bezier(.16, 1, .3, 1) both; }
+      .ob-photo-etape.entre .ob-photo-contenu > * { animation: ob-ph-monte .8s cubic-bezier(.16, 1, .3, 1) both; }
+      .ob-photo-etape.entre .ob-photo-contenu > :nth-child(1) { animation-delay: .18s; }
+      .ob-photo-etape.entre .ob-photo-contenu > :nth-child(2) { animation-delay: .26s; }
+      .ob-photo-etape.entre .ob-photo-contenu > :nth-child(3) { animation-delay: .34s; }
+      .ob-photo-etape.entre .ob-photo-contenu > :nth-child(4) { animation-delay: .42s; }
+      .ob-photo-etape.entre .ob-photo-contenu > :nth-child(n+5) { animation-delay: .5s; }
+      .ob-photo-etape.entre .ob-bas { animation: ob-ph-monte .8s cubic-bezier(.16, 1, .3, 1) .45s both; }
+      @keyframes ob-ph-photo { from { opacity: 0; scale: 1.16; filter: brightness(.35); } 40% { opacity: 1; } }
+      @keyframes ob-ph-monte { from { opacity: 0; translate: 0 22px; filter: blur(8px); } }
+
+      /* Les barres du haut, comme une story : un segment par ecran du
+         parcours, celui en cours se remplit. */
+      .ob-progres {
+        position: absolute; z-index: 4; left: 12px; right: 12px; top: calc(10px + env(safe-area-inset-top, 0px));
+        display: flex; gap: 4px; pointer-events: none;
+        opacity: 0; transition: opacity .3s ease;
+      }
+      .ob-feuille.plein .ob-progres.visible { opacity: 1; }
+      .ob-progres i {
+        position: relative; flex: 1; height: 3px; border-radius: 3px; overflow: hidden;
+        background: rgba(255,255,255,.3);
+      }
+      .ob-progres i::after {
+        content: ""; position: absolute; inset: 0; border-radius: inherit; background: #ffffff;
+        transform: scaleX(0); transform-origin: left; transition: transform .7s cubic-bezier(.16, 1, .3, 1) .15s;
+      }
+      .ob-progres i.fait::after { transform: scaleX(1); }
+      /* Cadre de demonstration : sous la fausse barre d'etat et ses coins ronds. */
+      html:not(.mode-appli) .ob-progres { top: 44px; left: 18px; right: 18px; }
+      html:not(.mode-appli) .ob-feuille.plein .ob-nav { top: 56px; }
 
       /* ---- Le cadeau recupere : la page qui suit le bouton ----
          Julien, 15/09/2026 : « une page sympa pour quand il recupere le
@@ -984,7 +1026,8 @@
         .ob-cd-boite, .ob-cd-gerbe, .ob-cd-flash { display: none; }
         .ob-cd-medaille, .ob-cd-halo, .ob-cd-rayons { opacity: 1; }
         .ob-exemple-cible { animation: none; }
-        .ob-photo-etape.actif .ob-photo, .ob-photo-etape.actif .ob-photo-contenu { animation: none; }
+        .ob-photo-etape.entre .ob-photo, .ob-photo-etape.entre .ob-photo-contenu > *, .ob-photo-etape.entre .ob-bas { animation: none; }
+        .ob-progres i::after { transition: none; }
       }
 
       /* ============================================================
@@ -5676,6 +5719,7 @@
         <div class="ob-voile" id="ob-voile" hidden></div>
         <section class="ob-feuille" id="ob-feuille" role="dialog" aria-modal="true" aria-labelledby="ob-titre-code" hidden>
           <button type="button" class="ob-nav" id="ob-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          <div class="ob-progres" id="ob-progres" aria-hidden="true"></div>
           <button type="button" class="ob-nav" id="ob-retour" aria-label="Retour" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5M11 5l-7 7 7 7"/></svg></button>
 
           <!-- « Regarde tes mails » ET le code, sur la meme page (Julien : « on
@@ -8095,6 +8139,10 @@ function placerEtapeOb(nom, sens) {
   }
   cible.classList.remove("gauche");
   cible.classList.add("actif");
+  // Rejoue les animations d'arrivee (voir .entre) a chaque venue.
+  cible.classList.remove("entre");
+  void cible.offsetWidth;
+  cible.classList.add("entre");
   cible.inert = false;
   if (!sens) {
     requestAnimationFrame(function () {
@@ -8107,7 +8155,25 @@ function placerEtapeOb(nom, sens) {
   FEUILLE.setAttribute("aria-labelledby", "ob-titre-" + nom);
   majNavigationOb();
   FEUILLE.classList.toggle("plein", nom === "bienvenue" || cible.classList.contains("ob-plein"));
+  majProgresOb();
   if (nom === "bienvenue") jouerBienvenueOb();
+}
+
+/* Les barres du haut. Avant la connexion, la suite n'est pas encore connue :
+   on compte le parcours complet. Apres, le code (s'il a ete vu) puis ce que
+   poursuivreParcours a retenu. Sous deux ecrans, pas de barres. */
+function majProgresOb() {
+  var barres = $("#ob-progres");
+  if (!barres) return;
+  var liste = OB.suite && OB.suite.length
+    ? (OB.etape === "code" || OB.historique.indexOf("code") !== -1 ? ["code"] : []).concat(OB.suite)
+    : ["code", "nom", "instagram", "bienvenue"];
+  var ici = liste.indexOf(OB.etape);
+  if (barres.children.length !== liste.length) {
+    barres.innerHTML = liste.map(function () { return "<i></i>"; }).join("");
+  }
+  Array.prototype.forEach.call(barres.children, function (b, i) { b.classList.toggle("fait", i <= ici); });
+  barres.classList.toggle("visible", liste.length > 1 && ici !== -1);
 }
 
 function allerOb(nom) {
@@ -8610,8 +8676,34 @@ function majLienProfilOb() {
     : "https://www.instagram.com/";
 }
 
+/* « Ouvrir Instagram » ouvre l'APPLI sur le profil tape (Julien : « que le
+   lien ouvre sur le profil de la personne direct »). Le lien https seul
+   s'ouvre souvent dans le navigateur, deconnecte. Sur telephone on tente
+   instagram://user ; si rien ne s'est ouvert (page toujours visible), le
+   lien web prend le relais. Sans pseudo valide, le lien web normal. */
+function ouvrirProfilInstagramOb(ev) {
+  var pseudo = nettoyerPseudoIg($("#ob-pseudo").value).toLowerCase();
+  // Deja tente sans succes (appli absente) : le lien web, tout simplement.
+  if (OB.igSansAppli || !PSEUDO_IG_RE.test(pseudo) || !/iphone|ipad|ipod|android/i.test(navigator.userAgent)) return;
+  ev.preventDefault();
+  var web = "https://www.instagram.com/" + encodeURIComponent(pseudo) + "/";
+  var parti = false;
+  function quitte() { if (document.hidden) parti = true; }
+  document.addEventListener("visibilitychange", quitte);
+  window.location.href = "instagram://user?username=" + encodeURIComponent(pseudo);
+  setTimeout(function () {
+    document.removeEventListener("visibilitychange", quitte);
+    if (parti || document.hidden) return;
+    // Un navigateur peut bloquer cette ouverture differee : le prochain
+    // toucher passera alors par le lien web directement.
+    OB.igSansAppli = true;
+    window.open(web, "_blank", "noopener");
+  }, 1400);
+}
+
 function cablerInstagramOb() {
   var form = etapeOb("instagram");
+  $("#ob-ouvrir-instagram").addEventListener("click", ouvrirProfilInstagramOb);
   var champFichier = $("#ob-capture");
   var champPseudo = $("#ob-pseudo");
 
