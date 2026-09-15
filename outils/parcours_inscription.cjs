@@ -165,6 +165,21 @@ const HAUTEUR = 844;
     bilan.ecranFinal = await ecranActif();
     bilan.accueilMasque = await page.evaluate(() => document.querySelector("#vue-accueil").classList.contains("masque"));
 
+    // Cadeau pris : ni l'accueil, ni la feuille, ni la page du cadeau ne
+    // doivent revenir, meme en rouvrant l'appli (Julien, 15/09/2026). Le
+    // compte a moins de 30 minutes : c'est le cas qui les faisait revenir.
+    // Le stockage local est vide pour ecarter la trace du telephone : c'est
+    // la base qui doit suffire.
+    await page.evaluate(() => localStorage.removeItem("vn_parcours_fini"));
+    await page.reload({ waitUntil: "networkidle2" });
+    await pause(6000);
+    bilan.apresRechargement = await page.evaluate(() => ({
+      accueil: !document.querySelector("#vue-accueil").classList.contains("masque"),
+      feuille: !document.querySelector("#ob-feuille").hidden,
+      ecran: document.querySelector(".ob-etape.actif")?.dataset.etape || null,
+    }));
+    await prendre("11-apres-rechargement", "Rouverte : l'appli, rien d'autre");
+
     // Ce qui est VRAIMENT en base.
     const lignes = V.sql(`select handle, profile_proof_path, points_balance from public.users where id='${compte.uid}'`);
     const ligne = Array.isArray(lignes) ? lignes[0] : null;
@@ -178,7 +193,7 @@ const HAUTEUR = 844;
       nom: utilisateur && utilisateur.user_metadata && utilisateur.user_metadata.full_name,
       erreursPage: erreurs,
     });
-    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === pseudo && bilan.photoRefusee && bilan.pageBienvenue && bilan.pageCadeau && bilan.solde === 50 && bilan.accueilMasque;
+    bilan.reussi = bilan.handle === pseudo && Boolean(cheminCapture) && bilan.nom === pseudo && bilan.photoRefusee && bilan.pageBienvenue && bilan.pageCadeau && bilan.solde === 50 && bilan.accueilMasque && !bilan.apresRechargement.accueil && !bilan.apresRechargement.feuille;
     console.log("\n" + JSON.stringify(bilan, null, 1));
   } finally {
     if (navigateur) await navigateur.close();

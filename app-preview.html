@@ -8361,8 +8361,17 @@ function fermerFeuilleOb() {
 
 /* La feuille est finie : l'appli apparait, sur Recompenses -- ou la carte du
    bonus de bienvenue attend, s'il y en a un a prendre. */
+// La trace locale « parcours termine » d'un compte : posee quand l'appli
+// s'ouvre au bout du parcours, jamais effacee (sauf deconnexion du compte).
+function parcoursFiniOb(uid) {
+  try { return Boolean(uid) && localStorage.getItem("vn_parcours_fini") === uid; } catch (e) { return false; }
+}
+
 function finirParcoursOb() {
   OB.suite = [];
+  if (OB.verifiePour) {
+    try { localStorage.setItem("vn_parcours_fini", OB.verifiePour); } catch (e) { /* stockage refuse */ }
+  }
   fermerFeuilleOb();
   VUE_ACCUEIL.classList.add("masque");
   if (typeof chargerReglages === "function") chargerReglages();
@@ -8562,13 +8571,17 @@ async function poursuivreParcours(session) {
     // Lecture impossible : on ne bloque pas l'entree dans l'appli pour une
     // etape administrative.
   }
-  // La page de bienvenue ferme la marche : TOUJOURS pour un compte neuf
-  // (Julien, 15/09/2026 : la derniere page n'etait pas venue -- le bonus
-  // etait deja pris sur ce telephone, et sans bonus l'ecran sautait) ; pour
-  // un compte ancien, seulement s'il a encore un bonus a prendre.
+  /* La page de bienvenue ferme la marche SEULEMENT si le cadeau reste a
+     prendre. Julien, 15/09/2026 : « une fois qu'on recupere ce cadeau, il ne
+     faut plus JAMAIS que les pages d'accueil pour creer son compte
+     reapparaissent, meme la page du cadeau ». La version d'avant la montrait
+     a tout compte de moins de 30 minutes, cadeau pris ou non : elle revenait
+     a chaque reouverture de l'appli. La base fait foi (welcome_bonus_status :
+     deja_pris), le telephone garde en plus une trace, au cas ou la lecture
+     echoue. */
   var neuf = age < 30 * 60 * 1000;
-  var cadeau = (OB.ouverte || neuf) ? await lireCadeauOb() : null;
-  if (neuf || cadeau) suite.push("bienvenue");
+  var cadeau = (OB.ouverte || neuf) && !parcoursFiniOb(uid) ? await lireCadeauOb() : null;
+  if (cadeau) suite.push("bienvenue");
 
   OB.suite = suite;
   if (!suite.length) {
@@ -13337,7 +13350,7 @@ function etapeMotifDepart() {
       // Les jetons de statistiques aussi : c'est le meme telephone, il ne
       // doit pas compter pour une installation de plus dans le tableau de bord.
       var garder = {};
-      ["vn_appareil", "vn_stat", "vn_stat_installe"].forEach(function (k) {
+      ["vn_appareil", "vn_stat", "vn_stat_installe", "vn_parcours_fini"].forEach(function (k) {
         try { garder[k] = localStorage.getItem(k); } catch (e) {}
       });
       try { localStorage.clear(); } catch (e) {}
