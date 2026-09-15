@@ -1087,7 +1087,6 @@
       .ob-capture-etape.entre .ob-cap-tel:not(.rempli) { animation: ob-cap-appui 6s ease-in-out 1s 1 both; }
       .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-accueil { animation: ob-cap-accueil 6s ease-in-out 1s 1 both; }
       .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .a-insta i { animation: ob-cap-icone 6s ease-in-out 1s 1 both; }
-      .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-doigt { animation: ob-cap-doigt 6s ease-in-out 1s 1 both; }
       .ob-capture-etape.entre .ob-cap-tel:not(.rempli) > .ob-cap-ecran { animation: ob-cap-ouvre 6s cubic-bezier(.3, .7, .2, 1) 1s 1 both; }
       .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-flash { animation: ob-cap-flash 6s ease-out 1s 1 both; }
       .ob-capture-etape.entre .ob-cap-tel:not(.rempli) .ob-cap-mini { animation: ob-cap-mini 6s cubic-bezier(.3, .8, .25, 1) 1s 1 both; }
@@ -5018,7 +5017,6 @@
       .st-scene.joue .st-tel-photo { animation: st-recul 2.2s cubic-bezier(.16, 1, .3, 1) both; }
       .st-scene.joue .st-tel-sticker { animation: st-colle .65s cubic-bezier(.34, 1.56, .64, 1) 1.3s both; }
       .st-scene.joue .st-tel-pub { animation: st-monte .5s cubic-bezier(.16, 1, .3, 1) 1.9s both; }
-      .st-scene.joue .st-tel-doigt { animation: st-doigt 1.5s ease-in-out 2.5s both; }
       .st-scene.joue .st-tel-envoi { animation: st-appui .3s ease-in-out 3.05s; }
       .st-scene.joue .st-tel-partage { animation: st-partage 1.8s cubic-bezier(.16, 1, .3, 1) 3.35s both; }
       .st-scene.joue .st-gain { animation: st-gain .7s cubic-bezier(.34, 1.56, .64, 1) 3.9s both; }
@@ -5164,8 +5162,31 @@
       .st-inviter-txt { flex: 1; min-width: 0; }
       .st-inviter-txt strong { display: block; font-size: calc(15.5 * var(--u)); font-weight: 750; letter-spacing: -.01em; }
       .st-inviter-txt > span { display: block; margin-top: 2px; font-size: calc(13 * var(--u)); color: var(--ink2); }
+      /* La carte unique de la page Story : la mention en grand, le lieu dessous. */
+      .st-carte {
+        margin: 18px 0 0; padding: 16px 16px 8px; border-radius: 20px; background: var(--s1);
+        box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 12px 30px -18px rgba(15,17,20,.3);
+      }
+      .st-carte-titre { margin: 0 0 8px; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink3); }
+      .vue-story .st-carte .st-tag { padding: 0; background: none; box-shadow: none; border-radius: 0; }
+      .vue-story .st-carte .st-tag-txt b { font-size: calc(21 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
+      .vue-story .st-carte .st-lieu {
+        margin: 12px -6px 0; padding: 10px 6px; border-radius: 0; background: none; box-shadow: none;
+        border-top: 1px solid var(--line);
+      }
+      .vue-story .st-carte .st-lieu-tuile { width: 32px; height: 32px; border-radius: 9px; }
+      .vue-story .st-carte .st-lieu-txt strong { font-size: calc(14.5 * var(--u)); }
+      .vue-story .st-carte .st-lieu-txt span { display: none; }
+      .vue-story .st-actions { margin-top: 18px; }
+      /* Le scan du QR, discret : une ligne, pas une carte. */
+      .vue-story .st-scan {
+        width: auto; margin: 14px auto 0; padding: 8px 12px; background: none; box-shadow: none;
+        font-size: calc(13.5 * var(--u)); font-weight: 600; color: var(--ink2);
+      }
+      .vue-story .st-scan > span:first-of-type { flex: none; }
+
       /* Cartes blanches a ombre douce, comme l'inscription (15/09/2026). */
-      .vue-story .st-lieu, .vue-story .st-tag, .vue-story .st-scan, .vue-story .st-inviter {
+      .vue-story .st-lieu, .vue-story .st-tag, .vue-story .st-inviter {
         background: var(--s1); box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 10px 26px -16px rgba(15,17,20,.28);
         border-radius: 18px;
       }
@@ -6081,7 +6102,6 @@
                   <img class="ob-cap-nav" src="/ambiance/profil/barre-onglets.png" alt="" />
                 </div>
                 <img class="ob-cap-image" id="ob-cap-image" alt="" hidden />
-                <span class="ob-cap-doigt"></span>
                 <span class="ob-cap-flash"></span>
                 <span class="ob-cap-mini" id="ob-cap-mini"><span class="ob-cap-mini-ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></span>
                 <span class="ob-cap-ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
@@ -6207,31 +6227,19 @@
                 </span>
               </span>
               <span class="st-tel-sticker"><span class="st-tel-sticker-txt" id="st-apercu-mention">@club</span></span>
-              <span class="st-tel-pub">#publicite</span>
               <span class="st-tel-bas">
                 <span class="st-tel-envoi"><i></i>Votre story</span>
                 <span class="st-tel-fleche"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
               </span>
-              <span class="st-tel-doigt"></span>
               <span class="st-tel-partage"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Partagée</span>
             </div>
             <span class="st-gain"><strong id="st-hero-montant">+100</strong>points</span>
           </div>
-          <p class="st-hero-sous">par story qui mentionne l’établissement</p>
 
           <div id="story-page-corps"></div>
 
-          <!-- "Inviter des amis" reste dans Story (demande du 13/09 matin),
-               mais en carte : la ligne grise a enveloppe et coeur rouge
-               faisait "pas esthetique". -->
-          <button type="button" class="st-inviter" id="story-inviter">
-            <span class="st-inviter-tuile" aria-hidden="true"><img src="/mascotte/verre-salut.webp" alt="" width="640" height="640" /></span>
-            <span class="st-inviter-txt">
-              <strong>Inviter des amis</strong>
-              <span><span class="js-montant-parrainage">100</span> points par ami qui s’inscrit</span>
-            </span>
-            <span class="st-inviter-btn">Inviter</span>
-          </button>
+          <!-- « Inviter des amis » a quitte Story (15/09/2026, page allegee) : la
+               ligne vit dans les reglages. -->
         </div>
 
         <!-- ECRAN FICHE GOOGLE -- ouvre la fiche Google du club en
@@ -8684,9 +8692,11 @@ function montrerCadeauOb(points) {
 
   minuteursCadeauOb.push(setTimeout(function () {
     natif.vibrer("succes");
-    if (calme) { jouer("points"); return; }
+    // Le son d'avant, deux notes qui montent (Julien, 15/09/2026 : la cascade
+    // de pieces lui plaisait moins que celui-la).
+    jouer("points");
+    if (calme) return;
     var duree = 900;
-    jouerPointsQuiTombent(duree);
     var debut = performance.now(), dernier = 0;
     (function compter(t) {
       var p = Math.min(1, (t - debut) / duree);
@@ -9658,31 +9668,6 @@ var SONS = {
     [1046.5, 0.21, 0.12], [1318.5, 0.3, 0.34],
   ],
 };
-
-/* Les points qui tombent, au cadeau de bienvenue (Julien, 15/09/2026 : « juste
-   le bruitage, un bruitage satisfaisant »). Une cascade de petites pieces --
-   chaque « tic » est une note breve et son octave, qui monte d'un cran --,
-   calee sur le compteur : serree au debut quand le chiffre file, espacee a la
-   fin quand il ralentit. Puis le « ka-ching » : deux notes claires, la
-   seconde tenue. Volume bas, comme le reste des sons de l'appli. */
-function jouerPointsQuiTombent(dureeMs) {
-  if (!sonActif) return;
-  var ctx = contexteAudio();
-  if (!ctx) return;
-  if (ctx.state === "suspended") { try { ctx.resume(); } catch (e) { /* refuse */ } }
-  var d = dureeMs / 1000, TICS = 16;
-  for (var k = 1; k <= TICS; k++) {
-    // Le moment ou le compteur (courbe en 1-(1-p)^3) passe k/TICS.
-    var quand = d * (1 - Math.pow(1 - k / TICS, 1 / 3));
-    var f = 1180 + k * 34 + (k % 2 ? 0 : 18);
-    note(f, quand, 0.07, 0.035);
-    note(f * 2, quand, 0.035, 0.009);
-  }
-  var fin = d + 0.02;
-  note(987.77, fin, 0.09, 0.055);
-  note(1318.51, fin + 0.075, 0.55, 0.065);
-  note(2637.02, fin + 0.075, 0.28, 0.012);
-}
 
 function jouer(nom) {
   if (!sonActif) return;
@@ -11238,7 +11223,9 @@ $("#vg-close")?.addEventListener("click", fermerFicheGoogle);
 
    "#publicite" sans accent : un hashtag accentue se saisit mal et se
    partage mal d'un telephone a l'autre. Le mot reste explicite. */
-var MENTION_PUB = "#publicite";
+// Retire de l'appli le 15/09/2026 a la demande de Julien (« le hashtag pub,
+// degage ce truc »). Le commentaire ci-dessus garde le raisonnement legal.
+var MENTION_PUB = "";
 
 var BAREME_STORY = {
   story: { pts: "+100", texte: "Montant fixe." },
@@ -11292,7 +11279,7 @@ function ouvrirChoixReseau(nomClub) {
      · trois boutons rouges. Il reste UN bouton plein (Ouvrir Instagram),
        qui passe la main a "J'ai poste" au retour de l'appli (.st-revenu).
 
-     ⚠️ LA MENTION #publicite RESTE COPIEE AVEC LE TAG. Poster contre des
+     LA MENTION #publicite A ETE RETIREE LE 15/09/2026 (demande de Julien). Avant : Poster contre des
      points est une publication promotionnelle (voir MENTION_PUB) : le
      bouton copier l'emporte avec le pseudo, sans rien a retenir. */
 
@@ -11322,13 +11309,13 @@ function ouvrirChoixReseau(nomClub) {
       "</span>";
   }
 
-  // Le tag a ecrire, et de quoi le copier d'un tap -- avec #publicite.
+  // Le tag a ecrire, et de quoi le copier d'un tap.
   function blocTag(handle) {
     var c = CLUBS[cleChoisie];
     var cible = handle ? "@" + handle : (c ? c.nom : "l'établissement");
-    var aCopier = handle ? "@" + handle + " " + MENTION_PUB : "";
+    var aCopier = handle ? "@" + handle : "";
     return '<div class="st-tag">' +
-      '<span class="st-tag-txt"><b>' + escapeHtmlSupport(cible) + "</b><span>" + MENTION_PUB + "</span></span>" +
+      '<span class="st-tag-txt"><b>' + escapeHtmlSupport(cible) + "</b></span>" +
       (aCopier
         ? '<button type="button" class="ps-copier" data-copie="' + escapeHtmlSupport(aCopier) + '">' + ICONE_COPIER + "<span>Copier</span></button>"
         : "") +
@@ -11362,31 +11349,20 @@ function ouvrirChoixReseau(nomClub) {
     return '<option value="' + k + '"' + (k === cleChoisie ? " selected" : "") + ">" + escapeHtmlSupport(CLUBS[k].nom) + "</option>";
   }).join("");
 
+  /* 15/09/2026, page allegee (Julien : « il y a toujours trop d'elements ») :
+     une carte -- la mention a copier, et le lieu en petit, modifiable --, les
+     deux boutons, la regle du soir, et le scan du QR en simple lien. Plus de
+     titres de section, plus de note sous la mention. */
   var html =
     '<form id="story-form" class="st-form" novalidate>' +
-      '<section class="st-bloc">' +
-        '<h2 class="st-bloc-titre">Où tu es</h2>' +
-        // Le select natif est pose, invisible, sur toute la ligne : un tap
-        // n'importe ou ouvre la roue du telephone, "Changer" le dit.
+      '<section class="st-carte">' +
+        '<p class="st-carte-titre">Mentionne dans ta story</p>' +
+        '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
         '<div class="st-lieu">' +
           '<span class="st-lieu-corps" id="st-lieu">' + blocLieu(cleChoisie) + "</span>" +
           '<span class="st-lieu-changer">Changer</span>' +
           '<select class="st-lieu-select" id="story-club" aria-label="Choisir l’établissement">' + options + "</select>" +
         "</div>" +
-        '<button type="button" class="st-scan" id="story-scan-btn">' + ICONE_QR +
-          "<span>Scanner le QR sur place</span>" +
-          '<span class="st-scan-pts">+15</span>' +
-        "</button>" +
-        '<div class="st-scan-zone" id="story-scan-zone" hidden>' +
-          '<video id="story-scan-video" playsinline muted></video>' +
-          '<p id="story-scan-msg">Vise le QR affiché sur place…</p>' +
-        "</div>" +
-      "</section>" +
-
-      '<section class="st-bloc">' +
-        '<h2 class="st-bloc-titre">À écrire dans ta story</h2>' +
-        '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
-        '<p class="st-note" id="story-mention">Sans la mention, pas de points. #publicite est obligatoire quand une story rapporte des points.</p>' +
       "</section>" +
 
       '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
@@ -11394,10 +11370,16 @@ function ouvrirChoixReseau(nomClub) {
         '<div id="story-ouvrir">' + blocOuvrir("story") + "</div>" +
         '<button type="submit" class="st-cta-second" id="story-envoyer">J’ai posté</button>' +
         '<p class="st-msg" id="story-msg" hidden></p>' +
-        /* La regle du soir (migration 0042) et le delai des points, AVANT le
-           geste. verifierStoryDuSoir() corrige la ligne si la soiree est
-           deja prise. */
         '<p class="ps-regle" id="ps-regle">Une story par soirée. Points crédités 24 h après.</p>' +
+      "</div>" +
+
+      '<button type="button" class="st-scan" id="story-scan-btn">' + ICONE_QR +
+        "<span>Scanner le QR sur place</span>" +
+        '<span class="st-scan-pts">+15</span>' +
+      "</button>" +
+      '<div class="st-scan-zone" id="story-scan-zone" hidden>' +
+        '<video id="story-scan-video" playsinline muted></video>' +
+        '<p id="story-scan-msg">Vise le QR affiché sur place…</p>' +
       "</div>" +
     "</form>";
 
