@@ -16,7 +16,8 @@ const CAPTURE = process.env.VN_CAPTURE || path.resolve(__dirname, "../public/sto
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {
-  fs.rmSync(DOSSIER, { recursive: true, force: true });
+  // Vider les images sans supprimer le dossier (il peut etre ouvert ailleurs).
+  if (fs.existsSync(DOSSIER)) for (const f of fs.readdirSync(DOSSIER)) fs.rmSync(`${DOSSIER}/${f}`, { force: true });
   fs.mkdirSync(DOSSIER, { recursive: true });
   let compte = null;
   const navigateur = await puppeteer.launch({ executablePath: V.CHROME, headless: "new", args: ["--force-color-profile=srgb", "--hide-scrollbars"] });
@@ -25,6 +26,8 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
     const page = await navigateur.newPage();
     await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     page.on("pageerror", (e) => erreurs.push(e.message));
+    // Un vrai iPhone : Safari iOS, pas Chrome de bureau.
+    await page.setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1");
     const prendre = (nom) => page.screenshot({ path: `${DOSSIER}/${nom}.png` });
 
     compte = await V.compteJetable("divers", `${SITE}/app-preview.html`);
@@ -88,4 +91,4 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
     await navigateur.close();
     if (compte) await V.supprimerCompte(compte.uid).catch(() => {});
   }
-})().catch((e) => { console.error("ECHEC:", e.message, erreurs); process.exit(1); });
+})().catch((e) => { console.error("ECHEC:", e.message); process.exit(1); });
