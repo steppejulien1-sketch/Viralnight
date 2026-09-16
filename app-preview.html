@@ -11783,15 +11783,32 @@ function ouvrirChoixReseau(nomClub) {
      points est une publication promotionnelle (voir MENTION_PUB) : le
      bouton copier l'emporte avec le pseudo, sans rien a retenir. */
 
+  /* Les etablissements proposes sur cette page : les vrais (CLUBS) et, tant que
+     MONTRER_BARS_DEMO le permet, les bars de demonstration de la boutique
+     (Julien, 16/09/2026 : « mets le Velours que je puisse voir le depliage »).
+     Un bar de demo ne sert qu'a voir : sa mention est inventee, et rien ne
+     peut lui etre envoye (voir le garde-fou de l'envoi plus bas). */
+  var CLUBS_STORY = {};
+  Object.keys(CLUBS).forEach(function (k) { CLUBS_STORY[k] = CLUBS[k]; });
+  if (MONTRER_BARS_DEMO) {
+    var MENTIONS_DEMO = ["velours.bxl", "minuitdouze.bxl", "neon88.club"];
+    BARS_DEMO.forEach(function (bar, i) {
+      CLUBS_STORY["demo-" + i] = {
+        nom: bar.nom, adr: bar.quartier, lngLat: bar.lngLat, horaires: bar.horaires,
+        photo: bar.club && bar.club.photo, ig: MENTIONS_DEMO[i], demo: true,
+      };
+    });
+  }
+
   // L'etablissement : celui de la fiche d'ou l'on vient, sinon celui de la
   // boutique (le plus proche, ou le dernier choisi a la main).
   var cleChoisie = null;
-  Object.keys(CLUBS).forEach(function (k) { if (nomClub && CLUBS[k].nom === nomClub) cleChoisie = k; });
-  if (!cleChoisie) cleChoisie = CLUBS[CLUB_BOUTIQUE] ? CLUB_BOUTIQUE : Object.keys(CLUBS)[0];
+  Object.keys(CLUBS_STORY).forEach(function (k) { if (nomClub && CLUBS_STORY[k].nom === nomClub) cleChoisie = k; });
+  if (!cleChoisie) cleChoisie = CLUBS_STORY[CLUB_BOUTIQUE] ? CLUB_BOUTIQUE : Object.keys(CLUBS_STORY)[0];
 
-  // Le compte a mentionner. CLUBS[..].ig d'abord (le vrai compte, releve a
+  // Le compte a mentionner. CLUBS_STORY[..].ig d'abord (le vrai compte, releve a
   // la main) ; la table clubs le remplace quand elle le connait.
-  var handleActuel = (CLUBS[cleChoisie] && CLUBS[cleChoisie].ig) || null;
+  var handleActuel = (CLUBS_STORY[cleChoisie] && CLUBS_STORY[cleChoisie].ig) || null;
   var kindChoisi = "story";
 
   var ICONE_QR = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h2.6v2.6H14zM18 18h2.5v2.5H18zM14 20.5h2.6M20.5 14v2.6"/></svg>';
@@ -11804,13 +11821,13 @@ function ouvrirChoixReseau(nomClub) {
   function lignesClubsStory() {
     var origine = POSITION_MOI || MOI;
     // Le club deja choisi est dans l'en-tete : il n'est pas repete dessous.
-    return Object.keys(CLUBS).filter(function (k) { return k !== cleChoisie; }).sort(function (a, b) {
-      return distanceKm(origine, CLUBS[a].lngLat) - distanceKm(origine, CLUBS[b].lngLat);
+    return Object.keys(CLUBS_STORY).filter(function (k) { return k !== cleChoisie; }).sort(function (a, b) {
+      return distanceKm(origine, CLUBS_STORY[a].lngLat) - distanceKm(origine, CLUBS_STORY[b].lngLat);
     }).map(function (k) {
-      var c = CLUBS[k];
+      var c = CLUBS_STORY[k];
       var choisi = k === cleChoisie;
       var src = c.avatar || c.photo || PHOTO_CLUB_PAR_DEFAUT;
-      var lieu = POSITION_MOI ? formaterDistance(distanceKm(POSITION_MOI, c.lngLat)) : quartierDe(c.adr);
+      var lieu = POSITION_MOI ? formaterDistance(distanceKm(POSITION_MOI, c.lngLat)) : (c.demo ? c.adr : quartierDe(c.adr));
       return '<button type="button" class="st-club-option' + (choisi ? " choisi" : "") + '" role="option" aria-selected="' + choisi + '" data-cle="' + k + '">' +
         '<span class="st-club-option-photo"><img src="' + escapeHtmlSupport(src) + '" alt="" loading="lazy" onerror="this.src=\'' + PHOTO_CLUB_PAR_DEFAUT + '\'" /></span>' +
         '<span class="st-club-option-txt"><strong>' + escapeHtmlSupport(c.nom) + "</strong>" + (lieu ? "<span>" + escapeHtmlSupport(lieu) + "</span>" : "") + "</span>" +
@@ -11820,11 +11837,11 @@ function ouvrirChoixReseau(nomClub) {
   }
 
   function blocLieu(cle) {
-    var c = CLUBS[cle];
+    var c = CLUBS_STORY[cle];
     if (!c) return "";
     // Le quartier seul : "Boite de nuit" en sous-titre, Julien l'a deja
     // trouve bizarre sur la boutique (13/09/2026).
-    var sous = quartierDe(c.adr);
+    var sous = c.demo ? c.adr : quartierDe(c.adr);
     var src = c.avatar || c.photo || PHOTO_CLUB_PAR_DEFAUT;
     return '<span class="st-lieu-tuile" aria-hidden="true"><img src="' + escapeHtmlSupport(src) + '" alt="" onerror="this.src=\'' + PHOTO_CLUB_PAR_DEFAUT + '\'" /></span>' +
       '<span class="st-lieu-txt"><strong>' + escapeHtmlSupport(c.nom) + "</strong>" +
@@ -11834,7 +11851,7 @@ function ouvrirChoixReseau(nomClub) {
 
   // Le tag a ecrire, et de quoi le copier d'un tap.
   function blocTag(handle) {
-    var c = CLUBS[cleChoisie];
+    var c = CLUBS_STORY[cleChoisie];
     var cible = handle ? "@" + handle : (c ? c.nom : "l'établissement");
     var aCopier = handle ? "@" + handle : "";
     return '<div class="st-tag">' +
@@ -11925,7 +11942,7 @@ function ouvrirChoixReseau(nomClub) {
      carte (photo, nom, quartier, coche), et une fleche discrete tourne a la
      place du mot « Changer ». Un choix, ou un tap ailleurs, la replie. */
   // Un seul etablissement : rien a choisir, donc ni fleche ni depliage.
-  $("#st-club").classList.toggle("unique", Object.keys(CLUBS).length < 2);
+  $("#st-club").classList.toggle("unique", Object.keys(CLUBS_STORY).length < 2);
   $("#st-club").innerHTML =
     '<button type="button" class="st-club-tete" id="story-club" aria-expanded="false" aria-controls="st-club-liste">' +
       '<span class="st-club-corps" id="st-lieu">' + blocLieu(cleChoisie) + "</span>" +
@@ -11943,7 +11960,7 @@ function ouvrirChoixReseau(nomClub) {
   // La scene du telephone se rejoue a chaque ouverture de la page.
   function majIntro() {
     var intro = $("#st-intro");
-    var c = CLUBS[cleChoisie];
+    var c = CLUBS_STORY[cleChoisie];
     if (intro && c) intro.textContent = "Mentionne le club dans ta story Instagram et gagne " + String(BAREME_STORY.story.pts).replace("+", "") + " points.";
   }
   majIntro();
@@ -11957,14 +11974,14 @@ function ouvrirChoixReseau(nomClub) {
     var chip = $("#story-handle-chip");
     if (chip) chip.innerHTML = blocTag(handleActuel);
     var autocollant = $("#st-apercu-mention");
-    if (autocollant) autocollant.textContent = handleActuel ? "@" + handleActuel : CLUBS[cleChoisie].nom;
+    if (autocollant) autocollant.textContent = handleActuel ? "@" + handleActuel : CLUBS_STORY[cleChoisie].nom;
   }
   majHandle(handleActuel);
 
   // Le vrai compte Instagram quand la table clubs le connait. Best-effort :
   // le nom de la maquette n'a pas toujours sa ligne en base.
   function chercherHandle() {
-    var nom = CLUBS[cleChoisie] && CLUBS[cleChoisie].nom;
+    var nom = CLUBS_STORY[cleChoisie] && CLUBS_STORY[cleChoisie].nom;
     if (!nom) return;
     supabaseClubbeur.from("clubs").select("ig_handle").eq("name", nom).maybeSingle()
       .then(function (res) { if (res.data && res.data.ig_handle) majHandle(res.data.ig_handle); })
@@ -11974,7 +11991,7 @@ function ouvrirChoixReseau(nomClub) {
 
   function changerClubStory(cle) {
     cleChoisie = cle;
-    handleActuel = CLUBS[cle].ig || null;
+    handleActuel = CLUBS_STORY[cle].ig || null;
     $("#st-lieu").innerHTML = blocLieu(cle);
     var liste = document.querySelector("#st-club .st-club-liste");
     if (liste) { liste.innerHTML = lignesClubsStory(); brancherOptionsClub(); }
@@ -12155,7 +12172,12 @@ function ouvrirChoixReseau(nomClub) {
        boutique (idClubBoutique) : tant que la table clubs ne connait pas
        le nom affiche, la ligne de demonstration tient sa place -- c'est
        elle qui porte deja le catalogue affiche pour cet etablissement. */
-    var nom = CLUBS[cleChoisie].nom;
+    if (CLUBS_STORY[cleChoisie].demo) {
+      bouton.disabled = false;
+      bouton.textContent = "J’ai posté";
+      return direStory("Ce bar n'a pas encore rejoint Noctify.", true);
+    }
+    var nom = CLUBS_STORY[cleChoisie].nom;
     var idClub = IDS_CLUBS[cleChoisie];
     if (!idClub) {
       var ligne = await supabaseClubbeur.from("clubs").select("id").eq("name", nom).maybeSingle();
@@ -12181,7 +12203,7 @@ function ouvrirChoixReseau(nomClub) {
     }
     champ.value = "";
     $("#story-form").classList.remove("st-revenu");
-    direStory("Envoyé. " + CLUBS[cleChoisie].nom + " vérifie ta story, tes points arrivent dans les 24 h.", false);
+    direStory("Envoyé. " + CLUBS_STORY[cleChoisie].nom + " vérifie ta story, tes points arrivent dans les 24 h.", false);
     verifierStoryDuSoir();
     /* LE MEILLEUR MOMENT POUR PROPOSER LES NOTIFICATIONS. Julien veut
        pousser a les activer ; la personne attend maintenant une nouvelle
