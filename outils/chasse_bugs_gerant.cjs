@@ -62,10 +62,34 @@ async function session(email) {
 
     // Le parcours d'installation : on avance jusqu'au bout avec le bouton principal.
     etape = "parcours";
-    for (let i = 0; i < 8; i++) {
+    const PHOTO = require("path").resolve(__dirname, "../public/ambiance/bienvenue.webp");
+    for (let i = 0; i < 10; i++) {
+      // La photo de couverture est obligatoire : on en depose une, comme un gerant.
+      const aCouvrir = await page.evaluate(() => { const b = document.getElementById("pa-photo-btn"); return !!b && b.getClientRects().length > 0 && !document.querySelector(".pa-couv.remplie"); });
+      if (aCouvrir) {
+        const [choix] = await Promise.all([page.waitForFileChooser({ timeout: 5000 }), page.evaluate(() => document.getElementById("pa-photo-btn").click())]);
+        await choix.accept([PHOTO]);
+        await pause(5000);
+        bilan.etapes.push({ nom: "photo couverture", posee: await page.evaluate(() => !!document.querySelector(".pa-couv.remplie")) });
+      }
       const suivant = await page.evaluate(() => {
         const p = document.getElementById("parcours");
         if (!p || p.hidden || !p.getClientRects().length) return null;
+        // Le telephone est obligatoire a l'etape « Ton club » : on le remplit.
+        p.querySelectorAll('input[type="tel"]').forEach((i) => {
+          if (i.getClientRects().length && !i.value) {
+            i.value = "0470 12 34 56";
+            i.dispatchEvent(new Event("input", { bubbles: true }));
+            i.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        });
+        p.querySelectorAll('input[placeholder="@leclub"]').forEach((i) => {
+          if (i.getClientRects().length && !i.value) {
+            i.value = "chasse_gerant_test";
+            i.dispatchEvent(new Event("input", { bubbles: true }));
+            i.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        });
         const b = [...p.querySelectorAll("button")].filter((x) => x.getClientRects().length && !x.disabled).pop();
         if (!b) return "aucun bouton";
         const t = b.textContent.trim();
@@ -95,6 +119,14 @@ async function session(email) {
     if (etabId) {
       try { V.sql(`delete from public.rewards where club_id in (select id from public.clubs where establishment_id='${etabId}'); delete from public.clubs where establishment_id='${etabId}';`); } catch (e) { bilan.menageClubbeur = e.message; }
       try { B.sql(`delete from public.establishments where id='${etabId}'`); } catch (e) { bilan.menageEtab = e.message; }
+    }
+    if (etabId) {
+      try {
+        const [, liste] = await B.admin("/storage/v1/object/list/reward-photos", "POST", { prefix: etabId, limit: 100 });
+        const chemins = (liste || []).map((o) => `${etabId}/${o.name}`);
+        if (chemins.length) await B.admin("/storage/v1/object/reward-photos", "DELETE", { prefixes: chemins });
+        bilan.photosEffacees = chemins.length;
+      } catch (e) { bilan.menagePhotos = e.message; }
     }
     if (uid) await B.admin(`/auth/v1/admin/users/${uid}`, "DELETE");
     console.log(JSON.stringify(bilan, null, 1));
