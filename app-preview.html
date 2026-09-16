@@ -3259,6 +3259,7 @@
         letter-spacing: -.035em; line-height: .98; text-wrap: balance; text-shadow: 0 2px 24px rgba(0,0,0,.35);
       }
       .vb-sous { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 10px 0 0; font-size: calc(14.5 * var(--u)); font-weight: 600; }
+      .vb-sous { color: rgba(255,255,255,.88); font-size: calc(16 * var(--u)); }
       .vb-gagne { display: inline-flex; align-items: center; gap: 6px; color: #f5c542; }
       .vb-gagne svg { width: 17px; height: 17px; fill: #f5c542; }
       .vb-etat { color: rgba(255,255,255,.78); }
@@ -3337,6 +3338,15 @@
       .vb-jauge i { transform: none; transition: none; background: var(--ink); }
       .vue-boutique .bar-couverture img, .vue-boutique .bar-section.vue .bar-couverture img { transform: none; transition: none; }
       .bar-sur-photo .bar-nom, .bar-ligne { opacity: 1; transform: none; transition: none; }
+      /* La carte d'un etablissement, proportions DUSK (photo 585 x 300), texte sous la photo. */
+      .vue-boutique .bar-couverture { aspect-ratio: 39 / 20; }
+      .vue-boutique .bar-section + .bar-section { margin-top: 0; }
+      .vue-boutique .bar-infos {
+        display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 14px 4px 30px; border: 0; background: none;
+        font-family: inherit; text-align: left; cursor: pointer;
+      }
+      .vue-boutique .bar-infos .bar-nom { font-size: calc(23 * var(--u)); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; color: var(--ink); }
+      .vue-boutique .bar-infos .bar-tags { margin: 0; font-size: calc(15.5 * var(--u)); font-weight: 500; color: var(--ink3); }
       @media (prefers-reduced-motion: reduce) { .bar-couverture img, .boutique-filtre { transition: none; } }
       .drop-titre {
         display: flex; align-items: center; gap: 8px; margin: 0;
@@ -16033,7 +16043,7 @@ function semaineDemo(jours, de, a) {
 }
 var BARS_DEMO = [
   { nom: "Velours", type: "bar", lngLat: [4.3503, 50.8468], quartier: "Bruxelles-Centre", horaires: semaineDemo([1, 2, 3, 4, 5, 6], "18:00", "02:00") },
-  { nom: "Minuit Douze", type: "bar", lngLat: [4.3452, 50.8331], quartier: "Saint-Gilles", horaires: semaineDemo([3, 4, 5], "21:00", "04:00") },
+  { nom: "Minuit Douze", type: "restaurant", lngLat: [4.3452, 50.8331], quartier: "Saint-Gilles", horaires: semaineDemo([3, 4, 5], "21:00", "04:00") },
   { nom: "Néon 88", type: "club", lngLat: [4.3688, 50.8322], quartier: "Ixelles", horaires: semaineDemo([4, 5], "23:00", "06:00") },
 ];
 BARS_DEMO.forEach(function (bar, i) {
@@ -16113,6 +16123,10 @@ function formaterDistance(km) {
 // La vraie position, quand on l'a (voir appliquerPosition).
 var POSITION_MOI = null;
 
+function typeEtablissement(c) {
+  return ({ club: "Boîte de nuit", bar: "Bar", restaurant: "Restaurant" })[c && c.type] || "";
+}
+
 function rendreListe() {
   var z = $("#liste");
   if (!z) return;
@@ -16182,22 +16196,26 @@ function rendreListe() {
        photos sont plus hautes et se suivent presque sans espace, et chacune
        se pose avec un leger zoom quand elle arrive a l'ecran. */
     var nbRecos = (bar.recompenses || []).length;
+    /* 16/09/2026 soir, Julien : « sur DUSK on est plonge dans la photo, la taille
+       est parfaite » et « il faut plus d'espace blanc, laisse-les ». Donc comme
+       DUSK : photo bord a bord a leurs proportions, le quartier en pastille,
+       puis SOUS la photo, sur le blanc, le nom et une ligne grise : le type
+       d'etablissement et le nombre de recompenses. Plus de « Gagne des points ici ». */
+    var nbRecos = (bar.recompenses || []).length;
+    var ligne = [typeEtablissement(c), nbRecos ? nbRecos + " récompense" + (nbRecos > 1 ? "s" : "") : ""].filter(Boolean);
     section.innerHTML =
       '<button type="button" class="bar-couverture" aria-label="Voir la boutique de ' + escapeHtmlSupport(bar.nom) + '">' +
         '<img src="' + escapeHtmlSupport(couverture) + '" alt="" loading="lazy" onerror="this.src=\'/clubs/couverture-par-defaut.webp\'" />' +
-        '<span class="bar-degrade" aria-hidden="true"></span>' +
         (ou ? '<span class="bar-pastille"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>' + escapeHtmlSupport(ou) + "</span>" : "") +
-        '<span class="bar-sur-photo">' +
-          '<span class="bar-nom">' + escapeHtmlSupport(bar.nom) + "</span>" +
-          '<span class="bar-ligne">' +
-            (cle ? '<span class="bar-gagne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>Gagne des points ici</span>' : "") +
-            (nbRecos ? '<span class="bar-nb">' + nbRecos + " récompense" + (nbRecos > 1 ? "s" : "") + "</span>" : "") +
-          "</span>" +
-        "</span>" +
-        '<span class="bar-fleche" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>' +
+      "</button>" +
+      '<button type="button" class="bar-infos" tabindex="-1" aria-hidden="true">' +
+        '<span class="bar-nom">' + escapeHtmlSupport(bar.nom) + "</span>" +
+        (ligne.length ? '<span class="bar-tags">' + ligne.map(escapeHtmlSupport).join(" • ") + "</span>" : "") +
       "</button>";
     bar.cle = cle;
-    section.querySelector(".bar-couverture").addEventListener("click", function () { ouvrirBoutiqueBar(bar); });
+    section.querySelectorAll(".bar-couverture, .bar-infos").forEach(function (el) {
+      el.addEventListener("click", function () { ouvrirBoutiqueBar(bar); });
+    });
     z.appendChild(section);
     observerPhotoBar(section);
   });
@@ -16232,9 +16250,8 @@ function rendreBoutiqueBar(bar) {
   document.getElementById("vb-lieu").hidden = !ou;
   document.getElementById("vb-nom").textContent = bar.nom;
   document.getElementById("vb-barre-titre").textContent = bar.nom;
-  document.getElementById("vb-sous").innerHTML =
-    (bar.cle ? '<span class="vb-gagne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>Gagne des points ici</span>' : "") +
-    "";
+  // Le type d'etablissement a la place de « Gagne des points ici » (Julien, 16/09/2026).
+  document.getElementById("vb-sous").textContent = typeEtablissement(bar.club);
   document.getElementById("vb-points").innerHTML = "<b>" + nb(solde) + "</b> pts";
 
   // Le solde : ce qu'on a, et le prochain palier. Des faits, pas de slogan.
