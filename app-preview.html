@@ -5322,9 +5322,46 @@
       }
       .vue-story .st-club .st-lieu-txt strong { font-size: calc(16.5 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
       .vue-story .st-club .st-lieu-txt span { margin-top: 2px; font-size: calc(13 * var(--u)); color: var(--ink3); }
-      .vue-story .st-club .st-club-changer { gap: 1px; font-size: calc(13.5 * var(--u)); font-weight: 700; color: var(--ink2); }
-      .vue-story .st-club .st-club-changer svg { width: 15px; height: 15px; }
-      .vue-story .st-club:active { transform: scale(.99); }
+      /* La carte qui se deplie (voir « troisieme passage » dans le JS). */
+      .vue-story .st-club { display: block; padding: 0; overflow: hidden; }
+      .vue-story .st-club:focus-within { box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 10px 24px -16px rgba(15,17,20,.3); }
+      .st-club-tete {
+        display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px 10px 10px; border: 0;
+        background: none; font-family: inherit; color: var(--ink); text-align: left; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .st-club-tete:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 20px; }
+      .st-club-fleche {
+        flex: 0 0 auto; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+        background: var(--s2); color: var(--ink2); transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+      }
+      .st-club-fleche svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+      .st-club.ouvert .st-club-fleche { transform: rotate(180deg); }
+      .st-club.unique .st-club-fleche, .st-club.unique .st-club-deplie { display: none; }
+      .st-club.unique .st-club-tete { cursor: default; }
+      .st-club-deplie { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s cubic-bezier(.4, 0, .2, 1); }
+      .st-club.ouvert .st-club-deplie { grid-template-rows: 1fr; }
+      .st-club-liste { min-height: 0; overflow: hidden; margin: 0 10px; }
+      .st-club.ouvert .st-club-liste { padding: 2px 0 8px; border-top: 1px solid var(--line); }
+      .st-club-option {
+        display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 4px; padding: 8px 6px; border: 0; border-radius: 14px;
+        background: none; font-family: inherit; color: var(--ink); text-align: left; cursor: pointer;
+        opacity: 0; transform: translateY(-4px); transition: opacity .2s ease, transform .2s ease, background-color .15s ease;
+      }
+      .st-club.ouvert .st-club-option { opacity: 1; transform: none; transition-delay: .08s; }
+      .st-club-option:active { background: var(--s2); }
+      .st-club-option-photo { flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--s2); box-shadow: 0 0 0 1px rgba(15,17,20,.08); }
+      .st-club-option-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .st-club-option-txt { flex: 1; min-width: 0; }
+      .st-club-option-txt strong { display: block; font-size: calc(15 * var(--u)); font-weight: 700; letter-spacing: -.01em; }
+      .st-club-option-txt span { display: block; margin-top: 1px; font-size: calc(12.5 * var(--u)); color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .st-club-option-coche { flex: 0 0 auto; width: 22px; height: 22px; display: grid; place-items: center; color: transparent; }
+      .st-club-option-coche svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+      .st-club-option.choisi strong { font-weight: 800; }
+      .st-club-option.choisi .st-club-option-coche { color: var(--ink); }
+      @media (prefers-reduced-motion: reduce) {
+        .st-club-fleche, .st-club-deplie, .st-club-option { transition: none; }
+      }
       .st-club-corps { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
       .st-club .st-lieu-tuile { width: 36px; height: 36px; border-radius: 10px; }
       .st-club .st-lieu-txt strong { font-size: calc(16 * var(--u)); }
@@ -11764,6 +11801,24 @@ function ouvrirChoixReseau(nomClub) {
      sinon une photo de soiree -- plus de repere de carte (Julien, 16/09/2026). */
   var PHOTO_CLUB_PAR_DEFAUT = "/clubs/profil-par-defaut.webp";
 
+  function lignesClubsStory() {
+    var origine = POSITION_MOI || MOI;
+    // Le club deja choisi est dans l'en-tete : il n'est pas repete dessous.
+    return Object.keys(CLUBS).filter(function (k) { return k !== cleChoisie; }).sort(function (a, b) {
+      return distanceKm(origine, CLUBS[a].lngLat) - distanceKm(origine, CLUBS[b].lngLat);
+    }).map(function (k) {
+      var c = CLUBS[k];
+      var choisi = k === cleChoisie;
+      var src = c.avatar || c.photo || PHOTO_CLUB_PAR_DEFAUT;
+      var lieu = POSITION_MOI ? formaterDistance(distanceKm(POSITION_MOI, c.lngLat)) : quartierDe(c.adr);
+      return '<button type="button" class="st-club-option' + (choisi ? " choisi" : "") + '" role="option" aria-selected="' + choisi + '" data-cle="' + k + '">' +
+        '<span class="st-club-option-photo"><img src="' + escapeHtmlSupport(src) + '" alt="" loading="lazy" onerror="this.src=\'' + PHOTO_CLUB_PAR_DEFAUT + '\'" /></span>' +
+        '<span class="st-club-option-txt"><strong>' + escapeHtmlSupport(c.nom) + "</strong>" + (lieu ? "<span>" + escapeHtmlSupport(lieu) + "</span>" : "") + "</span>" +
+        '<span class="st-club-option-coche" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+      "</button>";
+    }).join("");
+  }
+
   function blocLieu(cle) {
     var c = CLUBS[cle];
     if (!c) return "";
@@ -11864,13 +11919,19 @@ function ouvrirChoixReseau(nomClub) {
   /* Le choix du club tel qu'au debut (Julien, 16/09/2026 : « remets ce qu'il y
      avait au tout debut, juste rends-le plus esthetique ») : la carte, et le
      menu du telephone par-dessus (le <select> invisible). */
-  var options = Object.keys(CLUBS).map(function (k) {
-    return '<option value="' + k + '"' + (k === cleChoisie ? " selected" : "") + ">" + escapeHtmlSupport(CLUBS[k].nom) + "</option>";
-  }).join("");
+  /* 16/09/2026, troisieme passage : la carte reste, mais « Changer » et le
+     menu du telephone qui s'ouvrait en bas « c'est pas beau ». La carte se
+     DEPLIE sur place : les etablissements apparaissent dessous, dans la meme
+     carte (photo, nom, quartier, coche), et une fleche discrete tourne a la
+     place du mot « Changer ». Un choix, ou un tap ailleurs, la replie. */
+  // Un seul etablissement : rien a choisir, donc ni fleche ni depliage.
+  $("#st-club").classList.toggle("unique", Object.keys(CLUBS).length < 2);
   $("#st-club").innerHTML =
-    '<span class="st-club-corps" id="st-lieu">' + blocLieu(cleChoisie) + "</span>" +
-    '<span class="st-club-changer">Changer<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></span>' +
-    '<select class="st-lieu-select" id="story-club" aria-label="Choisir l’établissement">' + options + "</select>";
+    '<button type="button" class="st-club-tete" id="story-club" aria-expanded="false" aria-controls="st-club-liste">' +
+      '<span class="st-club-corps" id="st-lieu">' + blocLieu(cleChoisie) + "</span>" +
+      '<span class="st-club-fleche" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></span>' +
+    "</button>" +
+    '<div class="st-club-deplie" id="st-club-liste"><div class="st-club-liste" role="listbox" aria-label="Choisir l’établissement">' + lignesClubsStory() + "</div></div>";
   TAB_STORY.classList.add("on");
   TAB_STORY.setAttribute("aria-current", "page");
   VUE_STORY.hidden = false;
@@ -11915,6 +11976,8 @@ function ouvrirChoixReseau(nomClub) {
     cleChoisie = cle;
     handleActuel = CLUBS[cle].ig || null;
     $("#st-lieu").innerHTML = blocLieu(cle);
+    var liste = document.querySelector("#st-club .st-club-liste");
+    if (liste) { liste.innerHTML = lignesClubsStory(); brancherOptionsClub(); }
     majIntro();
     majHandle(handleActuel);
     chercherHandle();
@@ -11923,7 +11986,37 @@ function ouvrirChoixReseau(nomClub) {
     if (sc) { sc.classList.remove("joue"); void sc.offsetWidth; sc.classList.add("joue"); }
     vibrer("leger");
   }
-  $("#story-club").addEventListener("change", function () { changerClubStory(this.value); });
+  function plierClub(ouvrir) {
+    var bloc = $("#st-club"), tete = $("#story-club");
+    if (!bloc || !tete) return;
+    bloc.classList.toggle("ouvert", ouvrir);
+    tete.setAttribute("aria-expanded", String(ouvrir));
+  }
+  function brancherOptionsClub() {
+    document.querySelectorAll("#st-club .st-club-option").forEach(function (b) {
+      b.addEventListener("click", function () {
+        plierClub(false);
+        if (b.dataset.cle !== cleChoisie) changerClubStory(b.dataset.cle);
+      });
+    });
+  }
+  brancherOptionsClub();
+  $("#story-club").addEventListener("click", function () {
+    if ($("#st-club").classList.contains("unique")) return;
+    plierClub(!$("#st-club").classList.contains("ouvert"));
+  });
+  // Un tap ailleurs replie la carte (ecouteur pose une seule fois).
+  if (!window.__plierClubAilleurs) {
+    window.__plierClubAilleurs = true;
+    document.addEventListener("click", function (e) {
+      var bloc = document.getElementById("st-club");
+      if (bloc && bloc.classList.contains("ouvert") && !bloc.contains(e.target)) {
+        bloc.classList.remove("ouvert");
+        var tete = document.getElementById("story-club");
+        if (tete) tete.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
 
   activerScanClub();
 

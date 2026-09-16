@@ -129,6 +129,11 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
       await page.evaluate(() => { const v = document.getElementById("vue-story"); if (v) v.scrollTop = 0; document.querySelector(".st-club")?.scrollIntoView({ block: "start" }); });
       await pause(4500);
       await page.screenshot({ path: `${CAPTURES}/02c-story-club.png` });
+      await page.evaluate(() => document.getElementById("story-club")?.click());
+      await pause(900);
+      await page.screenshot({ path: `${CAPTURES}/02d-story-club-deplie.png` });
+      await page.evaluate(() => document.getElementById("story-club")?.click());
+      await pause(600);
     }
     await essai("onglet carte", "#tab-carte");
     await essai("onglet profil", "#tab-profil");
