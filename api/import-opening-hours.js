@@ -100,7 +100,8 @@ async function actionFiche(request, response, body) {
     fiche = await lireFicheGoogle(googleUrl, process.env.GOOGLE_PLACES_API_KEY);
   } catch (error) {
     console.error("[fiche-google]", error.message);
-    return json(response, { error: "Google ne répond pas pour le moment. Réessaie dans un instant." }, 502);
+    // `detail` : le message de Google (jamais la cle), pour comprendre un refus sans acces aux logs.
+    return json(response, { error: "Google ne répond pas pour le moment. Réessaie dans un instant.", detail: String(error.message || "").replace(/key=[^&\s]+/g, "key=…").slice(0, 300) }, 502);
   }
   if (!fiche || !fiche.nom) return json(response, { error: "Fiche introuvable. Vérifie que le lien ouvre bien ton établissement dans Google Maps." }, 422);
 
