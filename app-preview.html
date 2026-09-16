@@ -2773,6 +2773,10 @@
          d'un titre en ferait une carte de plus a lire avant d'arriver au
          catalogue. */
       .solde-carte { position: relative; padding: 2px 2px 0; }
+      /* La jauge rouge sous l'en-tete : retiree (Julien, 16/09/2026). */
+      .vue-boutique .solde-prog { display: none; }
+      .solde-simple { margin: 0; font-size: calc(16 * var(--u)); font-weight: 600; color: var(--ink2); white-space: nowrap; }
+      .solde-simple strong { font-family: var(--chiffre); font-size: calc(24 * var(--u)); font-weight: 900; letter-spacing: -.03em; color: var(--ink); }
       .solde-tete {
         display: flex; align-items: center; justify-content: space-between; gap: 12px;
       }
@@ -3174,6 +3178,50 @@
       .bar-tags { margin: 5px 0 0; font-size: calc(14.5 * var(--u)); font-weight: 500; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .bar-aucun { margin: 18px 2px; font-size: calc(14.5 * var(--u)); color: var(--ink3); }
       .bar-section + .bar-section { margin-top: 6px; }
+      /* ---- La carte d'un etablissement, facon feed : tout sur la photo ---- */
+      .sec-bars { margin-top: 16px; }
+      .vue-boutique .bar-section + .bar-section { margin-top: 4px; }
+      .vue-boutique .bar-couverture {
+        aspect-ratio: 1170 / 1080; background: #0d0d0f; cursor: pointer; isolation: isolate;
+      }
+      .vue-boutique .bar-couverture img {
+        transform: scale(1.1); filter: saturate(1.08) contrast(1.04);
+        transition: transform 1.4s cubic-bezier(.16, .8, .2, 1);
+      }
+      .vue-boutique .bar-section.apparue .bar-couverture img { transform: scale(1); }
+      .vue-boutique .bar-couverture:active img { transform: scale(1.03); transition-duration: .3s; }
+      .bar-degrade {
+        position: absolute; inset: 0; z-index: 1; pointer-events: none;
+        background:
+          linear-gradient(to bottom, rgba(0,0,0,.34), rgba(0,0,0,0) 24%),
+          linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.4) 34%, rgba(0,0,0,0) 58%);
+      }
+      .vue-boutique .bar-pastille { z-index: 2; left: 16px; top: 16px; background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+      .bar-sur-photo {
+        position: absolute; z-index: 2; left: 18px; right: 64px; bottom: 20px; display: flex; flex-direction: column; gap: 6px;
+        color: #ffffff; text-align: left;
+      }
+      .bar-sur-photo .bar-nom {
+        font-family: var(--titre); font-size: calc(34 * var(--u)); font-weight: 900; letter-spacing: -.035em; line-height: 1;
+        color: #ffffff; text-shadow: 0 2px 20px rgba(0,0,0,.35);
+        opacity: 0; transform: translateY(12px); transition: opacity .6s ease .15s, transform .7s cubic-bezier(.2, .8, .2, 1) .15s;
+      }
+      .bar-ligne {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: calc(14.5 * var(--u)); font-weight: 650;
+        opacity: 0; transform: translateY(10px); transition: opacity .6s ease .28s, transform .7s cubic-bezier(.2, .8, .2, 1) .28s;
+      }
+      .vue-boutique .bar-section.apparue .bar-sur-photo .bar-nom, .vue-boutique .bar-section.apparue .bar-ligne { opacity: 1; transform: none; }
+      .bar-sur-photo .bar-gagne { margin: 0; color: #f5c542; }
+      .bar-sur-photo .bar-gagne svg { fill: #f5c542; }
+      .bar-nb { color: rgba(255,255,255,.82); }
+      .bar-fleche {
+        position: absolute; z-index: 2; right: 16px; bottom: 20px; display: grid; place-items: center; width: 40px; height: 40px;
+        border-radius: 50%; background: rgba(255,255,255,.18); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      }
+      .bar-fleche svg { width: 20px; height: 20px; fill: none; stroke: #ffffff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+      @media (prefers-reduced-motion: reduce) {
+        .vue-boutique .bar-couverture img, .bar-sur-photo .bar-nom, .bar-ligne { transition: none; transform: none; opacity: 1; }
+      }
       .bar-infos {
         display: block; width: 100%; padding: 14px 2px 22px; border: 0; background: none;
         font-family: inherit; color: inherit; text-align: left; cursor: pointer;
@@ -7815,20 +7863,10 @@
               <div class="solde-carte">
                 <div class="solde-tete">
                   <h2 class="solde-titre marque-noctify" aria-label="Noctify, récompenses">NOCTIFY</h2>
-                  <div class="boutique-actions">
-                    <p class="solde-chiffre">
-                      <strong class="carte-solde-num" id="solde-num">0</strong><span>points</span>
-                    </p>
-                    <button type="button" class="boutique-icone" id="boutique-carte" aria-label="Voir la carte">
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>
-                    </button>
-                  </div>
-                </div>
-                <div class="boutique-filtres" role="group" aria-label="Filtrer les établissements">
-                  <button type="button" class="boutique-filtre" id="filtre-proche" aria-pressed="false">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5 3.8 10.3a.6.6 0 0 0 .05 1.13l6.4 2.2 2.2 6.4a.6.6 0 0 0 1.13.05z"/></svg>Près de moi
-                  </button>
-                  <button type="button" class="boutique-filtre" id="filtre-ouvert" aria-pressed="false">Ouvert</button>
+                  <!-- 16/09/2026, Julien : « le compteur des points est bizarre, mets
+                       juste 50 points ; le bouton carte ca sert a rien ; les filtres
+                       sont moches ; pas la barre rouge ». -->
+                  <p class="solde-simple"><strong class="carte-solde-num" id="solde-num">0</strong> points</p>
                 </div>
                 <div class="solde-prog" id="solde-prog">
                   <span class="solde-prog-piste" id="solde-prog-piste"></span>
@@ -16130,22 +16168,30 @@ function rendreListe() {
     var photos = Array.isArray(c.photos) ? c.photos.filter(Boolean) : [];
     var couverture = c.couverture || photos[0] || c.photo || "/clubs/couverture-par-defaut.webp";
     // Une ligne, comme chez DUSK : une ambiance et l'heure.
-    var tags = (Array.isArray(c.ambiance) ? c.ambiance.slice(0, 1) : []).concat(etat ? [etat.texte] : []);
+    // Plus d'horaires ni d'etiquettes (Julien, 16/09/2026) : la photo, le nom, les points.
+    /* 16/09/2026, Julien : « trop de blanc, pas assez vivant, il faut qu'on vive
+       dans le truc ». Le texte passe SUR la photo (degrade sombre en bas), les
+       photos sont plus hautes et se suivent presque sans espace, et chacune
+       se pose avec un leger zoom quand elle arrive a l'ecran. */
+    var nbRecos = (bar.recompenses || []).length;
     section.innerHTML =
       '<button type="button" class="bar-couverture" aria-label="Voir la boutique de ' + escapeHtmlSupport(bar.nom) + '">' +
         '<img src="' + escapeHtmlSupport(couverture) + '" alt="" loading="lazy" onerror="this.src=\'/clubs/couverture-par-defaut.webp\'" />' +
+        '<span class="bar-degrade" aria-hidden="true"></span>' +
         (ou ? '<span class="bar-pastille"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>' + escapeHtmlSupport(ou) + "</span>" : "") +
-      "</button>" +
-      '<button type="button" class="bar-infos" tabindex="-1" aria-hidden="true">' +
-        '<h2 class="bar-nom">' + escapeHtmlSupport(bar.nom) + "</h2>" +
-        (cle ? '<p class="bar-gagne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>Gagne des points ici</p>' : "") +
-        (tags.length ? '<p class="bar-tags' + (etat && etat.ouvert ? " ouvert" : "") + '">' + tags.map(escapeHtmlSupport).join(" • ") + "</p>" : "") +
+        '<span class="bar-sur-photo">' +
+          '<span class="bar-nom">' + escapeHtmlSupport(bar.nom) + "</span>" +
+          '<span class="bar-ligne">' +
+            (cle ? '<span class="bar-gagne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>Gagne des points ici</span>' : "") +
+            (nbRecos ? '<span class="bar-nb">' + nbRecos + " récompense" + (nbRecos > 1 ? "s" : "") + "</span>" : "") +
+          "</span>" +
+        "</span>" +
+        '<span class="bar-fleche" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>' +
       "</button>";
     bar.cle = cle;
-    section.querySelectorAll(".bar-couverture, .bar-infos").forEach(function (el) {
-      el.addEventListener("click", function () { ouvrirBoutiqueBar(bar); });
-    });
+    section.querySelector(".bar-couverture").addEventListener("click", function () { ouvrirBoutiqueBar(bar); });
     z.appendChild(section);
+    observerPhotoBar(section);
   });
   majFiltresBoutique();
   // La boutique ouverte suit le solde (un echange vient d'avoir lieu, des points arrivent).
@@ -16180,7 +16226,7 @@ function rendreBoutiqueBar(bar) {
   document.getElementById("vb-barre-titre").textContent = bar.nom;
   document.getElementById("vb-sous").innerHTML =
     (bar.cle ? '<span class="vb-gagne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>Gagne des points ici</span>' : "") +
-    (etat ? '<span class="vb-etat' + (etat.ouvert ? " ouvert" : "") + '">' + escapeHtmlSupport(etat.texte) + "</span>" : "");
+    "";
   document.getElementById("vb-points").innerHTML = "<b>" + nb(solde) + "</b> pts";
 
   // Le solde : ce qu'on a, et le prochain palier. Des faits, pas de slogan.
@@ -16226,7 +16272,7 @@ function rendreBoutiqueBar(bar) {
   if (!recos.length) sections.innerHTML = '<p class="vb-vide">Pas encore de récompense ici.</p>';
 
   document.getElementById("vb-pied").innerHTML = bar.cle
-    ? '<button type="button" class="vb-fiche" id="vb-fiche">Horaires, adresse et photos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'
+    ? '<button type="button" class="vb-fiche" id="vb-fiche">Adresse et photos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'
     : '<p class="vb-demo">Établissement de démonstration : ses récompenses ne s’échangent pas.</p>';
   var fiche = document.getElementById("vb-fiche");
   if (fiche) fiche.addEventListener("click", function () { ouvrirClub(CLUBS[bar.cle], fiche, bar.cle); });
@@ -16260,6 +16306,21 @@ document.getElementById("vb-defile")?.addEventListener("scroll", function () {
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape" && VUE_BAR && !VUE_BAR.hidden && document.getElementById("sheet")?.getAttribute("aria-hidden") !== "false") fermerBoutiqueBar();
 });
+
+/* Le leger zoom d'arrivee de chaque photo, une fois, quand elle entre a l'ecran.
+   ⚠️ Classe « apparue », jamais « vue » : .vue est deja la classe des ecrans
+   entiers (position absolue, cachee) -- la liste devenait blanche. */
+var OBSERVATEUR_PHOTOS = "IntersectionObserver" in window
+  ? new IntersectionObserver(function (entrees) {
+      entrees.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("apparue"); OBSERVATEUR_PHOTOS.unobserve(e.target); }
+      });
+    }, { threshold: 0.2 })
+  : null;
+function observerPhotoBar(section) {
+  if (OBSERVATEUR_PHOTOS) OBSERVATEUR_PHOTOS.observe(section);
+  else section.classList.add("apparue");
+}
 
 var FILTRE_OUVERT = false;
 function majFiltresBoutique() {
