@@ -14338,18 +14338,23 @@ var SUJETS_SUPPORT = [
 ];
 var sujetSupport = null;
 
-function choisirSujetSupport(sujet, sansFocus) {
+/* 16/09/2026, Julien : « au lieu de mettre ce truc-la, que ca envoie
+   directement "Je n'ai pas reçu mes points" et que ca reponde
+   automatiquement ». Toucher une question l'ENVOIE dans le fil ; la reponse
+   prevue pour cette question arrive toute seule (lib/support/baseSupport.js,
+   QUESTIONS_PREDEFINIES). Plus d'encadre d'explication au-dessus du fil. */
+function poserSujetSupport(sujet) {
   sujetSupport = sujet;
-  $("#ai-accueil").hidden = !!sujet;
-  $("#ai-reponse").hidden = !sujet;
+  $("#ai-reponse").hidden = true;
   if (sujet) {
-    $("#ai-reponse-titre").textContent = sujet.t;
-    $("#ai-reponse-txt").textContent = sujet.r;
-    $("#ai-reponse-txt").hidden = !sujet.r;
-    var champ = $("#ai-message");
-    champ.placeholder = sujet.court === "Autre" ? "Écris ton message…" : "Décris ton problème…";
-    if (!sansFocus) champ.focus();
+    $("#ai-accueil").hidden = true;
+    $("#ai-message").placeholder = sujet.court === "Autre" ? "Écris ton message…" : "Décris ton problème…";
   }
+}
+
+async function choisirSujetSupport(sujet) {
+  poserSujetSupport(sujet);
+  await envoyerMessageSupport("[" + sujet.court + "] " + sujet.t);
 }
 
 (function rendreSujetsSupport() {
@@ -14408,7 +14413,7 @@ async function chargerChatClient() {
     var court = etiquete && /^\[([^\]]{1,30})\]/.exec(etiquete.message)[1];
     var retrouve = court && SUJETS_SUPPORT.find(function (x) { return x.court === court; });
     if (retrouve) {
-      choisirSujetSupport(retrouve, true);
+      poserSujetSupport(retrouve);
     } else {
       $("#ai-accueil").hidden = messages.length > 0;
     }
@@ -14452,14 +14457,23 @@ $("#ai-form")?.addEventListener("submit", async function (e) {
   // Le sujet voyage avec le message : l'admin sait de quoi il s'agit avant
   // d'ouvrir le fil.
   var aEnvoyer = sujetSupport && sujetSupport.court !== "Autre" ? "[" + sujetSupport.court + "] " + texte : texte;
-  var res = await supabaseClubbeur.from("support_messages").insert({ user_id: session.user.id, message: aEnvoyer, auteur: "client" });
+  champ.value = "";
+  var erreur = await envoyerMessageSupport(aEnvoyer, session);
   bouton.disabled = false;
   bouton.innerHTML = labelOriginal;
-
-  if (res.error) return dire("Ça n’a pas marché. Réessaie dans un instant.", true);
-  champ.value = "";
+  if (erreur) {
+    champ.value = texte;
+    return dire("Ça n’a pas marché. Réessaie dans un instant.", true);
+  }
   msg.style.display = "none";
-  // Le sujet reste affiche (plus de remise a zero apres l'envoi).
+});
+
+/* Poser un message client dans le fil, puis attendre la reponse automatique. */
+async function envoyerMessageSupport(aEnvoyer, session) {
+  session = session || (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return "session";
+  var res = await supabaseClubbeur.from("support_messages").insert({ user_id: session.user.id, message: aEnvoyer, auteur: "client" });
+  if (res.error) return "erreur";
   await chargerChatClient();
   /* La reponse automatique (api/credit-clubbeur.js ?action=support-nouveau,
      lib/support/reponseAuto.js, sans IA payante) : on attend la route, bulle « … » a l'ecran, puis
@@ -14483,7 +14497,8 @@ $("#ai-form")?.addEventListener("submit", async function (e) {
     montrerSaisieSupport(false);
     chargerChatClient();
   }
-});
+  return null;
+}
 
 /* ---- Cote admin : toutes les conversations ---- */
 async function chargerConversationsAdmin() {

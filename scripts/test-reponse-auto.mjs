@@ -262,6 +262,24 @@ for (const [m, attendu] of CAS) {
 }
 console.log(`  => ${justes}/${CAS.length} messages compris`);
 
+console.log("\nQuestions de l'ecran Aide & Support (reponse prevue)");
+const QUESTIONS = [
+  ["[Points] Je n’ai pas reçu mes points", "points_pas_recus"],
+  ["[Story] Ma story n’a pas été validée", "story_etat"],
+  ["[Récompense] Un problème avec une récompense", "bons"],
+  ["[Établissement] Je ne trouve pas un établissement", "etablissements"],
+  ["[Compte] Mon compte ou ma connexion", "question:mon compte ou ma connexion"],
+  ["[Autre] Autre chose", "question:autre chose"],
+];
+for (const [q, attendu] of QUESTIONS) {
+  const r = repondre(q, {}, MAINTENANT);
+  check(`« ${q} » -> ${attendu}`, r.intention === attendu, r.intention);
+}
+const autre = repondre("[Autre] Autre chose", {}, MAINTENANT);
+check("Autre chose -> l'equipe contacte, transmis", /l'équipe te contacte/.test(autre.texte) && autre.transmettre);
+check("Probleme de recompense -> ajoute la phrase du bar", /refusé ton bon/.test(repondre("[Récompense] Un problème avec une récompense", {}, MAINTENANT).texte));
+check("Chaque question a une reponse differente", new Set(QUESTIONS.map(([q]) => repondre(q, {}, MAINTENANT).texte)).size === QUESTIONS.length);
+
 console.log("\nDeux questions, relances");
 let rep = repondre("comment je scanne le qr ? et aussi c'est quoi le cadeau du jour", {}, MAINTENANT);
 check("deux questions -> deux reponses", rep.intention.includes("scan") && rep.intention.includes("cadeau_jour"), rep.intention);
