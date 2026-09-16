@@ -468,6 +468,21 @@ Ce qui est autorisé, et qui marche :
    navigateur, appelée depuis `echanger()` et limitée à une fois tous les
    deux mois côté appli.
 
+**✅ Branché le 16/09/2026** (`natif.js`, plugin `@capacitor-community/in-app-review` 8.0.0) :
+
+- `ouvrirAvisStore()` : dans l'appli installée, « Donner mon avis » (Profil) mène **tout le
+  monde** au Store, sans question avant. iOS : page « Écrire un avis » de l'App Store dès que
+  **`APP_STORE_ID`** est rempli dans `natif.js` (l'« Apple ID » numérique de la fiche, visible
+  dans App Store Connect après sa création) ; tant qu'il est vide, fenêtre de note du système.
+  Android : fiche Play Store (`market://details?id=com.noctify.app`). Au navigateur : la note
+  interne, inchangée.
+- `proposerAvisStore()` : fenêtre de note du système 2,5 s après un échange de récompense
+  réussi, au plus une fois tous les deux mois (`localStorage` `vn_avis_store_propose`).
+- La note interne n'apparaît plus dans Aide & Support et ne prévient plus le support ; elle
+  reste lue par le tableau de bord (rubrique Avis).
+- ⚠️ Après `npm run build:mobile`, lancer `npx cap sync` pour que le plugin entre dans le
+  projet iOS/Android.
+
 ### Rester connecté après avoir désinstallé puis réinstallé
 
 Chez DUSK, Julien a désinstallé, réinstallé : l'accueil est revenu, mais pas

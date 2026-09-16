@@ -203,3 +203,73 @@ export async function masquerSplash() {
     await m.SplashScreen.hide({ fadeOutDuration: 200 });
   } catch (e) {}
 }
+
+/* ================= L'AVIS SUR L'APP STORE / LE PLAY STORE =================
+   Julien, 16/09/2026 : « configure le truc de l'avis specialement pour l'App
+   Store, ce sera sur ca l'appli ».
+
+   ⚠️ JAMAIS SELON LA NOTE. Envoyer au Store seulement ceux qui ont mis 5
+   etoiles est du « review gating », interdit par Apple (App Review Guidelines,
+   section 3) et Google (In-App Review API) -- voir MOBILE.md, section 8. Donc :
+   - dans l'appli installee, « Donner mon avis » mene TOUT LE MONDE au Store,
+     sans question avant ;
+   - la fenetre de note du systeme se propose seule apres un moment heureux
+     (un echange reussi), au plus une fois tous les deux mois ;
+   - au navigateur, rien ne change : la note reste interne a Noctify.
+
+   APP_STORE_ID : l'identifiant numerique donne par App Store Connect a la
+   creation de la fiche (« Apple ID » de l'appli, 10 chiffres). Tant qu'il est
+   vide, iOS retombe sur la fenetre de note du systeme. */
+export const APP_STORE_ID = "";
+const PLAY_STORE_ID = "com.noctify.app"; // = appId de capacitor.config.json
+
+function plateformeNative() {
+  try {
+    return window.Capacitor && typeof window.Capacitor.getPlatform === "function" ? window.Capacitor.getPlatform() : "web";
+  } catch (e) {
+    return "web";
+  }
+}
+
+/** Le bouton « Donner mon avis » de l'appli installee. Rend false au navigateur. */
+export async function ouvrirAvisStore() {
+  if (!estNatif) return false;
+  const plateforme = plateformeNative();
+  // La page « Ecrire un avis » du Store : c'est ce qu'Apple recommande derriere
+  // un bouton (la fenetre systeme, elle, peut ne rien afficher du tout).
+  if (plateforme === "ios" && APP_STORE_ID) {
+    window.location.href = "itms-apps://itunes.apple.com/app/id" + APP_STORE_ID + "?action=write-review";
+    return true;
+  }
+  if (plateforme === "android") {
+    window.location.href = "market://details?id=" + PLAY_STORE_ID;
+    return true;
+  }
+  const m = await plugin("avis", () => import("@capacitor-community/in-app-review"));
+  if (!m) return false;
+  try {
+    await m.InAppReview.requestReview();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+const CLE_AVIS_AUTO = "vn_avis_store_propose";
+const INTERVALLE_AVIS_AUTO_MS = 60 * 24 * 60 * 60 * 1000;
+
+/** Apres un moment heureux : la fenetre de note du systeme, a tout le monde,
+    au plus une fois tous les deux mois. Sans effet au navigateur. */
+export async function proposerAvisStore() {
+  if (!estNatif) return;
+  try {
+    const dernier = Number(localStorage.getItem(CLE_AVIS_AUTO) || 0);
+    if (dernier && Date.now() - dernier < INTERVALLE_AVIS_AUTO_MS) return;
+  } catch (e) {}
+  const m = await plugin("avis", () => import("@capacitor-community/in-app-review"));
+  if (!m) return;
+  try {
+    await m.InAppReview.requestReview();
+    try { localStorage.setItem(CLE_AVIS_AUTO, String(Date.now())); } catch (e) {}
+  } catch (e) {}
+}

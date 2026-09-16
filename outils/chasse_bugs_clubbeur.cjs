@@ -120,6 +120,12 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
       await pause(800);
     }
     await essai("onglet story", "#tab-story");
+    // Le bas de la page Story (la mention a copier), cache sous les onglets.
+    if (CAPTURES) {
+      await page.evaluate(() => document.querySelector(".st-carte")?.scrollIntoView({ block: "center" }));
+      await pause(800);
+      await page.screenshot({ path: `${CAPTURES}/02b-story-mention.png` });
+    }
     await essai("onglet carte", "#tab-carte");
     await essai("onglet profil", "#tab-profil");
     for (const [nom, sel] of [["fidelite", "#pf-fidelite"], ["gagner", "#pf-gagner"], ["inviter", "#pf-inviter"], ["aide", "#pf-aide"], ["avis", "#pf-avis"], ["a propos", "#pf-apropos"], ["devenir club", "#pf-devenir-club"], ["reglages", "#pf-reglages"]]) {

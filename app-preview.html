@@ -914,7 +914,7 @@
         background: radial-gradient(60% 45% at 50% 52%, rgba(255,255,255,.07), rgba(255,255,255,0) 70%);
       }
       .ob-cap-tel {
-        position: relative; height: min(400px, calc(100dvh - 350px)); min-height: 250px; aspect-ratio: 9 / 17;
+        position: relative; height: min(400px, calc(100dvh - 350px)); min-height: 250px; aspect-ratio: 9 / 17.5;
         border-radius: 30px; overflow: hidden; background: #ffffff;
         box-shadow: 0 0 0 6px #1c1c1f, 0 0 0 7px rgba(255,255,255,.14), 0 40px 70px -24px rgba(0,0,0,.8);
       }
@@ -1033,7 +1033,9 @@
           52-64 %  la capture retrecit dans le coin, comme sur iPhone, coche
           fin      le profil et la miniature cochee */
       .ob-cap-cadre { position: relative; }
-      .ob-cap-cote { position: absolute; z-index: 0; width: 4px; border-radius: 2px; background: #2a2a2e; }
+      /* Plus de boutons sur la tranche (Julien, 16/09/2026 : « les deux GSM du
+         parcours, de la meme forme que celui dans Story ») : .st-tel n'en a pas. */
+      .ob-cap-cote { display: none; position: absolute; z-index: 0; width: 4px; border-radius: 2px; background: #2a2a2e; }
       .ob-cap-cote.gauche { left: -9px; top: 22%; height: 11%; }
       .ob-cap-cote.droite { right: -9px; top: 26%; height: 16%; }
       .ob-cap-tel { --ox: 62%; --oy: 52%; z-index: 1; }
@@ -5411,8 +5413,13 @@
         box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 12px 30px -18px rgba(15,17,20,.3);
       }
       .st-carte-titre { margin: 0 0 8px; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink3); }
-      .vue-story .st-carte .st-tag { padding: 0; background: none; box-shadow: none; border-radius: 0; }
-      .vue-story .st-carte .st-tag-txt b { font-size: calc(21 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
+      /* Cerclee du rouge de la marque (Julien, 16/09/2026 : « autour du truc
+         mention en story, une ligne rouge tout autour ») : c'est LA chose a
+         faire sur cette page. */
+      .vue-story .st-carte .st-tag { gap: 8px; padding: 8px 6px 8px 12px; background: none; border-radius: 14px; box-shadow: inset 0 0 0 2px var(--marque, #de3131); }
+      .vue-story .st-carte .st-tag-txt b { font-size: calc(19 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
+      /* « Copier » plus compact : le pseudo entier doit tenir dans le cadre rouge. */
+      .vue-story .st-carte .ps-copier { min-height: 36px; padding: 0 12px; }
       .vue-story .st-carte .st-lieu {
         margin: 12px -6px 0; padding: 10px 6px; width: auto; border-radius: 0; background: none; box-shadow: none;
         border-top: 1px solid var(--line);
@@ -14244,7 +14251,10 @@ async function chargerChatClient() {
     .select("auteur, message, created_at")
     .eq("user_id", session.user.id)
     .order("created_at", { ascending: true });
-  var messages = res.data || [];
+  /* Les avis sur l'appli sont ranges dans la meme table, mais ce ne sont
+     pas des messages : « pourquoi ca envoie la l'avis qu'on a mis, ce n'est
+     pas normal » (Julien, 16/09/2026). Ils sont retires du fil. */
+  var messages = (res.data || []).filter(function (m) { return !/^(Avis|Commentaire) sur l'appli/.test(m.message || ""); });
   zone.innerHTML = messages.map(function (m) { return bulleChat(m.auteur, "client", m.message, m.created_at); }).join("");
   /* Premiere visite : les sujets. Conversation deja commencee : le sujet
      choisi RESTE en tete du fil (Julien, 16/09/2026 : « quand on choisit une
@@ -14839,7 +14849,8 @@ function ouvrirAvisAppli(src) {
     var session = (await supabaseClubbeur.auth.getSession()).data.session;
     if (!session) return "session";
     var res = await supabaseClubbeur.from("support_messages").insert({ user_id: session.user.id, auteur: "client", message: message });
-    if (!res.error) signalerSupport("nouveau");
+    // Plus de signalerSupport : un avis n'est pas une demande d'aide (Julien,
+    // 16/09/2026). Il reste lisible dans le tableau de bord, rubrique Avis.
     return res.error ? "erreur" : null;
   }
   function merci() {
@@ -14886,7 +14897,14 @@ function ouvrirAvisAppli(src) {
     merci();
   });
 }
-$("#pf-avis")?.addEventListener("click", function () { ouvrirAvisAppli(this); });
+/* Dans l'appli installee (iPhone, Android), le bouton mene au Store, pour
+   tout le monde (natif.ouvrirAvisStore, jamais selon une note). Au navigateur,
+   ou si le Store ne s'ouvre pas, la note interne a Noctify. */
+$("#pf-avis")?.addEventListener("click", async function () {
+  var src = this;
+  if (natif.estNatif && (await natif.ouvrirAvisStore())) return;
+  ouvrirAvisAppli(src);
+});
 
 /* ================= LE CADEAU DU JOUR =================
    Julien, 06/09/2026 : "chaque jour on se connecte, on recoit cinq
@@ -16151,6 +16169,8 @@ async function echanger(item) {
   // endroit qui merite la vibration longue -- et le seul accord.
   vibrer("fort");
   jouer("bon");
+  // Le moment heureux pour la note du Store (appli installee, 1 fois / 2 mois).
+  setTimeout(function () { natif.proposerAvisStore(); }, 2500);
 
   // Le bon EST le ticket : la recompense payee en haut, la perforation,
   // le QR dans la souche. Voir .bon-ticket dans le CSS pour le pourquoi.
