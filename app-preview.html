@@ -5964,6 +5964,12 @@
       .ai-reponse-txt { margin: 10px 0 0; font-size: calc(14.5 * var(--u)); line-height: 1.55; color: var(--ink2); }
       .ai-reponse-txt[hidden] { display: none; }
       .ai-reponse-invite { margin: 12px 0 0; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink3); }
+      .ai-points { display: inline-flex; gap: 4px; padding: 12px 14px; }
+      .ai-points i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink3); animation: ai-point 1s infinite ease-in-out; }
+      .ai-points i:nth-child(2) { animation-delay: .15s; }
+      .ai-points i:nth-child(3) { animation-delay: .3s; }
+      @keyframes ai-point { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+      @media (prefers-reduced-motion: reduce) { .ai-points i { animation: none; } }
       .ai-autre-sujet { display: block; margin: 0 auto 14px; padding: 8px 14px; border: 0; border-radius: var(--r-pill); background: var(--s2); color: var(--ink); font-family: inherit; font-size: calc(13.5 * var(--u)); font-weight: 700; cursor: pointer; }
       #vue-aide #ai-scroll { padding-top: 4px; }
       /* .ai-footer est en display:flex, qui gagnait sur l'attribut hidden : la
@@ -7093,14 +7099,14 @@
                 <div class="pf-liste" id="ai-sujets"></div>
               </div>
               <div class="ai-reponse" id="ai-reponse" hidden>
+                <!-- Plus de bouton « Changer » (Julien, 16/09/2026) : le sujet
+                     choisi reste, on ne propose pas d'en changer. -->
                 <div class="ai-reponse-tete">
                   <strong id="ai-reponse-titre"></strong>
-                  <button type="button" class="ai-reponse-changer" id="ai-reponse-changer">Changer</button>
                 </div>
                 <p class="ai-reponse-txt" id="ai-reponse-txt"></p>
                 <p class="ai-reponse-invite">Écris-nous juste en dessous, on te répond ici.</p>
               </div>
-              <button type="button" class="ai-autre-sujet" id="ai-autre-sujet" hidden>Un autre sujet&nbsp;?</button>
               <div id="ai-chat"></div>
             </div>
 
@@ -14139,7 +14145,7 @@ function bulleChat(auteur, moi, message, quand) {
       '<div class="chat-bulle ' + (mien ? "moi" : "autre") + '">' +
         (sujet ? '<span class="chat-sujet">' + escapeHtmlSupport(sujet) + "</span>" : "") +
         escapeHtmlSupport(texte) + "</div>" +
-      '<time class="chat-heure">' + (mien || moi !== "client" ? "" : "Noctify · ") + heure + "</time>" +
+      '<time class="chat-heure">' + (mien || moi !== "client" ? "" : auteur === "ia" ? "Réponse automatique · " : "Noctify · ") + heure + "</time>" +
     "</div>" +
   "</div>";
 }
@@ -14183,7 +14189,7 @@ var SUJETS_SUPPORT = [
 ];
 var sujetSupport = null;
 
-function choisirSujetSupport(sujet) {
+function choisirSujetSupport(sujet, sansFocus) {
   sujetSupport = sujet;
   $("#ai-accueil").hidden = !!sujet;
   $("#ai-reponse").hidden = !sujet;
@@ -14193,7 +14199,7 @@ function choisirSujetSupport(sujet) {
     $("#ai-reponse-txt").hidden = !sujet.r;
     var champ = $("#ai-message");
     champ.placeholder = sujet.court === "Autre" ? "Écris ton message…" : "Décris ton problème…";
-    champ.focus();
+    if (!sansFocus) champ.focus();
   }
 }
 
@@ -14210,11 +14216,6 @@ function choisirSujetSupport(sujet) {
       '<svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
     b.addEventListener("click", function () { choisirSujetSupport(sujet); });
     liste.appendChild(b);
-  });
-  $("#ai-reponse-changer")?.addEventListener("click", function () { choisirSujetSupport(null); });
-  $("#ai-autre-sujet")?.addEventListener("click", function () {
-    this.hidden = true;
-    choisirSujetSupport(null);
   });
 })();
 
@@ -14245,12 +14246,36 @@ async function chargerChatClient() {
     .order("created_at", { ascending: true });
   var messages = res.data || [];
   zone.innerHTML = messages.map(function (m) { return bulleChat(m.auteur, "client", m.message, m.created_at); }).join("");
-  // Premiere visite : les sujets. Conversation deja commencee : le fil, et
-  // de quoi repartir sur un autre sujet.
+  /* Premiere visite : les sujets. Conversation deja commencee : le sujet
+     choisi RESTE en tete du fil (Julien, 16/09/2026 : « quand on choisit une
+     raison, laisse-la »). On le relit sur le dernier message etiquete. */
   if (!sujetSupport) {
-    $("#ai-accueil").hidden = messages.length > 0;
-    $("#ai-autre-sujet").hidden = messages.length === 0;
+    var etiquete = messages.slice().reverse().find(function (m) {
+      return m.auteur === "client" && /^\[[^\]]{1,30}\]/.test(m.message || "");
+    });
+    var court = etiquete && /^\[([^\]]{1,30})\]/.exec(etiquete.message)[1];
+    var retrouve = court && SUJETS_SUPPORT.find(function (x) { return x.court === court; });
+    if (retrouve) {
+      choisirSujetSupport(retrouve, true);
+    } else {
+      $("#ai-accueil").hidden = messages.length > 0;
+    }
   }
+  var scroll = $("#ai-scroll");
+  if (scroll) scroll.scrollTop = scroll.scrollHeight;
+}
+
+/* La bulle « … » pendant que la reponse automatique s'ecrit. */
+function montrerSaisieSupport(visible) {
+  var zone = $("#ai-chat");
+  var existante = document.getElementById("ai-saisie");
+  if (!visible) { if (existante) existante.remove(); return; }
+  if (existante || !zone) return;
+  zone.insertAdjacentHTML("beforeend",
+    '<div class="chat-ligne autre" id="ai-saisie"><img class="chat-av" src="/icones/favicon-64.png?v=verre" alt="" />' +
+    '<div class="chat-col"><div class="chat-bulle autre ai-points" aria-label="Réponse en cours"><i></i><i></i><i></i></div></div></div>');
+  var scroll = $("#ai-scroll");
+  if (scroll) scroll.scrollTop = scroll.scrollHeight;
 }
 
 $("#ai-form")?.addEventListener("submit", async function (e) {
@@ -14282,10 +14307,30 @@ $("#ai-form")?.addEventListener("submit", async function (e) {
   if (res.error) return dire("Ça n’a pas marché. Réessaie dans un instant.", true);
   champ.value = "";
   msg.style.display = "none";
-  signalerSupport("nouveau");
-  sujetSupport = null;
-  $("#ai-reponse").hidden = true;
-  chargerChatClient();
+  // Le sujet reste affiche (plus de remise a zero apres l'envoi).
+  await chargerChatClient();
+  /* La reponse automatique (api/credit-clubbeur.js ?action=support-nouveau,
+     lib/ai/supportIa.js) : on attend la route, bulle « … » a l'ecran, puis
+     on relit le fil. Si l'IA ne repond pas (credit OpenAI, delai), le
+     message est quand meme parti et Julien est prevenu. */
+  montrerSaisieSupport(true);
+  try {
+    var sessionIa = (await supabaseClubbeur.auth.getSession()).data.session;
+    if (sessionIa) {
+      var controleur = new AbortController();
+      var minuteur = setTimeout(function () { controleur.abort(); }, 25000);
+      await fetch(BASE_API + "/api/credit-clubbeur?action=support-nouveau", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + sessionIa.access_token, "Content-Type": "application/json" },
+        body: "{}",
+        signal: controleur.signal,
+      }).catch(function () {});
+      clearTimeout(minuteur);
+    }
+  } finally {
+    montrerSaisieSupport(false);
+    chargerChatClient();
+  }
 });
 
 /* ---- Cote admin : toutes les conversations ---- */

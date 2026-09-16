@@ -628,10 +628,10 @@ function rendreSupport() {
           <button type="button" class="pl-fil-tete" data-fil="${esc(f.user_id)}" aria-expanded="${ouvert}">
             <span class="pl-fil-qui">${qui}${f.email ? ` <em>${esc(f.email)}</em>` : ""}${f.aRepondre ? '<span class="pl-a-repondre">À traiter</span>' : ""}</span>
             <span class="pl-fil-date">${esc(dateCourte(f.dernier))}</span>
-            <span class="pl-fil-extrait">${f.sujet ? `<span class="pl-sujet">${esc(f.sujet)}</span>` : ""}${dernier.auteur === "admin" ? "Toi : " : ""}${esc(extrait)}</span>
+            <span class="pl-fil-extrait">${f.sujet ? `<span class="pl-sujet">${esc(f.sujet)}</span>` : ""}${dernier.auteur === "admin" ? "Toi : " : dernier.auteur === "ia" ? "IA : " : ""}${esc(extrait)}</span>
           </button>
           <div class="pl-fil-corps"${ouvert ? "" : " hidden"}>
-            <div class="pl-bulles">${f.messages.map((m) => `<div class="pl-bulle ${m.auteur}">${esc(m.message)}<small>${m.auteur === "admin" ? "Toi · " : ""}${esc(dateCourte(m.date))}</small></div>`).join("")}</div>
+            <div class="pl-bulles">${f.messages.map((m) => `<div class="pl-bulle ${m.auteur}">${esc(m.message)}<small>${m.auteur === "admin" ? "Toi · " : m.auteur === "ia" ? "IA · " : ""}${esc(dateCourte(m.date))}</small></div>`).join("")}</div>
             <form class="pl-repondre" data-user="${esc(f.user_id)}">
               <textarea data-user="${esc(f.user_id)}" maxlength="2000" placeholder="Ta réponse…" aria-label="Réponse à ${qui}"></textarea>
               <div class="pl-repondre-ligne"><span class="pl-repondre-etat"></span><button type="submit" class="pl-bouton">Envoyer la réponse</button></div>

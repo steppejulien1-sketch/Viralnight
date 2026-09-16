@@ -29,6 +29,7 @@ import { timingSafeEqual } from "node:crypto";
 import { envoyerEmail } from "../lib/notifications/email.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
+import { doitRepondre, contexteCompte, historiquePourModele, genererReponse, messageEnregistre } from "../lib/ai/supportIa.js";
 
 const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
@@ -449,17 +450,59 @@ async function idAdminSupport(clubbeur) {
 // Le lien du tableau de bord : c'est la que Julien repond desormais.
 const LIEN_PILOTAGE = "https://viralnight-koif.vercel.app/pilotage.html";
 
-async function mailSupport({ pseudo, email, message }) {
+async function mailSupport({ pseudo, email, message, ia }) {
   const qui = pseudo ? `@${pseudo}` : email || "un clubbeur";
+  // L'etat de la reponse automatique dans le sujet : Julien sait d'un coup
+  // d'oeil s'il doit intervenir.
+  const etat = ia?.texte ? (ia.transmettre ? " — à traiter" : " — répondu par l'IA") : "";
+  const blocIa = ia?.texte
+    ? `<p><strong>Réponse automatique${ia.transmettre ? " (transmis à toi)" : ""} :</strong></p><p style="white-space:pre-wrap;color:#535964">${echapper(ia.texte)}</p>`
+    : ia?.erreur && !ia.silence ? `<p style="color:#9f1c1c">Pas de réponse automatique : ${echapper(ia.erreur)}</p>` : "";
   return envoyerEmail({
     type: "support",
-    sujet: `Support Noctify : message de ${qui}`,
+    sujet: `Support Noctify : message de ${qui}${etat}`,
     html: `<h2>Nouveau message au support</h2>
       <p><strong>De :</strong> ${echapper(qui)}${email ? " (" + echapper(email) + ")" : ""}</p>
       <p style="white-space:pre-wrap">${echapper(message)}</p>
+      ${blocIa}
       <p><a href="${LIEN_PILOTAGE}#support">Répondre depuis le tableau de bord</a></p>`,
-    texte: `Nouveau message au support\nDe : ${qui}${email ? " (" + email + ")" : ""}\n\n${message}\n\nRépondre depuis le tableau de bord : ${LIEN_PILOTAGE}#support`,
+    texte: `Nouveau message au support\nDe : ${qui}${email ? " (" + email + ")" : ""}\n\n${message}\n\n${ia?.texte ? "Réponse automatique : " + ia.texte + "\n\n" : ""}Répondre depuis le tableau de bord : ${LIEN_PILOTAGE}#support`,
   });
+}
+
+/* La reponse automatique (lib/ai/supportIa.js). Ne leve jamais : un souci
+   d'IA ne doit ni faire echouer la requete ni empecher de prevenir Julien. */
+async function repondreAutomatiquement(clubbeur, userId, derniers) {
+  try {
+    const decision = doitRepondre(derniers);
+    if (!decision.repondre) return { erreur: decision.raison, silence: true };
+    const [profil, stories, gains, bons] = await Promise.all([
+      clubbeur.from("users").select("handle, points_balance, lifetime_points, created_at").eq("id", userId).maybeSingle(),
+      clubbeur.from("story_events").select("mentioned_at, review_status, awarded_points, clubs(name)").eq("user_id", userId).order("mentioned_at", { ascending: false }).limit(5),
+      clubbeur.from("point_grants").select("created_at, amount, source, released, unlocks_at, clubs(name)").eq("user_id", userId).order("created_at", { ascending: false }).limit(8),
+      clubbeur.from("redemptions").select("redeemed_at, used, rewards(title)").eq("user_id", userId).order("redeemed_at", { ascending: false }).limit(4),
+    ]);
+    const contexte = contexteCompte({
+      profil: profil.data,
+      stories: (stories.data || []).map((x) => ({ ...x, club: x.clubs?.name })),
+      gains: (gains.data || []).map((x) => ({ ...x, club: x.clubs?.name })),
+      bons: (bons.data || []).map((x) => ({ ...x, titre: x.rewards?.title })),
+    });
+    const ia = await genererReponse({ historique: historiquePourModele(derniers), contexte });
+    if (ia.erreur) {
+      console.error("[support-ia]", ia.erreur);
+      return ia;
+    }
+    const { error } = await clubbeur.from("support_messages").insert({ user_id: userId, auteur: "ia", message: messageEnregistre(ia) });
+    if (error) {
+      console.error("[support-ia] enregistrement", error.message);
+      return { erreur: "enregistrement" };
+    }
+    return ia;
+  } catch (e) {
+    console.error("[support-ia]", e.message);
+    return { erreur: "inattendue" };
+  }
 }
 
 async function actionSupport(request, response, sens) {
@@ -484,32 +527,41 @@ async function actionSupport(request, response, sens) {
       .select("message, created_at, auteur")
       .eq("user_id", moi.id)
       .order("created_at", { ascending: false })
-      .limit(6);
+      .limit(12);
     const dernier = derniers?.[0];
     const age = dernier ? Date.now() - new Date(dernier.created_at).getTime() : Infinity;
     if (!dernier || dernier.auteur !== "client" || age > FENETRE_FRAICHE_MS) {
       return json(response, { ok: true, prevenu: false, raison: "aucun_message_frais" });
     }
+
+    // D'abord la reponse au client : c'est lui qui attend, l'ecran ouvert.
+    const ia = await repondreAutomatiquement(clubbeur, moi.id, derniers);
+    const reponseIa = ia.texte ? { repondu: true, transmis: ia.transmettre } : { repondu: false, raison: ia.erreur };
+
     const rafale = (derniers || []).slice(1).some((m) =>
       m.auteur === "client" &&
       new Date(dernier.created_at).getTime() - new Date(m.created_at).getTime() < FENETRE_RAFALE_MS
     );
-    if (rafale) return json(response, { ok: true, prevenu: false, raison: "rafale" });
+    if (rafale) return json(response, { ok: true, prevenu: false, raison: "rafale", ia: reponseIa });
 
     const { data: profil } = await clubbeur.from("users").select("handle").eq("id", moi.id).maybeSingle();
     const pseudo = profil?.handle || "";
 
+    // Les comptes de test (e2e-...@viralnight.test) n'ecrivent pas a Julien.
+    const compteDeTest = /@viralnight\.test$/i.test(moi.email || "");
     let mail = false;
-    try {
-      mail = await mailSupport({ pseudo, email: moi.email, message: dernier.message });
-    } catch (e) {
-      console.error("[support] e-mail impossible", e.message);
+    if (!compteDeTest) {
+      try {
+        mail = await mailSupport({ pseudo, email: moi.email, message: dernier.message, ia });
+      } catch (e) {
+        console.error("[support] e-mail impossible", e.message);
+      }
     }
-    const adminId = await idAdminSupport(clubbeur);
+    const adminId = compteDeTest ? null : await idAdminSupport(clubbeur);
     const push = adminId
       ? await pousserA(adminId, { type: "support_nouveau", pseudo, extrait: dernier.message })
-      : { envoyees: 0, raison: "admin_introuvable" };
-    return json(response, { ok: true, prevenu: true, mail, push: push.envoyees || 0 });
+      : { envoyees: 0, raison: compteDeTest ? "compte_de_test" : "admin_introuvable" };
+    return json(response, { ok: true, prevenu: !compteDeTest, mail, push: push.envoyees || 0, ia: reponseIa });
   }
 
   // sens === "reponse"
