@@ -2904,6 +2904,11 @@
         margin: 1px 0 0; font-family: var(--chiffre); font-size: calc(20 * var(--u));
         font-weight: 800; letter-spacing: -.03em; line-height: 1.15; color: var(--ink);
       }
+      .cadeau-montant:has(.cadeau-jour) { white-space: nowrap; }
+      .cadeau-jour {
+        font-family: var(--sans); font-size: calc(13 * var(--u)); font-weight: 600;
+        letter-spacing: -.005em; color: var(--ink2); white-space: nowrap;
+      }
       .cadeau-sous { margin: 2px 0 0; font-size: calc(12 * var(--u)); color: var(--ink2); }
       .cadeau-sous[hidden] { display: none; }
       /* "Scanne un club d'abord", "Deja pris" : une phrase, pas un
@@ -14942,7 +14947,14 @@ async function verifierCadeau() {
   // est deterministe pour le couple (personne, journee), rafraichir la
   // page ne retire pas un autre nombre.
   $("#cadeau-titre").textContent = "Cadeau du jour";
-  $("#cadeau-montant").textContent = nb(res.data.points) + " points";
+  /* Le jour de la serie sur la MEME ligne que le montant (Julien,
+     16/09/2026 : « jour sur la meme ligne que le reste ») : la carte garde
+     sa taille, et 3 points se lisent comme une marche vers les 20 du 7e. */
+  // « pts » et « 2/7 » : en toutes lettres, la ligne passait sur deux et la
+  // carte grandissait (mesure a 375 px).
+  $("#cadeau-montant").innerHTML = res.data.jour
+    ? nb(res.data.points) + ' pts<span class="cadeau-jour"> · Jour ' + Number(res.data.jour) + "/7</span>"
+    : nb(res.data.points) + " points";
   $("#cadeau-sous").hidden = true;
   CADEAU_BTN.textContent = "Récupérer";
   CADEAU.hidden = res.data.etat !== "disponible";
