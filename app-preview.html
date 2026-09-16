@@ -3376,11 +3376,12 @@
          etiquette plus fine qui mord sur l'image, rien qui bouge. ---- */
       .vue-bar .vb-corps { padding-top: 26px; }
       .vue-bar .vb-solde {
-        padding: 18px 20px 16px; border-radius: 18px; background: var(--s1);
-        box-shadow: 0 0 0 1px var(--line), 0 18px 40px -30px rgba(15,17,20,.35);
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 13px 18px; border-radius: 14px; background: var(--s1); box-shadow: 0 0 0 1px var(--line);
       }
-      .vue-bar .vb-solde-lib { font-size: calc(12 * var(--u)); letter-spacing: .12em; }
-      .vue-bar .vb-solde-num b { font-size: calc(30 * var(--u)); }
+      .vue-bar .vb-solde-lib { font-size: calc(11.5 * var(--u)); font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); }
+      .vue-bar .vb-solde-num { font-size: calc(13.5 * var(--u)); font-weight: 550; color: var(--ink3); font-variant-numeric: tabular-nums; }
+      .vue-bar .vb-solde-num b { font-family: var(--chiffre); font-size: calc(20 * var(--u)); font-weight: 800; letter-spacing: -.02em; color: var(--ink); margin-right: 2px; }
       .vue-bar .vb-jauge { height: 5px; margin-top: 14px; }
       .vue-bar .vb-solde-txt { margin-top: 12px; font-size: calc(14.5 * var(--u)); }
       .vue-bar .vb-section { margin-top: 36px; }
@@ -16322,18 +16323,11 @@ function rendreBoutiqueBar(bar) {
   document.getElementById("vb-sous").textContent = typeEtablissement(bar.club);
   document.getElementById("vb-points").innerHTML = "<b>" + nb(solde) + "</b> pts";
 
-  // Le solde : ce qu'on a, et le prochain palier. Des faits, pas de slogan.
-  var jauge = suivante ? Math.max(4, Math.min(100, Math.round(solde / suivante.cout * 100))) : 100;
+  // Le solde, sur une ligne fine (Julien, 16/09/2026 : « plus fin, plus quali,
+  // retire le bazar en dessous ») : plus de jauge ni de phrase de palier.
   document.getElementById("vb-solde").innerHTML =
-    '<div class="vb-solde-haut">' +
-      '<span class="vb-solde-lib">Ton solde</span>' +
-      '<span class="vb-solde-num"><b>' + nb(solde) + "</b> points</span>" +
-    "</div>" +
-    '<div class="vb-jauge"><i style="width:' + jauge + '%"></i></div>' +
-    '<p class="vb-solde-txt">' + (suivante
-      ? "Plus que <b>" + nb(suivante.cout - solde) + " points</b> pour « " + escapeHtmlSupport(nomRecompense(suivante.nom)) + " »."
-      : recos.length ? "Tu peux prendre toutes les récompenses de " + escapeHtmlSupport(bar.nom) + "." : "") +
-    "</p>";
+    '<span class="vb-solde-lib">Ton solde</span>' +
+    '<span class="vb-solde-num"><b>' + nb(solde) + "</b> points</span>";
 
   var sections = document.getElementById("vb-sections");
   sections.innerHTML = "";
