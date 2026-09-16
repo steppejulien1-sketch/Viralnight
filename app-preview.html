@@ -13879,10 +13879,20 @@ function champTexteLibre(id, colonne, libelle) {
     var saisie = window.prompt(libelle + " :", (actuel && actuel[colonne]) || "");
     if (saisie === null) return;
     var propre = saisie.trim();
+    /* Le pseudo Instagram est la cle qui relie une mention au clubbeur
+       (api/instagram.js cherche users.handle). Tape « @Julien.Stpt », il
+       etait enregistre tel quel et plus aucune story ne se creditait. Meme
+       nettoyage que « Modifier le pseudo ». Et jamais vide : sans pseudo,
+       plus rien ne peut etre reconnu. */
+    if (colonne === "handle") {
+      propre = propre.toLowerCase().replace(/^@+/, "").replace(/[^a-z0-9._]/g, "").slice(0, 30);
+      if (!propre) { window.alert("Pseudo invalide."); return; }
+    }
     var patch = {}; patch[colonne] = propre || null;
     var res = await supabaseClubbeur.from("users").update(patch).eq("id", session.user.id);
     if (res.error) {
-      window.alert("Ça n'a pas marché : " + res.error.message);
+      // Le message Postgres brut (en anglais) n'aide personne.
+      window.alert(/duplicate|unique/i.test(res.error.message) ? "Ce pseudo est déjà pris." : "Ça n'a pas marché, réessaie.");
       return;
     }
     // Un seul endroit decide de l'apparence d'une ligne vide. Le pseudo
@@ -13910,10 +13920,16 @@ $("#rg-email-modifier")?.addEventListener("click", async function () {
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) return;
   var nouveau = window.prompt("Nouvelle adresse email :", session.user.email);
+  nouveau = nouveau ? nouveau.trim().toLowerCase() : "";
   if (!nouveau || nouveau === session.user.email) return;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nouveau)) { window.alert("Adresse email invalide."); return; }
   var res = await supabaseClubbeur.auth.updateUser({ email: nouveau });
   if (res.error) {
-    window.alert("Ça n'a pas marché : " + res.error.message);
+    // Supabase repond en anglais : on traduit les cas courants.
+    var m = res.error.message || "";
+    window.alert(/already|registered|exists/i.test(m) ? "Cette adresse est déjà utilisée par un autre compte."
+      : /rate|seconds|too many/i.test(m) ? "Trop de tentatives. Réessaie dans quelques minutes."
+      : "Ça n'a pas marché, réessaie.");
     return;
   }
   window.alert("Vérifie ta boîte mail : un lien de confirmation a été envoyé à " + nouveau + ".");

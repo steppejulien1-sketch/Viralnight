@@ -11,6 +11,9 @@ const puppeteer = require("puppeteer-core");
 const V = require("../../06-pwa-clubbeurs/outils/lib_vn.cjs");
 
 const SITE = process.env.VN_URL || "https://viralnight-koif.vercel.app";
+const CAPTURES = process.env.VN_CAPTURES || "";
+const fs = require("fs");
+if (CAPTURES) fs.mkdirSync(CAPTURES, { recursive: true });
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1";
 
@@ -47,6 +50,12 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
     etape = "connexion";
     await page.goto(compte.lien, { waitUntil: "networkidle2" });
     await pause(2500);
+    // En local, la session posee sur le domaine de prod est recopiee.
+    if (!SITE.includes("vercel.app")) {
+      const cles = await page.evaluate(() => Object.fromEntries(Object.keys(localStorage).filter((k) => k.startsWith("sb-")).map((k) => [k, localStorage.getItem(k)])));
+      await page.goto(`${SITE}/app-preview.html?app=1`, { waitUntil: "domcontentloaded" });
+      await page.evaluate((c) => Object.entries(c).forEach(([k, v]) => localStorage.setItem(k, v)), cles);
+    }
     await page.goto(`${SITE}/app-preview.html?app=1&cb=${Date.now()}`, { waitUntil: "networkidle2" });
     await pause(5000);
 
@@ -62,12 +71,26 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
       document.querySelector(".sheet-close, #sup-fermer")?.click();
     });
 
+    // Ce qu'une capture ne dit pas : un element plus large que l'ecran,
+    // une image cassee, un texte coupe au milieu d'un mot.
+    const mesurer = () => page.evaluate(() => {
+      const W = window.innerWidth;
+      const deborde = [...document.querySelectorAll("body *")].filter((e) => {
+        if (e.closest("svg, .maplibregl-map, [hidden], #splash, .vue-accueil.masque") || !e.getClientRects().length) return false;
+        const r = e.getBoundingClientRect();
+        return r.width > 0 && r.right > W + 2 && getComputedStyle(e).position !== "fixed";
+      }).slice(0, 4).map((e) => (e.id ? "#" + e.id : e.className && String(e.className).slice(0, 40)) + " " + Math.round(e.getBoundingClientRect().right));
+      const images = [...document.images].filter((i) => i.complete && i.naturalWidth === 0 && i.getClientRects().length && i.src).map((i) => i.src.slice(-60));
+      return { deborde, images };
+    });
     async function essai(nom, sel, attendu) {
       etape = nom;
       const ok = await cliquer(sel);
       await pause(2200);
       const vu = attendu ? await visible(attendu) : null;
-      bilan.etapes.push({ nom, clic: ok, ecran: vu });
+      const m = await mesurer();
+      bilan.etapes.push({ nom, clic: ok, ecran: vu, ...(m.deborde.length ? { deborde: m.deborde } : {}), ...(m.images.length ? { imagesCassees: m.images } : {}) });
+      if (CAPTURES) await page.screenshot({ path: `${CAPTURES}/${String(bilan.etapes.length).padStart(2, "0")}-${nom.replace(/\s+/g, "-")}.png` });
     }
 
     await essai("onglet boutique", "#tab-boutique");
