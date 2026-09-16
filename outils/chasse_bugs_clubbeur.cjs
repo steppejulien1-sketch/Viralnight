@@ -26,6 +26,15 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
     const handle = "chasse_" + compte.uid.slice(0, 6);
     V.sql(`insert into public.users (id, handle, email, profile_proof_path) values ('${compte.uid}', '${handle}', '${compte.email}', 'e2e/aucune')
            on conflict (id) do update set handle = excluded.handle, profile_proof_path = excluded.profile_proof_path;`);
+    // VN_CADEAU=1 : un compte « installe » -- bienvenue deja prise, un scan au
+    // Mirage et 450 points -- pour voir le cadeau du jour et une boutique
+    // echangeable sur les captures.
+    if (process.env.VN_CADEAU) {
+      V.sql(`insert into public.welcome_bonuses (user_id, amount) values ('${compte.uid}', 50) on conflict do nothing;
+             insert into public.point_grants (user_id, club_id, amount, unlocks_at, released, source)
+               select '${compte.uid}', id, 450, now(), false, 'scan' from public.clubs where slug = 'mirage-brussels';
+             select public.release_due_points('${compte.uid}');`);
+    }
 
     navigateur = await puppeteer.launch({ executablePath: V.CHROME, headless: "new", args: ["--hide-scrollbars"] });
     const contexte = navigateur.defaultBrowserContext();
@@ -94,6 +103,22 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
     }
 
     await essai("onglet boutique", "#tab-boutique");
+    // Le bon d'une recompense echangee (seulement avec VN_CADEAU : il faut des points).
+    if (process.env.VN_CADEAU && CAPTURES) {
+      etape = "echange";
+      await page.evaluate(() => {
+        const s = [...document.querySelectorAll(".bar-section")].find((x) => /mira/i.test(x.querySelector(".drop-titre")?.textContent || ""));
+        const c = s && [...s.querySelectorAll(".carte-reco")].find((e) => /cocktail/i.test(e.textContent));
+        c?.click();
+      });
+      await pause(1500);
+      await page.screenshot({ path: `${CAPTURES}/01b-fiche-recompense.png` });
+      await page.evaluate(() => document.getElementById("sh-cta")?.click());
+      await pause(3500);
+      await page.screenshot({ path: `${CAPTURES}/01c-bon.png` });
+      await page.evaluate(() => window.noctifyFermerFeuille && window.noctifyFermerFeuille());
+      await pause(800);
+    }
     await essai("onglet story", "#tab-story");
     await essai("onglet carte", "#tab-carte");
     await essai("onglet profil", "#tab-profil");
@@ -101,7 +126,7 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
       await essai(nom, sel);
       const ouvert = await page.evaluate(() => [...document.querySelectorAll("[id^='vue-']")].filter((v) => !v.hidden && v.getClientRects().length && v.id !== "vue-accueil").map((v) => v.id));
       bilan.etapes[bilan.etapes.length - 1].vues = ouvert;
-      if (nom !== "reglages") { await fermerTout(); await cliquer("#tab-profil"); await pause(800); }
+      if (nom !== "reglages") { await page.evaluate(() => window.noctifyFermerFeuille && window.noctifyFermerFeuille()); await fermerTout(); await cliquer("#tab-profil"); await pause(800); }
     }
     etape = "reglages suppression";
     await cliquer("#rg-supprimer-compte");
