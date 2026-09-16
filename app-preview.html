@@ -3264,118 +3264,149 @@
         font-family: inherit; color: inherit; text-align: left; cursor: pointer;
       }
 
-      /* ================= LA PAGE BOUTIQUE D'UN ETABLISSEMENT ================= */
+      /* ================= LA PAGE D'UN ETABLISSEMENT, FACON DUSK (noir) ================= */
       .vue-bar {
-        position: absolute; inset: 0; z-index: 28; overflow: hidden; background: var(--bg); color: var(--ink);
-        transform: translateX(100%); transition: transform .42s cubic-bezier(.22, .8, .2, 1);
-        box-shadow: -18px 0 40px -20px rgba(0,0,0,.35);
+        --vb-noir: #000000; --vb-carte: #141416; --vb-ligne: #2a2a2e; --vb-texte: #ffffff; --vb-gris: #9b9ba1; --vb-or: #e8b53d;
+        position: absolute; inset: 0; z-index: 28; overflow: hidden; background: var(--vb-noir); color: var(--vb-texte);
+        transform: translateY(100%); transition: transform .45s cubic-bezier(.22, .8, .2, 1);
       }
       .vue-bar.ouverte { transform: none; }
       .vue-bar[hidden] { display: block; visibility: hidden; }
-      .vb-defile { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding-bottom: 40px; }
+      .vb-defile { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding-bottom: 120px; }
       .vb-defile::-webkit-scrollbar { display: none; }
 
-      .vb-hero { position: relative; height: min(66vh, 560px); min-height: 380px; overflow: hidden; background: #0d0d0f; }
-      .vb-galerie {
-        position: absolute; inset: 0; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
-        overscroll-behavior-x: contain; transform: scale(1.08); transition: transform 1.1s cubic-bezier(.2, .7, .2, 1);
-      }
+      .vb-hero { position: relative; height: min(58vh, 500px); min-height: 340px; background: #0b0b0c; }
+      .vb-galerie { position: absolute; inset: 0; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
       .vb-galerie::-webkit-scrollbar { display: none; }
-      .vue-bar.ouverte .vb-galerie { transform: scale(1); }
-      .vb-photo { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; filter: saturate(1.08) contrast(1.04); }
-      .vb-voile { pointer-events: none; }
-      .vb-hero-bas { pointer-events: none; }
-      .vb-points-galerie { position: absolute; z-index: 1; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center; gap: 6px; pointer-events: none; }
-      .vb-points-galerie i { width: 6px; height: 6px; border-radius: 99px; background: rgba(255,255,255,.45); transition: width .25s ease, background-color .25s ease; }
-      .vb-points-galerie i.actif { width: 18px; background: #ffffff; }
-      .vb-ambiances { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
-      .vb-ambiances span { padding: 8px 12px; border-radius: 99px; background: var(--s2); font-size: calc(13.5 * var(--u)); font-weight: 650; color: var(--ink); }
+      .vb-photo { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; filter: saturate(1.1) contrast(1.05); }
       .vb-voile {
-        position: absolute; inset: 0;
-        background:
-          linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0) 26%),
-          linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,.35) 38%, rgba(0,0,0,0) 62%);
+        position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 55%, #000 100%);
       }
-      .vb-hero-bas { position: absolute; left: 20px; right: 20px; bottom: 56px; color: #ffffff; }
-      .vb-pastille {
-        display: inline-block; font-size: calc(13 * var(--u)); font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-        color: rgba(255,255,255,.86);
-      }
-      .vb-pastille svg { width: 14px; height: 14px; fill: none; stroke: #ffffff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-      .vb-nom {
-        margin: 12px 0 0; font-family: var(--titre); font-size: calc(40 * var(--u)); font-weight: 900;
-        letter-spacing: -.035em; line-height: .98; text-wrap: balance; text-shadow: 0 2px 24px rgba(0,0,0,.35);
-      }
-      .vb-sous { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 10px 0 0; font-size: calc(14.5 * var(--u)); font-weight: 600; }
-      .vb-gagne { display: inline-flex; align-items: center; gap: 6px; color: #f5c542; }
-      .vb-gagne svg { width: 17px; height: 17px; fill: #f5c542; }
-      .vb-etat { color: rgba(255,255,255,.78); }
-      .vb-etat.ouvert { color: #7ee2a8; }
-      .vb-etat.ouvert::before { content: ""; display: inline-block; width: 7px; height: 7px; margin: 0 6px 1px 0; border-radius: 50%; background: #3ddc84; vertical-align: middle; }
-      /* Entree du texte : il monte en se posant, apres la photo. */
-      .vb-hero-bas > * { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .6s cubic-bezier(.2, .8, .2, 1); }
-      .vue-bar.ouverte .vb-hero-bas > * { opacity: 1; transform: none; }
-      .vue-bar.ouverte .vb-hero-bas > :nth-child(2) { transition-delay: .08s; }
-      .vue-bar.ouverte .vb-hero-bas > :nth-child(3) { transition-delay: .16s; }
+      .vb-segments { position: absolute; z-index: 2; left: 14px; right: 14px; top: calc(8px + env(safe-area-inset-top)); display: flex; gap: 4px; pointer-events: none; }
+      .vb-segments i { flex: 1; height: 2.5px; border-radius: 2px; background: rgba(255,255,255,.3); overflow: hidden; }
+      .vb-segments b { display: block; height: 100%; width: 0; background: #fff; }
+      .vb-segments i.fait b { width: 100%; }
+      .vb-segments i.encours b { animation: bar-segment 4s linear forwards; }
 
-      .vb-corps { position: relative; margin-top: -24px; padding: 22px 20px 0; border-radius: 26px 26px 0 0; background: var(--bg); }
-      .vb-solde {
-        padding: 16px 18px; border-radius: 20px; background: var(--s1);
-        box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 14px 34px -22px rgba(15,17,20,.35);
+      .vb-corps { position: relative; margin-top: -64px; padding: 0 20px; }
+      .vb-corps > * { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .6s cubic-bezier(.2, .8, .2, 1); }
+      .vue-bar.ouverte .vb-corps > * { opacity: 1; transform: none; }
+      .vue-bar.ouverte .vb-corps > :nth-child(2) { transition-delay: .06s; }
+      .vue-bar.ouverte .vb-corps > :nth-child(3) { transition-delay: .12s; }
+      .vue-bar.ouverte .vb-corps > :nth-child(n+4) { transition-delay: .18s; }
+      .vb-nom { margin: 0; font-family: var(--titre); font-size: calc(34 * var(--u)); font-weight: 800; letter-spacing: -.02em; line-height: 1.05; text-wrap: balance; }
+      .vb-tags { margin: 12px 0 0; font-size: calc(15 * var(--u)); line-height: 1.55; color: var(--vb-gris); }
+      .vb-tags i { font-style: normal; padding: 0 2px; }
+      .vb-or { color: var(--vb-or); font-weight: 650; }
+      .vb-cta {
+        display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; margin-top: 20px;
+        border: 0; border-radius: 6px; background: #ffffff; color: #000; font-family: inherit; font-size: calc(17 * var(--u)); font-weight: 750; cursor: pointer;
       }
-      .vb-solde-haut { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-      .vb-solde-lib { font-size: calc(13 * var(--u)); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); }
-      .vb-solde-num { font-size: calc(14 * var(--u)); font-weight: 600; color: var(--ink2); }
-      .vb-solde-num b { font-family: var(--chiffre); font-size: calc(28 * var(--u)); font-weight: 900; letter-spacing: -.03em; color: var(--ink); }
-      .vb-jauge { height: 8px; margin: 12px 0 0; border-radius: 99px; background: var(--s2); overflow: hidden; }
-      .vb-jauge i { display: block; height: 100%; border-radius: inherit; background: var(--marque, #de3131); transform-origin: left; transform: scaleX(0); transition: transform .9s cubic-bezier(.2, .8, .2, 1) .25s; }
-      .vue-bar.ouverte .vb-jauge i { transform: scaleX(1); }
-      .vb-solde-txt { margin: 10px 0 0; font-size: calc(14 * var(--u)); color: var(--ink2); }
-      .vb-solde-txt:empty { display: none; }
-      .vb-solde-txt b { color: var(--ink); }
+      .vb-cta span { padding: 3px 8px; border-radius: 99px; background: #000; color: #fff; font-size: calc(12.5 * var(--u)); font-weight: 800; }
+      .vb-cta:active { transform: scale(.985); }
+      .vb-desc { margin-top: 22px; }
+      .vb-desc-txt {
+        margin: 0; font-size: calc(16 * var(--u)); line-height: 1.6; color: #e9e9ec;
+        display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+      }
+      .vb-desc-txt.ouvert { -webkit-line-clamp: unset; display: block; }
+      .vb-lire { margin-top: 6px; padding: 4px 0; border: 0; background: none; color: #fff; font-family: inherit; font-size: calc(15 * var(--u)); font-weight: 700; cursor: pointer; }
+      .vb-horaires { margin-top: 18px; }
+      .vb-horaires-tete {
+        display: flex; align-items: center; gap: 10px; padding: 6px 0; border: 0; background: none; color: #e9e9ec;
+        font-family: inherit; font-size: calc(15 * var(--u)); cursor: pointer;
+      }
+      .vb-horaires-tete svg { width: 18px; height: 18px; fill: #e9e9ec; transition: transform .2s ease; }
+      .vb-horaires-tete[aria-expanded="true"] svg { transform: rotate(180deg); }
+      .vb-ouvert { color: #3ddc84; font-weight: 700; }
+      .vb-ferme { color: #ff5a5f; font-weight: 700; }
+      .vb-semaine { list-style: none; margin: 8px 0 0; padding: 12px 14px; border-radius: 10px; background: var(--vb-carte); }
+      .vb-semaine li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: calc(14.5 * var(--u)); color: var(--vb-gris); }
+      .vb-semaine li.auj { color: #fff; font-weight: 700; }
+      .vb-semaine em { display: block; font-style: normal; font-size: calc(12.5 * var(--u)); color: var(--vb-or); text-align: right; }
+      .vb-carte {
+        position: relative; display: block; width: 100%; height: 150px; margin-top: 18px; padding: 0; border: 0; border-radius: 6px; overflow: hidden; cursor: pointer;
+      }
+      .vb-carte-fond { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .vb-carte-pin { position: absolute; left: 50%; top: 32%; translate: -50% -50%; }
+      .vb-carte-pin svg { width: 34px; height: 34px; fill: var(--marque, #de3131); stroke: #000; stroke-width: 1.2; filter: drop-shadow(0 4px 8px rgba(0,0,0,.6)); }
+      .vb-carte-adr {
+        position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        padding: 12px 14px; background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0)); color: #fff;
+        font-size: calc(15 * var(--u)); font-weight: 600; text-align: left;
+      }
+      .vb-carte-adr svg { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .vb-itineraire {
+        display: block; width: 100%; min-height: 52px; margin-top: 8px; border: 0; border-radius: 6px; background: #3a3a3f; color: #fff;
+        font-family: inherit; font-size: calc(16 * var(--u)); font-weight: 700; cursor: pointer;
+      }
 
-      .vb-section { margin-top: 28px; }
-      .vb-titre { display: flex; align-items: center; gap: 8px; margin: 0 2px 14px; font-size: calc(20 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
-      .vb-titre span {
-        display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 99px;
-        background: var(--ink); color: var(--bg); font-size: calc(12.5 * var(--u)); font-weight: 800; letter-spacing: 0;
+      .vb-recos { margin-top: 34px; }
+      .vb-recos-titre { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-size: calc(21 * var(--u)); font-weight: 800; letter-spacing: -.01em; }
+      .vb-recos-titre svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .vb-recos-titre span { margin-left: auto; font-size: calc(13 * var(--u)); font-weight: 600; color: var(--vb-gris); }
+      .vb-recos-liste { display: grid; gap: 16px; }
+      .vb-reco { border-radius: 8px; overflow: hidden; background: var(--vb-carte); opacity: 0; transform: translateY(16px); transition: opacity .5s ease var(--d), transform .6s cubic-bezier(.2, .8, .2, 1) var(--d); }
+      .vue-bar.ouverte .vb-reco { opacity: 1; transform: none; }
+      .vb-reco-visuel { position: relative; display: grid; place-items: center; height: 210px; overflow: hidden; }
+      .vb-reco-visuel > img, .vb-reco-visuel > svg { width: 62%; height: 80%; object-fit: contain; filter: drop-shadow(0 18px 30px rgba(0,0,0,.45)); transition: transform .5s cubic-bezier(.2, .8, .2, 1); }
+      .vb-reco.prenable .vb-reco-visuel > img { transform: scale(1.04); }
+      .vb-fam-bar { background: radial-gradient(120% 90% at 50% 20%, #5a2a1c, #1d0f0b 70%); }
+      .vb-fam-acces { background: radial-gradient(120% 90% at 50% 20%, #25384f, #0d1219 70%); }
+      .vb-fam-vip { background: radial-gradient(120% 90% at 50% 20%, #4d3a14, #16110a 70%); }
+      .vb-reco-rare { position: absolute; left: 12px; top: 12px; padding: 4px 9px; border-radius: 99px; background: var(--vb-or); color: #000; font-size: calc(12 * var(--u)); font-weight: 800; }
+      .vb-reco-corps { padding: 16px 16px 18px; }
+      .vb-reco-sur { margin: 0; font-size: calc(12.5 * var(--u)); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--vb-or); }
+      .vb-reco.prenable .vb-reco-sur { color: #3ddc84; }
+      .vb-reco-nom { margin: 8px 0 0; font-size: calc(19 * var(--u)); font-weight: 750; }
+      .vb-reco-jauge { height: 4px; margin-top: 12px; border-radius: 99px; background: #2a2a2e; overflow: hidden; }
+      .vb-reco-jauge i { display: block; height: 100%; border-radius: inherit; background: var(--vb-or); }
+      .vb-reco-btn {
+        display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 48px; margin-top: 14px;
+        border: 2px solid #fff; border-radius: 6px; background: transparent; color: #fff; font-family: inherit; font-size: calc(16 * var(--u)); font-weight: 700; cursor: pointer;
       }
-      .vb-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
-      .vb-grille .carte-reco { width: auto; flex: none; opacity: 0; transform: translateY(12px); transition: opacity .45s ease var(--d, 0ms), transform .55s cubic-bezier(.2, .8, .2, 1) var(--d, 0ms); }
-      .vue-bar.ouverte .vb-grille .carte-reco { opacity: 1; transform: none; }
-      .vue-bar.ouverte .vb-grille .carte-reco:active { transform: scale(.97); }
-      .vb-mini-jauge { display: block; height: 4px; margin: 8px 0 2px; border-radius: 99px; background: var(--s2); overflow: hidden; }
-      .vb-mini-jauge i { display: block; height: 100%; border-radius: inherit; background: var(--ink3); }
-      .vb-vide, .vb-demo { margin: 28px 2px 0; font-size: calc(14 * var(--u)); color: var(--ink3); }
-      .vb-fiche {
-        display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 30px; padding: 16px 18px;
-        border: 0; border-radius: 16px; background: var(--s2); font-family: inherit; font-size: calc(15 * var(--u)); font-weight: 700;
-        color: var(--ink); cursor: pointer;
+      .vb-reco.prenable .vb-reco-btn { background: #fff; color: #000; }
+      .vb-reco-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .vb-signaler {
+        display: inline-flex; align-items: center; gap: 10px; margin: 26px 0 0; padding: 6px 0; border: 0; background: none; color: #e9e9ec;
+        font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 600; cursor: pointer;
       }
-      .vb-fiche svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .vb-signaler svg { width: 18px; height: 18px; fill: #e9e9ec; }
 
       .vb-barre {
-        position: absolute; left: 0; right: 0; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px;
-        padding: calc(12px + env(safe-area-inset-top)) 14px 10px; transition: background-color .25s ease, box-shadow .25s ease;
+        position: absolute; left: 0; right: 0; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px;
+        padding: calc(16px + env(safe-area-inset-top)) 14px 10px; transition: background-color .25s ease;
       }
-      .vb-rond {
-        flex: 0 0 auto; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%;
-        background: rgba(0,0,0,.35); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #ffffff; cursor: pointer;
-        transition: background-color .25s ease, color .25s ease;
+      .vb-rond { flex: 0 0 auto; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: rgba(0,0,0,.4); color: #fff; cursor: pointer; }
+      .vb-rond svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+      .vb-barre-titre { flex: 1; min-width: 0; font-size: calc(16 * var(--u)); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .2s ease; }
+      .vb-partager {
+        flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 9px 12px; border: 0; border-radius: 99px;
+        background: rgba(0,0,0,.4); color: #fff; font-family: inherit; font-size: calc(14.5 * var(--u)); font-weight: 650; cursor: pointer;
       }
-      .vb-rond svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-      .vb-barre-titre { flex: 1; min-width: 0; font-size: calc(16 * var(--u)); font-weight: 800; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .2s ease; }
-      .vb-points {
-        flex: 0 0 auto; margin-left: auto; padding: 8px 12px; border-radius: 99px; background: rgba(0,0,0,.35);
-        -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #ffffff; font-size: calc(13 * var(--u)); font-weight: 600;
-        transition: background-color .25s ease, color .25s ease;
-      }
-      .vb-points b { font-family: var(--chiffre); font-weight: 900; }
-      .vue-bar.compacte .vb-barre { background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); }
-      .vue-bar.compacte .vb-rond, .vue-bar.compacte .vb-points { background: var(--s2); color: var(--ink); }
+      .vb-partager svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .vue-bar.compacte .vb-barre { background: rgba(0,0,0,.92); box-shadow: 0 1px 0 #1f1f22; }
       .vue-bar.compacte .vb-barre-titre { opacity: 1; }
+
+      .vb-bandeau {
+        position: absolute; z-index: 3; left: 12px; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom));
+        display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border: 2px solid #fff; border-radius: 8px;
+        background: rgba(0,0,0,.88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff;
+        font-family: inherit; text-align: left; cursor: pointer;
+        transform: translateY(140%); transition: transform .5s cubic-bezier(.2, .8, .2, 1) .35s;
+      }
+      .vue-bar.ouverte .vb-bandeau { transform: none; }
+      .vb-bandeau[hidden] { display: none; }
+      .vb-bandeau-ico { flex: 0 0 auto; display: grid; place-items: center; width: 40px; height: 40px; }
+      .vb-bandeau-ico img, .vb-bandeau-ico svg { width: 100%; height: 100%; object-fit: contain; }
+      .vb-bandeau-txt { flex: 1; min-width: 0; }
+      .vb-bandeau-txt strong { display: block; font-size: calc(16 * var(--u)); font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .vb-bandeau-txt span { display: block; font-size: calc(12 * var(--u)); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #cfcfd4; }
+      .vb-bandeau > svg { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
       @media (prefers-reduced-motion: reduce) {
-        .vue-bar, .vb-photo, .vb-hero-bas > *, .vb-jauge i, .vb-grille .carte-reco { transition: none; }
+        .vue-bar, .vb-corps > *, .vb-reco, .vb-bandeau { transition: none; }
+        .vb-segments i.encours b { animation: none; width: 100%; }
       }
       @media (prefers-reduced-motion: reduce) { .bar-couverture img, .boutique-filtre { transition: none; } }
       .drop-titre {
@@ -7389,32 +7420,43 @@
              puis ses recompenses -- d'abord celles qu'on peut prendre, ensuite
              les autres avec leur jauge. Sous la feuille des recompenses
              (z-index 28 < voile 30), au-dessus des onglets (26). -->
+        <!-- 16/09/2026, deuxieme version : la page de detail de DUSK, relevee sur
+             la video de Julien (14/09, « 116 Pall Mall », « Simmons ») -- en NOIR,
+             la photo qui se fond dedans : photos qui defilent, nom, etiquettes
+             (Earn Points en dore), gros bouton blanc, description et « lire la
+             suite », ouvert/ferme depliable, encart carte + Itineraire, puis les
+             recompenses en grandes cartes (leur « Free drink ») et le bandeau du
+             bas (leur « Free Limoncello Spritz · UNLOCK BAR NOW »). -->
         <div class="vue-bar" id="vue-bar" hidden aria-labelledby="vb-nom">
           <div class="vb-defile" id="vb-defile">
             <div class="vb-hero">
               <div class="vb-galerie" id="vb-galerie"></div>
-              <div class="vb-points-galerie" id="vb-points-galerie" aria-hidden="true"></div>
+              <div class="vb-segments" id="vb-segments" aria-hidden="true"></div>
               <div class="vb-voile" aria-hidden="true"></div>
-              <div class="vb-hero-bas">
-                <span class="vb-pastille" id="vb-lieu"></span>
-                <h1 class="vb-nom" id="vb-nom"></h1>
-                <p class="vb-sous" id="vb-sous"></p>
-              </div>
             </div>
             <div class="vb-corps">
-              <div class="vb-ambiances" id="vb-ambiances" hidden></div>
-              <div class="vb-solde" id="vb-solde"></div>
-              <div id="vb-sections"></div>
-              <div class="vb-pied" id="vb-pied"></div>
+              <h1 class="vb-nom" id="vb-nom"></h1>
+              <p class="vb-tags" id="vb-tags"></p>
+              <div id="vb-action"></div>
+              <div class="vb-desc" id="vb-desc"></div>
+              <div class="vb-horaires" id="vb-horaires"></div>
+              <div id="vb-lieu-carte"></div>
+              <section class="vb-recos" id="vb-recompenses"></section>
+              <button type="button" class="vb-signaler" id="vb-signaler">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>Signaler une erreur
+              </button>
             </div>
           </div>
           <div class="vb-barre" id="vb-barre">
-            <button type="button" class="vb-rond" id="vb-retour" aria-label="Retour aux établissements">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+            <button type="button" class="vb-rond" id="vb-retour" aria-label="Fermer">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
             </button>
             <span class="vb-barre-titre" id="vb-barre-titre" aria-hidden="true"></span>
-            <span class="vb-points" id="vb-points"></span>
+            <button type="button" class="vb-partager" id="vb-partager">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5l6 6-6 6"/><path d="M20 11h-8a8 8 0 0 0-8 8"/></svg>On y va ?
+            </button>
           </div>
+          <button type="button" class="vb-bandeau" id="vb-bandeau" hidden></button>
         </div>
 
         <div class="vue-profil vue-aide-page" id="vue-aide" hidden>
@@ -16279,89 +16321,183 @@ function rendreListe() {
 var BAR_OUVERT = null;
 var VUE_BAR = document.getElementById("vue-bar");
 
+/* Les descriptions : le Mirano d'apres sa fiche (faits verifies dans CLUBS),
+   les bars de demonstration inventes comme eux. */
+var DESCRIPTIONS_BARS = {
+  Mirano: "Ancien cinéma de 1934 devenu club, avec sa piste de danse tournante, ses gradins d’origine et un écran LED géant. Café Afro le jeudi dès 21 h, hip-hop et R&B le vendredi et le samedi. Plus de 620 personnes les grands soirs.",
+  Velours: "Banquettes de velours, lumière basse et bar en cuivre. On y vient pour l’apéro qui s’éternise et les cocktails maison, avant de sortir plus loin ou pour rester jusqu’à la fermeture.",
+  "Minuit Douze": "Restaurant de nuit à Saint-Gilles : cuisine ouverte tard, vins au verre et terrasse sous les guirlandes. L’adresse pour manger quand tout est fermé.",
+  "Néon 88": "Club techno et house d’Ixelles. Grande piste, son lourd, néons partout et une programmation qui tient jusqu’au matin.",
+};
+
+var ICO_ETOILE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>';
+var diapoPage = null;
+
 function rendreBoutiqueBar(bar) {
   BAR_OUVERT = bar;
   var c = bar.club;
-  var etat = etatOuverture(c);
-  var photos = Array.isArray(c.photos) ? c.photos.filter(Boolean) : [];
   var solde = ETAT.solde || 0;
-  var recos = (bar.recompenses || []).slice().sort(function (a, b) { return a.cout - b.cout; });
-  var prenables = recos.filter(function (r) { return r.cout <= solde && r.stock > 0; });
-  var autres = recos.filter(function (r) { return r.cout > solde || r.stock <= 0; });
-  var suivante = autres.filter(function (r) { return r.stock > 0; })[0];
-
-  // La galerie : on la fait glisser au doigt, les points suivent.
   var galerie = galerieBar(bar);
-  var zoneGalerie = document.getElementById("vb-galerie");
-  zoneGalerie.innerHTML = galerie.map(function (src, i) {
+
+  // --- Les photos, facon story : segments en haut, defilement auto, glisse au doigt.
+  var zone = document.getElementById("vb-galerie");
+  zone.innerHTML = galerie.map(function (src, i) {
     return '<img class="vb-photo" src="' + escapeHtmlSupport(src) + '" alt=""' + (i ? ' loading="lazy"' : "") + ' onerror="this.remove()" />';
   }).join("");
-  zoneGalerie.scrollLeft = 0;
-  document.getElementById("vb-points-galerie").innerHTML = galerie.length > 1
-    ? galerie.map(function (_, i) { return "<i" + (i === 0 ? ' class="actif"' : "") + "></i>"; }).join("")
-    : "";
-  var ou = POSITION_MOI ? formaterDistance(bar.km) : bar.quartier;
-  var surNom = [typeEtablissement(c), ou].filter(Boolean).join(" · ");
-  document.getElementById("vb-lieu").textContent = surNom;
-  document.getElementById("vb-lieu").hidden = !surNom;
+  zone.scrollLeft = 0;
+  document.getElementById("vb-segments").innerHTML = galerie.length > 1 ? galerie.map(function () { return "<i><b></b></i>"; }).join("") : "";
+  segmentsPage(0);
+
+  // --- Nom et etiquettes.
   document.getElementById("vb-nom").textContent = bar.nom;
   document.getElementById("vb-barre-titre").textContent = bar.nom;
-  document.getElementById("vb-sous").innerHTML =
-    (bar.cle ? '<span class="vb-gagne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>Gagne des points ici</span>' : "") +
-    "";
-  // Les ambiances, en pastilles, juste sous la photo.
-  var ambiances = Array.isArray(c.ambiance) ? c.ambiance.slice(0, 4) : [];
-  document.getElementById("vb-ambiances").innerHTML = ambiances.map(function (a) { return "<span>" + escapeHtmlSupport(a) + "</span>"; }).join("");
-  document.getElementById("vb-ambiances").hidden = !ambiances.length;
-  document.getElementById("vb-points").innerHTML = "<b>" + nb(solde) + "</b> pts";
+  var tags = [];
+  if (bar.cle) tags.push('<span class="vb-or">Gagne des points</span>');
+  if (typeEtablissement(c)) tags.push(escapeHtmlSupport(typeEtablissement(c)));
+  (Array.isArray(c.ambiance) ? c.ambiance.slice(0, 2) : []).forEach(function (a) { tags.push(escapeHtmlSupport(a)); });
+  document.getElementById("vb-tags").innerHTML = tags.join(" <i>•</i> ");
 
-  // Le solde : ce qu'on a, et le prochain palier. Des faits, pas de slogan.
-  var jauge = suivante ? Math.max(4, Math.min(100, Math.round(solde / suivante.cout * 100))) : 100;
-  document.getElementById("vb-solde").innerHTML =
-    '<div class="vb-solde-haut">' +
-      '<span class="vb-solde-lib">Ton solde</span>' +
-      '<span class="vb-solde-num"><b>' + nb(solde) + "</b> points</span>" +
-    "</div>" +
-    '<div class="vb-jauge"><i style="width:' + jauge + '%"></i></div>' +
-    '<p class="vb-solde-txt">' + (suivante
-      ? "Plus que <b>" + nb(suivante.cout - solde) + " points</b> pour « " + escapeHtmlSupport(nomRecompense(suivante.nom)) + " »."
-      : recos.length ? "Tu peux prendre toutes les récompenses de " + escapeHtmlSupport(bar.nom) + "." : "") +
-    "</p>";
+  // --- Le gros bouton blanc (leur « Book here ») : ce qu'on vient faire ici.
+  document.getElementById("vb-action").innerHTML = bar.cle
+    ? '<button type="button" class="vb-cta" id="vb-cta">Poster une story ici<span>+' + String(BAREME_STORY.story.pts).replace("+", "") + " pts</span></button>"
+    : "";
 
-  var sections = document.getElementById("vb-sections");
-  sections.innerHTML = "";
-  var index = 0;
-  function section(titre, liste, compteur) {
-    if (!liste.length) return;
-    var bloc = document.createElement("section");
-    bloc.className = "vb-section";
-    bloc.innerHTML = '<h2 class="vb-titre">' + titre + (compteur ? '<span>' + liste.length + "</span>" : "") + "</h2>";
-    var grille = document.createElement("div");
-    grille.className = "vb-grille";
-    liste.forEach(function (r) {
-      var carte = carteRecompense(r, index, bar);
-      carte.style.setProperty("--d", (index * 45) + "ms");
-      index++;
-      // La jauge de la recompense : combien on en est, en un coup d'oeil.
-      if (r.cout > solde && r.stock > 0) {
+  // --- La description, repliee sur quatre lignes.
+  var desc = DESCRIPTIONS_BARS[bar.nom] || "";
+  document.getElementById("vb-desc").innerHTML = desc
+    ? '<p class="vb-desc-txt" id="vb-desc-txt">' + escapeHtmlSupport(desc) + '</p><button type="button" class="vb-lire" id="vb-lire">Lire la suite</button>'
+    : "";
+
+  // --- Ouvert / ferme, et la semaine qui se deplie.
+  var etat = etatOuverture(c);
+  var jours = Array.isArray(c.horaires) ? c.horaires : [];
+  var aujourdhui = (new Date().getDay() + 6) % 7;
+  document.getElementById("vb-horaires").innerHTML = etat
+    ? '<button type="button" class="vb-horaires-tete" id="vb-horaires-tete" aria-expanded="false">' +
+        '<span class="' + (etat.ouvert ? "vb-ouvert" : "vb-ferme") + '">' + (etat.ouvert ? "Ouvert" : "Fermé") + "</span>" +
+        "<span>" + escapeHtmlSupport(etat.ouvert ? etat.texte.replace(/^Ouvert jusqu'à/, "Ferme à") : etat.texte) + "</span>" +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg>' +
+      "</button>" +
+      '<ul class="vb-semaine" id="vb-semaine" hidden>' + jours.map(function (j, i) {
+        return '<li' + (i === aujourdhui ? ' class="auj"' : "") + "><span>" + escapeHtmlSupport(j.jour) + "</span><span>" +
+          (j.ferme ? "Fermé" : escapeHtmlSupport(heureCourte(j.de) + " – " + heureCourte(j.a)) + (j.soiree ? "<em>" + escapeHtmlSupport(j.soiree) + "</em>" : "")) +
+          "</span></li>";
+      }).join("") + "</ul>"
+    : "";
+
+  // --- L'encart carte (adresse, ouvre la carte de l'appli) et l'itineraire.
+  var adresse = c.adr && /\d{4}/.test(c.adr) ? c.adr : (bar.quartier ? bar.quartier + ", Bruxelles" : "Bruxelles");
+  document.getElementById("vb-lieu-carte").innerHTML =
+    '<button type="button" class="vb-carte" id="vb-carte" aria-label="Voir ' + escapeHtmlSupport(bar.nom) + ' sur la carte">' +
+      '<svg class="vb-carte-fond" viewBox="0 0 400 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+        '<rect width="400" height="150" fill="#1b1c20"/>' +
+        '<path d="M-10 120 C 80 90, 140 140, 230 96 S 360 40, 420 70" stroke="#2d4a63" stroke-width="16" fill="none" opacity=".7"/>' +
+        '<g stroke="#2b2c31" stroke-width="3" fill="none"><path d="M0 30h400M0 70h400M40 0v150M120 0v150M200 0v150M290 0v150M360 0v150"/></g>' +
+        '<g stroke="#34363c" stroke-width="7" fill="none"><path d="M-10 10 L 410 140M60 150 L 250 0"/></g>' +
+        '<g fill="#23332a"><rect x="300" y="84" width="46" height="36" rx="4"/><rect x="18" y="38" width="30" height="24" rx="4"/></g>' +
+      "</svg>" +
+      '<span class="vb-carte-pin" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6" fill="#000"/></svg></span>' +
+      '<span class="vb-carte-adr">' + escapeHtmlSupport(adresse) + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>' +
+    "</button>" +
+    '<button type="button" class="vb-itineraire" id="vb-itineraire">Itinéraire</button>';
+
+  // --- Les recompenses : de grandes cartes, comme leur « Free drink ».
+  var recos = (bar.recompenses || []).slice().sort(function (a, b) { return a.cout - b.cout; });
+  var zoneRecos = document.getElementById("vb-recompenses");
+  zoneRecos.innerHTML = recos.length
+    ? '<h2 class="vb-recos-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8.5" width="18" height="12.5" rx="2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>Récompenses<span>Tu as ' + nb(solde) + " points</span></h2>" +
+      '<div class="vb-recos-liste">' + recos.map(function (r, i) {
+        var epuise = r.stock <= 0;
+        var manque = Math.max(0, r.cout - solde);
         var pct = Math.max(4, Math.min(100, Math.round(solde / r.cout * 100)));
-        carte.querySelector(".corps")?.insertAdjacentHTML("beforeend",
-          '<span class="vb-mini-jauge" aria-label="' + pct + ' % des points"><i style="width:' + pct + '%"></i></span>');
-      }
-      grille.appendChild(carte);
-    });
-    bloc.appendChild(grille);
-    sections.appendChild(bloc);
-  }
-  section("À échanger maintenant", prenables, true);
-  section(prenables.length ? "Encore quelques points" : "Récompenses", autres, false);
-  if (!recos.length) sections.innerHTML = '<p class="vb-vide">Pas encore de récompense ici.</p>';
+        var surtitre = epuise ? "Épuisé pour ce soir"
+          : r.demo ? nb(r.cout) + " points · bientôt disponible"
+          : manque ? nb(r.cout) + " points · encore " + nb(manque)
+          : nb(r.cout) + " points · à échanger ce soir";
+        return '<article class="vb-reco' + (manque || epuise || r.demo ? "" : " prenable") + '" style="--d:' + (i * 60) + 'ms">' +
+          '<div class="vb-reco-visuel vb-fam-' + escapeHtmlSupport(r.fam || "bar") + '">' + (r.foto ? '<img src="' + escapeHtmlSupport(r.foto) + '" alt="" loading="lazy" />' : r.art()) +
+            (r.stock > 0 && r.stock <= 5 ? '<span class="vb-reco-rare">Plus que ' + r.stock + "</span>" : "") + "</div>" +
+          '<div class="vb-reco-corps">' +
+            '<p class="vb-reco-sur">' + escapeHtmlSupport(surtitre) + "</p>" +
+            '<h3 class="vb-reco-nom">' + escapeHtmlSupport(nomRecompense(r.nom)) + "</h3>" +
+            (manque && !epuise && !r.demo ? '<div class="vb-reco-jauge"><i style="width:' + pct + '%"></i></div>' : "") +
+            '<button type="button" class="vb-reco-btn" data-i="' + i + '">' +
+              '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l-1 7a3 3 0 0 1-6 0zM12 13v7M8.5 21h7"/></svg>' +
+              (epuise ? "Revenir demain" : r.demo ? "Voir la récompense" : manque ? "Voir la récompense" : "Échanger maintenant") +
+            "</button>" +
+          "</div></article>";
+      }).join("") + "</div>"
+    : "";
+  zoneRecos.querySelectorAll(".vb-reco-btn").forEach(function (b) {
+    b.addEventListener("click", function () { ouvrirRecompense(recos[Number(b.dataset.i)], b); });
+  });
 
-  document.getElementById("vb-pied").innerHTML = bar.cle
-    ? '<button type="button" class="vb-fiche" id="vb-fiche">Adresse et photos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'
-    : '<p class="vb-demo">Établissement de démonstration : ses récompenses ne s’échangent pas.</p>';
-  var fiche = document.getElementById("vb-fiche");
-  if (fiche) fiche.addEventListener("click", function () { ouvrirClub(CLUBS[bar.cle], fiche, bar.cle); });
+  // --- Le bandeau du bas : la meilleure recompense a portee, sinon la plus proche.
+  var bandeau = document.getElementById("vb-bandeau");
+  var cible = recos.filter(function (r) { return r.cout <= solde && r.stock > 0 && !r.demo; }).pop() || recos.filter(function (r) { return r.stock > 0; })[0];
+  bandeau.hidden = !cible;
+  if (cible) {
+    var ok = cible.cout <= solde && !cible.demo;
+    bandeau.innerHTML =
+      '<span class="vb-bandeau-ico">' + (cible.foto ? '<img src="' + escapeHtmlSupport(cible.foto) + '" alt="" />' : cible.art()) + "</span>" +
+      '<span class="vb-bandeau-txt"><strong>' + escapeHtmlSupport(nomRecompense(cible.nom)) + "</strong><span>" +
+        (ok ? "Échange-le maintenant" : cible.demo ? "Bientôt disponible" : "Encore " + nb(cible.cout - solde) + " points") + "</span></span>" +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+    bandeau.onclick = function () { ouvrirRecompense(cible, bandeau); };
+  }
+
+  brancherPageBar(bar);
+}
+
+function segmentsPage(index) {
+  document.querySelectorAll("#vb-segments i").forEach(function (seg, k) {
+    seg.className = k < index ? "fait" : k === index ? "encours" : "";
+    void seg.offsetWidth;
+  });
+}
+
+function brancherPageBar(bar) {
+  var c = bar.club;
+  document.getElementById("vb-cta")?.addEventListener("click", function () {
+    fermerBoutiqueBar();
+    ouvrirChoixReseau(c.nom);
+  });
+  var lire = document.getElementById("vb-lire");
+  if (lire) {
+    var txt = document.getElementById("vb-desc-txt");
+    lire.hidden = txt.scrollHeight <= txt.clientHeight + 2;
+    lire.onclick = function () {
+      var ouvert = txt.classList.toggle("ouvert");
+      lire.textContent = ouvert ? "Réduire" : "Lire la suite";
+    };
+  }
+  var tete = document.getElementById("vb-horaires-tete");
+  if (tete) tete.onclick = function () {
+    var semaine = document.getElementById("vb-semaine");
+    semaine.hidden = !semaine.hidden;
+    tete.setAttribute("aria-expanded", String(!semaine.hidden));
+  };
+  document.getElementById("vb-carte").onclick = function () {
+    fermerBoutiqueBar();
+    activerVue("carte");
+    map.easeTo({ center: bar.lngLat || c.lngLat, zoom: 15.5, pitch: 0, bearing: 0, duration: 1100 });
+  };
+  document.getElementById("vb-itineraire").onclick = function () {
+    var ll = bar.lngLat || c.lngLat;
+    var url = "https://www.google.com/maps/dir/?api=1&destination=" + ll[1] + "," + ll[0];
+    natif.ouvrirLien(url).then(function (ok) { if (!ok) window.open(url, "_blank", "noopener"); });
+  };
+  document.getElementById("vb-partager").onclick = async function () {
+    var url = (BASE_API || location.origin) + "/app-preview.html?app=1" + (bar.cle ? "#club-" + bar.cle : "");
+    var texte = "On se retrouve au " + bar.nom + " ?";
+    if (navigator.share) { try { await navigator.share({ title: bar.nom, text: texte, url: url }); } catch (e) {} }
+    else { try { await navigator.clipboard.writeText(texte + " " + url); pasEncore("Lien copié"); } catch (e) {} }
+  };
+  document.getElementById("vb-signaler").onclick = function () {
+    fermerBoutiqueBar();
+    document.getElementById("tab-profil")?.click();
+    setTimeout(function () { document.getElementById("pf-aide")?.click(); }, 250);
+  };
 }
 
 function ouvrirBoutiqueBar(bar) {
@@ -16373,25 +16509,37 @@ function ouvrirBoutiqueBar(bar) {
   void VUE_BAR.offsetWidth;
   VUE_BAR.classList.add("ouverte");
   vibrer("leger");
+  // Les photos defilent seules toutes les 4 s, jusqu'a ce qu'on les touche.
+  clearInterval(diapoPage);
+  diapoPage = setInterval(function () {
+    var z = document.getElementById("vb-galerie");
+    var n = z.querySelectorAll("img").length;
+    if (n < 2 || VUE_BAR.hidden) return;
+    var i = (Math.round(z.scrollLeft / Math.max(1, z.clientWidth)) + 1) % n;
+    z.scrollTo({ left: i * z.clientWidth, behavior: i ? "smooth" : "auto" });
+  }, 4000);
 }
 
 function fermerBoutiqueBar() {
   if (!VUE_BAR || VUE_BAR.hidden) return false;
   VUE_BAR.classList.remove("ouverte");
   BAR_OUVERT = null;
+  clearInterval(diapoPage);
   setTimeout(function () { if (!VUE_BAR.classList.contains("ouverte")) VUE_BAR.hidden = true; }, 380);
   return true;
 }
 window.noctifyFermerBoutiqueBar = fermerBoutiqueBar;
 
 document.getElementById("vb-retour")?.addEventListener("click", fermerBoutiqueBar);
+var dernierSegment = -1;
 document.getElementById("vb-galerie")?.addEventListener("scroll", function () {
   var i = Math.round(this.scrollLeft / Math.max(1, this.clientWidth));
-  document.querySelectorAll("#vb-points-galerie i").forEach(function (p, k) { p.classList.toggle("actif", k === i); });
+  if (i !== dernierSegment) { dernierSegment = i; segmentsPage(i); }
 }, { passive: true });
+document.getElementById("vb-galerie")?.addEventListener("touchstart", function () { clearInterval(diapoPage); }, { passive: true });
 // En defilant, la barre du haut se remplit et reprend le nom (comme une appli native).
 document.getElementById("vb-defile")?.addEventListener("scroll", function () {
-  VUE_BAR.classList.toggle("compacte", this.scrollTop > this.querySelector(".vb-hero").offsetHeight - 110);
+  VUE_BAR.classList.toggle("compacte", this.scrollTop > this.querySelector(".vb-hero").offsetHeight - 150);
 }, { passive: true });
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape" && VUE_BAR && !VUE_BAR.hidden && document.getElementById("sheet")?.getAttribute("aria-hidden") !== "false") fermerBoutiqueBar();
