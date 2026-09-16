@@ -1,0 +1,99 @@
+// CHASSE AUX BUGS DE L'APPLI CLUBBEUR, AVEC UN COMPTE JETABLE (prod par defaut).
+//
+//   node outils/chasse_bugs_clubbeur.cjs
+//
+// Ouvre chaque onglet, chaque ligne du profil et des reglages, et releve ce
+// qu'une capture ne montre pas : erreurs JavaScript, erreurs console,
+// requetes en echec (>= 400) et ecrans qui ne s'ouvrent pas. Le compte est
+// supprime a la fin, quoi qu'il arrive.
+
+const puppeteer = require("puppeteer-core");
+const V = require("../../06-pwa-clubbeurs/outils/lib_vn.cjs");
+
+const SITE = process.env.VN_URL || "https://viralnight-koif.vercel.app";
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1";
+
+(async () => {
+  const bilan = { etapes: [], erreursJs: [], console: [], requetes: [] };
+  let compte = null, navigateur = null;
+  let etape = "demarrage";
+  try {
+    compte = await V.compteJetable("chasse", `${SITE}/app-preview.html`);
+    const handle = "chasse_" + compte.uid.slice(0, 6);
+    V.sql(`insert into public.users (id, handle, email, profile_proof_path) values ('${compte.uid}', '${handle}', '${compte.email}', 'e2e/aucune')
+           on conflict (id) do update set handle = excluded.handle, profile_proof_path = excluded.profile_proof_path;`);
+
+    navigateur = await puppeteer.launch({ executablePath: V.CHROME, headless: "new", args: ["--hide-scrollbars"] });
+    const contexte = navigateur.defaultBrowserContext();
+    const page = await navigateur.newPage();
+    await page.setUserAgent(IPHONE);
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+    await page.evaluateOnNewDocument((id) => {
+      try {
+        localStorage.setItem("vn_stat_installe", "1");
+        localStorage.setItem("vn_parcours_fini", id);
+        localStorage.setItem("vn_notif_report", String(Date.now() + 864e5));
+      } catch (e) {}
+    }, compte.uid);
+    page.on("pageerror", (e) => bilan.erreursJs.push(`[${etape}] ${e.message}`));
+    page.on("console", (m) => { if (m.type() === "error") bilan.console.push(`[${etape}] ${m.text().slice(0, 200)}`); });
+    page.on("response", (r) => {
+      const u = r.url();
+      if (r.status() >= 400 && !/google-analytics|googletagmanager|favicon/.test(u)) bilan.requetes.push(`[${etape}] ${r.status()} ${r.request().method()} ${u.slice(0, 160)}`);
+    });
+    page.on("requestfailed", (r) => { if (!/google|analytics/.test(r.url())) bilan.requetes.push(`[${etape}] ECHEC ${r.url().slice(0, 160)} ${r.failure()?.errorText}`); });
+
+    etape = "connexion";
+    await page.goto(compte.lien, { waitUntil: "networkidle2" });
+    await pause(2500);
+    await page.goto(`${SITE}/app-preview.html?app=1&cb=${Date.now()}`, { waitUntil: "networkidle2" });
+    await pause(5000);
+
+    const visible = (sel) => page.evaluate((s) => {
+      const el = document.querySelector(s);
+      if (!el) return "absent";
+      const st = getComputedStyle(el);
+      return !el.hidden && st.display !== "none" && st.visibility !== "hidden" && el.getClientRects().length > 0;
+    }, sel);
+    const cliquer = async (sel) => page.evaluate((s) => { const el = document.querySelector(s); if (!el) return false; el.click(); return true; }, sel);
+    const fermerTout = () => page.evaluate(() => {
+      document.querySelectorAll(".vue-plein, [id^='vue-']").forEach((v) => { if (v.id !== "vue-accueil" && v.id !== "vue-profil") v.hidden = true; });
+      document.querySelector(".sheet-close, #sup-fermer")?.click();
+    });
+
+    async function essai(nom, sel, attendu) {
+      etape = nom;
+      const ok = await cliquer(sel);
+      await pause(2200);
+      const vu = attendu ? await visible(attendu) : null;
+      bilan.etapes.push({ nom, clic: ok, ecran: vu });
+    }
+
+    await essai("onglet boutique", "#tab-boutique");
+    await essai("onglet story", "#tab-story");
+    await essai("onglet carte", "#tab-carte");
+    await essai("onglet profil", "#tab-profil");
+    for (const [nom, sel] of [["fidelite", "#pf-fidelite"], ["gagner", "#pf-gagner"], ["inviter", "#pf-inviter"], ["aide", "#pf-aide"], ["avis", "#pf-avis"], ["a propos", "#pf-apropos"], ["devenir club", "#pf-devenir-club"], ["reglages", "#pf-reglages"]]) {
+      await essai(nom, sel);
+      const ouvert = await page.evaluate(() => [...document.querySelectorAll("[id^='vue-']")].filter((v) => !v.hidden && v.getClientRects().length && v.id !== "vue-accueil").map((v) => v.id));
+      bilan.etapes[bilan.etapes.length - 1].vues = ouvert;
+      if (nom !== "reglages") { await fermerTout(); await cliquer("#tab-profil"); await pause(800); }
+    }
+    etape = "reglages suppression";
+    await cliquer("#rg-supprimer-compte");
+    await pause(1500);
+    bilan.etapes.push({ nom: "feuille suppression", garder: await visible("#sup-garder"), supprimer: await visible("#sup-supprimer") });
+    await cliquer("#sup-fermer");
+    await pause(800);
+
+    etape = "inviter partage";
+    bilan.etapes.push({ nom: "lien invitation", lien: await page.evaluate(() => document.getElementById("va-lien")?.textContent) });
+  } catch (e) {
+    bilan.plantage = `[${etape}] ${e.message}`;
+  } finally {
+    if (navigateur) await navigateur.close();
+    if (compte) await V.supprimerCompte(compte.uid);
+    console.log(JSON.stringify(bilan, null, 1));
+  }
+})();

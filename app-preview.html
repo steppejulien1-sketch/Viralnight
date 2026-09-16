@@ -5679,6 +5679,9 @@
       }
       .sup-confirmer:disabled { opacity: .6; }
       .sup-confirmer:not(:disabled):active { transform: scale(.985); }
+      /* 16/09/2026, Julien : pas de « Garder mon compte », la croix suffit.
+         La suppression devient le seul bouton, en rouge marque. */
+      .sup-confirmer.sup-rouge { background: var(--marque, #de3131); color: #fff; }
       /* Ce qu'on perdrait, en grand : c'est ce qui fait rester. */
       .sup-solde { display: flex; align-items: baseline; gap: 10px; margin: 0 0 18px; padding: 16px 18px; border-radius: 16px; background: var(--s2); }
       .sup-solde strong { font-family: var(--chiffre); font-size: calc(40 * var(--u)); font-weight: 800; letter-spacing: -.04em; line-height: 1; color: var(--ink); }
@@ -12526,7 +12529,9 @@ async function ouvrirPageAmis(session) {
        la page de demonstration (l'appli dans un cadre de telephone sur fond
        sombre), pas l'appli. Son ecran d'accueil lui propose ensuite de
        l'installer (voir #ac-installer). */
-    ? window.location.origin + window.location.pathname + "?app=1&parrain=" + encodeURIComponent(monCode)
+    /* BASE_API d'abord : dans la coquille Capacitor l'origine vaut
+       capacitor://localhost, un lien que l'ami ne pourrait pas ouvrir. */
+    ? (BASE_API || window.location.origin) + "/app-preview.html?app=1&parrain=" + encodeURIComponent(monCode)
     : null;
 
   var lienEl = document.getElementById("va-lien");
@@ -12626,9 +12631,14 @@ async function ouvrirPageAmis(session) {
       navigator.share({ title: "Noctify", text: "Rejoins-moi sur Noctify !", url: lien }).catch(function () {});
       return;
     }
+    // Pas de feuille de partage (ordinateur) : on copie, et on le dit SUR le
+    // bouton. #va-msg appartient a la liste d'amis, masquee sur cet ecran :
+    // le clic semblait ne rien faire (meme piege que « Copier » plus haut).
     try {
       await navigator.clipboard.writeText(lien);
-      montrer("Lien copié : " + lien, "ok");
+      boutonPartager.textContent = "Lien copié";
+      vibrer("leger");
+      setTimeout(function () { boutonPartager.textContent = "Inviter mes amis"; }, 1800);
     } catch {
       window.prompt("Copie ton lien :", lien);
     }
@@ -13506,31 +13516,58 @@ async function activerNotifications() {
     direNotif("Les notifications ne sont pas encore configurées. On s'en occupe.");
     return false;
   }
+
+  /* ⚠️ requestPermission() AVANT tout autre await (16/09/2026). Sur iPhone,
+     WebKit n'ouvre la boite du systeme que dans le geste de l'utilisateur :
+     attendre d'abord la session (getSession passe par un verrou asynchrone)
+     pouvait consommer ce geste, et la demande repondait sans rien montrer.
+     La base n'avait AUCUN abonnement enregistre. */
+  var permission;
+  try {
+    permission = await Notification.requestPermission();
+  } catch (e) {
+    permission = Notification.permission;
+  }
+  if (permission !== "granted") {
+    direNotif(
+      permission === "denied"
+        ? "Notifications bloquées. Pour les réactiver, il faut passer par les réglages de ton téléphone."
+        : "Notifications non activées."
+    );
+    return false;
+  }
+
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) {
     direNotif("Connecte-toi d'abord pour recevoir tes notifications.");
     return false;
   }
 
-  var permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    direNotif(
-      permission === "denied"
-        ? "Notifications bloquées. Pour les réactiver, il faut passer par les réglages de ton navigateur."
-        : "Notifications non activées."
-    );
+  var abonnement;
+  try {
+    // Le service worker s'enregistre au "load" : si on arrive avant (ou si
+    // l'enregistrement a rate), ready attendrait pour toujours et
+    // l'interrupteur resterait bloque. On l'enregistre nous-memes au besoin.
+    var reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) reg = await navigator.serviceWorker.register("/sw.js");
+    reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise(function (_, rejeter) { setTimeout(function () { rejeter(new Error("sw")); }, 10000); }),
+    ]);
+    abonnement = await reg.pushManager.getSubscription();
+    if (!abonnement) {
+      abonnement = await reg.pushManager.subscribe({
+        // Obligatoire, et vrai : chaque push que l'on envoie affiche bien
+        // quelque chose. Un push silencieux fait revoquer la permission.
+        userVisibleOnly: true,
+        applicationServerKey: base64UrlVersOctets(CLE_VAPID),
+      });
+    }
+  } catch (e) {
+    // Avant, une erreur ici remontait sans message : l'interrupteur
+    // revenait sur "off" et personne ne savait pourquoi.
+    direNotif("Impossible d'activer les notifications sur ce téléphone. Réessaie dans un instant.");
     return false;
-  }
-
-  var reg = await navigator.serviceWorker.ready;
-  var abonnement = await reg.pushManager.getSubscription();
-  if (!abonnement) {
-    abonnement = await reg.pushManager.subscribe({
-      // Obligatoire, et vrai : chaque push que l'on envoie affiche bien
-      // quelque chose. Un push silencieux fait revoquer la permission.
-      userVisibleOnly: true,
-      applicationServerKey: base64UrlVersOctets(CLE_VAPID),
-    });
   }
 
   if (!(await enregistrerAbonnement(abonnement))) {
@@ -13673,6 +13710,15 @@ if (BOUTONS_NOTIF.length) {
 }
 
 $("#rg-deconnexion")?.addEventListener("click", async function () {
+  /* L'abonnement push est lie au COMPTE en base, pas au telephone. Sans ce
+     menage, un compte deconnecte continuait de recevoir ses notifications,
+     et le compte suivant sur le meme telephone n'en recevait aucune : la
+     ligne (unique par endpoint) appartenait encore a l'autre, la RLS
+     refusait de la reprendre. On la supprime tant que la session vaut. */
+  try {
+    var abo = await abonnementCourant();
+    if (abo) await supabaseClubbeur.from("push_subscriptions").delete().eq("endpoint", abo.endpoint);
+  } catch (e) {}
   await supabaseClubbeur.auth.signOut();
   fermerReglages();
   fermerProfil();
@@ -13890,15 +13936,16 @@ var VUE_DONNEES = $("#vue-reglages");
    Store 5.1.1(v)). */
 /* Deux pages seulement (Julien, 15/09/2026) : la ligne des parametres, puis
    cette feuille. La page des raisons est partie : « de la data inutile ». La
-   feuille pousse a rester : ce qu'on perd en grand (les points), « Garder mon
-   compte » en gros bouton, la suppression en lien rouge dessous. */
+   feuille dit ce qu'on perd en grand (les points). 16/09/2026 : plus de
+   bouton « Garder mon compte » (« inutile »), la croix ferme, la
+   suppression est le seul bouton. */
 function ouvrirSuppressionCompte(src) {
   rendeur = src || null;
   var solde = ETAT.solde || 0;
   var html =
     '<div class="sup">' +
       '<div class="sup-hero" aria-hidden="true"><img src="/ambiance/quitter.webp" alt="" width="780" height="520" /></div>' +
-      '<button type="button" class="sup-fermer" id="sup-fermer" aria-label="Garder mon compte"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
+      '<button type="button" class="sup-fermer" id="sup-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
       '<h3 class="sup-titre" id="sh-titre">Supprimer ton compte ?</h3>' +
       '<p class="sup-sous">C’est définitif : ton compte ne pourra pas être récupéré.</p>' +
       (solde > 0
@@ -13912,8 +13959,7 @@ function ouvrirSuppressionCompte(src) {
         '<span><strong>Un problème avec l’appli ?</strong><span>Écris-nous, on te répond dans Aide &amp; Support.</span></span>' +
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>' +
       "</button>" +
-      '<button type="button" class="sup-confirmer" id="sup-garder">Garder mon compte</button>' +
-      '<button type="button" class="sup-partir" id="sup-supprimer">Supprimer mon compte</button>' +
+      '<button type="button" class="sup-confirmer sup-rouge" id="sup-supprimer">Supprimer mon compte</button>' +
       '<p class="sup-msg" id="sup-msg" hidden></p>' +
     "</div>";
   ouvrirFeuille(html);
@@ -13923,7 +13969,6 @@ function ouvrirSuppressionCompte(src) {
   voile.classList.add("au-dessus");
 
   $("#sup-fermer").addEventListener("click", fermerFeuille);
-  $("#sup-garder").addEventListener("click", fermerFeuille);
   $("#sup-souci").addEventListener("click", function () {
     fermerFeuille();
     VUE_DONNEES.hidden = true;
@@ -13935,7 +13980,6 @@ function ouvrirSuppressionCompte(src) {
 async function supprimerCompteMaintenant() {
   var bouton = $("#sup-supprimer"), msg = $("#sup-msg");
   bouton.disabled = true;
-  $("#sup-garder").disabled = true;
   bouton.textContent = "Suppression…";
   try {
     var session = (await supabaseClubbeur.auth.getSession()).data.session;
@@ -13964,7 +14008,6 @@ async function supprimerCompteMaintenant() {
     VUE_ACCUEIL.classList.remove("masque");
   } catch (e) {
     bouton.disabled = false;
-    $("#sup-garder").disabled = false;
     bouton.textContent = "Supprimer mon compte";
     msg.hidden = false;
     msg.textContent = "La suppression n'a pas abouti. Réessaie dans un moment, ou écris-nous dans Aide & Support.";
