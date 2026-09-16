@@ -2626,6 +2626,32 @@
         .club-couv .club-couv-img, .club-couv-live i, .hero::before, .tel, .tel-reco img, .tel-story-barres i::after, .tel-gain,
         .parcours .pa-etape .pa-titre, .parcours .pa-etape .pa-sous, .parcours .pa-etape .vitrine { animation: none !important; }
       }
+
+      /* -- Parcours : la fiche Google -- */
+      .pa-google { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 14px; }
+      .pa-google .ac-input { min-width: 0; }
+      .pa-google-btn {
+        padding: 0 16px; border: 0; border-radius: 14px; background: var(--ink); color: #fff;
+        font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      }
+      .pa-google-btn[disabled] { opacity: .6; }
+      .pa-google-aide { list-style: none; margin: 0 0 16px; padding: 14px 14px 4px; border-radius: 16px; background: #f5f5f7; }
+      .pa-google-aide[hidden] { display: none; }
+      .pa-google-aide li { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13.5px; color: var(--ink2); }
+      .pa-google-aide b { flex: 0 0 auto; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px var(--line); font-size: 11.5px; color: var(--ink); }
+      .pa-google-aide em { font-style: normal; font-weight: 700; color: var(--ink); }
+      .pa-fiche { margin-bottom: 16px; padding: 16px; border-radius: 18px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 16px 34px -24px rgba(15,17,20,.4); animation: paMonte .45s cubic-bezier(.2,.8,.2,1) both; }
+      .pa-fiche[hidden] { display: none; }
+      .pa-fiche-tete { display: flex; align-items: center; gap: 12px; }
+      .pa-fiche-ok { flex: 0 0 auto; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #14a06f; }
+      .pa-fiche-ok svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+      .pa-fiche-tete strong { display: block; font-family: var(--titre); font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+      .pa-fiche-tete span span { display: block; font-size: 13px; color: var(--ink3); }
+      .pa-fiche ul { list-style: none; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--line); display: grid; gap: 9px; }
+      .pa-fiche li { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--ink2); line-height: 1.4; }
+      .pa-fiche li svg { flex: 0 0 auto; width: 17px; height: 17px; margin-top: 1px; fill: none; stroke: var(--ink3); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .pa-manuel-lien { display: block; margin: 0 0 16px; padding: 6px 0; border: 0; background: none; font-family: inherit; font-size: 13.5px; font-weight: 650; color: var(--ink2); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+      .pa-manuel[hidden] { display: none; }
     </style>
   </head>
   <body>
@@ -2924,9 +2950,25 @@
                          type (Bar, Boite de nuit, Restaurant) et montre l'adresse : on les demande
                          ici (colonnes establishments.category et address). -->
                     <section class="pa-etape" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pa-photo" style="background-image:url(/ambiance/hero-nightclub.webp)" aria-hidden="true"></div>
-                      <h1 class="pa-titre">Ton établissement.</h1>
-                      <p class="pa-sous">Ce que tes clients liront sur Noctify.</p>
+                      <!-- 17/09/2026, Julien : « ils ont juste besoin de copier-coller leur fiche
+                           Google, sur la fiche il y a toutes les infos ». Un seul champ ; la saisie
+                           a la main reste derriere un lien, pour qui n'a pas de fiche. Photo : celle
+                           de la derniere page du parcours clubbeur (ambiance/bienvenue.webp). -->
+                      <div class="pa-photo" style="background-image:url(/ambiance/bienvenue.webp)" aria-hidden="true"></div>
+                      <h1 class="pa-titre">Ta fiche Google.</h1>
+                      <p class="pa-sous">Colle le lien de ton établissement sur Google Maps. On récupère tout le reste.</p>
+                      <div class="pa-google pa-arrive">
+                        <input class="ac-input" id="pa-google" type="url" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://maps.app.goo.gl/…" />
+                        <button type="button" class="pa-google-btn" id="pa-google-btn">Récupérer</button>
+                      </div>
+                      <ol class="pa-google-aide pa-arrive" id="pa-google-aide">
+                        <li><b>1</b>Ouvre ton établissement dans Google Maps</li>
+                        <li><b>2</b>Touche <em>Partager</em>, puis <em>Copier le lien</em></li>
+                        <li><b>3</b>Colle-le ici</li>
+                      </ol>
+                      <div class="pa-fiche" id="pa-fiche" hidden></div>
+                      <button type="button" class="pa-manuel-lien pa-arrive" id="pa-manuel-lien">Pas de fiche Google ? Remplir à la main</button>
+                      <div class="pa-manuel" id="pa-manuel" hidden>
                       <p class="pa-legende pa-arrive">C'est un…</p>
                       <div class="pa-types pa-arrive" id="pa-types" role="radiogroup" aria-label="Type d'établissement">
                         <button type="button" class="pa-type" data-type="bar" role="radio" aria-checked="false">
@@ -2955,6 +2997,7 @@
                         <label for="pa-tel">Ton numéro de téléphone</label>
                         <input class="ac-input" id="pa-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0470 12 34 56" />
                         <span class="pa-aide">Pour te joindre si besoin. Tes clients ne le voient pas.</span>
+                      </div>
                       </div>
                     </section>
 
@@ -6559,6 +6602,7 @@
           $("#pa-ville").value = etab.city || "";
           $("#pa-tel").value = etab.phone || "";
           $("#pa-adresse").value = etab.address || "";
+          montrerManuel(!!(etab.address || PARCOURS.seule));
           choisirTypeParcours(etab.category === "bar" || etab.category === "restaurant" ? etab.category : "club");
           rendrePhotoParcours(etab.logo_url || null);
           construireChoixRecompenses();
@@ -6934,6 +6978,10 @@
       async function enregistrerFicheParcours() {
         var etab = etablissementCourant();
         var nom = $("#pa-nom").value.trim();
+        if (!nom && $("#pa-manuel").hidden) {
+          direParcours("Colle le lien de ta fiche Google, ou remplis à la main.", true);
+          return false;
+        }
         if (!nom) {
           direParcours("Le nom est nécessaire : c'est lui que tes clients voient.", true);
           return false;
@@ -6949,6 +6997,8 @@
         // tableau de bord de Julien (pilotage.html), sans rien lui demander.
         var telephone = $("#pa-tel").value.trim();
         if (telephone.replace(/\D/g, "").length < 8) {
+          // La fiche Google n'avait pas de numero : on ouvre la saisie pour le demander.
+          montrerManuel(true);
           direParcours("Ton numéro de téléphone aussi : c'est celui qu'on appelle si tu as besoin d'aide.", true);
           $("#pa-tel").focus();
           return false;
@@ -6959,7 +7009,11 @@
         // se saisit ici -- /api/create-client deduit le proprietaire du
         // jeton de session, jamais du corps de la requete.
         var adresse = $("#pa-adresse").value.trim();
-        if (!etab) return creerLeClub(nom, ville, telephone, adresse);
+        if (!etab) {
+          var cree = await creerLeClub(nom, ville, telephone, adresse);
+          if (cree) await enregistrerFicheGoogle();
+          return cree;
+        }
 
         var payload = { name: nom, city: ville, phone: telephone, address: adresse || null, category: PARCOURS.type || "club" };
 
@@ -6988,6 +7042,7 @@
         etab.phone = telephone;
         etab.address = adresse || null;
         etab.category = PARCOURS.type || "club";
+        await enregistrerFicheGoogle();
         rendreDashboard();
         rendreQr();
         return true;
@@ -7045,6 +7100,96 @@
         if (!maj.error) Object.assign(data.establishment, ajout);
         // Les photos ont leur propre ecran, juste apres : le dossier existe maintenant.
         return true;
+      }
+
+      /* ---- 2 · La fiche Google ---- */
+      var ICO_FICHE = {
+        lieu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>',
+        tel: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',
+        heure: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+      };
+      function montrerManuel(ouvert) {
+        $("#pa-manuel").hidden = !ouvert;
+        $("#pa-manuel-lien").textContent = ouvert ? "Utiliser ma fiche Google" : "Pas de fiche Google ? Remplir à la main";
+      }
+      $("#pa-manuel-lien").addEventListener("click", function () { montrerManuel($("#pa-manuel").hidden); });
+
+      function rendreFicheGoogle(fiche) {
+        var zone = $("#pa-fiche");
+        if (!fiche) { zone.hidden = true; zone.innerHTML = ""; $("#pa-google-aide").hidden = false; return; }
+        var jours = (fiche.horaires || []).filter(function (h) { return h.isOpen; }).length;
+        var lignes = [
+          [ICO_FICHE.lieu, fiche.adresse],
+          [ICO_FICHE.tel, fiche.telephone || "Pas de téléphone sur la fiche"],
+          [ICO_FICHE.heure, fiche.horaires ? "Ouvert " + jours + " jour" + (jours > 1 ? "s" : "") + " sur 7" : "Pas d'horaires sur la fiche"],
+        ].filter(function (l) { return l[1]; });
+        zone.innerHTML =
+          '<div class="pa-fiche-tete"><span class="pa-fiche-ok">' + COCHE_SVG + '</span><span><strong>' + escapeHtml(fiche.nom) + "</strong>" +
+          "<span>" + escapeHtml(NOMS_TYPES[fiche.type] || "") + (fiche.ville ? " · " + escapeHtml(fiche.ville) : "") + "</span></span></div>" +
+          "<ul>" + lignes.map(function (l) { return "<li>" + l[0] + "<span>" + escapeHtml(l[1]) + "</span></li>"; }).join("") + "</ul>";
+        zone.hidden = false;
+        $("#pa-google-aide").hidden = true;
+      }
+
+      async function recupererFicheGoogle() {
+        var lien = $("#pa-google").value.trim();
+        if (!lien) { direParcours("Colle d'abord le lien de ta fiche Google.", true); return false; }
+        if (!ETAT.session) return false;
+        var bouton = $("#pa-google-btn");
+        bouton.disabled = true;
+        bouton.textContent = "Recherche…";
+        try {
+          var reponse = await fetch("/api/import-opening-hours", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + ETAT.session.access_token },
+            body: JSON.stringify({ action: "fiche", googleUrl: lien }),
+          });
+          var corps = await reponse.json().catch(function () { return {}; });
+          if (!reponse.ok || !corps.fiche) throw new Error(corps.error || "Fiche introuvable.");
+          var fiche = corps.fiche;
+          PARCOURS.fiche = fiche;
+          PARCOURS.ficheLien = lien;
+          $("#pa-nom").value = fiche.nom || "";
+          $("#pa-adresse").value = fiche.adresse || "";
+          $("#pa-ville").value = fiche.ville || "";
+          if (fiche.telephone) $("#pa-tel").value = fiche.telephone;
+          choisirTypeParcours(fiche.type || "club");
+          rendreFicheGoogle(fiche);
+          direParcours("", false);
+          return true;
+        } catch (erreur) {
+          PARCOURS.fiche = null;
+          rendreFicheGoogle(null);
+          direParcours((erreur && erreur.message) || "Fiche introuvable.", true);
+          return false;
+        } finally {
+          bouton.disabled = false;
+          bouton.textContent = "Récupérer";
+        }
+      }
+      $("#pa-google-btn").addEventListener("click", recupererFicheGoogle);
+      $("#pa-google").addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); recupererFicheGoogle(); } });
+      $("#pa-google").addEventListener("paste", function () { setTimeout(function () { if (/^https?:\/\//.test($("#pa-google").value.trim())) recupererFicheGoogle(); }, 30); });
+
+      // Une fois l'etablissement cree ou mis a jour : horaires, position et type de la fiche.
+      async function enregistrerFicheGoogle() {
+        if (!PARCOURS.fiche || !PARCOURS.ficheLien || !ETAT.session) return;
+        try {
+          var reponse = await fetch("/api/import-opening-hours", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + ETAT.session.access_token },
+            body: JSON.stringify({ action: "fiche", googleUrl: PARCOURS.ficheLien, enregistrer: true }),
+          });
+          if (!reponse.ok) console.warn("[fiche-google] enregistrement", reponse.status);
+          var etab = etablissementCourant();
+          if (etab) {
+            etab.category = PARCOURS.fiche.type;
+            etab.address = PARCOURS.fiche.adresse;
+            if (PARCOURS.fiche.ville) etab.city = PARCOURS.fiche.ville;
+          }
+        } catch (e) {
+          console.warn("[fiche-google]", e);
+        }
       }
 
       /* ---- 3 · Les photos ---- */

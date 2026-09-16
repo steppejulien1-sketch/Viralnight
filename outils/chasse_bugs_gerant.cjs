@@ -64,6 +64,14 @@ async function session(email) {
     etape = "parcours";
     const PHOTO = require("path").resolve(__dirname, "../public/ambiance/bienvenue.webp");
     for (let i = 0; i < 10; i++) {
+      // L'etape « Ta fiche Google » (17/09/2026) : on colle le lien du Mirano et on recupere.
+      const aColler = await page.evaluate(() => { const c = document.getElementById("pa-google"); return !!c && c.getClientRects().length > 0 && !c.value && !document.querySelector("#pa-fiche:not([hidden])"); });
+      if (aColler) {
+        await page.evaluate(() => { const c = document.getElementById("pa-google"); c.value = "https://www.google.com/maps/place/Mirano/@50.84937,4.37139,17z"; document.getElementById("pa-google-btn").click(); });
+        await pause(7000);
+        bilan.etapes.push({ nom: "fiche google", fiche: await page.evaluate(() => { const f = document.getElementById("pa-fiche"); return f && !f.hidden ? f.innerText.replace(/\s+/g, " ") : (document.getElementById("pa-msg") || {}).textContent; }) });
+        await capture("fiche-google");
+      }
       // La photo de couverture est obligatoire : on en depose une, comme un gerant.
       const aCouvrir = await page.evaluate(() => { const b = document.getElementById("pa-photo-btn"); return !!b && b.getClientRects().length > 0 && !document.querySelector(".pa-couv.remplie"); });
       if (aCouvrir) {

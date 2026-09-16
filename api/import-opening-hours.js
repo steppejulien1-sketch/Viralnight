@@ -1,6 +1,8 @@
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 import { importOpeningHoursFromGoogle } from "../lib/google/openingHours.js";
 import { LIEUX_AUTORISES, listerPhotos, lirePhoto } from "../lib/google/photosLieu.js";
+import { lireFicheGoogle } from "../lib/google/ficheLieu.js";
+import { getSupabaseAdmin } from "../lib/db/supabaseAdmin.js";
 
 function json(response, body, status = 200) {
   response.statusCode = status;
@@ -29,6 +31,7 @@ function isGoogleUrl(value) {
       host.startsWith("google.") ||
       host.endsWith(".google.com") ||
       host === "maps.app.goo.gl" ||
+      host === "share.google" ||
       host === "goo.gl" ||
       host === "g.co"
     );
@@ -74,6 +77,60 @@ async function servirPhotos(request, response) {
   }
 }
 
+/* POST { action: "fiche", googleUrl, enregistrer }
+   Le parcours de l'appli des gerants (17/09/2026) : le gerant colle le lien de
+   sa fiche Google, on lui renvoie nom, adresse, type, telephone et horaires.
+   Il faut une session (la cle Places se paie), mais pas encore d'etablissement :
+   le club nait juste apres, avec ces infos. `enregistrer` ecrit ensuite la
+   fiche sur l'etablissement DU JETON -- jamais un id lu dans la requete. */
+async function actionFiche(request, response, body) {
+  const googleUrl = String(body.googleUrl || "").trim();
+  if (!googleUrl) return json(response, { error: "Colle le lien de ta fiche Google." }, 400);
+  if (!isGoogleUrl(googleUrl)) return json(response, { error: "Ce lien n'est pas un lien Google Maps." }, 400);
+
+  const token = (request.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  if (!token) return json(response, { error: "Session requise." }, 401);
+  let supabase;
+  try { supabase = getSupabaseAdmin(); } catch { return json(response, { error: "Configuration serveur incomplete." }, 500); }
+  const { data: qui, error: erreurQui } = await supabase.auth.getUser(token);
+  if (erreurQui || !qui?.user) return json(response, { error: "Session invalide." }, 401);
+
+  let fiche;
+  try {
+    fiche = await lireFicheGoogle(googleUrl, process.env.GOOGLE_PLACES_API_KEY);
+  } catch (error) {
+    console.error("[fiche-google]", error.message);
+    return json(response, { error: "Google ne répond pas pour le moment. Réessaie dans un instant." }, 502);
+  }
+  if (!fiche || !fiche.nom) return json(response, { error: "Fiche introuvable. Vérifie que le lien ouvre bien ton établissement dans Google Maps." }, 422);
+
+  if (body.enregistrer) {
+    const auth = await requireEstablishment(request);
+    if (auth.error) return json(response, { error: auth.error }, auth.status);
+    const maj = { address: fiche.adresse || null, category: fiche.type };
+    if (fiche.ville) maj.city = fiche.ville;
+    if (fiche.lat !== null && fiche.lng !== null) { maj.lat = fiche.lat; maj.lng = fiche.lng; }
+    const { error: erreurMaj } = await auth.supabase.from("establishments").update(maj).eq("id", auth.establishmentId);
+    if (erreurMaj) console.warn("[fiche-google] etablissement", erreurMaj.message);
+
+    if (fiche.horaires) {
+      const lignes = fiche.horaires.map((h) => ({
+        establishment_id: auth.establishmentId, weekday: h.weekday, is_open: h.isOpen,
+        opens_at: h.isOpen ? h.opensAt : null, closes_at: h.isOpen ? h.closesAt : null,
+      }));
+      const { error: erreurHoraires } = await auth.supabase.from("establishment_opening_hours").upsert(lignes, { onConflict: "establishment_id,weekday" });
+      if (erreurHoraires) console.warn("[fiche-google] horaires", erreurHoraires.message);
+      const { error: erreurPlanning } = await auth.supabase.from("establishment_schedule").upsert({
+        establishment_id: auth.establishmentId, google_place_id: fiche.placeId, google_place_name: fiche.nom,
+        google_synced_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      }, { onConflict: "establishment_id" });
+      if (erreurPlanning) console.warn("[fiche-google] planning", erreurPlanning.message);
+    }
+  }
+
+  return json(response, { ok: true, fiche });
+}
+
 export default async function handler(request, response) {
   if (request.method === "GET") return servirPhotos(request, response);
   if (request.method !== "POST") {
@@ -82,6 +139,7 @@ export default async function handler(request, response) {
 
   try {
     const body = await readBody(request);
+    if (body.action === "fiche") return actionFiche(request, response, body);
     const googleUrl = String(body.googleUrl || "").trim();
 
     if (!googleUrl) return json(response, { error: "Lien Google requis." }, 400);
