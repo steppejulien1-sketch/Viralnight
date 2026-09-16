@@ -3347,6 +3347,29 @@
       }
       .vue-boutique .bar-infos .bar-nom { font-size: calc(23 * var(--u)); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; color: var(--ink); }
       .vue-boutique .bar-infos .bar-tags { margin: 0; font-size: calc(15.5 * var(--u)); font-weight: 500; color: var(--ink3); }
+      /* 16/09/2026, Julien : « c'etait mieux quand le texte etait ecrit sur l'image,
+         sans agrandir l'image ». La photo garde les proportions DUSK ; le texte
+         se pose en bas a gauche sur un voile qui ne noircit que le dernier tiers
+         (le haut de la photo reste intact), et un blanc net separe les cartes. */
+      .vue-boutique .bar-section + .bar-section { margin-top: 16px; }
+      .vue-boutique .bar-couverture { isolation: isolate; width: 100%; margin: 0; border-radius: 20px; }
+      .bar-voile {
+        position: absolute; inset: 0; z-index: 1; pointer-events: none;
+        background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.38) 32%, rgba(0,0,0,0) 62%);
+      }
+      .vue-boutique .bar-pastille { z-index: 2; }
+      .bar-texte {
+        position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 14px;
+        display: flex; flex-direction: column; gap: 3px; text-align: left; color: #ffffff;
+      }
+      .bar-texte .bar-nom {
+        font-size: calc(24 * var(--u)); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; color: #ffffff;
+        text-shadow: 0 1px 14px rgba(0,0,0,.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .bar-texte .bar-tags {
+        margin: 0; font-size: calc(14.5 * var(--u)); font-weight: 550; color: rgba(255,255,255,.86);
+        text-shadow: 0 1px 10px rgba(0,0,0,.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
       /* ---- 16/09/2026, Julien : « rendre ca plus premium, quali ». La page d'un
          etablissement garde sa structure (il la trouve « parfaite ») : on affine.
          Une seule encre, plus de vert ni d'ambre, des tuiles plus douces, une
@@ -16250,14 +16273,15 @@ function rendreListe() {
     section.innerHTML =
       '<button type="button" class="bar-couverture" aria-label="Voir la boutique de ' + escapeHtmlSupport(bar.nom) + '">' +
         '<img src="' + escapeHtmlSupport(couverture) + '" alt="" loading="lazy" onerror="this.src=\'/clubs/couverture-par-defaut.webp\'" />' +
+        '<span class="bar-voile" aria-hidden="true"></span>' +
         (ou ? '<span class="bar-pastille"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>' + escapeHtmlSupport(ou) + "</span>" : "") +
-      "</button>" +
-      '<button type="button" class="bar-infos" tabindex="-1" aria-hidden="true">' +
-        '<span class="bar-nom">' + escapeHtmlSupport(bar.nom) + "</span>" +
-        (ligne.length ? '<span class="bar-tags">' + ligne.map(escapeHtmlSupport).join(" • ") + "</span>" : "") +
+        '<span class="bar-texte">' +
+          '<span class="bar-nom">' + escapeHtmlSupport(bar.nom) + "</span>" +
+          (ligne.length ? '<span class="bar-tags">' + ligne.map(escapeHtmlSupport).join(" • ") + "</span>" : "") +
+        "</span>" +
       "</button>";
     bar.cle = cle;
-    section.querySelectorAll(".bar-couverture, .bar-infos").forEach(function (el) {
+    section.querySelectorAll(".bar-couverture").forEach(function (el) {
       el.addEventListener("click", function () { ouvrirBoutiqueBar(bar); });
     });
     z.appendChild(section);
