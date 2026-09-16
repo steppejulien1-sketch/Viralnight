@@ -29,7 +29,7 @@ import { timingSafeEqual } from "node:crypto";
 import { envoyerEmail } from "../lib/notifications/email.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
-import { doitRepondre, contexteCompte, historiquePourModele, genererReponse, messageEnregistre } from "../lib/ai/supportIa.js";
+import { doitRepondre, repondre, messageEnregistre } from "../lib/support/reponseAuto.js";
 
 const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
@@ -454,10 +454,10 @@ async function mailSupport({ pseudo, email, message, ia }) {
   const qui = pseudo ? `@${pseudo}` : email || "un clubbeur";
   // L'etat de la reponse automatique dans le sujet : Julien sait d'un coup
   // d'oeil s'il doit intervenir.
-  const etat = ia?.texte ? (ia.transmettre ? " — à traiter" : " — répondu par l'IA") : "";
+  const etat = ia?.texte ? (ia.transmettre ? " — à traiter" : " — répondu automatiquement") : "";
   const blocIa = ia?.texte
     ? `<p><strong>Réponse automatique${ia.transmettre ? " (transmis à toi)" : ""} :</strong></p><p style="white-space:pre-wrap;color:#535964">${echapper(ia.texte)}</p>`
-    : ia?.erreur && !ia.silence ? `<p style="color:#9f1c1c">Pas de réponse automatique : ${echapper(ia.erreur)}</p>` : "";
+    : "";
   return envoyerEmail({
     type: "support",
     sujet: `Support Noctify : message de ${qui}${etat}`,
@@ -470,37 +470,40 @@ async function mailSupport({ pseudo, email, message, ia }) {
   });
 }
 
-/* La reponse automatique (lib/ai/supportIa.js). Ne leve jamais : un souci
-   d'IA ne doit ni faire echouer la requete ni empecher de prevenir Julien. */
+/* La reponse automatique (lib/support/reponseAuto.js) : GRATUITE, sans IA
+   payante (Julien, 16/09/2026). On lit le compte, on reconnait le sujet, on
+   repond avec ses vraies donnees -- ou on transmet. Ne leve jamais : un
+   souci ici ne doit ni faire echouer la requete ni empecher de prevenir
+   Julien. */
 async function repondreAutomatiquement(clubbeur, userId, derniers) {
   try {
     const decision = doitRepondre(derniers);
-    if (!decision.repondre) return { erreur: decision.raison, silence: true };
-    const [profil, stories, gains, bons] = await Promise.all([
+    if (!decision.repondre) return { erreur: decision.raison };
+    const [profil, stories, gains, bons, cadeaux, parrainages] = await Promise.all([
       clubbeur.from("users").select("handle, points_balance, lifetime_points, created_at").eq("id", userId).maybeSingle(),
-      clubbeur.from("story_events").select("mentioned_at, review_status, awarded_points, clubs(name)").eq("user_id", userId).order("mentioned_at", { ascending: false }).limit(5),
-      clubbeur.from("point_grants").select("created_at, amount, source, released, unlocks_at, clubs(name)").eq("user_id", userId).order("created_at", { ascending: false }).limit(8),
-      clubbeur.from("redemptions").select("redeemed_at, used, rewards(title)").eq("user_id", userId).order("redeemed_at", { ascending: false }).limit(4),
+      clubbeur.from("story_events").select("mentioned_at, review_status, awarded_points, clubs(name)").eq("user_id", userId).order("mentioned_at", { ascending: false }).limit(3),
+      clubbeur.from("point_grants").select("created_at, amount, source, released, unlocks_at, clubs(name)").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
+      clubbeur.from("redemptions").select("redeemed_at, used, rewards(title)").eq("user_id", userId).order("redeemed_at", { ascending: false }).limit(5),
+      clubbeur.from("daily_gifts").select("gift_date, amount, jour").eq("user_id", userId).order("gift_date", { ascending: false }).limit(2),
+      clubbeur.from("parrainages").select("id", { count: "exact", head: true }).eq("parrain_id", userId),
     ]);
-    const contexte = contexteCompte({
+    const compte = {
       profil: profil.data,
       stories: (stories.data || []).map((x) => ({ ...x, club: x.clubs?.name })),
       gains: (gains.data || []).map((x) => ({ ...x, club: x.clubs?.name })),
       bons: (bons.data || []).map((x) => ({ ...x, titre: x.rewards?.title })),
-    });
-    const ia = await genererReponse({ historique: historiquePourModele(derniers), contexte });
-    if (ia.erreur) {
-      console.error("[support-ia]", ia.erreur);
-      return ia;
-    }
-    const { error } = await clubbeur.from("support_messages").insert({ user_id: userId, auteur: "ia", message: messageEnregistre(ia) });
+      cadeaux: cadeaux.data || [],
+      parrainages: parrainages.count || 0,
+    };
+    const reponse = repondre(derniers[0].message, compte);
+    const { error } = await clubbeur.from("support_messages").insert({ user_id: userId, auteur: "ia", message: messageEnregistre(reponse) });
     if (error) {
-      console.error("[support-ia] enregistrement", error.message);
+      console.error("[support-auto] enregistrement", error.message);
       return { erreur: "enregistrement" };
     }
-    return ia;
+    return reponse;
   } catch (e) {
-    console.error("[support-ia]", e.message);
+    console.error("[support-auto]", e.message);
     return { erreur: "inattendue" };
   }
 }
