@@ -125,6 +125,15 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
       await page.evaluate(() => document.querySelector(".st-carte")?.scrollIntoView({ block: "center" }));
       await pause(800);
       await page.screenshot({ path: `${CAPTURES}/02b-story-mention.png` });
+      // Le choix de l'etablissement : la carte en haut, puis sa liste.
+      await page.evaluate(() => { const v = document.getElementById("vue-story"); if (v) v.scrollTop = 0; document.querySelector(".stc-carte")?.scrollIntoView({ block: "start" }); });
+      await pause(4500);
+      await page.screenshot({ path: `${CAPTURES}/02c-story-club.png` });
+      await page.evaluate(() => document.getElementById("story-club")?.click());
+      await pause(1200);
+      await page.screenshot({ path: `${CAPTURES}/02d-story-choix-club.png` });
+      await page.evaluate(() => window.noctifyFermerFeuille && window.noctifyFermerFeuille());
+      await pause(600);
     }
     await essai("onglet carte", "#tab-carte");
     await essai("onglet profil", "#tab-profil");

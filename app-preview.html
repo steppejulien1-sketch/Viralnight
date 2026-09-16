@@ -5312,6 +5312,54 @@
         box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 10px 24px -16px rgba(15,17,20,.3);
       }
       .st-club:empty { display: none; }
+      /* 16/09/2026 : la carte du club facon compte Instagram, et sa liste. */
+      .vue-story .st-club { padding: 0; background: none; box-shadow: none; margin: 0 0 8px; }
+      .stc-carte, .stc-ligne {
+        box-sizing: border-box; display: flex; align-items: center; gap: 12px; width: 100%; max-width: 100%; border: 0; text-align: left;
+        font-family: inherit; color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent;
+        transition: transform var(--tr-court), background-color var(--tr-court);
+      }
+      .stc-carte {
+        padding: 12px 14px 12px 12px; border-radius: 20px; background: var(--s1);
+        box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 12px 30px -18px rgba(15,17,20,.3);
+      }
+      .stc-carte:active, .stc-ligne:active { transform: scale(.985); }
+      .stc-carte:focus-visible, .stc-ligne:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .stc-avatar {
+        flex: 0 0 auto; width: var(--t); height: var(--t); padding: 2px; border-radius: 50%;
+        background: conic-gradient(from 210deg, #f58529, #dd2a7b, #8134af, #515bd4, #f58529);
+      }
+      .stc-avatar.vide { background: var(--line); }
+      .stc-avatar-in {
+        display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+        background: var(--lieu-sans-photo, #eeece9); box-shadow: 0 0 0 2px var(--s1);
+      }
+      .stc-avatar-in img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .stc-avatar-in svg { width: 42%; height: 42%; fill: none; stroke: var(--ink3); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .stc-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+      .stc-txt strong { font-size: calc(17 * var(--u)); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .stc-infos { font-size: calc(13 * var(--u)); font-weight: 600; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .stc-etat { display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--ink3); }
+      .stc-etat i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink3); opacity: .6; }
+      .stc-etat.ouvert { color: #1a7f45; }
+      .stc-etat.ouvert i { background: #1fa35a; opacity: 1; }
+      .stc-changer {
+        flex: 0 0 auto; display: inline-flex; align-items: center; gap: 2px; padding: 8px 8px 8px 12px; border-radius: 999px;
+        background: var(--s2); font-size: calc(13.5 * var(--u)); font-weight: 700; color: var(--ink);
+      }
+      .stc-changer svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+      .stc-feuille h3 { margin: 0; font-size: calc(22 * var(--u)); font-weight: 800; letter-spacing: -.03em; }
+      .stc-sous { margin: 4px 0 16px; font-size: calc(14 * var(--u)); color: var(--ink2); }
+      .stc-liste { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+      .stc-ligne { padding: 10px 12px 10px 10px; border-radius: 18px; background: var(--s2); }
+      .stc-ligne.choisi { background: var(--s1); box-shadow: inset 0 0 0 2px var(--ink); }
+      .stc-coche {
+        flex: 0 0 auto; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+        box-shadow: inset 0 0 0 1.5px var(--line); color: transparent;
+      }
+      .stc-coche svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+      .stc-ligne.choisi .stc-coche { background: var(--ink); box-shadow: none; color: var(--bg); }
+      @media (prefers-reduced-motion: reduce) { .stc-carte, .stc-ligne { transition: none; } }
       .st-club-corps { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
       .st-club .st-lieu-tuile { width: 36px; height: 36px; border-radius: 10px; }
       .st-club .st-lieu-txt strong { font-size: calc(16 * var(--u)); }
@@ -6512,9 +6560,10 @@
               </span>
               <!-- La mention, la ou on la pose vraiment : en bas, pas au milieu
                    de la photo. -->
-              <!-- Un club IMAGINAIRE dans l'exemple (Julien : « ne mentionne pas le
-                   Mirano ») ; la vraie mention a copier est dans la carte dessous. -->
-              <span class="st-tel-sticker"><span class="st-tel-sticker-txt">@mirage.bruxelles</span></span>
+              <!-- 16/09/2026, Julien : la mention SPECIALE de l'etablissement choisi
+                   (avant : un club imaginaire). majHandle() la remplit, et la
+                   change quand on change d'etablissement. -->
+              <span class="st-tel-sticker"><span class="st-tel-sticker-txt" id="st-apercu-mention">@mention</span></span>
               <!-- Les onglets du bas de l'editeur, decoupes dans une vraie capture
                    (IMG_5086), poses SUR la story (fond transparent) : la story
                    reste entiere. -->
@@ -11746,6 +11795,81 @@ function ouvrirChoixReseau(nomClub) {
   var ICONE_QR = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h2.6v2.6H14zM18 18h2.5v2.5H18zM14 20.5h2.6M20.5 14v2.6"/></svg>';
   var ICONE_COPIER = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11.5" height="11.5" rx="2.2"/><path d="M5.5 15V5.8a2.3 2.3 0 0 1 2.3-2.3H15"/></svg>';
 
+  /* La photo de profil du club, cerclee comme une story Instagram. Photo
+     deposee par le gerant (logo_url, recopiee dans CLUBS par
+     resoudreIdsClubs) ou fournie dans CLUBS ; sans photo, le rond neutre
+     (le monogramme a ete refuse, voir visuelClub). */
+  function avatarClubStory(c, taille) {
+    var src = c && (c.avatar || c.photo);
+    return '<span class="stc-avatar' + (src ? "" : " vide") + '" style="--t:' + taille + 'px" aria-hidden="true"><span class="stc-avatar-in">' +
+      (src ? '<img src="' + escapeHtmlSupport(src) + '" alt="" onerror="this.remove()" />'
+           : '<svg viewBox="0 0 24 24"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>') +
+    "</span></span>";
+  }
+
+  function ligneInfosClub(c, handle) {
+    var morceaux = [];
+    if (handle) morceaux.push("@" + handle);
+    var etat = etatOuverture(c);
+    var quartier = quartierDe(c && c.adr);
+    return { texte: morceaux.concat(quartier && !handle ? [quartier] : []).join(" · "), etat: etat };
+  }
+
+  function carteClubStory(cle) {
+    var c = CLUBS[cle];
+    if (!c) return "";
+    var infos = ligneInfosClub(c, handleActuel || c.ig);
+    return '<button type="button" class="stc-carte" id="story-club" aria-haspopup="dialog" aria-label="Établissement : ' + escapeHtmlSupport(c.nom) + '. Changer">' +
+      avatarClubStory(c, 46) +
+      '<span class="stc-txt">' +
+        '<strong>' + escapeHtmlSupport(c.nom) + "</strong>" +
+        '<span class="stc-infos">' + escapeHtmlSupport(infos.texte) + "</span>" +
+        (infos.etat ? '<span class="stc-etat' + (infos.etat.ouvert ? " ouvert" : "") + '"><i></i>' + escapeHtmlSupport(infos.etat.texte) + "</span>" : "") +
+      "</span>" +
+      '<span class="stc-changer">Changer<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>' +
+    "</button>";
+  }
+
+  /* La liste des etablissements, en feuille : photo, nom, @, ouvert ou non,
+     et une coche sur celui qui est choisi. Les plus proches d'abord quand la
+     position est connue. */
+  function ouvrirChoixClubStory(src) {
+    rendeur = src || null;
+    var origine = POSITION_MOI || MOI;
+    var cles = Object.keys(CLUBS).sort(function (a, b) {
+      return distanceKm(origine, CLUBS[a].lngLat) - distanceKm(origine, CLUBS[b].lngLat);
+    });
+    var lignes = cles.map(function (k) {
+      var c = CLUBS[k];
+      var infos = ligneInfosClub(c, c.ig);
+      var choisi = k === cleChoisie;
+      var ou = POSITION_MOI ? formaterDistance(distanceKm(POSITION_MOI, c.lngLat)) : quartierDe(c.adr);
+      return '<button type="button" class="stc-ligne' + (choisi ? " choisi" : "") + '" data-cle="' + k + '" aria-pressed="' + choisi + '">' +
+        avatarClubStory(c, 52) +
+        '<span class="stc-txt">' +
+          "<strong>" + escapeHtmlSupport(c.nom) + "</strong>" +
+          '<span class="stc-infos">' + escapeHtmlSupport([c.ig ? "@" + c.ig : "", ou].filter(Boolean).join(" · ")) + "</span>" +
+          (infos.etat ? '<span class="stc-etat' + (infos.etat.ouvert ? " ouvert" : "") + '"><i></i>' + escapeHtmlSupport(infos.etat.texte) + "</span>" : "") +
+        "</span>" +
+        '<span class="stc-coche" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+      "</button>";
+    }).join("");
+    ouvrirFeuille(
+      '<div class="stc-feuille">' +
+        '<h3 id="sh-titre">Où es-tu ce soir&nbsp;?</h3>' +
+        '<p class="stc-sous">Ta story mentionnera cet établissement.</p>' +
+        '<div class="stc-liste">' + lignes + "</div>" +
+      "</div>"
+    );
+    sheet.classList.add("clair");
+    corps.querySelectorAll(".stc-ligne").forEach(function (b) {
+      b.addEventListener("click", function () {
+        fermerFeuille();
+        if (b.dataset.cle !== cleChoisie) changerClubStory(b.dataset.cle);
+      });
+    });
+  }
+
   function blocLieu(cle) {
     var c = CLUBS[cle];
     if (!c) return "";
@@ -11794,10 +11918,6 @@ function ouvrirChoixReseau(nomClub) {
       (kindId === "tiktok" ? '<p class="st-note">Plus 7 points par tranche de 100 vues comptées par TikTok.</p>' : "");
   }
 
-  var options = Object.keys(CLUBS).map(function (k) {
-    return '<option value="' + k + '"' + (k === cleChoisie ? " selected" : "") + ">" + escapeHtmlSupport(CLUBS[k].nom) + "</option>";
-  }).join("");
-
   /* 15/09/2026, page allegee (Julien : « il y a toujours trop d'elements ») :
      une carte -- la mention a copier, et le lieu en petit, modifiable --, les
      deux boutons, la regle du soir, et le scan du QR en simple lien. Plus de
@@ -11841,10 +11961,12 @@ function ouvrirChoixReseau(nomClub) {
   // Theme clair de la boutique, repose apres masquerCarteEtBoutique().
   SCREEN.classList.add("boutique-pro");
   $("#story-page-corps").innerHTML = html;
-  $("#st-club").innerHTML =
-    '<span class="st-club-corps" id="st-lieu">' + blocLieu(cleChoisie) + "</span>" +
-    '<span class="st-club-changer">Changer<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></span>' +
-    '<select class="st-lieu-select" id="story-club" aria-label="Choisir l’établissement">' + options + "</select>";
+  /* 16/09/2026, Julien : « ce truc pour choisir son club fait trop vibe codé,
+     un truc bien plus qualitatif avec la photo de profil du club ». La carte
+     montre le club comme un compte Instagram -- photo ronde cerclee, nom, son
+     @, s'il est ouvert -- et ouvre une vraie liste (feuille) au lieu du menu
+     deroulant du systeme. */
+  $("#st-club").innerHTML = carteClubStory(cleChoisie);
   TAB_STORY.classList.add("on");
   TAB_STORY.setAttribute("aria-current", "page");
   VUE_STORY.hidden = false;
@@ -11871,6 +11993,8 @@ function ouvrirChoixReseau(nomClub) {
     if (chip) chip.innerHTML = blocTag(handleActuel);
     var autocollant = $("#st-apercu-mention");
     if (autocollant) autocollant.textContent = handleActuel ? "@" + handleActuel : CLUBS[cleChoisie].nom;
+    var infos = document.querySelector("#story-club .stc-infos");
+    if (infos) infos.textContent = ligneInfosClub(CLUBS[cleChoisie], handleActuel || CLUBS[cleChoisie].ig).texte;
   }
   majHandle(handleActuel);
 
@@ -11885,13 +12009,24 @@ function ouvrirChoixReseau(nomClub) {
   }
   chercherHandle();
 
-  $("#story-club").addEventListener("change", function () {
-    cleChoisie = this.value;
-    $("#st-lieu").innerHTML = blocLieu(cleChoisie);
+  function changerClubStory(cle) {
+    cleChoisie = cle;
+    handleActuel = CLUBS[cle].ig || null;
+    $("#st-club").innerHTML = carteClubStory(cle);
+    brancherCarteClub();
     majIntro();
-    majHandle(CLUBS[cleChoisie].ig || null);
+    majHandle(handleActuel);
     chercherHandle();
-  });
+    // Le telephone rejoue la story avec la nouvelle mention.
+    var sc = $("#st-scene");
+    if (sc) { sc.classList.remove("joue"); void sc.offsetWidth; sc.classList.add("joue"); }
+    vibrer("leger");
+  }
+  function brancherCarteClub() {
+    var carte = $("#story-club");
+    if (carte) carte.addEventListener("click", function () { ouvrirChoixClubStory(carte); });
+  }
+  brancherCarteClub();
 
   activerScanClub();
 
