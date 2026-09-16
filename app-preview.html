@@ -13923,7 +13923,13 @@ $("#rg-email-modifier")?.addEventListener("click", async function () {
   nouveau = nouveau ? nouveau.trim().toLowerCase() : "";
   if (!nouveau || nouveau === session.user.email) return;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nouveau)) { window.alert("Adresse email invalide."); return; }
-  var res = await supabaseClubbeur.auth.updateUser({ email: nouveau });
+  /* emailRedirectTo : sans lui, le lien de confirmation renvoyait sur le
+     « Site URL » de la base clubbeur -- viralnight-pwa.vercel.app, l'ancienne
+     appli -- et le changement ne se voyait jamais ici. */
+  var res = await supabaseClubbeur.auth.updateUser(
+    { email: nouveau },
+    { emailRedirectTo: (BASE_API || window.location.origin) + "/app-preview.html" }
+  );
   if (res.error) {
     // Supabase repond en anglais : on traduit les cas courants.
     var m = res.error.message || "";

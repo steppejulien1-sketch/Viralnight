@@ -2,11 +2,32 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#120d0d" />
     <meta name="color-scheme" content="dark" />
     <meta name="robots" content="noindex" />
-    <title>Noctify — appli club (maquette)</title>
+    <title>Noctify club</title>
+    <script>
+      /* 16/09/2026. Sur un telephone, le gerant voyait la MAQUETTE : un
+         telephone dessine de 360 px dans son propre ecran, coupe en haut,
+         sous « Maquette interactive · 25 août 2026 ». C'est pourtant ici
+         qu'arrivent les liens d'invitation. Comme app-preview.html :
+         .mode-appli posee avant la premiere peinture fait tomber
+         l'habillage. En plus des cas installes (PWA, ecran d'accueil,
+         Capacitor, ?app=1), tout ecran etroit passe en appli : le
+         telephone dessine n'a de sens que sur un ordinateur. */
+      (function () {
+        var enAppli =
+          (window.matchMedia &&
+            (matchMedia("(display-mode: standalone)").matches ||
+              matchMedia("(display-mode: fullscreen)").matches ||
+              matchMedia("(max-width: 520px)").matches)) ||
+          window.navigator.standalone === true ||
+          typeof window.Capacitor !== "undefined" ||
+          location.search.indexOf("app=1") !== -1;
+        if (enAppli) document.documentElement.classList.add("mode-appli");
+      })();
+    </script>
     <!-- Les memes deux polices que l'appli clubbeur : c'est la meme
          marque, et c'est ce qui separe une application d'une page web.
          Inter puis la pile systeme en repli nomme -- sur le wifi d'un
@@ -76,6 +97,20 @@
         padding: 5px; flex: 0 0 auto;
         box-shadow: 0 44px 100px -26px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.08);
       }
+      /* Mode appli (voir le script du <head>) : plein ecran, sans cadre. */
+      html.mode-appli, html.mode-appli body {
+        height: 100%; overflow: hidden; overscroll-behavior: none;
+        background: #f9f6f1; -webkit-tap-highlight-color: transparent;
+      }
+      html.mode-appli .wrap { max-width: none; margin: 0; padding: 0; }
+      html.mode-appli .wrap > *:not(.stage) { display: none; }
+      html.mode-appli .stage { display: block; padding: 0; }
+      html.mode-appli .phone {
+        width: 100%; height: 100vh; height: 100dvh;
+        border-radius: 0; padding: env(safe-area-inset-top) 0 0; box-shadow: none; background: #f9f6f1;
+      }
+      html.mode-appli .screen { border-radius: 0; }
+      html.mode-appli .tabs { padding-bottom: env(safe-area-inset-bottom); height: calc(88px + env(safe-area-inset-bottom)); }
       /* ---- La palette ----
          CLAIRE, PARTOUT. Trois allers-retours en une journee, et c'est
          Julien qui tranche a chaque fois :
@@ -2399,13 +2434,11 @@
   </head>
   <body>
     <div class="wrap">
-      <span class="kicker">Maquette interactive · appli club · 25 août 2026</span>
       <h1>Noctify, côté club.</h1>
       <p class="lede">
-        Même esprit que l'appli clubbeur juste au-dessus (mockup téléphone, onglets du
-        bas) — mais pour le gérant : voir ce que génère son club, régler sa boutique de
-        récompenses, gérer Instagram. Données réelles dès l'ouverture :
-        connecte-toi avec ton compte club habituel.
+        Ce que génère ton club, ta boutique de récompenses et ton Instagram, au même
+        endroit. Connecte-toi avec ton compte club. Sur ton téléphone, l'appli s'ouvre
+        en plein écran.
       </p>
 
       <div class="stage">
@@ -3743,6 +3776,23 @@
           var b = ev.currentTarget;
           var msg = $("#accueil-msg");
           b.disabled = true;
+          /* ⚠️ Un fournisseur desactive dans Supabase ne rend PAS d'erreur
+             ici : le navigateur part sur /authorize et tombe sur une page
+             JSON brute (« provider is not enabled »). C'etait le cas
+             d'Apple (16/09/2026). On demande d'abord a Supabase ce qui est
+             actif -- meme principe que fournisseursActifs cote clubbeur. */
+          try {
+            var reglages = await fetch(import.meta.env.VITE_SUPABASE_URL + "/auth/v1/settings", {
+              headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY },
+            }).then(function (r) { return r.json(); });
+            if (reglages && reglages.external && reglages.external[fournisseur] === false) {
+              b.disabled = false;
+              msg.style.display = "block";
+              msg.style.color = "var(--accent-fort)";
+              msg.textContent = repli;
+              return;
+            }
+          } catch (e) {}
           var { error } = await supabase.auth.signInWithOAuth({
             provider: fournisseur,
             options: { redirectTo: urlDeRetour() },
