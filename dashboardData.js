@@ -304,7 +304,12 @@ export async function fetchDashboardData(supabase, isSupabaseConfigured, options
     };
   }
 
-  if (isNoctifyAdmin(session) && !ownerEmail) {
+  // Le compte admin qui a cree SON etablissement (appli des gerants, 17/09/2026)
+  // se lit comme un gerant ; sans etablissement, il garde le choix du client.
+  const lienAdmin = isNoctifyAdmin(session) && !ownerEmail
+    ? await supabase.from("establishment_owners").select("establishment_id").eq("id", session.user.id).maybeSingle()
+    : null;
+  if (isNoctifyAdmin(session) && !ownerEmail && !lienAdmin?.data?.establishment_id) {
     return {
       ...fallbackDashboardData,
       reason: "admin_select_client",

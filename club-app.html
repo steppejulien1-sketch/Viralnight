@@ -2652,6 +2652,8 @@
       .pa-fiche li svg { flex: 0 0 auto; width: 17px; height: 17px; margin-top: 1px; fill: none; stroke: var(--ink3); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       .pa-manuel-lien { display: block; margin: 0 0 16px; padding: 6px 0; border: 0; background: none; font-family: inherit; font-size: 13.5px; font-weight: 650; color: var(--ink2); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
       .pa-manuel[hidden] { display: none; }
+      /* 17/09/2026, Julien : « Bienvenue sur Noctify » sur une seule ligne. */
+      .pa-etape[data-pas="1"] .pa-titre { white-space: nowrap; font-size: clamp(22px, 7.4vw, 30px); }
     </style>
   </head>
   <body>
@@ -2896,7 +2898,7 @@
                            de l'exploitant : ce que SES clients font, ce
                            que LUI donne, ce qu'il recupere. Pas de verbe a
                            l'imperatif, pas de promesse chiffree. -->
-                      <p class="pa-sous">Tes clients publient tes soirées, tu leur offres une récompense, et tu vois exactement ce que ça t'a rapporté.</p>
+                      <p class="pa-sous">Tes clients partagent ton établissement, tu leur offres une récompense, et tu vois exactement combien de vues ça t'a rapporté.</p>
 
                       <div class="accueil-actions pa-arrive">
                         <!-- Apple AVANT Google, comme cote clubbeur.
@@ -2905,10 +2907,6 @@
                              gestionnaire retombe alors sur le meme
                              message que l'appli clubbeur, plutot que de
                              laisser un bouton mort. -->
-                        <button type="button" class="ac-btn ac-btn-apple" id="accueil-apple">
-                          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.462 2.15-1.213 2.94-.822.86-2.17 1.53-3.29 1.44-.14-1.09.45-2.24 1.19-2.99.83-.86 2.28-1.5 3.31-1.39zm4.29 16.6c-.4.93-.6 1.34-1.12 2.16-.72 1.15-1.74 2.58-3 2.59-1.12.01-1.41-.73-2.93-.72-1.52.01-1.84.73-2.96.72-1.26-.01-2.23-1.31-2.95-2.46-2.02-3.2-2.23-6.95-.99-8.95.88-1.42 2.27-2.25 3.58-2.25 1.33 0 2.17.73 3.27.73 1.07 0 1.72-.73 3.27-.73 1.17 0 2.4.64 3.28 1.74-2.88 1.58-2.41 5.7.55 6.97-.32.9-.72 1.5-.99 2.2z"/></svg>
-                          Continuer avec Apple
-                        </button>
                         <button type="button" class="ac-btn ac-btn-google" id="accueil-google">
                           <svg viewBox="0 0 48 48" aria-hidden="true">
                             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -2917,6 +2915,10 @@
                             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                           </svg>
                           Continuer avec Google
+                        </button>
+                        <button type="button" class="ac-btn ac-btn-apple" id="accueil-apple">
+                          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.462 2.15-1.213 2.94-.822.86-2.17 1.53-3.29 1.44-.14-1.09.45-2.24 1.19-2.99.83-.86 2.28-1.5 3.31-1.39zm4.29 16.6c-.4.93-.6 1.34-1.12 2.16-.72 1.15-1.74 2.58-3 2.59-1.12.01-1.41-.73-2.93-.72-1.52.01-1.84.73-2.96.72-1.26-.01-2.23-1.31-2.95-2.46-2.02-3.2-2.23-6.95-.99-8.95.88-1.42 2.27-2.25 3.58-2.25 1.33 0 2.17.73 3.27.73 1.07 0 1.72-.73 3.27-.73 1.17 0 2.4.64 3.28 1.74-2.88 1.58-2.41 5.7.55 6.97-.32.9-.72 1.5-.99 2.2z"/></svg>
+                          Continuer avec Apple
                         </button>
 
                         <p class="ac-sep">ou par email</p>
@@ -4230,7 +4232,9 @@
         // seule action qui debloque la suite : nommer son club.
         // Un compte sans club : c'est exactement l'etape 2 du parcours,
         // "Ton club". Plus besoin d'un ecran de rattrapage a part.
-        if (data.session && data.reason === "no_establishment") {
+        // 17/09/2026 : le compte admin de Julien, connecte par Google, tombait sur la
+        // demonstration (« admin_select_client ») et semblait ne pas etre connecte.
+        if (data.session && (data.reason === "no_establishment" || data.reason === "admin_select_client")) {
           ETAT.session = data.session;
           ETAT.data = data;
           ACCUEIL.classList.add("masque");
