@@ -106,6 +106,7 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
     etape = "reglages suppression";
     await cliquer("#rg-supprimer-compte");
     await pause(1500);
+    if (CAPTURES) await page.screenshot({ path: `${CAPTURES}/13-suppression.png` });
     bilan.etapes.push({ nom: "feuille suppression", garder: await visible("#sup-garder"), supprimer: await visible("#sup-supprimer") });
     await cliquer("#sup-fermer");
     await pause(800);

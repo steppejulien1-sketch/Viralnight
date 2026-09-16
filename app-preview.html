@@ -5681,7 +5681,10 @@
       .sup-confirmer:not(:disabled):active { transform: scale(.985); }
       /* 16/09/2026, Julien : pas de « Garder mon compte », la croix suffit.
          La suppression devient le seul bouton, en rouge marque. */
-      .sup-confirmer.sup-rouge { background: var(--marque, #de3131); color: #fff; }
+      /* Pas le rouge des cadeaux (Julien, 16/09/2026) : --marque sert aux
+         boutons qui DONNENT (Récupérer). Supprimer prend un rouge sombre a
+         part, qu'on ne confond pas avec une bonne nouvelle. */
+      .sup-confirmer.sup-rouge { background: var(--danger, #9f1c1c); color: #fff; }
       /* Ce qu'on perdrait, en grand : c'est ce qui fait rester. */
       .sup-solde { display: flex; align-items: baseline; gap: 10px; margin: 0 0 18px; padding: 16px 18px; border-radius: 16px; background: var(--s2); }
       .sup-solde strong { font-family: var(--chiffre); font-size: calc(40 * var(--u)); font-weight: 800; letter-spacing: -.04em; line-height: 1; color: var(--ink); }
@@ -5907,8 +5910,10 @@
       /* Les deux sorties en rouge, sans phrase dessous (Julien, 15/09/2026 :
          « supprimer le compte mets en rouge et se deconnecter aussi, et ne
          mets pas une explication bizarre en dessous »). */
-      #rg-deconnexion .rg-ligne-txt strong, #rg-supprimer-compte .dp-supprimer-txt strong { color: var(--marque, #de3131); }
-      #rg-supprimer-compte .dp-supprimer-ico, #rg-supprimer-compte .pf-item-chev { stroke: var(--marque, #de3131); }
+      #rg-deconnexion .rg-ligne-txt strong { color: var(--marque, #de3131); }
+      /* Meme rouge sombre que le bouton de la feuille de suppression. */
+      #rg-supprimer-compte .dp-supprimer-txt strong { color: var(--danger, #9f1c1c); }
+      #rg-supprimer-compte .dp-supprimer-ico, #rg-supprimer-compte .pf-item-chev { stroke: var(--danger, #9f1c1c); }
 
       /* Inviter : le gain en grand, sous le titre. */
       .iv-gain {
@@ -14889,6 +14894,8 @@ function jetonAppareil() {
 
 // Ce que la carte propose en ce moment : "bienvenue" ou "jour".
 var modeCadeau = null;
+// La page de bienvenue ne s'ouvre d'elle-meme qu'une fois par lancement.
+var bienvenueProposee = false;
 
 async function verifierCadeau() {
   if (!CADEAU || !supabaseClubbeur) return;
@@ -14898,14 +14905,22 @@ async function verifierCadeau() {
      cadeaux quotidiens. */
   var bv = await supabaseClubbeur.rpc("welcome_bonus_status", { p_device: jetonAppareil() });
   if (!bv.error && bv.data && bv.data.etat === "disponible") {
-    modeCadeau = "bienvenue";
-    CADEAU.classList.add("bienvenue");
-    CADEAU.classList.remove("message");
-    $("#cadeau-titre").textContent = "Bienvenue";
-    $("#cadeau-montant").textContent = nb(bv.data.points) + " points";
-    $("#cadeau-sous").hidden = true;
-    CADEAU_BTN.textContent = "Récupérer";
-    CADEAU.hidden = false;
+    /* 16/09/2026, Julien : le cadeau de bienvenue « on est cense l'avoir
+       dans le parcours », pas en carte dans Recompenses. Un compte qui ne
+       l'a pas encore pris (parcours saute, compte cree avant) voit donc la
+       page photo du parcours, une fois par ouverture de l'appli -- jamais
+       la carte. Le leger delai laisse poursuivreParcours() ouvrir la
+       feuille s'il a lui-meme quelque chose a demander. */
+    CADEAU.hidden = true;
+    if (bienvenueProposee) return;
+    bienvenueProposee = true;
+    setTimeout(async function () {
+      if (OB.ouverte) return;
+      if (!(await lireCadeauOb())) return;
+      OB.suite = ["bienvenue"];
+      VUE_ACCUEIL.classList.add("masque");
+      ouvrirFeuilleOb("bienvenue");
+    }, 1500);
     return;
   }
 
