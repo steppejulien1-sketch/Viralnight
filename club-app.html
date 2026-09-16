@@ -3633,14 +3633,21 @@
         return url.toString();
       }
 
-      async function slugClubbeur(nomClub) {
+      /* Par establishment_id d'abord (16/09/2026) : la recherche par NOM
+         echouait des que deux clubs portaient le meme nom (maybeSingle
+         leve sur deux lignes) et des que le gerant renommait son club. */
+      async function slugClubbeur(nomClub, idEtab) {
         // Hors session, tout l'ecran est une demo : inutile d'interroger
         // la vraie base pour un club qui n'est pas le sien.
         if (estDemo()) return "demo";
-        if (!nomClub) return null;
         try {
-          var res = await supabaseClubbeur.from("clubs").select("slug").eq("name", nomClub).maybeSingle();
-          return (res.data && res.data.slug) || null;
+          if (idEtab) {
+            var parId = await supabaseClubbeur.from("clubs").select("slug").eq("establishment_id", idEtab).limit(1);
+            if (parId.data && parId.data[0]) return parId.data[0].slug;
+          }
+          if (!nomClub) return null;
+          var res = await supabaseClubbeur.from("clubs").select("slug").eq("name", nomClub).limit(1);
+          return (res.data && res.data[0] && res.data[0].slug) || null;
         } catch (erreur) {
           return null;
         }
@@ -5229,7 +5236,18 @@
         }
 
         var nomClub = (etab.name || "").trim();
-        var slug = await slugClubbeur(nomClub);
+        var slug = await slugClubbeur(nomClub, etab.id);
+
+        /* Club tout neuf : il n'existe cote clubbeurs qu'apres une
+           synchronisation de la boutique -- que rien ne declenchait tant
+           que le gerant ne touchait pas a ses recompenses. L'affiche
+           restait vide avec la promesse « sous 24 h », que rien ne tenait.
+           On ouvre le club maintenant (sync-boutique le cree), puis on
+           relit. */
+        if (!slug && ETAT.session && ETAT.data.source !== "demo") {
+          await synchroniserBoutique();
+          slug = await slugClubbeur(nomClub, etab.id);
+        }
 
         // Sans slug, le club n'existe pas encore cote clubbeurs : le QR
         // ouvrirait une appli qui ne saurait pas a qui creder le scan.
@@ -5241,7 +5259,7 @@
           $("#affiche-telecharger").hidden = true;
           msg.style.display = "block";
           msg.style.color = "var(--accent-fort)";
-          msg.textContent = "Ton affiche n'est pas encore prête : ton club vient d'être créé, il apparaît dans l'appli de tes clients sous 24 h.";
+          msg.textContent = "Ton affiche n'est pas encore prête. Réessaie dans un instant, ou écris-nous si ça dure.";
           return;
         }
 

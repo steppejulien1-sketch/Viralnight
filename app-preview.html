@@ -9832,22 +9832,50 @@ async function creditScanUrl() {
     // L'URL est nettoyee tout de suite : un rechargement ne doit pas
     // rejouer le scan, et le slug n'a plus rien a faire dans la barre
     // d'adresse une fois lu.
-    history.replaceState(null, "", location.pathname + location.hash);
+    // Seul « club » part : ?app=1 doit rester, sinon un rechargement
+    // retombait sur la page de demonstration.
+    params.delete("club");
+    var reste = params.toString();
+    history.replaceState(null, "", location.pathname + (reste ? "?" + reste : "") + location.hash);
   } else {
     try { slug = sessionStorage.getItem(CLE_SCAN_EN_ATTENTE); } catch (e) {}
   }
-  if (!slug) return;
+  if (!slug || scanUrlEnCours) return;
+  /* Deux appels se croisent a l'ouverture (chargement + onAuthStateChange) :
+     le premier creditait les +15, le second repondait « deja recupere » et
+     son message ecrasait celui du gain. Un seul a la fois. */
+  scanUrlEnCours = true;
 
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
-  if (!session) return; // on retentera apres la connexion
+  if (!session) { scanUrlEnCours = false; return; } // on retentera apres la connexion
 
   try { sessionStorage.removeItem(CLE_SCAN_EN_ATTENTE); } catch (e) {}
+  try {
+    await crediterScanUrl(slug, session);
+  } finally {
+    scanUrlEnCours = false;
+  }
+}
 
+var scanUrlEnCours = false;
+
+async function crediterScanUrl(slug, session) {
   var res = await supabaseClubbeur.rpc("checkin_scan", { p_club_slug: String(slug).trim().toLowerCase() });
-  if (res.error || !(res.data && res.data[0])) return;
+  var ligne = res.data && res.data[0];
+  /* Le QR de l'affiche ouvre l'appli par l'appareil photo du telephone, pas
+     par le viseur de l'appli : c'est le chemin de presque tout le monde. Il
+     ne disait RIEN -- ni les +15 points, ni un QR inconnu. Memes messages
+     que le viseur (traiterCode). */
+  if (res.error || !ligne) {
+    pasEncore("QR non reconnu. Vérifie l'établissement.");
+    return;
+  }
 
   activerVue("boutique");
   await chargerSoldeReel(session.user.id);
+  pasEncore(ligne.deja_recupere
+    ? "Bienvenue " + auClub(ligne.club_nom) + " ! Bonus déjà récupéré ce soir."
+    : "+" + ligne.points + " points pour ton arrivée " + auClub(ligne.club_nom) + " !");
 }
 
 creditScanUrl();
@@ -15998,13 +16026,20 @@ function confettis() {
 // atomique. Avant, ce code (nouveauCode()) n'ecrivait jamais rien en
 // base -- un "bon" qui n'existait que dans le navigateur.
 async function echanger(item) {
-  var res = await supabaseClubbeur.rpc("redeem_reward", { p_reward_id: item.id });
+  /* ⚠️ Le parametre s'appelle p_reward en base (16/09/2026). L'appli
+     envoyait p_reward_id : PostgREST ne trouvait aucune fonction a ce nom
+     et TOUT echange repondait « Ça n'a pas marché ». Les codes d'erreur
+     ci-dessous sont ceux que redeem_reward leve vraiment. */
+  var res = await supabaseClubbeur.rpc("redeem_reward", { p_reward: item.id });
   if (res.error) {
     var messages = {
       not_authenticated: "Ta session a expiré, reconnecte-toi.",
-      recompense_introuvable: "Cette récompense n'est plus disponible.",
-      stock_epuise: "Épuisé, quelqu'un vient de prendre le dernier.",
-      solde_insuffisant: "Tu n'as pas encore assez de points.",
+      reward_not_found: "Cette récompense n'est plus disponible.",
+      reward_inactive: "Cette récompense n'est plus disponible.",
+      reward_out_of_window: "Cette récompense n'est pas disponible en ce moment.",
+      out_of_stock: "Épuisé, quelqu'un vient de prendre le dernier.",
+      insufficient_points: "Tu n'as pas encore assez de points.",
+      level_too_low: "Cette récompense se débloque à un niveau supérieur.",
     };
     pasEncore(messages[res.error.message] || "Ça n'a pas marché. Réessaie dans un instant.");
     return;
