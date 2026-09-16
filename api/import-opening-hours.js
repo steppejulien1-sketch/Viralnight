@@ -95,6 +95,11 @@ async function actionFiche(request, response, body) {
   const { data: qui, error: erreurQui } = await supabase.auth.getUser(token);
   if (erreurQui || !qui?.user) return json(response, { error: "Session invalide." }, 401);
 
+  // Sans cle Places, rien a lire : l'appli bascule sur la saisie a la main.
+  if (!process.env.GOOGLE_PLACES_API_KEY) {
+    return json(response, { error: "La récupération depuis Google n'est pas encore active. Remplis tes infos à la main.", manuel: true }, 503);
+  }
+
   let fiche;
   try {
     fiche = await lireFicheGoogle(googleUrl, process.env.GOOGLE_PLACES_API_KEY);

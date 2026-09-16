@@ -51,6 +51,22 @@ async function session(email) {
     page.on("console", (m) => { if (m.type() === "error") bilan.console.push(`[${etape}] ${m.text().slice(0, 200)}`); });
     page.on("response", (r) => { if (r.status() >= 400 && /supabase|\/api\//.test(r.url())) bilan.requetes.push(`[${etape}] ${r.status()} ${r.request().method()} ${r.url().slice(0, 150)}`); });
 
+    // VN_FICHE_SIMULEE=1 : la reponse de Google est simulee (utile tant que
+    // GOOGLE_PLACES_API_KEY n'est pas posee sur Vercel).
+    if (process.env.VN_FICHE_SIMULEE) {
+      await page.setRequestInterception(true);
+      page.on("request", (req) => {
+        if (req.method() === "POST" && req.url().includes("/api/import-opening-hours") && /"action":"fiche"/.test(req.postData() || "")) {
+          const h = (w, o, c) => ({ weekday: w, isOpen: o, opensAt: o ? c[0] : null, closesAt: o ? c[1] : null });
+          return req.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, fiche: {
+            placeId: "ChIJpwov02LDw0cRA9JgUbYb7jc", nom: "Mirano", adresse: "Chau. de Louvain 38, 1210 Saint-Josse-ten-Noode", ville: "Saint-Josse-ten-Noode",
+            lat: 50.84937, lng: 4.37139, type: "club", telephone: "02 227 39 70", nbPhotos: 10,
+            horaires: [h(0, false), h(1, false), h(2, false), h(3, false), h(4, true, ["21:00", "04:00"]), h(5, true, ["23:00", "06:00"]), h(6, true, ["23:00", "06:00"])],
+          } }) });
+        }
+        req.continue();
+      });
+    }
     etape = "ouverture";
     await page.goto(`${SITE}/club-app.html`, { waitUntil: "domcontentloaded" });
     await page.evaluate((cle, val) => localStorage.setItem(cle, val), `sb-${B.REF}-auth-token`, JSON.stringify(s));
