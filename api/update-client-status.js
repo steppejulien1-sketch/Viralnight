@@ -28,6 +28,7 @@ import {
    GET  ?action=pilotage        le tableau de bord de pilotage.html : les DEUX bases
    POST ?action=pilotage-repondre  repondre a un clubbeur depuis le tableau de bord
    POST ?action=pilotage-valider   valider ou refuser une story / un post
+   POST ?action=pilotage-effacer   effacer une conversation du support (probleme regle)
 
    Greffe ici plutot que dans un nouveau fichier : le plan Hobby plafonne a
    12 fonctions serverless et api/ y est deja (voir CLAUDE.md). Ce fichier
@@ -96,13 +97,14 @@ async function verifierAdmin(request) {
 export default async function handler(request, response) {
   const action = new URL(request.url, "http://localhost").searchParams.get("action");
 
-  if (action === "pilotage" || action === "pilotage-repondre" || action === "pilotage-valider") {
+  if (action === "pilotage" || action === "pilotage-repondre" || action === "pilotage-valider" || action === "pilotage-effacer") {
     const attendu = action === "pilotage" ? "GET" : "POST";
     if (request.method !== attendu) return json(response, { error: "Method not allowed" }, 405);
     const admin = await verifierAdmin(request);
     if (admin.error) return json(response, { error: admin.error }, admin.status);
     if (action === "pilotage") return actionPilotage(response, admin.supabase);
     if (action === "pilotage-valider") return actionValider(request, response, admin.supabase);
+    if (action === "pilotage-effacer") return actionEffacerConversation(request, response);
     return actionRepondre(request, response);
   }
 
@@ -378,7 +380,11 @@ async function actionPilotage(response, b2b) {
 
   const supportClients = support.filter(externe);
   const avis = syntheseAvis(supportClients);
-  const fils = filsSupport(supportClients, profils);
+  /* Les fils des comptes de Julien s'affichent aussi (il teste le support
+     avec eux), marques « Test » ; seuls ceux des clients comptent dans
+     « a traiter ». */
+  const fils = filsSupport(support.filter((m) => !/@viralnight\.test$/i.test(profils[m.user_id]?.email || "")), profils)
+    .map((f) => ({ ...f, interne: internes.has(f.user_id) }));
   const plateformes = { iphone: 0, android: 0, ordinateur: 0, autre: 0 };
   for (const i of installations) plateformes[plateformes[i.plateforme] === undefined ? "autre" : i.plateforme] += 1;
 
@@ -448,8 +454,8 @@ async function actionPilotage(response, b2b) {
       commentaires: avis.commentaires.slice(0, 12).map((c) => ({ ...c, pseudo: profils[c.user_id]?.pseudo || null, user_id: undefined })),
     },
     support: {
-      aRepondre: fils.filter((f) => f.aRepondre).length,
-      total: fils.length,
+      aRepondre: fils.filter((f) => f.aRepondre && !f.interne).length,
+      total: fils.filter((f) => !f.interne).length,
       fils: fils.slice(0, 40).map((f) => ({ ...f, messages: f.messages.slice(-30) })),
     },
     clubs: {
@@ -564,4 +570,35 @@ async function actionValider(request, response, b2b) {
   const r = await deciderStory({ clubbeur: cb, gerants: b2b, storyId: id, approve });
   if (!r.ok) return json(response, { error: r.message }, r.code === "deja" ? 409 : r.code === "introuvable" ? 404 : 500);
   return json(response, { ok: true, points: r.points, notifie: r.notifie });
+}
+
+/* Effacer une conversation du support une fois le probleme regle (Julien,
+   16/09/2026 : « une fois le probleme regle, il faut que la conversation
+   s'efface »). Seuls les MESSAGES partent : les avis sur l'appli, ranges dans
+   la meme table, restent (ils nourrissent la rubrique Avis). Le clubbeur
+   retrouve un Aide & Support vierge, avec les questions. */
+async function actionEffacerConversation(request, response) {
+  let corps = {};
+  try {
+    corps = await readBody(request);
+  } catch {
+    return json(response, { error: "Invalid JSON body" }, 400);
+  }
+  const userId = String(corps.userId || "");
+  if (!/^[0-9a-f-]{36}$/i.test(userId)) return json(response, { error: "Conversation invalide" }, 400);
+  let cb;
+  try {
+    cb = getSupabaseClubbeurAdmin();
+  } catch {
+    return json(response, { error: "Configuration serveur incomplete" }, 500);
+  }
+  const { data, error } = await cb
+    .from("support_messages")
+    .delete()
+    .eq("user_id", userId)
+    .not("message", "like", "Avis sur l'appli%")
+    .not("message", "like", "Commentaire sur l'appli%")
+    .select("id");
+  if (error) return json(response, { error: error.message }, 500);
+  return json(response, { ok: true, effaces: (data || []).length });
 }

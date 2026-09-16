@@ -6,7 +6,7 @@
 // Les cas « De quoi parle le client » sont la mesure de l'efficacite : chaque
 // message qu'un vrai client a mal fait comprendre au robot doit finir ici.
 
-import { doitRepondre, repondre, messageEnregistre, classer, REPONSES_MAX_24H } from "../lib/support/reponseAuto.js";
+import { doitRepondre, repondre, messageEnregistre, classer, eviterRepetition, ACCUSE_TRANSMIS, REPONSES_MAX_24H } from "../lib/support/reponseAuto.js";
 
 let passed = 0, failed = 0;
 function check(nom, ok, detail) {
@@ -324,6 +324,18 @@ rep = repondre("tu connais une bonne pizzeria", compte, MAINTENANT);
 check("rien de reconnu -> transmis", rep.transmettre);
 check("compte vide sans planter", typeof repondre("[Points] ?", {}, MAINTENANT).texte === "string");
 check("aucune reponse ne contient d'e-mail ou d'id", CAS.every(([m]) => !/@viralnight|[0-9a-f]{8}-[0-9a-f]{4}/.test(repondre(m, compte, MAINTENANT).texte)));
+
+console.log("\nPas de radotage (Julien : MAIS TGL, MAIS QUOI CRETIN)");
+check("« MAIS TGL » -> colere", repondre("[Points] MAIS TGL", {}, MAINTENANT).intention === "colere");
+check("« MAIS QUOI CRETIN » -> colere", repondre("[Points] MAIS QUOI CRETIN", {}, MAINTENANT).intention === "colere");
+const deja = { texte: "Ton solde est de 50 points.", transmettre: true };
+const filAvant = [{ auteur: "client", message: "encore" }, { auteur: "ia", message: "[Transmis] Ton solde est de 50 points." }];
+check("meme reponse que la precedente -> accuse reception", eviterRepetition(deja, filAvant).texte === ACCUSE_TRANSMIS);
+const filAccuse = [{ auteur: "client", message: "??" }, { auteur: "ia", message: "[Transmis] " + ACCUSE_TRANSMIS }];
+check("accuse deja envoye + nouvelle transmission -> silence", eviterRepetition(deja, filAccuse) === null);
+check("accuse deja envoye + vraie reponse differente -> repond", eviterRepetition({ texte: "Autre chose.", transmettre: false }, filAccuse).texte === "Autre chose.");
+check("reponse differente -> inchangee", eviterRepetition({ texte: "Autre.", transmettre: false }, filAvant).texte === "Autre.");
+check("Julien a repondu entre-temps -> inchangee", eviterRepetition(deja, [{ auteur: "client", message: "x" }, { auteur: "admin", message: "ok" }, { auteur: "ia", message: "[Transmis] Ton solde est de 50 points." }]).texte === deja.texte);
 
 console.log("\nEnregistrement");
 check("transmis -> etiquette", messageEnregistre({ texte: "Je transmets.", transmettre: true }) === "[Transmis] Je transmets.");

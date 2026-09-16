@@ -29,7 +29,7 @@ import { timingSafeEqual } from "node:crypto";
 import { envoyerEmail } from "../lib/notifications/email.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
-import { doitRepondre, repondre, messageEnregistre } from "../lib/support/reponseAuto.js";
+import { doitRepondre, repondre, messageEnregistre, eviterRepetition } from "../lib/support/reponseAuto.js";
 
 const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
@@ -508,7 +508,8 @@ async function repondreAutomatiquement(clubbeur, userId, derniers) {
     };
     // Les messages client d'avant : « et c'est quand ? » reprend leur sujet.
     const precedents = derniers.slice(1).filter((m) => m.auteur === "client").map((m) => m.message);
-    const reponse = repondre(derniers[0].message, compte, new Date(), precedents);
+    const reponse = eviterRepetition(repondre(derniers[0].message, compte, new Date(), precedents), derniers);
+    if (!reponse) return { erreur: "deja_transmis" };
     const { error } = await clubbeur.from("support_messages").insert({ user_id: userId, auteur: "ia", message: messageEnregistre(reponse) });
     if (error) {
       console.error("[support-auto] enregistrement", error.message);

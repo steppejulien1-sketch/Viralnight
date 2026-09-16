@@ -626,7 +626,7 @@ function rendreSupport() {
         const extrait = dernier.message.replace(/^\[[^\]]{1,40}\]\s*/, "");
         return `<div class="pl-fil">
           <button type="button" class="pl-fil-tete" data-fil="${esc(f.user_id)}" aria-expanded="${ouvert}">
-            <span class="pl-fil-qui">${qui}${f.email ? ` <em>${esc(f.email)}</em>` : ""}${f.aRepondre ? '<span class="pl-a-repondre">À traiter</span>' : ""}</span>
+            <span class="pl-fil-qui">${qui}${f.email ? ` <em>${esc(f.email)}</em>` : ""}${f.interne ? '<span class="pl-sujet">Test</span>' : ""}${f.aRepondre && !f.interne ? '<span class="pl-a-repondre">À traiter</span>' : ""}</span>
             <span class="pl-fil-date">${esc(dateCourte(f.dernier))}</span>
             <span class="pl-fil-extrait">${f.sujet ? `<span class="pl-sujet">${esc(f.sujet)}</span>` : ""}${dernier.auteur === "admin" ? "Toi : " : dernier.auteur === "ia" ? "Auto : " : ""}${esc(extrait)}</span>
           </button>
@@ -634,7 +634,7 @@ function rendreSupport() {
             <div class="pl-bulles">${f.messages.map((m) => `<div class="pl-bulle ${m.auteur}">${esc(m.message)}<small>${m.auteur === "admin" ? "Toi · " : m.auteur === "ia" ? "Auto · " : ""}${esc(dateCourte(m.date))}</small></div>`).join("")}</div>
             <form class="pl-repondre" data-user="${esc(f.user_id)}">
               <textarea data-user="${esc(f.user_id)}" maxlength="2000" placeholder="Ta réponse…" aria-label="Réponse à ${qui}"></textarea>
-              <div class="pl-repondre-ligne"><span class="pl-repondre-etat"></span><button type="submit" class="pl-bouton">Envoyer la réponse</button></div>
+              <div class="pl-repondre-ligne"><span class="pl-repondre-etat"></span><button type="button" class="pl-bouton pl-effacer" data-user="${esc(f.user_id)}">Effacer la conversation</button><button type="submit" class="pl-bouton">Envoyer la réponse</button></div>
             </form>
           </div>
         </div>`;
@@ -685,6 +685,33 @@ document.addEventListener("submit", async (evenement) => {
     etat.textContent = `Pas envoyé : ${e.message}`;
   } finally {
     bouton.disabled = false;
+  }
+});
+
+/* Effacer une conversation reglee : un premier clic arme le bouton
+   (« Confirmer l'effacement »), un second efface. Pas de window.confirm, qui
+   bloque la page. */
+document.addEventListener("click", async (evenement) => {
+  const bouton = evenement.target.closest(".pl-effacer");
+  if (!bouton) return;
+  evenement.preventDefault();
+  if (!bouton.classList.contains("arme")) {
+    bouton.classList.add("arme");
+    bouton.textContent = "Confirmer l'effacement";
+    setTimeout(() => { if (bouton.isConnected && bouton.classList.contains("arme")) { bouton.classList.remove("arme"); bouton.textContent = "Effacer la conversation"; } }, 4000);
+    return;
+  }
+  bouton.disabled = true;
+  bouton.textContent = "Effacement…";
+  try {
+    await appelApi(`${API}?action=pilotage-effacer`, { method: "POST", body: JSON.stringify({ userId: bouton.dataset.user }) });
+    filsOuverts.delete(bouton.dataset.user);
+    brouillons.delete(bouton.dataset.user);
+    await charger();
+  } catch (e) {
+    bouton.disabled = false;
+    bouton.classList.remove("arme");
+    bouton.textContent = `Pas effacé : ${e.message}`;
   }
 });
 
