@@ -479,14 +479,22 @@ async function repondreAutomatiquement(clubbeur, userId, derniers) {
   try {
     const decision = doitRepondre(derniers);
     if (!decision.repondre) return { erreur: decision.raison };
-    const [profil, stories, gains, bons, cadeaux, parrainages] = await Promise.all([
+    const [profil, stories, gains, bons, cadeaux, parrainages, bienvenue, clubs] = await Promise.all([
       clubbeur.from("users").select("handle, points_balance, lifetime_points, created_at").eq("id", userId).maybeSingle(),
       clubbeur.from("story_events").select("mentioned_at, review_status, awarded_points, clubs(name)").eq("user_id", userId).order("mentioned_at", { ascending: false }).limit(3),
-      clubbeur.from("point_grants").select("created_at, amount, source, released, unlocks_at, clubs(name)").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
+      clubbeur.from("point_grants").select("created_at, amount, source, released, unlocks_at, club_id, clubs(name)").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
       clubbeur.from("redemptions").select("redeemed_at, used, rewards(title)").eq("user_id", userId).order("redeemed_at", { ascending: false }).limit(5),
       clubbeur.from("daily_gifts").select("gift_date, amount, jour").eq("user_id", userId).order("gift_date", { ascending: false }).limit(2),
       clubbeur.from("parrainages").select("id", { count: "exact", head: true }).eq("parrain_id", userId),
+      clubbeur.from("welcome_bonuses").select("amount, created_at").eq("user_id", userId).maybeSingle(),
+      clubbeur.from("clubs").select("id, name, city, ig_handle").order("name").limit(30),
     ]);
+    // Les recompenses du dernier etablissement ou il a gagne des points :
+    // « il te manque 435 points pour le coupe-file ».
+    const dernierClub = (gains.data || []).find((g) => g.club_id)?.club_id || clubs.data?.[0]?.id || null;
+    const recompenses = dernierClub
+      ? (await clubbeur.from("rewards").select("title, cost_points").eq("club_id", dernierClub).eq("active", true).order("cost_points")).data || []
+      : [];
     const compte = {
       profil: profil.data,
       stories: (stories.data || []).map((x) => ({ ...x, club: x.clubs?.name })),
@@ -494,8 +502,13 @@ async function repondreAutomatiquement(clubbeur, userId, derniers) {
       bons: (bons.data || []).map((x) => ({ ...x, titre: x.rewards?.title })),
       cadeaux: cadeaux.data || [],
       parrainages: parrainages.count || 0,
+      bienvenue: bienvenue.data || null,
+      clubs: clubs.data || [],
+      recompenses,
     };
-    const reponse = repondre(derniers[0].message, compte);
+    // Les messages client d'avant : « et c'est quand ? » reprend leur sujet.
+    const precedents = derniers.slice(1).filter((m) => m.auteur === "client").map((m) => m.message);
+    const reponse = repondre(derniers[0].message, compte, new Date(), precedents);
     const { error } = await clubbeur.from("support_messages").insert({ user_id: userId, auteur: "ia", message: messageEnregistre(reponse) });
     if (error) {
       console.error("[support-auto] enregistrement", error.message);
