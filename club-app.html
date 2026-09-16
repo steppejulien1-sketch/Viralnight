@@ -1281,6 +1281,45 @@
         --rebond: cubic-bezier(.34, 1.42, .64, 1);
       }
       .parcours[hidden] { display: none; }
+      /* 16/09/2026 : parcours en blanc, sans le bandeau creme de la mascotte --
+         le meme registre que l'appli clubbeur, dont il montre maintenant les cartes. */
+      .parcours { background: #ffffff; }
+      .pa-bandeau { display: none; }
+      .pa-texte { padding-top: 12px; }
+      .pa-titre { font-size: 30px; margin-bottom: 8px; }
+      .pa-sous { font-size: 14.5px; max-width: 36ch; margin-bottom: 22px; }
+
+      .pa-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+      .pa-type {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+        min-height: 84px; padding: 12px 6px; border: 0; border-radius: 16px;
+        background: #ffffff; box-shadow: 0 0 0 1px var(--line); color: var(--ink);
+        font-family: inherit; font-size: 13px; font-weight: 650; cursor: pointer;
+      }
+      .pa-type svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .pa-type.choisi { background: var(--ink); color: #ffffff; box-shadow: none; }
+      .pa-type:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+      /* L'apercu : la carte de la boutique clubbeur, a l'identique. */
+      .parcours .pa-couv { border: 0; border-radius: 20px; background: #16161a; isolation: isolate; }
+      .parcours .pa-couv:not(.remplie) { background: var(--s2); box-shadow: inset 0 0 0 1.5px var(--line2); }
+      .parcours .pa-couv-vue { z-index: 0; }
+      .pa-couv-voile { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.38) 32%, rgba(0,0,0,0) 62%); }
+      .pa-couv:not(.remplie) .pa-couv-voile { background: linear-gradient(to top, rgba(0,0,0,.45), rgba(0,0,0,0) 65%); }
+      .pa-couv-lieu {
+        position: absolute; z-index: 2; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 9px 5px 7px; border-radius: 8px; background: rgba(20,20,22,.62); color: #fff; font-size: 12px; font-weight: 600;
+      }
+      .pa-couv-lieu[hidden] { display: none; }
+      .pa-couv-lieu svg { width: 13px; height: 13px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .pa-couv-texte { position: absolute; z-index: 2; left: 14px; right: 14px; bottom: 12px; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+      .pa-couv-nom { font-size: 21px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .pa-couv-ligne { font-size: 13px; font-weight: 550; color: rgba(255,255,255,.86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .parcours .pa-couv .pa-couv-act {
+        position: absolute; z-index: 2; right: 12px; top: 12px; padding: 6px 11px; border-radius: 99px;
+        background: #ffffff; color: var(--ink); font-size: 12px; font-weight: 700;
+      }
+      .parcours .pa-couv:not(.remplie) .pa-couv-vue svg { margin-bottom: 28px; }
 
       /* ---- La barre du haut ----
          Retour a gauche, avancement au centre, sortie a droite : la
@@ -1563,7 +1602,7 @@
          est cadre ici est ce qui sera vu la-bas. */
       .pa-couv {
         position: relative; display: block; width: 100%; overflow: hidden;
-        margin-bottom: 7px; padding: 0; aspect-ratio: 16 / 9;
+        margin-bottom: 7px; padding: 0; aspect-ratio: 39 / 20;
         border: 1.5px dashed var(--line2); border-radius: 18px;
         background: var(--s2); color: inherit; font-family: inherit; cursor: pointer;
         transition: border-color .15s ease, transform .16s var(--sortie);
@@ -2638,7 +2677,7 @@
                     <p class="pa-compteur">
                       <i>Étape</i>
                       <b id="pa-compteur-n">01</b>
-                      <span>/ 06</span>
+                      <span>/ 07</span>
                     </p>
                   </div>
 
@@ -2727,14 +2766,32 @@
                       </div>
                     </section>
 
-                    <!-- 2 · Le club et ses photos -->
+                    <!-- 2 · L'etablissement. 16/09/2026, Julien : « un vrai parcours adapte a
+                         ce qu'il y a sur l'app maintenant ». L'appli clubbeur range les lieux par
+                         type (Bar, Boite de nuit, Restaurant) et montre l'adresse : on les demande
+                         ici (colonnes establishments.category et address). -->
                     <section class="pa-etape" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <h1 class="pa-titre">Ton club.</h1>
-                      <p class="pa-sous">Son nom, sa ville, et ce à quoi il ressemble.</p>
-
+                      <h1 class="pa-titre">Ton établissement.</h1>
+                      <p class="pa-sous">Ce que tes clients liront sur Noctify.</p>
+                      <p class="pa-legende pa-arrive">C'est un…</p>
+                      <div class="pa-types pa-arrive" id="pa-types" role="radiogroup" aria-label="Type d'établissement">
+                        <button type="button" class="pa-type" data-type="bar" role="radio" aria-checked="false">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14l-7 8z"/><path d="M12 12v8M8 20h8"/></svg>Bar
+                        </button>
+                        <button type="button" class="pa-type" data-type="club" role="radio" aria-checked="false">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>Boîte de nuit
+                        </button>
+                        <button type="button" class="pa-type" data-type="restaurant" role="radio" aria-checked="false">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3H17"/></svg>Restaurant
+                        </button>
+                      </div>
                       <div class="pa-champ pa-arrive">
-                        <label for="pa-nom">Nom du club</label>
+                        <label for="pa-nom">Nom</label>
                         <input class="ac-input" id="pa-nom" type="text" autocomplete="organization" placeholder="Le Mirage" />
+                      </div>
+                      <div class="pa-champ pa-arrive">
+                        <label for="pa-adresse">Adresse</label>
+                        <input class="ac-input" id="pa-adresse" type="text" autocomplete="street-address" placeholder="Rue du Marché au Charbon 12" />
                       </div>
                       <div class="pa-champ pa-arrive">
                         <label for="pa-ville">Ville</label>
@@ -2743,27 +2800,32 @@
                       <div class="pa-champ pa-arrive">
                         <label for="pa-tel">Ton numéro de téléphone</label>
                         <input class="ac-input" id="pa-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0470 12 34 56" />
+                        <span class="pa-aide">Pour te joindre si besoin. Tes clients ne le voient pas.</span>
                       </div>
+                    </section>
 
-                      <!-- La couverture pleine largeur, la galerie dessous.
-                           Une vignette carrée de 58 px ne montrait rien d'une
-                           salle ; c'est pourtant la seule image que le
-                           clubbeur voit avant de venir. -->
-                      <p class="pa-legende pa-arrive">Tes photos</p>
+                    <!-- 3 · Les photos, montrees EXACTEMENT comme dans la boutique de l'appli
+                         clubbeur : photo arrondie, quartier en pastille, nom et type dessus. -->
+                    <section class="pa-etape" data-pas="3" data-mascotte="/mascotte/pose-1.webp" hidden>
+                      <h1 class="pa-titre">Tes photos.</h1>
+                      <p class="pa-sous">Voici ton établissement dans l'appli de tes clients. Touche la photo pour la changer.</p>
                       <button type="button" class="pa-couv pa-arrive" id="pa-photo-btn">
                         <span class="pa-couv-vue" id="pa-photo-vue"></span>
-                        <span class="pa-couv-pied">
-                          <span class="pa-couv-etiq">Couverture</span>
-                          <span class="pa-couv-act" id="pa-photo-titre">Ajouter une photo</span>
+                        <span class="pa-couv-voile" aria-hidden="true"></span>
+                        <span class="pa-couv-lieu" id="pa-apercu-lieu"></span>
+                        <span class="pa-couv-texte">
+                          <span class="pa-couv-nom" id="pa-apercu-nom"></span>
+                          <span class="pa-couv-ligne" id="pa-apercu-ligne"></span>
                         </span>
+                        <span class="pa-couv-act" id="pa-photo-titre">Ajouter une photo</span>
                       </button>
-
+                      <p class="pa-legende pa-arrive" style="margin-top:22px">Plus de photos</p>
                       <div class="pa-galerie pa-arrive" id="pa-galerie"></div>
                       <p class="pa-aide pa-arrive" id="pa-galerie-aide">La façade, la salle, le bar. Quatre suffisent.</p>
                     </section>
 
                     <!-- 2 · Les recompenses -->
-                    <section class="pa-etape" data-pas="3" data-mascotte="/mascotte/pose-2.webp" hidden>
+                    <section class="pa-etape" data-pas="4" data-mascotte="/mascotte/pose-2.webp" hidden>
                       <h1 class="pa-titre">Tes récompenses.</h1>
                       <p class="pa-sous">
                         Ce que tes clients échangent contre leurs points. Touche une carte
@@ -2784,7 +2846,7 @@
                     </section>
 
                     <!-- 3 · Le bareme -->
-                    <section class="pa-etape" data-pas="4" data-mascotte="/mascotte/pose-3.webp" hidden>
+                    <section class="pa-etape" data-pas="5" data-mascotte="/mascotte/pose-3.webp" hidden>
                       <h1 class="pa-titre">Ton barème.</h1>
                       <p class="pa-sous">Ce qu'un Reel ou un TikTok rapporte à ton client, selon ses vues. Modifiable à tout moment.</p>
 
@@ -2805,11 +2867,11 @@
                     </section>
 
                     <!-- 4 · Instagram -->
-                    <section class="pa-etape" data-pas="5" data-mascotte="/mascotte/pose-4.webp" hidden>
+                    <section class="pa-etape" data-pas="6" data-mascotte="/mascotte/pose-4.webp" hidden>
                       <h1 class="pa-titre">Ton Instagram.</h1>
                       <p class="pa-sous">
-                        Noctify repère les stories qui mentionnent ton club et crédite ceux qui
-                        les publient. Sans compte connecté, chaque publication est à valider à la main.
+                        Tes clients mentionnent ce compte dans leur story ; Noctify la repère et
+                        leur donne leurs points. Sans compte connecté, chaque publication est à valider à la main.
                       </p>
 
                       <div class="pa-champ pa-arrive">
@@ -2833,7 +2895,7 @@
                     </section>
 
                     <!-- 5 · Ce qui vient d'etre construit -->
-                    <section class="pa-etape" data-pas="6" data-mascotte="/mascotte/pose-5.webp" hidden>
+                    <section class="pa-etape" data-pas="7" data-mascotte="/mascotte/pose-5.webp" hidden>
                       <h1 class="pa-titre">Tout est prêt.</h1>
                       <p class="pa-sous">Il ne reste qu'à coller ton affiche : à l'entrée, au bar, aux toilettes.</p>
 
@@ -6040,7 +6102,7 @@
 
       var CLE_PARCOURS = "noctify_club_installation";
       var CLE_PARCOURS_PAS = "noctify_club_installation_pas";
-      var PAS_MAX = 6;
+      var PAS_MAX = 7;
 
       /* `seule` : le parcours est ouvert sur UNE etape, pas sur la
          sequence. C'est ce qui permet aux Reglages de rouvrir la fiche du
@@ -6224,6 +6286,8 @@
         // drapeau est une sequence complete, y compris "Refaire
         // l'installation" qui rouvre juste apres une fiche modifiee.
         PARCOURS.seule = !!seule;
+        // « Nom, ville et photos » depuis les Reglages : la fiche PUIS ses photos.
+        PARCOURS.finSeule = seule ? (pasForce === 2 ? 3 : pasForce) : PAS_MAX;
         $("#parcours").hidden = false;
         $("#parcours").classList.toggle("pa-seule", PARCOURS.seule);
         $("#pa-passer").textContent = PARCOURS.seule ? "Fermer" : "Passer";
@@ -6236,6 +6300,8 @@
           $("#pa-nom").value = etab.name || "";
           $("#pa-ville").value = etab.city || "";
           $("#pa-tel").value = etab.phone || "";
+          $("#pa-adresse").value = etab.address || "";
+          choisirTypeParcours(etab.category === "bar" || etab.category === "restaurant" ? etab.category : "club");
           rendrePhotoParcours(etab.logo_url || null);
           construireChoixRecompenses();
           rendreChoixRecompenses();
@@ -6253,7 +6319,7 @@
         // d'ecran precedent d'ou venir.
         // Jamais l'ecran du compte quand on en a deja un : son bouton
         // Continuer est masque, on y resterait enferme.
-        PARCOURS.pas = retourInstagram() ? 5 : Math.max(2, pasMemorise());
+        PARCOURS.pas = retourInstagram() ? 6 : Math.max(2, pasMemorise());
         allerAuPas(PARCOURS.pas, true);
       }
 
@@ -6325,11 +6391,12 @@
         $("#pa-passer").hidden = cible === PAS_MAX;
         $("#pa-corps").scrollTop = 0;
 
-        if (cible === 5) preparerPasInstagram();
+        if (cible === 3) rendreApercuParcours();
+        if (cible === 6) preparerPasInstagram();
         // L'affiche se dessine sur un canvas : le rejeu peut echouer
         // (pas de code public, image du logo illisible). Le dire, plutot
         // que de laisser une promesse rejetee dans la console.
-        if (cible === 6) {
+        if (cible === 7) {
           rendreBilan();
           preparerPasQr().catch(function () {
             direParcours("L'affiche n'a pas pu être générée. Elle reste disponible dans Réglages.", true);
@@ -6369,13 +6436,13 @@
       $("#pa-suivant").addEventListener("click", async function (ev) {
         var bouton = ev.currentTarget;
         var seule = PARCOURS.seule;
-        var dernier = seule || PARCOURS.pas === PAS_MAX;
+        var dernier = seule ? PARCOURS.pas >= PARCOURS.finSeule : PARCOURS.pas === PAS_MAX;
 
         bouton.disabled = true;
         bouton.textContent = "Enregistrement…";
         var ok = await enregistrerPas(PARCOURS.pas);
         bouton.disabled = false;
-        bouton.textContent = seule ? "Enregistrer" : (dernier ? "Terminer" : "Continuer");
+        bouton.textContent = seule ? (dernier ? "Enregistrer" : "Continuer") : (dernier ? "Terminer" : "Continuer");
 
         if (!ok) return;
         // Une etape ouverte seule ne "termine" pas l'installation : elle
@@ -6392,9 +6459,10 @@
         // Le pas 1 ne s'enregistre pas : on n'en sort qu'en creant une
         // session, et c'est demarrer() qui reprend la main.
         if (pas === 2) return enregistrerFicheParcours();
-        if (pas === 3) return enregistrerRecompensesParcours();
-        if (pas === 4) return enregistrerBaremeParcours();
-        if (pas === 5) return enregistrerHandleParcours();
+        if (pas === 3) return enregistrerPhotosParcours();
+        if (pas === 4) return enregistrerRecompensesParcours();
+        if (pas === 5) return enregistrerBaremeParcours();
+        if (pas === 6) return enregistrerHandleParcours();
         return true;
       }
 
@@ -6454,7 +6522,7 @@
         var vue = $("#pa-photo-vue");
         if (!vue) return;
         vue.innerHTML = url ? '<img src="' + escapeHtml(url) + '" alt="" />' : ICONE_APPAREIL;
-        $("#pa-photo-titre").textContent = url ? "Remplacer" : "Ajouter une photo";
+        $("#pa-photo-titre").textContent = url ? "Changer" : "Ajouter une photo";
         $("#pa-photo-btn").classList.toggle("remplie", !!url);
         rendreGalerieParcours();
       }
@@ -6608,13 +6676,13 @@
         var etab = etablissementCourant();
         var nom = $("#pa-nom").value.trim();
         if (!nom) {
-          direParcours("Le nom du club est nécessaire : c'est lui que tes clients voient.", true);
+          direParcours("Le nom est nécessaire : c'est lui que tes clients voient.", true);
           return false;
         }
 
         var ville = $("#pa-ville").value.trim();
         if (!ville) {
-          direParcours("La ville aussi : c'est elle qui place ton club sur la carte des clubbeurs.", true);
+          direParcours("La ville aussi : c'est elle qui place ton établissement sur la carte.", true);
           return false;
         }
 
@@ -6622,7 +6690,7 @@
         // tableau de bord de Julien (pilotage.html), sans rien lui demander.
         var telephone = $("#pa-tel").value.trim();
         if (telephone.replace(/\D/g, "").length < 8) {
-          direParcours("Ton numéro de téléphone aussi : c'est celui qu'on appelle si ton club a besoin d'aide.", true);
+          direParcours("Ton numéro de téléphone aussi : c'est celui qu'on appelle si tu as besoin d'aide.", true);
           $("#pa-tel").focus();
           return false;
         }
@@ -6631,18 +6699,10 @@
         // l'inscription. Le compte vient d'etre cree a l'etape 1, le nom
         // se saisit ici -- /api/create-client deduit le proprietaire du
         // jeton de session, jamais du corps de la requete.
-        if (!etab) return creerLeClub(nom, ville, telephone);
+        var adresse = $("#pa-adresse").value.trim();
+        if (!etab) return creerLeClub(nom, ville, telephone, adresse);
 
-        if (!etab.logo_url) {
-          direParcours("Ajoute une photo de couverture : c'est la première chose que tes clients verront de ton club.", true);
-          // Le message s'affiche dans le pied, la couverture est plus bas
-          // que le pli depuis que les champs sont passes au-dessus : sans
-          // ce cadrage, le gerant lit un refus sans voir quoi corriger.
-          $("#pa-photo-btn").scrollIntoView({ block: "center", behavior: "smooth" });
-          return false;
-        }
-
-        var payload = { name: nom, city: ville, phone: telephone, logo_url: etab.logo_url, photos: photosDuClub() };
+        var payload = { name: nom, city: ville, phone: telephone, address: adresse || null, category: PARCOURS.type || "club" };
 
         var { error } = await supabase.from("establishments").update(payload).eq("id", etab.id);
         if (error) {
@@ -6667,6 +6727,8 @@
         etab.name = nom;
         etab.city = ville || null;
         etab.phone = telephone;
+        etab.address = adresse || null;
+        etab.category = PARCOURS.type || "club";
         rendreDashboard();
         rendreQr();
         return true;
@@ -6675,7 +6737,7 @@
       /* La creation, quand le compte n'a pas encore de club. La photo est
          demandee au passage suivant : le bucket exige un dossier au nom
          de l'etablissement, qui n'existe pas avant cet appel. */
-      async function creerLeClub(nom, ville, telephone) {
+      async function creerLeClub(nom, ville, telephone, adresse) {
         try {
           var reponse = await fetch("/api/create-client", {
             method: "POST",
@@ -6717,10 +6779,66 @@
         rendreQr();
         rendreBareme();
 
-        // La photo n'a pas pu etre demandee avant : on reste sur l'ecran
-        // pour l'obtenir, maintenant que le dossier existe.
-        direParcours("Ton club est créé. Ajoute sa photo pour continuer.", false);
-        return false;
+        // Le type et l'adresse ne passent pas par /api/create-client : on les
+        // ecrit juste apres, la ligne appartient deja au gerant (RLS).
+        var ajout = { category: PARCOURS.type || "club", address: adresse || null };
+        var maj = await supabase.from("establishments").update(ajout).eq("id", data.establishment.id);
+        if (!maj.error) Object.assign(data.establishment, ajout);
+        // Les photos ont leur propre ecran, juste apres : le dossier existe maintenant.
+        return true;
+      }
+
+      /* ---- 3 · Les photos ---- */
+      async function enregistrerPhotosParcours() {
+        var etab = etablissementCourant();
+        if (!etab) return false;
+        if (!etab.logo_url) {
+          direParcours("Ajoute une photo : c'est la première chose que tes clients verront.", true);
+          return false;
+        }
+        var payload = { logo_url: etab.logo_url, photos: photosDuClub() };
+        var { error } = await supabase.from("establishments").update(payload).eq("id", etab.id);
+        if (error) {
+          if (/photos/.test(error.message || "")) {
+            delete payload.photos;
+            var second = await supabase.from("establishments").update(payload).eq("id", etab.id);
+            if (second.error) { direParcours("Photos non enregistrées : " + second.error.message, true); return false; }
+          } else {
+            direParcours("Photos non enregistrées : " + error.message, true);
+            return false;
+          }
+        }
+        rendreDashboard();
+        rendreQr();
+        return true;
+      }
+
+      /* Le type choisi, et l'apercu de la carte telle que la boutique clubbeur la dessine. */
+      var NOMS_TYPES = { bar: "Bar", club: "Boîte de nuit", restaurant: "Restaurant" };
+      function choisirTypeParcours(type) {
+        PARCOURS.type = type;
+        document.querySelectorAll("#pa-types .pa-type").forEach(function (b) {
+          var oui = b.dataset.type === type;
+          b.classList.toggle("choisi", oui);
+          b.setAttribute("aria-checked", String(oui));
+        });
+      }
+      $("#pa-types").addEventListener("click", function (ev) {
+        var b = ev.target.closest(".pa-type");
+        if (b) choisirTypeParcours(b.dataset.type);
+      });
+
+      function rendreApercuParcours() {
+        var etab = etablissementCourant() || {};
+        var nbRecos = (PARCOURS.choix || []).filter(function (c) { return c.prise; }).length ||
+          ((ETAT.data && ETAT.data.rewards) || []).length;
+        $("#pa-apercu-nom").textContent = $("#pa-nom").value.trim() || etab.name || "Ton établissement";
+        $("#pa-apercu-ligne").textContent = [NOMS_TYPES[PARCOURS.type || "club"], nbRecos ? nbRecos + " récompense" + (nbRecos > 1 ? "s" : "") : ""].filter(Boolean).join(" • ");
+        var lieu = $("#pa-ville").value.trim() || etab.city || "";
+        $("#pa-apercu-lieu").innerHTML = lieu
+          ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>' + escapeHtml(lieu)
+          : "";
+        $("#pa-apercu-lieu").hidden = !lieu;
       }
 
 
