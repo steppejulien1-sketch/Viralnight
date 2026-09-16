@@ -5312,43 +5312,19 @@
         box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 10px 24px -16px rgba(15,17,20,.3);
       }
       .st-club:empty { display: none; }
-      /* 16/09/2026 : les etablissements en ronds, comme les stories d'Instagram. */
-      .vue-story .st-club { display: block; padding: 0; background: none; box-shadow: none; margin: 2px 0 10px; }
-      .stc-bande {
-        display: flex; gap: 16px; overflow-x: auto; padding: 4px 2px 2px; margin: 0 -2px;
-        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      /* 16/09/2026 : la carte d'origine, plus soignee -- photo ronde du club,
+         nom en gras, quartier en gris, « Changer » discret a droite. */
+      .vue-story .st-club { gap: 12px; margin: 2px 0 10px; padding: 10px 14px 10px 10px; border-radius: 20px; }
+      .vue-story .st-club .st-club-corps { gap: 12px; }
+      .vue-story .st-club .st-lieu-tuile {
+        width: 44px; height: 44px; border-radius: 50%; background: var(--s2);
+        box-shadow: 0 0 0 1px rgba(15,17,20,.08);
       }
-      .stc-bande::-webkit-scrollbar { display: none; }
-      .stc-club {
-        flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; width: 92px; padding: 0;
-        border: 0; background: none; font-family: inherit; color: var(--ink); cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .stc-rond {
-        display: block; width: 68px; height: 68px; padding: 5px; border-radius: 50%;
-        background: var(--line); transition: transform .2s cubic-bezier(.34, 1.56, .64, 1);
-      }
-      .stc-club.choisi .stc-rond { background: conic-gradient(from 210deg, #f58529, #dd2a7b, #8134af, #515bd4, #f58529); }
-      .stc-rond img {
-        display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
-        /* L'anneau blanc (2,5 px) laisse voir 2,5 px du cercle colore autour. */
-        box-shadow: 0 0 0 2.5px var(--bg);
-      }
-      .stc-club:active .stc-rond { transform: scale(.94); }
-      .stc-club:focus-visible { outline: none; }
-      .stc-club:focus-visible .stc-rond { box-shadow: 0 0 0 2px var(--ink); }
-      .stc-nom {
-        max-width: 100%; margin-top: 6px; font-size: calc(13 * var(--u)); font-weight: 600; line-height: 1.2;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      .stc-club.choisi .stc-nom { font-weight: 800; }
-      /* Deux lignes au plus : « Saint-Josse-ten-Noode » tient en entier. */
-      .stc-lieu {
-        max-width: 100%; margin-top: 1px; font-size: calc(11.5 * var(--u)); line-height: 1.25; color: var(--ink3);
-        text-align: center; overflow-wrap: anywhere; hyphens: auto;
-        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-      }
-      @media (prefers-reduced-motion: reduce) { .stc-rond { transition: none; } }
+      .vue-story .st-club .st-lieu-txt strong { font-size: calc(16.5 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
+      .vue-story .st-club .st-lieu-txt span { margin-top: 2px; font-size: calc(13 * var(--u)); color: var(--ink3); }
+      .vue-story .st-club .st-club-changer { gap: 1px; font-size: calc(13.5 * var(--u)); font-weight: 700; color: var(--ink2); }
+      .vue-story .st-club .st-club-changer svg { width: 15px; height: 15px; }
+      .vue-story .st-club:active { transform: scale(.99); }
       .st-club-corps { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
       .st-club .st-lieu-tuile { width: 36px; height: 36px; border-radius: 10px; }
       .st-club .st-lieu-txt strong { font-size: calc(16 * var(--u)); }
@@ -11784,38 +11760,9 @@ function ouvrirChoixReseau(nomClub) {
   var ICONE_QR = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h2.6v2.6H14zM18 18h2.5v2.5H18zM14 20.5h2.6M20.5 14v2.6"/></svg>';
   var ICONE_COPIER = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11.5" height="11.5" rx="2.2"/><path d="M5.5 15V5.8a2.3 2.3 0 0 1 2.3-2.3H15"/></svg>';
 
-  /* LE CHOIX DE L'ETABLISSEMENT (16/09/2026, deuxieme version).
-     Julien a refuse la carte + feuille : « le bouton est beaucoup trop gros,
-     je veux un truc qui n'ouvre pas un truc en dessous, on voit la photo de
-     profil, le nom de l'etablissement, la localisation, et c'est tout ».
-     Donc une rangee de ronds, comme les stories en haut d'Instagram : photo,
-     nom, quartier. On touche celui ou l'on est ; il prend le cercle colore.
-     Pas de bouton, pas de liste qui monte.
-
-     La photo : celle du club (deposee par le gerant, ou dans CLUBS). Sans
-     photo, une photo de soiree (public/clubs/profil-par-defaut.webp) -- ni
-     monogramme (refuse le 30/08) ni repere de carte (refuse le 16/09). */
+  /* La photo ronde du club : la sienne (deposee par le gerant ou dans CLUBS),
+     sinon une photo de soiree -- plus de repere de carte (Julien, 16/09/2026). */
   var PHOTO_CLUB_PAR_DEFAUT = "/clubs/profil-par-defaut.webp";
-
-  function bandeClubsStory() {
-    var origine = POSITION_MOI || MOI;
-    var cles = Object.keys(CLUBS).sort(function (a, b) {
-      return distanceKm(origine, CLUBS[a].lngLat) - distanceKm(origine, CLUBS[b].lngLat);
-    });
-    return '<div class="stc-bande" role="radiogroup" aria-label="Ton établissement">' +
-      cles.map(function (k) {
-        var c = CLUBS[k];
-        var choisi = k === cleChoisie;
-        var src = c.avatar || c.photo || PHOTO_CLUB_PAR_DEFAUT;
-        var lieu = POSITION_MOI ? formaterDistance(distanceKm(POSITION_MOI, c.lngLat)) : quartierDe(c.adr);
-        return '<button type="button" class="stc-club' + (choisi ? " choisi" : "") + '" data-cle="' + k + '" role="radio" aria-checked="' + choisi + '">' +
-          '<span class="stc-rond"><img src="' + escapeHtmlSupport(src) + '" alt="" onerror="this.src=\'' + PHOTO_CLUB_PAR_DEFAUT + '\'" /></span>' +
-          '<span class="stc-nom">' + escapeHtmlSupport(c.nom) + "</span>" +
-          (lieu ? '<span class="stc-lieu">' + escapeHtmlSupport(lieu) + "</span>" : "") +
-        "</button>";
-      }).join("") +
-    "</div>";
-  }
 
   function blocLieu(cle) {
     var c = CLUBS[cle];
@@ -11823,7 +11770,8 @@ function ouvrirChoixReseau(nomClub) {
     // Le quartier seul : "Boite de nuit" en sous-titre, Julien l'a deja
     // trouve bizarre sur la boutique (13/09/2026).
     var sous = quartierDe(c.adr);
-    return '<span class="st-lieu-tuile' + classeFoto(c) + '" aria-hidden="true">' + imgClub(c) + "</span>" +
+    var src = c.avatar || c.photo || PHOTO_CLUB_PAR_DEFAUT;
+    return '<span class="st-lieu-tuile" aria-hidden="true"><img src="' + escapeHtmlSupport(src) + '" alt="" onerror="this.src=\'' + PHOTO_CLUB_PAR_DEFAUT + '\'" /></span>' +
       '<span class="st-lieu-txt"><strong>' + escapeHtmlSupport(c.nom) + "</strong>" +
         (sous ? "<span>" + escapeHtmlSupport(sous) + "</span>" : "") +
       "</span>";
@@ -11913,7 +11861,16 @@ function ouvrirChoixReseau(nomClub) {
      montre le club comme un compte Instagram -- photo ronde cerclee, nom, son
      @, s'il est ouvert -- et ouvre une vraie liste (feuille) au lieu du menu
      deroulant du systeme. */
-  $("#st-club").innerHTML = bandeClubsStory();
+  /* Le choix du club tel qu'au debut (Julien, 16/09/2026 : « remets ce qu'il y
+     avait au tout debut, juste rends-le plus esthetique ») : la carte, et le
+     menu du telephone par-dessus (le <select> invisible). */
+  var options = Object.keys(CLUBS).map(function (k) {
+    return '<option value="' + k + '"' + (k === cleChoisie ? " selected" : "") + ">" + escapeHtmlSupport(CLUBS[k].nom) + "</option>";
+  }).join("");
+  $("#st-club").innerHTML =
+    '<span class="st-club-corps" id="st-lieu">' + blocLieu(cleChoisie) + "</span>" +
+    '<span class="st-club-changer">Changer<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></span>' +
+    '<select class="st-lieu-select" id="story-club" aria-label="Choisir l’établissement">' + options + "</select>";
   TAB_STORY.classList.add("on");
   TAB_STORY.setAttribute("aria-current", "page");
   VUE_STORY.hidden = false;
@@ -11957,11 +11914,7 @@ function ouvrirChoixReseau(nomClub) {
   function changerClubStory(cle) {
     cleChoisie = cle;
     handleActuel = CLUBS[cle].ig || null;
-    document.querySelectorAll("#st-club .stc-club").forEach(function (b) {
-      var oui = b.dataset.cle === cle;
-      b.classList.toggle("choisi", oui);
-      b.setAttribute("aria-checked", String(oui));
-    });
+    $("#st-lieu").innerHTML = blocLieu(cle);
     majIntro();
     majHandle(handleActuel);
     chercherHandle();
@@ -11970,11 +11923,7 @@ function ouvrirChoixReseau(nomClub) {
     if (sc) { sc.classList.remove("joue"); void sc.offsetWidth; sc.classList.add("joue"); }
     vibrer("leger");
   }
-  document.querySelectorAll("#st-club .stc-club").forEach(function (b) {
-    b.addEventListener("click", function () {
-      if (b.dataset.cle !== cleChoisie) changerClubStory(b.dataset.cle);
-    });
-  });
+  $("#story-club").addEventListener("change", function () { changerClubStory(this.value); });
 
   activerScanClub();
 

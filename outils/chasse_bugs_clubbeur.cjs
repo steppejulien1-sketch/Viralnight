@@ -126,7 +126,7 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
       await pause(800);
       await page.screenshot({ path: `${CAPTURES}/02b-story-mention.png` });
       // Le haut de la page : les etablissements en ronds.
-      await page.evaluate(() => { const v = document.getElementById("vue-story"); if (v) v.scrollTop = 0; document.querySelector(".stc-bande")?.scrollIntoView({ block: "start" }); });
+      await page.evaluate(() => { const v = document.getElementById("vue-story"); if (v) v.scrollTop = 0; document.querySelector(".st-club")?.scrollIntoView({ block: "start" }); });
       await pause(4500);
       await page.screenshot({ path: `${CAPTURES}/02c-story-club.png` });
     }
