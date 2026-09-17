@@ -2655,262 +2655,8 @@
       /* 17/09/2026, Julien : « Bienvenue sur Noctify » sur une seule ligne. */
       .pa-etape[data-pas="1"] .pa-titre { white-space: nowrap; font-size: clamp(22px, 7.4vw, 30px); }
 
-      /* ================= L'APERCU EN DIRECT (17/09/2026) =================
-         Le telephone est dessine a l'echelle 1 (390 x 844, les valeurs
-         d'app-preview.html recopiees), puis reduit par la « camera »
-         (.ap-monde, transform). Toutes les mesures de l'ecran sont donc
-         en pixels d'iPhone, pas en pixels de la scene. */
-      .ap-scene {
-        position: relative; flex: 0 0 auto; height: 268px; margin: 0 16px 2px; border-radius: 26px;
-        overflow: hidden; isolation: isolate; color: #fff; transition: height .35s var(--sortie);
-        background: radial-gradient(60% 80% at 88% 0%, rgba(222,49,49,.5), transparent 62%),
-                    radial-gradient(55% 70% at 0% 100%, rgba(124,92,255,.3), transparent 65%), #111114;
-      }
-      .ap-scene[hidden], .ap-plein[hidden], .ap-bulle[hidden], .ap-anneau[hidden] { display: none; }
-      .parcours.ap-clavier .ap-scene { height: 168px; }
-      .parcours.ap-clavier .ap-vues, .parcours.ap-clavier .ap-sur { opacity: 0; pointer-events: none; }
-      .ap-sur {
-        position: absolute; z-index: 3; left: 16px; top: 13px; margin: 0; display: flex; align-items: center; gap: 7px;
-        font-size: 10.5px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: rgba(255,255,255,.7);
-        pointer-events: none; transition: opacity .2s ease;
-      }
-      .ap-sur i { width: 7px; height: 7px; border-radius: 50%; background: #35d07f; animation: pouls 2s ease-out infinite; }
-      .ap-grand {
-        position: absolute; z-index: 3; right: 10px; top: 8px; display: grid; place-items: center; width: 32px; height: 32px;
-        padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); cursor: pointer;
-        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-      }
-      .ap-grand svg { width: 15px; height: 15px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-      .ap-monde {
-        position: absolute; left: 0; top: 0; width: 418px; height: 872px; transform-origin: 0 0;
-        transition: transform .8s cubic-bezier(.2, .8, .2, 1), filter .4s ease; will-change: transform;
-      }
-      .ap-monde.ap-flou { filter: blur(5px) brightness(.55); }
-      .ap-tel { position: absolute; inset: 0; padding: 14px; border-radius: 66px; background: #050506; box-shadow: 0 0 0 3px #2c2c31, 0 70px 90px -30px rgba(0,0,0,.85); }
-      .ap-ecran {
-        position: relative; width: 390px; height: 844px; border-radius: 52px; overflow: hidden;
-        background: #f5f5f7; color: #111; font-family: Inter, var(--sans); text-align: left;
-      }
-      .ap-ile { position: absolute; z-index: 7; left: 50%; top: 11px; width: 124px; height: 36px; margin-left: -62px; border-radius: 20px; background: #000; }
-      .ap-statut {
-        position: absolute; z-index: 6; left: 0; right: 0; top: 0; height: 56px; display: flex; align-items: center; justify-content: space-between;
-        padding: 2px 34px 0 46px; font-size: 16px; color: #111; pointer-events: none;
-      }
-      .ap-statut span { display: flex; gap: 5px; }
-      .ap-statut i { width: 17px; height: 11px; border-radius: 3px; background: currentColor; opacity: .9; }
-      .ap-statut i:last-child { width: 25px; }
-      .ap-ecran.sombre .ap-statut { color: #fff; }
-      .ap-cadre { position: absolute; inset: 0; overflow: hidden; }
-      .ap-defile { position: relative; min-height: 100%; transition: transform .8s cubic-bezier(.2, .8, .2, 1); }
-      .ap-defile.ap-change { animation: apFondu .45s ease both; }
-      @keyframes apFondu { from { opacity: 0; } to { opacity: 1; } }
-      .ap-vide { opacity: .5; }
-
-      /* L'anneau et l'etiquette : ce qui dit « c'est ici ». */
-      .ap-anneau {
-        position: absolute; z-index: 5; pointer-events: none; border-radius: 16px;
-        box-shadow: 0 0 0 4px #fff, 0 0 0 9px #de3131;
-        transition: left .8s cubic-bezier(.2, .8, .2, 1), top .8s cubic-bezier(.2, .8, .2, 1), width .8s cubic-bezier(.2, .8, .2, 1), height .8s cubic-bezier(.2, .8, .2, 1);
-        animation: apAnneau 1.8s ease-in-out infinite;
-      }
-      @keyframes apAnneau { 0%, 100% { box-shadow: 0 0 0 4px #fff, 0 0 0 9px #de3131, 0 0 0 9px rgba(222,49,49,.5); } 50% { box-shadow: 0 0 0 4px #fff, 0 0 0 9px #de3131, 0 0 0 26px rgba(222,49,49,0); } }
-      .ap-bulle {
-        position: absolute; z-index: 4; left: 0; top: 0; padding: 7px 12px; border-radius: 99px; background: #fff; color: #111;
-        font-size: 12.5px; font-weight: 750; letter-spacing: -.01em; white-space: nowrap; pointer-events: none;
-        box-shadow: 0 12px 26px -10px rgba(0,0,0,.7); transform: translate(-50%, -100%);
-        transition: left .8s cubic-bezier(.2, .8, .2, 1), top .8s cubic-bezier(.2, .8, .2, 1);
-        animation: apBulle .35s cubic-bezier(.3, 1.4, .5, 1) both;
-      }
-      .ap-bulle.dessous { transform: translate(-50%, 0); }
-      .ap-bulle.prive { display: inline-flex; align-items: center; gap: 7px; transform: translate(-50%, -50%); }
-      .ap-bulle.prive svg { width: 15px; height: 15px; fill: none; stroke: #111; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-      @keyframes apBulle { from { opacity: 0; scale: .8; } to { opacity: 1; scale: 1; } }
-      .ap-vues {
-        position: absolute; z-index: 3; left: 50%; bottom: 11px; display: flex; gap: 2px; padding: 3px; border-radius: 99px;
-        transform: translateX(-50%); background: rgba(20,20,24,.55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); transition: opacity .2s ease;
-      }
-      .ap-vue {
-        padding: 6px 11px; border: 0; border-radius: 99px; background: none; cursor: pointer;
-        font-family: inherit; font-size: 11.5px; font-weight: 650; color: rgba(255,255,255,.72); white-space: nowrap;
-      }
-      .ap-vue.on { background: #fff; color: #111; }
-
-      /* -- Liste des etablissements (onglet Recompenses de l'appli) -- */
-      .ap-l { padding: 64px 20px 140px; }
-      .ap-l-tete { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 4px 20px; }
-      .ap-l-tete > b { font-family: var(--titre); font-size: 42px; font-weight: 900; letter-spacing: -.045em; line-height: .9; }
-      .ap-l-tete span { font-size: 19px; color: #666; }
-      .ap-l-tete span b { font-family: var(--titre); font-size: 28px; font-weight: 900; color: #111; }
-      .ap-carte { position: relative; display: block; aspect-ratio: 39 / 20; margin-bottom: 16px; border-radius: 20px; overflow: hidden; background: #16161a; isolation: isolate; }
-      .ap-carte img, .ap-b-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-      .ap-voile { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.38) 32%, rgba(0,0,0,0) 62%); }
-      .ap-pastille {
-        position: absolute; z-index: 2; left: 16px; top: 16px; display: inline-flex; align-items: center; gap: 6px; max-width: calc(100% - 32px);
-        padding: 6px 10px 6px 8px; border-radius: 8px; background: rgba(20,20,22,.62); color: #fff;
-        font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      .ap-pastille svg, .ap-b-pastille svg { flex: 0 0 auto; width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-      .ap-carte-txt { position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 14px; display: flex; flex-direction: column; gap: 3px; color: #fff; }
-      .ap-carte-txt b { font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .ap-carte-txt span { font-size: 16px; font-weight: 550; color: rgba(255,255,255,.86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .ap-carte.fantome { opacity: .28; filter: grayscale(1); }
-      .ap-app-onglets {
-        position: absolute; z-index: 6; left: 14px; right: 14px; bottom: 26px; height: 58px; display: grid; grid-template-columns: repeat(4, 1fr);
-        align-items: center; border-radius: 30px; background: #fff; box-shadow: 0 10px 30px -10px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.04);
-      }
-      .ap-app-onglets:empty { display: none; }
-      .ap-app-onglets span { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 650; color: #8a8a90; }
-      .ap-app-onglets span.on { color: #de3131; }
-      .ap-app-onglets svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-
-      /* -- Page d'un etablissement -- */
-      .ap-b-hero { position: relative; height: 540px; overflow: hidden; background: #0d0d0f; }
-      .ap-b-hero .ap-voile { background: linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0) 26%), linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,.35) 38%, rgba(0,0,0,0) 62%); }
-      .ap-b-haut { position: absolute; z-index: 2; left: 14px; right: 14px; top: 60px; display: flex; justify-content: space-between; align-items: center; }
-      .ap-b-rond { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(20,20,22,.5); }
-      .ap-b-rond svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-      .ap-b-pts { padding: 10px 14px; border-radius: 99px; background: rgba(20,20,22,.5); color: #fff; font-size: 15px; font-weight: 700; }
-      .ap-b-bas { position: absolute; z-index: 2; left: 20px; right: 20px; bottom: 50px; color: #fff; }
-      .ap-b-pastille { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 6px 10px 6px 8px; border-radius: 8px; background: rgba(255,255,255,.16); font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .ap-b-nom { display: block; margin: 12px 0 0; font-family: var(--titre); font-size: 42px; font-weight: 900; letter-spacing: -.035em; line-height: .98; text-wrap: balance; overflow-wrap: anywhere; }
-      .ap-b-sous { display: inline-block; margin: 10px 0 0; font-size: 17px; font-weight: 600; color: rgba(255,255,255,.88); }
-      .ap-b-corps { position: relative; z-index: 2; margin-top: -26px; padding: 26px 20px 60px; border-radius: 26px 26px 0 0; background: #f5f5f7; }
-      .ap-solde { display: flex; align-items: center; justify-content: space-between; padding: 4px 2px 16px; border-bottom: 1px solid rgba(0,0,0,.08); }
-      .ap-solde span:first-child { font-size: 12.5px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: #777; }
-      .ap-solde span:last-child { font-size: 14.5px; color: #777; }
-      .ap-solde b { font-family: var(--titre); font-size: 26px; font-weight: 900; color: #111; }
-      .ap-h2 { margin: 30px 2px 14px; font-size: 21px; font-weight: 800; letter-spacing: -.02em; }
-      .ap-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; padding: 4px; margin: -4px; }
-      .ap-reco { position: relative; display: block; }
-      .ap-reco-img {
-        position: relative; display: block; aspect-ratio: 1 / 1; border-radius: 18px; overflow: hidden;
-        background: linear-gradient(#fff, #ededf0); box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
-      }
-      .ap-reco-img img { position: absolute; left: 50%; top: 10%; width: 56%; height: 56%; margin-left: -28%; object-fit: contain; }
-      .ap-reco-img img.photo { left: 0; top: 0; width: 100%; height: 100%; margin: 0; object-fit: cover; }
-      .ap-reco-img em { position: absolute; left: 0; right: 0; top: 24%; text-align: center; font-style: normal; font-family: var(--titre); font-size: 44px; font-weight: 900; color: #c9c9cf; }
-      .ap-reco-lab {
-        position: relative; display: block; margin: -64px 10px 0; padding: 13px 14px 12px; border-radius: 16px; background: #fff;
-        box-shadow: 0 14px 24px -16px rgba(0,0,0,.4), 0 0 0 1px rgba(0,0,0,.05);
-      }
-      .ap-reco-lab b { display: block; font-family: var(--titre); font-size: 17px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .ap-reco-lab span { display: block; margin-top: 3px; font-size: 14.5px; color: #666; }
-      .ap-reco-lab i { display: block; height: 3px; margin-top: 10px; border-radius: 3px; background: #ededf0; }
-      .ap-reco.arrive { animation: apPop .55s cubic-bezier(.3, 1.5, .5, 1) both; }
-      @keyframes apPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
-      .ap-rien { padding: 26px 10px; border-radius: 18px; background: #ededf0; text-align: center; font-size: 15px; color: #777; }
-      .ap-infos { margin-top: 12px; padding: 2px 16px; border-radius: 18px; background: #fff; }
-      .ap-info { display: flex; align-items: center; gap: 12px; padding: 14px 0; font-size: 15.5px; line-height: 1.35; }
-      .ap-info + .ap-info { border-top: 1px solid #efeff2; }
-      .ap-info svg { flex: 0 0 auto; width: 21px; height: 21px; fill: none; stroke: #111; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-      .ap-plan { position: relative; display: block; height: 150px; margin: 12px 0 0; border-radius: 16px; overflow: hidden; background: #e8e9ed; }
-      .ap-plan svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-      .ap-plan .ap-epingle { inset: auto; left: 50%; top: 50%; width: 34px; height: 44px; margin: -44px 0 0 -17px; }
-      .ap-plan-nom { position: absolute; left: 50%; top: 50%; margin-top: 6px; transform: translateX(-50%); padding: 3px 8px; border-radius: 6px; background: #fff; font-size: 13px; font-weight: 750; white-space: nowrap; box-shadow: 0 4px 10px -4px rgba(0,0,0,.3); }
-      .ap-galerie { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; height: 210px; margin-top: 12px; border-radius: 16px; overflow: hidden; }
-      .ap-galerie span { position: relative; background: #e3e3e8; overflow: hidden; }
-      .ap-galerie span:first-child { grid-row: 1 / 3; }
-      .ap-galerie img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-
-      /* -- Une story Instagram qui mentionne l'etablissement -- */
-      .ap-s { position: absolute; inset: 0; background: #000; }
-      .ap-s > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-      .ap-s-barres { position: absolute; left: 12px; right: 12px; top: 60px; display: flex; gap: 4px; }
-      .ap-s-barres i { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.45); }
-      .ap-s-barres i:first-child { background: #fff; }
-      .ap-s-auteur { position: absolute; left: 14px; top: 74px; display: flex; align-items: center; gap: 8px; color: #fff; font-size: 15px; font-weight: 650; }
-      .ap-s-auteur i { width: 34px; height: 34px; border-radius: 50%; background: url(/ambiance/profil/avatar.webp) center / cover, #888; box-shadow: 0 0 0 2px #fff; }
-      .ap-mention {
-        /* Centre par les marges, pas par translate : l'anneau lit offsetLeft, qui ignore les transform. */
-        position: absolute; left: 0; right: 0; top: 54%; width: max-content; margin: 0 auto; display: block; padding: 12px 18px; border-radius: 12px; background: #fff;
-        transform: rotate(-3deg); box-shadow: 0 10px 26px rgba(0,0,0,.35); white-space: nowrap;
-      }
-      .ap-mention span {
-        font-family: var(--titre); font-size: 26px; font-weight: 900; letter-spacing: -.01em; text-transform: uppercase;
-        background: linear-gradient(90deg, #f58529, #dd2a7b 45%, #8134af 80%, #515bd4); -webkit-background-clip: text; background-clip: text; color: transparent;
-      }
-      .ap-gain {
-        position: absolute; left: 0; right: 0; top: 69%; width: max-content; margin: 0 auto; padding: 11px 18px; border-radius: 99px; background: #de3131; color: #fff;
-        font-size: 18px; font-weight: 800; white-space: nowrap; box-shadow: 0 12px 26px -8px rgba(222,49,49,.8);
-      }
-      .ap-s-bas { position: absolute; left: 14px; right: 14px; bottom: 34px; display: flex; gap: 10px; align-items: center; }
-      .ap-s-bas span { flex: 1; display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 14px; border-radius: 99px; background: rgba(20,20,22,.6); color: #fff; font-size: 15px; font-weight: 650; }
-      .ap-s-bas span i { width: 26px; height: 26px; border-radius: 50%; background: url(/ambiance/profil/avatar.webp) center / cover, #888; }
-      .ap-s-bas span + span i { background: #3ecf5a; }
-      .ap-s-bas b { flex: 0 0 auto; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; background: #fff; }
-      .ap-s-bas b svg { width: 22px; height: 22px; fill: none; stroke: #111; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-      .ap-notif {
-        position: absolute; z-index: 3; left: 12px; right: 12px; top: 62px; display: flex; gap: 12px; align-items: center; padding: 14px;
-        border-radius: 24px; background: rgba(246,246,248,.9); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); color: #111;
-        box-shadow: 0 14px 30px -12px rgba(0,0,0,.5);
-      }
-      .ap-notif img { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 10px; }
-      .ap-notif div { min-width: 0; flex: 1; }
-      .ap-notif p { margin: 0; display: flex; justify-content: space-between; font-size: 14.5px; font-weight: 700; }
-      .ap-notif p span { font-weight: 500; color: #888; }
-      .ap-notif div > span { display: block; margin-top: 2px; font-size: 15px; line-height: 1.3; }
-      .ap-notif[hidden] { display: none; }
-
-      /* -- En grand : le meme telephone, qu'on fait defiler -- */
-      .ap-plein { position: absolute; inset: 0; z-index: 60; background: rgba(8,8,10,.94); animation: apFondu .25s ease both; }
-      .ap-plein-fermer { position: absolute; z-index: 2; right: 14px; top: 14px; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); cursor: pointer; }
-      .ap-plein-fermer svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; }
-      .ap-plein-txt { position: absolute; left: 18px; right: 64px; top: 22px; margin: 0; color: rgba(255,255,255,.72); font-size: 13px; font-weight: 600; }
-      .ap-plein-zone { position: absolute; left: 0; right: 0; top: 64px; bottom: 58px; }
-      .ap-plein .ap-vues { bottom: 14px; }
-      .ap-plein .ap-monde { transition: none; }
-      .ap-plein .ap-cadre { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
-      .ap-plein .ap-cadre::-webkit-scrollbar { display: none; }
-      .ap-plein .ap-defile { transform: none !important; }
-      .ap-plein .ap-anneau { display: none; }
-
-      /* -- Etape 2 : la page de l'etablissement, qu'on remplit en ecrivant dessus -- */
-      .pw { margin: -12px -20px 0; }
-      .pw-hero { position: relative; height: 380px; overflow: hidden; background: #0d0d0f; color: #fff; }
-      .pw-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: pwPhoto 1.2s cubic-bezier(.2, .7, .2, 1) both; }
-      @keyframes pwPhoto { from { transform: scale(1.08); opacity: .4; } to { transform: none; opacity: 1; } }
-      .pw-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.5), rgba(0,0,0,0) 30%), linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.4) 42%, rgba(0,0,0,0) 68%); }
-      .pw-consigne { position: absolute; left: 20px; right: 175px; top: 16px; margin: 0; font-size: 12.5px; font-weight: 600; line-height: 1.35; color: rgba(255,255,255,.85); }
-      .pw-photo-btn {
-        position: absolute; right: 14px; top: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 0; border-radius: 99px;
-        background: rgba(20,20,22,.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #fff; font-family: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer;
-      }
-      .pw-photo-btn[hidden] { display: none; }
-      .pw-photo-btn svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-      .pw-bas { position: absolute; left: 20px; right: 20px; bottom: 46px; display: flex; flex-direction: column; align-items: flex-start; }
-      .pw input { min-width: 0; margin: 0; padding: 0; border: 0; outline: 0; border-radius: 0; background: none; font-family: inherit; color: inherit; caret-color: #de3131; box-shadow: none; }
-      .pw-hero input::placeholder { color: rgba(255,255,255,.62); }
-      .pw-ville {
-        display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px 7px 9px; border-radius: 8px; cursor: text;
-        background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-      }
-      .pw-ville svg, .pw-ligne svg { flex: 0 0 auto; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-      .pw-ville input { width: 150px; font-size: 14px; font-weight: 600; }
-      .pw .pw-nom {
-        width: 100%; margin-top: 12px; padding-bottom: 4px; font-family: var(--titre); font-size: 38px; font-weight: 900;
-        letter-spacing: -.035em; line-height: 1.05; text-shadow: 0 2px 24px rgba(0,0,0,.35);
-        border-bottom: 2px dashed rgba(255,255,255,.45); transition: border-color .2s ease;
-      }
-      .pw .pw-nom:not(:placeholder-shown) { border-bottom-color: transparent; }
-      .pw .pw-nom:focus { border-bottom: 2px solid #fff; }
-      .pw-type { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; padding: 2px 0; border: 0; background: none; color: rgba(255,255,255,.9); font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
-      .pw-type svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; opacity: .75; }
-      .pw-type .pw-change { animation: paArrive .3s var(--sortie) both; }
-      .pw-corps { position: relative; margin-top: -26px; padding: 24px 20px 8px; border-radius: 26px 26px 0 0; background: #fff; }
-      .pw-titre { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 2px 10px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
-      .pw-ligne + .pw-titre { margin-top: 24px; }
-      .pw-titre span { font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ink3); }
-      .pw-ligne { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 16px; border-radius: 16px; background: #f3f3f5; color: var(--ink); cursor: text; transition: box-shadow .2s ease, background-color .2s ease; }
-      .pw-ligne:focus-within { box-shadow: inset 0 0 0 2px var(--ink); background: #fff; }
-      .pw-ligne input { flex: 1; font-size: 16px; font-weight: 550; }
-      .pw-ligne input::placeholder { color: #9a9aa2; }
-
-      /* Plus de boutons a toucher sur l'apercu des autres etapes : il se lit tout seul. */
-      .ap-scene .ap-vues, .ap-scene .ap-grand { display: none; }
-      .ap-scene { height: 300px; }
-
-      /* -- Le bouton « Suivant » de la barre du haut -- */
+      /* ================= LE PARCOURS, TROISIEME VERSION (17/09/2026) =================
+         En haut la scene (le resultat, vivant), en bas les commandes. */
       .pa-avancer {
         flex: 0 0 auto; display: inline-flex; align-items: center; gap: 2px; padding: 6px 8px 6px 11px; border: 0; border-radius: 99px;
         background: var(--s2); color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer;
@@ -2918,118 +2664,228 @@
       .pa-avancer svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
       .pa-avancer[hidden] { display: none; }
 
-      /* -- Etapes 3 a 6 : communs -- */
-      .px-consigne { margin: 0 0 14px; font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--ink3); }
-      .px-titre { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 26px 2px 12px; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
-      .px-titre span { font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ink3); white-space: nowrap; }
-      .pl, .pg { animation: paArrive .35s var(--sortie) both; }
+      .pv svg { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .pv .pa-titre { font-size: 30px; margin-bottom: 6px; }
+      .pv .pa-sous { margin-bottom: 20px; }
+      .pv-etape { margin: 0 0 8px; font-size: 11.5px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; color: #de3131; }
 
-      /* 3 · la liste */
-      .pl-tete { display: flex; align-items: baseline; justify-content: space-between; margin: 4px 2px 16px; }
-      .pl-tete > b { font-family: var(--titre); font-size: 34px; font-weight: 900; letter-spacing: -.045em; line-height: .9; }
-      .pl-tete span { font-size: 15px; color: var(--ink3); }
-      .pl-tete span b { font-family: var(--titre); font-size: 22px; font-weight: 900; color: var(--ink); }
-      .pl .pa-couv { margin: 0; border-radius: 20px; }
-      .pl .pa-couv:not(.remplie) { background: #2a2a30; box-shadow: none; }
-      .pl .pa-couv:not(.remplie) .pa-couv-vue { background: radial-gradient(90% 90% at 50% 30%, #3a3a42, #1d1d22); }
-      .pl .pa-couv:not(.remplie) .pa-couv-vue svg { stroke: rgba(255,255,255,.7); margin-bottom: 24px; }
-      .pl .pa-couv-lieu { left: 14px; top: 14px; }
-      .pl .pa-galerie { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-      .pl .pa-vign { aspect-ratio: 4 / 3; border-radius: 16px; }
-      .pl-fantome { margin-top: 18px; aspect-ratio: 39 / 20; border-radius: 20px; overflow: hidden; opacity: .22; filter: grayscale(1); }
-      .pl-fantome img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      /* -- La scene -- */
+      .pv-scene {
+        position: relative; height: 272px; margin: -12px -20px 24px; overflow: hidden; isolation: isolate;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+        background: linear-gradient(180deg, #f7f4f2, #eeebea); transition: height .35s var(--sortie);
+      }
+      .pv-scene::before, .pv-scene::after {
+        content: ""; position: absolute; z-index: -1; width: 280px; height: 280px; border-radius: 50%; filter: blur(56px); opacity: .5; pointer-events: none;
+      }
+      .pv-scene::before { left: -80px; top: -110px; background: #ff7d6e; animation: pvNuage 16s ease-in-out infinite alternate; }
+      .pv-scene::after { right: -90px; bottom: -120px; background: #9d8bff; animation: pvNuage 19s ease-in-out infinite alternate-reverse; }
+      @keyframes pvNuage { from { transform: translate(0, 0) scale(1); } to { transform: translate(46px, 34px) scale(1.18); } }
+      .parcours.pv-clavier .pv-scene { height: 150px; margin-bottom: 14px; }
+      .parcours.pv-clavier .pv-scene > * { scale: .56; }
+      .parcours.pv-clavier .pv-scene .pv-pastille { display: none; }
+      @keyframes pvFlotte { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+      @keyframes pvPop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
 
-      /* 4 · la boutique */
-      .pr { margin: -12px -20px 0; }
-      .pr-hero { position: relative; height: 190px; overflow: hidden; background: #0d0d0f; }
-      .px-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-      .pr-voile { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,.2) 60%, rgba(0,0,0,.1)); }
-      .pr-nom { position: absolute; left: 20px; right: 20px; bottom: 38px; color: #fff; font-family: var(--titre); font-size: 30px; font-weight: 900; letter-spacing: -.035em; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .pr-corps { position: relative; margin-top: -24px; padding: 22px 20px 4px; border-radius: 24px 24px 0 0; background: #fff; }
-      .pr-solde { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 14px; border-bottom: 1px solid var(--line); }
-      .pr-solde span:first-child { font-size: 11.5px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); }
-      .pr-solde span:last-child { font-size: 13.5px; color: var(--ink3); }
-      .pr-solde b { font-family: var(--titre); font-size: 22px; font-weight: 900; color: var(--ink); }
-      .pr .px-titre { margin-top: 22px; margin-bottom: 4px; }
-      .pr .pa-compte { margin: 0; font-family: inherit; }
-      .pr .pa-grille { gap: 16px 12px; }
-      .pr .pa-tuile { overflow: visible; background: none; border: 0; border-radius: 0; box-shadow: none; opacity: 1; }
-      .pr .pa-tuile.prise { box-shadow: none; }
-      .pr .pa-tuile-img {
-        aspect-ratio: 1 / 1; border-radius: 18px; background: linear-gradient(#fff, #ededf0); box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
-        transition: opacity .2s ease, filter .2s ease;
+      /* -- La carte de l'etablissement, comme dans la liste de l'appli -- */
+      .pv-carte {
+        position: relative; flex: 0 0 auto; width: calc(100% - 48px); max-width: 330px; aspect-ratio: 39 / 22; border-radius: 22px; overflow: hidden;
+        background: #1b1b20; color: #fff; isolation: isolate; text-align: left; -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 36px 60px -28px rgba(50, 16, 16, .6), 0 12px 24px -14px rgba(0,0,0,.35);
+        animation: pvFlotte 6s ease-in-out infinite; transition: scale .35s var(--sortie);
       }
-      .pr .pa-tuile-img img { position: absolute; left: 20%; top: 7%; width: 60%; height: 60%; object-fit: contain; }
-      .pr .pa-tuile-corps {
-        margin: -62px 10px 0; padding: 12px 13px 11px; border: 0; border-radius: 16px; background: #fff;
-        box-shadow: 0 14px 24px -16px rgba(0,0,0,.4), 0 0 0 1px rgba(0,0,0,.05); transition: opacity .2s ease;
+      .pv-carte.pv-plusieurs { cursor: pointer; }
+      .pv-carte.pv-tap { animation: pvFlotte 6s ease-in-out infinite, pvTap .35s ease; }
+      @keyframes pvTap { 40% { transform: scale(.97); } }
+      .pv-carte-photos img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; scale: 1.08;
+        transition: opacity .55s ease, scale 1.4s cubic-bezier(.2, .7, .2, 1);
       }
-      .pr .pa-tuile-nom { min-height: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .pr .pa-tuile-prix { margin-top: 3px; }
-      .pr .pa-tuile-prix input { font-family: inherit; font-size: 14.5px; font-weight: 600; color: #666; width: 4.4ch; border-bottom: 1.5px dashed #c9c9cf; }
-      .pr .pa-tuile-prix span { font-family: inherit; font-size: 14.5px; color: #666; }
-      .pr .pa-tuile:not(.prise) .pa-tuile-img { opacity: .45; filter: grayscale(1); }
-      .pr .pa-tuile:not(.prise) .pa-tuile-corps { opacity: .5; }
-      .pr .pa-tuile:not(.prise) .pa-tuile-prix input { border-bottom-color: transparent; }
-      .pr .pa-coche { top: 10px; right: 10px; width: 26px; height: 26px; }
-      .pr .pa-tuile:not(.prise) .pa-coche { background: #fff; }
-      .pr .pa-tuile:not(.prise) .pa-coche::after { content: "+"; font-size: 18px; font-weight: 600; line-height: 1; color: var(--ink); margin-top: -2px; }
-      .pr .pa-tuile:not(.prise) .pa-coche svg { display: none; }
-      .pr .pa-tuile-photo { left: 10px; top: 10px; bottom: auto; width: 30px; height: 30px; }
-      .pr .pa-sienne { margin-top: 20px; padding: 14px; border-radius: 18px; background: #f3f3f5; }
+      .pv-carte-photos img.on { opacity: 1; scale: 1; }
+      .pv-carte-vide {
+        position: absolute; inset: 0; display: none; place-items: center; align-content: center; gap: 8px;
+        background: radial-gradient(120% 100% at 50% 0%, #3b3b45, #121216); color: rgba(255,255,255,.5); font-size: 12px; font-weight: 650;
+      }
+      .pv-sans-photo .pv-carte-vide { display: grid; }
+      .pv-carte-vide svg { width: 70px; height: 57px; stroke: rgba(255,255,255,.42); stroke-width: 1.5; margin-top: -26px; }
+      .pv-carte-voile { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,.3) 40%, rgba(0,0,0,0) 64%); }
+      .pv-carte-segments { position: absolute; z-index: 2; left: 12px; right: 12px; top: 9px; display: flex; gap: 4px; }
+      .pv-carte-segments:empty { display: none; }
+      .pv-carte-segments i { flex: 1; height: 2.5px; border-radius: 3px; background: rgba(255,255,255,.38); transition: background-color .3s ease; }
+      .pv-carte-segments i.on { background: #fff; }
+      .pv-carte-lieu {
+        position: absolute; z-index: 2; left: 12px; top: 20px; display: inline-flex; align-items: center; gap: 5px; max-width: calc(100% - 24px);
+        padding: 5px 9px 5px 7px; border-radius: 8px; background: rgba(20,20,22,.55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+        font-size: 12.5px; font-weight: 600; white-space: nowrap;
+      }
+      .pv-carte-lieu svg { flex: 0 0 auto; width: 14px; height: 14px; stroke: #fff; stroke-width: 2; }
+      .pv-carte-txt { position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 13px; display: flex; flex-direction: column; gap: 2px; }
+      .pv-carte-txt b { font-size: 23px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .pv-carte-txt span { font-size: 13.5px; font-weight: 550; color: rgba(255,255,255,.86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .pv-vide { opacity: .55; }
+      .pv-carte-txt b.pv-vide, .pv-carte-lieu .pv-vide { opacity: .6; font-style: italic; }
 
-      /* 5 · « Gagner des points » */
-      .pg-titre { margin: 2px 2px 16px; font-family: var(--titre); font-size: 30px; font-weight: 900; letter-spacing: -.04em; line-height: 1; }
-      .pg-liste { border-radius: 20px; background: #f3f3f5; padding: 2px 16px; }
-      .pg .bareme-ligne { padding: 16px 0; border-bottom: 1px solid rgba(0,0,0,.07); }
-      .pg #pa-bareme .bareme-ligne:last-child { border-bottom: 0; }
-      .pg .bareme-txt strong { font-size: 15.5px; font-weight: 750; }
-      .pg .bareme-txt span { font-size: 12.5px; }
-      .pg .bareme-champ { gap: 3px; }
-      .pg .bareme-champ::before { content: "+"; font-family: var(--titre); font-size: 20px; font-weight: 900; color: #de3131; }
-      .pg .bareme-champ input, .pg .pg-valeur {
-        width: 3.6ch; padding: 0 0 1px; border: 0; border-bottom: 2px dashed rgba(222,49,49,.45); border-radius: 0; background: none; text-align: left;
-        font-family: var(--titre); font-size: 22px; font-weight: 900; color: #de3131; letter-spacing: -.03em;
+      .pv-pastille {
+        display: inline-flex; align-items: center; gap: 7px; max-width: calc(100% - 64px); padding: 8px 14px 8px 11px; border-radius: 99px;
+        background: rgba(255,255,255,.88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #1d1d22;
+        box-shadow: 0 10px 22px -14px rgba(0,0,0,.35); font-size: 13px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
-      .pg .bareme-champ input:focus { outline: 0; border-bottom: 2px solid #de3131; }
-      .pg .pg-valeur { width: auto; border-bottom-color: transparent; }
-      .pg .bareme-champ input::-webkit-outer-spin-button, .pg .bareme-champ input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-      .pg .bareme-champ input { appearance: textfield; -moz-appearance: textfield; }
-      .pg .bareme-unite { font-family: inherit; font-size: 12px; font-weight: 600; width: auto; margin-left: 3px; }
+      .pv-pastille[hidden] { display: none; }
+      .pv-pastille svg { flex: 0 0 auto; width: 15px; height: 15px; stroke: #de3131; stroke-width: 2; }
+      .pv-pastille.sombre { background: rgba(17,17,20,.86); color: #fff; animation: pvPop .4s cubic-bezier(.3, 1.4, .5, 1) both; }
+      .pv-pastille.sombre svg { stroke: #fff; }
+      .pv-live { width: 8px; height: 8px; border-radius: 50%; background: #2fc26b; animation: pouls 2s ease-out infinite; }
 
-      /* 6 · la story */
-      .pi { margin: -12px -20px 0; }
-      .pi-story { position: relative; height: 470px; overflow: hidden; background: #000; color: #fff; }
-      .pi-story > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: pwPhoto 1.2s cubic-bezier(.2, .7, .2, 1) both; }
-      .pi-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0) 32%), linear-gradient(to top, rgba(0,0,0,.35), rgba(0,0,0,0) 40%); }
-      .pi-barres { position: absolute; left: 12px; right: 12px; top: 10px; display: flex; gap: 4px; }
-      .pi-barres i { flex: 1; height: 2.5px; border-radius: 3px; background: rgba(255,255,255,.45); }
-      .pi-barres i:first-child { background: #fff; }
-      .pi-auteur { position: absolute; left: 14px; top: 22px; display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 650; }
-      .pi-auteur i { width: 28px; height: 28px; border-radius: 50%; background: url(/ambiance/profil/avatar.webp) center / cover, #888; box-shadow: 0 0 0 1.5px #fff; }
-      .pi-consigne { position: absolute; left: 20px; right: 20px; top: 66px; margin: 0; font-size: 14px; font-weight: 650; line-height: 1.35; text-shadow: 0 1px 10px rgba(0,0,0,.5); }
-      .pi .pi-mention {
-        position: absolute; left: 0; right: 0; top: 46%; width: max-content; max-width: calc(100% - 40px); margin: 0 auto; display: block;
-        padding: 12px 18px; border-radius: 12px; background: #fff; transform: rotate(-3deg); box-shadow: 0 10px 26px rgba(0,0,0,.35); cursor: text;
+      /* -- Les champs -- */
+      .pv-champs { display: grid; gap: 10px; }
+      .pv-champ, .pv .pa-champ.pv-champ {
+        position: relative; display: flex; align-items: center; gap: 14px; min-height: 66px; margin: 0; padding: 10px 16px; border-radius: 18px;
+        background: #f3f3f5; cursor: text; transition: background-color .2s ease, box-shadow .2s ease;
       }
-      .pi-mention[hidden] { display: none !important; }
-      .pi .pi-mention input, .pi-connecte {
-        max-width: 100%; margin: 0; padding: 0; border: 0; outline: 0; background: linear-gradient(90deg, #f58529, #dd2a7b 45%, #8134af 80%, #515bd4);
-        -webkit-background-clip: text; background-clip: text; color: transparent; caret-color: #dd2a7b;
-        font-family: var(--titre); font-size: 24px; font-weight: 900; letter-spacing: -.01em; text-transform: uppercase;
+      .pv .pa-champ.pv-champ[hidden] { display: none; }
+      .pv-champ:focus-within { background: #fff; box-shadow: inset 0 0 0 2px #111, 0 16px 30px -20px rgba(0,0,0,.4); }
+      .pv-champ > svg { flex: 0 0 auto; width: 22px; height: 22px; stroke: #8e8e96; stroke-width: 1.9; transition: stroke .2s ease; }
+      .pv-champ:focus-within > svg { stroke: #de3131; }
+      .pv-champ-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .pv-lib { font-size: 12px; font-weight: 650; color: #8e8e96; }
+      .pv-champ input {
+        width: 100%; min-width: 0; margin: 0; padding: 0; border: 0; border-radius: 0; outline: 0; background: none; box-shadow: none;
+        font-family: inherit; font-size: 17px; font-weight: 600; color: #111;
       }
-      .pi .pi-mention input::placeholder { color: rgba(221,42,123,.45); }
-      .pi-connecte { background-clip: border-box; -webkit-background-clip: border-box; background: #fff; color: #dd2a7b; }
-      .pi-gain {
-        position: absolute; left: 0; right: 0; top: 64%; width: max-content; margin: 0 auto; padding: 10px 17px; border-radius: 99px;
-        background: #de3131; color: #fff; font-size: 16px; font-weight: 800; box-shadow: 0 12px 26px -8px rgba(222,49,49,.8);
-      }
-      .pi-bas { padding: 18px 20px 0; }
+      .pv-champ input::placeholder { color: #b8b8bf; font-weight: 500; }
+      .pv-prive { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; padding: 5px 9px; border-radius: 99px; background: #e8e8ec; font-size: 11px; font-weight: 700; color: #66666e; }
+      .pv-prive svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.2; }
 
-      /* L'ancienne carte d'apercu de l'etape photos : le telephone la montre deja. */
+      /* -- Le gros bouton de la facade -- */
+      .pv-gros {
+        display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 16px 12px 12px; border: 0; border-radius: 22px;
+        background: #111; color: #fff; font-family: inherit; text-align: left; cursor: pointer;
+        box-shadow: 0 18px 32px -20px rgba(0,0,0,.7); transition: transform .15s ease;
+      }
+      .pv-gros:active { transform: scale(.985); }
+      .pv-gros[disabled] { opacity: .7; }
+      .pv-gros-vignette { position: relative; flex: 0 0 auto; width: 64px; height: 64px; border-radius: 15px; overflow: hidden; display: grid; place-items: center; background: rgba(255,255,255,.12); }
+      .pv-gros-vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .pv-gros-vignette svg { width: 26px; height: 26px; stroke: #fff; stroke-width: 1.7; }
+      .pv-gros:not(.remplie) .pv-gros-vignette { animation: pvAppel 2.2s ease-in-out infinite; }
+      @keyframes pvAppel { 0%, 100% { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.25), 0 0 0 0 rgba(255,255,255,.35); } 50% { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.5), 0 0 0 7px rgba(255,255,255,0); } }
+      .pv-gros-txt { flex: 1; min-width: 0; }
+      .pv-gros-txt b { display: block; font-size: 16.5px; font-weight: 750; }
+      .pv-gros-txt span { display: block; margin-top: 2px; font-size: 13px; color: rgba(255,255,255,.62); }
+      .pv-gros > svg { flex: 0 0 auto; width: 20px; height: 20px; stroke: rgba(255,255,255,.6); stroke-width: 2.2; }
+      .pv-sec { display: flex; justify-content: space-between; align-items: baseline; margin: 26px 2px 10px; font-size: 16px; font-weight: 750; letter-spacing: -.01em; }
+      .pv-sec span { font-size: 12px; font-weight: 600; color: var(--ink3); }
+      .pv .pa-galerie { gap: 8px; }
+      .pv .pa-vign { border-radius: 14px; }
+      .pv #pa-galerie-aide { margin-top: 8px; }
+
+      /* -- La boutique -- */
+      .pv-scene-boutique { justify-content: flex-start; gap: 6px; padding-top: 20px; }
+      .pv-boutique-tete { align-self: stretch; display: flex; align-items: center; gap: 10px; padding: 0 22px; }
+      .pv-mini-photo { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: #2a2a30 center / cover; box-shadow: 0 0 0 2px #fff, 0 6px 14px -6px rgba(0,0,0,.4); }
+      .pv-boutique-tete > span:last-child { min-width: 0; display: flex; flex-direction: column; }
+      .pv-boutique-tete b { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .pv-boutique-tete b.pv-vide { opacity: .6; }
+      .pv-boutique-tete #pa-compte { margin: 0; font-family: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; color: #8e8e96; }
+      .pv-bande { align-self: stretch; display: flex; gap: 12px; overflow-x: auto; padding: 12px 22px 30px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+      .pv-bande::-webkit-scrollbar { display: none; }
+      .pv-mini-reco { flex: 0 0 136px; scroll-snap-align: center; }
+      .pv-mini-img { position: relative; display: block; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(#fff, #ececf0); box-shadow: 0 18px 30px -22px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.05); }
+      .pv-mini-img img { position: absolute; left: 17%; top: 6%; width: 66%; height: 62%; object-fit: contain; }
+      .pv-mini-img em, .pv-reco-img em { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-family: var(--titre); font-size: 34px; font-weight: 900; color: #c6c6cd; }
+      .pv-mini-lab { position: relative; display: block; margin: -46px 8px 0; padding: 9px 11px; border-radius: 14px; background: #fff; box-shadow: 0 12px 22px -14px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.04); }
+      .pv-mini-lab b { display: block; font-family: var(--titre); font-size: 13.5px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .pv-mini-lab span { display: block; margin-top: 1px; font-size: 12px; color: #77777f; }
+      .pv-mini-reco.arrive { animation: pvPop .55s cubic-bezier(.3, 1.5, .5, 1) both; }
+      .pv-bande-vide { margin: 50px auto 0; font-size: 13.5px; font-weight: 600; color: #8e8e96; }
+
+      .pv .pa-grille { grid-template-columns: 1fr; gap: 10px; }
+      .pv .pa-tuile.pv-reco {
+        display: flex; align-items: center; gap: 14px; padding: 10px 14px 10px 10px; border: 0; border-radius: 20px; overflow: visible;
+        background: #f3f3f5; box-shadow: none; opacity: 1; transition: background-color .2s ease, box-shadow .2s ease;
+      }
+      .pv .pa-tuile.pv-reco.prise { background: #fff; box-shadow: inset 0 0 0 2px #111; }
+      .pv-reco-img { position: relative; flex: 0 0 auto; width: 64px; height: 64px; border-radius: 15px; overflow: hidden; background: linear-gradient(#fff, #ececf0); box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+      .pv-reco-img img { position: absolute; left: 11%; top: 11%; width: 78%; height: 78%; object-fit: contain; transition: filter .25s ease, opacity .25s ease; }
+      .pv-reco:not(.prise) .pv-reco-img img { filter: grayscale(1); opacity: .55; }
+      .pv-reco-photo { position: absolute; right: 3px; bottom: 3px; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: rgba(17,17,20,.78); cursor: pointer; }
+      .pv-reco-photo svg { width: 13px; height: 13px; stroke: #fff; stroke-width: 2; }
+      .pv-reco-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+      .pv-reco-txt > b { max-width: 100%; font-size: 15.5px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .pv-prix { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border-radius: 99px; background: #ececf0; transition: opacity .2s ease; }
+      .pv-reco:not(.prise) .pv-prix { opacity: .5; }
+      .pv-prix button {
+        display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+        background: #fff; color: #111; font-family: inherit; font-size: 17px; font-weight: 600; line-height: 1; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.14);
+      }
+      .pv-prix button:active { transform: scale(.9); }
+      .pv-prix input {
+        width: 3.4ch; margin: 0 0 0 4px; padding: 0; border: 0; background: none; text-align: right;
+        font-family: var(--titre); font-size: 15px; font-weight: 800; color: #111; appearance: textfield; -moz-appearance: textfield;
+      }
+      .pv-prix input::-webkit-outer-spin-button, .pv-prix input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+      .pv-prix input:focus { outline: 0; }
+      .pv-prix input.pv-bouge { animation: pvPop .3s ease both; }
+      .pv-prix > span { margin: 0 6px 0 3px; font-size: 11.5px; font-weight: 650; color: #8e8e96; }
+      .pv-switch { position: relative; flex: 0 0 auto; width: 50px; height: 30px; border-radius: 99px; background: #d7d7dc; transition: background-color .25s ease; }
+      .pv-switch i { position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: transform .32s cubic-bezier(.3, 1.4, .5, 1); }
+      .pv-reco.prise .pv-switch { background: #34c759; }
+      .pv-reco.prise .pv-switch i { transform: translateX(20px); }
+      .pv-sienne { margin-top: 14px; padding: 4px 14px 14px; border-radius: 20px; background: #f3f3f5; }
+      .pv-sienne .pv-sec { margin-top: 12px; }
+      .pv-sienne .ac-input { background: #fff; }
+
+      /* -- Les points -- */
+      .pv-scene-points { flex-direction: row; gap: 18px; }
+      .pv-mini { position: relative; flex: 0 0 auto; width: 128px; aspect-ratio: 9 / 16; border-radius: 18px; overflow: hidden; box-shadow: 0 30px 50px -26px rgba(50,16,16,.6), 0 10px 20px -12px rgba(0,0,0,.3); }
+      .pv-mini-story { background: #000; rotate: -5deg; animation: pvFlotte 6s ease-in-out infinite; }
+      .pv-mini-story img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .pv-mini-scan { display: grid; place-items: center; background: #fff; rotate: 5deg; animation: pvFlotte 6s ease-in-out -3s infinite; }
+      .pv-mini-mention { position: absolute; left: 0; right: 0; top: 40%; width: max-content; max-width: calc(100% - 14px); margin: 0 auto; padding: 5px 8px; border-radius: 7px; background: #fff; rotate: -3deg; overflow: hidden; }
+      .pv-mini-mention > span, .pv-sticker > span {
+        display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--titre); font-weight: 900; text-transform: uppercase;
+        background: linear-gradient(90deg, #f58529, #dd2a7b 45%, #8134af 80%, #515bd4); -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+      .pv-mini-mention > span { font-size: 10px; }
+      .pv-qr { position: relative; width: 74px; height: 74px; margin-top: -30px; }
+      .pv-qr svg { width: 100%; height: 100%; fill: #111; }
+      .pv-qr i { position: absolute; left: -6px; right: -6px; top: 0; height: 2px; border-radius: 2px; background: #de3131; box-shadow: 0 0 10px 2px rgba(222,49,49,.5); animation: pvScan 2.4s ease-in-out infinite alternate; }
+      @keyframes pvScan { from { top: 4%; } to { top: 94%; } }
+      .pv-gain-mini {
+        position: absolute; left: 0; right: 0; bottom: 14px; width: max-content; margin: 0 auto; padding: 6px 11px; border-radius: 99px;
+        background: #de3131; color: #fff; font-size: 12.5px; font-weight: 800; white-space: nowrap; box-shadow: 0 8px 18px -6px rgba(222,49,49,.7);
+        animation: pvPop .5s cubic-bezier(.3, 1.5, .5, 1) .4s both;
+      }
+      .pv-regles { display: grid; gap: 10px; }
+      .pv-regle { display: flex; align-items: center; gap: 14px; padding: 14px 18px 14px 14px; border-radius: 20px; background: #f3f3f5; }
+      .pv-regle-ico { flex: 0 0 auto; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); }
+      .pv-regle-ico svg { width: 22px; height: 22px; stroke: #de3131; stroke-width: 2; }
+      .pv-regle-txt { flex: 1; min-width: 0; }
+      .pv-regle-txt b { display: block; font-size: 15.5px; font-weight: 750; }
+      .pv-regle-txt span { display: block; margin-top: 2px; font-size: 12.5px; color: #8e8e96; }
+      .pv-regle strong { font-family: var(--titre); font-size: 28px; font-weight: 900; letter-spacing: -.03em; white-space: nowrap; }
+      .pv-regle strong small { margin-left: 3px; font-family: inherit; font-size: 12px; font-weight: 650; letter-spacing: 0; color: #8e8e96; }
+
+      /* -- La story -- */
+      .pv-scene-story { height: 320px; }
+      .pv-story { position: relative; flex: 0 0 auto; height: 280px; aspect-ratio: 9 / 16; border-radius: 22px; overflow: hidden; background: #000; color: #fff; box-shadow: 0 36px 60px -28px rgba(50,16,16,.65), 0 12px 24px -14px rgba(0,0,0,.35); animation: pvFlotte 6s ease-in-out infinite; }
+      .pv-story > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .pv-story-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0) 28%); }
+      .pv-story-barres { position: absolute; left: 8px; right: 8px; top: 7px; display: flex; gap: 3px; }
+      .pv-story-barres i { flex: 1; height: 2px; border-radius: 2px; background: rgba(255,255,255,.45); }
+      .pv-story-barres i:first-child { background: #fff; }
+      .pv-story-auteur { position: absolute; left: 9px; top: 15px; display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 650; }
+      .pv-story-auteur i { width: 20px; height: 20px; border-radius: 50%; background: url(/ambiance/profil/avatar.webp) center / cover, #888; box-shadow: 0 0 0 1.5px #fff; }
+      .pv-sticker { position: absolute; left: 0; right: 0; top: 44%; display: flex; align-items: center; width: max-content; max-width: calc(100% - 18px); margin: 0 auto; padding: 7px 10px; border-radius: 9px; background: #fff; rotate: -3deg; box-shadow: 0 10px 22px rgba(0,0,0,.35); }
+      .pv-sticker > span { font-size: 15px; }
+      .pv-curseur { flex: 0 0 auto; width: 2px; height: 16px; margin-left: 2px; border-radius: 1px; background: #dd2a7b; opacity: 0; }
+      .pv:has(#pa-handle:focus) .pv-curseur { animation: pvCurseur 1s steps(1) infinite; }
+      @keyframes pvCurseur { 50% { opacity: 1; } }
+      .pv-story .pv-gain-mini { bottom: 22px; font-size: 13px; }
+      .pv-ig { margin-top: 12px; }
 
       @media (prefers-reduced-motion: reduce) {
-        .ap-monde, .ap-defile, .ap-anneau, .ap-bulle, .ap-reco.arrive, .ap-defile.ap-change, .ap-sur i { transition: none !important; animation: none !important; }
+        .pv-scene::before, .pv-scene::after, .pv-carte, .pv-mini, .pv-story, .pv-qr i, .pv-gros-vignette, .pv-mini-reco.arrive, .pv-gain-mini { animation: none !important; }
       }
     </style>
   </head>
@@ -3232,42 +3088,6 @@
                 <button type="button" class="pa-passer" id="pa-passer">Passer</button>
               </div>
 
-              <!-- L'APERCU EN DIRECT (17/09/2026). Julien : « qu'ils voient exactement
-                   ou vont leurs infos, et ce que ca donne sur notre application ».
-                   Un seul telephone pour tout le parcours, HORS de la scene qui glisse
-                   d'une etape a l'autre : c'est le meme objet qui se remplit. Il dessine
-                   l'appli clubbeur aux mesures d'app-preview.html (liste, page du bar,
-                   story) ; toucher un champ zoome sur l'endroit ou il s'affiche. -->
-              <div class="ap-scene" id="ap-scene" hidden>
-                <p class="ap-sur"><i></i>Vu par tes clients</p>
-                <button type="button" class="ap-grand" id="ap-grand" aria-label="Voir l'aperçu en grand">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>
-                </button>
-                <div class="ap-monde" id="ap-monde" aria-hidden="true">
-                  <div class="ap-tel">
-                    <div class="ap-ecran" id="ap-ecran">
-                      <div class="ap-ile"></div>
-                      <div class="ap-statut"><b>21:47</b><span><i></i><i></i><i></i></span></div>
-                      <div class="ap-cadre" id="ap-cadre"><div class="ap-defile" id="ap-defile"></div></div>
-                      <div class="ap-app-onglets" id="ap-app-onglets"></div>
-                    </div>
-                  </div>
-                </div>
-                <span class="ap-bulle" id="ap-bulle" hidden></span>
-                <div class="ap-vues" id="ap-vues" role="tablist" aria-label="Écran de l'appli clubbeur">
-                  <button type="button" class="ap-vue" data-ap-vue="liste" role="tab">Liste</button>
-                  <button type="button" class="ap-vue" data-ap-vue="bar" role="tab">Ta page</button>
-                  <button type="button" class="ap-vue" data-ap-vue="story" role="tab">Story</button>
-                </div>
-              </div>
-              <div class="ap-plein" id="ap-plein" hidden>
-                <button type="button" class="ap-plein-fermer" id="ap-plein-fermer" aria-label="Fermer l'aperçu">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-                </button>
-                <p class="ap-plein-txt">Fais défiler, c'est ce que voient tes clients.</p>
-                <div class="ap-plein-zone" id="ap-plein-zone"></div>
-              </div>
-
               <div class="pa-corps" id="pa-corps">
                 <!-- Ce bloc-ci est ce qui glisse d'une etape a l'autre. -->
                 <div class="pa-scene" id="pa-scene">
@@ -3365,39 +3185,35 @@
                       </div>
                     </section>
 
-                    <!-- 2 · L'etablissement, ECRIT SUR SA PAGE. 17/09/2026, Julien : « il faut
-                         que ce soit directement integre sur l'ecran [...] trop de trucs inutiles, le
-                         lien Google Maps, bar / boite de nuit / restaurant, c'est moche ». L'ecran
-                         EST la page de l'etablissement dans l'appli clubbeur (memes mesures que
-                         #vue-bar) : le nom s'ecrit sur la photo, la ville dans sa pastille, l'adresse
-                         dans la fiche. Les champs gardent leurs id (pa-nom, pa-ville, pa-adresse,
-                         pa-tel) : enregistrerFicheParcours ne change pas. Le type se change en
-                         touchant la ligne sous le nom. Le bloc Google reste dans le DOM, masque :
-                         ses gestionnaires y sont accroches. -->
-                    <section class="pa-etape" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pw">
-                        <div class="pw-hero">
-                          <img class="pw-photo" id="pw-photo" src="/clubs/couverture-par-defaut.webp" alt="" />
-                          <span class="pw-voile" aria-hidden="true"></span>
-                          <p class="pw-consigne">Ta page, telle que tes clients la voient.</p>
-                          <button type="button" class="pw-photo-btn" id="pw-photo-btn" hidden>
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></svg>
-                            <span id="pw-photo-txt">Ta photo</span>
-                          </button>
-                          <div class="pw-bas">
-                            <label class="pw-ville"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><input id="pa-ville" type="text" autocomplete="address-level2" placeholder="Ville" aria-label="Ville" /></label>
-                            <input class="pw-nom" id="pa-nom" type="text" autocomplete="organization" placeholder="Nom de ton établissement" aria-label="Nom de ton établissement" />
-                            <button type="button" class="pw-type" id="pw-type" aria-label="Changer le type d'établissement"><span id="pw-type-txt">Boîte de nuit</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
-                          </div>
-                        </div>
-                        <div class="pw-corps">
-                          <p class="pw-titre">Adresse</p>
-                          <label class="pw-ligne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><input id="pa-adresse" type="text" autocomplete="street-address" placeholder="Rue et numéro" aria-label="Adresse" /></label>
-                          <p class="pw-titre">Ton numéro<span>Tes clients ne le voient pas</span></p>
-                          <label class="pw-ligne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><input id="pa-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0470 12 34 56" aria-label="Ton numéro de téléphone" /></label>
-                        </div>
-                      </div>
+                    <!-- ============ LE PARCOURS, TROISIEME VERSION (17/09/2026) ============
+                         Julien : « on ne sait pas ou on clique, rien n'est beau [...] on travaille
+                         avec des vrais mecs, il faut que ce soit vraiment esthetique, interactif,
+                         inspire-toi des applis qui ont des parcours ».
+                         Modele : l'installation d'un hote Airbnb et les ecrans de Revolut. Chaque
+                         etape a deux etages qui ne se confondent pas :
+                           - EN HAUT, la scene : le resultat, tel que le client le verra, vivant
+                             (la carte de l'etablissement, la boutique, la story) ;
+                           - EN BAS, les commandes : des champs et des boutons qui ressemblent a ce
+                             qu'ils sont. On sait ou toucher sans chercher.
+                         Photos : la FACADE d'abord ; les autres defilent quand on touche la carte.
+                         Points : imposes a tous (Julien), l'etape les annonce, elle ne demande rien.
+                         Les id des champs sont ceux d'avant : les enregistrements ne changent pas. -->
 
+                    <!-- 2 · L'etablissement -->
+                    <section class="pa-etape pv" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
+                      <div class="pv-scene">
+                        <div class="pv-carte pv-sans-photo" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div>
+                        <span class="pv-pastille"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="adresse"></span></span>
+                      </div>
+                      <p class="pv-etape">Étape 1 sur 5</p>
+                      <h1 class="pa-titre">Ton établissement.</h1>
+                      <p class="pa-sous">Au-dessus, ce que tes clients verront dans l'appli.</p>
+                      <div class="pv-champs">
+                        <label class="pv-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5 5 4h14l1.5 5.5"/><path d="M3.5 9.5a2.8 2.8 0 0 0 5.5 0 2.8 2.8 0 0 0 5.6 0 2.8 2.8 0 0 0 5.4 0"/><path d="M5 12v8h14v-8M10 20v-5h4v5"/></svg><span class="pv-champ-txt"><span class="pv-lib">Nom</span><input id="pa-nom" type="text" autocomplete="organization" placeholder="Mirage Club" /></span></label>
+                        <label class="pv-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span class="pv-champ-txt"><span class="pv-lib">Adresse</span><input id="pa-adresse" type="text" autocomplete="street-address" placeholder="Avenue Louise 120" /></span></label>
+                        <label class="pv-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V10l5-3v14M10 21V4l9 4v13M13.5 10.5h2M13.5 14h2M13.5 17.5h2"/></svg><span class="pv-champ-txt"><span class="pv-lib">Ville</span><input id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" /></span></label>
+                        <label class="pv-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span class="pv-champ-txt"><span class="pv-lib">Téléphone</span><input id="pa-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0470 12 34 56" /></span><span class="pv-prive"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Privé</span></label>
+                      </div>
                       <div hidden>
                         <input id="pa-google" type="url" /><button type="button" id="pa-google-btn">Récupérer</button>
                         <ol id="pa-google-aide"></ol>
@@ -3412,106 +3228,116 @@
                       </div>
                     </section>
 
-                    <!-- 3 a 6 · ECRITS SUR L'ECRAN DU CLIENT (17/09/2026). Julien : « vas-y, fais
-                         pareil avec les recompenses, Instagram, etc. » Comme l'etape 2, chaque etape
-                         EST l'ecran de l'appli clubbeur ou l'info s'affiche : la liste des
-                         etablissements (photos), la boutique de la page du bar (recompenses), la
-                         page « Gagner des points » (bareme), la story du client (Instagram).
-                         Les id des champs ne changent pas : les enregistrements non plus. -->
+                    <!-- 3 · La facade, et les photos qui defilent -->
+                    <section class="pa-etape pv" data-pas="3" data-mascotte="/mascotte/pose-1.webp" hidden>
+                      <div class="pv-scene">
+                        <div class="pv-carte pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div>
+                        <span class="pv-pastille sombre" data-pv="tape" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.5V5.5a1.5 1.5 0 0 1 3 0v5M12 10.5V9a1.5 1.5 0 0 1 3 0v2M15 11a1.5 1.5 0 0 1 3 0v3.5a6.5 6.5 0 0 1-6.5 6.5h-.6a6 6 0 0 1-4.7-2.3L4 15.5a1.5 1.5 0 0 1 2.3-1.9L9 16"/></svg>Touche la photo</span>
+                      </div>
+                      <p class="pv-etape">Étape 2 sur 5</p>
+                      <h1 class="pa-titre">Ta façade.</h1>
+                      <p class="pa-sous">La première photo que voient tes clients. Prends-la belle.</p>
+                      <button type="button" class="pv-gros" id="pa-photo-btn">
+                        <span class="pv-gros-vignette" id="pa-photo-vue"></span>
+                        <span class="pv-gros-txt"><b id="pa-photo-titre">Ajouter une photo</b><span>Photo de ta façade</span></span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+                      </button>
+                      <p class="pv-sec">Autres photos<span>Facultatif</span></p>
+                      <div class="pa-galerie" id="pa-galerie"></div>
+                      <p class="pa-aide" id="pa-galerie-aide"></p>
+                      <span hidden><span id="pa-apercu-nom"></span><span id="pa-apercu-ligne"></span><span id="pa-apercu-lieu"></span></span>
+                    </section>
 
-                    <!-- 3 · Les photos : la liste des etablissements -->
-                    <section class="pa-etape" data-pas="3" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pl">
-                        <p class="px-consigne">Ta carte dans la liste de l'appli. Touche la photo pour la changer.</p>
-                        <div class="pl-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div>
-                        <button type="button" class="pa-couv" id="pa-photo-btn">
-                          <span class="pa-couv-vue" id="pa-photo-vue"></span>
-                          <span class="pa-couv-voile" aria-hidden="true"></span>
-                          <span class="pa-couv-lieu" id="pa-apercu-lieu"></span>
-                          <span class="pa-couv-texte">
-                            <span class="pa-couv-nom" id="pa-apercu-nom"></span>
-                            <span class="pa-couv-ligne" id="pa-apercu-ligne"></span>
-                          </span>
-                          <span class="pa-couv-act" id="pa-photo-titre">Ajouter une photo</span>
-                        </button>
-                        <h2 class="px-titre">Tes photos<span id="pa-galerie-aide"></span></h2>
-                        <div class="pa-galerie" id="pa-galerie"></div>
-                        <div class="pl-fantome" aria-hidden="true"><img src="/clubs/demo-velours.webp" alt="" /></div>
+                    <!-- 4 · La boutique -->
+                    <section class="pa-etape pv" data-pas="4" data-mascotte="/mascotte/pose-2.webp" hidden>
+                      <div class="pv-scene pv-scene-boutique">
+                        <div class="pv-boutique-tete">
+                          <span class="pv-mini-photo" data-pv="vignette"></span>
+                          <span><b data-pv="nom"></b><span id="pa-compte"></span></span>
+                        </div>
+                        <div class="pv-bande" id="pv-bande"></div>
+                      </div>
+                      <p class="pv-etape">Étape 3 sur 5</p>
+                      <h1 class="pa-titre">Ta boutique.</h1>
+                      <p class="pa-sous">Ce que tes clients s'offrent avec leurs points. Active, règle le prix.</p>
+                      <div class="pa-grille" id="pa-grille"></div>
+                      <div class="pv-sienne">
+                        <p class="pv-sec">Une autre récompense</p>
+                        <div class="pa-sienne-lignes">
+                          <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Ex. Bouteille offerte" />
+                          <input class="ac-input pa-sienne-pts" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" />
+                        </div>
+                        <button type="button" class="ajouter-recompense" id="pa-sienne-ajouter">Ajouter</button>
                       </div>
                     </section>
 
-                    <!-- 4 · Les recompenses : la boutique de la page du bar -->
-                    <section class="pa-etape" data-pas="4" data-mascotte="/mascotte/pose-2.webp" hidden>
-                      <div class="pr">
-                        <div class="pr-hero">
-                          <img class="px-photo" data-px="photo" src="/clubs/couverture-par-defaut.webp" alt="" />
-                          <span class="pr-voile" aria-hidden="true"></span>
-                          <span class="pr-nom" data-px="nom"></span>
-                        </div>
-                        <div class="pr-corps">
-                          <div class="pr-solde"><span>Ton solde</span><span><b>450</b> points</span></div>
-                          <h2 class="px-titre">Récompenses<span id="pa-compte"></span></h2>
-                          <p class="px-consigne sombre">Touche une récompense pour la mettre dans ta boutique. Son prix se change sur la carte.</p>
-                          <div class="pa-grille" id="pa-grille"></div>
-                          <div class="pa-sienne">
-                            <div class="pa-sienne-lignes">
-                              <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Une autre récompense" />
-                              <input class="ac-input pa-sienne-pts" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" />
-                            </div>
-                            <button type="button" class="ajouter-recompense" id="pa-sienne-ajouter">Ajouter cette récompense</button>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- 5 · Le bareme : la page « Gagner des points » -->
-                    <section class="pa-etape" data-pas="5" data-mascotte="/mascotte/pose-3.webp" hidden>
-                      <div class="pg">
-                        <p class="px-consigne sombre">Ce que tes clients gagnent chez toi. Touche un chiffre pour le changer.</p>
-                        <h1 class="pg-titre">Gagner des points</h1>
-                        <div class="pg-liste">
-                          <div class="bareme-ligne pg-fixe">
-                            <span class="bareme-txt"><strong>Poster une story</strong><span>Mentionne ton établissement</span></span>
-                            <span class="bareme-champ"><b class="pg-valeur" data-px="story">100</b><span class="bareme-unite">pts</span></span>
-                          </div>
-                          <div id="pa-bareme"></div>
-                        </div>
-                        <div class="pa-profils" id="pa-profils" hidden></div>
-                      </div>
-                    </section>
-
-                    <!-- 6 · Instagram : la story du client -->
-                    <section class="pa-etape" data-pas="6" data-mascotte="/mascotte/pose-4.webp" hidden>
-                      <div class="pi">
-                        <div class="pi-story">
+                    <!-- 5 · Les points, imposes : on les annonce -->
+                    <section class="pa-etape pv" data-pas="5" data-mascotte="/mascotte/pose-3.webp" hidden>
+                      <div class="pv-scene pv-scene-points">
+                        <div class="pv-mini pv-mini-story">
                           <img src="/ambiance/bienvenue.webp" alt="" />
-                          <span class="pi-voile" aria-hidden="true"></span>
-                          <div class="pi-barres" aria-hidden="true"><i></i><i></i></div>
-                          <div class="pi-auteur" aria-hidden="true"><i></i>ton client</div>
-                          <p class="pi-consigne">Écris le compte que tes clients mentionnent dans leur story.</p>
-                          <label class="pa-champ pi-mention"><input id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@tonclub" aria-label="Ton pseudo Instagram" /></label>
-                          <span class="pi-mention pi-connecte" id="pi-connecte" hidden></span>
-                          <span class="pi-gain" data-px="gain">+100 points</span>
+                          <span class="pv-mini-mention"><span>@<span data-pv="handle"></span></span></span>
+                          <span class="pv-gain-mini" data-pv="gain-story"></span>
                         </div>
-                        <div class="pi-bas">
-                          <button type="button" class="ac-btn ac-btn-google" id="pa-ig-connecter">
-                            <svg viewBox="0 0 24 24" class="ig-glyphe" aria-hidden="true">
-                              <rect x="3" y="3" width="18" height="18" rx="5.4"/>
-                              <circle cx="12" cy="12" r="4.1"/>
-                              <circle cx="17.3" cy="6.7" r="1.15" fill="#e1306c" stroke="none"/>
-                            </svg>
-                            Connecter Instagram
-                          </button>
-                          <p class="pa-aide" id="pa-ig-aide" style="margin-top:10px">
-                            Le compte Instagram doit être un compte professionnel (Entreprise ou Créateur).
-                            La connexion peut se faire plus tard, depuis les Réglages.
-                          </p>
+                        <div class="pv-mini pv-mini-scan">
+                          <span class="pv-qr" aria-hidden="true"><svg viewBox="0 0 29 29"><path d="M1 1h9v9H1zM19 1h9v9h-9zM1 19h9v9H1z" fill="none" stroke="#111" stroke-width="2"/><path d="M4 4h3v3H4zM22 4h3v3h-3zM4 22h3v3H4zM13 2h2v4h-2zM12 8h4v2h-4zM13 12h3v3h-3zM18 13h4v2h-4zM24 12h3v4h-3zM12 18h2v3h-2zM16 17h3v3h-3zM21 19h3v2h-3zM25 21h2v6h-2zM13 23h4v2h-4zM18 24h3v3h-3zM2 13h3v2H2zM7 12h3v4H7z"/></svg><i></i></span>
+                          <span class="pv-gain-mini" data-pv="gain-scan"></span>
                         </div>
                       </div>
+                      <p class="pv-etape">Étape 4 sur 5</p>
+                      <h1 class="pa-titre">Ce que gagnent tes clients.</h1>
+                      <p class="pa-sous">Les mêmes points partout sur Noctify. Tu n'as rien à régler.</p>
+                      <div class="pv-regles">
+                        <div class="pv-regle">
+                          <span class="pv-regle-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></svg></span>
+                          <span class="pv-regle-txt"><b>Une story qui te mentionne</b><span>Crédités 24 h après</span></span>
+                          <strong data-pv="pts-story"></strong>
+                        </div>
+                        <div class="pv-regle">
+                          <span class="pv-regle-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M4 12h16"/></svg></span>
+                          <span class="pv-regle-txt"><b>Un scan du QR sur place</b><span>Une fois par soirée</span></span>
+                          <strong data-pv="pts-scan"></strong>
+                        </div>
+                      </div>
+                      <div hidden><div id="pa-profils" hidden></div><div id="pa-bareme"></div></div>
+                    </section>
+
+                    <!-- 6 · Instagram -->
+                    <section class="pa-etape pv" data-pas="6" data-mascotte="/mascotte/pose-4.webp" hidden>
+                      <div class="pv-scene pv-scene-story">
+                        <div class="pv-story">
+                          <img src="/ambiance/bienvenue.webp" alt="" />
+                          <span class="pv-story-voile" aria-hidden="true"></span>
+                          <span class="pv-story-barres" aria-hidden="true"><i></i><i></i></span>
+                          <span class="pv-story-auteur" aria-hidden="true"><i></i>ton.client</span>
+                          <span class="pv-sticker"><span>@<span data-pv="handle"></span></span><i class="pv-curseur"></i></span>
+                          <span class="pv-gain-mini" data-pv="gain-story"></span>
+                        </div>
+                      </div>
+                      <p class="pv-etape">Étape 5 sur 5</p>
+                      <h1 class="pa-titre">Ton Instagram.</h1>
+                      <p class="pa-sous">Le compte que tes clients mentionnent dans leur story.</p>
+                      <label class="pv-champ pa-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.3" cy="6.7" r="1.1"/></svg><span class="pv-champ-txt"><span class="pv-lib">Compte Instagram</span><input id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@tonclub" /></span></label>
+                      <button type="button" class="ac-btn ac-btn-google pv-ig" id="pa-ig-connecter">
+                        <svg viewBox="0 0 24 24" class="ig-glyphe" aria-hidden="true">
+                          <rect x="3" y="3" width="18" height="18" rx="5.4"/>
+                          <circle cx="12" cy="12" r="4.1"/>
+                          <circle cx="17.3" cy="6.7" r="1.15" fill="#e1306c" stroke="none"/>
+                        </svg>
+                        Connecter Instagram
+                      </button>
+                      <p class="pa-aide" id="pa-ig-aide" style="margin-top:10px">
+                        Le compte Instagram doit être un compte professionnel (Entreprise ou Créateur).
+                        La connexion peut se faire plus tard, depuis les Réglages.
+                      </p>
                     </section>
 
                     <!-- 5 · Ce qui vient d'etre construit -->
-                    <section class="pa-etape" data-pas="7" data-mascotte="/mascotte/pose-5.webp" hidden>
+                    <section class="pa-etape pv" data-pas="7" data-mascotte="/mascotte/pose-5.webp" hidden>
+                      <div class="pv-scene">
+                        <div class="pv-carte pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div>
+                        <span class="pv-pastille"><i class="pv-live"></i>En ligne sur Noctify</span>
+                      </div>
                       <h1 class="pa-titre">Tout est prêt.</h1>
                       <p class="pa-sous">Il ne reste qu'à coller ton affiche : à l'entrée, au bar, aux toilettes.</p>
 
@@ -7180,7 +7006,8 @@
         if (pas === 2) return enregistrerFicheParcours();
         if (pas === 3) return enregistrerPhotosParcours();
         if (pas === 4) return enregistrerRecompensesParcours();
-        if (pas === 5) return enregistrerBaremeParcours();
+        // Les points sont imposes a tous (Julien, 17/09/2026) : l'etape 5 n'ecrit plus rien.
+        if (pas === 5) return true;
         if (pas === 6) return enregistrerHandleParcours();
         return true;
       }
@@ -7204,7 +7031,7 @@
 
         var lignes = [
           [true, boutique + (boutique > 1 ? " récompenses" : " récompense"), "Dans la boutique de tes clients"],
-          [true, "Barème réglé", nb.format(parVideo) + " pts pour 1 000 vues"],
+          [true, PV_POINTS.story + " points par story", PV_POINTS.scan + " points par scan du QR, comme partout"],
           igConnecte
             ? [true, "Instagram connecté", "Les mentions arrivent toutes seules"]
             : [false, etab.ig_handle ? "Instagram à connecter" : "Instagram non renseigné",
@@ -7395,7 +7222,7 @@
         var etab = etablissementCourant();
         var nom = $("#pa-nom").value.trim();
         if (!nom) {
-          direParcours("Écris le nom de ton établissement, sur la photo.", true);
+          direParcours("Écris le nom de ton établissement.", true);
           $("#pa-nom").focus();
           return false;
         }
@@ -7715,65 +7542,63 @@
         PARCOURS.choix = choix;
       }
 
+      /* Une ligne par recompense, comme les reglages d'iPhone : la vignette, le nom,
+         le prix a regler au - / +, et l'interrupteur. Toucher la ligne l'active. */
       function rendreChoixRecompenses() {
+        var ICO_PHOTO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></svg>';
         $("#pa-grille").innerHTML = PARCOURS.choix.map(function (c, i) {
+          var titre = escapeHtml(c.titre || "");
           var vignette = c.foto
             ? '<img src="' + escapeHtml(c.foto) + '" alt="" loading="lazy" />'
-            : escapeHtml((c.titre || "?").trim().charAt(0).toUpperCase());
-
-          return (
-            '<div class="pa-tuile' + (c.prise ? " prise" : "") + '" data-i="' + i + '"' +
-                 ' role="checkbox" tabindex="0" aria-checked="' + (c.prise ? "true" : "false") + '"' +
-                 ' aria-label="' + escapeHtml(c.titre) + '">' +
-              '<span class="pa-tuile-img">' + vignette +
-                // La photo se change ICI, sur la vignette, pas dans un
-                // ecran de reglages plus tard : c'est ce que le client
-                // verra dans sa boutique, il faut pouvoir le corriger en
-                // le regardant.
-                '<button type="button" class="pa-tuile-photo" data-photo="' + i + '"' +
-                  ' aria-label="Changer la photo de ' + escapeHtml(c.titre) + '">' +
-                  '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-                    '<path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/>' +
-                  "</svg>" +
-                "</button>" +
+            : "<em>" + escapeHtml((c.titre || "?").trim().charAt(0).toUpperCase()) + "</em>";
+          return '<div class="pa-tuile pv-reco' + (c.prise ? " prise" : "") + '" data-i="' + i + '" role="checkbox" tabindex="0"' +
+              ' aria-checked="' + (c.prise ? "true" : "false") + '" aria-label="' + titre + '">' +
+            '<span class="pv-reco-img">' + vignette +
+              '<button type="button" class="pv-reco-photo" data-photo="' + i + '" aria-label="Changer la photo de ' + titre + '">' + ICO_PHOTO + "</button>" +
+            "</span>" +
+            '<span class="pv-reco-txt"><b>' + titre + "</b>" +
+              '<span class="pv-prix">' +
+                '<button type="button" data-pas-prix="-10" data-i-prix="' + i + '" aria-label="Moins de points">−</button>' +
+                '<input type="number" min="0" step="10" value="' + Number(c.points || 0) + '" data-prix="' + i + '" aria-label="Prix en points"' + (c.prise ? "" : " disabled") + " />" +
+                "<span>pts</span>" +
+                '<button type="button" data-pas-prix="10" data-i-prix="' + i + '" aria-label="Plus de points">+</button>' +
               "</span>" +
-              '<span class="pa-coche" aria-hidden="true">' +
-                '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' +
-              "</span>" +
-              '<span class="pa-tuile-corps">' +
-                '<span class="pa-tuile-nom">' + escapeHtml(c.titre) + "</span>" +
-                '<span class="pa-tuile-prix">' +
-                  '<input type="number" min="0" step="10" value="' + Number(c.points || 0) + '"' +
-                    ' data-prix="' + i + '" aria-label="Prix en points"' + (c.prise ? "" : " disabled") + " />" +
-                  "<span>pts</span>" +
-                "</span>" +
-              "</span>" +
-            "</div>"
-          );
+            "</span>" +
+            '<span class="pv-switch" aria-hidden="true"><i></i></span>' +
+          "</div>";
         }).join("");
 
         $("#pa-grille").querySelectorAll(".pa-tuile").forEach(function (tuile) {
           tuile.addEventListener("click", function (ev) {
-            // Regler le prix ou changer la photo n'est pas decocher : sans
-            // ce garde, chaque clic dans le champ sortait la recompense de
-            // la boutique.
-            if (ev.target.closest("input") || ev.target.closest("[data-photo]")) return;
+            if (ev.target.closest("input, [data-photo], [data-pas-prix]")) return;
             basculerChoix(Number(tuile.dataset.i));
           });
           tuile.addEventListener("keydown", function (ev) {
             if (ev.key !== " " && ev.key !== "Enter") return;
-            if (ev.target.closest("[data-photo]")) return;
+            if (ev.target.closest("input, [data-photo], [data-pas-prix]")) return;
             ev.preventDefault();
             basculerChoix(Number(tuile.dataset.i));
           });
         });
-
         $("#pa-grille").querySelectorAll("[data-prix]").forEach(function (champ) {
-          champ.addEventListener("change", function () {
+          champ.addEventListener("input", function () {
             PARCOURS.choix[Number(champ.dataset.prix)].points = Math.max(0, Math.round(Number(champ.value) || 0));
+            pvSynchro();
           });
         });
-
+        $("#pa-grille").querySelectorAll("[data-pas-prix]").forEach(function (bouton) {
+          bouton.addEventListener("click", function () {
+            var i = Number(bouton.dataset.iPrix);
+            var c = PARCOURS.choix[i];
+            if (!c) return;
+            // Regler le prix d'une recompense eteinte, c'est vouloir la proposer.
+            if (!c.prise) basculerChoix(i);
+            c.points = Math.max(0, Math.round(Number(c.points || 0) + Number(bouton.dataset.pasPrix)));
+            var champ = $('[data-prix="' + i + '"]');
+            if (champ) { champ.value = c.points; relancerAnimation(champ, "pv-bouge"); }
+            pvSynchro();
+          });
+        });
         $("#pa-grille").querySelectorAll("[data-photo]").forEach(function (bouton) {
           bouton.addEventListener("click", function () { choisirPhotoRecompense(Number(bouton.dataset.photo)); });
         });
@@ -7842,7 +7667,7 @@
         var n = PARCOURS.choix.filter(function (c) { return c.prise; }).length;
         $("#pa-compte").textContent = n === 0
           ? "Boutique vide"
-          : n + (n > 1 ? " récompenses dans ta boutique" : " récompense dans ta boutique");
+          : n + (n > 1 ? " récompenses en boutique" : " récompense en boutique");
       }
 
       $("#pa-sienne-ajouter").addEventListener("click", function () {
@@ -8198,556 +8023,151 @@
       }
 
 
-      /* ================= L'APERCU EN DIRECT (17/09/2026) =================
-         Julien : « un parcours vraiment super beau, interactif, qu'ils voient
-         exactement ou vont leurs infos et ce que ca donne sur notre appli ».
+      /* ================= LE PARCOURS, TROISIEME VERSION (17/09/2026) =================
+         Voir le commentaire au-dessus des etapes dans le HTML. pvSynchro() recopie
+         l'etat des champs dans les scenes : elle est appelee a chaque frappe et apres
+         chaque rendu du parcours (photos, boutique, Instagram, changement d'etape). */
+      var PV_POINTS = { story: 100, scan: 15 };
+      var PV = { bande: null };
 
-         Trois ecrans de l'appli clubbeur, redessines aux mesures
-         d'app-preview.html (captures de reference : outils/captures_ref_clubbeur.cjs) :
-           liste  -- l'onglet Recompenses, la carte de l'etablissement ;
-           bar    -- sa page : photo, nom, type, recompenses, adresse, photos ;
-           story  -- la story qui mentionne l'etablissement.
-         Chaque champ du parcours porte une CIBLE ; le toucher fait zoomer la
-         « camera » (.ap-monde) sur l'endroit ou il s'affiche, et chaque frappe
-         se voit tout de suite. Rien n'est ecrit en base ici : l'apercu lit les
-         champs et l'etat du parcours, l'enregistrement reste celui de chaque etape. */
-      var APERCU = { vue: null, cible: null, proche: false, scrollY: 0, tour: [], grand: false };
-      var AP_SOLDE = 450;
-      var AP_ICO = {
-        lieu: '<svg viewBox="0 0 24 24"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>',
-        heure: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
-        retour: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
-        envoi: '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
-        cadenas: '<svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>',
-      };
-      var AP_ONGLETS =
-        '<span class="on"><svg viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z"/></svg>Récompenses</span>' +
-        '<span><svg viewBox="0 0 24 24"><path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></svg>Story</span>' +
-        '<span><svg viewBox="0 0 24 24"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>Carte</span>' +
-        '<span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>Profil</span>';
-
-      // Ce que chaque cible montre, sur quel ecran, et ce que dit l'etiquette.
-      var AP_CIBLES = {
-        nom: ["bar", "Ton nom"], sous: ["bar", "Ton type"], ville: ["bar", "Ta ville"],
-        adresse: ["bar", "Ton adresse"], horaires: ["bar", "Tes horaires"], plan: ["bar", "Sur la carte"],
-        galerie: ["bar", "Tes photos"], recos: ["bar", "Ta boutique"],
-        couverture: ["liste", "Ta photo principale"], carte: ["liste", "Ton établissement"],
-        notif: ["story", "Ce que ton client reçoit"], mention: ["story", "Ce qu'ils taguent"], gain: ["story", "Leur gain"],
-      };
-      // L'ecran et la cible par defaut de chaque etape.
-      // Pas d'etape 2 : elle EST la page (voir « L'etape 2, ecrite sur la page »).
-      // 17/09 (2) : les etapes 3 a 6 sont ecrites sur l'ecran du client ; le telephone ne sert plus qu'a la fin.
-      var AP_ETAPES_AVANT = { 3: ["liste", "couverture"], 4: ["bar", "recos"], 5: ["story", "notif"], 6: ["story", "mention"], 7: ["liste", null] };
-
-      function apValeur(sel, repli) {
-        var el = $(sel);
-        var v = el ? el.value.trim() : "";
-        return v || repli || "";
-      }
-      function apDonnees() {
+      function pvPhotos() {
         var etab = etablissementCourant() || {};
+        return [etab.logo_url].concat(photosDuClub()).filter(Boolean);
+      }
+      function pvTexte(selecteur, texte, repli) {
+        document.querySelectorAll(selecteur).forEach(function (el) {
+          el.textContent = texte || repli;
+          el.classList.toggle("pv-vide", !texte);
+        });
+      }
+      function pvRendreCarte(carte) {
+        var photos = pvPhotos();
+        var cle = photos.join("|");
+        if (carte.dataset.cle === cle) return;
+        carte.dataset.cle = cle;
+        carte.dataset.i = "0";
+        carte.querySelector('[data-pv="photos"]').innerHTML = photos.map(function (u, i) {
+          return '<img src="' + escapeHtml(u) + '" alt=""' + (i === 0 ? ' class="on"' : "") + " />";
+        }).join("");
+        carte.querySelector('[data-pv="segments"]').innerHTML = photos.length > 1
+          ? photos.map(function (u, i) { return "<i" + (i === 0 ? ' class="on"' : "") + "></i>"; }).join("")
+          : "";
+        carte.classList.toggle("pv-sans-photo", !photos.length);
+        carte.classList.toggle("pv-plusieurs", photos.length > 1);
+      }
+      // Toucher la carte : la photo suivante, comme le fera le client.
+      function pvPhotoSuivante(carte) {
+        var imgs = carte.querySelectorAll('[data-pv="photos"] img');
+        if (imgs.length < 2) return;
+        var i = (Number(carte.dataset.i || 0) + 1) % imgs.length;
+        carte.dataset.i = String(i);
+        imgs.forEach(function (img, k) { img.classList.toggle("on", k === i); });
+        carte.querySelectorAll('[data-pv="segments"] i').forEach(function (seg, k) { seg.classList.toggle("on", k <= i); });
+        relancerAnimation(carte, "pv-tap");
+      }
+      function pvRendreBande() {
+        var zone = $("#pv-bande");
+        if (!zone) return;
         var choix = (PARCOURS.choix || []).filter(function (c) { return c.prise; });
-        if (!PARCOURS.choix || !PARCOURS.choix.length) {
-          try {
-            choix = getActiveRewards((ETAT.data && ETAT.data.rewards) || []).map(function (r) {
-              return { titre: r.title, points: Number(r.points_required || 0), foto: imageRecompenseSrc(r), photoPerso: !!r.image_url };
-            });
-          } catch (e) { choix = []; }
-        }
-        var ig = ETAT.instagram;
-        var handle = ig && ig.connecte && ig.handle ? ig.handle : apValeur("#pa-handle", etab.ig_handle || "");
-        var regles = (ETAT.data && ETAT.data.pointRules) || {};
-        var regle = function (cle) {
-          var champ = $('[data-pa-regle="' + cle + '"]');
-          var v = champ && champ.value !== "" ? Number(champ.value) : Number(regles[cle] || 0);
-          return Math.max(0, Math.round(v || 0));
-        };
-        var fiche = PARCOURS.fiche || null;
-        var jours = fiche && fiche.horaires ? fiche.horaires.filter(function (h) { return h.isOpen; }).length : 0;
-        return {
-          nom: apValeur("#pa-nom", etab.name), ville: apValeur("#pa-ville", etab.city), adresse: apValeur("#pa-adresse", etab.address),
-          type: NOMS_TYPES[PARCOURS.type || etab.category || "club"] || "Boîte de nuit",
-          horaires: jours ? "Ouvert " + jours + " jour" + (jours > 1 ? "s" : "") + " sur 7" : "",
-          couverture: etab.logo_url || "", photos: photosDuClub(), recos: choix,
-          handle: String(handle || "").replace(/^@+/, "").replace(/\s+/g, "").toLowerCase(),
-          story: Number(regles.storyFlat || 100), regle: regle,
-        };
-      }
-      function imageRecompenseSrc(r) {
-        var m = /src="([^"]+)"/.exec(imageRecompense(r).html || "");
-        return m ? m[1] : null;
-      }
-      // Un texte encore vide s'affiche en gris clair, a sa place : le gerant voit la case a remplir.
-      function apTexte(v, repli) {
-        return v ? escapeHtml(v) : '<span class="ap-vide">' + escapeHtml(repli) + "</span>";
-      }
-
-      function apRendreListe(d) {
-        var n = d.recos.length;
-        return '<div class="ap-l">' +
-          '<div class="ap-l-tete"><b>NOCTIFY</b><span><b>' + nb.format(AP_SOLDE) + "</b> points</span></div>" +
-          '<div class="ap-carte" data-ap="carte">' +
-            '<img data-ap="couverture" src="' + escapeHtml(d.couverture || "/clubs/couverture-par-defaut.webp") + '" alt="" />' +
-            '<span class="ap-voile"></span>' +
-            '<span class="ap-pastille">' + AP_ICO.lieu + apTexte(d.ville, "Ta ville") + "</span>" +
-            '<span class="ap-carte-txt"><b>' + apTexte(d.nom, "Ton établissement") + "</b>" +
-              "<span>" + escapeHtml(d.type) + (n ? " • " + n + " récompense" + (n > 1 ? "s" : "") : "") + "</span></span>" +
-          "</div>" +
-          '<div class="ap-carte fantome"><img src="/clubs/demo-velours.webp" alt="" /></div>' +
-          '<div class="ap-carte fantome"><img src="/clubs/demo-neon-88.webp" alt="" /></div>' +
-        "</div>";
-      }
-      function apRendreRecos(d) {
-        if (!d.recos.length) return '<p class="ap-rien">Pas encore de récompense ici.</p>';
-        return '<div class="ap-grille">' + d.recos.map(function (c, i) {
+        var avant = PV.bande;
+        zone.innerHTML = choix.length ? choix.map(function (c) {
           var img = c.foto
-            ? '<img' + (c.photoPerso ? ' class="photo"' : "") + ' src="' + escapeHtml(c.foto) + '" alt="" />'
+            ? '<img src="' + escapeHtml(c.foto) + '" alt="" />'
             : "<em>" + escapeHtml((c.titre || "?").trim().charAt(0).toUpperCase()) + "</em>";
-          return '<span class="ap-reco" data-ap-reco="' + escapeHtml(c.titre || "") + '">' +
-            '<span class="ap-reco-img">' + img + "</span>" +
-            '<span class="ap-reco-lab"><b>' + escapeHtml(c.titre || "") + "</b><span>" + nb.format(Number(c.points || 0)) + " points</span><i></i></span>" +
+          var neuve = avant && avant.indexOf(c.titre) === -1;
+          return '<span class="pv-mini-reco' + (neuve ? " arrive" : "") + '">' +
+            '<span class="pv-mini-img">' + img + "</span>" +
+            '<span class="pv-mini-lab"><b>' + escapeHtml(c.titre || "") + "</b><span>" + nb.format(Number(c.points || 0)) + " points</span></span>" +
           "</span>";
-        }).join("") + "</div>";
-      }
-      function apRendreBar(d) {
-        var photos = d.photos.slice(0, 3);
-        var galerie = "";
-        for (var i = 0; i < 3; i++) galerie += "<span>" + (photos[i] ? '<img src="' + escapeHtml(photos[i]) + '" alt="" />' : "") + "</span>";
-        return '<div class="ap-b">' +
-          '<div class="ap-b-hero">' +
-            '<img src="' + escapeHtml(d.couverture || "/clubs/couverture-par-defaut.webp") + '" alt="" />' +
-            '<span class="ap-voile"></span>' +
-            '<div class="ap-b-haut"><span class="ap-b-rond">' + AP_ICO.retour + '</span><span class="ap-b-pts">' + nb.format(AP_SOLDE) + " pts</span></div>" +
-            '<div class="ap-b-bas">' +
-              '<span class="ap-b-pastille" data-ap="ville">' + AP_ICO.lieu + apTexte(d.ville, "Ta ville") + "</span>" +
-              '<span class="ap-b-nom" data-ap="nom">' + apTexte(d.nom, "Ton établissement") + "</span>" +
-              '<span class="ap-b-sous" data-ap="sous">' + escapeHtml(d.type) + "</span>" +
-            "</div>" +
-          "</div>" +
-          '<div class="ap-b-corps">' +
-            '<div class="ap-solde"><span>Ton solde</span><span><b>' + nb.format(AP_SOLDE) + "</b> points</span></div>" +
-            '<h2 class="ap-h2">Récompenses</h2>' +
-            '<div data-ap="recos" id="ap-recos">' + apRendreRecos(d) + "</div>" +
-            '<h2 class="ap-h2">Adresse et photos</h2>' +
-            '<div class="ap-infos">' +
-              '<div class="ap-info" data-ap="adresse">' + AP_ICO.lieu + "<span>" + apTexte(d.adresse, "Ton adresse") + "</span></div>" +
-              '<div class="ap-info" data-ap="horaires">' + AP_ICO.heure + "<span>" + apTexte(d.horaires, "Tes horaires") + "</span></div>" +
-            "</div>" +
-            '<span class="ap-plan" data-ap="plan">' +
-              '<svg viewBox="0 0 350 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
-                '<path d="M-10 40 L360 70 M-10 118 L360 96 M70 -10 L110 160 M250 -10 L214 160 M-10 150 L170 -10" stroke="#fff" stroke-width="11" fill="none"/>' +
-                '<path d="M20 -10 L40 160 M300 -10 L330 160 M-10 10 L360 20" stroke="#fff" stroke-width="5" fill="none"/>' +
-                '<rect x="126" y="80" width="54" height="34" rx="4" fill="#d9dbe1"/><rect x="232" y="18" width="46" height="30" rx="4" fill="#cfe5d3"/>' +
-              "</svg>" +
-              '<svg class="ap-epingle" viewBox="0 0 34 44" aria-hidden="true"><path d="M17 43C17 43 3 27 3 16.5a14 14 0 1 1 28 0C31 27 17 43 17 43z" fill="#de3131" stroke="#111" stroke-width="2.4"/><circle cx="17" cy="16.5" r="5" fill="#111"/></svg>' +
-              '<span class="ap-plan-nom">' + apTexte(d.nom, "Ton établissement") + "</span>" +
-            "</span>" +
-            '<div class="ap-galerie" data-ap="galerie">' + galerie + "</div>" +
-          "</div>" +
-        "</div>";
-      }
-      function apTexteNotif(d, cle) {
-        var nom = d.nom || "ton établissement";
-        if (cle === "viralBonus") return "Ta vidéo a passé 10 000 vues : +" + nb.format(d.regle("viralBonus")) + " points en prime.";
-        if (cle === "qrCheckin") return "Bienvenue au " + nom + " : +" + nb.format(d.regle("qrCheckin")) + " points pour le scan.";
-        if (cle === "monthlyAmbassador") return "Tu es l'ambassadeur du mois au " + nom + " : +" + nb.format(d.regle("monthlyAmbassador")) + " points.";
-        return "Ta vidéo a passé 1 000 vues : +" + nb.format(d.regle("videoViewsPerThousand")) + " points.";
-      }
-      function apRendreStory(d) {
-        var notif = PARCOURS.pas === 5;
-        return '<div class="ap-s">' +
-          '<img src="/ambiance/bienvenue.webp" alt="" />' +
-          '<div class="ap-s-barres"><i></i><i></i></div>' +
-          '<div class="ap-s-auteur"><i></i>julien.stpt</div>' +
-          '<div class="ap-notif" data-ap="notif"' + (notif ? "" : " hidden") + '>' +
-            '<img src="/icones/apple-touch-icon.png?v=verre" alt="" />' +
-            '<div><p>Noctify<span>maintenant</span></p><span id="ap-notif-txt">' + escapeHtml(apTexteNotif(d, APERCU.regle)) + "</span></div>" +
-          "</div>" +
-          '<span class="ap-mention" data-ap="mention"><span>@' + escapeHtml(d.handle || "tonclub") + "</span></span>" +
-          '<span class="ap-gain" data-ap="gain">+' + nb.format(d.story) + " points</span>" +
-          '<div class="ap-s-bas"><span><i></i>Votre story</span><span><i></i>Amis proches</span><b>' + AP_ICO.envoi + "</b></div>" +
-        "</div>";
+        }).join("") : '<p class="pv-bande-vide">Active une récompense : elle apparaît ici.</p>';
+        var neuve = zone.querySelector(".arrive");
+        if (neuve) neuve.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+        PV.bande = choix.map(function (c) { return c.titre; });
       }
 
-      /* Redessine l'ecran courant. Les images gardent leur src d'un rendu a
-         l'autre (cache du navigateur) : une frappe au clavier ne fait pas clignoter
-         la photo. */
-      function apRendre(animer) {
-        var scene = $("#ap-scene");
-        if (!scene || scene.hidden || !APERCU.vue) return;
-        var d = apDonnees();
-        var html = APERCU.vue === "liste" ? apRendreListe(d) : APERCU.vue === "story" ? apRendreStory(d) : apRendreBar(d);
-        var defile = $("#ap-defile");
-        var recos = APERCU.recosAvant || [];
-        defile.innerHTML = html;
-        if (animer) relancerAnimation(defile, "ap-change");
-        // La recompense qui vient d'entrer dans la boutique arrive en sautant.
-        if (APERCU.vue === "bar") {
-          defile.querySelectorAll("[data-ap-reco]").forEach(function (el) {
-            if (recos.length && recos.indexOf(el.dataset.apReco) === -1) el.classList.add("arrive");
-          });
-        }
-        APERCU.recosAvant = d.recos.map(function (c) { return c.titre || ""; });
-        $("#ap-ecran").classList.toggle("sombre", APERCU.vue !== "liste");
-        $("#ap-app-onglets").innerHTML = APERCU.vue === "liste" ? AP_ONGLETS : "";
-        document.querySelectorAll("[data-ap-vue]").forEach(function (b) {
-          var on = b.dataset.apVue === APERCU.vue;
-          b.classList.toggle("on", on);
-          b.setAttribute("aria-selected", String(on));
+      function pvSynchro() {
+        var etab = etablissementCourant() || {};
+        var nom = $("#pa-nom").value.trim() || etab.name || "";
+        var n = (PARCOURS.choix || []).filter(function (c) { return c.prise; }).length;
+        pvTexte('[data-pv="nom"]', nom, "Ton établissement");
+        pvTexte('[data-pv="ville"]', $("#pa-ville").value.trim() || etab.city || "", "Ta ville");
+        pvTexte('[data-pv="adresse"]', $("#pa-adresse").value.trim() || etab.address || "", "Ton adresse");
+        pvTexte('[data-pv="ligne"]', [NOMS_TYPES[PARCOURS.type || etab.category || "club"], n ? n + " récompense" + (n > 1 ? "s" : "") : ""].filter(Boolean).join(" • "), "");
+        var ig = ETAT.instagram;
+        var handle = ig && ig.connecte && ig.handle ? ig.handle : $("#pa-handle").value.trim().replace(/^@+/, "").replace(/\s+/g, "");
+        pvTexte('[data-pv="handle"]', handle || etab.ig_handle || "", "tonclub");
+        // Un long pseudo tient dans l'autocollant : la lettre rapetisse au lieu d'etre coupee.
+        var longueur = (handle || etab.ig_handle || "tonclub").length + 1;
+        document.querySelectorAll(".pv-sticker > span").forEach(function (el) { el.style.fontSize = Math.max(9, Math.min(15, 15 - (longueur - 9) * .7)) + "px"; });
+        document.querySelectorAll(".pv-mini-mention > span").forEach(function (el) { el.style.fontSize = Math.max(7, Math.min(10, 10 - (longueur - 9) * .45)) + "px"; });
+        document.querySelectorAll('[data-pv="gain-story"]').forEach(function (el) { el.textContent = "+" + PV_POINTS.story + " points"; });
+        document.querySelectorAll('[data-pv="gain-scan"]').forEach(function (el) { el.textContent = "+" + PV_POINTS.scan + " points"; });
+        document.querySelectorAll('[data-pv="pts-story"]').forEach(function (el) { el.innerHTML = PV_POINTS.story + "<small>pts</small>"; });
+        document.querySelectorAll('[data-pv="pts-scan"]').forEach(function (el) { el.innerHTML = PV_POINTS.scan + "<small>pts</small>"; });
+
+        document.querySelectorAll("[data-pv-carte]").forEach(pvRendreCarte);
+        var photos = pvPhotos();
+        document.querySelectorAll('[data-pv="vignette"]').forEach(function (el) {
+          el.style.backgroundImage = photos[0] ? 'url("' + photos[0].replace(/"/g, "") + '")' : "";
         });
-        apCamera();
+        document.querySelectorAll('[data-pv="tape"]').forEach(function (el) { el.hidden = photos.length < 2; });
+
+        var titre = $("#pa-photo-titre");
+        if (titre && titre.textContent !== "Envoi…") titre.textContent = etab.logo_url ? "Changer la photo" : "Ajouter ta façade";
+        var aide = $("#pa-galerie-aide");
+        if (aide) aide.textContent = photosDuClub().length
+          ? "Elles défilent quand un client touche ta photo."
+          : "La salle, le bar, une soirée. Elles défilent quand un client touche ta photo.";
+        pvRendreBande();
       }
 
-      // Position d'un element dans l'ecran du telephone, en pixels d'iPhone.
-      function apPosition(el) {
-        var racine = $("#ap-defile");
-        var x = 0, y = 0, n = el;
-        while (n && n !== racine) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
-        return { x: x, y: y, l: el.offsetWidth, h: el.offsetHeight };
-      }
-
-      function apCamera() {
-        var scene = $("#ap-scene");
-        var monde = $("#ap-monde");
-        if (!scene || scene.hidden || APERCU.grand) return;
-        var W = scene.clientWidth, H = scene.clientHeight;
-        var compact = H < 200;
-        var prive = APERCU.cible === "prive";
-        var cle = prive ? null : APERCU.cible;
-        var el = cle ? $("#ap-defile").querySelector('[data-ap="' + cle + '"]') : null;
-        var s = APERCU.proche && el ? Math.min(.7, Math.max(.5, W * .00182)) : Math.min(.44, Math.max(.33, W * .00116));
-        if (compact) s *= .8;
-        var hauteur = $("#ap-defile").offsetHeight;
-        var p = el ? apPosition(el) : null;
-
-        // On fait defiler l'ecran du telephone quand la cible est plus bas que ce qu'il montre.
-        var scrollY = 0;
-        if (p && p.y + p.h > 700) scrollY = Math.max(0, Math.min(p.y - 230, hauteur - 844));
-        APERCU.scrollY = scrollY;
-        $("#ap-defile").style.transform = "translateY(" + (-scrollY) + "px)";
-
-        var cx = p ? 14 + p.x + p.l / 2 : 209;
-        var cy = p ? 14 + p.y - scrollY + p.h / 2 : 300;
-        var tx = W / 2 - cx * s;
-        var ty = H * (compact ? .5 : .47) - cy * s;
-        // Le telephone ne quitte jamais tout a fait la scene, et son haut ne descend pas dans le vide.
-        tx = Math.min(W * .5, Math.max(W * .5 - 418 * s, tx));
-        ty = Math.min(compact ? 10 : 40, Math.max(H - 872 * s - 20, ty));
-        if (!p) { tx = (W - 418 * s) / 2; ty = compact ? 10 : 40; }
-        monde.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + s + ")";
-        monde.classList.toggle("ap-flou", prive);
-
-        // L'anneau, dans l'ecran ; l'etiquette, dans la scene.
-        var anneau = $("#ap-cadre").querySelector(".ap-anneau");
-        var bulle = $("#ap-bulle");
-        if (!p) {
-          if (anneau) anneau.hidden = true;
-          if (prive) {
-            bulle.hidden = false;
-            bulle.className = "ap-bulle prive";
-            bulle.innerHTML = AP_ICO.cadenas + "Tes clients ne le voient pas";
-            bulle.style.left = W / 2 + "px";
-            bulle.style.top = H / 2 + "px";
-          } else {
-            bulle.hidden = true;
-          }
-          return;
-        }
-        // L'anneau vit dans le cadre, pas dans l'ecran redessine a chaque frappe :
-        // il glisse d'une case a l'autre au lieu de reapparaitre.
-        if (!anneau) {
-          anneau = document.createElement("span");
-          anneau.className = "ap-anneau";
-          $("#ap-cadre").appendChild(anneau);
-        }
-        anneau.hidden = false;
-        var marge = 8;
-        anneau.style.left = (p.x - marge) + "px";
-        anneau.style.top = (p.y - scrollY - marge) + "px";
-        anneau.style.width = (p.l + marge * 2) + "px";
-        anneau.style.height = (p.h + marge * 2) + "px";
-
-        var texte = (AP_CIBLES[cle] || [])[1] || "";
-        if (bulle.hidden || bulle.textContent !== texte) {
-          bulle.hidden = false;
-          bulle.textContent = texte;
-          relancerAnimation(bulle, "ap-bulle");
-        }
-        var bx = tx + (14 + p.x + p.l / 2) * s;
-        var haut = ty + (14 + p.y - scrollY - marge) * s - 12;
-        var dessous = haut < 52;
-        var by = dessous ? ty + (14 + p.y - scrollY + p.h + marge) * s + 12 : haut;
-        bulle.className = "ap-bulle" + (dessous ? " dessous" : "");
-        bulle.style.left = Math.min(W - 80, Math.max(80, bx)) + "px";
-        // Jamais sous les onglets Liste / Ta page / Story, poses en bas de la scene.
-        bulle.style.top = (dessous ? Math.min(H - 84, by) : by) + "px";
-      }
-
-      /* Aller sur une cible : change d'ecran si besoin, puis zoome.
-         proche = le gerant est en train de remplir ce champ. */
-      function apCibler(cle, proche) {
-        apStopTour();
-        var ecran = cle && AP_CIBLES[cle] ? AP_CIBLES[cle][0] : APERCU.vue;
-        APERCU.cible = cle;
-        APERCU.proche = !!proche;
-        if (ecran !== APERCU.vue) { APERCU.vue = ecran; apRendre(true); }
-        else apCamera();
-      }
-      function apVue(vue) {
-        apStopTour();
-        APERCU.vue = vue;
-        var defaut = AP_ETAPES[PARCOURS.pas];
-        APERCU.cible = defaut && defaut[0] === vue ? defaut[1] : null;
-        APERCU.proche = false;
-        apRendre(true);
-      }
-
-      var AP_ETAPES = { 7: ["liste", null] };
-      function apEtape(pas) {
-        var scene = $("#ap-scene");
-        var defaut = AP_ETAPES[pas];
-        scene.hidden = !defaut;
-        apStopTour();
-        if (!defaut) return;
-        APERCU.vue = defaut[0];
-        APERCU.cible = defaut[1];
-        // Deja zoome a l'arrivee. Julien, 17/09 : « un truc ou il faut cliquer dessus ».
-        APERCU.proche = true;
-        APERCU.regle = "videoViewsPerThousand";
-        APERCU.recosAvant = null;
-        // La scene vient d'apparaitre : sa taille n'est lue juste qu'a l'image suivante.
-        requestAnimationFrame(function () { apRendre(true); });
-        if (pas === 7) setTimeout(apTour, 500);
-      }
-
-      /* La fin du parcours : le telephone refait, une fois, le chemin d'un client.
-         La liste, la carte de l'etablissement, sa page, sa boutique. Pas de boucle. */
-      function apTour() {
-        apStopTour();
-        var pas = [
-          [0, function () { APERCU.vue = "liste"; APERCU.cible = "carte"; APERCU.proche = false; apRendre(true); }],
-          [1500, function () { APERCU.vue = "bar"; APERCU.cible = "nom"; APERCU.proche = false; apRendre(true); }],
-          [3100, function () { APERCU.cible = "recos"; apCamera(); }],
-          [4700, function () { APERCU.cible = "galerie"; apCamera(); }],
-          [6300, function () { APERCU.cible = null; apCamera(); }],
-        ];
-        APERCU.tour = pas.map(function (p) { return setTimeout(p[1], p[0]); });
-      }
-      function apStopTour() {
-        (APERCU.tour || []).forEach(clearTimeout);
-        APERCU.tour = [];
-      }
-
-      // Quel champ montre quoi.
-      function apCibleDuChamp(el) {
-        if (!el || !el.closest) return undefined;
-        var id = el.id;
-        if (id === "pa-nom") return "nom";
-        if (id === "pa-ville") return "ville";
-        if (id === "pa-adresse") return "adresse";
-        if (id === "pa-tel") return "prive";
-        if (id === "pa-handle") return "mention";
-        if (id === "pa-sienne-nom" || id === "pa-sienne-pts" || el.closest("#pa-grille")) return "recos";
-        if (el.closest("#pa-types")) return "sous";
-        if (el.closest("#pa-photo-btn")) return "couverture";
-        if (el.closest("#pa-galerie")) return "galerie";
-        if (el.dataset && el.dataset.paRegle) { APERCU.regle = el.dataset.paRegle; return "notif"; }
-        return undefined;
-      }
-
-      (function brancherApercu() {
+      (function brancherParcoursVivant() {
         var parcours = $("#parcours");
-        var retour = null;
-        parcours.addEventListener("focusin", function (ev) {
-          var cle = apCibleDuChamp(ev.target);
-          if (cle === undefined) return;
-          clearTimeout(retour);
-          if (cle === "notif") apRendre(false);
-          apCibler(cle, true);
-        });
-        // En quittant un champ, la camera recule -- sauf si un autre champ prend la main.
-        parcours.addEventListener("focusout", function () {
-          clearTimeout(retour);
-          retour = setTimeout(function () {
-            if (apCibleDuChamp(document.activeElement) !== undefined) return;
-            var defaut = AP_ETAPES[PARCOURS.pas];
-            if (!defaut || APERCU.cible === null) return;
-            if (APERCU.cible === "prive") APERCU.cible = defaut[1];
-            APERCU.proche = true;
-            apCamera();
-          }, 260);
-        });
-        parcours.addEventListener("input", function (ev) {
-          if ($("#ap-scene").hidden) return;
-          if (ev.target.closest && ev.target.closest(".ap-scene")) return;
-          apRendre(false);
-        });
-        // Les choix a la souris (type, recompense cochee) : on montre l'endroit, apres le rendu.
+        parcours.addEventListener("input", function () { pvSynchro(); });
         parcours.addEventListener("click", function (ev) {
-          var cle = apCibleDuChamp(ev.target);
-          if (cle !== "sous" && cle !== "recos") return;
-          setTimeout(function () { apRendre(false); apCibler(cle, true); }, 30);
+          var carte = ev.target.closest("[data-pv-carte]");
+          if (carte) pvPhotoSuivante(carte);
         });
-        document.querySelectorAll("[data-ap-vue]").forEach(function (b) {
-          b.addEventListener("click", function () { apVue(b.dataset.apVue); });
+        parcours.addEventListener("keydown", function (ev) {
+          var carte = ev.target.closest && ev.target.closest("[data-pv-carte]");
+          if (carte && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); pvPhotoSuivante(carte); }
         });
-
-        // Le clavier du telephone mange la moitie de l'ecran : la scene se fait plus petite.
+        // Entree : la case suivante.
+        [["#pa-nom", "#pa-adresse"], ["#pa-adresse", "#pa-ville"], ["#pa-ville", "#pa-tel"]].forEach(function (c) {
+          $(c[0]).addEventListener("keydown", function (ev) {
+            if (ev.key !== "Enter") return;
+            ev.preventDefault();
+            $(c[1]).focus();
+          });
+        });
+        // Clavier ouvert : la scene se tasse, les champs restent visibles.
         if (window.visualViewport) {
           window.visualViewport.addEventListener("resize", function () {
-            var clavier = window.visualViewport.height < window.innerHeight * .78;
-            if (parcours.classList.contains("ap-clavier") === clavier) return;
-            parcours.classList.toggle("ap-clavier", clavier);
-            setTimeout(apCamera, 380);
+            parcours.classList.toggle("pv-clavier", window.visualViewport.height < window.innerHeight * .78);
           });
         }
-        window.addEventListener("resize", function () { if (APERCU.grand) apAjusterGrand(); else apCamera(); });
-
-        // En grand : le meme telephone, a la taille de l'ecran, qu'on fait defiler au doigt.
-        $("#ap-grand").addEventListener("click", function () {
-          apStopTour();
-          APERCU.grand = true;
-          $("#ap-plein").hidden = false;
-          $("#ap-plein-zone").appendChild($("#ap-monde"));
-          $("#ap-plein").appendChild($("#ap-vues"));
-          $("#ap-monde").classList.remove("ap-flou");
-          $("#ap-bulle").hidden = true;
-          apAjusterGrand();
+        $("#pa-avancer").addEventListener("click", function () {
+          if (PARCOURS.pas < PAS_MAX) allerAuPas(PARCOURS.pas + 1);
         });
-        $("#ap-plein-fermer").addEventListener("click", function () {
-          APERCU.grand = false;
-          $("#ap-plein").hidden = true;
-          $("#ap-scene").insertBefore($("#ap-monde"), $("#ap-bulle"));
-          $("#ap-scene").appendChild($("#ap-vues"));
-          $("#ap-cadre").scrollTop = 0;
-          apRendre(false);
-        });
-      })();
-      function apAjusterGrand() {
-        var zone = $("#ap-plein-zone");
-        var s = Math.min(zone.clientHeight / 872, (zone.clientWidth - 24) / 418, 1);
-        $("#ap-monde").style.transform = "translate(" + (zone.clientWidth - 418 * s) / 2 + "px,0) scale(" + s + ")";
-        $("#ap-defile").style.transform = "none";
-      }
-      // Changer d'ecran en grand : on repart du haut.
-      var apVueOrigine = apVue;
-      apVue = function (vue) {
-        apVueOrigine(vue);
-        if (APERCU.grand) { $("#ap-cadre").scrollTop = 0; apAjusterGrand(); }
-      };
 
-      /* Les points d'entree du parcours qui changent ce que montre le telephone.
-         Enveloppes plutot que modifies : meme procede que l'habillage. */
-      (function brancherApercuParcours() {
-        var poserPasOrigine = poserPas;
-        poserPas = function (cible) {
-          var r = poserPasOrigine.apply(this, arguments);
-          try { apEtape(cible); if (cible === 2) pwSynchro(); pxSynchro(); } catch (e) { console.warn("[apercu]", e); }
-          $("#pa-avancer").hidden = cible <= 1 || cible >= PAS_MAX || PARCOURS.seule || !etablissementCourant();
-          return r;
-        };
-        ["rendrePhotoParcours", "rendreGalerieParcours", "rendreChoixRecompenses", "preparerPasInstagram"].forEach(function (nom) {
-          var origine = { rendrePhotoParcours: rendrePhotoParcours, rendreGalerieParcours: rendreGalerieParcours, rendreChoixRecompenses: rendreChoixRecompenses, preparerPasInstagram: preparerPasInstagram }[nom];
-          var enveloppe = function () {
-            var r = origine.apply(this, arguments);
-            try { if (!$("#ap-scene").hidden) apRendre(false); pwSynchro(); } catch (e) {}
+        function apres(fn, suite) {
+          return function () {
+            var r = fn.apply(this, arguments);
+            try { suite.apply(this, arguments); } catch (e) { console.warn("[parcours]", e); }
             return r;
           };
-          if (nom === "rendrePhotoParcours") rendrePhotoParcours = enveloppe;
-          if (nom === "rendreGalerieParcours") rendreGalerieParcours = enveloppe;
-          if (nom === "rendreChoixRecompenses") rendreChoixRecompenses = enveloppe;
-          if (nom === "preparerPasInstagram") preparerPasInstagram = function () { var r = enveloppe.apply(this, arguments); try { pxSynchro(); } catch (e) {} return r; };
+        }
+        poserPas = apres(poserPas, function (cible) {
+          $("#pa-avancer").hidden = cible <= 1 || cible >= PAS_MAX || PARCOURS.seule || !etablissementCourant();
+          PV.bande = null;
+          pvSynchro();
         });
-        var basculerOrigine = basculerChoix;
-        basculerChoix = function () {
-          var r = basculerOrigine.apply(this, arguments);
-          try { apRendre(false); apCibler("recos", true); } catch (e) {}
-          return r;
-        };
-        // La fiche Google vient d'arriver : le telephone montre, une par une, les cases qu'elle a remplies.
-        var ficheOrigine = rendreFicheGoogle;
-        rendreFicheGoogle = function (fiche) {
-          var r = ficheOrigine.apply(this, arguments);
-          if (!fiche || $("#ap-scene").hidden) return r;
-          try {
-            apStopTour();
-            APERCU.vue = "bar";
-            apRendre(false);
-            var suite = ["nom", "sous", "ville", "adresse", "horaires", "plan"];
-            if (!fiche.horaires) suite.splice(4, 1);
-            APERCU.tour = suite.map(function (cle, i) {
-              return setTimeout(function () { APERCU.cible = cle; APERCU.proche = true; apCamera(); }, 250 + i * 1100);
-            });
-            APERCU.tour.push(setTimeout(function () { APERCU.cible = "nom"; APERCU.proche = false; apCamera(); }, 250 + suite.length * 1100));
-          } catch (e) { console.warn("[apercu]", e); }
-          return r;
-        };
+        rendrePhotoParcours = apres(rendrePhotoParcours, pvSynchro);
+        rendreGalerieParcours = apres(rendreGalerieParcours, pvSynchro);
+        rendreChoixRecompenses = apres(rendreChoixRecompenses, pvSynchro);
+        basculerChoix = apres(basculerChoix, pvSynchro);
+        preparerPasInstagram = apres(preparerPasInstagram, pvSynchro);
       })();
-
-      /* ---- L'etape 2, ecrite sur la page ---- */
-      var PW_TYPES = ["club", "bar", "restaurant"];
-      function pwTailleNom() {
-        var champ = $("#pa-nom");
-        var n = (champ.value || champ.placeholder).length;
-        // Le nom tient sur une ligne : la police descend quand il s'allonge.
-        champ.style.fontSize = Math.max(22, Math.min(38, 38 - Math.max(0, n - 11) * 1.25)) + "px";
-      }
-      function pwSynchro() {
-        var etab = etablissementCourant();
-        $("#pw-type-txt").textContent = NOMS_TYPES[PARCOURS.type || "club"] || "Boîte de nuit";
-        var photo = etab && etab.logo_url;
-        var img = $("#pw-photo");
-        var src = photo || "/clubs/couverture-par-defaut.webp";
-        if (img.getAttribute("src") !== src) img.src = src;
-        // La photo s'envoie dans le dossier de l'etablissement : il faut qu'il existe.
-        $("#pw-photo-btn").hidden = !etab;
-        $("#pw-photo-txt").textContent = photo ? "Changer la photo" : "Ajouter ta photo";
-        pwTailleNom();
-      }
-      $("#pa-nom").addEventListener("input", pwTailleNom);
-      $("#pw-type").addEventListener("click", function () {
-        var i = PW_TYPES.indexOf(PARCOURS.type || "club");
-        choisirTypeParcours(PW_TYPES[(i + 1) % PW_TYPES.length]);
-        pwSynchro();
-        relancerAnimation($("#pw-type-txt"), "pw-change");
-      });
-      $("#pw-photo-btn").addEventListener("click", function () { $("#pa-photo-btn").click(); });
-      // Entree au clavier : la case suivante, dans l'ordre de la page.
-      [["#pa-nom", "#pa-ville"], ["#pa-ville", "#pa-adresse"], ["#pa-adresse", "#pa-tel"]].forEach(function (c) {
-        $(c[0]).addEventListener("keydown", function (ev) {
-          if (ev.key !== "Enter") return;
-          ev.preventDefault();
-          $(c[1]).focus();
-        });
-      });
-
-      /* ---- Les etapes 3 a 6, ecrites sur l'ecran du client ---- */
-      function pxSynchro() {
-        var etab = etablissementCourant() || {};
-        var nom = $("#pa-nom").value.trim() || etab.name || "Ton établissement";
-        var photo = etab.logo_url || "/clubs/couverture-par-defaut.webp";
-        document.querySelectorAll('[data-px="nom"]').forEach(function (el) { el.textContent = nom; });
-        document.querySelectorAll('[data-px="photo"]').forEach(function (el) { if (el.getAttribute("src") !== photo) el.src = photo; });
-        var story = Number((ETAT.data && ETAT.data.pointRules && ETAT.data.pointRules.storyFlat) || 100);
-        document.querySelectorAll('[data-px="story"]').forEach(function (el) { el.textContent = nb.format(story); });
-        document.querySelectorAll('[data-px="gain"]').forEach(function (el) { el.textContent = "+" + nb.format(story) + " points"; });
-        pxTailleHandle();
-        var ig = ETAT.instagram;
-        var connecte = !!(ig && ig.connecte);
-        $("#pi-connecte").hidden = !connecte;
-        $("#pi-connecte").textContent = connecte ? "@" + (ig.handle || etab.ig_handle || "") : "";
-      }
-      // L'autocollant de mention epouse le pseudo, comme dans Instagram.
-      function pxTailleHandle() {
-        var champ = $("#pa-handle");
-        // En capitales grasses, une lettre est plus large qu'un « ch » : 1,08 ch par lettre.
-        champ.style.width = Math.max(8, ((champ.value || champ.placeholder).length + 1) * 1.08) + "ch";
-      }
-      $("#pa-handle").addEventListener("input", pxTailleHandle);
-      $("#pa-avancer").addEventListener("click", function () {
-        if (PARCOURS.pas >= PAS_MAX) return;
-        allerAuPas(PARCOURS.pas + 1);
-      });
 
       demarrer();
     </script>

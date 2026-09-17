@@ -93,58 +93,51 @@ async function session(email) {
     await taper("#pa-nom", "Mirage Club Bruxelles");
     await capture("2-nom", 500);
     await taper("#pa-ville", "Bruxelles");
-    await page.evaluate(() => document.getElementById("pw-type").click());
     await taper("#pa-adresse", "Avenue Louise 120");
     await taper("#pa-tel", "0470 12 34 56");
     await capture("2-tout-rempli", 600);
     await page.evaluate(() => document.activeElement.blur());
     await suivant();
 
-    // 3 · les photos
-    await capture("3-photos-arrivee", 900);
+    // 3 · la facade, puis les photos qui defilent
+    await capture("3-facade-arrivee", 900);
     const PHOTO = path.resolve(__dirname, "../public/clubs/demo-velours.webp");
     const [choix] = await Promise.all([page.waitForFileChooser({ timeout: 5000 }), page.evaluate(() => document.getElementById("pa-photo-btn").click())]);
     await choix.accept([PHOTO]);
-    await capture("3-photo-posee", 5000);
+    await capture("3-facade-posee", 5000);
     for (const f of ["mirano-2.webp", "mirano-3.webp"]) {
       const [ch] = await Promise.all([page.waitForFileChooser({ timeout: 5000 }), page.evaluate(() => document.querySelector("#pa-galerie [data-galerie-ajouter]:not([disabled])").click())]);
       await ch.accept([path.resolve(__dirname, "../public/clubs/" + f)]);
       await pause(4000);
     }
-    await capture("3-galerie", 800);
+    await page.evaluate(() => document.querySelector('.pa-etape[data-pas="3"] [data-pv-carte]').click());
+    await capture("3-photo-suivante", 900);
     await suivant();
 
-    // 4 · les recompenses
-    await capture("4-recompenses-arrivee", 900);
-    await page.evaluate(() => document.querySelector("#pa-grille .pa-tuile:not(.prise)")?.click());
-    await capture("4-recompense-ajoutee", 1200);
+    // 4 · la boutique
+    await capture("4-boutique-arrivee", 900);
+    await page.evaluate(() => document.querySelector("#pa-grille .pa-tuile.prise")?.click());
+    await capture("4-une-eteinte", 700);
+    await page.evaluate(() => document.querySelector('#pa-grille [data-pas-prix="10"]').click());
+    await page.evaluate(() => document.querySelector('#pa-grille [data-pas-prix="10"]').click());
+    await capture("4-prix-monte", 700);
+    await page.evaluate(() => document.getElementById("pa-corps").scrollTop = 400);
+    await capture("4-bas", 500);
     await suivant();
 
-    // 5 · le bareme
-    await capture("5-bareme-arrivee", 900);
-    await toucher('[data-pa-regle="qrCheckin"]');
-    await page.evaluate(() => { const e = document.querySelector('[data-pa-regle="qrCheckin"]'); e.value = "25"; e.dispatchEvent(new Event("input", { bubbles: true })); });
-    await capture("5-bareme-scan");
-    await page.evaluate(() => document.activeElement.blur());
+    // 5 · les points, annonces
+    await capture("5-points", 1400);
     await suivant();
 
     // 6 · Instagram
     await capture("6-instagram-arrivee", 900);
-    await taper("#pa-handle", "@levelvet.bxl");
+    await taper("#pa-handle", "@mirage.club");
     await capture("6-instagram-tape");
     await page.evaluate(() => document.activeElement.blur());
     await suivant();
 
-    // 7 · la fin : la visite du telephone
-    await capture("7-fin-debut", 700);
-    await capture("7-fin-page", 2200);
-    await capture("7-fin-boutique", 1700);
-    await page.evaluate(() => document.getElementById("ap-grand").click());
-    await capture("7-en-grand", 900);
-    await page.evaluate(() => { document.getElementById("ap-cadre").scrollTop = 700; });
-    await capture("7-en-grand-defile", 500);
-    await page.evaluate(() => document.getElementById("ap-plein-fermer").click());
-    await capture("7-retour", 900);
+    // 7 · la fin
+    await capture("7-fin", 1500);
   } catch (e) {
     bilan.plantage = e.message;
   } finally {
