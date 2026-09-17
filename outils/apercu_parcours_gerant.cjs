@@ -83,6 +83,13 @@ async function session(email) {
 
     // 2 · la fiche, ecrite sur la page
     await capture("2-page-vide", 900);
+    // Le bouton « Suivant » de la barre du haut : un ecran de plus, sans rien enregistrer.
+    for (const k of [3, 4, 5, 6]) {
+      await page.evaluate(() => document.getElementById("pa-avancer").click());
+      await capture("saut-vers-" + k, 900);
+    }
+    for (let k = 0; k < 4; k++) { await page.evaluate(() => document.getElementById("pa-retour").click()); await pause(500); }
+
     await taper("#pa-nom", "Mirage Club Bruxelles");
     await capture("2-nom", 500);
     await taper("#pa-ville", "Bruxelles");
