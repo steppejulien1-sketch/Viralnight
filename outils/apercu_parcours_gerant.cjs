@@ -110,8 +110,7 @@ async function session(email) {
       await ch.accept([path.resolve(__dirname, "../public/clubs/" + f)]);
       await pause(4000);
     }
-    await page.evaluate(() => document.querySelector('.pa-etape[data-pas="3"] [data-pv-carte]').click());
-    await capture("3-photo-suivante", 900);
+    await capture("3-photos-choisies", 900);
     await suivant();
 
     // 4 · la boutique
