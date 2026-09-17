@@ -2884,125 +2884,119 @@
       .pv-ig { margin-top: 12px; }
 
 
-      /* -- Les telephones des scenes (17/09/2026, Julien : « mets des trucs comme le telephone ») --
-         Un iPhone dessine qui monte dans la scene, coupe en bas, et montre l'ecran de l'appli
-         clubbeur aux couleurs du gerant. */
-      /* Le telephone ENTIER (Julien : « le tel est coupe en deux ») : dessine a 236 x 510, puis
-         reduit a la taille de la scene. Son ombre de sol le pose sur le fond. */
-      .pv-scene-tel { height: 408px; justify-content: flex-start; padding-top: 20px; }
-      .pv-scene-tel > .pv-tel:not(.petit) { scale: .73; transform-origin: top center; margin-bottom: -138px; }
-      .pv-scene-tel::after {
-        content: ""; position: absolute; z-index: -1; left: 50%; bottom: 10px; width: 190px; height: 22px; margin-left: -95px; border-radius: 50%;
-        background: radial-gradient(closest-side, rgba(0,0,0,.22), rgba(0,0,0,0)); filter: none; opacity: 1; animation: none;
+      /* -- Des scenes variees (17/09/2026, Julien : « que des telephones sur toutes les pages ») --
+         Etablissement et fin : le plan du quartier et l'epingle. Facade : une pile de photos.
+         Boutique : un eventail de cartes. Points et Instagram : le telephone de la story,
+         le meme que dans l'appli clubbeur (vraie barre d'etat, vrais onglets d'Instagram). */
+      .pv-scene-plan { height: 330px; }
+      .pv-scene-pile, .pv-scene-eventail { height: 300px; }
+      .pv-scene-gains, .pv-scene-story { height: 408px; }
+
+      .pv-scene-plan { justify-content: flex-end; padding-bottom: 22px; background: #eceef1; }
+      .pv-plan { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; }
+      .pv-epingle { position: absolute; left: 0; right: 0; top: 14px; width: max-content; margin: 0 auto; display: flex; flex-direction: column; align-items: center; animation: pvEpingle .6s cubic-bezier(.3, 1.4, .5, 1) .15s both; }
+      .pv-epingle svg { width: 34px; height: 44px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.25)); }
+      .pv-epingle b { margin-top: 4px; max-width: 220px; padding: 4px 9px; border-radius: 7px; background: #fff; font-size: 12.5px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 6px 14px -8px rgba(0,0,0,.35); }
+      .pv-epingle b.pv-vide { opacity: 1; color: #9a9aa2; }
+      @keyframes pvEpingle { from { opacity: 0; transform: translateY(-26px); } 70% { opacity: 1; } }
+      .pv-scene-plan .pv-carte { max-width: 320px; animation: none; box-shadow: 0 24px 44px -22px rgba(0,0,0,.55); }
+
+      .pv-pile { position: relative; width: calc(100% - 56px); max-width: 310px; }
+      .pv-pile .pv-carte { width: 100%; max-width: none; animation: none; }
+      .pv-pile-fond {
+        position: absolute; inset: 0; border-radius: 22px; background: #d9d9de center / cover no-repeat;
+        box-shadow: 0 16px 30px -18px rgba(0,0,0,.45); transition: background-image .3s ease;
       }
-      .pv-tel {
-        position: relative; flex: 0 0 auto; width: 236px; height: 510px; padding: 8px; border-radius: 46px; background: #0c0c0e;
-        box-shadow: 0 0 0 1.5px #34343a, inset 0 0 0 1px rgba(255,255,255,.1), 0 44px 70px -30px rgba(50,16,16,.6), 0 16px 30px -18px rgba(0,0,0,.4);
-        animation: pvMonte .9s cubic-bezier(.2, .8, .2, 1) both;
+      .pv-pile-fond.un { rotate: -5deg; translate: -10px 6px; }
+      .pv-pile-fond.deux { rotate: 5deg; translate: 12px 4px; }
+      .pv-pile-fond.vide { background: #fff; box-shadow: inset 0 0 0 1.5px #dcdce2, 0 14px 26px -18px rgba(0,0,0,.3); }
+
+      .pv-eventail { position: relative; width: 100%; height: 236px; }
+      .pv-eventail .pv-mini-reco {
+        position: absolute; left: 50%; top: 14px; width: 124px; margin-left: -62px;
+        transform: translate(var(--x), var(--y)) rotate(var(--r)); transition: transform .45s cubic-bezier(.2, .8, .2, 1);
       }
-      .pv-tel::before, .pv-tel::after { content: ""; position: absolute; width: 3px; border-radius: 2px; background: #2a2a2f; }
-      .pv-tel::before { left: -3px; top: 96px; height: 44px; box-shadow: 0 58px 0 #2a2a2f; }
-      .pv-tel::after { right: -3px; top: 124px; height: 64px; }
-      @keyframes pvMonte { from { transform: translateY(70px); opacity: 0; } to { transform: none; opacity: 1; } }
-      .pv-tel-ecran { position: relative; height: 100%; border-radius: 38px; overflow: hidden; background: #f5f5f7; color: #111; }
-      .pv-tel-ile { position: absolute; z-index: 6; left: 50%; top: 9px; width: 76px; height: 23px; margin-left: -38px; border-radius: 13px; background: #000; }
-      .pv-tel-statut { position: absolute; z-index: 5; left: 0; right: 0; top: 0; height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 1px 20px 0 28px; font-size: 11.5px; pointer-events: none; }
-      .pv-tel-statut span { display: flex; gap: 3px; align-items: center; }
-      .pv-tel-statut i { width: 12px; height: 7px; border-radius: 2px; background: currentColor; }
-      .pv-tel-statut i:last-child { width: 17px; height: 8px; }
-      .pv-tel-ecran.sombre .pv-tel-statut { color: #fff; }
-      .pv-flottant { position: absolute; z-index: 3; left: 0; right: 0; bottom: 44px; width: max-content; margin: 0 auto; animation: pvPop .5s cubic-bezier(.3, 1.4, .5, 1) .5s both; }
-      .pv-flottant[hidden] { display: none; }
-      .parcours.pv-clavier .pv-scene-tel { height: 196px; padding-top: 12px; }
-      .parcours.pv-clavier .pv-scene-tel > .pv-tel:not(.petit) { scale: .35; margin-bottom: -332px; }
-      .parcours.pv-clavier .pv-scene-tel::after { display: none; }
+      .pv-eventail .pv-mini-reco.arrive { animation: pvCarte .55s cubic-bezier(.3, 1.4, .5, 1) both; }
+      @keyframes pvCarte { from { opacity: 0; transform: translate(var(--x), calc(var(--y) + 40px)) rotate(var(--r)) scale(.8); } }
+      .pv-eventail .pv-mini-img { box-shadow: 0 22px 34px -22px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.05); }
+      .pv-eventail-plus { position: absolute; right: 8px; top: 8px; padding: 3px 8px; border-radius: 99px; background: #111; color: #fff; font-size: 11px; font-weight: 800; }
+      .pv-eventail .pv-bande-vide { position: absolute; left: 0; right: 0; top: 96px; margin: 0; text-align: center; }
 
-      /* l'ecran « liste » */
-      .pv-tel-liste { padding: 46px 10px 0; }
-      .pv-tel-tete { display: flex; align-items: baseline; justify-content: space-between; margin: 2px 4px 11px; }
-      .pv-tel-tete > b { font-family: var(--titre); font-size: 23px; font-weight: 900; letter-spacing: -.045em; line-height: .9; }
-      .pv-tel-tete span { font-size: 10.5px; color: #777; }
-      .pv-tel-tete span b { font-family: var(--titre); font-size: 14px; font-weight: 900; color: #111; }
-      .pv-carte.pv-carte-tel { width: 100%; max-width: none; border-radius: 14px; animation: none; box-shadow: 0 12px 22px -14px rgba(0,0,0,.5); }
-      .pv-carte-tel .pv-carte-segments { left: 8px; right: 8px; top: 6px; gap: 3px; }
-      .pv-carte-tel .pv-carte-segments i { height: 2px; }
-      .pv-carte-tel .pv-carte-lieu { left: 8px; top: 13px; gap: 3px; padding: 3px 6px 3px 4px; border-radius: 6px; font-size: 9.5px; }
-      .pv-carte-tel .pv-carte-lieu svg { width: 11px; height: 11px; }
-      .pv-carte-tel .pv-carte-txt { left: 10px; right: 10px; bottom: 8px; gap: 1px; }
-      .pv-carte-tel .pv-carte-txt b { font-size: 16px; }
-      .pv-carte-tel .pv-carte-txt span { font-size: 10px; }
-      .pv-carte-tel .pv-carte-vide { font-size: 9.5px; gap: 5px; }
-      .pv-carte-tel .pv-carte-vide svg { width: 44px; height: 36px; margin-top: -18px; }
-      /* Les autres etablissements de la liste, en vraies couleurs : l'ecran ressemble a l'appli, pas a un gabarit gris. */
-      .pv-tel-autre { position: relative; display: block; margin-top: 10px; aspect-ratio: 39 / 22; border-radius: 14px; overflow: hidden; background: #222 center / cover; color: #fff; }
-      .pv-tel-autre::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0) 62%); }
-      .pv-tel-autre b { position: absolute; left: 10px; bottom: 20px; font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
-      .pv-tel-autre i { position: absolute; left: 10px; bottom: 8px; font-style: normal; font-size: 10px; font-weight: 550; color: rgba(255,255,255,.85); }
+      /* Le telephone de la story : copie d'app-preview.html (.st-tel), mesures en px. */
+      .pv-scene-gains { flex-direction: row; align-items: flex-start; justify-content: center; gap: 16px; padding-top: 20px; }
+      .pv-scene-story { justify-content: flex-start; padding-top: 20px; }
+      .pv-colonne { display: flex; flex-direction: column; align-items: center; }
+      .st-tel {
+        position: relative; width: 168px; aspect-ratio: 9 / 17.5; border-radius: 28px; overflow: hidden; background: #14100d; color: #fff;
+        box-shadow: 0 0 0 6px #1c1c1f, 0 0 0 7px rgba(0,0,0,.06), 0 30px 60px -22px rgba(0,0,0,.4);
+      }
+      .pv-scene-gains .st-tel { width: 150px; border-radius: 25px; }
+      .st-tel-contenu { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; transform-origin: 50% 45%; }
+      .st-tel-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+      .st-tel-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 72%, rgba(0,0,0,.45)); }
+      .st-tel-barre { position: absolute; left: 0; top: 3px; width: 100%; height: auto; }
+      .st-tel-haut { position: absolute; left: 10px; right: 9px; top: 28px; display: flex; align-items: center; justify-content: space-between; }
+      .st-tel svg { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
+      .st-tel-fermer { width: 14px; height: 14px; }
+      .st-tel-outils { display: flex; align-items: center; gap: 7px; }
+      .st-tel-outils b { font-size: 11px; font-weight: 700; letter-spacing: -.02em; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+      .st-tel-outils svg { width: 14px; height: 14px; stroke-width: 1.8; }
+      .st-tel-outils svg:last-child { stroke-width: 3; }
+      .pv-scene-gains .st-tel-outils { gap: 5px; }
+      .pv-scene-gains .st-tel-outils svg { width: 12px; height: 12px; }
+      .st-tel-sticker {
+        position: absolute; right: 12px; top: 64px; max-width: 140px; padding: 6px 10px 6px 9px; border-radius: 8px; background: #fff;
+        box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 8px 18px -8px rgba(0,0,0,.55);
+        font-size: 10.5px; font-weight: 800; letter-spacing: -.005em; text-transform: uppercase; line-height: 1.2;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform-origin: 80% 20%;
+      }
+      .pv-scene-gains .st-tel-sticker { max-width: 120px; font-size: 9.5px; }
+      .st-tel-sticker-txt { color: #d62976; background: linear-gradient(90deg, #f58529, #dd2a7b 55%, #8134af); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+      .st-tel-bas { position: absolute; left: 0; right: 0; bottom: 8px; width: 100%; height: auto; }
+      .st-tel-partage {
+        position: absolute; left: 50%; top: 44%; translate: -50% 0; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+        padding: 7px 12px; border-radius: 999px; background: rgba(20,20,22,.82); font-size: 11px; font-weight: 750; opacity: 0; visibility: hidden;
+      }
+      .st-tel-partage svg { width: 13px; height: 13px; stroke-width: 3; filter: none; }
+      .st-gain {
+        margin-top: 16px; display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 16px 9px; border-radius: 999px;
+        background: #0b0b0c; color: #fff; white-space: nowrap; font-size: 13px; font-weight: 700; box-shadow: 0 12px 24px -12px rgba(0,0,0,.45);
+      }
+      .st-gain strong { font-family: var(--chiffre); font-size: 22px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+      .pv-scene.joue .st-tel { animation: st-arrive 1s cubic-bezier(.2, 1.1, .3, 1) both; }
+      .pv-scene.joue .st-tel-photo { animation: st-recul 2.2s cubic-bezier(.16, 1, .3, 1) both; }
+      .pv-scene.joue .st-tel-sticker { animation: st-colle .6s cubic-bezier(.34, 1.56, .64, 1) 1s both; }
+      .pv-scene.joue .st-tel-contenu { animation: st-envoye 2.2s cubic-bezier(.4, 0, .2, 1) 2.1s both; }
+      .pv-scene.joue .st-tel-partage { animation: st-partage 1.9s cubic-bezier(.16, 1, .3, 1) 2.3s both; }
+      .pv-scene.joue .st-gain { animation: st-gain .7s cubic-bezier(.34, 1.56, .64, 1) 2.7s both; }
+      @keyframes st-arrive { from { opacity: 0; translate: 0 60px; rotate: 6deg; scale: .92; } 60% { opacity: 1; } }
+      @keyframes st-recul { from { scale: 1.15; } }
+      @keyframes st-colle { from { opacity: 0; scale: .2; rotate: -24deg; } }
+      @keyframes st-envoye { 20%, 70% { scale: .96; filter: brightness(.82); } 100% { scale: 1; filter: none; } }
+      @keyframes st-partage { 0% { opacity: 0; visibility: visible; translate: -50% 10px; scale: .9; } 20%, 70% { opacity: 1; translate: -50% 0; scale: 1; } 100% { opacity: 0; visibility: hidden; translate: -50% -6px; } }
+      @keyframes st-gain { from { opacity: 0; translate: 0 -30px; scale: .6; } }
 
-      /* l'ecran « page du bar » */
-      .pv-tel-bar-hero { position: relative; height: 118px; background: #1b1b20 center / cover no-repeat; }
-      .pv-tel-bar-txt { position: absolute; z-index: 2; left: 12px; right: 12px; bottom: 24px; display: flex; flex-direction: column; gap: 2px; color: #fff; }
-      .pv-tel-bar-txt b { font-family: var(--titre); font-size: 18px; font-weight: 900; letter-spacing: -.035em; line-height: 1.02; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-      .pv-tel-bar-txt span { font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,.85); }
-      .pv-tel-bar-corps { position: relative; z-index: 2; margin-top: -16px; padding: 14px 10px 0; border-radius: 18px 18px 0 0; background: #f5f5f7; }
-      .pv-tel-solde { display: flex; justify-content: space-between; align-items: center; padding: 0 2px 9px; border-bottom: 1px solid rgba(0,0,0,.08); font-size: 8.5px; color: #888; }
-      .pv-tel-solde span:first-child { font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-      .pv-tel-solde b { font-family: var(--titre); font-size: 14px; font-weight: 900; color: #111; }
-      .pv-tel-bar-corps h4 { margin: 12px 2px 8px; font-size: 13px; font-weight: 800; letter-spacing: -.01em; }
-      #pv-bande.pv-tel-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 8px; padding: 0; overflow: visible; }
-      .pv-tel-grille .pv-mini-reco { flex: none; }
-      .pv-tel-grille .pv-mini-img { border-radius: 13px; }
-      .pv-tel-grille .pv-mini-lab { margin: -28px 5px 0; padding: 5px 7px; border-radius: 9px; }
-      .pv-tel-grille .pv-mini-lab b { font-size: 9.5px; }
-      .pv-tel-grille .pv-mini-lab span { font-size: 8.5px; }
-      .pv-tel-grille .pv-mini-img em { font-size: 22px; }
-      .pv-tel-grille .pv-bande-vide { grid-column: 1 / -1; margin: 22px 0 0; font-size: 10.5px; text-align: center; }
-      #pa-compte:empty { display: none; }
+      /* le ticket du scan */
+      .pv-ticket {
+        position: relative; width: 150px; aspect-ratio: 9 / 17.5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        border-radius: 22px; background: #fff; color: #111; box-shadow: 0 0 0 1px #e5e5ea, 0 30px 60px -26px rgba(0,0,0,.35);
+      }
+      .pv-ticket-titre { position: absolute; top: 18px; font-size: 10.5px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; color: #de3131; }
+      .pv-ticket .pv-qr { width: 96px; height: 96px; margin: 0; }
+      .pv-ticket-nom { max-width: 124px; font-family: var(--titre); font-size: 14px; font-weight: 900; letter-spacing: -.02em; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .pv-ticket-trous { position: absolute; left: -9px; right: -9px; bottom: 58px; height: 18px; background: radial-gradient(circle 9px at 0 50%, #f3f3f5 98%, transparent 100%) left / 18px 18px no-repeat, radial-gradient(circle 9px at 100% 50%, #f3f3f5 98%, transparent 100%) right / 18px 18px no-repeat; border-bottom: 0; }
+      .pv-ticket-trous::after { content: ""; position: absolute; left: 20px; right: 20px; top: 8px; border-top: 1.5px dashed #dcdce2; }
+      .pv-ticket-bas { position: absolute; bottom: 24px; font-size: 11px; font-weight: 650; color: #8e8e96; }
 
-      /* les deux telephones des points */
-      .pv-scene-duo { flex-direction: row; align-items: flex-start; gap: 14px; }
-      .pv-scene-duo::after { width: 300px; margin-left: -150px; }
-      .pv-tel.petit { width: 158px; height: 342px; padding: 6px; border-radius: 30px; }
-      .pv-tel.petit .pv-tel-ecran { border-radius: 25px; }
-      .pv-tel.petit .pv-tel-ile { top: 6px; width: 46px; height: 14px; margin-left: -23px; }
-      .pv-tel.petit .pv-tel-statut { height: 26px; padding: 0 12px 0 17px; font-size: 7.5px; }
-      .pv-tel.petit .pv-tel-statut i { width: 8px; height: 5px; }
-      .pv-tel.petit::before { top: 62px; height: 28px; box-shadow: 0 36px 0 #2a2a2f; }
-      .pv-tel.petit::after { top: 80px; height: 40px; }
-      .pv-tel.penche-g { rotate: -3deg; margin-top: 12px; }
-      .pv-tel.penche-d { rotate: 3deg; margin-top: 12px; animation-delay: .12s; }
-      .pv-tel-story, .pv-tel-scan { position: absolute; inset: 0; background: #000; color: #fff; }
-      .pv-tel-story > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-      .pv-tel-story .pv-story-barres { top: 32px; }
-      .pv-tel-story .pv-story-auteur { top: 40px; }
-      .pv-tel.petit .pv-story-barres { top: 24px; left: 6px; right: 6px; }
-      .pv-tel.petit .pv-story-auteur { top: 30px; left: 7px; font-size: 7.5px; }
-      .pv-tel.petit .pv-story-auteur i { width: 14px; height: 14px; }
-      .pv-tel.petit .pv-sticker { padding: 4px 7px; border-radius: 6px; }
-      .pv-tel.petit .pv-sticker > span { font-size: 9.5px !important; }
-      .pv-tel.petit .pv-gain-mini { bottom: auto; top: 70%; padding: 4px 8px; font-size: 10px; }
-      .pv-tel-scan { background: #0e0e10 url(/ambiance/bienvenue.webp) center / cover; }
-      .pv-tel-scan::before { content: ""; position: absolute; inset: 0; background: rgba(8,8,10,.62); }
-      .pv-scan-titre { position: absolute; left: 0; right: 0; top: 34px; text-align: center; font-size: 10px; font-weight: 700; }
-      .pv-viseur { position: absolute; left: 50%; top: 44%; width: 96px; height: 96px; margin: -48px 0 0 -48px; display: grid; place-items: center; }
-      .pv-viseur > i { position: absolute; width: 20px; height: 20px; border: 3px solid #fff; }
-      .pv-viseur > i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
-      .pv-viseur > i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; border-radius: 0 8px 0 0; }
-      .pv-viseur > i:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 8px; }
-      .pv-viseur > i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; border-radius: 0 0 8px 0; }
-      .pv-tel-scan .pv-qr { width: 62px; height: 62px; margin: 0; padding: 5px; border-radius: 6px; background: #fff; box-sizing: content-box; }
-      .pv-tel-scan .pv-qr i { left: -4px; right: -4px; }
-
-      /* la story du grand telephone, avec la barre d'Instagram */
-      .pv-tel:not(.petit) .pv-sticker { top: 30%; padding: 8px 12px; }
-      .pv-tel:not(.petit) .pv-gain-mini { bottom: auto; top: 46%; font-size: 13px; }
-      .pv-tel-ig { position: absolute; left: 10px; right: 10px; bottom: 16px; display: flex; gap: 6px; align-items: center; }
-      .pv-tel-ig > span { flex: 1; display: flex; align-items: center; gap: 5px; height: 32px; padding: 0 8px; border-radius: 99px; background: rgba(20,20,22,.6); font-size: 9.5px; font-weight: 650; white-space: nowrap; }
-      .pv-tel-ig > span i { width: 16px; height: 16px; border-radius: 50%; background: url(/ambiance/profil/avatar.webp) center / cover, #888; }
-      .pv-tel-ig > span + span i { background: #3ecf5a; }
-      .pv-tel-ig b { flex: 0 0 auto; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #fff; }
-      .pv-tel-ig b svg { width: 15px; height: 15px; stroke: #111; stroke-width: 2.4; }
-
+      .parcours.pv-clavier .pv-scene-plan { height: 178px; padding-bottom: 12px; }
+      .parcours.pv-clavier .pv-scene-plan .pv-epingle { display: none; }
+      .parcours.pv-clavier .pv-scene-plan .pv-carte { scale: 1; max-width: 250px; }
+      .parcours.pv-clavier .pv-scene-story { height: 200px; padding-top: 12px; }
+      .parcours.pv-clavier .pv-scene-story > * { scale: 1; }
+      .parcours.pv-clavier .pv-scene-story .st-tel { width: 84px; border-radius: 16px; }
+      .parcours.pv-clavier .pv-scene-story .st-tel-haut, .parcours.pv-clavier .pv-scene-story .st-tel-bas { display: none; }
+      .parcours.pv-clavier .pv-scene-story .st-gain { display: none; }
+      @media (prefers-reduced-motion: reduce) { .pv-epingle, .pv-scene.joue * { animation: none !important; } }
 
       /* -- Au carre (17/09/2026, Julien : « il faut que la dispo soit carree ») --
          Rien ne flotte plus sur le telephone. Champs, recompenses et points en
@@ -3349,7 +3343,7 @@
 
                     <!-- 2 · L'etablissement -->
                     <section class="pa-etape pv" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-liste"><div class="pv-tel-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div><div class="pv-carte pv-carte-tel pv-sans-photo" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div><span class="pv-tel-autre" style="background-image:url(/clubs/demo-velours.webp)"><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span>Bruxelles-Centre</span></span><b>Velours</b><i>Bar • 3 récompenses</i></span><span class="pv-tel-autre" style="background-image:url(/clubs/demo-neon-88.webp)"><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span>Ixelles</span></span><b>Néon 88</b><i>Boîte de nuit • 3 récompenses</i></span></div></div></div></div>
+                      <div class="pv-scene pv-scene-plan"><svg class="pv-plan" viewBox="0 0 390 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="390" height="300" fill="#eceef1"/><path d="M250 -10 C300 60 330 90 400 110 L400 -10z" fill="#dde6ee"/><rect x="28" y="150" width="84" height="56" rx="6" fill="#dfe9dd"/><g fill="#e3e5e9"><rect x="140" y="30" width="70" height="50" rx="4"/><rect x="30" y="40" width="80" height="70" rx="4"/><rect x="236" y="150" width="120" height="60" rx="4"/><rect x="140" y="220" width="80" height="60" rx="4"/></g><g stroke="#ffffff" fill="none" stroke-linecap="round"><path d="M-10 128 L400 118" stroke-width="16"/><path d="M125 -10 L118 310" stroke-width="12"/><path d="M226 -10 L234 310" stroke-width="9"/><path d="M-10 226 L400 240" stroke-width="9"/><path d="M-10 20 L130 130 L400 300" stroke-width="7"/></g></svg><span class="pv-epingle" aria-hidden="true"><svg viewBox="0 0 34 44"><path d="M17 43C17 43 3 27 3 16.5a14 14 0 1 1 28 0C31 27 17 43 17 43z" fill="#de3131" stroke="#111" stroke-width="2.4"/><circle cx="17" cy="16.5" r="5" fill="#111"/></svg><b data-pv="nom"></b></span><div class="pv-carte pv-sans-photo" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div></div>
                       <p class="pv-etape">Étape 1 sur 5</p>
                       <h1 class="pa-titre">Ton établissement.</h1>
                       <p class="pa-sous">Au-dessus, ce que tes clients verront dans l'appli.</p>
@@ -3375,7 +3369,7 @@
 
                     <!-- 3 · La facade, et les photos qui defilent -->
                     <section class="pa-etape pv" data-pas="3" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-liste"><div class="pv-tel-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div><div class="pv-carte pv-carte-tel pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div><span class="pv-tel-autre" style="background-image:url(/clubs/demo-velours.webp)"><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span>Bruxelles-Centre</span></span><b>Velours</b><i>Bar • 3 récompenses</i></span><span class="pv-tel-autre" style="background-image:url(/clubs/demo-neon-88.webp)"><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span>Ixelles</span></span><b>Néon 88</b><i>Boîte de nuit • 3 récompenses</i></span></div></div></div></div>
+                      <div class="pv-scene pv-scene-pile"><div class="pv-pile"><span class="pv-pile-fond deux" data-pv-fond="2"></span><span class="pv-pile-fond un" data-pv-fond="1"></span><div class="pv-carte pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div></div></div>
                       <p class="pv-etape">Étape 2 sur 5</p>
                       <h1 class="pa-titre">Ta façade.</h1>
                       <p class="pa-sous">La première photo que voient tes clients. Prends-la belle.</p>
@@ -3392,7 +3386,7 @@
 
                     <!-- 4 · La boutique -->
                     <section class="pa-etape pv" data-pas="4" data-mascotte="/mascotte/pose-2.webp" hidden>
-                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran sombre"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-bar"><div class="pv-tel-bar-hero" data-pv="vignette"><span class="pv-carte-voile"></span><span class="pv-tel-bar-txt"><b data-pv="nom"></b><span data-pv="type"></span></span></div><div class="pv-tel-bar-corps"><div class="pv-tel-solde"><span>Ton solde</span><span><b>450</b> points</span></div><h4>Récompenses</h4><div class="pv-bande pv-tel-grille" id="pv-bande"></div></div></div></div></div></div>
+                      <div class="pv-scene pv-scene-eventail"><div class="pv-eventail" id="pv-bande"></div></div>
                       <p class="pv-etape">Étape 3 sur 5</p>
                       <h1 class="pa-titre">Ta boutique.</h1>
                       <p class="pa-sous">Ce que tes clients s'offrent avec leurs points. Active, règle le prix.</p>
@@ -3410,7 +3404,7 @@
 
                     <!-- 5 · Les points, imposes : on les annonce -->
                     <section class="pa-etape pv" data-pas="5" data-mascotte="/mascotte/pose-3.webp" hidden>
-                      <div class="pv-scene pv-scene-tel pv-scene-duo"><div class="pv-tel petit penche-g" aria-hidden="true"><div class="pv-tel-ecran sombre"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-story"><img src="/ambiance/bienvenue.webp" alt="" /><span class="pv-story-voile"></span><span class="pv-story-barres"><i></i><i></i></span><span class="pv-story-auteur"><i></i>ton.client</span><span class="pv-sticker"><span>@<span data-pv="handle"></span></span><i class="pv-curseur"></i></span><span class="pv-gain-mini" data-pv="gain-story"></span></div></div></div><div class="pv-tel petit penche-d" aria-hidden="true"><div class="pv-tel-ecran sombre"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-scan"><span class="pv-scan-titre">Scanne le QR</span><span class="pv-viseur"><i></i><i></i><i></i><i></i><span class="pv-qr"><svg viewBox="0 0 29 29"><path d="M1 1h9v9H1zM19 1h9v9h-9zM1 19h9v9H1z" fill="none" stroke="#111" stroke-width="2"/><path d="M4 4h3v3H4zM22 4h3v3h-3zM4 22h3v3H4zM13 2h2v4h-2zM12 8h4v2h-4zM13 12h3v3h-3zM18 13h4v2h-4zM24 12h3v4h-3zM12 18h2v3h-2zM16 17h3v3h-3zM21 19h3v2h-3zM25 21h2v6h-2zM13 23h4v2h-4zM18 24h3v3h-3zM2 13h3v2H2zM7 12h3v4H7z"/></svg><i></i></span></span><span class="pv-gain-mini" data-pv="gain-scan"></span></div></div></div></div>
+                      <div class="pv-scene pv-scene-gains"><div class="pv-colonne"><div class="st-tel"><span class="st-tel-contenu"><img class="st-tel-photo" src="/ambiance/bienvenue.webp" alt="" /><span class="st-tel-voile"></span><img class="st-tel-barre" src="/ambiance/profil/barre-etat-blanche.png" alt="" /><span class="st-tel-haut"><svg class="st-tel-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span class="st-tel-outils"><b>Aa</b><svg viewBox="0 0 24 24"><path d="M15.5 3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6.5l7-7V7A3.5 3.5 0 0 0 17 3.5z"/><path d="M13.5 20.5v-3.5a3.5 3.5 0 0 1 3.5-3.5h3.5"/><circle cx="9" cy="10" r=".9"/><circle cx="14" cy="10" r=".9"/></svg><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg><svg viewBox="0 0 24 24"><path d="M12 3.5l1.6 4.4L18 9.5l-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6z"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18.5" cy="12" r=".6"/></svg></span></span><span class="st-tel-sticker"><span class="st-tel-sticker-txt">@<span data-pv="handle"></span></span></span><img class="st-tel-bas" src="/ambiance/profil/story-onglets.png" alt="" /></span><span class="st-tel-partage"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Story partagée</span></div><span class="st-gain"><strong data-pv="n-story"></strong>points</span></div><div class="pv-colonne"><div class="pv-ticket"><span class="pv-ticket-titre">Sur place</span><span class="pv-qr"><svg viewBox="0 0 29 29"><path d="M1 1h9v9H1zM19 1h9v9h-9zM1 19h9v9H1z" fill="none" stroke="#111" stroke-width="2"/><path d="M4 4h3v3H4zM22 4h3v3h-3zM4 22h3v3H4zM13 2h2v4h-2zM12 8h4v2h-4zM13 12h3v3h-3zM18 13h4v2h-4zM24 12h3v4h-3zM12 18h2v3h-2zM16 17h3v3h-3zM21 19h3v2h-3zM25 21h2v6h-2zM13 23h4v2h-4zM18 24h3v3h-3zM2 13h3v2H2zM7 12h3v4H7z"/></svg><i></i></span><span class="pv-ticket-nom" data-pv="nom"></span><span class="pv-ticket-trous"></span><span class="pv-ticket-bas">Scanne à l'entrée</span></div><span class="st-gain"><strong data-pv="n-scan"></strong>points</span></div></div>
                       <p class="pv-etape">Étape 4 sur 5</p>
                       <h1 class="pa-titre">Ce que gagnent tes clients.</h1>
                       <p class="pa-sous">Les mêmes points partout sur Noctify. Tu n'as rien à régler.</p>
@@ -3431,7 +3425,7 @@
 
                     <!-- 6 · Instagram -->
                     <section class="pa-etape pv" data-pas="6" data-mascotte="/mascotte/pose-4.webp" hidden>
-                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran sombre"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-story"><img src="/ambiance/bienvenue.webp" alt="" /><span class="pv-story-voile"></span><span class="pv-story-barres"><i></i><i></i></span><span class="pv-story-auteur"><i></i>ton.client</span><span class="pv-sticker"><span>@<span data-pv="handle"></span></span><i class="pv-curseur"></i></span><span class="pv-gain-mini" data-pv="gain-story"></span><span class="pv-tel-ig"><span><i></i>Votre story</span><span><i></i>Amis proches</span><b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></b></span></div></div></div></div>
+                      <div class="pv-scene pv-scene-story"><div class="st-tel"><span class="st-tel-contenu"><img class="st-tel-photo" src="/ambiance/bienvenue.webp" alt="" /><span class="st-tel-voile"></span><img class="st-tel-barre" src="/ambiance/profil/barre-etat-blanche.png" alt="" /><span class="st-tel-haut"><svg class="st-tel-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span class="st-tel-outils"><b>Aa</b><svg viewBox="0 0 24 24"><path d="M15.5 3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6.5l7-7V7A3.5 3.5 0 0 0 17 3.5z"/><path d="M13.5 20.5v-3.5a3.5 3.5 0 0 1 3.5-3.5h3.5"/><circle cx="9" cy="10" r=".9"/><circle cx="14" cy="10" r=".9"/></svg><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg><svg viewBox="0 0 24 24"><path d="M12 3.5l1.6 4.4L18 9.5l-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6z"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18.5" cy="12" r=".6"/></svg></span></span><span class="st-tel-sticker"><span class="st-tel-sticker-txt">@<span data-pv="handle"></span></span></span><img class="st-tel-bas" src="/ambiance/profil/story-onglets.png" alt="" /></span><span class="st-tel-partage"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Story partagée</span></div><span class="st-gain"><strong data-pv="n-story"></strong>points</span></div>
                       <p class="pv-etape">Étape 5 sur 5</p>
                       <h1 class="pa-titre">Ton Instagram.</h1>
                       <p class="pa-sous">Le compte que tes clients mentionnent dans leur story.</p>
@@ -3452,7 +3446,7 @@
 
                     <!-- 5 · Ce qui vient d'etre construit -->
                     <section class="pa-etape pv" data-pas="7" data-mascotte="/mascotte/pose-5.webp" hidden>
-                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-liste"><div class="pv-tel-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div><div class="pv-carte pv-carte-tel pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div><span class="pv-tel-autre" style="background-image:url(/clubs/demo-velours.webp)"><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span>Bruxelles-Centre</span></span><b>Velours</b><i>Bar • 3 récompenses</i></span><span class="pv-tel-autre" style="background-image:url(/clubs/demo-neon-88.webp)"><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span>Ixelles</span></span><b>Néon 88</b><i>Boîte de nuit • 3 récompenses</i></span></div></div></div></div>
+                      <div class="pv-scene pv-scene-plan"><svg class="pv-plan" viewBox="0 0 390 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="390" height="300" fill="#eceef1"/><path d="M250 -10 C300 60 330 90 400 110 L400 -10z" fill="#dde6ee"/><rect x="28" y="150" width="84" height="56" rx="6" fill="#dfe9dd"/><g fill="#e3e5e9"><rect x="140" y="30" width="70" height="50" rx="4"/><rect x="30" y="40" width="80" height="70" rx="4"/><rect x="236" y="150" width="120" height="60" rx="4"/><rect x="140" y="220" width="80" height="60" rx="4"/></g><g stroke="#ffffff" fill="none" stroke-linecap="round"><path d="M-10 128 L400 118" stroke-width="16"/><path d="M125 -10 L118 310" stroke-width="12"/><path d="M226 -10 L234 310" stroke-width="9"/><path d="M-10 226 L400 240" stroke-width="9"/><path d="M-10 20 L130 130 L400 300" stroke-width="7"/></g></svg><span class="pv-epingle" aria-hidden="true"><svg viewBox="0 0 34 44"><path d="M17 43C17 43 3 27 3 16.5a14 14 0 1 1 28 0C31 27 17 43 17 43z" fill="#de3131" stroke="#111" stroke-width="2.4"/><circle cx="17" cy="16.5" r="5" fill="#111"/></svg><b data-pv="nom"></b></span><div class="pv-carte pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div></div>
                       <p class="pv-etape pv-en-ligne"><i class="pv-live"></i>En ligne sur Noctify</p>
                       <h1 class="pa-titre">Tout est prêt.</h1>
                       <p class="pa-sous">Il ne reste qu'à coller ton affiche : à l'entrée, au bar, aux toilettes.</p>
@@ -8181,18 +8175,24 @@
         carte.querySelectorAll('[data-pv="segments"] i').forEach(function (seg, k) { seg.classList.toggle("on", k <= i); });
         relancerAnimation(carte, "pv-tap");
       }
+      /* La boutique en eventail : trois cartes au plus, celle du milieu devant.
+         Au-dela, la troisieme porte le nombre des autres. */
       function pvRendreBande() {
         var zone = $("#pv-bande");
         if (!zone) return;
         var choix = (PARCOURS.choix || []).filter(function (c) { return c.prise; });
         var avant = PV.bande;
-        zone.innerHTML = choix.length ? choix.map(function (c) {
+        var montrees = choix.slice(0, 3);
+        var positions = { 1: [[0, 0, 0]], 2: [[-62, -5, 8], [62, 5, 8]], 3: [[-110, -8, 20], [0, 0, 0], [110, 8, 20]] }[montrees.length] || [];
+        zone.innerHTML = montrees.length ? montrees.map(function (c, i) {
           var img = c.foto
             ? '<img src="' + escapeHtml(c.foto) + '" alt="" />'
             : "<em>" + escapeHtml((c.titre || "?").trim().charAt(0).toUpperCase()) + "</em>";
           var neuve = avant && avant.indexOf(c.titre) === -1;
-          return '<span class="pv-mini-reco' + (neuve ? " arrive" : "") + '">' +
-            '<span class="pv-mini-img">' + img + "</span>" +
+          var pos = positions[i];
+          var reste = i === 2 && choix.length > 3 ? '<span class="pv-eventail-plus">+' + (choix.length - 3) + "</span>" : "";
+          return '<span class="pv-mini-reco' + (neuve ? " arrive" : "") + '" style="--x:' + pos[0] + "px;--r:" + pos[1] + "deg;--y:" + pos[2] + "px;z-index:" + (i === 1 ? 3 : 2) + '">' +
+            '<span class="pv-mini-img">' + img + reste + "</span>" +
             '<span class="pv-mini-lab"><b>' + escapeHtml(c.titre || "") + "</b><span>" + nb.format(Number(c.points || 0)) + " points</span></span>" +
           "</span>";
         }).join("") : '<p class="pv-bande-vide">Active une récompense : elle apparaît ici.</p>';
@@ -8211,10 +8211,8 @@
         var ig = ETAT.instagram;
         var handle = ig && ig.connecte && ig.handle ? ig.handle : $("#pa-handle").value.trim().replace(/^@+/, "").replace(/\s+/g, "");
         pvTexte('[data-pv="handle"]', handle || etab.ig_handle || "", "tonclub");
-        // Un long pseudo tient dans l'autocollant : la lettre rapetisse au lieu d'etre coupee.
-        var longueur = (handle || etab.ig_handle || "tonclub").length + 1;
-        document.querySelectorAll(".pv-sticker > span").forEach(function (el) { el.style.fontSize = Math.max(9, Math.min(15, 15 - (longueur - 9) * .7)) + "px"; });
-        document.querySelectorAll(".pv-mini-mention > span").forEach(function (el) { el.style.fontSize = Math.max(7, Math.min(10, 10 - (longueur - 9) * .45)) + "px"; });
+        document.querySelectorAll('[data-pv="n-story"]').forEach(function (el) { el.textContent = "+" + PV_POINTS.story; });
+        document.querySelectorAll('[data-pv="n-scan"]').forEach(function (el) { el.textContent = "+" + PV_POINTS.scan; });
         document.querySelectorAll('[data-pv="gain-story"]').forEach(function (el) { el.textContent = "+" + PV_POINTS.story + " points"; });
         document.querySelectorAll('[data-pv="gain-scan"]').forEach(function (el) { el.textContent = "+" + PV_POINTS.scan + " points"; });
         document.querySelectorAll('[data-pv="pts-story"]').forEach(function (el) { el.innerHTML = PV_POINTS.story + "<small>pts</small>"; });
@@ -8225,7 +8223,12 @@
         document.querySelectorAll('[data-pv="vignette"]').forEach(function (el) {
           el.style.backgroundImage = photos[0] ? 'url("' + photos[0].replace(/"/g, "") + '")' : "";
         });
-        document.querySelectorAll('[data-pv="tape"]').forEach(function (el) { el.hidden = photos.length < 2; });
+        // La pile de la facade : les autres photos derriere, des cadres blancs tant qu'il n'y en a pas.
+        document.querySelectorAll("[data-pv-fond]").forEach(function (el) {
+          var u = photos[Number(el.dataset.pvFond)] || photos[1] || "";
+          el.style.backgroundImage = u ? 'url("' + u.replace(/"/g, "") + '")' : "";
+          el.classList.toggle("vide", !u);
+        });
 
         var titre = $("#pa-photo-titre");
         if (titre && titre.textContent !== "Envoi…") titre.textContent = etab.logo_url ? "Changer la photo" : "Ajouter ta façade";
@@ -8276,6 +8279,9 @@
           $("#pa-avancer").hidden = cible <= 1 || cible >= PAS_MAX || PARCOURS.seule || !etablissementCourant();
           PV.bande = null;
           pvSynchro();
+          // La story se colle une fois, a l'arrivee sur l'ecran.
+          var scene = document.querySelector('.pa-etape[data-pas="' + cible + '"] .pv-scene');
+          if (scene && scene.querySelector(".st-tel")) relancerAnimation(scene, "joue");
         });
         rendrePhotoParcours = apres(rendrePhotoParcours, pvSynchro);
         rendreGalerieParcours = apres(rendreGalerieParcours, pvSynchro);
