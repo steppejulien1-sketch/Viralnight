@@ -2673,11 +2673,10 @@
       .pv-scene {
         position: relative; height: 272px; margin: -12px -20px 24px; overflow: hidden; isolation: isolate;
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-        background: linear-gradient(180deg, #f7f4f2, #eeebea); transition: height .35s var(--sortie);
+        /* 17/09/2026, Julien : plus de lueurs rose et violette. Un fond neutre, comme une photo produit. */
+        background: linear-gradient(180deg, #ffffff 0%, #f1f1f3 100%); border-bottom: 1px solid #ececef; transition: height .35s var(--sortie);
       }
-      .pv-scene::before, .pv-scene::after {
-        content: ""; position: absolute; z-index: -1; width: 280px; height: 280px; border-radius: 50%; filter: blur(56px); opacity: .5; pointer-events: none;
-      }
+      .pv-scene::before, .pv-scene::after { content: none; }
       .pv-scene::before { left: -80px; top: -110px; background: #ff7d6e; animation: pvNuage 16s ease-in-out infinite alternate; }
       .pv-scene::after { right: -90px; bottom: -120px; background: #9d8bff; animation: pvNuage 19s ease-in-out infinite alternate-reverse; }
       @keyframes pvNuage { from { transform: translate(0, 0) scale(1); } to { transform: translate(46px, 34px) scale(1.18); } }
@@ -2888,9 +2887,16 @@
       /* -- Les telephones des scenes (17/09/2026, Julien : « mets des trucs comme le telephone ») --
          Un iPhone dessine qui monte dans la scene, coupe en bas, et montre l'ecran de l'appli
          clubbeur aux couleurs du gerant. */
-      .pv-scene-tel { height: 336px; justify-content: flex-start; padding-top: 26px; }
+      /* Le telephone ENTIER (Julien : « le tel est coupe en deux ») : dessine a 236 x 510, puis
+         reduit a la taille de la scene. Son ombre de sol le pose sur le fond. */
+      .pv-scene-tel { height: 408px; justify-content: flex-start; padding-top: 20px; }
+      .pv-scene-tel > .pv-tel:not(.petit) { scale: .73; transform-origin: top center; margin-bottom: -138px; }
+      .pv-scene-tel::after {
+        content: ""; position: absolute; z-index: -1; left: 50%; bottom: 10px; width: 190px; height: 22px; margin-left: -95px; border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(0,0,0,.22), rgba(0,0,0,0)); filter: none; opacity: 1; animation: none;
+      }
       .pv-tel {
-        position: relative; flex: 0 0 auto; width: 236px; height: 480px; padding: 8px; border-radius: 46px; background: #0c0c0e;
+        position: relative; flex: 0 0 auto; width: 236px; height: 510px; padding: 8px; border-radius: 46px; background: #0c0c0e;
         box-shadow: 0 0 0 1.5px #34343a, inset 0 0 0 1px rgba(255,255,255,.1), 0 44px 70px -30px rgba(50,16,16,.6), 0 16px 30px -18px rgba(0,0,0,.4);
         animation: pvMonte .9s cubic-bezier(.2, .8, .2, 1) both;
       }
@@ -2905,10 +2911,11 @@
       .pv-tel-statut i { width: 12px; height: 7px; border-radius: 2px; background: currentColor; }
       .pv-tel-statut i:last-child { width: 17px; height: 8px; }
       .pv-tel-ecran.sombre .pv-tel-statut { color: #fff; }
-      .pv-flottant { position: absolute; z-index: 3; left: 0; right: 0; bottom: 18px; width: max-content; margin: 0 auto; animation: pvPop .5s cubic-bezier(.3, 1.4, .5, 1) .5s both; }
+      .pv-flottant { position: absolute; z-index: 3; left: 0; right: 0; bottom: 44px; width: max-content; margin: 0 auto; animation: pvPop .5s cubic-bezier(.3, 1.4, .5, 1) .5s both; }
       .pv-flottant[hidden] { display: none; }
-      .parcours.pv-clavier .pv-scene-tel { height: 170px; padding-top: 14px; }
-      .parcours.pv-clavier .pv-scene-tel > .pv-tel { scale: .62; transform-origin: top center; margin-top: 0; }
+      .parcours.pv-clavier .pv-scene-tel { height: 196px; padding-top: 12px; }
+      .parcours.pv-clavier .pv-scene-tel > .pv-tel:not(.petit) { scale: .35; margin-bottom: -332px; }
+      .parcours.pv-clavier .pv-scene-tel::after { display: none; }
 
       /* l'ecran « liste » */
       .pv-tel-liste { padding: 46px 10px 0; }
@@ -2926,7 +2933,11 @@
       .pv-carte-tel .pv-carte-txt span { font-size: 10px; }
       .pv-carte-tel .pv-carte-vide { font-size: 9.5px; gap: 5px; }
       .pv-carte-tel .pv-carte-vide svg { width: 44px; height: 36px; margin-top: -18px; }
-      .pv-tel-fantome { display: block; margin-top: 10px; aspect-ratio: 39 / 22; border-radius: 14px; background: #ddd center / cover; opacity: .3; filter: grayscale(1); }
+      /* Les autres etablissements de la liste, en vraies couleurs : l'ecran ressemble a l'appli, pas a un gabarit gris. */
+      .pv-tel-autre { position: relative; display: block; margin-top: 10px; aspect-ratio: 39 / 22; border-radius: 14px; overflow: hidden; background: #222 center / cover; color: #fff; }
+      .pv-tel-autre::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0) 62%); }
+      .pv-tel-autre b { position: absolute; left: 10px; bottom: 20px; font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+      .pv-tel-autre i { position: absolute; left: 10px; bottom: 8px; font-style: normal; font-size: 10px; font-weight: 550; color: rgba(255,255,255,.85); }
 
       /* l'ecran « page du bar » */
       .pv-tel-bar-hero { position: relative; height: 118px; background: #1b1b20 center / cover no-repeat; }
@@ -2949,16 +2960,17 @@
       #pa-compte:empty { display: none; }
 
       /* les deux telephones des points */
-      .pv-scene-duo { flex-direction: row; align-items: flex-start; gap: 6px; }
-      .pv-tel.petit { width: 150px; height: 310px; padding: 6px; border-radius: 30px; }
+      .pv-scene-duo { flex-direction: row; align-items: flex-start; gap: 14px; }
+      .pv-scene-duo::after { width: 300px; margin-left: -150px; }
+      .pv-tel.petit { width: 158px; height: 342px; padding: 6px; border-radius: 30px; }
       .pv-tel.petit .pv-tel-ecran { border-radius: 25px; }
       .pv-tel.petit .pv-tel-ile { top: 6px; width: 46px; height: 14px; margin-left: -23px; }
       .pv-tel.petit .pv-tel-statut { height: 26px; padding: 0 12px 0 17px; font-size: 7.5px; }
       .pv-tel.petit .pv-tel-statut i { width: 8px; height: 5px; }
       .pv-tel.petit::before { top: 62px; height: 28px; box-shadow: 0 36px 0 #2a2a2f; }
       .pv-tel.petit::after { top: 80px; height: 40px; }
-      .pv-tel.penche-g { rotate: -6deg; margin-top: 16px; }
-      .pv-tel.penche-d { rotate: 6deg; margin-top: 16px; animation-delay: .12s; }
+      .pv-tel.penche-g { rotate: -3deg; margin-top: 12px; }
+      .pv-tel.penche-d { rotate: 3deg; margin-top: 12px; animation-delay: .12s; }
       .pv-tel-story, .pv-tel-scan { position: absolute; inset: 0; background: #000; color: #fff; }
       .pv-tel-story > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
       .pv-tel-story .pv-story-barres { top: 32px; }
@@ -3309,7 +3321,7 @@
 
                     <!-- 2 · L'etablissement -->
                     <section class="pa-etape pv" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-liste"><div class="pv-tel-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div><div class="pv-carte pv-carte-tel pv-sans-photo" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div><span class="pv-tel-fantome" style="background-image:url(/clubs/demo-velours.webp)"></span><span class="pv-tel-fantome" style="background-image:url(/clubs/demo-neon-88.webp)"></span></div></div></div><span class="pv-pastille pv-flottant"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="adresse"></span></span></div>
+                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-liste"><div class="pv-tel-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div><div class="pv-carte pv-carte-tel pv-sans-photo" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div><span class="pv-tel-autre" style="background-image:url(/clubs/demo-velours.webp)"><b>Velours</b><i>Bar • 3 récompenses</i></span><span class="pv-tel-autre" style="background-image:url(/clubs/demo-neon-88.webp)"><b>Néon 88</b><i>Boîte de nuit • 3 récompenses</i></span></div></div></div><span class="pv-pastille pv-flottant"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="adresse"></span></span></div>
                       <p class="pv-etape">Étape 1 sur 5</p>
                       <h1 class="pa-titre">Ton établissement.</h1>
                       <p class="pa-sous">Au-dessus, ce que tes clients verront dans l'appli.</p>
@@ -3335,7 +3347,7 @@
 
                     <!-- 3 · La facade, et les photos qui defilent -->
                     <section class="pa-etape pv" data-pas="3" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-liste"><div class="pv-tel-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div><div class="pv-carte pv-carte-tel pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div><span class="pv-tel-fantome" style="background-image:url(/clubs/demo-velours.webp)"></span><span class="pv-tel-fantome" style="background-image:url(/clubs/demo-neon-88.webp)"></span></div></div></div><span class="pv-pastille sombre pv-flottant" data-pv="tape" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.5V5.5a1.5 1.5 0 0 1 3 0v5M12 10.5V9a1.5 1.5 0 0 1 3 0v2M15 11a1.5 1.5 0 0 1 3 0v3.5a6.5 6.5 0 0 1-6.5 6.5h-.6a6 6 0 0 1-4.7-2.3L4 15.5a1.5 1.5 0 0 1 2.3-1.9L9 16"/></svg>Touche la photo</span></div>
+                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-liste"><div class="pv-tel-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div><div class="pv-carte pv-carte-tel pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div><span class="pv-tel-autre" style="background-image:url(/clubs/demo-velours.webp)"><b>Velours</b><i>Bar • 3 récompenses</i></span><span class="pv-tel-autre" style="background-image:url(/clubs/demo-neon-88.webp)"><b>Néon 88</b><i>Boîte de nuit • 3 récompenses</i></span></div></div></div><span class="pv-pastille sombre pv-flottant" data-pv="tape" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.5V5.5a1.5 1.5 0 0 1 3 0v5M12 10.5V9a1.5 1.5 0 0 1 3 0v2M15 11a1.5 1.5 0 0 1 3 0v3.5a6.5 6.5 0 0 1-6.5 6.5h-.6a6 6 0 0 1-4.7-2.3L4 15.5a1.5 1.5 0 0 1 2.3-1.9L9 16"/></svg>Touche la photo</span></div>
                       <p class="pv-etape">Étape 2 sur 5</p>
                       <h1 class="pa-titre">Ta façade.</h1>
                       <p class="pa-sous">La première photo que voient tes clients. Prends-la belle.</p>
@@ -3411,7 +3423,7 @@
 
                     <!-- 5 · Ce qui vient d'etre construit -->
                     <section class="pa-etape pv" data-pas="7" data-mascotte="/mascotte/pose-5.webp" hidden>
-                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-liste"><div class="pv-tel-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div><div class="pv-carte pv-carte-tel pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div><span class="pv-tel-fantome" style="background-image:url(/clubs/demo-velours.webp)"></span><span class="pv-tel-fantome" style="background-image:url(/clubs/demo-neon-88.webp)"></span></div></div></div><span class="pv-pastille pv-flottant"><i class="pv-live"></i>En ligne sur Noctify</span></div>
+                      <div class="pv-scene pv-scene-tel"><div class="pv-tel " aria-hidden="true"><div class="pv-tel-ecran"><span class="pv-tel-ile"></span><span class="pv-tel-statut"><b>21:47</b><span><i></i><i></i><i></i></span></span><div class="pv-tel-liste"><div class="pv-tel-tete"><b>NOCTIFY</b><span><b>450</b> points</span></div><div class="pv-carte pv-carte-tel pv-sans-photo" role="button" tabindex="0" aria-label="Voir la photo suivante" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile" aria-hidden="true"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="ville"></span></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></div><span class="pv-tel-autre" style="background-image:url(/clubs/demo-velours.webp)"><b>Velours</b><i>Bar • 3 récompenses</i></span><span class="pv-tel-autre" style="background-image:url(/clubs/demo-neon-88.webp)"><b>Néon 88</b><i>Boîte de nuit • 3 récompenses</i></span></div></div></div><span class="pv-pastille pv-flottant"><i class="pv-live"></i>En ligne sur Noctify</span></div>
                       <h1 class="pa-titre">Tout est prêt.</h1>
                       <p class="pa-sous">Il ne reste qu'à coller ton affiche : à l'entrée, au bar, aux toilettes.</p>
 
