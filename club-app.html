@@ -2865,6 +2865,51 @@
       .ap-plein .ap-defile { transform: none !important; }
       .ap-plein .ap-anneau { display: none; }
 
+      /* -- Etape 2 : la page de l'etablissement, qu'on remplit en ecrivant dessus -- */
+      .pw { margin: -12px -20px 0; }
+      .pw-hero { position: relative; height: 380px; overflow: hidden; background: #0d0d0f; color: #fff; }
+      .pw-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: pwPhoto 1.2s cubic-bezier(.2, .7, .2, 1) both; }
+      @keyframes pwPhoto { from { transform: scale(1.08); opacity: .4; } to { transform: none; opacity: 1; } }
+      .pw-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.5), rgba(0,0,0,0) 30%), linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.4) 42%, rgba(0,0,0,0) 68%); }
+      .pw-consigne { position: absolute; left: 20px; right: 150px; top: 16px; margin: 0; font-size: 12.5px; font-weight: 600; line-height: 1.35; color: rgba(255,255,255,.85); }
+      .pw-photo-btn {
+        position: absolute; right: 14px; top: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 0; border-radius: 99px;
+        background: rgba(20,20,22,.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #fff; font-family: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer;
+      }
+      .pw-photo-btn[hidden] { display: none; }
+      .pw-photo-btn svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .pw-bas { position: absolute; left: 20px; right: 20px; bottom: 46px; display: flex; flex-direction: column; align-items: flex-start; }
+      .pw input { min-width: 0; margin: 0; padding: 0; border: 0; outline: 0; border-radius: 0; background: none; font-family: inherit; color: inherit; caret-color: #de3131; box-shadow: none; }
+      .pw-hero input::placeholder { color: rgba(255,255,255,.62); }
+      .pw-ville {
+        display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px 7px 9px; border-radius: 8px; cursor: text;
+        background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      }
+      .pw-ville svg, .pw-ligne svg { flex: 0 0 auto; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .pw-ville input { width: 150px; font-size: 14px; font-weight: 600; }
+      .pw .pw-nom {
+        width: 100%; margin-top: 12px; padding-bottom: 4px; font-family: var(--titre); font-size: 38px; font-weight: 900;
+        letter-spacing: -.035em; line-height: 1.05; text-shadow: 0 2px 24px rgba(0,0,0,.35);
+        border-bottom: 2px dashed rgba(255,255,255,.45); transition: border-color .2s ease;
+      }
+      .pw .pw-nom:not(:placeholder-shown) { border-bottom-color: transparent; }
+      .pw .pw-nom:focus { border-bottom: 2px solid #fff; }
+      .pw-type { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; padding: 2px 0; border: 0; background: none; color: rgba(255,255,255,.9); font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+      .pw-type svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; opacity: .75; }
+      .pw-type .pw-change { animation: paArrive .3s var(--sortie) both; }
+      .pw-corps { position: relative; margin-top: -26px; padding: 24px 20px 8px; border-radius: 26px 26px 0 0; background: #fff; }
+      .pw-titre { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 2px 10px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+      .pw-ligne + .pw-titre { margin-top: 24px; }
+      .pw-titre span { font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ink3); }
+      .pw-ligne { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 16px; border-radius: 16px; background: #f3f3f5; color: var(--ink); cursor: text; transition: box-shadow .2s ease, background-color .2s ease; }
+      .pw-ligne:focus-within { box-shadow: inset 0 0 0 2px var(--ink); background: #fff; }
+      .pw-ligne input { flex: 1; font-size: 16px; font-weight: 550; }
+      .pw-ligne input::placeholder { color: #9a9aa2; }
+
+      /* Plus de boutons a toucher sur l'apercu des autres etapes : il se lit tout seul. */
+      .ap-scene .ap-vues, .ap-scene .ap-grand { display: none; }
+      .ap-scene { height: 300px; }
+
       /* L'ancienne carte d'apercu de l'etape photos : le telephone la montre deja. */
       .parcours .pa-couv .pa-couv-lieu, .parcours .pa-couv .pa-couv-texte, .parcours .pa-couv .pa-couv-voile { display: none; }
 
@@ -3200,58 +3245,50 @@
                       </div>
                     </section>
 
-                    <!-- 2 · L'etablissement. 16/09/2026, Julien : « un vrai parcours adapte a
-                         ce qu'il y a sur l'app maintenant ». L'appli clubbeur range les lieux par
-                         type (Bar, Boite de nuit, Restaurant) et montre l'adresse : on les demande
-                         ici (colonnes establishments.category et address). -->
+                    <!-- 2 · L'etablissement, ECRIT SUR SA PAGE. 17/09/2026, Julien : « il faut
+                         que ce soit directement integre sur l'ecran [...] trop de trucs inutiles, le
+                         lien Google Maps, bar / boite de nuit / restaurant, c'est moche ». L'ecran
+                         EST la page de l'etablissement dans l'appli clubbeur (memes mesures que
+                         #vue-bar) : le nom s'ecrit sur la photo, la ville dans sa pastille, l'adresse
+                         dans la fiche. Les champs gardent leurs id (pa-nom, pa-ville, pa-adresse,
+                         pa-tel) : enregistrerFicheParcours ne change pas. Le type se change en
+                         touchant la ligne sous le nom. Le bloc Google reste dans le DOM, masque :
+                         ses gestionnaires y sont accroches. -->
                     <section class="pa-etape" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <!-- 17/09/2026, Julien : « ils ont juste besoin de copier-coller leur fiche
-                           Google, sur la fiche il y a toutes les infos ». Un seul champ ; la saisie
-                           a la main reste derriere un lien, pour qui n'a pas de fiche. Photo : celle
-                           de la derniere page du parcours clubbeur (ambiance/bienvenue.webp). -->
-                      <h1 class="pa-titre">Ta fiche Google.</h1>
-                      <p class="pa-sous">Colle le lien de ton établissement sur Google Maps. On récupère tout le reste.</p>
-                      <div class="pa-google pa-arrive">
-                        <input class="ac-input" id="pa-google" type="url" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://maps.app.goo.gl/…" />
-                        <button type="button" class="pa-google-btn" id="pa-google-btn">Récupérer</button>
+                      <div class="pw">
+                        <div class="pw-hero">
+                          <img class="pw-photo" id="pw-photo" src="/clubs/couverture-par-defaut.webp" alt="" />
+                          <span class="pw-voile" aria-hidden="true"></span>
+                          <p class="pw-consigne">Ta page, telle que tes clients la voient.</p>
+                          <button type="button" class="pw-photo-btn" id="pw-photo-btn" hidden>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></svg>
+                            <span id="pw-photo-txt">Ta photo</span>
+                          </button>
+                          <div class="pw-bas">
+                            <label class="pw-ville"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><input id="pa-ville" type="text" autocomplete="address-level2" placeholder="Ville" aria-label="Ville" /></label>
+                            <input class="pw-nom" id="pa-nom" type="text" autocomplete="organization" placeholder="Nom de ton établissement" aria-label="Nom de ton établissement" />
+                            <button type="button" class="pw-type" id="pw-type" aria-label="Changer le type d'établissement"><span id="pw-type-txt">Boîte de nuit</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
+                          </div>
+                        </div>
+                        <div class="pw-corps">
+                          <p class="pw-titre">Adresse</p>
+                          <label class="pw-ligne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><input id="pa-adresse" type="text" autocomplete="street-address" placeholder="Rue et numéro" aria-label="Adresse" /></label>
+                          <p class="pw-titre">Ton numéro<span>Tes clients ne le voient pas</span></p>
+                          <label class="pw-ligne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><input id="pa-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0470 12 34 56" aria-label="Ton numéro de téléphone" /></label>
+                        </div>
                       </div>
-                      <ol class="pa-google-aide pa-arrive" id="pa-google-aide">
-                        <li><b>1</b><span>Ouvre ton établissement dans Google Maps</span></li>
-                        <li><b>2</b><span>Touche <em>Partager</em>, puis <em>Copier le lien</em></span></li>
-                        <li><b>3</b><span>Colle-le ici</span></li>
-                      </ol>
-                      <div class="pa-fiche" id="pa-fiche" hidden></div>
-                      <button type="button" class="pa-manuel-lien pa-arrive" id="pa-manuel-lien">Pas de fiche Google ? Remplir à la main</button>
-                      <div class="pa-manuel" id="pa-manuel" hidden>
-                      <p class="pa-legende pa-arrive">C'est un…</p>
-                      <div class="pa-types pa-arrive" id="pa-types" role="radiogroup" aria-label="Type d'établissement">
-                        <button type="button" class="pa-type" data-type="bar" role="radio" aria-checked="false">
-                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14l-7 8z"/><path d="M12 12v8M8 20h8"/></svg>Bar
-                        </button>
-                        <button type="button" class="pa-type" data-type="club" role="radio" aria-checked="false">
-                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>Boîte de nuit
-                        </button>
-                        <button type="button" class="pa-type" data-type="restaurant" role="radio" aria-checked="false">
-                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3H17"/></svg>Restaurant
-                        </button>
-                      </div>
-                      <div class="pa-champ pa-arrive">
-                        <label for="pa-nom">Nom</label>
-                        <input class="ac-input" id="pa-nom" type="text" autocomplete="organization" placeholder="Le Mirage" />
-                      </div>
-                      <div class="pa-champ pa-arrive">
-                        <label for="pa-adresse">Adresse</label>
-                        <input class="ac-input" id="pa-adresse" type="text" autocomplete="street-address" placeholder="Rue du Marché au Charbon 12" />
-                      </div>
-                      <div class="pa-champ pa-arrive">
-                        <label for="pa-ville">Ville</label>
-                        <input class="ac-input" id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" />
-                      </div>
-                      <div class="pa-champ pa-arrive">
-                        <label for="pa-tel">Ton numéro de téléphone</label>
-                        <input class="ac-input" id="pa-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0470 12 34 56" />
-                        <span class="pa-aide">Pour te joindre si besoin. Tes clients ne le voient pas.</span>
-                      </div>
+
+                      <div hidden>
+                        <input id="pa-google" type="url" /><button type="button" id="pa-google-btn">Récupérer</button>
+                        <ol id="pa-google-aide"></ol>
+                        <div id="pa-fiche" hidden></div>
+                        <button type="button" id="pa-manuel-lien"></button>
+                        <div id="pa-manuel" hidden></div>
+                        <div id="pa-types">
+                          <button type="button" class="pa-type" data-type="bar">Bar</button>
+                          <button type="button" class="pa-type" data-type="club">Boîte de nuit</button>
+                          <button type="button" class="pa-type" data-type="restaurant">Restaurant</button>
+                        </div>
                       </div>
                     </section>
 
@@ -7229,8 +7266,9 @@
       async function enregistrerFicheParcours() {
         var etab = etablissementCourant();
         var nom = $("#pa-nom").value.trim();
-        if (!nom && $("#pa-manuel").hidden) {
-          direParcours("Colle le lien de ta fiche Google, ou remplis à la main.", true);
+        if (!nom) {
+          direParcours("Écris le nom de ton établissement, sur la photo.", true);
+          $("#pa-nom").focus();
           return false;
         }
         if (!nom) {
@@ -7241,6 +7279,7 @@
         var ville = $("#pa-ville").value.trim();
         if (!ville) {
           direParcours("La ville aussi : c'est elle qui place ton établissement sur la carte.", true);
+          $("#pa-ville").focus();
           return false;
         }
 
@@ -8068,7 +8107,8 @@
         notif: ["story", "Ce que ton client reçoit"], mention: ["story", "Ce qu'ils taguent"], gain: ["story", "Leur gain"],
       };
       // L'ecran et la cible par defaut de chaque etape.
-      var AP_ETAPES = { 2: ["bar", "nom"], 3: ["liste", "couverture"], 4: ["bar", "recos"], 5: ["story", "notif"], 6: ["story", "mention"], 7: ["liste", null] };
+      // Pas d'etape 2 : elle EST la page (voir « L'etape 2, ecrite sur la page »).
+      var AP_ETAPES = { 3: ["liste", "couverture"], 4: ["bar", "recos"], 5: ["story", "notif"], 6: ["story", "mention"], 7: ["liste", null] };
 
       function apValeur(sel, repli) {
         var el = $(sel);
@@ -8341,7 +8381,8 @@
         if (!defaut) return;
         APERCU.vue = defaut[0];
         APERCU.cible = defaut[1];
-        APERCU.proche = false;
+        // Deja zoome a l'arrivee. Julien, 17/09 : « un truc ou il faut cliquer dessus ».
+        APERCU.proche = true;
         APERCU.regle = "videoViewsPerThousand";
         APERCU.recosAvant = null;
         // La scene vient d'apparaitre : sa taille n'est lue juste qu'a l'image suivante.
@@ -8402,7 +8443,7 @@
             var defaut = AP_ETAPES[PARCOURS.pas];
             if (!defaut || APERCU.cible === null) return;
             if (APERCU.cible === "prive") APERCU.cible = defaut[1];
-            APERCU.proche = false;
+            APERCU.proche = true;
             apCamera();
           }, 260);
         });
@@ -8471,14 +8512,14 @@
         var poserPasOrigine = poserPas;
         poserPas = function (cible) {
           var r = poserPasOrigine.apply(this, arguments);
-          try { apEtape(cible); } catch (e) { console.warn("[apercu]", e); }
+          try { apEtape(cible); if (cible === 2) pwSynchro(); } catch (e) { console.warn("[apercu]", e); }
           return r;
         };
         ["rendrePhotoParcours", "rendreGalerieParcours", "rendreChoixRecompenses", "preparerPasInstagram"].forEach(function (nom) {
           var origine = { rendrePhotoParcours: rendrePhotoParcours, rendreGalerieParcours: rendreGalerieParcours, rendreChoixRecompenses: rendreChoixRecompenses, preparerPasInstagram: preparerPasInstagram }[nom];
           var enveloppe = function () {
             var r = origine.apply(this, arguments);
-            try { if (!$("#ap-scene").hidden) apRendre(false); } catch (e) {}
+            try { if (!$("#ap-scene").hidden) apRendre(false); pwSynchro(); } catch (e) {}
             return r;
           };
           if (nom === "rendrePhotoParcours") rendrePhotoParcours = enveloppe;
@@ -8511,6 +8552,43 @@
           return r;
         };
       })();
+
+      /* ---- L'etape 2, ecrite sur la page ---- */
+      var PW_TYPES = ["club", "bar", "restaurant"];
+      function pwTailleNom() {
+        var champ = $("#pa-nom");
+        var n = (champ.value || champ.placeholder).length;
+        // Le nom tient sur une ligne : la police descend quand il s'allonge.
+        champ.style.fontSize = Math.max(22, Math.min(38, 38 - Math.max(0, n - 11) * 1.25)) + "px";
+      }
+      function pwSynchro() {
+        var etab = etablissementCourant();
+        $("#pw-type-txt").textContent = NOMS_TYPES[PARCOURS.type || "club"] || "Boîte de nuit";
+        var photo = etab && etab.logo_url;
+        var img = $("#pw-photo");
+        var src = photo || "/clubs/couverture-par-defaut.webp";
+        if (img.getAttribute("src") !== src) img.src = src;
+        // La photo s'envoie dans le dossier de l'etablissement : il faut qu'il existe.
+        $("#pw-photo-btn").hidden = !etab;
+        $("#pw-photo-txt").textContent = photo ? "Changer la photo" : "Ajouter ta photo";
+        pwTailleNom();
+      }
+      $("#pa-nom").addEventListener("input", pwTailleNom);
+      $("#pw-type").addEventListener("click", function () {
+        var i = PW_TYPES.indexOf(PARCOURS.type || "club");
+        choisirTypeParcours(PW_TYPES[(i + 1) % PW_TYPES.length]);
+        pwSynchro();
+        relancerAnimation($("#pw-type-txt"), "pw-change");
+      });
+      $("#pw-photo-btn").addEventListener("click", function () { $("#pa-photo-btn").click(); });
+      // Entree au clavier : la case suivante, dans l'ordre de la page.
+      [["#pa-nom", "#pa-ville"], ["#pa-ville", "#pa-adresse"], ["#pa-adresse", "#pa-tel"]].forEach(function (c) {
+        $(c[0]).addEventListener("keydown", function (ev) {
+          if (ev.key !== "Enter") return;
+          ev.preventDefault();
+          $(c[1]).focus();
+        });
+      });
 
       demarrer();
     </script>

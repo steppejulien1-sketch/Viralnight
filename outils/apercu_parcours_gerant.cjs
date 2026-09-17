@@ -81,18 +81,15 @@ async function session(email) {
     };
     const suivant = async () => { await page.evaluate(() => document.getElementById("pa-suivant").click()); await pause(2600); };
 
-    // 2 · la fiche
-    await capture("2-fiche-arrivee", 800);
-    await page.evaluate(() => { const c = document.getElementById("pa-google"); c.value = "https://maps.app.goo.gl/velvet"; document.getElementById("pa-google-btn").click(); });
-    await capture("2-fiche-google-nom", 900);
-    await capture("2-fiche-google-adresse", 3300);
-    await capture("2-fiche-google-fin", 3500);
-    await page.evaluate(() => document.getElementById("pa-manuel-lien").click());
-    await pause(400);
-    await taper("#pa-nom", "Le Velvet Club");
-    await capture("2-nom-tape");
-    await toucher("#pa-tel");
-    await capture("2-telephone-prive");
+    // 2 · la fiche, ecrite sur la page
+    await capture("2-page-vide", 900);
+    await taper("#pa-nom", "Mirage Club Bruxelles");
+    await capture("2-nom", 500);
+    await taper("#pa-ville", "Bruxelles");
+    await page.evaluate(() => document.getElementById("pw-type").click());
+    await taper("#pa-adresse", "Avenue Louise 120");
+    await taper("#pa-tel", "0470 12 34 56");
+    await capture("2-tout-rempli", 600);
     await page.evaluate(() => document.activeElement.blur());
     await suivant();
 
