@@ -67,6 +67,13 @@ function slugifier(nom) {
    n'empeche pas le club d'exister. La reponse dit lequel a servi pour
    que le gerant puisse corriger au lieu de se demander pourquoi rien
    ne se credite. */
+/* Les photos du gerant, sans la facade (deja dans logo_url), sans doublon ni
+   valeur vide, quatre au plus -- ce que le parcours d'installation permet. */
+function photosPropres(photos) {
+  if (!Array.isArray(photos)) return [];
+  return photos.filter((u) => typeof u === "string" && /^https?:\/\//.test(u)).slice(0, 4);
+}
+
 async function ouvrirClubClubbeur(clubbeur, supabaseGerants, etab, establishmentId) {
   const { data: compte } = await supabaseGerants
     .from("establishment_instagram_accounts")
@@ -90,6 +97,8 @@ async function ouvrirClubClubbeur(clubbeur, supabaseGerants, etab, establishment
     // sur la carte des clubbeurs avec un rond vide alors que le gerant
     // avait bel et bien mis une photo -- et rien ne le disait.
     logo_url: etab.logo_url || null,
+    // Les autres photos, qui defilent quand un client touche la facade (0053 cote clubbeur).
+    photos: photosPropres(etab.photos),
     b2b_public_code: etab.public_code,
     // Les deux cles de jointure sont posees d'un coup. b2b_public_code
     // sert a la synchro de boutique, establishment_id au credit
@@ -146,7 +155,7 @@ async function actionSyncBoutique(request, response) {
 
   const { data: etab, error: erreurEtab } = await auth.supabase
     .from("establishments")
-    .select("public_code, name, city, slug, ig_handle, primary_color, logo_url")
+    .select("public_code, name, city, slug, ig_handle, primary_color, logo_url, photos")
     .eq("id", auth.establishmentId)
     .maybeSingle();
 
@@ -189,7 +198,7 @@ async function actionSyncBoutique(request, response) {
   if (!clubOuvert) {
     await clubbeur
       .from("clubs")
-      .update({ logo_url: etab.logo_url || null })
+      .update({ logo_url: etab.logo_url || null, photos: photosPropres(etab.photos) })
       .eq("id", club.id);
   }
 

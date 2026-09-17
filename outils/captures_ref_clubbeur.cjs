@@ -44,6 +44,12 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
     await clic(".bar-couverture");
     await pause(2500);
     await page.screenshot({ path: `${DOSSIER}/2-bar.png` });
+    // Toucher la photo : la suivante, comme une story (17/09/2026).
+    for (const k of [1, 2]) {
+      await page.evaluate(() => { const h = document.querySelector("#vue-bar .vb-hero"); const r = h.getBoundingClientRect(); h.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: r.left + r.width * .8, clientY: r.top + 100 })); });
+      await pause(900);
+      await page.screenshot({ path: `${DOSSIER}/2-bar-photo-${k + 1}.png` });
+    }
     await page.evaluate(() => { const d = document.getElementById("vb-defile"); if (d) d.scrollTop = 420; });
     await pause(1200);
     await page.screenshot({ path: `${DOSSIER}/3-bar-recompenses.png` });

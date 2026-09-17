@@ -3276,6 +3276,13 @@
 
       .vb-hero { position: relative; height: min(64vh, 520px); min-height: 360px; overflow: hidden; background: #0d0d0f; }
       .vb-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.08); transition: transform 1.1s cubic-bezier(.2, .7, .2, 1); }
+      .vb-hero.plusieurs { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      .vb-photo.change { animation: vbPhoto .45s ease both; }
+      @keyframes vbPhoto { from { opacity: .35; } to { opacity: 1; } }
+      .vb-segments { position: absolute; z-index: 2; left: 20px; right: 20px; bottom: 26px; display: flex; gap: 4px; pointer-events: none; }
+      .vb-segments:empty { display: none; }
+      .vb-segments i { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.35); transition: background-color .3s ease; }
+      .vb-segments i.vu { background: #ffffff; }
       .vue-bar.ouverte .vb-photo { transform: scale(1); }
       .vb-voile {
         position: absolute; inset: 0;
@@ -7470,6 +7477,10 @@
           <div class="vb-defile" id="vb-defile">
             <div class="vb-hero">
               <img class="vb-photo" id="vb-photo" src="" alt="" />
+              <!-- Les photos de l'etablissement, au toucher (17/09/2026, Julien : « la facade,
+                   et quand on clique sur la photo ca change de photo »). Un trait par photo,
+                   comme les stories. -->
+              <div class="vb-segments" id="vb-segments" aria-hidden="true"></div>
               <div class="vb-voile" aria-hidden="true"></div>
               <div class="vb-hero-bas">
                 <span class="vb-pastille" id="vb-lieu"></span>
@@ -15026,7 +15037,11 @@ async function resoudreIdsClubs() {
        recopiee cote clubbeur par api/credit-clubbeur -- et personne ne
        la lisait ici. Le rond du club restait vide pour toujours, meme
        quand la photo existait. */
-    var res = await supabaseClubbeur.from("clubs").select("id, name, logo_url").in("name", noms);
+    var res = await supabaseClubbeur.from("clubs").select("id, name, logo_url, photos").in("name", noms);
+    // Base sans la migration 0053 : on relit sans les photos plutot que de tout perdre.
+    if (res.error && /photos/.test(res.error.message || "")) {
+      res = await supabaseClubbeur.from("clubs").select("id, name, logo_url").in("name", noms);
+    }
     if (res.error) throw new Error(res.error.message);
     var aChange = false;
     (res.data || []).forEach(function (ligne) {
@@ -15037,6 +15052,8 @@ async function resoudreIdsClubs() {
           CLUBS[k].photo = ligne.logo_url;
           aChange = true;
         }
+        // Les photos deposees par le gerant, qui defilent sur la page du club.
+        if (Array.isArray(ligne.photos) && ligne.photos.length) CLUBS[k].photos = ligne.photos;
       });
     });
     // Les badges et le rail sont deja dessines quand la reponse arrive
@@ -16167,6 +16184,12 @@ BARS_DEMO.forEach(function (bar, i) {
     photo: ["/ambiance/profil/3.webp", "/ambiance/profil/1.webp", "/ambiance/hero-nightclub.webp"][i],
     // Grande photo de la boutique facon DUSK (recadrages 1170 x 640, libres de droits).
     couverture: ["/clubs/demo-velours.webp", "/clubs/demo-minuit-douze.webp", "/clubs/demo-neon-88.webp"][i],
+    // Les photos qui defilent au toucher sur la page du bar.
+    photos: [
+      ["/clubs/velours-2.webp", "/clubs/velours-3.webp", "/clubs/velours-4.webp"],
+      ["/clubs/minuit-douze-1.webp", "/clubs/minuit-douze-2.webp", "/clubs/minuit-douze-3.webp"],
+      ["/clubs/neon-88-2.webp", "/clubs/neon-88-3.webp", "/clubs/neon-88-4.webp"],
+    ][i],
   };
   bar.recompenses = catalogues.map(function (c, j) {
     return { id: "demo-" + i + "-" + j, nom: c[0], fam: c[1], cout: c[2], art: c[3], foto: FOTOS[c[4]], stock: 20, code: "", demo: true, bar: bar.club };
@@ -16350,7 +16373,7 @@ function rendreBoutiqueBar(bar) {
   var autres = recos.filter(function (r) { return r.cout > solde || r.stock <= 0; });
   var suivante = autres.filter(function (r) { return r.stock > 0; })[0];
 
-  document.getElementById("vb-photo").src = c.couverture || photos[0] || c.photo || "/clubs/couverture-par-defaut.webp";
+  poserPhotosBar(c);
   var ou = POSITION_MOI ? formaterDistance(bar.km) : bar.quartier;
   document.getElementById("vb-lieu").innerHTML = ou
     ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>' + escapeHtmlSupport(ou)
@@ -16403,6 +16426,42 @@ function rendreBoutiqueBar(bar) {
   var fiche = document.getElementById("vb-fiche");
   if (fiche) fiche.addEventListener("click", function () { ouvrirClub(CLUBS[bar.cle], fiche, bar.cle); });
 }
+
+/* Les photos d'un etablissement : la facade d'abord, puis les autres. Toucher
+   la moitie droite de la photo avance, le tiers gauche recule (comme une story). */
+var PHOTOS_BAR = { liste: [], i: 0 };
+function photosDuBar(c) {
+  var autres = Array.isArray(c.photos) ? c.photos.filter(Boolean) : [];
+  var liste = [c.couverture || c.photo || autres[0]].concat(autres);
+  var vues = {};
+  liste = liste.filter(function (u) { if (!u || vues[u]) return false; vues[u] = true; return true; });
+  return liste.length ? liste : ["/clubs/couverture-par-defaut.webp"];
+}
+function poserPhotosBar(c) {
+  PHOTOS_BAR.liste = photosDuBar(c);
+  PHOTOS_BAR.i = 0;
+  PHOTOS_BAR.liste.slice(1).forEach(function (u) { var im = new Image(); im.src = u; });
+  var plusieurs = PHOTOS_BAR.liste.length > 1;
+  document.getElementById("vb-photo").closest(".vb-hero").classList.toggle("plusieurs", plusieurs);
+  document.getElementById("vb-segments").innerHTML = plusieurs ? PHOTOS_BAR.liste.map(function () { return "<i></i>"; }).join("") : "";
+  montrerPhotoBar(0, false);
+}
+function montrerPhotoBar(i, anime) {
+  var l = PHOTOS_BAR.liste;
+  if (!l.length) return;
+  PHOTOS_BAR.i = (i + l.length) % l.length;
+  var img = document.getElementById("vb-photo");
+  img.onerror = function () { img.onerror = null; img.src = "/clubs/couverture-par-defaut.webp"; };
+  img.src = l[PHOTOS_BAR.i];
+  if (anime) { img.classList.remove("change"); void img.offsetWidth; img.classList.add("change"); }
+  document.querySelectorAll("#vb-segments i").forEach(function (seg, k) { seg.classList.toggle("vu", k <= PHOTOS_BAR.i); });
+}
+document.getElementById("vb-photo")?.closest(".vb-hero")?.addEventListener("click", function (ev) {
+  if (PHOTOS_BAR.liste.length < 2) return;
+  var r = this.getBoundingClientRect();
+  montrerPhotoBar(PHOTOS_BAR.i + (ev.clientX - r.left < r.width / 3 ? -1 : 1), true);
+  vibrer("leger");
+});
 
 function ouvrirBoutiqueBar(bar) {
   if (!VUE_BAR) return;
