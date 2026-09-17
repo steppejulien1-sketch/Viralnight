@@ -2830,8 +2830,14 @@
       .pv-switch i { position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: transform .32s cubic-bezier(.3, 1.4, .5, 1); }
       .pv-reco.prise .pv-switch { background: #34c759; }
       .pv-reco.prise .pv-switch i { transform: translateX(20px); }
-      .pv-sienne { margin-top: 14px; padding: 4px 14px 14px; border-radius: 20px; background: #f3f3f5; }
-      .pv-sienne .pv-sec { margin-top: 12px; }
+      .pv-sienne { margin-top: 10px; padding: 14px; border-radius: 20px; background: #f3f3f5; }
+      .pv-sienne[hidden] { display: none; }
+      /* Replie par defaut : l'ecran doit tenir d'un coup d'oeil. */
+      .pv-ajout {
+        width: 100%; margin-top: 12px; padding: 14px; border: 0; border-radius: 18px; background: none; box-shadow: inset 0 0 0 1.5px #e0e0e6;
+        font-family: inherit; font-size: 14.5px; font-weight: 700; color: var(--ink2); cursor: pointer;
+      }
+      .pv-ajout[hidden] { display: none; }
       .pv-sienne .ac-input { background: #fff; }
 
       /* -- Les points -- */
@@ -2884,114 +2890,127 @@
       .pv-ig { margin-top: 12px; }
 
 
-      /* -- Des objets d'iPhone, en 3D (17/09/2026) --
-         Julien : « des details un peu techniques, un peu styles, comme le telephone, qui
-         montrent que c'est un vrai truc ». Le telephone de la story reste la ou il sert
-         (points, Instagram). Ailleurs, des objets reconnaissables d'iOS : l'ecran
-         verrouille et sa notification, le selecteur de Photos, les passes de Cartes.
-         Tous se balancent et suivent le doigt, avec un reflet qui glisse. */
+      /* -- LES OBJETS DE LA NUIT, EN 3D (17/09/2026) --
+         Julien : « il n'y a pas que le telephone qu'on peut mettre ». Le telephone de la
+         story reste la ou il sert (les points, Instagram) ; ailleurs, ce sont les objets
+         du metier : l'enseigne au neon, le cadre lumineux de l'entree, les sous-bocks du
+         bar, l'affiche collee au mur. Tous se balancent et suivent le doigt. */
       .pv-scene-3d { perspective: 1100px; justify-content: center; }
-      .pv-scene-verrou, .pv-scene-picker { height: 360px; }
-      .pv-scene-wallet { height: 390px; }
-      .pv-scene-story { height: 444px; justify-content: flex-start; padding-top: 22px; }
+      /* Pas de hauteur imposee : la scene prend celle de l'objet, que pvAjusterScene()
+         reduit pour que l'ecran entier tienne sans defiler. */
+      .pv-scene-3d { height: auto; padding: 14px 0 6px; }
+      /* ⚠️ Meme piege qu'ailleurs dans ce fichier : un display explicite bat la regle
+         [hidden] du navigateur. Sans cette ligne, la scene masquee restait a l'ecran. */
+      .parcours .pv-scene[hidden] { display: none; }
       .pv-3d {
         position: relative; transform-style: preserve-3d; transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg));
         animation: pvBalance 9s ease-in-out infinite; transition: transform .6s cubic-bezier(.2, .8, .2, 1);
       }
       .pv-scene-3d.suit .pv-3d { animation: none; transition: transform .1s linear; }
       @keyframes pvBalance { 0%, 100% { transform: rotateY(-9deg) rotateX(4deg); } 50% { transform: rotateY(9deg) rotateX(-3deg); } }
-      .pv-reflet::after, .ob-verrou::after, .ob-picker::after, .ob-pass::after, .st-tel::after {
+      .st-tel::after, .ob-cadre::after, .ob-affiche::after {
         content: ""; position: absolute; inset: 0; z-index: 9; border-radius: inherit; pointer-events: none;
         background: linear-gradient(110deg, rgba(255,255,255,0) calc(var(--reflet, 50%) - 30%), rgba(255,255,255,.18) var(--reflet, 50%), rgba(255,255,255,0) calc(var(--reflet, 50%) + 22%));
       }
 
-      /* l'ecran verrouille */
-      .ob-verrou {
-        position: relative; width: 262px; height: 312px; border-radius: 34px; overflow: hidden; background: #111; color: #fff; text-align: center;
-        box-shadow: 0 0 0 6px #1c1c1f, 0 0 0 7px rgba(0,0,0,.08), 0 40px 70px -30px rgba(0,0,0,.55);
+      /* -- L'enseigne au neon -- */
+      .ob-neon {
+        position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        width: 290px; height: 298px; padding: 26px 22px; border-radius: 18px; overflow: hidden; text-align: center;
+        background:
+          repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, rgba(0,0,0,0) 1px 34px),
+          repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 1px, rgba(0,0,0,0) 1px 68px),
+          radial-gradient(90% 70% at 50% 40%, #2a2226, #141217 70%);
+        box-shadow: inset 0 0 60px rgba(0,0,0,.6), 0 40px 70px -30px rgba(0,0,0,.6);
       }
-      .ob-fond { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; scale: 1.05; filter: saturate(1.1); }
-      .ob-fond-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.05) 45%, rgba(0,0,0,.45)); }
-      /* Pas l'image de barre d'etat de la story : elle porte une heure figee, qui contredisait l'horloge. */
-      .ob-barre { position: absolute; right: 18px; top: 13px; display: flex; gap: 4px; align-items: center; }
-      .ob-barre i { width: 13px; height: 8px; border-radius: 2px; background: #fff; }
-      .ob-barre i:last-child { width: 20px; height: 9px; border-radius: 3px; }
-      .ob-cadenas { position: absolute; left: 0; right: 0; top: 30px; }
-      .ob-cadenas svg { width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; }
-      .ob-date { position: absolute; left: 0; right: 0; top: 50px; font-size: 12.5px; font-weight: 600; text-transform: capitalize; opacity: .92; }
-      .ob-heure { position: absolute; left: 0; right: 0; top: 60px; font-size: 66px; font-weight: 700; letter-spacing: -.04em; line-height: 1.1; font-variant-numeric: tabular-nums; text-shadow: 0 2px 20px rgba(0,0,0,.2); }
-      .ob-notif {
-        position: absolute; left: 10px; right: 10px; bottom: 16px; display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px; border-radius: 20px; text-align: left;
-        background: rgba(245,245,247,.72); -webkit-backdrop-filter: blur(22px) saturate(1.6); backdrop-filter: blur(22px) saturate(1.6); color: #111;
-        box-shadow: 0 10px 28px -10px rgba(0,0,0,.45); animation: obNotif .7s cubic-bezier(.3, 1.3, .5, 1) .35s both;
+      .ob-neon-halo { position: absolute; left: 50%; top: 38%; width: 250px; height: 150px; margin: -75px 0 0 -125px; border-radius: 50%; background: radial-gradient(closest-side, rgba(222,49,49,.45), rgba(222,49,49,0)); filter: blur(6px); }
+      .ob-neon-nom {
+        position: relative; max-width: 100%; font-family: var(--titre); font-size: 34px; font-weight: 900; letter-spacing: -.02em; line-height: 1.02;
+        color: #fff2f2; text-shadow: 0 0 5px #fff, 0 0 12px #ff6b6b, 0 0 26px #de3131, 0 0 52px rgba(222,49,49,.85);
+        animation: obNeon 2.6s ease-out both;
       }
-      @keyframes obNotif { from { opacity: 0; transform: translateY(24px) scale(.96); } }
-      .ob-notif > img { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 8px; }
-      .ob-notif-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-      .ob-notif-haut { display: flex; justify-content: space-between; font-size: 10.5px; color: #6b6b72; }
-      .ob-notif-haut b { font-weight: 650; letter-spacing: .02em; }
-      .ob-notif-haut i { font-style: normal; }
-      .ob-notif-txt > b { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .ob-notif-lieu { display: flex; align-items: center; gap: 3px; font-size: 12px; color: #333; white-space: nowrap; overflow: hidden; }
-      .ob-notif-lieu svg { flex: 0 0 auto; width: 11px; height: 11px; fill: none; stroke: #de3131; stroke-width: 2.4; }
-      .ob-notif-lieu .pv-vide { opacity: .55; }
-      .ob-notif-sous { margin-top: 2px; font-size: 11.5px; color: #555; }
+      .ob-neon-nom.pv-vide { opacity: .5; text-shadow: 0 0 8px rgba(255,255,255,.25); }
+      @keyframes obNeon {
+        0%, 12% { opacity: .15; text-shadow: none; }
+        14%, 17% { opacity: 1; text-shadow: 0 0 5px #fff, 0 0 12px #ff6b6b, 0 0 26px #de3131; }
+        19%, 24% { opacity: .2; text-shadow: none; }
+        26%, 30% { opacity: 1; }
+        32% { opacity: .35; }
+        36%, 100% { opacity: 1; text-shadow: 0 0 5px #fff, 0 0 12px #ff6b6b, 0 0 26px #de3131, 0 0 52px rgba(222,49,49,.85); }
+      }
+      .ob-neon-ville {
+        position: relative; display: flex; align-items: center; gap: 10px; max-width: 100%;
+        font-size: 12px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase;
+        color: #eaf6ff; text-shadow: 0 0 4px #fff, 0 0 12px #4fc3ff, 0 0 26px rgba(79,195,255,.7);
+      }
+      .ob-neon-ville i { width: 34px; height: 2px; border-radius: 2px; background: #cfeeff; box-shadow: 0 0 6px #4fc3ff, 0 0 16px rgba(79,195,255,.8); }
+      .ob-neon-ville span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .ob-plaque {
+        position: relative; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; margin-top: 6px; padding: 7px 12px; border-radius: 4px;
+        background: linear-gradient(160deg, #d9d5c6, #a9a495 60%, #c8c4b5); color: #3a362c;
+        font-size: 11.5px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 0 -1px 0 rgba(0,0,0,.25), 0 6px 14px -8px rgba(0,0,0,.6);
+        text-shadow: 0 1px 0 rgba(255,255,255,.45);
+      }
+      .ob-plaque svg { width: 12px; height: 12px; fill: none; stroke: #6d2020; stroke-width: 2.2; }
+      .ob-plaque .pv-vide { opacity: .6; }
 
-      /* le selecteur de Photos d'iOS (feuille sombre) */
-      .ob-picker {
-        position: relative; width: 272px; padding: 8px 10px 12px; border-radius: 26px; background: #1c1c1e; color: #fff; cursor: pointer;
-        box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 40px 70px -28px rgba(0,0,0,.6); -webkit-tap-highlight-color: transparent;
+      /* -- Le cadre lumineux de l'entree -- */
+      .ob-cadre {
+        position: relative; width: 262px; padding: 12px 12px 0; border-radius: 16px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+        background: linear-gradient(160deg, #f2f2f4, #cfcfd6 55%, #e6e6ea);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -2px 4px rgba(0,0,0,.15), 0 40px 70px -30px rgba(0,0,0,.55);
       }
-      .ob-picker-poignee { display: block; width: 36px; height: 5px; margin: 0 auto 8px; border-radius: 3px; background: #48484a; }
-      .ob-picker-tete { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; font-size: 13px; }
-      .ob-picker-tete i { font-style: normal; color: #0a84ff; }
-      .ob-picker-tete i:first-child { color: #0a84ff; }
-      .ob-picker-tete b { font-weight: 650; }
-      .ob-picker-seg { display: grid; grid-template-columns: 1fr 1fr; margin: 10px 2px; padding: 2px; border-radius: 9px; background: #2c2c2e; font-size: 11.5px; font-weight: 600; text-align: center; }
-      .ob-picker-seg span { padding: 4px 0; border-radius: 7px; color: #d1d1d6; }
-      .ob-picker-seg span.on { background: #636366; color: #fff; }
-      .ob-picker-grille { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; border-radius: 4px; overflow: hidden; }
-      .ob-vignette { position: relative; aspect-ratio: 1; background: #2c2c2e; }
-      .ob-vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .ob-vignette i {
-        position: absolute; right: 4px; bottom: 4px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%;
-        box-shadow: inset 0 0 0 1.5px #fff, 0 1px 3px rgba(0,0,0,.4); font-style: normal; font-size: 10px; font-weight: 700;
+      .ob-cadre-vitre { position: relative; display: block; aspect-ratio: 4 / 5; border-radius: 8px; overflow: hidden; background: #1b1b20; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25), inset 0 8px 24px rgba(0,0,0,.45); }
+      .ob-cadre .pv-carte-vide { position: absolute; inset: 0; display: none; place-items: center; align-content: center; gap: 8px; background: radial-gradient(120% 100% at 50% 0%, #3b3b45, #121216); color: rgba(255,255,255,.5); font-size: 11px; font-weight: 650; }
+      .ob-cadre.pv-sans-photo .pv-carte-vide { display: grid; }
+      .ob-cadre .pv-carte-vide svg { width: 62px; height: 50px; stroke: rgba(255,255,255,.4); stroke-width: 1.5; fill: none; }
+      .ob-cadre .pv-carte-segments { position: absolute; z-index: 2; left: 10px; right: 10px; top: 9px; display: flex; gap: 4px; }
+      .ob-cadre .pv-carte-segments i { flex: 1; height: 2.5px; border-radius: 3px; background: rgba(255,255,255,.4); }
+      .ob-cadre .pv-carte-segments i.on { background: #fff; }
+      .ob-laiton {
+        position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; margin: 10px auto 12px; padding: 7px 14px; border-radius: 4px; max-width: 86%;
+        background: linear-gradient(160deg, #e3cf9a, #b89a56 55%, #d8c189); color: #3f3216; text-align: center;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.7), inset 0 -1px 0 rgba(0,0,0,.25), 0 6px 14px -8px rgba(0,0,0,.5);
       }
-      .ob-vignette.choisie img { opacity: .78; }
-      .ob-vignette.choisie i { background: #0a84ff; box-shadow: inset 0 0 0 1.5px #fff; animation: pvPop .35s cubic-bezier(.3, 1.5, .5, 1) both; }
-      .ob-picker-pied { display: block; margin-top: 10px; font-size: 11.5px; font-weight: 600; text-align: center; color: #aeaeb2; }
+      .ob-laiton b { max-width: 100%; font-family: var(--titre); font-size: 14px; font-weight: 900; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
+      .ob-laiton span { font-size: 9.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; opacity: .75; }
 
-      /* les passes de l'app Cartes */
-      .ob-wallet { position: relative; width: 266px; padding-top: 52px; }
-      .ob-pass-dos {
-        position: absolute; left: 0; right: 0; top: calc((2 - var(--i)) * 26px); height: 70px; display: flex; justify-content: space-between; align-items: flex-start;
-        padding: 9px 14px; border-radius: 16px; font-size: 11.5px; font-weight: 700; color: #fff;
-        background: linear-gradient(180deg, #3a3a3f, #2a2a2e); box-shadow: 0 -1px 0 rgba(255,255,255,.08) inset;
+      /* -- Les sous-bocks du bar -- */
+      .ob-sousbocks { position: relative; width: 250px; height: 250px; }
+      .ob-sb {
+        position: absolute; left: 50%; top: 50%; width: 200px; height: 200px; margin: -100px 0 0 -100px; border-radius: 50%;
+        background: radial-gradient(90% 90% at 30% 20%, #fdfaf2, #efe7d6 70%, #e2d8c3);
+        box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.08), inset 0 0 0 9px rgba(255,255,255,.55), inset 0 0 0 10.5px rgba(0,0,0,.07), 0 18px 30px -16px rgba(0,0,0,.45);
+        transform: translate(calc(var(--rang) * -16px), calc(var(--rang) * 12px)) rotate(calc(var(--rang) * -9deg));
       }
-      .ob-pass-dos:nth-child(2) { background: linear-gradient(180deg, #8a1f1f, #6d1616); }
-      .ob-pass-dos span { font-weight: 600; color: rgba(255,255,255,.7); }
-      .ob-pass {
-        position: relative; z-index: 2; display: block; padding: 14px 16px 16px; border-radius: 16px; color: #fff;
-        background: linear-gradient(160deg, #1f1f23 0%, #0d0d0f 100%); box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset, 0 40px 70px -28px rgba(0,0,0,.6);
+      .ob-sb:not(:last-child) { filter: brightness(.94); }
+      .ob-sb-fond {
+        position: absolute; inset: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; border-radius: 50%;
+        border: 1.5px dashed rgba(60,40,20,.25); text-align: center; color: #2f261a;
       }
-      .ob-pass.arrive { animation: obPass .55s cubic-bezier(.3, 1.3, .5, 1) both; }
-      @keyframes obPass { from { opacity: 0; transform: translateY(40px); } }
-      .ob-pass.vide { min-height: 200px; display: grid; place-items: center; background: #f3f3f5; color: #8e8e96; box-shadow: inset 0 0 0 1.5px #dcdce2; }
-      .ob-pass-vide { font-size: 12.5px; font-weight: 600; text-align: center; padding: 0 20px; }
-      .ob-pass-tete { display: flex; align-items: center; gap: 8px; }
-      .ob-pass-tete img { width: 24px; height: 24px; border-radius: 6px; }
-      .ob-pass-tete > b { font-family: var(--titre); font-size: 14px; font-weight: 900; letter-spacing: -.02em; }
-      .ob-champ { display: flex; flex-direction: column; min-width: 0; }
-      .ob-champ small { font-size: 8.5px; font-weight: 700; letter-spacing: .1em; color: #8e8e96; }
-      .ob-champ b { font-size: 12.5px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .ob-champ b.grand { font-size: 20px; font-weight: 800; letter-spacing: -.02em; white-space: normal; line-height: 1.1; }
-      .ob-champ.droite { margin-left: auto; text-align: right; max-width: 130px; }
-      .ob-pass-milieu { display: flex; align-items: center; gap: 12px; margin: 16px 0 12px; }
-      .ob-pass-milieu img { flex: 0 0 auto; width: 58px; height: 58px; object-fit: contain; border-radius: 12px; background: linear-gradient(#fff, #ececf0); padding: 4px; }
-      .ob-pass-ligne { display: flex; gap: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
-      .ob-pass-qr { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 14px; }
-      .ob-pass-qr svg { width: 92px; height: 92px; padding: 7px; border-radius: 8px; background: #fff; }
-      .ob-pass-qr small { font-size: 10px; color: #8e8e96; }
+      .ob-sb-fond small { font-size: 8.5px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: #a08b62; }
+      .ob-sb-fond b { max-width: 130px; font-family: var(--titre); font-size: 19px; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
+      .ob-sb-fond i { padding: 3px 10px; border-radius: 99px; background: #de3131; color: #fff; font-style: normal; font-size: 11.5px; font-weight: 800; box-shadow: 0 6px 14px -8px rgba(222,49,49,.9); }
+      .ob-sb.vide .ob-sb-fond { color: #8e8e96; }
+      .ob-sb.vide .ob-sb-fond b { font-size: 16px; }
+      .ob-sb.vide .ob-sb-fond i { background: none; color: #a09680; box-shadow: none; font-weight: 650; }
+      .ob-sb.arrive { animation: obBock .6s cubic-bezier(.3, 1.4, .5, 1) both; }
+      @keyframes obBock { from { opacity: 0; transform: translate(0, -40px) rotate(-20deg) scale(.8); } }
+
+      /* -- L'affiche collee au mur -- */
+      .ob-affiche {
+        position: relative; width: 220px; min-height: 300px; display: grid; place-items: center; padding: 8px; border-radius: 2px;
+        background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.08), 0 30px 60px -26px rgba(0,0,0,.55);
+      }
+      .ob-affiche .pa-affiche { display: block; width: 100%; height: auto; border: 0; border-radius: 0; box-shadow: none; margin: 0; }
+      .ob-affiche .pa-affiche-attente { margin: 0; padding: 40px 12px; font-size: 12.5px; color: var(--ink3); text-align: center; }
+      .ob-scotch {
+        position: absolute; z-index: 3; top: -12px; width: 62px; height: 22px; background: rgba(226,224,214,.72); box-shadow: 0 1px 2px rgba(0,0,0,.18);
+        -webkit-backdrop-filter: blur(1px); backdrop-filter: blur(1px);
+      }
+      .ob-scotch.gauche { left: -14px; rotate: -34deg; }
+      .ob-scotch.droite { right: -14px; rotate: 34deg; }
 
       /* le telephone de la story (copie de .st-tel d'app-preview.html) */
       .st-tel {
@@ -3043,8 +3062,6 @@
       @keyframes st-partage { 0% { opacity: 0; visibility: visible; translate: -50% 10px; scale: .9; } 20%, 70% { opacity: 1; translate: -50% 0; scale: 1; } 100% { opacity: 0; visibility: hidden; translate: -50% -6px; } }
       @keyframes st-gain { from { opacity: 0; translate: 0 -30px; scale: .6; } }
 
-      .parcours.pv-clavier .pv-scene-3d { height: 200px !important; padding-top: 10px; justify-content: flex-start; }
-      .parcours.pv-clavier .pv-3d { scale: .56; transform-origin: top center; }
       .parcours.pv-clavier .pv-scene-3d .st-gain, .parcours.pv-clavier .pv-gains { display: none; }
       @media (prefers-reduced-motion: reduce) { .pv-3d, .ob-notif, .ob-pass.arrive, .pv-scene.joue * { animation: none !important; } }
 
@@ -3393,10 +3410,10 @@
 
                     <!-- 2 · L'etablissement -->
                     <section class="pa-etape pv" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pv-scene pv-scene-3d pv-scene-verrou"><div class="pv-3d"><div class="ob-verrou"><img class="ob-fond" src="/ambiance/bienvenue.webp" alt="" /><span class="ob-fond-voile"></span><span class="ob-barre"><i></i><i></i><i></i></span><span class="ob-cadenas"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span><span class="ob-date" data-pv="date"></span><span class="ob-heure" data-pv="heure"></span><span class="ob-notif"><img src="/icones/apple-touch-icon.png?v=verre" alt="" /><span class="ob-notif-txt"><span class="ob-notif-haut"><b>NOCTIFY</b><i>maintenant</i></span><b><span data-pv="nom"></span></b><span class="ob-notif-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="adresse"></span>, <span data-pv="ville"></span></span><span class="ob-notif-sous">Gagne 100 points avec ta story ce soir</span></span></span></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-neon"><div class="pv-3d"><div class="ob-neon"><span class="ob-neon-halo" aria-hidden="true"></span><span class="ob-neon-nom" data-pv="nom"></span><span class="ob-neon-ville"><i></i><span data-pv="ville"></span><i></i></span><span class="ob-plaque"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="adresse"></span></span></div></div></div>
                       <p class="pv-etape">Étape 1 sur 5</p>
                       <h1 class="pa-titre">Ton établissement.</h1>
-                      <p class="pa-sous">Au-dessus, ce que tes clients verront dans l'appli.</p>
+                      <p class="pa-sous">Tel que tes clients le verront.</p>
                       <div class="pv-champs">
                         <label class="pv-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5 5 4h14l1.5 5.5"/><path d="M3.5 9.5a2.8 2.8 0 0 0 5.5 0 2.8 2.8 0 0 0 5.6 0 2.8 2.8 0 0 0 5.4 0"/><path d="M5 12v8h14v-8M10 20v-5h4v5"/></svg><span class="pv-champ-txt"><span class="pv-lib">Nom</span><input id="pa-nom" type="text" autocomplete="organization" placeholder="Mirage Club" /></span></label>
                         <label class="pv-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span class="pv-champ-txt"><span class="pv-lib">Adresse</span><input id="pa-adresse" type="text" autocomplete="street-address" placeholder="Avenue Louise 120" /></span></label>
@@ -3419,10 +3436,10 @@
 
                     <!-- 3 · La facade, et les photos qui defilent -->
                     <section class="pa-etape pv" data-pas="3" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pv-scene pv-scene-3d pv-scene-picker"><div class="pv-3d"><div class="ob-picker" role="button" tabindex="0" aria-label="Choisir la photo de la façade"><span class="ob-picker-poignee"></span><span class="ob-picker-tete"><i>Annuler</i><b>Photos</b><i class="bleu" data-pv="picker-ajouter">Ajouter</i></span><span class="ob-picker-seg"><span class="on">Photos</span><span>Albums</span></span><span class="ob-picker-grille" data-pv="picker"></span><span class="ob-picker-pied" data-pv="picker-pied"></span></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-cadre"><div class="pv-3d"><div class="ob-cadre pv-sans-photo" data-pv-carte role="button" tabindex="0" aria-label="Voir la photo suivante"><span class="ob-cadre-vitre"><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-segments" data-pv="segments"></span></span><span class="ob-laiton"><b data-pv="nom"></b><span data-pv="ville"></span></span></div></div></div>
                       <p class="pv-etape">Étape 2 sur 5</p>
                       <h1 class="pa-titre">Ta façade.</h1>
-                      <p class="pa-sous">La première photo que voient tes clients. Prends-la belle.</p>
+                      <p class="pa-sous">La première photo que voient tes clients.</p>
                       <button type="button" class="pv-gros" id="pa-photo-btn">
                         <span class="pv-gros-vignette" id="pa-photo-vue"></span>
                         <span class="pv-gros-txt"><b id="pa-photo-titre">Ajouter une photo</b><span>Photo de ta façade</span></span>
@@ -3436,14 +3453,14 @@
 
                     <!-- 4 · La boutique -->
                     <section class="pa-etape pv" data-pas="4" data-mascotte="/mascotte/pose-2.webp" hidden>
-                      <div class="pv-scene pv-scene-3d pv-scene-wallet"><div class="pv-3d"><div class="ob-wallet" id="pv-bande"></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-bocks"><div class="pv-3d"><div class="ob-sousbocks" id="pv-bande"></div></div></div>
                       <p class="pv-etape">Étape 3 sur 5</p>
                       <h1 class="pa-titre">Ta boutique.</h1>
-                      <p class="pa-sous">Ce que tes clients s'offrent avec leurs points. Active, règle le prix.</p>
+                      <p class="pa-sous">Active ce que tu offres, règle le prix.</p>
                       <p class="pv-sec pv-sec-haut">Récompenses<span id="pa-compte"></span></p>
                       <div class="pa-grille" id="pa-grille"></div>
-                      <div class="pv-sienne">
-                        <p class="pv-sec">Une autre récompense</p>
+                      <button type="button" class="pv-ajout" id="pa-sienne-ouvrir">+ Une autre récompense</button>
+                      <div class="pv-sienne" id="pa-sienne" hidden>
                         <div class="pa-sienne-lignes">
                           <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Ex. Bouteille offerte" />
                           <input class="ac-input pa-sienne-pts" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" />
@@ -3496,7 +3513,7 @@
 
                     <!-- 5 · Ce qui vient d'etre construit -->
                     <section class="pa-etape pv" data-pas="7" data-mascotte="/mascotte/pose-5.webp" hidden>
-                      <div class="pv-scene pv-scene-3d pv-scene-verrou"><div class="pv-3d"><div class="ob-verrou"><img class="ob-fond" src="/ambiance/bienvenue.webp" alt="" /><span class="ob-fond-voile"></span><span class="ob-barre"><i></i><i></i><i></i></span><span class="ob-cadenas"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span><span class="ob-date" data-pv="date"></span><span class="ob-heure" data-pv="heure"></span><span class="ob-notif"><img src="/icones/apple-touch-icon.png?v=verre" alt="" /><span class="ob-notif-txt"><span class="ob-notif-haut"><b>NOCTIFY</b><i>maintenant</i></span><b>Nouveau sur Noctify : <span data-pv="nom"></span></b><span class="ob-notif-lieu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg><span data-pv="adresse"></span>, <span data-pv="ville"></span></span><span class="ob-notif-sous">Tes clients te voient dans l’appli</span></span></span></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-affiche"><div class="pv-3d"><div class="ob-affiche"><span class="ob-scotch gauche"></span><span class="ob-scotch droite"></span><p class="pa-affiche-attente" id="pa-affiche-attente">Préparation de ton affiche…</p><img class="pa-affiche" id="pa-affiche" alt="Aperçu de l'affiche à imprimer" hidden /></div></div></div>
                       <p class="pv-etape pv-en-ligne"><i class="pv-live"></i>En ligne sur Noctify</p>
                       <h1 class="pa-titre">Tout est prêt.</h1>
                       <p class="pa-sous">Il ne reste qu'à coller ton affiche : à l'entrée, au bar, aux toilettes.</p>
@@ -3510,8 +3527,6 @@
                            si le club n'a pas de code public, il n'arrive
                            jamais -- l'icone cassee restait a l'ecran sous
                            le message qui expliquait pourtant la situation. -->
-                      <p class="pa-affiche-attente" id="pa-affiche-attente">Préparation de ton affiche…</p>
-                      <img class="pa-affiche pa-arrive" id="pa-affiche" alt="Aperçu de l'affiche à imprimer" hidden />
                       <a class="bouton sobre pleine pa-arrive" id="pa-affiche-lien" download="affiche-noctify.png" hidden>Télécharger l'affiche (A4)</a>
 
                       <ul class="pa-bilan pa-arrive" id="pa-bilan"></ul>
@@ -7845,6 +7860,13 @@
           : n + (n > 1 ? " récompenses en boutique" : " récompense en boutique");
       }
 
+      $("#pa-sienne-ouvrir").addEventListener("click", function () {
+        $("#pa-sienne").hidden = false;
+        $("#pa-sienne-ouvrir").hidden = true;
+        $("#pa-sienne-nom").focus();
+        pvAjusterScene();
+      });
+
       $("#pa-sienne-ajouter").addEventListener("click", function () {
         var nom = $("#pa-sienne-nom").value.trim();
         var pts = Math.max(0, Math.round(Number($("#pa-sienne-pts").value) || 0));
@@ -7858,7 +7880,10 @@
         $("#pa-sienne-nom").value = "";
         $("#pa-sienne-pts").value = "";
         direParcours("", false);
+        $("#pa-sienne").hidden = true;
+        $("#pa-sienne-ouvrir").hidden = false;
         rendreChoixRecompenses();
+        pvAjusterScene();
         // La nouvelle carte arrive en bas d'une grille de douze : sans ce
         // deplacement, rien a l'ecran ne dit qu'elle a ete ajoutee.
         $("#pa-grille").lastElementChild.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -8240,60 +8265,64 @@
         carte.querySelectorAll('[data-pv="segments"] i').forEach(function (seg, k) { seg.classList.toggle("on", k <= i); });
         relancerAnimation(carte, "pv-tap");
       }
-      /* La boutique en passes « Cartes » d'iPhone : la premiere recompense active
-         devant, avec son prix et le QR du bon ; les suivantes rangees au-dessus. */
-      var PV_QR = '<svg viewBox="0 0 29 29" aria-hidden="true"><path d="M1 1h9v9H1zM19 1h9v9h-9zM1 19h9v9H1z" fill="none" stroke="#111" stroke-width="2"/><path fill="#111" d="M4 4h3v3H4zM22 4h3v3h-3zM4 22h3v3H4zM13 2h2v4h-2zM12 8h4v2h-4zM13 12h3v3h-3zM18 13h4v2h-4zM24 12h3v4h-3zM12 18h2v3h-2zM16 17h3v3h-3zM21 19h3v2h-3zM25 21h2v6h-2zM13 23h4v2h-4zM18 24h3v3h-3zM2 13h3v2H2zM7 12h3v4H7z"/></svg>';
+      /* La boutique en sous-bocks de bar : un carton par recompense, empiles sur la
+         table. Trois au plus ; le premier devant, les autres en dessous, de biais. */
       function pvRendreBande() {
         var zone = $("#pv-bande");
         if (!zone) return;
-        var etab = etablissementCourant() || {};
-        var nom = $("#pa-nom").value.trim() || etab.name || "Ton établissement";
         var choix = (PARCOURS.choix || []).filter(function (c) { return c.prise; });
+        var avant = PV.bande;
         if (!choix.length) {
-          zone.innerHTML = '<span class="ob-pass vide"><span class="ob-pass-vide">Active une récompense : son bon apparaît ici.</span></span>';
+          zone.innerHTML = '<span class="ob-sb vide"><span class="ob-sb-fond"><b>Ta boutique</b><i>Active une récompense</i></span></span>';
           PV.bande = [];
           return;
         }
-        var devant = choix[0];
-        var derriere = choix.slice(1, 3).reverse();
-        var neuve = PV.bande && PV.bande.indexOf(devant.titre) === -1;
-        zone.innerHTML = derriere.map(function (c, i) {
-          return '<span class="ob-pass-dos" style="--i:' + (derriere.length - i) + '"><b>' + escapeHtml(c.titre) + "</b><span>" + nb.format(Number(c.points || 0)) + " pts</span></span>";
-        }).join("") +
-          '<span class="ob-pass' + (neuve ? " arrive" : "") + '">' +
-            '<span class="ob-pass-tete"><img src="/icones/apple-touch-icon.png?v=verre" alt="" /><b>NOCTIFY</b>' +
-              '<span class="ob-champ droite"><small>LIEU</small><b>' + escapeHtml(nom) + "</b></span></span>" +
-            '<span class="ob-pass-milieu">' + (devant.foto ? '<img src="' + escapeHtml(devant.foto) + '" alt="" />' : "") +
-              '<span class="ob-champ"><small>RÉCOMPENSE</small><b class="grand">' + escapeHtml(devant.titre) + "</b></span></span>" +
-            '<span class="ob-pass-ligne">' +
-              '<span class="ob-champ"><small>PRIX</small><b>' + nb.format(Number(devant.points || 0)) + " points</b></span>" +
-              '<span class="ob-champ"><small>VALABLE</small><b>Au bar</b></span>' +
-              '<span class="ob-champ droite"><small>BONS</small><b>' + choix.length + "</b></span></span>" +
-            '<span class="ob-pass-qr">' + PV_QR + "<small>Montre ce code au bar</small></span>" +
-          "</span>";
+        var montres = choix.slice(0, 3);
+        zone.innerHTML = montres.map(function (c, i) {
+          var neuve = avant && avant.indexOf(c.titre) === -1;
+          var rang = montres.length - 1 - i;
+          return '<span class="ob-sb' + (neuve && !rang ? " arrive" : "") + '" style="--rang:' + rang + '">' +
+            '<span class="ob-sb-fond">' +
+              '<small>Bon Noctify</small>' +
+              "<b>" + escapeHtml(c.titre || "") + "</b>" +
+              '<i>' + nb.format(Number(c.points || 0)) + " points</i>" +
+            "</span></span>";
+        }).reverse().join("");
         PV.bande = choix.map(function (c) { return c.titre; });
       }
 
-      /* Le selecteur de Photos d'iPhone : les photos deja choisies en tete, cochees
-         et numerotees dans l'ordre (la facade = 1), puis la pellicule. */
-      var PV_PELLICULE = ["/ambiance/profil/1.webp", "/ambiance/profil/2.webp", "/ambiance/profil/3.webp", "/ambiance/profil/4.webp", "/ambiance/profil/5.webp", "/ambiance/profil/6.webp", "/ambiance/profil/7.webp", "/ambiance/profil/8.webp", "/ambiance/profil/9.webp", "/ambiance/hero-nightclub.webp", "/clubs/demo-velours.webp", "/clubs/demo-neon-88.webp"];
-      function pvRendrePicker() {
-        var grille = document.querySelector('[data-pv="picker"]');
-        if (!grille) return;
-        var choisies = pvPhotos();
-        var cles = choisies.join("|");
-        if (grille.dataset.cle === cles) return;
-        grille.dataset.cle = cles;
-        var cases = choisies.map(function (u, i) { return [u, i + 1]; })
-          .concat(PV_PELLICULE.map(function (u) { return [u, 0]; })).slice(0, 12);
-        grille.innerHTML = cases.map(function (c) {
-          return '<span class="ob-vignette' + (c[1] ? " choisie" : "") + '"><img src="' + escapeHtml(c[0]) + '" alt="" loading="lazy" />' +
-            '<i>' + (c[1] || "") + "</i></span>";
-        }).join("");
-        var pied = document.querySelector('[data-pv="picker-pied"]');
-        if (pied) pied.textContent = choisies.length
-          ? choisies.length + (choisies.length > 1 ? " photos sélectionnées" : " photo sélectionnée")
-          : "Choisis la photo de ta façade";
+      /* ⚠️ TOUT DOIT TENIR SUR L'ECRAN, SANS DESCENDRE. Julien, 17/09/2026 :
+         « il faut que tout arrive en un coup d'oeil, que tout tienne sur sa page de
+         telephone, sinon ca ne marchera jamais ». La scene prend donc ce qui RESTE une
+         fois les champs poses, et l'objet se reduit d'autant. Mesure a chaque etape et a
+         chaque changement de taille (clavier compris). */
+      /* Les images de la scene arrivent apres : tant qu'elles ne sont pas chargees,
+         l'objet est plus petit qu'il ne sera, et la mesure se trompe. On remesure au
+         chargement de chacune, une fois pour toutes. */
+      function pvSurveillerImages(scene) {
+        scene.querySelectorAll("img").forEach(function (img) {
+          if (img.dataset.mesure || img.complete) return;
+          img.dataset.mesure = "1";
+          img.addEventListener("load", pvAjusterScene, { once: true });
+          img.addEventListener("error", pvAjusterScene, { once: true });
+        });
+      }
+
+      function pvAjusterScene() {
+        var etape = document.querySelector('.pa-etape[data-pas="' + PARCOURS.pas + '"]');
+        var scene = etape && etape.querySelector(".pv-scene");
+        var objet = scene && scene.querySelector(".pv-3d");
+        if (!scene || !objet) return;
+        pvSurveillerImages(scene);
+        // La scene n'a pas de hauteur a elle : elle prend celle de l'objet, et l'objet
+        // se reduit pour tenir dans la place qui reste sous les champs.
+        scene.hidden = false;
+        objet.style.zoom = "";
+        var hauteur = objet.getBoundingClientRect().height + (scene.querySelector(".st-gain, .pv-gains") ? 56 : 0);
+        var reste = $("#pa-corps").clientHeight - (etape.scrollHeight - scene.getBoundingClientRect().height) - 18;
+        // Sous 112 px l'objet ne se lit plus : mieux vaut ne rien montrer qu'une vignette.
+        if (reste < 112) { scene.hidden = true; return; }
+        objet.style.zoom = Math.min(1, Math.min(330, reste) / Math.max(1, hauteur)).toFixed(3);
       }
 
       function pvSynchro() {
@@ -8334,14 +8363,6 @@
           ? "Elles défilent quand un client touche ta photo."
           : "La salle, le bar, une soirée. Elles défilent quand un client touche ta photo.";
         pvRendreBande();
-        pvRendrePicker();
-        var maintenant = new Date();
-        document.querySelectorAll('[data-pv="heure"]').forEach(function (el) {
-          el.textContent = maintenant.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-        });
-        document.querySelectorAll('[data-pv="date"]').forEach(function (el) {
-          el.textContent = maintenant.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-        });
       }
 
       (function brancherParcoursVivant() {
@@ -8391,11 +8412,6 @@
           sc.addEventListener("pointerup", function (ev) { if (ev.pointerType !== "mouse") lacher(); });
           sc.addEventListener("pointercancel", lacher);
         });
-        // Toucher le selecteur de Photos ouvre le vrai.
-        document.querySelectorAll(".ob-picker").forEach(function (picker) {
-          picker.addEventListener("click", function () { $("#pa-photo-btn").click(); });
-        });
-
         $("#pa-avancer").addEventListener("click", function () {
           if (PARCOURS.pas < PAS_MAX) allerAuPas(PARCOURS.pas + 1);
         });
@@ -8407,10 +8423,15 @@
             return r;
           };
         }
+        window.addEventListener("resize", pvAjusterScene);
         poserPas = apres(poserPas, function (cible) {
           $("#pa-avancer").hidden = cible <= 1 || cible >= PAS_MAX || PARCOURS.seule || !etablissementCourant();
           PV.bande = null;
           pvSynchro();
+          pvAjusterScene();
+          // Deuxieme mesure une fois la scene posee (polices et images arrivees).
+          setTimeout(pvAjusterScene, 140);
+          setTimeout(pvAjusterScene, 600);
           // La story se colle une fois, a l'arrivee sur l'ecran.
           var scene = document.querySelector('.pa-etape[data-pas="' + cible + '"] .pv-scene');
           if (scene && scene.querySelector(".st-tel")) relancerAnimation(scene, "joue");
