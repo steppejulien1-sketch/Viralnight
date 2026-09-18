@@ -3285,6 +3285,36 @@
       .pv-gros-clair > svg { stroke: var(--ink3); }
       .pv-gros.pv-gros-clair:not(.remplie) .pv-gros-vignette { animation: pvAppelClair 2.2s ease-in-out infinite; }
       @keyframes pvAppelClair { 0%, 100% { box-shadow: 0 0 0 0 rgba(222,49,49,.28); } 50% { box-shadow: 0 0 0 7px rgba(222,49,49,0); } }
+
+      /* -- Les reglages, repris ligne par ligne (18/09/2026) --
+         Julien : « les reglages, c'est moche, c'est eclate ». Meme famille que le
+         reste : carte blanche a filet, icone dans un carre gris neutre, chevron
+         discret, une ligne = une hauteur. */
+      .vue-reglages .carte, #vue-reglages .carte {
+        background: #fff; border: 1px solid #e8e8ee; border-radius: 16px; box-shadow: none; padding: 2px 14px !important;
+      }
+      .reglage-lien, .reglage-ligne { min-height: 58px; gap: 12px; }
+      .reglage-lien + .reglage-lien, .reglage-ligne + .reglage-lien { border-top: 1px solid #f0f0f4; }
+      .reglage-ico { width: 34px; height: 34px; border-radius: 10px; background: #f4f4f7; box-shadow: none; }
+      .reglage-ico svg { width: 17px; height: 17px; stroke: #6b6b72; }
+      .reglage-txt strong { font-size: 15.5px; font-weight: 650; letter-spacing: -.01em; }
+      .reglage-txt span { font-size: 12.5px; color: var(--ink3); }
+      .reglage-fleche { width: 16px; height: 16px; stroke: #c3c3cc; stroke-width: 2; }
+      #reglages-deconnexion .reglage-txt strong { color: var(--accent-fort); }
+      #reglages-deconnexion .reglage-ico { background: #fdeeee; }
+      #reglages-deconnexion .reglage-ico svg { stroke: var(--accent-fort); }
+      #reglages-compte { font-size: 12.5px; color: var(--ink3); }
+
+      /* L'exemple, en tete quand le club n'a encore rien. */
+      .dash-exemple.dash-exemple-haut {
+        display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 14px; padding: 13px 14px; border: 0; border-radius: 16px;
+        background: #111; color: #fff; text-align: left; cursor: pointer;
+      }
+      .dash-exemple-haut[hidden] { display: none; }
+      .dash-exemple-haut .dash-exemple-txt { flex: 1; min-width: 0; }
+      .dash-exemple-haut strong { display: block; font-size: 15px; font-weight: 700; }
+      .dash-exemple-haut span span, .dash-exemple-haut .dash-exemple-txt > span { display: block; margin-top: 2px; font-size: 12.5px; color: rgba(255,255,255,.66); }
+      .dash-exemple-haut > svg { width: 18px; height: 18px; fill: none; stroke: rgba(255,255,255,.7); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
   </head>
   <body>
@@ -3736,6 +3766,14 @@
                 <span><strong>Exemple.</strong> Ce ne sont pas les chiffres de ton club.</span>
                 <button type="button" id="dash-quitter-exemple">Revenir</button>
               </div>
+
+              <button type="button" class="dash-exemple dash-exemple-haut" id="dash-voir-exemple-haut" hidden>
+                <span class="dash-exemple-txt">
+                  <strong>Voir avec des chiffres d'exemple</strong>
+                  <span>Ton club n'a pas encore d'activité</span>
+                </span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+              </button>
 
               <div class="club-tete club-couv">
                 <img class="club-couv-img" id="dash-couv-img" alt="" />
@@ -5566,6 +5604,7 @@
 
       $("#dash-voir-exemple").addEventListener("click", function () { afficherExemple(true); });
       $("#dash-quitter-exemple").addEventListener("click", function () { afficherExemple(false); });
+      $("#dash-voir-exemple-haut").addEventListener("click", function () { afficherExemple(true); });
 
       var LABEL_STATUT_C = { validated: "Validé", pending: "En attente", rejected: "Rejeté" };
       var LABEL_PLATEFORME_C = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube" };
@@ -5592,7 +5631,12 @@
            hors session on regarde deja la demo, et un club qui tourne n'a
            rien a apprendre d'un exemple. */
         var vraiesLignes = (ETAT.data.submissions || []).length + (ETAT.data.qrScans || []).length;
-        $("#dash-voir-exemple").hidden = !ETAT.session || EXEMPLE || vraiesLignes > 0;
+        var sansActivite = !!ETAT.session && !EXEMPLE && vraiesLignes === 0;
+        $("#dash-voir-exemple").hidden = !sansActivite;
+        // Le meme bouton, mais EN TETE : a zero donnee, c'est la premiere
+        // chose a voir (Julien, 18/09/2026 : « mets des fausses data que je
+        // puisse voir a quoi ca ressemble »).
+        $("#dash-voir-exemple-haut").hidden = !sansActivite;
 
         /* L'ecran des contenus lit la MEME source et suit le meme cycle :
            le rendre ici, c'est la garantie qu'il ne montre jamais autre
