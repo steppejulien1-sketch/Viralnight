@@ -8,7 +8,7 @@ const ADMIN_EMAIL = "steppejulien1@gmail.com";
 const demoSubmissions = [
   {
     id: "vn-001",
-    establishment: "Mirage Club Brussels",
+    establishment: "Mirage",
     platform: "TikTok",
     type: "Reel dancefloor",
     views: 12800,
@@ -38,7 +38,7 @@ const demoSubmissions = [
   },
   {
     id: "vn-004",
-    establishment: "Mirage Club Brussels",
+    establishment: "Mirage",
     platform: "Instagram",
     type: "Story table",
     views: 2600,
