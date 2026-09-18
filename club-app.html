@@ -2674,7 +2674,7 @@
         position: relative; height: 272px; margin: -12px -20px 24px; overflow: hidden; isolation: isolate;
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
         /* 17/09/2026, Julien : plus de lueurs rose et violette. Un fond neutre, comme une photo produit. */
-        background: linear-gradient(180deg, #ffffff 0%, #f1f1f3 100%); border-bottom: 1px solid #ececef; transition: height .35s var(--sortie);
+        background: #f3f3f6; border-bottom: 1px solid #e7e7ec; transition: height .35s var(--sortie);
       }
       .pv-scene::before, .pv-scene::after { content: none; }
       .pv-scene::before { left: -80px; top: -110px; background: #ff7d6e; animation: pvNuage 16s ease-in-out infinite alternate; }
@@ -2890,193 +2890,202 @@
       .pv-ig { margin-top: 12px; }
 
 
-      /* -- LES OBJETS 3D DU PARCOURS (18/09/2026) --
-         Julien a ecrit la planche : « QR en levitation, carte VIP, ticket, jeton,
-         story flottante, notification en verre... 1 objet principal + 2 ou 3 petits
-         elements par ecran, pas un telephone a chaque page ».
-         Tout est dessine en CSS : pas de librairie 3D, pas d'image a charger. La scene
-         donne la perspective, .pv-3d se balance et suit le doigt (voir brancherParcoursVivant),
-         et pvAjusterScene() reduit l'objet a la place qui reste sous les champs. */
-      .pv-scene-3d { perspective: 1100px; justify-content: center; height: auto; padding: 8px 0 22px; }
+      /* -- CE QUE CA DONNE SUR L'APPLI (17/09/2026) --
+         Julien : « il faut leur montrer de toute facon ce que ca donnerait sur l'app ».
+         Chaque etape montre donc l'ecran de l'appli clubbeur ou l'info s'affiche, dans le
+         telephone de la page Story (vraie barre d'etat, memes mesures qu'app-preview.html).
+         Il se balance, s'incline sous le doigt, et un reflet glisse sur la vitre. */
+      .pv-scene-3d { perspective: 1100px; justify-content: center; }
+      /* Pas de hauteur imposee : la scene prend celle du telephone, que pvAjusterScene()
+         reduit pour que l'ecran entier tienne d'un coup d'oeil. */
+      .pv-scene-3d { height: auto; padding: 18px 0 20px; margin-bottom: 18px; }
       .parcours .pv-scene[hidden] { display: none; }
       .pv-3d {
         position: relative; transform-style: preserve-3d; transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg));
         animation: pvBalance 9s ease-in-out infinite; transition: transform .6s cubic-bezier(.2, .8, .2, 1);
       }
       .pv-scene-3d.suit .pv-3d { animation: none; transition: transform .1s linear; }
-      @keyframes pvBalance { 0%, 100% { transform: rotateY(-8deg) rotateX(4deg); } 50% { transform: rotateY(8deg) rotateX(-3deg); } }
+      @keyframes pvBalance { 0%, 100% { transform: rotateY(-9deg) rotateX(4deg); } 50% { transform: rotateY(9deg) rotateX(-3deg); } }
+      .st-tel::after {
+        content: ""; position: absolute; inset: 0; z-index: 9; border-radius: inherit; pointer-events: none;
+        background: linear-gradient(110deg, rgba(255,255,255,0) calc(var(--reflet, 50%) - 30%), rgba(255,255,255,.18) var(--reflet, 50%), rgba(255,255,255,0) calc(var(--reflet, 50%) + 22%));
+      }
+
+      /* Serre au maximum (Julien, 17/09/2026 : « colle plus qu'on puisse voir tout du
+         premier coup d'oeil ») : chaque pixel gagne ici agrandit le telephone, que
+         pvAjusterScene() met a la place qui reste. */
+      .pv-scene-3d { padding: 4px 0 18px; }
+      /* L'ombre au sol : le telephone est pose, il ne flotte pas dans du vide. */
       .pv-3d::after {
-        content: ""; position: absolute; left: 50%; bottom: -18px; width: 58%; height: 18px; translate: -50% 0; border-radius: 50%;
-        background: radial-gradient(closest-side, rgba(0,0,0,.26), rgba(0,0,0,0)); transform: translateZ(-70px);
+        content: ""; position: absolute; left: 50%; bottom: -16px; width: 62%; height: 18px; translate: -50% 0; border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(0,0,0,.28), rgba(0,0,0,0)); transform: translateZ(-60px);
       }
-      .o3 { position: relative; transform-style: preserve-3d; }
-      /* le reflet qui glisse sur les surfaces, au doigt */
-      .vip::after, .pola::after, .ticket::after, .sy::after, .qr-carte::after {
-        content: ""; position: absolute; inset: 0; z-index: 4; border-radius: inherit; pointer-events: none;
-        background: linear-gradient(112deg, rgba(255,255,255,0) calc(var(--reflet, 50%) - 26%), rgba(255,255,255,.22) var(--reflet, 50%), rgba(255,255,255,0) calc(var(--reflet, 50%) + 20%));
-      }
-      /* les petits elements qui gravitent */
-      .o3-grain { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #de3131; box-shadow: 0 0 10px rgba(222,49,49,.8); opacity: .8; }
-      .o3-grain.g1 { left: -14px; top: 26%; animation: o3Flotte 5s ease-in-out infinite; }
-      .o3-grain.g2 { right: -10px; top: 62%; width: 4px; height: 4px; background: #fff; box-shadow: 0 0 8px rgba(255,255,255,.9); animation: o3Flotte 6.5s ease-in-out -2s infinite; }
-      .o3-grain.g3 { right: 16%; top: -14px; width: 5px; height: 5px; animation: o3Flotte 7s ease-in-out -4s infinite; }
-      @keyframes o3Flotte { 0%, 100% { transform: translate3d(0, 0, 40px); } 50% { transform: translate3d(4px, -14px, 40px); } }
-      .o3-notif {
-        position: absolute; display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 9px; border-radius: 14px;
-        background: rgba(255,255,255,.86); -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5);
-        box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 16px 26px -16px rgba(0,0,0,.5); color: #111; white-space: nowrap;
-        transform: translateZ(50px); animation: o3Notif .7s cubic-bezier(.3, 1.35, .5, 1) .5s both;
-      }
-      @keyframes o3Notif { from { opacity: 0; transform: translate3d(0, 18px, 50px) scale(.94); } }
-      .o3-notif-ok { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #1f9d55; }
-      .o3-notif-ok svg { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-      .o3-notif b { display: block; font-size: 12.5px; font-weight: 750; }
-      .o3-notif i { display: block; font-style: normal; font-size: 11px; color: #6b6b72; }
-      .o3-plaque {
-        position: absolute; left: 50%; bottom: -14px; max-width: 80%; padding: 6px 12px; border-radius: 4px; translate: -50% 0;
-        background: linear-gradient(160deg, #dedac9, #aba694 60%, #cbc7b7); color: #3a362c; transform: translateZ(30px);
-        font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.65), 0 8px 16px -10px rgba(0,0,0,.6); text-shadow: 0 1px 0 rgba(255,255,255,.4);
-      }
-      .o3-plaque .pv-vide { opacity: .55; }
+      .pv .pa-titre { margin: 0 0 5px; font-size: 27px; line-height: 1.05; }
+      .pv .pa-sous { margin: 0 0 16px; font-size: 13.5px; line-height: 1.45; color: var(--ink3); }
+      /* Un seul intervalle entre les blocs : titre 16, section 20, bloc 12. */
+      .pv-champs { gap: 0; }
+      .pv-sec { margin: 20px 2px 10px; }
+      .pv-sienne, .pv-ajout { margin-top: 12px; }
+      .pv .pa-galerie { margin-top: 2px; }
+      .pv #pa-galerie-aide { margin-top: 8px; }
+      .pv-regles + *, .pv .pa-grille + * { margin-top: 12px; }
+      .pv-champs .pv-champ, .pv > .pv-champ { min-height: 56px; padding: 8px 14px; gap: 12px; }
+      .pv-champ > svg { width: 20px; height: 20px; }
+      .pv-lib { font-size: 11.5px; }
+      .pv-champ input { font-size: 16.5px; }
+      .pv-gros { padding: 9px 14px 9px 9px; border-radius: 18px; }
+      .pv-gros-vignette { width: 54px; height: 54px; border-radius: 13px; }
+      .pv-gros-txt b { font-size: 15.5px; }
+      .pv-gros-txt span { font-size: 12px; }
+      .pv-sec { margin: 16px 2px 8px; font-size: 15px; }
+      .pv .pa-galerie { gap: 7px; }
+      .pv .pa-tuile.pv-reco { padding: 9px 14px 9px 9px; gap: 12px; }
+      .pv-reco-img { width: 54px; height: 54px; }
+      .pv-reco-txt { gap: 5px; }
+      .pv-reco-txt > b { font-size: 14.5px; }
+      .pv-regle { padding: 11px 16px 11px 12px; gap: 12px; }
+      .pv-regle-ico { width: 40px; height: 40px; border-radius: 12px; }
+      .pv-regle-txt b { font-size: 14.5px; }
+      .pv-regle strong { font-size: 24px; }
+      .pv-ajout { margin-top: 10px; padding: 11px; font-size: 14px; }
+      .pv-ig { margin-top: 10px; }
+      .pv #pa-galerie-aide { margin-top: 6px; }
+      .pv-gains .st-gain, .pv-scene-3d .st-gain { margin-top: 14px; }
 
-      /* 1 · la carte de membre */
-      .vip {
-        position: relative; display: flex; flex-direction: column; width: 246px; aspect-ratio: 1.586; padding: 16px 18px; border-radius: 14px; color: #fff;
-        background: linear-gradient(145deg, #2a2a30 0%, #121216 45%, #0a0a0c 100%);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 40px rgba(222,49,49,.1), 0 30px 50px -22px rgba(0,0,0,.75);
+      /* L'affiche du dernier ecran : la vraie, posee comme une feuille imprimee. */
+      .ob-affiche {
+        position: relative; width: 196px; min-height: 120px; display: grid; place-items: center; padding: 7px; border-radius: 3px; background: #fff;
+        box-shadow: 0 1px 0 rgba(0,0,0,.08), 0 26px 50px -24px rgba(0,0,0,.5);
       }
-      .vip-tete { display: flex; align-items: baseline; justify-content: space-between; }
-      .vip-tete b { font-family: var(--titre); font-size: 15px; font-weight: 900; letter-spacing: .04em; }
-      .vip-tete i { font-style: normal; font-size: 9px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.45); }
-      .vip-puce { width: 34px; height: 26px; margin: 14px 0 0; border-radius: 5px; background: linear-gradient(150deg, #f0d98a, #b8912f 55%, #e8d290); box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
-      .vip-puce::after { content: ""; display: block; width: 100%; height: 100%; background: repeating-linear-gradient(90deg, rgba(0,0,0,.22) 0 1px, transparent 1px 7px), repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 9px); }
-      .vip-nom {
-        margin-top: auto; font-family: var(--titre); font-size: 20px; font-weight: 900; letter-spacing: -.02em; text-transform: uppercase;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,255,255,.12);
-      }
-      .vip-nom.pv-vide { opacity: .45; }
-      .vip-bas { display: flex; align-items: baseline; justify-content: space-between; margin-top: 4px; font-size: 10.5px; font-weight: 650; color: rgba(255,255,255,.7); }
-      .vip-bas i { font-style: normal; font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase; color: #de6a6a; }
+      .ob-affiche .pa-affiche { display: block; width: 100%; height: auto; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .ob-affiche .pa-affiche-attente { margin: 0; padding: 30px 10px; font-size: 12px; color: var(--ink3); text-align: center; }
+      .ob-affiche .pa-affiche-attente[hidden], .ob-affiche .pa-affiche[hidden] { display: none; }
 
-      /* 2 · le polaroid de la facade */
-      .pola { position: relative; display: block; width: 210px; padding: 10px 10px 0; border-radius: 3px; background: #fff; box-shadow: 0 26px 44px -24px rgba(0,0,0,.6), 0 2px 0 rgba(0,0,0,.05); }
-      .pola-vitre { position: relative; display: block; aspect-ratio: 1; overflow: hidden; background: #1b1b20; }
-      .pola .pv-carte-vide { position: absolute; inset: 0; display: none; place-items: center; align-content: center; gap: 6px; background: radial-gradient(120% 100% at 50% 0%, #3b3b45, #121216); color: rgba(255,255,255,.5); font-size: 10px; font-weight: 650; }
-      .pola.pv-sans-photo .pv-carte-vide { display: grid; }
-      .pola .pv-carte-vide svg { width: 56px; height: 46px; stroke: rgba(255,255,255,.42); stroke-width: 1.5; fill: none; }
-      .pola .pv-carte-segments { position: absolute; z-index: 2; left: 9px; right: 9px; top: 8px; display: flex; gap: 4px; }
-      .pola .pv-carte-segments i { flex: 1; height: 2.5px; border-radius: 3px; background: rgba(255,255,255,.45); }
-      .pola .pv-carte-segments i.on { background: #fff; }
-      .pola-legende { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 10px 6px 14px; text-align: center; }
-      .pola-legende i { font-style: normal; font-size: 8.5px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: #de3131; }
-      .pola-legende b { max-width: 180px; font-family: var(--titre); font-size: 14px; font-weight: 900; letter-spacing: -.01em; color: #1b1b20; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .pola-legende b.pv-vide { opacity: .45; }
-      .pola-dos { position: absolute; inset: 0; border-radius: 3px; background: #f4f2ee; box-shadow: 0 18px 30px -22px rgba(0,0,0,.5); }
-      .pola-dos.d1 { rotate: -6deg; translate: -12px 6px; }
-      .pola-dos.d2 { rotate: 5deg; translate: 14px 3px; }
+      /* -- Les ecrans de l'appli clubbeur, dans le telephone -- */
+      .se-clair { background: #f5f5f7; color: #111; }
+      .se-clair svg { stroke: currentColor; filter: none; }
+      .se-liste { position: absolute; left: 0; right: 0; top: 30px; padding: 0 9px; }
+      .se-tete { display: flex; align-items: baseline; justify-content: space-between; margin: 6px 3px 9px; }
+      .se-tete > b { font-family: var(--titre); font-size: 20px; font-weight: 900; letter-spacing: -.045em; line-height: .9; }
+      .se-tete span { font-size: 9px; color: #777; }
+      .se-tete span b { font-family: var(--titre); font-size: 12px; font-weight: 900; color: #111; }
+      .pv-carte.se-carte { display: block; position: relative; width: 100%; max-width: none; aspect-ratio: 39 / 20; border-radius: 12px; overflow: hidden; background: #1b1b20; color: #fff; animation: none; box-shadow: 0 10px 18px -12px rgba(0,0,0,.45); }
+      .se-carte .pv-carte-segments { left: 7px; right: 7px; top: 5px; gap: 3px; }
+      .se-carte .pv-carte-segments i { height: 2px; }
+      .se-carte .pv-carte-lieu, .se-autre .pv-carte-lieu { left: 7px; top: 7px; gap: 3px; padding: 2px 5px 2px 3px; border-radius: 5px; font-size: 8px; }
+      .se-carte.pv-plusieurs .pv-carte-lieu { top: 11px; }
+      .se-carte .pv-carte-lieu svg, .se-autre .pv-carte-lieu svg { width: 9px; height: 9px; stroke: #fff; }
+      .se-carte .pv-carte-txt { left: 8px; right: 8px; bottom: 6px; gap: 0; }
+      .se-carte .pv-carte-txt b { font-size: 13.5px; }
+      .se-carte .pv-carte-txt span { font-size: 8.5px; }
+      .se-carte .pv-carte-vide { font-size: 8px; gap: 3px; }
+      .se-carte .pv-carte-vide svg { width: 34px; height: 28px; margin-top: -12px; stroke: rgba(255,255,255,.42); }
+      .se-autre { position: relative; display: block; margin-top: 8px; aspect-ratio: 39 / 20; border-radius: 12px; overflow: hidden; background: #222 center / cover; color: #fff; }
+      .se-autre::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,0) 62%); }
+      .se-autre .pv-carte-lieu { z-index: 1; }
+      .se-autre b { position: absolute; left: 8px; bottom: 15px; font-size: 13.5px; font-weight: 800; letter-spacing: -.02em; }
+      .se-autre i { position: absolute; left: 8px; bottom: 6px; font-style: normal; font-size: 8.5px; font-weight: 550; color: rgba(255,255,255,.85); }
+      .se-onglets {
+        position: absolute; z-index: 5; left: 8px; right: 8px; bottom: 10px; height: 34px; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center;
+        border-radius: 18px; background: #fff; box-shadow: 0 8px 18px -10px rgba(0,0,0,.3), 0 0 0 1px rgba(0,0,0,.04);
+      }
+      .se-onglets span { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 6px; font-weight: 650; color: #8a8a90; }
+      .se-onglets span.on { color: #de3131; }
+      .se-onglets svg { width: 12px; height: 12px; stroke-width: 1.9; }
 
-      /* 3 · le ticket et les jetons */
-      .o3-boutique { position: relative; display: flex; justify-content: center; padding: 0 68px; }
-      .ticket {
-        position: relative; display: flex; flex-direction: column; width: 178px; padding: 14px 16px 16px; border-radius: 14px; color: #fff;
-        background: linear-gradient(150deg, #24242a, #0e0e11); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 28px 46px -24px rgba(0,0,0,.7);
-      }
-      .ticket.arrive { animation: o3Pop .55s cubic-bezier(.3, 1.4, .5, 1) both; }
-      @keyframes o3Pop { from { opacity: 0; transform: translateY(26px) scale(.9); } }
-      .ticket-tete { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-      .ticket-tete b { font-family: var(--titre); font-size: 12px; font-weight: 900; letter-spacing: .05em; }
-      .ticket-tete i { font-style: normal; font-size: 8px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.45); }
-      .ticket-corps { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 0 14px; }
-      .ticket-corps img { width: 64px; height: 64px; object-fit: contain; filter: drop-shadow(0 8px 12px rgba(0,0,0,.5)); }
-      .ticket-corps b { font-family: var(--titre); font-size: 17px; font-weight: 900; letter-spacing: -.02em; text-align: center; line-height: 1.1; }
-      .ticket-perfo { position: relative; height: 1px; margin: 0 -16px; border-top: 1.5px dashed rgba(255,255,255,.22); }
-      .ticket-perfo::before, .ticket-perfo::after { content: ""; position: absolute; top: -8px; width: 16px; height: 16px; border-radius: 50%; background: #f7f7f8; }
-      .ticket-perfo::before { left: -8px; }
-      .ticket-perfo::after { right: -8px; }
-      .ticket-pied { padding-top: 12px; text-align: center; font-size: 11px; font-weight: 650; color: rgba(255,255,255,.7); }
-      .ticket-pied b { font-family: var(--titre); font-size: 20px; font-weight: 900; letter-spacing: -.03em; color: #fff; }
-      .ticket.vide { align-items: center; justify-content: center; min-height: 190px; background: #f3f3f5; color: #8e8e96; box-shadow: inset 0 0 0 1.5px #e0e0e6; }
-      .ticket.vide b { font-family: var(--titre); font-size: 16px; font-weight: 900; color: #6b6b72; }
-      .ticket.vide i { font-style: normal; font-size: 12px; }
-      .jeton {
-        position: absolute; display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; color: #fff; text-align: center;
-        background: radial-gradient(70% 70% at 35% 25%, #3a3a42, #0c0c0f 75%);
-        box-shadow: inset 0 0 0 2px rgba(255,255,255,.12), inset 0 -6px 12px rgba(0,0,0,.6), 0 16px 24px -14px rgba(0,0,0,.7);
-        transform: translateZ(40px); animation: o3Flotte 6s ease-in-out infinite;
-      }
-      .jeton b { font-family: var(--chiffre); font-size: 16px; font-weight: 900; letter-spacing: -.03em; }
-      .jeton i { display: block; font-style: normal; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.55); }
-      /* Les jetons se tiennent HORS du ticket : la place leur est reservee par le padding. */
-      .o3-boutique .jeton { width: 56px; height: 56px; }
-      .o3-boutique .jeton.j1 { left: 0; top: 10px; }
-      .o3-boutique .jeton.j2 { right: 0; bottom: 14px; animation-delay: -3s; }
+      .se-hero { position: absolute; left: 0; right: 0; top: 0; height: 64%; overflow: hidden; background: #1b1b20; color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      .se-hero .pv-carte-vide { position: absolute; inset: 0; display: none; place-items: center; align-content: center; gap: 6px; background: radial-gradient(120% 100% at 50% 0%, #3b3b45, #121216); color: rgba(255,255,255,.5); font-size: 9px; font-weight: 650; }
+      .se-hero.pv-sans-photo .pv-carte-vide { display: grid; }
+      .se-hero .pv-carte-vide svg { width: 50px; height: 40px; margin-top: -30px; stroke: rgba(255,255,255,.42); fill: none; }
+      .se-hero-voile { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom, rgba(0,0,0,.4), rgba(0,0,0,0) 26%), linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,.3) 38%, rgba(0,0,0,0) 62%); }
+      .se-hero .pv-carte-segments { position: absolute; z-index: 2; top: auto; bottom: 30px; left: 11px; right: 11px; display: flex; gap: 3px; }
+      .se-hero .pv-carte-segments i { flex: 1; height: 2px; border-radius: 2px; background: rgba(255,255,255,.4); }
+      .se-hero .pv-carte-segments i.on { background: #fff; }
+      .se-hero-bas { position: absolute; z-index: 2; left: 11px; right: 11px; bottom: 36px; display: flex; flex-direction: column; align-items: flex-start; }
+      .se-pastille { display: inline-flex; align-items: center; gap: 3px; padding: 3px 6px 3px 4px; border-radius: 5px; background: rgba(255,255,255,.18); font-size: 8.5px; font-weight: 600; }
+      .se-pastille svg { width: 9px; height: 9px; }
+      .se-hero-bas b { margin-top: 5px; font-family: var(--titre); font-size: 20px; font-weight: 900; letter-spacing: -.035em; line-height: 1; }
+      .se-hero-bas > span:last-child { margin-top: 4px; font-size: 9.5px; font-weight: 600; color: rgba(255,255,255,.88); }
+      .se-haut { position: absolute; z-index: 5; left: 8px; right: 8px; top: 26px; display: flex; justify-content: space-between; align-items: center; color: #fff; }
+      .se-haut i { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(20,20,22,.5); }
+      .se-haut i svg { width: 12px; height: 12px; stroke: #fff; stroke-width: 2.6; }
+      .se-haut > span { padding: 4px 8px; border-radius: 99px; background: rgba(20,20,22,.5); font-size: 8.5px; font-weight: 700; }
+      .se-corps { position: absolute; z-index: 3; left: 0; right: 0; top: calc(64% - 16px); bottom: 0; padding: 12px 10px; border-radius: 16px 16px 0 0; background: #f5f5f7; }
+      .se-solde { display: flex; justify-content: space-between; align-items: center; padding: 0 1px 7px; border-bottom: 1px solid rgba(0,0,0,.08); font-size: 7.5px; color: #888; }
+      .se-solde > span:first-child { font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+      .se-solde b { font-family: var(--titre); font-size: 12px; font-weight: 900; color: #111; }
+      .se-h { display: block; margin: 10px 1px 7px; font-size: 11.5px; font-weight: 800; letter-spacing: -.01em; }
 
-      /* 4 · la piece et la notification */
-      .o3-points { position: relative; display: grid; place-items: center; width: 250px; height: 210px; }
-      .piece { position: relative; display: grid; place-items: center; width: 118px; height: 118px; border-radius: 50%; transform: translateZ(20px); animation: o3Tourne 7s ease-in-out infinite; transform-style: preserve-3d; }
-      /* Un balancement, pas un tour complet : de profil, une piece n'est plus qu'un trait. */
-      @keyframes o3Tourne { 0%, 100% { transform: translateZ(20px) rotateY(-26deg); } 50% { transform: translateZ(20px) rotateY(26deg); } }
-      .piece-face {
-        position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%;
-        background: radial-gradient(70% 70% at 32% 24%, #45454f, #0b0b0e 78%);
-        box-shadow: inset 0 0 0 3px rgba(255,255,255,.14), inset 0 -10px 18px rgba(0,0,0,.65), 0 24px 34px -18px rgba(0,0,0,.75);
-      }
-      .piece-face img { width: 54%; height: 54%; border-radius: 12px; }
-      .piece-tranche { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 4px rgba(222,49,49,.25); }
-      .o3-points .jeton.j-story { left: 2px; top: 6px; }
-      .o3-points .jeton.j-scan { right: 0; bottom: 10px; width: 54px; height: 54px; animation-delay: -3s; }
-      .o3-points .jeton b { font-size: 15px; }
-      .o3-points .o3-notif { right: -8px; top: -6px; }
+      .se-compacte { position: absolute; z-index: 5; left: 0; right: 0; top: 0; height: 54px; display: flex; align-items: flex-end; gap: 6px; padding: 0 9px 7px; background: rgba(245,245,247,.94); border-bottom: 1px solid rgba(0,0,0,.06); }
+      .se-compacte i { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #e8e8ec; }
+      .se-compacte i svg { width: 11px; height: 11px; stroke-width: 2.6; }
+      .se-compacte b { flex: 1; min-width: 0; font-size: 11px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .se-compacte > span { font-size: 8.5px; color: #777; }
+      .se-compacte > span b { font-size: 10px; color: #111; }
+      .se-boutique { position: absolute; left: 0; right: 0; top: 54px; padding: 10px 9px; }
+      .se-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 7px; }
+      .se-grille .pv-mini-reco { display: block; }
+      .se-grille .pv-mini-img { position: relative; display: block; aspect-ratio: 1; border-radius: 11px; background: linear-gradient(#fff, #ececf0); box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); }
+      .se-grille .pv-mini-img img { position: absolute; left: 17%; top: 6%; width: 66%; height: 62%; object-fit: contain; }
+      .se-grille .pv-mini-img em { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-family: var(--titre); font-size: 20px; font-weight: 900; color: #c6c6cd; }
+      .se-grille .pv-mini-lab { position: relative; display: block; margin: -24px 4px 0; padding: 4px 6px; border-radius: 8px; background: #fff; box-shadow: 0 8px 16px -12px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.04); }
+      .se-grille .pv-mini-lab b { display: block; font-family: var(--titre); font-size: 8.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .se-grille .pv-mini-lab span { display: block; font-size: 7.5px; color: #77777f; }
+      .se-grille .pv-mini-reco.arrive { animation: pvPop .5s cubic-bezier(.3, 1.5, .5, 1) both; }
+      .se-grille .pv-bande-vide { grid-column: 1 / -1; margin: 30px 0 0; font-size: 9.5px; text-align: center; color: #8e8e96; }
 
-      /* 5 · la story detachee */
-      .o3-story { position: relative; }
-      .sy { position: relative; display: block; width: 168px; aspect-ratio: 9 / 16; border-radius: 18px; overflow: hidden; background: #000; color: #fff; box-shadow: 0 30px 50px -24px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.12); }
-      .sy > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-      .sy-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 62%, rgba(0,0,0,.5)); }
-      .sy-barres { position: absolute; left: 10px; right: 10px; top: 9px; display: flex; gap: 3px; }
-      .sy-barres i { flex: 1; height: 2px; border-radius: 2px; background: rgba(255,255,255,.4); }
-      .sy-barres i:first-child { background: #fff; }
-      .sy-auteur { position: absolute; left: 11px; top: 18px; display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 650; }
-      .sy-auteur i { width: 18px; height: 18px; border-radius: 50%; background: url(/ambiance/profil/avatar.webp) center / cover, #888; box-shadow: 0 0 0 1.5px #fff; }
-      .sy-mention {
-        position: absolute; left: 0; right: 0; top: 44%; width: max-content; max-width: calc(100% - 20px); margin: 0 auto; padding: 6px 10px; border-radius: 8px; background: #fff;
-        rotate: -3deg; box-shadow: 0 10px 20px -8px rgba(0,0,0,.6); overflow: hidden;
+      /* le telephone de la story (copie de .st-tel d'app-preview.html) */
+      .st-tel {
+        position: relative; width: 176px; aspect-ratio: 9 / 17.5; border-radius: 30px; overflow: hidden; background: #14100d; color: #fff;
+        box-shadow: 0 0 0 6px #1c1c1f, 0 0 0 7px rgba(0,0,0,.08), 0 34px 60px -24px rgba(0,0,0,.45);
       }
-      .sy-mention-txt {
-        display: block; font-family: var(--titre); font-size: 13px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        background: linear-gradient(90deg, #f58529, #dd2a7b 55%, #8134af); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      .st-tel-contenu { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; transform-origin: 50% 45%; }
+      .st-tel-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+      .st-tel-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 72%, rgba(0,0,0,.45)); }
+      .st-tel-barre { position: absolute; left: 0; top: 3px; width: 100%; height: auto; }
+      .st-tel-haut { position: absolute; left: 10px; right: 9px; top: 28px; display: flex; align-items: center; justify-content: space-between; }
+      .st-tel svg { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
+      .st-tel-fermer { width: 14px; height: 14px; }
+      .st-tel-outils { display: flex; align-items: center; gap: 7px; }
+      .st-tel-outils b { font-size: 11px; font-weight: 700; letter-spacing: -.02em; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+      .st-tel-outils svg { width: 14px; height: 14px; stroke-width: 1.8; }
+      .st-tel-outils svg:last-child { stroke-width: 3; }
+      .st-tel-sticker {
+        position: absolute; right: 12px; top: 64px; max-width: 146px; padding: 6px 10px 6px 9px; border-radius: 8px; background: #fff;
+        box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 8px 18px -8px rgba(0,0,0,.55);
+        font-size: 10.5px; font-weight: 800; letter-spacing: -.005em; text-transform: uppercase; line-height: 1.2;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform-origin: 80% 20%;
       }
-      .sy-gain {
-        position: absolute; left: 0; right: 0; bottom: 14px; width: max-content; margin: 0 auto; padding: 7px 13px; border-radius: 99px;
-        background: #de3131; color: #fff; font-size: 12.5px; font-weight: 800; box-shadow: 0 12px 22px -10px rgba(222,49,49,.9);
+      .st-tel-sticker-txt { color: #d62976; background: linear-gradient(90deg, #f58529, #dd2a7b 55%, #8134af); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+      .st-tel-bas { position: absolute; left: 0; right: 0; bottom: 8px; width: 100%; height: auto; }
+      .st-tel-partage {
+        position: absolute; left: 50%; top: 44%; translate: -50% 0; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+        padding: 7px 12px; border-radius: 999px; background: rgba(20,20,22,.82); font-size: 11px; font-weight: 750; opacity: 0; visibility: hidden;
       }
-      .o3-coeur { position: absolute; color: #ff4d6d; font-size: 16px; text-shadow: 0 6px 12px rgba(222,49,49,.6); transform: translateZ(50px); animation: o3Monte 4.5s ease-in-out infinite; }
-      .o3-coeur.c1 { right: -12px; bottom: 26%; }
-      .o3-coeur.c2 { left: -10px; bottom: 44%; font-size: 12px; animation-delay: -2.2s; }
-      @keyframes o3Monte { 0% { opacity: 0; transform: translate3d(0, 18px, 50px) scale(.8); } 30%, 70% { opacity: 1; } 100% { opacity: 0; transform: translate3d(-6px, -22px, 50px) scale(1.1); } }
+      .st-tel-partage svg { width: 13px; height: 13px; stroke-width: 3; filter: none; }
+      .st-gain {
+        margin-top: 22px; display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 16px 9px; border-radius: 999px;
+        background: #0b0b0c; color: #fff; white-space: nowrap; font-size: 13px; font-weight: 700; box-shadow: 0 12px 24px -12px rgba(0,0,0,.45);
+      }
+      .st-gain strong { font-family: var(--chiffre); font-size: 22px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+      .st-gain.clair { background: #fff; color: #111; box-shadow: 0 0 0 1px #e5e5ea, 0 12px 24px -14px rgba(0,0,0,.3); }
+      .pv-gains { display: flex; gap: 8px; }
+      .pv-scene.joue .st-tel { animation: st-arrive 1s cubic-bezier(.2, 1.1, .3, 1) both; }
+      .pv-scene.joue .st-tel-photo { animation: st-recul 2.2s cubic-bezier(.16, 1, .3, 1) both; }
+      .pv-scene.joue .st-tel-sticker { animation: st-colle .6s cubic-bezier(.34, 1.56, .64, 1) 1s both; }
+      .pv-scene.joue .st-tel-contenu { animation: st-envoye 2.2s cubic-bezier(.4, 0, .2, 1) 2.1s both; }
+      .pv-scene.joue .st-tel-partage { animation: st-partage 1.9s cubic-bezier(.16, 1, .3, 1) 2.3s both; }
+      .pv-scene.joue .st-gain { animation: st-gain .7s cubic-bezier(.34, 1.56, .64, 1) 2.7s both; }
+      .pv-scene.joue .st-gain.clair { animation-delay: 2.9s; }
+      @keyframes st-arrive { from { opacity: 0; translate: 0 60px; rotate: 6deg; scale: .92; } 60% { opacity: 1; } }
+      @keyframes st-recul { from { scale: 1.15; } }
+      @keyframes st-colle { from { opacity: 0; scale: .2; rotate: -24deg; } }
+      @keyframes st-envoye { 20%, 70% { scale: .96; filter: brightness(.82); } 100% { scale: 1; filter: none; } }
+      @keyframes st-partage { 0% { opacity: 0; visibility: visible; translate: -50% 10px; scale: .9; } 20%, 70% { opacity: 1; translate: -50% 0; scale: 1; } 100% { opacity: 0; visibility: hidden; translate: -50% -6px; } }
+      @keyframes st-gain { from { opacity: 0; translate: 0 -30px; scale: .6; } }
 
-      /* 6 · le QR en levitation */
-      .o3-qr { position: relative; display: grid; place-items: center; padding-bottom: 18px; }
-      .qr-carte {
-        position: relative; display: grid; place-items: center; width: 138px; height: 138px; padding: 12px; border-radius: 16px; background: #fff;
-        box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 26px 40px -22px rgba(0,0,0,.6), 0 0 34px rgba(222,49,49,.18);
-        transform: translateZ(40px); animation: o3Levite 6s ease-in-out infinite;
-      }
-      @keyframes o3Levite { 0%, 100% { transform: translate3d(0, 0, 40px); } 50% { transform: translate3d(0, -10px, 40px); } }
-      .qr-carte img { width: 100%; height: 100%; object-fit: contain; }
-      .qr-carte img[hidden] { display: none; }
-      .qr-attente { font-size: 11px; color: #8e8e96; text-align: center; }
-      .qr-attente[hidden] { display: none; }
-      .qr-socle {
-        width: 128px; height: 14px; margin-top: 18px; border-radius: 50%;
-        background: linear-gradient(180deg, rgba(222,49,49,.35), rgba(222,49,49,0)); filter: blur(3px);
-      }
-      .o3-qr .o3-notif { right: -14px; bottom: 6px; }
-
-      @media (prefers-reduced-motion: reduce) {
-        .pv-3d, .piece, .jeton, .o3-grain, .o3-coeur, .qr-carte, .o3-notif, .ticket.arrive { animation: none !important; }
-      }
+      .parcours.pv-clavier .pv-scene-3d .st-gain, .parcours.pv-clavier .pv-gains { display: none; }
+      @media (prefers-reduced-motion: reduce) { .pv-3d, .ob-notif, .ob-pass.arrive, .pv-scene.joue * { animation: none !important; } }
 
       /* -- Au carre (17/09/2026, Julien : « il faut que la dispo soit carree ») --
          Rien ne flotte plus sur le telephone. Champs, recompenses et points en
@@ -3423,7 +3432,7 @@
 
                     <!-- 2 · L'etablissement -->
                     <section class="pa-etape pv" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pv-scene pv-scene-3d sc-vip"><div class="pv-3d"><div class="o3 o3-vip"><span class="vip"><span class="vip-tete"><b>NOCTIFY</b><i>Club member</i></span><span class="vip-puce"></span><span class="vip-nom" data-pv="nom"></span><span class="vip-bas"><span data-pv="type"></span><i>Membre fondateur</i></span></span><span class="o3-plaque"><span data-pv="adresse"></span></span><span class="o3-grain g1"></span><span class="o3-grain g2"></span></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-appli"><div class="pv-3d"><div class="st-tel"><span class="st-tel-contenu se-clair"><img class="st-tel-barre" src="/ambiance/profil/barre-etat-noire.png" alt="" /><span class="se-liste"><span class="se-tete"><b>NOCTIFY</b><span><b>450</b> points</span></span><span class="pv-carte se-carte pv-sans-photo" data-pv-carte><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-voile"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="pv-carte-txt"><b data-pv="nom"></b><span data-pv="ligne"></span></span></span><span class="se-autre" style="background-image:url(/clubs/demo-velours.webp)"><b>Velours</b><i>Bar</i></span><span class="se-autre" style="background-image:url(/clubs/demo-neon-88.webp)"><b>Néon 88</b><i>Boîte de nuit</i></span></span><span class="se-onglets"><span class="on"><svg viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z"/></svg>Récompenses</span><span><svg viewBox="0 0 24 24"><path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></svg>Story</span><span><svg viewBox="0 0 24 24"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>Carte</span><span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>Profil</span></span></span></div></div></div>
                       <h1 class="pa-titre">Ton établissement.</h1>
                       <p class="pa-sous">Tel que tes clients le verront.</p>
                       <div class="pv-champs">
@@ -3448,7 +3457,7 @@
 
                     <!-- 3 · La facade, et les photos qui defilent -->
                     <section class="pa-etape pv" data-pas="3" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <div class="pv-scene pv-scene-3d sc-pola"><div class="pv-3d"><div class="o3 o3-pola"><span class="pola-dos d2"></span><span class="pola-dos d1"></span><span class="pola pv-sans-photo" data-pv-carte role="button" tabindex="0" aria-label="Voir la photo suivante"><span class="pola-vitre"><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="pv-carte-segments" data-pv="segments"></span></span><span class="pola-legende"><i>Façade</i><b data-pv="nom"></b></span></span></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-appli"><div class="pv-3d"><div class="st-tel"><span class="st-tel-contenu se-clair"><span class="se-hero pv-sans-photo" data-pv-carte role="button" tabindex="0" aria-label="Voir la photo suivante"><span class="pv-carte-photos" data-pv="photos"></span><span class="pv-carte-vide"><svg viewBox="0 0 64 52" aria-hidden="true"><path d="M6 20 10 6h44l4 14"/><path d="M6 20c0 4 3 6 6.5 6S19 24 19 20c0 4 3 6 6.5 6S32 24 32 20c0 4 3 6 6.5 6S45 24 45 20c0 4 3 6 6.5 6S58 24 58 20"/><path d="M10 26v22h44V26M27 48V34h10v14M15 32h7v7h-7zM42 32h7v7h-7z"/></svg><span>Ta façade</span></span><span class="se-hero-voile"></span><span class="pv-carte-segments" data-pv="segments"></span><span class="se-hero-bas"><b data-pv="nom"></b><span data-pv="type"></span></span></span><img class="st-tel-barre" src="/ambiance/profil/barre-etat-blanche.png" alt="" /><span class="se-haut"><i><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></i><span><b>450</b> pts</span></span><span class="se-corps"><span class="se-solde"><span>Ton solde</span><span><b>450</b> points</span></span><b class="se-h">Récompenses</b><span class="se-grille" data-pv-grille></span></span></span></div></div></div>
                       <h1 class="pa-titre">Ta façade.</h1>
                       <p class="pa-sous">La première photo que voient tes clients.</p>
                       <button type="button" class="pv-gros" id="pa-photo-btn">
@@ -3464,7 +3473,7 @@
 
                     <!-- 4 · La boutique -->
                     <section class="pa-etape pv" data-pas="4" data-mascotte="/mascotte/pose-2.webp" hidden>
-                      <div class="pv-scene pv-scene-3d sc-boutique"><div class="pv-3d"><div class="o3 o3-boutique" data-pv-reco></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-appli"><div class="pv-3d"><div class="st-tel"><span class="st-tel-contenu se-clair"><img class="st-tel-barre" src="/ambiance/profil/barre-etat-noire.png" alt="" /><span class="se-compacte"><i><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></i><b data-pv="nom"></b><span><b>450</b> pts</span></span><span class="se-boutique"><span class="se-solde"><span>Ton solde</span><span><b>450</b> points</span></span><b class="se-h">Récompenses</b><span class="se-grille" data-pv-grille></span></span></span></div></div></div>
                       <h1 class="pa-titre">Ta boutique.</h1>
                       <p class="pa-sous">Active ce que tu offres, règle le prix.</p>
                       <p class="pv-sec pv-sec-haut">Récompenses<span id="pa-compte"></span></p>
@@ -3481,7 +3490,7 @@
 
                     <!-- 5 · Les points, imposes : on les annonce -->
                     <section class="pa-etape pv" data-pas="5" data-mascotte="/mascotte/pose-3.webp" hidden>
-                      <div class="pv-scene pv-scene-3d sc-points"><div class="pv-3d"><div class="o3 o3-points"><span class="piece"><span class="piece-face"><img src="/icones/apple-touch-icon.png?v=verre" alt="" /></span><span class="piece-tranche"></span></span><span class="jeton j-story"><b data-pv="n-story"></b><i>la story</i></span><span class="jeton j-scan"><b data-pv="n-scan"></b><i>le scan</i></span><span class="o3-notif"><span class="o3-notif-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><b>Story validée</b><i data-pv="gain-story"></i></span></span></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-story"><div class="pv-3d"><div class="st-tel"><span class="st-tel-contenu"><img class="st-tel-photo" src="/ambiance/bienvenue.webp" alt="" /><span class="st-tel-voile"></span><img class="st-tel-barre" src="/ambiance/profil/barre-etat-blanche.png" alt="" /><span class="st-tel-haut"><svg class="st-tel-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span class="st-tel-outils"><b>Aa</b><svg viewBox="0 0 24 24"><path d="M15.5 3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6.5l7-7V7A3.5 3.5 0 0 0 17 3.5z"/><path d="M13.5 20.5v-3.5a3.5 3.5 0 0 1 3.5-3.5h3.5"/><circle cx="9" cy="10" r=".9"/><circle cx="14" cy="10" r=".9"/></svg><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg><svg viewBox="0 0 24 24"><path d="M12 3.5l1.6 4.4L18 9.5l-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6z"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18.5" cy="12" r=".6"/></svg></span></span><span class="st-tel-sticker"><span class="st-tel-sticker-txt">@<span data-pv="handle"></span></span></span><img class="st-tel-bas" src="/ambiance/profil/story-onglets.png" alt="" /></span><span class="st-tel-partage"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Story partagée</span></div></div><span class="pv-gains"><span class="st-gain"><strong data-pv="n-story"></strong>la story</span><span class="st-gain clair"><strong data-pv="n-scan"></strong>le scan du QR</span></span></div>
                       <h1 class="pa-titre">Ce que gagnent tes clients.</h1>
                       <p class="pa-sous">Les mêmes points partout sur Noctify. Tu n'as rien à régler.</p>
                       <div class="pv-regles">
@@ -3501,7 +3510,7 @@
 
                     <!-- 6 · Instagram -->
                     <section class="pa-etape pv" data-pas="6" data-mascotte="/mascotte/pose-4.webp" hidden>
-                      <div class="pv-scene pv-scene-3d sc-story"><div class="pv-3d"><div class="o3 o3-story"><span class="sy"><img src="/ambiance/bienvenue.webp" alt="" /><span class="sy-voile"></span><span class="sy-barres"><i></i><i></i></span><span class="sy-auteur"><i></i>ton.client</span><span class="sy-mention"><span class="sy-mention-txt">@<span data-pv="handle"></span></span></span><span class="sy-gain" data-pv="gain-story"></span></span><span class="o3-coeur c1">♥</span><span class="o3-coeur c2">♥</span></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-story"><div class="pv-3d"><div class="st-tel"><span class="st-tel-contenu"><img class="st-tel-photo" src="/ambiance/bienvenue.webp" alt="" /><span class="st-tel-voile"></span><img class="st-tel-barre" src="/ambiance/profil/barre-etat-blanche.png" alt="" /><span class="st-tel-haut"><svg class="st-tel-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span class="st-tel-outils"><b>Aa</b><svg viewBox="0 0 24 24"><path d="M15.5 3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6.5l7-7V7A3.5 3.5 0 0 0 17 3.5z"/><path d="M13.5 20.5v-3.5a3.5 3.5 0 0 1 3.5-3.5h3.5"/><circle cx="9" cy="10" r=".9"/><circle cx="14" cy="10" r=".9"/></svg><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg><svg viewBox="0 0 24 24"><path d="M12 3.5l1.6 4.4L18 9.5l-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6z"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18.5" cy="12" r=".6"/></svg></span></span><span class="st-tel-sticker"><span class="st-tel-sticker-txt">@<span data-pv="handle"></span></span></span><img class="st-tel-bas" src="/ambiance/profil/story-onglets.png" alt="" /></span><span class="st-tel-partage"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Story partagée</span></div></div><span class="st-gain"><strong data-pv="n-story"></strong>points</span></div>
                       <h1 class="pa-titre">Ton Instagram.</h1>
                       <p class="pa-sous">Le compte que tes clients mentionnent dans leur story.</p>
                       <label class="pv-champ pa-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.3" cy="6.7" r="1.1"/></svg><span class="pv-champ-txt"><span class="pv-lib">Compte Instagram</span><input id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@tonclub" /></span></label>
@@ -3521,7 +3530,7 @@
 
                     <!-- 5 · Ce qui vient d'etre construit -->
                     <section class="pa-etape pv" data-pas="7" data-mascotte="/mascotte/pose-5.webp" hidden>
-                      <div class="pv-scene pv-scene-3d sc-qr"><div class="pv-3d"><div class="o3 o3-qr"><span class="qr-carte"><img id="pa-qr-image" alt="" hidden /><span class="qr-attente" id="pa-affiche-attente">Préparation…</span></span><span class="qr-socle"></span><span class="o3-notif"><span class="o3-notif-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><b>En ligne</b><i>Tes clients peuvent scanner</i></span></span><span class="o3-grain g1"></span><span class="o3-grain g2"></span><span class="o3-grain g3"></span></div></div></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-affiche"><div class="pv-3d"><div class="ob-affiche"><p class="pa-affiche-attente" id="pa-affiche-attente">Préparation de ton affiche…</p><img class="pa-affiche" id="pa-affiche" alt="Ton affiche à imprimer" hidden /></div></div></div>
                       <p class="pv-etape pv-en-ligne"><i class="pv-live"></i>En ligne sur Noctify</p>
                       <h1 class="pa-titre">Tout est prêt.</h1>
                       <p class="pa-sous">Il ne reste qu'à coller ton affiche : à l'entrée, au bar, aux toilettes.</p>
@@ -8215,19 +8224,17 @@
           // preparation" pour quelque chose qui n'arrivera pas serait
           // une deuxieme reponse, et la mauvaise.
           $("#pa-affiche-attente").hidden = true;
-          $("#pa-qr-image").hidden = true;
+          $("#pa-affiche").hidden = true;
           $("#pa-affiche-lien").hidden = true;
           direParcours("Ce club n'a pas encore de code public : l'affiche arrivera plus tard, dans Réglages.", false);
           return;
         }
 
-        // Le QR seul, pas l'affiche entiere : c'est lui l'objet pose sur le socle.
-        // (L'affiche complete reste au telechargement, juste en dessous.)
-        var image = $("#pa-qr-image");
-        var qrSeul = $("#qr-telecharger").getAttribute("href");
-        image.setAttribute("src", qrSeul || source);
+        // Le src AVANT de demasquer : demasquer d'abord rendrait visible,
+        // le temps d'une image, l'element vide qu'on cherche a eviter.
+        $("#pa-affiche").setAttribute("src", source);
         $("#pa-affiche-attente").hidden = true;
-        image.hidden = false;
+        $("#pa-affiche").hidden = false;
         // L'image n'existait pas a la mesure : la scene se recalcule avec elle.
         pvAjusterScene();
         setTimeout(pvAjusterScene, 120);
@@ -8278,32 +8285,24 @@
         carte.querySelectorAll('[data-pv="segments"] i').forEach(function (seg, k) { seg.classList.toggle("on", k <= i); });
         relancerAnimation(carte, "pv-tap");
       }
-      /* La boutique en objets : un ticket pour la premiere recompense, des jetons
-         pour les suivantes. Trois au plus -- au-dela l'ecran se charge. */
+      /* La boutique de l'appli clubbeur, dans le telephone : la grille de la page
+         de l'etablissement, quatre cartes au plus. */
       function pvRendreBande() {
-        var zone = document.querySelector("[data-pv-reco]");
-        if (!zone) return;
+        var zones = document.querySelectorAll("[data-pv-grille]");
+        if (!zones.length) return;
         var choix = (PARCOURS.choix || []).filter(function (c) { return c.prise; });
         var avant = PV.bande;
-        if (!choix.length) {
-          zone.innerHTML = '<span class="ticket vide"><b>Ta boutique</b><i>Active une récompense</i></span>';
-          PV.bande = [];
-          return;
-        }
-        var tete = choix[0];
-        var neuf = avant && avant.indexOf(tete.titre) === -1;
-        zone.innerHTML =
-          '<span class="ticket' + (neuf ? " arrive" : "") + '">' +
-            '<span class="ticket-tete"><b>NOCTIFY</b><i>Bon à échanger</i></span>' +
-            '<span class="ticket-corps">' + (tete.foto ? '<img src="' + escapeHtml(tete.foto) + '" alt="" />' : "") +
-              "<b>" + escapeHtml(tete.titre || "") + "</b></span>" +
-            '<span class="ticket-perfo"></span>' +
-            '<span class="ticket-pied"><b>' + nb.format(Number(tete.points || 0)) + "</b> points</span>" +
-          "</span>" +
-          choix.slice(1, 3).map(function (c, i) {
-            return '<span class="jeton j' + (i + 1) + '"><b>' + nb.format(Number(c.points || 0)) + "</b><i>" +
-              escapeHtml((c.titre || "").split(" ")[0]) + "</i></span>";
-          }).join("");
+        var html = choix.length ? choix.slice(0, 4).map(function (c) {
+          var img = c.foto
+            ? '<img src="' + escapeHtml(c.foto) + '" alt="" />'
+            : "<em>" + escapeHtml((c.titre || "?").trim().charAt(0).toUpperCase()) + "</em>";
+          var neuve = avant && avant.indexOf(c.titre) === -1;
+          return '<span class="pv-mini-reco' + (neuve ? " arrive" : "") + '">' +
+            '<span class="pv-mini-img">' + img + "</span>" +
+            '<span class="pv-mini-lab"><b>' + escapeHtml(c.titre || "") + "</b><span>" + nb.format(Number(c.points || 0)) + " points</span></span>" +
+          "</span>";
+        }).join("") : '<p class="pv-bande-vide">Active une récompense.</p>';
+        zones.forEach(function (zone) { zone.innerHTML = html; });
         PV.bande = choix.map(function (c) { return c.titre; });
       }
 
@@ -8340,17 +8339,13 @@
         // toute facon ce que ca donnerait sur l'app ». L'ecran se reduit a la place qui
         // reste, sans descendre sous 170 px : en dessous on ne verrait plus rien. Si le
         // contenu est trop long (la liste des recompenses), c'est lui qui defile.
-        var place = Math.max(170, Math.min(340, reste - 14));
+        var place = Math.max(186, Math.min(320, reste - 20));
         objet.style.zoom = Math.min(1, place / Math.max(1, hauteur)).toFixed(3);
       }
 
       function pvSynchro() {
         var etab = etablissementCourant() || {};
         var nom = $("#pa-nom").value.trim() || etab.name || "";
-        // Grave sur la carte de membre : un nom long rapetisse plutot que d'etre coupe.
-        document.querySelectorAll(".vip-nom").forEach(function (el) {
-          el.style.fontSize = Math.max(12, Math.min(20, 20 - Math.max(0, (nom || "Ton établissement").length - 13) * .7)) + "px";
-        });
         var n = (PARCOURS.choix || []).filter(function (c) { return c.prise; }).length;
         pvTexte('[data-pv="nom"]', nom, "Ton établissement");
         pvTexte('[data-pv="ville"]', $("#pa-ville").value.trim() || etab.city || "", "Ta ville");
