@@ -68,8 +68,28 @@ async function session(email) {
     await pause(6000);
 
     let n = 0;
+    // Ce qu'une capture ne dit pas : un element plus large que l'ecran, une image
+    // cassee, un bouton sous le pied de page, un texte coupe.
+    const mesurer = () => page.evaluate(() => {
+      const W = window.innerWidth, H = window.innerHeight;
+      const pied = document.querySelector(".pa-pied")?.getBoundingClientRect().top ?? H;
+      const etape = document.querySelector(".pa-etape:not([hidden])");
+      const deborde = [...(etape ? etape.querySelectorAll("*") : [])].filter((e) => {
+        if (!e.getClientRects().length || e.closest("svg")) return false;
+        const r = e.getBoundingClientRect();
+        return r.width > 0 && (r.right > W + 1 || r.left < -1);
+      }).slice(0, 4).map((e) => (e.id || e.className || e.tagName).toString().slice(0, 40));
+      const images = [...document.images].filter((i) => i.complete && i.naturalWidth === 0 && i.getClientRects().length).map((i) => i.src.slice(-50));
+      const sousLePied = [...(etape ? etape.querySelectorAll("input, button") : [])]
+        .filter((e) => e.getClientRects().length && e.getBoundingClientRect().top > pied - 6)
+        .slice(0, 4).map((e) => (e.id || e.className).toString().slice(0, 40));
+      return { deborde, images, sousLePied };
+    });
+
     const capture = async (nom, attente = 1100) => {
       await pause(attente);
+      const m = await mesurer();
+      if (m.deborde.length || m.images.length || m.sousLePied.length) bilan.defauts = (bilan.defauts || []).concat([{ ecran: nom, ...m }]);
       const f = `${DOSSIER}/${String(++n).padStart(2, "0")}-${nom}.png`;
       await page.screenshot({ path: f });
       bilan.captures.push(f);

@@ -2680,8 +2680,10 @@
       .pv-scene::before { left: -80px; top: -110px; background: #ff7d6e; animation: pvNuage 16s ease-in-out infinite alternate; }
       .pv-scene::after { right: -90px; bottom: -120px; background: #9d8bff; animation: pvNuage 19s ease-in-out infinite alternate-reverse; }
       @keyframes pvNuage { from { transform: translate(0, 0) scale(1); } to { transform: translate(46px, 34px) scale(1.18); } }
-      .parcours.pv-clavier .pv-scene { height: 150px; margin-bottom: 14px; }
-      .parcours.pv-clavier .pv-scene > * { scale: .56; }
+      /* ⚠️ PLUS DE HAUTEUR FORCEE QUAND LE CLAVIER EST LA. Elle coupait le
+         telephone en deux sur un vrai iPhone : la scene etait bloquee a 150 px
+         pendant que l'objet gardait sa taille. pvAjusterScene() mesure la place
+         qui reste -- clavier compris -- et reduit le telephone lui-meme. */
       .parcours.pv-clavier .pv-scene .pv-pastille { display: none; }
       @keyframes pvFlotte { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
       @keyframes pvPop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
@@ -8617,6 +8619,10 @@
         if (window.visualViewport) {
           window.visualViewport.addEventListener("resize", function () {
             parcours.classList.toggle("pv-clavier", window.visualViewport.height < window.innerHeight * .78);
+            // La place disponible vient de changer : le telephone se remet a la
+            // bonne taille au lieu d'etre rogne par le clavier.
+            pvAjusterScene();
+            setTimeout(pvAjusterScene, 180);
           });
         }
         /* Les objets en 3D : ils se balancent tout seuls et suivent le doigt ou la
