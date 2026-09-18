@@ -3250,10 +3250,10 @@
         position: absolute; z-index: 6; left: 0; right: 0; top: 0; height: 30px; display: flex; align-items: center;
         justify-content: space-between; padding: 6px 14px 0 16px; color: inherit; pointer-events: none;
       }
-      .se-barre b { font-size: 11px; font-weight: 700; letter-spacing: -.02em; }
-      .se-barre > span { display: flex; align-items: center; gap: 4px; }
-      .se-barre svg { height: 9px; width: auto; fill: currentColor; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
-      .se-barre svg:nth-child(2) { fill: none; }
+      .se-barre b { font-size: 11.5px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+      .se-barre > span { display: flex; align-items: flex-end; gap: 5px; }
+      .se-barre svg { height: 10px; width: auto; fill: currentColor; stroke: none; }
+      .se-barre svg:nth-child(2) { height: 9px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
       .se-clair .se-barre { color: #111; }
       .se-hero ~ .se-barre { color: #fff; }
 
@@ -4506,7 +4506,7 @@
       import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
       import { fetchDashboardData, fallbackDashboardData } from "./dashboardData.js";
       import { getDashboardStats, getActiveRewards } from "./lib/dashboardStats.js";
-      import { renderQrPngDataUrl } from "./lib/tracking/qrCode.js";
+      import { renderQrPngDataUrl, qrNombreModules } from "./lib/tracking/qrCode.js";
       import { createClient } from "@supabase/supabase-js";
 
       /* Deuxieme connexion, en LECTURE seule, vers la base des clubbeurs.
@@ -6083,7 +6083,7 @@
          Noir sur blanc, une seule couleur d'accent : une affiche collee
          dans un couloir mal eclaire doit se lire de loin, et l'encre
          couleur coute cher au club. */
-      function dessinerAffiche(qrImage, nomClub, handle) {
+      function dessinerAffiche(qrImage, nomClub, handle, modules) {
         var L = 1240, H = 1754;
         var canvas = document.createElement("canvas");
         canvas.width = L; canvas.height = H;
@@ -6135,22 +6135,26 @@
         c.fill();
         c.drawImage(qrImage, cx + 45, cy + 45, taille, taille);
 
-        /* QUATRE CARRES IDENTIQUES, pas quatre equerres. Julien, 18/09/2026 :
-           « le quatrieme carre est bugue, mets-moi quatre carres bien carres ».
-           Les equerres se lisaient comme des coins casses, et celui du bas a
-           droite tombait sur le motif d'alignement du QR -- d'ou l'impression
-           d'un carre rate. Un carre plein d'angle, quatre fois le meme. */
+        /* QUATRE CARRES, DESSINES SUR LA GRILLE DU QR. Julien, 18/09/2026 :
+           « mets-moi quatre carres bien carres », puis « c'est mal dessine ».
+           Un carre pose a vue d'oeil ne tombe jamais juste a cote d'un QR : il
+           est trop gros, trop petit, ou decale d'un demi-module. Ils ont donc
+           la taille exacte d'un repere du QR (7 modules), l'epaisseur d'un
+           module, et se posent sur la grille -- les trois du haut et de
+           gauche encadrent les vrais reperes, le quatrieme complete le carre
+           en bas a droite, dans la marge blanche, sans toucher aux donnees. */
+        var mod = taille / (modules || 29);
+        var cote = mod * 7, trait = Math.max(6, mod);
+        var q0 = cx + 45 + mod * 2, q1 = cx + 45 + taille - mod * 2 - cote;
+        var r0 = cy + 45 + mod * 2, r1 = cy + 45 + taille - mod * 2 - cote;
         c.strokeStyle = CORAIL;
-        c.lineWidth = 10;
+        c.lineWidth = trait;
         c.lineJoin = "round";
-        var cote = 52, m = 26;
-        [[cx + m, cy + m], [cx + carton - m - cote, cy + m],
-         [cx + m, cy + carton - m - cote], [cx + carton - m - cote, cy + carton - m - cote]]
-          .forEach(function (e) {
-            c.beginPath();
-            c.roundRect(e[0], e[1], cote, cote, 12);
-            c.stroke();
-          });
+        [[q0, r0], [q1, r0], [q0, r1], [q1, r1]].forEach(function (e) {
+          c.beginPath();
+          c.roundRect(e[0] - trait, e[1] - trait, cote + trait * 2, cote + trait * 2, trait * 1.6);
+          c.stroke();
+        });
 
         c.fillStyle = BLANC;
         c.font = "800 44px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
@@ -6295,7 +6299,7 @@
           lien.href = pngQr;
           lien.download = "qr-noctify-" + String(code).toLowerCase() + ".png";
 
-          var affiche = dessinerAffiche(await chargerImage(pngQr), nomClub, handle);
+          var affiche = dessinerAffiche(await chargerImage(pngQr), nomClub, handle, qrNombreModules(url));
           $("#affiche-apercu").src = affiche;
           var lienAffiche = $("#affiche-telecharger");
           lienAffiche.href = affiche;
