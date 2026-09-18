@@ -127,8 +127,12 @@ const DEMO_CLIENTS = 210;
 const clientDemo = (n) =>
   `00000000-0000-4000-8000-${String((n % DEMO_CLIENTS) + 1).padStart(12, "0")}`;
 
-const PLATEFORMES = ["instagram", "instagram", "tiktok", "instagram", "youtube", "tiktok"];
-const FORMATS = ["story", "reel", "story", "post", "video", "story"];
+// ⚠️ INSTAGRAM SEUL. Julien, 18/09/2026 : « pourquoi tu mets TikTok, YouTube ?
+// En fait il n'y a que Instagram ». Les autres reseaux restent possibles en base,
+// mais la demonstration ne doit montrer que ce que le produit fait vraiment.
+const PLATEFORMES = ["instagram"];
+// Des stories, comme dans la vraie appli : les Reels et TikTok en ont ete retires.
+const FORMATS = ["story"];
 
 const fallbackSubmissions = (() => {
   const out = [];
@@ -154,7 +158,8 @@ const fallbackSubmissions = (() => {
         url: `https://viralnight.example/contenu/${n}`,
         views_count: vues,
         // 15 pts pour 1 000 vues, le bareme par defaut du produit.
-        points_awarded: statut === "validated" ? Math.max(10, Math.round((vues / 1000) * 15)) : 0,
+        // Une story vaut 100 points, point final : c'est le bareme impose a tous.
+        points_awarded: statut === "validated" ? 100 : 0,
         status: statut,
         submitted_at: heureDeNuit(recul, i),
       });

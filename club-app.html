@@ -3346,6 +3346,33 @@
       .se-boutique { top: 13%; padding: 4% 7% 0; }
       .se-grille { gap: 11px 8px; }
       .se-corps { padding: 12px 7%; }
+
+      /* -- Les points imposes (18/09/2026) : deux cartes, deux gestes, rien a regler. -- */
+      .pts-carte {
+        position: relative; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; padding: 20px;
+        border-radius: 22px; overflow: hidden; color: #fff; isolation: isolate;
+      }
+      .pts-story { background: radial-gradient(90% 120% at 0% 0%, #3b2030, #121216 70%); }
+      .pts-scan { background: radial-gradient(90% 120% at 100% 0%, #1e2a3a, #121216 70%); }
+      .pts-txt { flex: 1; min-width: 0; }
+      .pts-sur { display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.62); }
+      .pts-nombre { display: block; margin: 4px 0 0; font-family: var(--titre); font-size: 52px; font-weight: 900; letter-spacing: -.05em; line-height: .95; }
+      .pts-unite { display: block; margin-top: 2px; font-size: 13.5px; font-weight: 650; color: rgba(255,255,255,.8); }
+      .pts-detail { margin: 12px 0 0; font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,.6); }
+      .pts-visuel { flex: 0 0 auto; width: 92px; display: grid; place-items: center; }
+      .pts-visuel-qr { color: #fff; opacity: .9; }
+      .pts-visuel-qr svg { width: 74px; height: 74px; }
+      .pts-pied { margin: 4px 2px 0; font-size: 12.5px; color: var(--ink3); }
+      .pts-story .pts-visuel { position: relative; height: 128px; }
+      /* La story, dessinee : une vignette verticale avec la mention et le gain. */
+      .pts-story .pts-visuel::before {
+        content: ""; position: absolute; inset: 0; border-radius: 14px;
+        background: url(/ambiance/bienvenue.webp) center / cover; box-shadow: 0 12px 26px -14px rgba(0,0,0,.8);
+      }
+      .pts-story .pts-visuel::after {
+        content: "+100"; position: absolute; left: 50%; bottom: 10px; translate: -50% 0; padding: 5px 10px; border-radius: 99px;
+        background: #de3131; color: #fff; font-size: 12px; font-weight: 800; box-shadow: 0 8px 16px -6px rgba(222,49,49,.8);
+      }
     </style>
   </head>
   <body>
@@ -3356,6 +3383,14 @@
         endroit. Connecte-toi avec ton compte club. Sur ton téléphone, l'appli s'ouvre
         en plein écran.
       </p>
+
+      <!-- ⚠️ UN SEUL CHAMP DE FICHIER, PERMANENT. Julien, 18/09/2026 : « le bouton
+           pour envoyer les photos, ca ne marche pas ». Sur iPhone, un <input type="file">
+           cree au moment du clic (puis retire) perd son evenement `change` : quand iOS
+           rend la main apres la photothèque, la page a pu etre rechargee et l'element
+           n'existe plus. Un champ unique, present des le depart, survit a l'aller-retour.
+           `capture` n'est PAS pose : le gerant doit pouvoir choisir une photo existante. -->
+      <input type="file" id="champ-photo" accept="image/*,image/heic,image/heif" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0" />
 
       <div class="stage">
         <!-- Le degrade du logo Instagram, declare une seule fois pour
@@ -4461,26 +4496,43 @@
             </div>
 
             <div class="vue" id="vue-bareme">
-              <h1 class="ecran-titre">Ton barème</h1>
-              <p class="ecran-sous">Ce que rapporte chaque publication de tes clients.</p>
-              <div class="vitrine" id="bareme-vitrine"></div>
+              <h1 class="ecran-titre">Les points</h1>
+              <p class="ecran-sous">Ce que gagnent tes clients chez toi. Les mêmes montants partout sur Noctify.</p>
 
-              <!-- Meme periode que les deux autres onglets : choisirPeriode()
-                   balaie tous les `.periode` de la page. -->
-              <div class="periodes" role="tablist" aria-label="Période">
-                <button type="button" class="periode" role="tab" data-jours="7">7 jours</button>
-                <button type="button" class="periode" role="tab" data-jours="30">30 jours</button>
-                <button type="button" class="periode" role="tab" data-jours="90">3 mois</button>
+              <!-- ⚠️ PLUS DE BAREME A REGLER. Julien, 18/09/2026 : « retire le bareme,
+                   on leur impose un nombre de points, fais juste un truc esthetique pour
+                   leur dire que ca rapporte ce nombre de points ». Les deux gestes qui
+                   comptent, en grand, avec ce que le client voit dans son appli. -->
+              <div class="pts-carte pts-story">
+                <div class="pts-txt">
+                  <span class="pts-sur">Une story qui te mentionne</span>
+                  <strong class="pts-nombre" id="pts-story">100</strong>
+                  <span class="pts-unite">points pour ton client</span>
+                  <p class="pts-detail">Il publie, te tague, et Noctify crédite ses points 24 h après.</p>
+                </div>
+                <div class="pts-visuel" id="pts-visuel-story"></div>
               </div>
 
-              <div class="reco-bilan" id="bareme-bilan"></div>
+              <div class="pts-carte pts-scan">
+                <div class="pts-txt">
+                  <span class="pts-sur">Un scan du QR sur place</span>
+                  <strong class="pts-nombre" id="pts-scan">20</strong>
+                  <span class="pts-unite">points pour ton client</span>
+                  <p class="pts-detail">À l'entrée ou au bar, une fois par soirée.</p>
+                </div>
+                <div class="pts-visuel pts-visuel-qr" aria-hidden="true">
+                  <svg viewBox="0 0 29 29"><path d="M1 1h9v9H1zM19 1h9v9h-9zM1 19h9v9H1z" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="M4 4h3v3H4zM22 4h3v3h-3zM4 22h3v3H4zM13 2h2v4h-2zM12 8h4v2h-4zM13 12h3v3h-3zM18 13h4v2h-4zM24 12h3v4h-3zM12 18h2v3h-2zM16 17h3v3h-3zM21 19h3v2h-3zM25 21h2v6h-2zM13 23h4v2h-4zM18 24h3v3h-3zM2 13h3v2H2zM7 12h3v4H7z"/></svg>
+                </div>
+              </div>
 
-              <div id="bareme-bandeau"></div>
+              <p class="pts-pied">Tu n'as rien à régler : ces montants sont les mêmes pour tous les établissements.</p>
 
-              <div class="carte" id="bareme-liste"></div>
-
-              <p class="fiche-msg" id="bareme-msg"></p>
-              <button type="button" class="bouton pleine" id="bareme-enregistrer">Enregistrer le barème</button>
+              <div hidden>
+                <div id="bareme-vitrine"></div>
+                <div class="periodes"><button type="button" class="periode" data-jours="7"></button><button type="button" class="periode" data-jours="30"></button><button type="button" class="periode" data-jours="90"></button></div>
+                <div id="bareme-bilan"></div><div id="bareme-bandeau"></div><div id="bareme-liste"></div>
+                <p id="bareme-msg"></p><button type="button" id="bareme-enregistrer"></button>
+              </div>
             </div>
 
             <!-- ================= QR CODE =================
@@ -4546,8 +4598,8 @@
                    Le grid-template-columns de .tabs suit le nombre
                    d'onglets, il n'y a rien d'autre a changer. -->
               <button class="tab" type="button" data-tab="bareme">
-                <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg>
-                <span class="lbl">Barème</span>
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2.5 0 0 1 2.5-2.5h.6a2.2 2.2 0 0 1 0 4.4h-1.2a2.2 2.2 0 0 0 0 4.4h.6a2.5 2.5 0 0 0 2.5-2.5"/></svg>
+                <span class="lbl">Points</span>
               </button>
               <button class="tab" type="button" data-tab="reglages">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l1.8-1.5-2-3.4-2.2.7a7.6 7.6 0 0 0-2.6-1.5L14 2.6h-4l-.4 2.2a7.6 7.6 0 0 0-2.6 1.5l-2.2-.7-2 3.4L4.6 10.5a7.6 7.6 0 0 0 0 3L2.8 15l2 3.4 2.2-.7c.76.65 1.64 1.16 2.6 1.5l.4 2.2h4l.4-2.2a7.6 7.6 0 0 0 2.6-1.5l2.2.7 2-3.4z"/></svg>
@@ -6517,7 +6569,7 @@
                 '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts" +
                   " · " + nb.format(prises) + (prises > 1 ? " prises" : " prise") +
                   (stock ? " · " + stock : "") + "</span>" +
-                '<span class="reco-courbe" data-courbe="' + escapeHtml(r.id) + '" aria-hidden="true"></span>' +
+
               "</span>" +
             "</button>"
           );
@@ -7547,24 +7599,29 @@
          phototheque, mais Safari iOS ne declenche pas toujours `change` sur un
          element absent du document : la photo choisie ne part jamais, sans
          erreur. On le pose, invisible, le temps du choix. */
-      function poserChampFichier(champ) {
-        champ.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0";
-        document.body.appendChild(champ);
+      /* Le champ unique de la page. Une seule promesse a la fois : si le gerant
+         relance un choix sans avoir fini le precedent, l'ancien se resout a vide
+         plutot que de rester suspendu. */
+      var attentePhoto = null;
+      (function brancherChampPhoto() {
+        var champ = document.getElementById("champ-photo");
         champ.addEventListener("change", function () {
-          setTimeout(function () { if (champ.parentNode) champ.parentNode.removeChild(champ); }, 60000);
-        }, { once: true });
-        champ.click();
-      }
+          var fichier = (champ.files && champ.files[0]) || null;
+          var promesse = attentePhoto;
+          attentePhoto = null;
+          // On vide le champ : choisir DEUX FOIS la meme photo doit marcher.
+          champ.value = "";
+          if (promesse) promesse(fichier);
+        });
+      })();
 
       function demanderUneImage() {
         return new Promise(function (resolve) {
-          var champ = document.createElement("input");
-          champ.type = "file";
-          champ.accept = "image/*";
-          champ.addEventListener("change", function () {
-            resolve((champ.files && champ.files[0]) || null);
-          });
-          poserChampFichier(champ);
+          if (attentePhoto) attentePhoto(null);
+          attentePhoto = resolve;
+          var champ = document.getElementById("champ-photo");
+          champ.value = "";
+          champ.click();
         });
       }
 
@@ -8048,16 +8105,13 @@
          n'a pas encore d'id -- certaines seront creees a l'etape
          suivante. On retient donc l'URL dans le choix, et
          enregistrerRecompensesParcours l'ecrit avec le reste. */
-      function choisirPhotoRecompense(i) {
+      async function choisirPhotoRecompense(i) {
         var etab = etablissementCourant();
         var choix = PARCOURS.choix[i];
         if (!etab || !choix) return;
 
-        var champ = document.createElement("input");
-        champ.type = "file";
-        champ.accept = "image/*";
-        champ.addEventListener("change", async function () {
-          var fichier = champ.files && champ.files[0];
+        {
+          var fichier = await demanderUneImage();
           if (!fichier) return;
 
           var tuile = $('.pa-tuile[data-i="' + i + '"]');
@@ -8084,8 +8138,7 @@
             if (bouton) bouton.classList.remove("occupe");
             direParcours("Photo non envoyée : " + ((erreur && erreur.message) || "réessaie dans un instant"), true);
           }
-        });
-        poserChampFichier(champ);
+        }
       }
 
       function basculerChoix(i) {
@@ -8477,7 +8530,9 @@
          Voir le commentaire au-dessus des etapes dans le HTML. pvSynchro() recopie
          l'etat des champs dans les scenes : elle est appelee a chaque frappe et apres
          chaque rendu du parcours (photos, boutique, Instagram, changement d'etape). */
-      var PV_POINTS = { story: 100, scan: 15 };
+      // Imposes a tous les clubs (Julien, 18/09/2026) : « une story, 100 points ;
+      // un scan du QR, 20 points ». Ni le gerant ni le parcours ne les reglent.
+      var PV_POINTS = { story: 100, scan: 20 };
       var PV = { bande: null };
 
       function pvPhotos() {

@@ -75,7 +75,7 @@ function hasard(min, max) {
       // Une partie des scans publie une story ; les vues suivent une loi large.
       if (Math.random() < 0.42) {
         const vues = hasard(300, 4200) + (Math.random() < 0.08 ? hasard(6000, 24000) : 0);
-        const points = 100 + Math.round(vues / 1000) * 25;
+        const points = 100; // impose a tous : une story = 100 points
         stories.push(`('${etab.id}', '${client}', 'instagram', 'story', 'https://instagram.com/stories/demo/${Math.random().toString(36).slice(2, 10)}', ${vues}, ${points}, 'validated', '${new Date(t.getTime() + 36e5).toISOString()}', 'customer_qr')`);
       }
       if (recompenses.length && Math.random() < 0.16) {
