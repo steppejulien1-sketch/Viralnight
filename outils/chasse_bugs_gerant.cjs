@@ -107,7 +107,7 @@ async function session(email) {
             i.dispatchEvent(new Event("change", { bubbles: true }));
           }
         });
-        p.querySelectorAll('input[placeholder="@leclub"]').forEach((i) => {
+        p.querySelectorAll('#pa-handle').forEach((i) => {
           if (i.getClientRects().length && !i.value) {
             i.value = "chasse_gerant_test";
             i.dispatchEvent(new Event("input", { bubbles: true }));
