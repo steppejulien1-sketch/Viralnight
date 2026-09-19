@@ -1204,6 +1204,7 @@
       /* Colle en bas tant que la place le permet : les champs tombent
          sous le pouce, pas au milieu de l'ecran. */
       .accueil-actions { width: 100%; display: grid; gap: 10px; margin-top: 26px; }
+      .accueil-actions[hidden] { display: none; }
       /* Le separateur porte l'espace : sans lui, "ou par email" est colle
          au bouton Google et le formulaire commence sans qu'on l'ait vu
          commencer. */
@@ -3133,7 +3134,7 @@
       /* -- La barre du bas, comme chez les clubbeurs -- */
       .tabs {
         background: transparent; border-top: 0; -webkit-backdrop-filter: none; backdrop-filter: none;
-        grid-template-columns: repeat(4, 1fr); padding: 0 18px 12px;
+        grid-template-columns: repeat(3, 1fr); padding: 0 18px 12px;
       }
       .tabs::before {
         content: ""; position: absolute; z-index: -1; left: 14px; right: 14px; top: 10px; bottom: 22px; border-radius: 999px;
@@ -3347,32 +3348,143 @@
       .se-grille { gap: 11px 8px; }
       .se-corps { padding: 12px 7%; }
 
-      /* -- Les points imposes (18/09/2026) : deux cartes, deux gestes, rien a regler. -- */
-      .pts-carte {
-        position: relative; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; padding: 20px;
-        border-radius: 22px; overflow: hidden; color: #fff; isolation: isolate;
+      /* ---- LE CODE A SIX CHIFFRES (19/09/2026) ----
+         Repris de l'appli clubbeur (.ob-code) : six cases dessinees, et un
+         champ transparent etale par-dessus qui recoit vraiment la frappe.
+         C'est ce qui donne le collage, l'auto-remplissage iOS et le clavier
+         numerique sans coder six champs qui se passent le focus. */
+      .cd-bloc { display: block; margin-top: 4px; text-align: center; }
+      .cd-bloc[hidden] { display: none; }
+      /* L'ecran du compte pendant l'attente du code : le titre, le logo et
+         l'argumentaire s'effacent. On ne vend plus rien a quelqu'un qui a
+         deja donne son adresse -- et sur un telephone ils poussaient les
+         six cases sous le pli. */
+      .pa-etape.en-code > .pa-titre,
+      .pa-etape.en-code > .pa-logo,
+      .pa-etape.en-code > .pa-sous { display: none; }
+      .pa-etape.en-code .cd-bloc { margin-top: 8vh; }
+      .cd-titre { margin: 0; font-family: var(--titre); font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); }
+      .cd-sous { margin: 8px 0 0; font-size: 14.5px; font-weight: 500; color: var(--ink3); line-height: 1.45; }
+      .cd-sous b { color: var(--ink); font-weight: 700; word-break: break-all; }
+      .cd-cases { position: relative; display: flex; justify-content: center; gap: 7px; width: max-content; margin: 26px auto 18px; }
+      .cd-case {
+        display: grid; place-items: center; width: 40px; height: 50px; border-radius: 12px;
+        background: #f3f3f5; box-shadow: inset 0 0 0 1px rgba(15,17,20,.1);
+        font-family: var(--chiffre); font-size: 22px; font-weight: 700; color: var(--ink);
       }
-      .pts-story { background: radial-gradient(90% 120% at 0% 0%, #3b2030, #121216 70%); }
-      .pts-scan { background: radial-gradient(90% 120% at 100% 0%, #1e2a3a, #121216 70%); }
-      .pts-txt { flex: 1; min-width: 0; }
-      .pts-sur { display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.62); }
-      .pts-nombre { display: block; margin: 4px 0 0; font-family: var(--titre); font-size: 52px; font-weight: 900; letter-spacing: -.05em; line-height: .95; }
-      .pts-unite { display: block; margin-top: 2px; font-size: 13.5px; font-weight: 650; color: rgba(255,255,255,.8); }
-      .pts-detail { margin: 12px 0 0; font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,.6); }
-      .pts-visuel { flex: 0 0 auto; width: 92px; display: grid; place-items: center; }
-      .pts-visuel-qr { color: #fff; opacity: .9; }
-      .pts-visuel-qr svg { width: 74px; height: 74px; }
-      .pts-pied { margin: 4px 2px 0; font-size: 12.5px; color: var(--ink3); }
-      .pts-story .pts-visuel { position: relative; height: 128px; }
-      /* La story, dessinee : une vignette verticale avec la mention et le gain. */
-      .pts-story .pts-visuel::before {
-        content: ""; position: absolute; inset: 0; border-radius: 14px;
-        background: url(/ambiance/bienvenue.webp) center / cover; box-shadow: 0 12px 26px -14px rgba(0,0,0,.8);
+      .cd-case:nth-of-type(3) { margin-right: 10px; }
+      .cd-case.rempli { background: #fff; box-shadow: inset 0 0 0 1.5px rgba(15,17,20,.45); }
+      .cd-cases:focus-within .cd-case.curseur { box-shadow: inset 0 0 0 2px var(--ink); }
+      .cd-cases input {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        margin: 0; padding: 0; border: 0; outline: 0; background: transparent;
+        color: transparent; -webkit-text-fill-color: transparent; caret-color: transparent;
+        font-size: 16px; letter-spacing: 1.2em;
       }
-      .pts-story .pts-visuel::after {
-        content: "+100"; position: absolute; left: 50%; bottom: 10px; translate: -50% 0; padding: 5px 10px; border-radius: 99px;
-        background: #de3131; color: #fff; font-size: 12px; font-weight: 800; box-shadow: 0 8px 16px -6px rgba(222,49,49,.8);
+      .cd-cases input::selection { background: transparent; }
+      .cd-cases.faux { animation: cd-secoue .42s cubic-bezier(.36,.07,.19,.97); }
+      @keyframes cd-secoue {
+        10%, 90% { translate: -1px 0; }
+        20%, 80% { translate: 3px 0; }
+        30%, 50%, 70% { translate: -6px 0; }
+        40%, 60% { translate: 6px 0; }
       }
+      @media (prefers-reduced-motion: reduce) { .cd-cases.faux { animation: none; } }
+      .cd-liens { display: flex; justify-content: center; gap: 18px; margin-top: 14px; }
+      #cd-msg { text-align: center; }
+
+      /* ---- LES REGLAGES, REPRIS SUR L'APPLI DES CLUBBEURS (19/09/2026) ----
+         Meme structure qu'app-preview.html (.pf-section / .pf-liste /
+         .pf-item) : un titre de bloc gras avec son icone, une carte blanche
+         au liseré fin, et dedans des lignes separees par un filet qui ne
+         touche pas les bords. L'icone est au TRAIT, sans tuile grise : c'est
+         le titre et sa phrase qui portent la ligne.
+         Les tailles sont en px ici, pas en calc(x * var(--u)) : club-app.html
+         n'a pas l'echelle variable de l'appli clubbeur. */
+      .pf-section { margin: 26px 0 0; }
+      .pf-section-titre {
+        display: flex; align-items: center; gap: 9px; margin: 0 0 10px 2px;
+        font-family: var(--titre); font-size: 19px; font-weight: 800;
+        letter-spacing: -.02em; line-height: 1.2; color: var(--ink);
+      }
+      .pf-section-titre svg {
+        flex: 0 0 auto; width: 20px; height: 20px; fill: none; stroke: var(--ink);
+        stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+      }
+      .pf-liste {
+        margin: 0; border-radius: 18px; overflow: hidden;
+        background: #fff; box-shadow: inset 0 0 0 1px #e8e8ee;
+      }
+      .pf-item {
+        position: relative; width: 100%;
+        display: grid; grid-template-columns: 26px 1fr 16px; align-items: center; column-gap: 15px;
+        padding: 15px 16px 15px 17px; border: 0; background: transparent;
+        color: var(--ink); font-family: inherit; cursor: pointer; text-align: left;
+        text-decoration: none;
+      }
+      /* Le filet se pose sur CHAQUE ligne puis se retire de la premiere :
+         la ligne Instagram vit dans son propre conteneur (elle se
+         reconstruit), donc `.pf-item + .pf-item` ne l'atteindrait pas. */
+      .pf-item::before {
+        content: ""; position: absolute; top: 0; left: 17px; right: 16px; height: 1px; background: #ececf1;
+      }
+      .pf-liste > .pf-item:first-child::before,
+      .pf-liste > *:first-child > .pf-item:first-child::before { display: none; }
+      .pf-item:active { background: #f4f4f7; }
+      .pf-item[disabled] { opacity: .45; cursor: default; }
+      .pf-item-inerte { cursor: default; }
+      .pf-item[hidden] { display: none; }
+      .pf-item-ico {
+        width: 26px; height: 26px; fill: none; stroke: var(--ink);
+        stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+      }
+      /* Le logo Instagram garde ses couleurs : c'est une marque, pas une
+         icone d'interface. Il arrive dans un <span>, pas en <svg>. */
+      .pf-item-ico.ico-instagram { display: grid; place-items: center; background: none; stroke: none; }
+      .pf-item-ico.ico-instagram .logo-ig { width: 24px; height: 24px; }
+      .pf-item-txt { min-width: 0; }
+      .pf-item-txt strong { display: block; font-size: 15px; font-weight: 750; letter-spacing: -.01em; line-height: 1.25; }
+      .pf-item-txt > span { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.4; color: var(--ink3); }
+      .pf-item-chev { width: 15px; height: 15px; fill: none; stroke: var(--ink3); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      /* L'etat a droite (Instagram) prend la place du chevron. */
+      .pf-item-etat { justify-self: end; font-size: 12px; font-weight: 700; white-space: nowrap; }
+      .pf-item-etat.actif { color: #127a45; }
+      .pf-item-etat.absent { color: var(--accent-fort); }
+      .pf-item-etat + .pf-item-chev { display: none; }
+      /* Se deconnecter en rouge, comme cote clubbeur. "Se connecter" ne
+         l'est pas : ce n'est pas une sortie. */
+      .pf-item-sortie .pf-item-txt strong, .pf-item-sortie .pf-item-ico { color: var(--accent-fort); stroke: var(--accent-fort); }
+      .pf-item-entree .pf-item-txt strong, .pf-item-entree .pf-item-ico { color: var(--ink); stroke: var(--ink); }
+      .reglages-pied { margin: 26px 0 0; text-align: center; font-size: 11.5px; color: var(--ink3); }
+
+      /* -- Ce que les points rapportent, en tete de la Boutique (19/09/2026) --
+         Deux tuiles claires, dans la meme famille que les .kpi du tableau de
+         bord : le chiffre est la seule chose coloree de l'ecran, donc c'est
+         lui qu'on voit en arrivant. Elles ne se touchent pas -- il n'y a
+         rien a regler ici. */
+      .pts-sec {
+        margin: 2px 2px 9px; font-family: var(--titre); font-size: 15px; font-weight: 800;
+        letter-spacing: -.015em; color: var(--ink);
+      }
+      .pts-paire { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 8px; }
+      .pts-mini {
+        position: relative; padding: 14px 14px 15px; border-radius: 16px;
+        background: #fff; border: 1px solid #e8e8ee;
+      }
+      .pts-mini-ico {
+        display: grid; place-items: center; width: 30px; height: 30px; margin-bottom: 9px;
+        border-radius: 9px; background: #f4f4f7;
+      }
+      .pts-mini-ico svg { width: 17px; height: 17px; fill: none; stroke: #7c7c86; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .pts-mini-n {
+        display: flex; align-items: baseline; gap: 4px;
+        font-family: var(--titre); font-size: 34px; font-weight: 900; letter-spacing: -.045em; line-height: 1;
+        color: var(--accent-fort);
+      }
+      .pts-mini-n i { font-family: var(--sans); font-size: 13px; font-style: normal; font-weight: 800; letter-spacing: 0; }
+      .pts-mini-quoi { display: block; margin-top: 7px; font-size: 12.5px; font-weight: 650; color: var(--ink); line-height: 1.3; }
+      .pts-mini-note { display: block; margin-top: 2px; font-size: 11.5px; color: var(--ink3); }
+      .pts-pied { margin: 0 2px 16px; font-size: 12px; line-height: 1.45; color: var(--ink3); }
     </style>
   </head>
   <body>
@@ -3590,7 +3702,7 @@
                     <p class="pa-compteur">
                       <i>Étape</i>
                       <b id="pa-compteur-n">01</b>
-                      <span>/ 07</span>
+                      <span>/ 06</span>
                     </p>
                   </div>
 
@@ -3676,7 +3788,43 @@
                           <p class="ac-aide" id="porte-form-msg"></p>
                         </form>
                         <p class="ac-aide" id="accueil-msg"></p>
+
+                        <!-- ⚠️ LA SEULE PORTE VERS LA DEMONSTRATION (19/09/2026).
+                             Julien : « mets des données fictives même quand on n'a
+                             pas de compte ». Elles etaient deja la -- derriere cet
+                             ecran, et rien n'y menait : `.pa-arrivee .pa-tete`
+                             masque toute la barre du haut sur l'etape 1, donc le
+                             bouton « Passer » du parcours n'existe pas ici. Un
+                             gerant qui n'avait pas recu son e-mail restait enferme
+                             sur ce seul ecran, sans onglets, sans retour. -->
+                        <button type="button" class="ac-bascule" id="accueil-demo">Voir l'appli avec des chiffres d'exemple</button>
                       </div>
+
+                      <!-- ⚠️ LE CODE A SIX CHIFFRES, COMME CHEZ LES CLUBBEURS
+                           (19/09/2026). Julien : « je peux pas créer de compte ».
+                           Le lien magique seul ne suffit pas sur un telephone :
+                           l'e-mail s'ouvre dans Mail, le lien rouvre Safari dans
+                           une AUTRE pile que l'appli installee, et on revient sur
+                           l'ecran de depart sans rien comprendre. L'appli clubbeur
+                           avait exactement ce probleme et le code l'a reglee.
+                           Le lien continue de marcher : l'e-mail porte les deux
+                           (outils/emails/connexion.html, {{ .Token }} et
+                           {{ .ConfirmationURL }}).
+                           ⚠️ LONGUEUR_CODE ici et mailer_otp_length dans la base
+                           B2B bougent ensemble, ou plus aucun code ne passe. -->
+                      <form class="cd-bloc" id="porte-code" hidden>
+                        <p class="cd-titre">Ton code</p>
+                        <p class="cd-sous">Envoyé à <b id="cd-adresse">—</b>. Il arrive en quelques secondes.</p>
+                        <div class="cd-cases" id="cd-cases">
+                          <input id="cd-champ" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" enterkeyhint="done" aria-label="Code reçu par e-mail" />
+                        </div>
+                        <p class="ac-aide" id="cd-msg"></p>
+                        <button type="submit" class="ac-btn ac-btn-marque" id="cd-valider" disabled>Continuer</button>
+                        <div class="cd-liens">
+                          <button type="button" class="ac-bascule" id="cd-renvoyer">Renvoyer le code</button>
+                          <button type="button" class="ac-bascule" id="cd-changer">Changer d'adresse</button>
+                        </div>
+                      </form>
                     </section>
 
                     <!-- ============ LE PARCOURS, TROISIEME VERSION (17/09/2026) ============
@@ -3975,6 +4123,35 @@
             <div class="vue" id="vue-recompenses">
               <h1 class="ecran-titre">Boutique de récompenses</h1>
               <p class="ecran-sous">Ce que tes clients peuvent échanger contre leurs points.</p>
+
+              <!-- ⚠️ CE QUE LES POINTS RAPPORTENT, ICI ET PLUS DANS UN ONGLET.
+                   Julien, 19/09/2026 : « supprime l'onglet point mais par contre
+                   indique dans l'onglet boutique combien les points rapportent ».
+                   C'est le bon endroit : on regle un prix en points juste en
+                   dessous, et on ne peut pas le regler sans savoir a quelle
+                   vitesse le client les accumule. Deux chiffres, rien a saisir --
+                   les montants sont les memes pour tous les etablissements. -->
+              <p class="pts-sec">Ce que tes clients gagnent chez toi</p>
+              <div class="pts-paire">
+                <div class="pts-mini">
+                  <span class="pts-mini-ico" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.3" cy="6.7" r="1.15"/></svg>
+                  </span>
+                  <strong class="pts-mini-n"><span id="pts-story">100</span><i>pts</i></strong>
+                  <span class="pts-mini-quoi">Une story qui te mentionne</span>
+                  <span class="pts-mini-note">Créditée 24 h après</span>
+                </div>
+                <div class="pts-mini">
+                  <span class="pts-mini-ico" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M3.5 7.5v-2A2 2 0 0 1 5.5 3.5h2M16.5 3.5h2a2 2 0 0 1 2 2v2M20.5 16.5v2a2 2 0 0 1-2 2h-2M7.5 20.5h-2a2 2 0 0 1-2-2v-2"/><rect x="7.8" y="7.8" width="3.4" height="3.4" rx=".6"/><rect x="12.8" y="7.8" width="3.4" height="3.4" rx=".6"/><rect x="7.8" y="12.8" width="3.4" height="3.4" rx=".6"/><path d="M12.8 12.8h1.2v1.2h-1.2zM15 15h1.2v1.2H15z"/></svg>
+                  </span>
+                  <strong class="pts-mini-n"><span id="pts-scan">20</span><i>pts</i></strong>
+                  <span class="pts-mini-quoi">Un scan du QR sur place</span>
+                  <span class="pts-mini-note">Une fois par soirée</span>
+                </div>
+              </div>
+              <p class="pts-pied">Tu n'as rien à régler : ces montants sont les mêmes pour tous les établissements. C'est ce que tes clients dépensent ci-dessous.</p>
+
               <div class="vitrine" id="reco-vitrine"></div>
 
               <!-- ⚠️ LA MEME PERIODE QUE LE TABLEAU DE BORD, littéralement.
@@ -3997,6 +4174,18 @@
             </div>
 
             <!-- ================= REGLAGES ================= -->
+            <!-- ⚠️ REPRIS SUR L'APPLI DES CLUBBEURS (19/09/2026). Julien :
+                 « les parametres, copie ceux qu'on a fait pour l'autre app,
+                 copie le style ».
+                 Meme grammaire qu'app-preview.html : des blocs TITRES (icone
+                 + titre gras), une carte blanche par bloc, et dans la carte
+                 des lignes qui portent chacune une icone au trait, un titre,
+                 UNE phrase qui dit ce qu'il y a derriere, un chevron. La
+                 phrase nomme, elle n'encourage pas.
+                 Avant : quatre lignes muettes dans deux cartes sans titre,
+                 et la moitie basse de l'ecran vide.
+                 Les identifiants sont ceux d'avant : rendreReglages(),
+                 majBoutonCompte() et les gestionnaires n'ont pas bouge. -->
             <div class="vue" id="vue-reglages">
               <h1 class="ecran-titre">Réglages</h1>
               <p class="ecran-sous" id="reglages-compte">—</p>
@@ -4014,71 +4203,69 @@
                 <svg class="reglage-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
               </button>
 
-              <!-- UNE carte pour le club, une pour le compte. Trois titres
-                   de section pour cinq lignes, c'etait de l'echafaudage :
-                   les lignes se suffisent, elles portent deja leur nom.
-                   Instagram redevient une ligne parmi les autres, avec son
-                   etat a droite -- il n'avait pas besoin d'une carte a lui
-                   seul. -->
-              <div class="carte" style="padding:1px 14px">
-                <div id="reglages-instagram">
-                  <div class="reglage-ligne"><span class="reglage-txt"><strong>Instagram</strong><span>Vérification…</span></span></div>
+              <section class="pf-section">
+                <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12v8h15v-8"/><path d="M3 10 5 4h14l2 6c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4S3 11.4 3 10z"/><path d="M10 20v-4.5h4V20"/></svg>Mon établissement</h2>
+                <div class="pf-liste">
+                  <button type="button" class="pf-item" data-va="qr">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>
+                    <span class="pf-item-txt"><strong>Affiche et QR code</strong><span>À imprimer et coller à l'entrée, au bar, aux toilettes.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                  <!-- La ligne Instagram est reconstruite par rendreReglages() :
+                       son etat change (absent, connecte, detection en panne). -->
+                  <div id="reglages-instagram">
+                    <div class="pf-item pf-item-inerte">
+                      <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.3" cy="6.7" r="1.15"/></svg>
+                      <span class="pf-item-txt"><strong>Instagram</strong><span>Vérification…</span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                  <button type="button" class="pf-item" id="reglages-installation">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.6v8.8M7.6 12h8.8"/></svg>
+                    <span class="pf-item-txt"><strong>Refaire l'installation</strong><span>Repasser les écrans de départ : fiche, photos, boutique.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
                 </div>
-                <button type="button" class="reglage-lien" data-va="qr">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg></span>
-                  <span class="reglage-txt"><strong>Affiche et QR code</strong></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </button>
-                <button type="button" class="reglage-lien" id="reglages-installation">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5v17M3.5 12h17"/><circle cx="12" cy="12" r="8.5"/></svg></span>
-                  <span class="reglage-txt"><strong>Refaire l'installation</strong></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </button>
-              </div>
+              </section>
 
-              <div class="carte" style="padding:1px 14px">
-                <!-- "Changer le mot de passe" est retire. Julien : "changer
-                     le mot de passe, du coup ça tu peux supprimer".
+              <section class="pf-section">
+                <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9.3a3 3 0 0 1 5.8 1c0 2-2.9 2.3-2.9 4.3"/><path d="M12 17.3h.01"/></svg>Aide</h2>
+                <div class="pf-liste">
+                  <a class="pf-item" href="mailto:noctify.support@gmail.com?subject=Noctify%20club">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6.5L20.5 7"/></svg>
+                    <span class="pf-item-txt"><strong>Aide <span class="esperluette">&amp;</span> Support</strong><span>Une question sur ton club, tes points ou tes récompenses.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </a>
+                </div>
+              </section>
 
-                     Ce n'est pas une perte de fonction : Supabase envoie le
-                     lien de reinitialisation depuis l'ecran de connexion,
-                     qui est l'endroit ou l'on en a besoin -- on cherche a
-                     changer son mot de passe quand on n'arrive PLUS a
-                     entrer, pas quand on est deja dedans. La ligne occupait
-                     une place dans un ecran que Julien trouvait deja trop
-                     charge, et elle ne concernait qu'une partie des comptes
-                     (ceux crees par email ; les comptes Google n'ont pas de
-                     mot de passe du tout). -->
-                <button type="button" class="reglage-lien" id="reglages-deconnexion">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24" id="reglages-deconnexion-ico"><path d="M15 4H6a1.6 1.6 0 0 0-1.6 1.6v12.8A1.6 1.6 0 0 0 6 20h9"/><path d="M14.5 12H21M18 8.6 21.4 12 18 15.4"/></svg></span>
-                  <span class="reglage-txt"><strong id="reglages-deconnexion-txt">Déconnexion</strong></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </button>
-              </div>
+              <section class="pf-section">
+                <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.4 20.2a7.6 7.6 0 0 1 15.2 0"/></svg>Compte</h2>
+                <div class="pf-liste">
+                  <button type="button" class="pf-item" data-va="confidentialite">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6z"/><circle cx="12" cy="10.2" r="2.4"/><path d="M8.3 16a4.3 4.3 0 0 1 7.4 0"/></svg>
+                    <span class="pf-item-txt"><strong>Confidentialité</strong><span>Ce que Noctify garde sur ton club, et pourquoi.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                  <button type="button" class="pf-item" data-va="conditions">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h8l4 4v13h-12z"/><path d="M14.5 3.5v4h4M9 12h6M9 15.5h6"/></svg>
+                    <span class="pf-item-txt"><strong>Conditions d'utilisation</strong><span>Ce à quoi tu t'engages en utilisant l'appli.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                  <!-- "Changer le mot de passe" est retire. Julien : "changer
+                       le mot de passe, du coup ça tu peux supprimer".
+                       Supabase envoie le lien de reinitialisation depuis
+                       l'ecran de connexion, qui est l'endroit ou l'on en a
+                       besoin. -->
+                  <button type="button" class="pf-item pf-item-sortie" id="reglages-deconnexion">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" id="reglages-deconnexion-ico" aria-hidden="true"><path d="M15 4H6a1.6 1.6 0 0 0-1.6 1.6v12.8A1.6 1.6 0 0 0 6 20h9"/><path d="M14.5 12H21M18 8.6 21.4 12 18 15.4"/></svg>
+                    <span class="pf-item-txt"><strong id="reglages-deconnexion-txt">Déconnexion</strong><span id="reglages-deconnexion-sous">Fermer la session sur ce téléphone.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                </div>
+              </section>
 
               <p class="fiche-msg" id="reglages-msg"></p>
-
-              <!-- Les liens legaux etaient trois mots gris flottant sous les
-                   cartes, suivis d'un "NOCTIFY · APPLI CLUB" en capitales
-                   mono. Resultat : l'ecran s'arretait a mi-hauteur et le
-                   bas etait vide.
-
-                   Ce sont des destinations comme les autres : elles
-                   prennent la meme carte, les memes lignes, le meme
-                   chevron. L'ecran se termine ou il finit. -->
-              <div class="carte" style="padding:1px 14px">
-                <button type="button" class="reglage-lien" data-va="confidentialite">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 3.5l7 3v5.2c0 4.2-2.9 7.6-7 8.8-4.1-1.2-7-4.6-7-8.8V6.5z"/></svg></span>
-                  <span class="reglage-txt"><strong>Confidentialité</strong></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </button>
-                <button type="button" class="reglage-lien" data-va="conditions">
-                  <span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3.5h8l4 4v13h-12z"/><path d="M14.5 3.5v4h4M9 12h6M9 15.5h6"/></svg></span>
-                  <span class="reglage-txt"><strong>Conditions d'utilisation</strong></span>
-                  <svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                </button>
-              </div>
-
               <p class="reglages-pied">Noctify · appli club</p>
             </div>
 
@@ -4495,38 +4682,14 @@
               </div>
             </div>
 
-            <div class="vue" id="vue-bareme">
-              <h1 class="ecran-titre">Les points</h1>
-              <p class="ecran-sous">Ce que gagnent tes clients chez toi. Les mêmes montants partout sur Noctify.</p>
-
-              <!-- ⚠️ PLUS DE BAREME A REGLER. Julien, 18/09/2026 : « retire le bareme,
-                   on leur impose un nombre de points, fais juste un truc esthetique pour
-                   leur dire que ca rapporte ce nombre de points ». Les deux gestes qui
-                   comptent, en grand, avec ce que le client voit dans son appli. -->
-              <div class="pts-carte pts-story">
-                <div class="pts-txt">
-                  <span class="pts-sur">Une story qui te mentionne</span>
-                  <strong class="pts-nombre" id="pts-story">100</strong>
-                  <span class="pts-unite">points pour ton client</span>
-                  <p class="pts-detail">Il publie, te tague, et Noctify crédite ses points 24 h après.</p>
-                </div>
-                <div class="pts-visuel" id="pts-visuel-story"></div>
-              </div>
-
-              <div class="pts-carte pts-scan">
-                <div class="pts-txt">
-                  <span class="pts-sur">Un scan du QR sur place</span>
-                  <strong class="pts-nombre" id="pts-scan">20</strong>
-                  <span class="pts-unite">points pour ton client</span>
-                  <p class="pts-detail">À l'entrée ou au bar, une fois par soirée.</p>
-                </div>
-                <div class="pts-visuel pts-visuel-qr" aria-hidden="true">
-                  <svg viewBox="0 0 29 29"><path d="M1 1h9v9H1zM19 1h9v9h-9zM1 19h9v9H1z" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="M4 4h3v3H4zM22 4h3v3h-3zM4 22h3v3H4zM13 2h2v4h-2zM12 8h4v2h-4zM13 12h3v3h-3zM18 13h4v2h-4zM24 12h3v4h-3zM12 18h2v3h-2zM16 17h3v3h-3zM21 19h3v2h-3zM25 21h2v6h-2zM13 23h4v2h-4zM18 24h3v3h-3zM2 13h3v2H2zM7 12h3v4H7z"/></svg>
-                </div>
-              </div>
-
-              <p class="pts-pied">Tu n'as rien à régler : ces montants sont les mêmes pour tous les établissements.</p>
-
+            <!-- L'ecran « Les points » a ete retire le 19/09/2026 avec son
+                 onglet (voir la barre d'onglets plus bas). Ce qu'il disait
+                 vit en tete de la Boutique. Ce qui reste ici est le
+                 squelette du bareme d'avant : ces elements ne sont plus
+                 affiches nulle part, mais rendreBareme() et son
+                 enregistrement leur ecrivent encore. Les retirer du DOM
+                 ferait tomber ces fonctions sur du null. -->
+            <div id="vue-bareme" hidden style="display:none">
               <div hidden>
                 <div id="bareme-vitrine"></div>
                 <div class="periodes"><button type="button" class="periode" data-jours="7"></button><button type="button" class="periode" data-jours="30"></button><button type="button" class="periode" data-jours="90"></button></div>
@@ -4574,12 +4737,20 @@
                    aucune question qu'on se pose a ce moment-la. -->
             </div>
 
-            <!-- TROIS onglets, il y en avait six. Points, QR et Ma fiche
-                 sont des reglages qu'on ouvre une fois puis plus jamais,
-                 pas des destinations quotidiennes. Julien : "il y a genre
-                 six onglets, c'est inutile, juste l'essentiel".
+            <!-- TROIS onglets, il y en avait six. QR et Ma fiche sont des
+                 reglages qu'on ouvre une fois puis plus jamais, pas des
+                 destinations quotidiennes. Julien : "il y a genre six
+                 onglets, c'est inutile, juste l'essentiel".
                  Regarder / vendre / regler. Le reste vit dans Reglages,
-                 a un geste de la, et les ecrans n'ont pas bouge. -->
+                 a un geste de la, et les ecrans n'ont pas bouge.
+
+                 ⚠️ PLUS D'ONGLET "POINTS" (19/09/2026). Julien : « supprime
+                 l'onglet point mais par contre indique dans l'onglet boutique
+                 combien les points rapportent ». Depuis que le bareme est
+                 impose (100 la story, 20 le scan), l'ecran ne demandait plus
+                 rien : c'etait un onglet permanent pour deux chiffres qu'on
+                 lit une fois. Les deux chiffres vivent maintenant en tete de
+                 la Boutique, la ou on regle ce qu'ils achetent. -->
             <nav class="tabs">
               <button class="tab on" type="button" data-tab="dashboard" aria-current="page">
                 <svg viewBox="0 0 24 24"><path d="M3 13h4v7H3zM10 8h4v12h-4zM17 3h4v17h-4z"/></svg>
@@ -4588,18 +4759,6 @@
               <button class="tab" type="button" data-tab="recompenses">
                 <svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="12.5" rx="2.2"/><path d="M3 12.8h18M12 8.5V21"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
                 <span class="lbl">Boutique</span>
-              </button>
-              <!-- ⚠️ LE BAREME EST UN ONGLET DEPUIS LE 09/09/2026. Julien :
-                   "le bareme de points, on peut le mettre en avant en vrai
-                   parce que ca peut etre utile [...] il faut que tu le
-                   mettes au meme niveau que le tableau de bord".
-                   C'est l'ecran qui decide de ce que le club PAIE : il
-                   etait a deux niveaux de profondeur, sous Reglages.
-                   Le grid-template-columns de .tabs suit le nombre
-                   d'onglets, il n'y a rien d'autre a changer. -->
-              <button class="tab" type="button" data-tab="bareme">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2.5 0 0 1 2.5-2.5h.6a2.2 2.2 0 0 1 0 4.4h-1.2a2.2 2.2 0 0 0 0 4.4h.6a2.5 2.5 0 0 0 2.5-2.5"/></svg>
-                <span class="lbl">Points</span>
               </button>
               <button class="tab" type="button" data-tab="reglages">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l1.8-1.5-2-3.4-2.2.7a7.6 7.6 0 0 0-2.6-1.5L14 2.6h-4l-.4 2.2a7.6 7.6 0 0 0-2.6 1.5l-2.2-.7-2 3.4L4.6 10.5a7.6 7.6 0 0 0 0 3L2.8 15l2 3.4 2.2-.7c.76.65 1.64 1.16 2.6 1.5l.4 2.2h4l.4-2.2a7.6 7.6 0 0 0 2.6-1.5l2.2.7 2-3.4z"/></svg>
@@ -4988,7 +5147,11 @@
          cas ou une session existe sans donnees derriere. */
       function afficherPorte(message, demanderClub) {
         if (!ETAT.session) {
-          ACCUEIL.classList.remove("masque");
+          // #accueil n'a plus de bouton depuis que le formulaire est passe
+          // dans l'etape 1 du parcours : le demasquer enfermait le gerant
+          // sur un ecran sans sortie. C'est l'etape 1 qui est la porte.
+          ACCUEIL.classList.add("masque");
+          ouvrirParcours(1);
           return;
         }
         if (message) $("#porte-message").textContent = message;
@@ -5046,9 +5209,17 @@
       // minimale plutot qu'un refactor pour rester autonome.
       function traduireErreurConnexion(error) {
         var brut = String((error && error.message) || "").toLowerCase();
+        // Supabase bride l'envoi d'e-mails a un par minute : sans ce cas,
+        // le gerant lisait "For security purposes, you can only request
+        // this after 47 seconds" et croyait a une panne.
+        if ((error && error.status === 429) || /rate.?limit|security purposes/.test(brut)) {
+          return "Un e-mail vient de partir. Attends une minute avant d'en demander un autre.";
+        }
+        if (/email_address_invalid|validate email|invalid.*email/.test(brut)) return "Cette adresse email n'est pas valide.";
+        if (brut.includes("signups not allowed")) return "Les inscriptions sont fermées pour le moment.";
         if (brut.includes("invalid login credentials")) return "Email ou mot de passe incorrect.";
         if (brut.includes("email not confirmed")) return "Confirme ton email avant de te connecter.";
-        if (brut.includes("failed to fetch")) return "Connexion impossible. Vérifie ton accès internet.";
+        if (/failed to fetch|network|load failed/.test(brut)) return "Connexion impossible. Vérifie ton accès internet.";
         return (error && error.message) || "Une erreur est survenue.";
       }
 
@@ -5180,8 +5351,198 @@
         bouton.textContent = libelle;
 
         if (error) return dire(traduireErreurConnexion(error), true);
-        dire("Lien envoyé à " + email + ". Ouvre-le sur ce téléphone pour continuer.", false);
+        // Le meme e-mail porte le code ET le lien : on montre les six
+        // cases, et le lien reste bon pour qui prefere cliquer.
+        montrerCode(email);
       });
+
+      /* ================= LE CODE A SIX CHIFFRES =================
+         Copie de la mecanique de l'appli clubbeur (cablerCodeOb /
+         verifierCodeOb). Elle y a fait ses preuves : dernier chiffre qui
+         valide tout seul, cases qui se vident et tremblent sur un code
+         faux, renvoi bride a une minute par Supabase.
+
+         ⚠️ SIX CHIFFRES ICI ET mailer_otp_length = 6 DANS LA BASE B2B
+         (mrukkexghpcqtwvwwcbe). Les deux bougent ensemble, sinon plus
+         aucun code ne passe. L'e-mail se pose avec
+         `node outils/emails/appliquer_modeles_club.cjs`. */
+      var LONGUEUR_CODE = 6;
+      var CODE = { email: "", verification: false, fin: 0, minuteur: null };
+
+      function direCode(texte, erreur) {
+        var msg = $("#cd-msg");
+        msg.style.display = texte ? "block" : "none";
+        msg.style.color = erreur ? "var(--accent-fort)" : "var(--ink3)";
+        msg.textContent = texte || "";
+      }
+
+      function montrerCode(email) {
+        CODE.email = email;
+        $("#cd-adresse").textContent = email;
+        $("#cd-champ").value = "";
+        peindreCode();
+        direCode("");
+        // Les boutons de l'accueil s'effacent : deux jeux d'actions sur le
+        // meme ecran, on ne sait plus lequel repond. Le titre, le logo et
+        // l'argumentaire partent avec eux -- on n'a plus rien a vendre a
+        // quelqu'un qui attend son code, et sur un telephone ils
+        // poussaient les six cases sous le pli.
+        document.querySelector(".pa-arrive").hidden = true;
+        etapeDuCompte().classList.add("en-code");
+        $("#porte-code").hidden = false;
+        demarrerRebours();
+        // Le clavier numerique monte tout de suite : c'est la seule chose
+        // a faire sur cet ecran.
+        setTimeout(function () { try { $("#cd-champ").focus(); } catch (e) {} }, 120);
+      }
+
+      function etapeDuCompte() {
+        return document.querySelector('.pa-etape[data-pas="1"]');
+      }
+
+      function cacherCode() {
+        $("#porte-code").hidden = true;
+        document.querySelector(".pa-arrive").hidden = false;
+        etapeDuCompte().classList.remove("en-code");
+        clearInterval(CODE.minuteur);
+      }
+
+      // Supabase refuse un second e-mail avant 60 s : le dire, plutot que
+      // de laisser appuyer sur un bouton qui repondra une erreur.
+      function demarrerRebours() {
+        CODE.fin = Date.now() + 60000;
+        clearInterval(CODE.minuteur);
+        CODE.minuteur = setInterval(majRebours, 1000);
+        majRebours();
+      }
+
+      function majRebours() {
+        var bouton = $("#cd-renvoyer");
+        var reste = Math.ceil((CODE.fin - Date.now()) / 1000);
+        if (reste > 0) {
+          bouton.disabled = true;
+          bouton.textContent = "Renvoyer le code (" + reste + " s)";
+          return;
+        }
+        clearInterval(CODE.minuteur);
+        bouton.disabled = false;
+        bouton.textContent = "Renvoyer le code";
+      }
+
+      var casesCode = null;
+      var codeAvant = "";
+
+      function peindreCode() {
+        var champ = $("#cd-champ");
+        var boite = $("#cd-cases");
+        if (!casesCode) {
+          var html = "";
+          for (var i = 0; i < LONGUEUR_CODE; i++) html += '<span class="cd-case"></span>';
+          champ.insertAdjacentHTML("beforebegin", html);
+          champ.maxLength = LONGUEUR_CODE;
+          casesCode = boite.querySelectorAll(".cd-case");
+        }
+        // Un collage apporte parfois des espaces ou un tiret : on ne garde
+        // que les chiffres.
+        var v = champ.value.replace(/\D/g, "").slice(0, LONGUEUR_CODE);
+        if (v !== champ.value) champ.value = v;
+        casesCode.forEach(function (c, k) {
+          var chiffre = v.charAt(k);
+          if (c.textContent !== chiffre) c.textContent = chiffre;
+          c.classList.toggle("rempli", Boolean(chiffre));
+          c.classList.toggle("curseur", k === v.length);
+        });
+        $("#cd-valider").disabled = v.length !== LONGUEUR_CODE;
+        if (v.length !== codeAvant.length) direCode("");
+        // Le dernier chiffre valide tout seul.
+        if (v.length === LONGUEUR_CODE && codeAvant.length !== LONGUEUR_CODE) verifierCode();
+        codeAvant = v;
+      }
+
+      $("#cd-champ").addEventListener("input", peindreCode);
+      $("#porte-code").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        verifierCode();
+      });
+
+      async function verifierCode() {
+        var champ = $("#cd-champ");
+        var bouton = $("#cd-valider");
+        var code = champ.value;
+        if (CODE.verification || code.length !== LONGUEUR_CODE || !CODE.email) return;
+
+        CODE.verification = true;
+        bouton.disabled = true;
+        bouton.textContent = "Vérification…";
+        direCode("");
+
+        var res = await supabase.auth
+          .verifyOtp({ email: CODE.email, token: code, type: "email" })
+          .catch(function (erreur) { return { error: erreur }; });
+
+        CODE.verification = false;
+        bouton.textContent = "Continuer";
+
+        if (res.error) {
+          // Les cases se vident AVANT le message : les vider efface le
+          // message (peindreCode), qui disparaitrait a l'instant ou il
+          // s'ecrit.
+          champ.value = "";
+          peindreCode();
+          var texte = String((res.error.code || "") + " " + (res.error.message || ""));
+          direCode(/otp|token|expired|invalid/i.test(texte)
+            ? "Code incorrect ou expiré."
+            : traduireErreurConnexion(res.error), true);
+          var boite = $("#cd-cases");
+          boite.classList.remove("faux");
+          void boite.offsetWidth;
+          boite.classList.add("faux");
+          champ.focus();
+          return;
+        }
+
+        // La session est ouverte : demarrer() enchaine sur "Ton club".
+        cacherCode();
+        await demarrer();
+      }
+
+      $("#cd-renvoyer").addEventListener("click", async function (ev) {
+        var bouton = ev.currentTarget;
+        if (!CODE.email) return;
+        bouton.disabled = true;
+        bouton.textContent = "Envoi…";
+        var { error } = await supabase.auth.signInWithOtp({
+          email: CODE.email,
+          options: { emailRedirectTo: urlDeRetour() },
+        });
+        if (error) {
+          bouton.disabled = false;
+          bouton.textContent = "Renvoyer le code";
+          return direCode(traduireErreurConnexion(error), true);
+        }
+        direCode("Nouvel e-mail envoyé.", false);
+        demarrerRebours();
+      });
+
+      $("#cd-changer").addEventListener("click", function () {
+        cacherCode();
+        $("#porte-email").focus();
+      });
+
+      /* Regarder l'appli sans compte. `false` : rien n'est "fait", rien
+         n'est synchronise -- on n'a pas de club. Le retour se fait par
+         Réglages → Créer mon compte, ou par n'importe quel bandeau
+         « Exemple ». */
+      $("#accueil-demo").addEventListener("click", function () {
+        cacherCode();
+        fermerParcours(false);
+      });
+
+      /* Pour les captures (outils/appli_club.cjs) : poser l'ecran du code
+         SANS envoyer d'e-mail. De l'affichage seulement -- aucune donnee,
+         aucun droit que la page n'ait deja. Meme usage que
+         window.noctifyParcours cote clubbeur. */
+      window.noctifyCodeClub = function (adresse) { montrerCode(adresse || "toi@exemple.com"); };
 
       /* ---- Ecran d'arrivee Instagram ----
          Le callback revient sur /club-app.html?instagram=<statut>, et
@@ -5989,8 +6350,8 @@
       function bandeauDemo(quoi) {
         if (!estDemo()) return "";
         return '<div class="bandeau-demo">' +
-          "<span><strong>Mode démo.</strong> Connecte-toi pour modifier " + quoi + ".</span>" +
-          '<button type="button" data-aller-connexion>Se connecter</button>' +
+          "<span><strong>Exemple.</strong> Ouvre ton club pour modifier " + quoi + ".</span>" +
+          '<button type="button" data-aller-connexion>Créer mon compte</button>' +
         "</div>";
       }
 
@@ -6000,6 +6361,7 @@
         if (!ev.target.closest("[data-aller-connexion]")) return;
         modeInscription = false;
         majModePorte();
+        // Sans session, afficherPorte() rouvre l'ecran du compte (etape 1).
         afficherPorte("Connecte-toi avec ton compte club.");
       });
 
@@ -6659,19 +7021,19 @@
       $("#fiche-retirer").addEventListener("click", function () { retirerRecompense(FICHE); });
 
       /* ---- Photo d'une recompense ----
-         Un seul <input type=file> cree a la volee, pas un par carte : dix
-         recompenses feraient dix champs caches dans le DOM pour un seul
-         usage a la fois. */
-      function choisirPhoto(carte) {
+         ⚠️ CE BOUTON PLANTAIT (corrige le 19/09/2026). Julien : « la
+         boutique, c'est bugué ». La fonction appelait poserChampFichier(),
+         qui N'EXISTE NULLE PART dans ce fichier : « Ajouter une photo »
+         levait une ReferenceError et ne faisait donc rien du tout, sans
+         message. Reste d'un aller-retour du 18/09 ou l'envoi de photo est
+         passe a un champ de fichier unique et permanent (#champ-photo) --
+         le parcours d'installation a ete converti, pas cette fiche-ci.
+         On passe par la meme porte que lui, demanderUneImage() : c'est
+         aussi la seule qui survit au retour de la phototheque sur iPhone. */
+      async function choisirPhoto(carte) {
         if (estDemo()) return;
-        var champ = document.createElement("input");
-        champ.type = "file";
-        champ.accept = "image/*";
-        champ.addEventListener("change", async function () {
-          var fichier = champ.files && champ.files[0];
-          if (fichier) await envoyerPhoto(carte, fichier);
-        });
-        poserChampFichier(champ);
+        var fichier = await demanderUneImage();
+        if (fichier) await envoyerPhoto(carte, fichier);
       }
 
       /* Recadrage en carre AVANT l'envoi. C'est la seule chose qui
@@ -6977,18 +7339,22 @@
           '<circle class="ig-flash" cx="16.75" cy="7.25" r="1.05"/>' +
         "</svg>";
       var GLYPHE_IG_LIGNE = '<span class="reglage-ico ico-instagram">' + MARQUE_IG + "</span>";
+      // Le logo Instagram en couleur, a la taille d'une icone de .pf-item.
+      var GLYPHE_IG_ITEM = '<span class="pf-item-ico ico-instagram">' + MARQUE_IG + "</span>";
       var GLYPHE_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="6"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>';
 
       function bandeauRien(titre, detail) {
-        return '<div class="reglage-ligne">' +
-          GLYPHE_IG_LIGNE +
-          '<span class="reglage-txt"><strong>' + escapeHtml(titre) + "</strong></span>" +
-          '<span class="reglage-etat">' + escapeHtml(detail) + "</span>" +
+        return '<div class="pf-item pf-item-inerte">' +
+          GLYPHE_IG_ITEM +
+          '<span class="pf-item-txt"><strong>' + escapeHtml(titre) + "</strong></span>" +
+          '<span class="pf-item-etat">' + escapeHtml(detail) + "</span>" +
         "</div>";
       }
 
       async function rendreReglages() {
-        $("#reglages-compte").textContent = ETAT.session ? (ETAT.session.user.email || "—") : "Mode démo — pas connecté";
+        $("#reglages-compte").textContent = ETAT.session
+          ? (ETAT.session.user.email || "—")
+          : "Exemple — tu n'as pas encore de club";
         majBoutonCompte();
 
         var etab = etablissementCourant();
@@ -7021,7 +7387,19 @@
 
            Une seule regle desormais, aux deux endroits : pas de compte,
            pas de ligne. */
-        if (!ETAT.session) { zone.innerHTML = ""; return; }
+        if (!ETAT.session) {
+          // En demonstration la ligne reste, mais elle dit ce qu'elle est :
+          // un exemple. Un bloc « Mon établissement » qui perdrait sa ligne
+          // du milieu laisserait un trou entre deux filets.
+          zone.innerHTML =
+            '<div class="pf-item pf-item-inerte">' +
+              GLYPHE_IG_ITEM +
+              '<span class="pf-item-txt"><strong>Instagram</strong>' +
+              "<span>Connecté, les mentions de tes clients arrivent seules.</span></span>" +
+              '<span class="pf-item-etat actif">exemple</span>' +
+            "</div>";
+          return;
+        }
 
         // Statut deja charge par chargerInstagram() : pas de second
         // appel pour la meme reponse.
@@ -7037,11 +7415,11 @@
           // et un bouton pleine largeur, c'etait trois niveaux
           // d'echafaudage pour une seule information : connecte ou pas.
           zone.innerHTML =
-            '<button type="button" class="reglage-lien" id="instagram-connecter">' +
-              GLYPHE_IG_LIGNE +
-              '<span class="reglage-txt"><strong>Instagram</strong></span>' +
-              '<span class="reglage-etat absent">Connecter</span>' +
-              '<svg class="reglage-fleche" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>' +
+            '<button type="button" class="pf-item" id="instagram-connecter">' +
+              GLYPHE_IG_ITEM +
+              '<span class="pf-item-txt"><strong>Instagram</strong>' +
+              "<span>Sans lui, aucune mention n'est détectée et personne n'est crédité.</span></span>" +
+              '<span class="pf-item-etat absent">Connecter</span>' +
             "</button>";
           $("#instagram-connecter").addEventListener("click", function (ev) {
             connecterInstagram(ev.currentTarget);
@@ -7052,13 +7430,13 @@
         var gain = statut.abonnesGagnes;
         var mentions = statut.mentions || 0;
         zone.innerHTML =
-          '<div class="reglage-ligne">' +
-            GLYPHE_IG_LIGNE +
-            '<span class="reglage-txt"><strong>Instagram</strong>' +
+          '<div class="pf-item pf-item-inerte">' +
+            GLYPHE_IG_ITEM +
+            '<span class="pf-item-txt"><strong>Instagram</strong>' +
             "<span>" + nb.format(mentions) + " mention" + (mentions > 1 ? "s" : "") + " reçue" + (mentions > 1 ? "s" : "") +
             (gain === null || gain === undefined ? "" : " · " + (gain >= 0 ? "+" : "") + nb.format(gain) + " abonnés") +
             "</span></span>" +
-            '<span class="reglage-etat actif">@' + escapeHtml(statut.username) + "</span>" +
+            '<span class="pf-item-etat actif">@' + escapeHtml(statut.username) + "</span>" +
           "</div>" +
           // Un compte relie dont l'abonnement au webhook a echoue ne
           // remontera jamais une mention : le dire, plutot que de laisser
@@ -7066,13 +7444,22 @@
           // affichee UNIQUEMENT quand ca ne marche pas -- une ligne qui
           // dit "tout va bien" est une ligne de plus a lire pour rien.
           (statut.webhookActif ? "" :
-            '<div class="reglage-ligne">' +
-              '<span class="reglage-ico"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="8.5"/></svg></span>' +
-              '<span class="reglage-txt"><strong>Détection en panne</strong>' +
-              "<span>Reconnecte le compte pour la réactiver</span></span>" +
+            '<div class="pf-item pf-item-inerte">' +
+              '<svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="8.5"/></svg>' +
+              '<span class="pf-item-txt"><strong>Détection en panne</strong>' +
+              "<span>Reconnecte le compte pour la réactiver.</span></span>" +
+              "<span></span>" +
             "</div>");
       }
 
+      /* ⚠️ CE BOUTON NE MENAIT NULLE PART EN DEMONSTRATION (corrige le
+         19/09/2026). Julien : « je peux pas créer de compte ».
+         Sans session il appelait afficherPorte(), qui demasque #accueil --
+         un ecran de presentation qui n'a plus AUCUN bouton depuis que le
+         formulaire est parti dans l'etape 1 du parcours. On arrivait donc
+         sur un cul-de-sac : plus de champ, plus d'onglets, plus de retour.
+         Avec ou sans session, on repart maintenant sur le seul ecran qui
+         cree un compte. */
       $("#reglages-deconnexion").addEventListener("click", async function (ev) {
         var bouton = ev.currentTarget;
         bouton.disabled = true;
@@ -7080,15 +7467,18 @@
         if (ETAT.session) {
           await supabase.auth.signOut();
           ETAT.session = null;
+          // demarrer() relit tout : sans lui, l'appli garderait derriere
+          // le parcours les chiffres du club qu'on vient de quitter.
+          PORTE.hidden = true;
+          await demarrer();
+          bouton.disabled = false;
+          return;
         }
 
         bouton.disabled = false;
-        modeInscription = false;
-        majModePorte();
-        afficherPorte("Connecte-toi avec ton compte club.");
-        // La porte se pose par-dessus l'onglet courant : sans ca, on
-        // reviendrait sur des Reglages qui parlent encore d'un compte
-        // qui n'existe plus.
+        PORTE.hidden = true;
+        ACCUEIL.classList.add("masque");
+        ouvrirParcours(1);
       });
 
       // En mode demo, "Deconnexion" n'a aucun sens : personne n'est
@@ -7106,10 +7496,20 @@
       function majBoutonCompte() {
         // Le libelle interne, pas le bouton : un textContent sur le
         // bouton emporterait l'icone et le chevron avec lui.
-        $("#reglages-deconnexion-txt").textContent = ETAT.session ? "Déconnexion" : "Se connecter";
+        $("#reglages-deconnexion-txt").textContent = ETAT.session ? "Déconnexion" : "Créer mon compte";
+        var sous = $("#reglages-deconnexion-sous");
+        if (sous) {
+          sous.textContent = ETAT.session
+            ? "Fermer la session sur ce téléphone."
+            : "Tu regardes une démo. Ouvre ton club en deux minutes.";
+        }
         var glyphe = $("#reglages-deconnexion-ico");
         if (glyphe) glyphe.innerHTML = ETAT.session ? FLECHE_SORTIE : FLECHE_ENTREE;
-
+        // Rouge = on SORT. Creer son compte est une entree : elle garde
+        // l'encre du reste de l'ecran.
+        var ligne = $("#reglages-deconnexion");
+        ligne.classList.toggle("pf-item-sortie", !!ETAT.session);
+        ligne.classList.toggle("pf-item-entree", !ETAT.session);
       }
 
 
@@ -7415,6 +7815,18 @@
         // Le dernier ecran n'a plus rien a passer : le bouton principal
         // fait deja sortir.
         $("#pa-passer").hidden = cible === PAS_MAX;
+        /* ⚠️ SUR L'ECRAN DU COMPTE, "PASSER" NE DIT PAS CE QU'IL FAIT
+           (19/09/2026). Julien : « mets des données fictives même quand on
+           n'a pas de compte ». Elles y etaient deja -- derriere ce bouton,
+           qui s'appelait "Passer" et ne promettait rien. Personne ne
+           "passe" la creation de son compte : on la remet a plus tard pour
+           aller voir a quoi ressemble l'appli. C'est ce que dit le
+           libelle maintenant, et c'est la seule porte vers la
+           demonstration. */
+        if (!PARCOURS.seule) $("#pa-passer").textContent = cible === 1 ? "Voir la démo" : "Passer";
+        // Le code ne survit pas a un changement d'ecran : on revient
+        // toujours sur les boutons de depart.
+        if (cible !== 1) cacherCode();
         $("#pa-corps").scrollTop = 0;
 
         try { habillerParcours(); } catch (e) {}
@@ -8533,6 +8945,12 @@
       // Imposes a tous les clubs (Julien, 18/09/2026) : « une story, 100 points ;
       // un scan du QR, 20 points ». Ni le gerant ni le parcours ne les reglent.
       var PV_POINTS = { story: 100, scan: 20 };
+
+      /* Les deux chiffres en tete de la Boutique viennent d'ici, comme ceux
+         du parcours : une seule source, sinon l'appli promet 100 a un
+         endroit et 120 a l'autre. */
+      $("#pts-story").textContent = PV_POINTS.story;
+      $("#pts-scan").textContent = PV_POINTS.scan;
       var PV = { bande: null };
 
       function pvPhotos() {

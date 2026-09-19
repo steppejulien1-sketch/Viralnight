@@ -227,19 +227,14 @@ function remplirGalerie() {
 
   console.log("Les écrans de réglage");
   const SOUS = [
-    // ⚠️ "bareme" a QUITTE cette liste le 09/09/2026 : c'est un onglet
-    // maintenant, plus une ligne des Reglages. Il se photographie avec
-    // les autres onglets, juste au-dessus.
+    // ⚠️ "bareme" a d'abord quitte cette liste le 09/09/2026 (il devenait
+    // un onglet), puis l'onglet lui-meme a ete retire le 19/09/2026. Ce
+    // que l'ecran disait -- 100 pour une story, 20 pour un scan -- est en
+    // tete de la Boutique, donc deja sur la capture 09.
     ["qr", "13-qr", "Affiche et QR code"],
     ["conditions", "14-conditions", "Conditions d'utilisation"],
     ["confidentialite", "15-confidentialite", "Confidentialité"],
   ];
-  console.log("L'onglet Barème");
-  await page.evaluate(() => document.querySelector('[data-tab="bareme"]').click());
-  await pause(900);
-  await prendre("12-bareme", "Barème de points");
-  await page.evaluate(() => document.querySelector('[data-tab="reglages"]').click());
-  await pause(600);
 
   for (const [va, nom, titre] of SOUS) {
     await page.evaluate((v) => document.querySelector(`[data-va="${v}"]`).click(), va);
