@@ -2572,8 +2572,6 @@
         animation: telFlotte 5s ease-in-out infinite;
       }
       .tel-ecran { position: relative; height: 100%; border-radius: 24px 24px 0 0; overflow: hidden; background: #fff; color: #111; }
-      .tel-statut { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px 0; font-size: 8px; }
-      .tel-statut i { width: 30px; height: 9px; border-radius: 9px; background: #111; }
       .tel-tete { display: flex; align-items: baseline; justify-content: space-between; padding: 8px 9px 6px; }
       .tel-tete b { font-family: var(--titre); font-size: 12px; font-weight: 900; letter-spacing: -.02em; }
       .tel-tete span { font-size: 8px; font-weight: 700; color: #555; }
@@ -3026,37 +3024,67 @@
       .se-compacte > span { font-size: 8.5px; color: #777; }
       .se-compacte > span b { font-size: 10px; color: #111; }
       .se-boutique { position: absolute; left: 0; right: 0; top: 54px; padding: 10px 9px; }
-      .se-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 9px; }
+      /* ⚠️ minmax(0, 1fr) ET PAS 1fr. Le libelle d'une recompense est en
+         `white-space: nowrap` : sa largeur MINIMALE est donc le texte
+         entier, et une colonne `1fr` (= minmax(auto, 1fr)) ne descend
+         jamais en dessous. « Vestiaire offert » poussait la grille a
+         deborder du telephone, la deuxieme colonne sortait de l'ecran et
+         l'ellipse ne se declenchait jamais. */
+      .se-grille { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 9px; }
       .se-grille .pv-mini-reco { display: block; }
       .se-grille .pv-mini-img { position: relative; display: block; aspect-ratio: 1; border-radius: 11px; background: linear-gradient(#fff, #ececf0); box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); }
       .se-grille .pv-mini-img img { position: absolute; left: 17%; top: 6%; width: 66%; height: 62%; object-fit: contain; }
       .se-grille .pv-mini-img em { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-family: var(--titre); font-size: 20px; font-weight: 900; color: #c6c6cd; }
       .se-grille .pv-mini-lab { position: relative; display: block; margin: -24px 4px 0; padding: 4px 6px; border-radius: 8px; background: #fff; box-shadow: 0 8px 16px -12px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.04); }
-      .se-grille .pv-mini-lab b { display: block; font-family: var(--titre); font-size: 8.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* Sur deux lignes plutot qu'une ellipse : « Vestiai… » ne dit rien,
+         et une vignette de recompense sans son nom n'a plus de raison
+         d'etre. Trois mots tiennent, au-dela c'est coupe. */
+      .se-grille .pv-mini-lab b {
+        display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+        /* `white-space` revient a normal : la regle generale .pv-mini-lab b
+           le met a nowrap pour le carrousel, ou les vignettes sont larges. */
+        white-space: normal;
+        font-family: var(--titre); font-size: 8.5px; font-weight: 800; line-height: 1.15; overflow: hidden;
+      }
       .se-grille .pv-mini-lab span { display: block; font-size: 7.5px; color: #77777f; }
       .se-grille .pv-mini-reco.arrive { animation: pvPop .5s cubic-bezier(.3, 1.5, .5, 1) both; }
       .se-grille .pv-bande-vide { grid-column: 1 / -1; margin: 30px 0 0; font-size: 9.5px; text-align: center; color: #8e8e96; }
 
       /* le telephone de la story (copie de .st-tel d'app-preview.html) */
       .st-tel {
-        position: relative; width: 176px; aspect-ratio: 9 / 17.5; border-radius: 30px; overflow: hidden; background: #14100d; color: #fff;
+        /* ⚠️ AUX PROPORTIONS D'UN VRAI IPHONE (19/09/2026). Julien : « le
+           telephone de story est toujours pas a la bonne taille ».
+           Il etait en 9/17.5, un ecran plus large que haut par rapport a un
+           iPhone 12+ (390 x 844, soit 9/19.5). Rien ne le montrait sur les
+           ecrans de l'appli, mais sur la story -- ou l'on reconnait
+           l'interface d'Instagram -- tout ce qui suit la LARGEUR (le X, les
+           outils, le sticker, la barre du bas) paraissait deux fois trop
+           gros pour la hauteur. C'est pvAjusterScene() qui rattrape la
+           taille finale, il n'y a rien d'autre a regler. */
+        position: relative; width: 176px; aspect-ratio: 9 / 19.5; border-radius: 30px; overflow: hidden; background: #14100d; color: #fff;
         box-shadow: 0 0 0 6px #1c1c1f, 0 0 0 7px rgba(0,0,0,.08), 0 34px 60px -24px rgba(0,0,0,.45);
       }
       .st-tel-contenu { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; transform-origin: 50% 45%; }
       .st-tel-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
       .st-tel-voile { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 72%, rgba(0,0,0,.45)); }
-      .st-tel-barre { position: absolute; left: 0; top: 3px; width: 100%; height: auto; }
-      .st-tel-haut { position: absolute; left: 10px; right: 9px; top: 28px; display: flex; align-items: center; justify-content: space-between; }
+      /* ⚠️ PLUS D'HEURE, DE WIFI NI DE BATTERIE (19/09/2026). Julien :
+         « retire aussi l'heure, le wifi etc de tous les telephones ».
+         C'etait une capture d'iPhone posee en image (barre-etat-blanche.png) :
+         a 176 px de large, l'heure et les icones deviennent des taches
+         floues plus grosses que tout le reste de l'ecran, et elles ne
+         disent rien. Les telephones des autres etapes n'en ont jamais eu.
+         La barre d'outils de la story remonte d'autant. */
+      .st-tel-haut { position: absolute; left: 10px; right: 9px; top: 12px; display: flex; align-items: center; justify-content: space-between; }
       .st-tel svg { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
-      .st-tel-fermer { width: 14px; height: 14px; }
-      .st-tel-outils { display: flex; align-items: center; gap: 7px; }
-      .st-tel-outils b { font-size: 11px; font-weight: 700; letter-spacing: -.02em; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
-      .st-tel-outils svg { width: 14px; height: 14px; stroke-width: 1.8; }
+      .st-tel-fermer { width: 12px; height: 12px; }
+      .st-tel-outils { display: flex; align-items: center; gap: 6px; }
+      .st-tel-outils b { font-size: 9.5px; font-weight: 700; letter-spacing: -.02em; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+      .st-tel-outils svg { width: 12px; height: 12px; stroke-width: 1.8; }
       .st-tel-outils svg:last-child { stroke-width: 3; }
       .st-tel-sticker {
-        position: absolute; right: 12px; top: 64px; max-width: 146px; padding: 6px 10px 6px 9px; border-radius: 8px; background: #fff;
+        position: absolute; right: 12px; top: 74px; max-width: 128px; padding: 5px 9px; border-radius: 7px; background: #fff;
         box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 8px 18px -8px rgba(0,0,0,.55);
-        font-size: 10.5px; font-weight: 800; letter-spacing: -.005em; text-transform: uppercase; line-height: 1.2;
+        font-size: 9px; font-weight: 800; letter-spacing: -.005em; text-transform: uppercase; line-height: 1.2;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform-origin: 80% 20%;
       }
       .st-tel-sticker-txt { color: #d62976; background: linear-gradient(90deg, #f58529, #dd2a7b 55%, #8134af); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
@@ -3417,7 +3445,10 @@
       }
       .pf-item {
         position: relative; width: 100%;
-        display: grid; grid-template-columns: 26px 1fr 16px; align-items: center; column-gap: 15px;
+        /* La troisieme colonne fait 16px pour un chevron, et s'elargit
+           quand la ligne porte un etat a droite (« Connecter », « @club »)
+           -- sinon le mot passait par-dessus la phrase. */
+        display: grid; grid-template-columns: 26px 1fr minmax(16px, auto); align-items: center; column-gap: 15px;
         padding: 15px 16px 15px 17px; border: 0; background: transparent;
         color: var(--ink); font-family: inherit; cursor: pointer; text-align: left;
         text-decoration: none;
@@ -3901,7 +3932,7 @@
 
                     <!-- 5 · Les points, imposes : on les annonce -->
                     <section class="pa-etape pv" data-pas="5" data-mascotte="/mascotte/pose-3.webp" hidden>
-                      <div class="pv-scene pv-scene-3d pv-scene-story"><div class="pv-3d"><div class="st-tel"><span class="st-tel-contenu"><img class="st-tel-photo" src="/ambiance/bienvenue.webp" alt="" /><span class="st-tel-voile"></span><img class="st-tel-barre" src="/ambiance/profil/barre-etat-blanche.png" alt="" /><span class="st-tel-haut"><svg class="st-tel-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span class="st-tel-outils"><b>Aa</b><svg viewBox="0 0 24 24"><path d="M15.5 3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6.5l7-7V7A3.5 3.5 0 0 0 17 3.5z"/><path d="M13.5 20.5v-3.5a3.5 3.5 0 0 1 3.5-3.5h3.5"/><circle cx="9" cy="10" r=".9"/><circle cx="14" cy="10" r=".9"/></svg><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg><svg viewBox="0 0 24 24"><path d="M12 3.5l1.6 4.4L18 9.5l-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6z"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18.5" cy="12" r=".6"/></svg></span></span><span class="st-tel-sticker"><span class="st-tel-sticker-txt">@<span data-pv="handle"></span></span></span><img class="st-tel-bas" src="/ambiance/profil/story-onglets.png" alt="" /></span><span class="st-tel-partage"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Story partagée</span></div></div><span class="pv-gains"><span class="st-gain"><strong data-pv="n-story"></strong>la story</span><span class="st-gain clair"><strong data-pv="n-scan"></strong>le scan du QR</span></span></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-story"><div class="pv-3d"><div class="st-tel"><span class="st-tel-contenu"><img class="st-tel-photo" src="/ambiance/bienvenue.webp" alt="" /><span class="st-tel-voile"></span><span class="st-tel-haut"><svg class="st-tel-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span class="st-tel-outils"><b>Aa</b><svg viewBox="0 0 24 24"><path d="M15.5 3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6.5l7-7V7A3.5 3.5 0 0 0 17 3.5z"/><path d="M13.5 20.5v-3.5a3.5 3.5 0 0 1 3.5-3.5h3.5"/><circle cx="9" cy="10" r=".9"/><circle cx="14" cy="10" r=".9"/></svg><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg><svg viewBox="0 0 24 24"><path d="M12 3.5l1.6 4.4L18 9.5l-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6z"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18.5" cy="12" r=".6"/></svg></span></span><span class="st-tel-sticker"><span class="st-tel-sticker-txt">@<span data-pv="handle"></span></span></span><img class="st-tel-bas" src="/ambiance/profil/story-onglets.png" alt="" /></span><span class="st-tel-partage"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Story partagée</span></div></div><span class="pv-gains"><span class="st-gain"><strong data-pv="n-story"></strong>la story</span><span class="st-gain clair"><strong data-pv="n-scan"></strong>le scan du QR</span></span></div>
                       <h1 class="pa-titre">Ce que gagnent tes clients.</h1>
                       <p class="pa-sous">Les mêmes points partout sur Noctify. Tu n'as rien à régler.</p>
                       <div class="pv-regles">
@@ -3921,7 +3952,7 @@
 
                     <!-- 6 · Instagram -->
                     <section class="pa-etape pv" data-pas="6" data-mascotte="/mascotte/pose-4.webp" hidden>
-                      <div class="pv-scene pv-scene-3d pv-scene-story"><div class="pv-3d"><div class="st-tel"><span class="st-tel-contenu"><img class="st-tel-photo" src="/ambiance/bienvenue.webp" alt="" /><span class="st-tel-voile"></span><img class="st-tel-barre" src="/ambiance/profil/barre-etat-blanche.png" alt="" /><span class="st-tel-haut"><svg class="st-tel-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span class="st-tel-outils"><b>Aa</b><svg viewBox="0 0 24 24"><path d="M15.5 3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6.5l7-7V7A3.5 3.5 0 0 0 17 3.5z"/><path d="M13.5 20.5v-3.5a3.5 3.5 0 0 1 3.5-3.5h3.5"/><circle cx="9" cy="10" r=".9"/><circle cx="14" cy="10" r=".9"/></svg><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg><svg viewBox="0 0 24 24"><path d="M12 3.5l1.6 4.4L18 9.5l-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6z"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18.5" cy="12" r=".6"/></svg></span></span><span class="st-tel-sticker"><span class="st-tel-sticker-txt">@<span data-pv="handle"></span></span></span><img class="st-tel-bas" src="/ambiance/profil/story-onglets.png" alt="" /></span><span class="st-tel-partage"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Story partagée</span></div></div><span class="st-gain"><strong data-pv="n-story"></strong>points</span></div>
+                      <div class="pv-scene pv-scene-3d pv-scene-story"><div class="pv-3d"><div class="st-tel"><span class="st-tel-contenu"><img class="st-tel-photo" src="/ambiance/bienvenue.webp" alt="" /><span class="st-tel-voile"></span><span class="st-tel-haut"><svg class="st-tel-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg><span class="st-tel-outils"><b>Aa</b><svg viewBox="0 0 24 24"><path d="M15.5 3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6.5l7-7V7A3.5 3.5 0 0 0 17 3.5z"/><path d="M13.5 20.5v-3.5a3.5 3.5 0 0 1 3.5-3.5h3.5"/><circle cx="9" cy="10" r=".9"/><circle cx="14" cy="10" r=".9"/></svg><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg><svg viewBox="0 0 24 24"><path d="M12 3.5l1.6 4.4L18 9.5l-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6z"/><path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18.5" cy="12" r=".6"/></svg></span></span><span class="st-tel-sticker"><span class="st-tel-sticker-txt">@<span data-pv="handle"></span></span></span><img class="st-tel-bas" src="/ambiance/profil/story-onglets.png" alt="" /></span><span class="st-tel-partage"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Story partagée</span></div></div><span class="st-gain"><strong data-pv="n-story"></strong>points</span></div>
                       <h1 class="pa-titre">Ton Instagram.</h1>
                       <p class="pa-sous">Le compte que tes clients mentionnent dans leur story.</p>
                       <label class="pv-champ pa-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.3" cy="6.7" r="1.1"/></svg><span class="pv-champ-txt"><span class="pv-lib">Compte Instagram</span><input id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@tonclub" /></span></label>
@@ -5100,10 +5131,23 @@
         // "Ton club". Plus besoin d'un ecran de rattrapage a part.
         // 17/09/2026 : le compte admin de Julien, connecte par Google, tombait sur la
         // demonstration (« admin_select_client ») et semblait ne pas etre connecte.
+        /* ⚠️ L'EXEMPLE PASSE DERRIERE, MEME CONNECTE (19/09/2026).
+           Avant, ce cas gardait `data` tel quel -- c'est-a-dire RIEN --
+           et ouvrait le parcours par-dessus. Un gerant qui touchait
+           « Passer » tombait sur une appli entierement vide : c'est ce
+           que Julien a vu. On charge donc le meme jeu d'exemple que hors
+           session ; `sansClubReel()` continue de dire que ce club n'est
+           pas le sien, donc rien ne s'enregistre dessus. */
         if (data.session && (data.reason === "no_establishment" || data.reason === "admin_select_client")) {
           ETAT.session = data.session;
-          ETAT.data = data;
+          ETAT.data = { ...fallbackDashboardData, session: data.session };
           ACCUEIL.classList.add("masque");
+          await chargerInstagram();
+          rendreDashboard();
+          rendreRecompenses();
+          rendreReglages();
+          rendreQr();
+          rendreBareme();
           ouvrirParcours(2);
           $("#splash").classList.add("masque");
           return;
@@ -5937,8 +5981,7 @@
         var n = nombreRecosActives();
         var ligne = [TYPES_ETAB[etab.category] || "Boîte de nuit", n ? n + " récompense" + (n > 1 ? "s" : "") : ""].filter(Boolean).join(" • ");
         return '<div class="tel" aria-hidden="true"><div class="tel-ecran">' +
-          '<div class="tel-statut"><b>21:47</b><i></i></div>' +
-          '<div class="tel-tete"><b>NOCTIFY</b><span>450 pts</span></div>' +
+                    '<div class="tel-tete"><b>NOCTIFY</b><span>450 pts</span></div>' +
           '<div class="tel-carte"><img src="' + escapeHtml(couvertureEtab(etab)) + '" alt="" />' +
             (etab.city ? '<span class="tel-lieu">' + escapeHtml(etab.city) + "</span>" : "") +
             '<span class="tel-carte-txt"><b>' + escapeHtml(etab.name || "Ton établissement") + "</b><span>" + escapeHtml(ligne) + "</span></span></div>" +
@@ -5984,12 +6027,18 @@
           "Chaque publication rapporte des points à ton client.", telStory(etab));
       }
       function habillerReglages() {
-        var etab = etablissementCourant() || (ETAT.data && ETAT.data.establishment) || {};
         var fiche = $("#reglages-fiche");
-        if (fiche) {
-          fiche.classList.add("avec-couv");
-          fiche.style.setProperty("--couv", "url(\"" + couvertureEtab(etab).replace(/"/g, "") + "\")");
+        if (!fiche) return;
+        // Pas de club : pas de couverture. Poser celle de l'exemple sur la
+        // carte reviendrait a montrer la photo d'un autre etablissement a
+        // cote de « Ton club n'est pas encore cree ».
+        fiche.classList.add("avec-couv");
+        if (!clubReelCharge()) {
+          fiche.style.removeProperty("--couv");
+          return;
         }
+        var etab = etablissementCourant() || {};
+        fiche.style.setProperty("--couv", "url(\"" + couvertureEtab(etab).replace(/"/g, "") + "\")");
       }
       function habillerParcours() {
         var etab = etablissementCourant() || {};
@@ -6345,13 +6394,33 @@
       /* Hors session, l'ecran affiche la demo : rien de ce qu'on y tape
          ne peut etre enregistre. Un seul endroit pour le savoir, plutot
          que la question posee dans chaque gestionnaire. */
-      function estDemo() { return !ETAT.session; }
+      /* ⚠️ « JE VOIS RIEN » (19/09/2026). Julien etait connecte avec un
+         compte SANS club : estDemo() ne regardait que la session, donc
+         l'appli se croyait chez un vrai client et affichait le vide --
+         tableau de bord a tirets, boutique sans une seule recompense, et
+         une ligne rouge « Aucun etablissement lie a ce compte ». Le seul
+         etat ou l'appli ne montre rien est justement celui ou il faut
+         montrer le plus.
 
+         La question n'est pas « y a-t-il une session ? » mais « ce qui
+         est a l'ecran appartient-il vraiment a ce club ? ». Les deux
+         cas sans club -- pas connecte, et connecte sans etablissement --
+         affichent desormais le meme exemple. */
+      function sansClubReel() {
+        return !ETAT.data || ETAT.data.source !== "supabase" || !ETAT.data.establishment;
+      }
+      function estDemo() { return !ETAT.session || sansClubReel(); }
+
+      /* Deux exemples, deux sorties. Pas de compte : il faut en creer un.
+         Compte sans club : le compte est la, c'est le club qui manque --
+         lui reproposer « Creer mon compte » serait lui dire que ce qu'il
+         vient de faire n'a pas marche. */
       function bandeauDemo(quoi) {
         if (!estDemo()) return "";
+        var geste = ETAT.session ? "Ouvrir mon club" : "Créer mon compte";
         return '<div class="bandeau-demo">' +
           "<span><strong>Exemple.</strong> Ouvre ton club pour modifier " + quoi + ".</span>" +
-          '<button type="button" data-aller-connexion>Créer mon compte</button>' +
+          '<button type="button" data-aller-connexion>' + geste + "</button>" +
         "</div>";
       }
 
@@ -6359,6 +6428,8 @@
       // gestionnaire par bandeau finirait par s'empiler.
       document.addEventListener("click", function (ev) {
         if (!ev.target.closest("[data-aller-connexion]")) return;
+        // Deja connecte : il ne manque que le club, donc l'etape 2.
+        if (ETAT.session) return ouvrirParcours(2);
         modeInscription = false;
         majModePorte();
         // Sans session, afficherPorte() rouvre l'ecran du compte (etape 1).
@@ -7358,12 +7429,21 @@
         majBoutonCompte();
 
         var etab = etablissementCourant();
-        $("#reglages-nom").textContent = (etab && etab.name) || "—";
-        $("#reglages-ville").textContent = (etab && etab.city) ? etab.city + " · Nom, ville et photos" : "Nom, ville et photos";
-        rendreVignetteClub($("#reglages-vignette"), etab);
-        // Sur le club de demonstration, l'ecran s'ouvrirait sur des champs
-        // dont aucune ecriture ne passerait la RLS.
-        $("#reglages-fiche").disabled = !clubReelCharge();
+        var reel = clubReelCharge();
+        /* ⚠️ LA CARTE DU HAUT NE MENT PLUS SUR L'EXEMPLE. Elle affichait
+           « Mirage · Bruxelles » grisé a un gerant qui n'a pas encore de
+           club : il lisait le nom d'un club qui n'est pas le sien, sur un
+           bouton mort. Elle dit maintenant ce qui manque, et elle ouvre
+           l'ecran qui le regle. */
+        $("#reglages-nom").textContent = reel ? (etab && etab.name) || "—" : "Ton club n'est pas encore créé";
+        $("#reglages-ville").textContent = reel
+          ? ((etab && etab.city) ? etab.city + " · Nom, ville et photos" : "Nom, ville et photos")
+          : (ETAT.session ? "Son nom, sa ville, ses photos — deux minutes" : "Connecte-toi pour l'ouvrir");
+        rendreVignetteClub($("#reglages-vignette"), reel ? etab : null);
+        // Connecte sans club : la carte reste vivante, c'est le seul geste
+        // qui fait sortir de l'exemple. Sans session, l'ecran du compte
+        // passe d'abord.
+        $("#reglages-fiche").disabled = false;
 
         // Rien a installer sur un club de demonstration : le lien serait
         // un bouton qui ne fait rien.
@@ -7484,8 +7564,12 @@
       // En mode demo, "Deconnexion" n'a aucun sens : personne n'est
       // connecte. Le bouton annonce ce qu'il fait vraiment.
       $("#reglages-fiche").addEventListener("click", function () {
-        if (!clubReelCharge()) return;
-        ouvrirParcours(2, true);
+        // Club reel : on rouvre sa fiche, seule. Compte sans club : c'est
+        // la CREATION qu'on ouvre, et elle enchaine sur la suite du
+        // parcours. Pas de compte : l'ecran du compte d'abord.
+        if (clubReelCharge()) return ouvrirParcours(2, true);
+        if (ETAT.session) return ouvrirParcours(2);
+        afficherPorte("Connecte-toi avec ton compte club.");
       });
 
       // Une fleche qui sort d'une porte, et une qui y entre. Hors
@@ -7573,7 +7657,7 @@
          202609040001 non appliquee). Sans lui, un parcours termine
          reviendrait a chaque ouverture. */
       function parcoursDejaFait() {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         if (!etab) return true;
         if (etab.onboarded_at) return true;
         try { return localStorage.getItem(CLE_PARCOURS + "_" + etab.id) === "1"; } catch (erreur) { return false; }
@@ -7581,7 +7665,7 @@
 
       function marquerParcoursFait() {
         if (!clubReelCharge()) return;
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         try { localStorage.setItem(CLE_PARCOURS + "_" + etab.id, "1"); } catch (erreur) { /* stockage refuse */ }
         try { localStorage.removeItem(CLE_PARCOURS_PAS + "_" + etab.id); } catch (erreur) { /* rien a nettoyer */ }
 
@@ -7601,13 +7685,13 @@
          page et revient dessus. Sans memoire du pas, le gerant repartait
          de l'etape 1 et refaisait tout. */
       function memoriserPas(pas) {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         if (!etab) return;
         try { localStorage.setItem(CLE_PARCOURS_PAS + "_" + etab.id, String(pas)); } catch (erreur) { /* stockage refuse */ }
       }
 
       function pasMemorise() {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         if (!etab) return 1;
         try {
           var v = Number(localStorage.getItem(CLE_PARCOURS_PAS + "_" + etab.id));
@@ -7622,9 +7706,17 @@
          "demo-establishment", que la RLS refuse -- cinq ecrans de
          reglages qui finissent tous en message d'erreur. */
       function clubReelCharge() {
-        if (!ETAT.session || estDemo()) return false;
-        if (!ETAT.data || ETAT.data.source !== "supabase") return false;
-        return !!etablissementCourant();
+        return !!ETAT.session && !sansClubReel();
+      }
+
+      /* L'etablissement sur lequel on a le droit d'ECRIRE. En exemple,
+         `etablissementCourant()` renvoie le club de demonstration
+         (« Mirage », id `demo-establishment`) : les ecrans le dessinent,
+         et c'est voulu -- mais un enregistrement qui partirait dessus se
+         ferait refuser par la RLS, ou pire, prefilerait le parcours avec
+         le nom du club d'exemple. Tout ce qui ECRIT passe par ici. */
+      function clubAEcrire() {
+        return clubReelCharge() ? etablissementCourant() : null;
       }
 
       function parcoursAOuvrir() {
@@ -7701,10 +7793,16 @@
       /* ---- Navigation ---- */
 
       function ouvrirParcours(pasForce, seule) {
+        // Deux etablissements a distinguer ici : celui qu'on DESSINE dans
+        // l'apercu (l'exemple, quand il n'y a pas encore de club) et celui
+        // qu'on a le droit de RECOPIER dans les champs. Prefiler le
+        // formulaire de creation avec « Mirage, Avenue Louise » ferait
+        // creer un club portant le nom de l'exemple.
         var etab = etablissementCourant();
+        var sien = clubAEcrire();
         // Sans club, deux ecrans ont un sens : celui du compte, et celui
         // qui CREE le club. Les quatre autres ecrivent dedans, eux.
-        if (!etab && pasForce !== 1 && pasForce !== 2) return;
+        if (!sien && pasForce !== 1 && pasForce !== 2) return;
 
         PARCOURS.ouvert = true;
         // Pose ICI et nulle part ailleurs : toute ouverture sans le
@@ -7721,14 +7819,23 @@
         // piste grise ne bouge pas.
         $("#pa-jauge").innerHTML = new Array(PAS_MAX + 1).join("<span><i></i></span>");
 
+        if (sien) {
+          $("#pa-nom").value = sien.name || "";
+          $("#pa-ville").value = sien.city || "";
+          $("#pa-tel").value = sien.phone || "";
+          $("#pa-adresse").value = sien.address || "";
+          montrerManuel(!!(sien.address || PARCOURS.seule));
+          choisirTypeParcours(sien.category === "bar" || sien.category === "restaurant" ? sien.category : "club");
+          rendrePhotoParcours(sien.logo_url || null);
+        } else {
+          // Compte sans club : les champs partent VIDES, avec leurs
+          // seuls placeholders.
+          ["#pa-nom", "#pa-ville", "#pa-tel", "#pa-adresse"].forEach(function (id) { $(id).value = ""; });
+          montrerManuel(false);
+          choisirTypeParcours("club");
+          rendrePhotoParcours(null);
+        }
         if (etab) {
-          $("#pa-nom").value = etab.name || "";
-          $("#pa-ville").value = etab.city || "";
-          $("#pa-tel").value = etab.phone || "";
-          $("#pa-adresse").value = etab.address || "";
-          montrerManuel(!!(etab.address || PARCOURS.seule));
-          choisirTypeParcours(etab.category === "bar" || etab.category === "restaurant" ? etab.category : "club");
-          rendrePhotoParcours(etab.logo_url || null);
           construireChoixRecompenses();
           rendreChoixRecompenses();
           rendreBaremeParcours();
@@ -8052,7 +8159,7 @@
          nom du fichier. Un bucket de plus aurait demande une migration
          supplementaire pour ranger deux images au meme endroit. */
       $("#pa-photo-btn").addEventListener("click", async function () {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         if (!etab) return;
 
         var fichier = await demanderUneImage();
@@ -8086,7 +8193,7 @@
       /* Delegue sur la zone : les vignettes sont reecrites a chaque rendu,
          un gestionnaire par bouton finirait par s'empiler. */
       $("#pa-galerie").addEventListener("click", async function (ev) {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         if (!etab) return;
 
         var retirer = ev.target.closest("[data-galerie-retirer]");
@@ -8133,7 +8240,7 @@
       });
 
       async function enregistrerFicheParcours() {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         var nom = $("#pa-nom").value.trim();
         if (!nom) {
           direParcours("Écris le nom de ton établissement.", true);
@@ -8333,7 +8440,7 @@
             body: JSON.stringify({ action: "fiche", googleUrl: PARCOURS.ficheLien, enregistrer: true }),
           });
           if (!reponse.ok) console.warn("[fiche-google] enregistrement", reponse.status);
-          var etab = etablissementCourant();
+          var etab = clubAEcrire();
           if (etab) {
             etab.category = PARCOURS.fiche.type;
             etab.address = PARCOURS.fiche.adresse;
@@ -8346,7 +8453,7 @@
 
       /* ---- 3 · Les photos ---- */
       async function enregistrerPhotosParcours() {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         if (!etab) return false;
         if (!etab.logo_url) {
           direParcours("Ajoute une photo : c'est la première chose que tes clients verront.", true);
@@ -8518,7 +8625,7 @@
          suivante. On retient donc l'URL dans le choix, et
          enregistrerRecompensesParcours l'ecrit avec le reste. */
       async function choisirPhotoRecompense(i) {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         var choix = PARCOURS.choix[i];
         if (!etab || !choix) return;
 
@@ -8602,7 +8709,7 @@
       });
 
       async function enregistrerRecompensesParcours() {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         if (!etab) return false;
 
         var aCreer = [];
@@ -8801,7 +8908,7 @@
       }
 
       async function enregistrerBaremeParcours() {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         if (!etab) return false;
 
         var payload = { establishment_id: etab.id };
@@ -8878,7 +8985,7 @@
       });
 
       async function enregistrerHandleParcours() {
-        var etab = etablissementCourant();
+        var etab = clubAEcrire();
         if (!etab) return true;
 
         var ig = ETAT.instagram;
@@ -9152,7 +9259,7 @@
         }
         window.addEventListener("resize", pvAjusterScene);
         poserPas = apres(poserPas, function (cible) {
-          $("#pa-avancer").hidden = cible <= 1 || cible >= PAS_MAX || PARCOURS.seule || !etablissementCourant();
+          $("#pa-avancer").hidden = cible <= 1 || cible >= PAS_MAX || PARCOURS.seule || !clubAEcrire();
           PV.bande = null;
           pvSynchro();
           pvAjusterScene();
