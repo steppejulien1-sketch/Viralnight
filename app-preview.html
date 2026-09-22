@@ -3328,7 +3328,45 @@
       .vue-bar.ouverte .vb-hero-bas > :nth-child(2) { transition-delay: .08s; }
       .vue-bar.ouverte .vb-hero-bas > :nth-child(3) { transition-delay: .16s; }
 
-      .vb-corps { position: relative; margin-top: -24px; padding: 22px 20px 0; border-radius: 26px 26px 0 0; background: var(--bg); }
+      .vb-corps { position: relative; isolation: isolate; margin-top: -24px; padding: 22px 20px 0; border-radius: 26px 26px 0 0; background: var(--bg); }
+
+      /* ---- L'AMBIANCE DU LIEU, SUR LE BLANC DE LA PAGE (22/09/2026, le soir) ----
+         Julien : « ce n'est pas l'arriere de la boisson qui doit etre
+         personnalise, c'est le blanc de la page recompense ; il faut que ce
+         soit dans l'ambiance des photos qu'ils ont mises ».
+
+         Le decor colle derriere les dessins est donc retire -- il salissait
+         les vignettes -- et c'est la PAGE qui prend la couleur du lieu : sa
+         propre photo, floutee jusqu'a n'etre plus qu'un champ de couleur, se
+         pose sous la feuille et s'eteint en descendant. Les cartes restent
+         blanches : c'est ce qui les fait flotter au lieu de se noyer.
+
+         Flou fort et pas leger : a 20 px on reconnait la salle et ca devient
+         un fond d'ecran ; a 52 px il ne reste que SA lumiere, et deux clubs
+         ne se ressemblent plus. */
+      .vb-ambiance {
+        position: absolute; inset: 0; z-index: -1; overflow: hidden;
+        border-radius: 26px 26px 0 0; pointer-events: none;
+      }
+      .vb-ambiance i {
+        position: absolute; inset: -90px;
+        background: var(--ambiance, none) center / cover no-repeat;
+        filter: blur(52px) saturate(1.6);
+        opacity: .72;
+      }
+      /* Le voile qui ramene le texte a un contraste lisible. Il laisse la
+         couleur franche en haut (juste sous la photo, la ou l'oeil arrive)
+         et la rend a peine perceptible en bas de la page. */
+      .vb-ambiance::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(to bottom,
+          color-mix(in srgb, var(--bg) 40%, transparent) 0%,
+          color-mix(in srgb, var(--bg) 72%, transparent) 34%,
+          color-mix(in srgb, var(--bg) 90%, transparent) 100%);
+      }
+      /* Un etablissement sans photo garde sa page blanche : pas de teinte
+         inventee. */
+      .vue-bar:not(.a-ambiance) .vb-ambiance { display: none; }
       .vb-solde {
         padding: 16px 18px; border-radius: 20px; background: var(--s1);
         box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 14px 34px -22px rgba(15,17,20,.35);
@@ -3537,30 +3575,6 @@
         position: relative; width: 100%; aspect-ratio: 1 / 1;
         background: #ebecef; border-radius: 10px; overflow: hidden;
       }
-      /* ---- Le decor de l'etablissement, derriere le dessin (22/09/2026) ----
-         Julien : « je veux pas deux boutiques pareilles ». La salle du bar
-         passe derriere la vignette, une photo differente par carte, et un
-         voile clair la ramene au rang de TEXTURE : le dessin garde tout son
-         contraste, mais la tuile appartient a CE club.
-         Un voile blanc et pas un voile sombre : les dessins sont des traits
-         fonces sur fond clair, ils disparaitraient sur du noir. */
-      .carte-reco .photo.maison { background: #ebecef; }
-      .carte-reco .photo.maison .reco-decor {
-        position: absolute; inset: 0; z-index: 0;
-        background: var(--decor) center / cover no-repeat;
-      }
-      .carte-reco .photo.maison .reco-decor::after {
-        content: ""; position: absolute; inset: 0;
-        /* Assez clair pour que le dessin garde ses contours, assez
-           transparent pour qu'on RECONNAISSE la salle : c'est tout
-           l'interet. Plus voile que ca, les quatre bars redevenaient
-           gris pareil. */
-        background: linear-gradient(170deg, rgba(255,255,255,.56), rgba(255,255,255,.74));
-      }
-      /* Le dessin repasse devant : sans z-index il se retrouvait sous le
-         decor, qui est pose apres lui dans le DOM. */
-      .carte-reco .photo.maison > img,
-      .carte-reco .photo.maison > svg { position: relative; z-index: 1; }
       /* Plus de tuile du club sur chaque image : la section porte deja le
          nom du bar. Julien : "ne mets pas a chaque fois mon petit logo en
          dessous". */
@@ -4967,6 +4981,55 @@
         border-radius: 18px; background: var(--s2);
       }
       .sheet-hero .sheet-visuel { margin: 0 auto; }
+
+      /* ---- LA FICHE D'UNE RECOMPENSE PREND L'AMBIANCE DU LIEU (22/09/2026) ----
+         Julien : « quand on appuie sur une recompense, essaie que la page
+         soit plus attirante ». Elle s'ouvrait sur du blanc et un dessin pose
+         sur une bande grise : correcte, eteinte.
+         Meme principe que la page de la boutique : la photo du club, floutee
+         a l'exces, colore le HAUT de la feuille, et le dessin reste sur sa
+         tuile blanche, qui flotte dessus. La couleur vient du lieu, le
+         produit garde son fond propre -- c'est exactement la separation que
+         Julien demandait. */
+      /* ⚠️ LA COULEUR S'ETEINT PAR UN MASQUE, PAS PAR UN VOILE. Un voile
+         opaque doit finir EXACTEMENT sur le fond de la feuille -- or ce
+         fond vaut #ffffff en dur dans la boutique (.screen.boutique-pro
+         .sheet) et --bg ailleurs : la premiere version laissait un trait
+         net en travers de l'ecran, la ou la bande s'arretait. Le masque,
+         lui, fait disparaitre la photo elle-meme : quel que soit le fond
+         dessous, il n'y a rien a raccorder. */
+      .sheet.a-ambiance::before {
+        content: ""; position: absolute; left: 0; right: 0; top: 0; height: 430px; z-index: -1;
+        background: var(--ambiance, none) center / cover no-repeat;
+        filter: blur(48px) saturate(1.7);
+        opacity: .8; pointer-events: none;
+        -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%);
+        mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%);
+      }
+      /* La tuile du produit : blanche, posee sur la couleur, un peu plus
+         haute qu'avant -- c'est elle qu'on doit voir en ouvrant. */
+      .sheet.a-ambiance .sheet-hero {
+        padding: 22px 0 18px; border-radius: 22px; background: var(--s1);
+        box-shadow: 0 1px 2px rgba(15,17,20,.06), 0 20px 40px -24px rgba(15,17,20,.5);
+      }
+
+      /* ---- LES DEUX ETAPES, DANS UNE SEULE CARTE ----
+         Julien : « quand on appuie sur un truc, il faut que ce soit plus
+         propre ». Deux lignes a tuile grise flottaient sur le fond de la
+         feuille, chacune de son cote. Elles tiennent maintenant dans une
+         carte unique, separees d'un trait, numerotees : on lit un ordre,
+         pas deux puces. */
+      .sheet-etapes.carte {
+        display: block; margin: 0 0 20px; padding: 2px 16px;
+        border-radius: 18px; background: var(--s1); box-shadow: 0 0 0 1px var(--line);
+      }
+      .sheet-etapes.carte li { align-items: center; gap: 14px; padding: 15px 0; }
+      .sheet-etapes.carte li + li { border-top: 1px solid var(--line); }
+      .sheet-etape-num {
+        flex: 0 0 auto; display: grid; place-items: center; width: 26px; height: 26px;
+        border-radius: 50%; background: var(--ink); color: var(--bg);
+        font-family: var(--chiffre); font-size: calc(13 * var(--u)); font-weight: 800;
+      }
       /* La tuile du club, a cheval sur le bas-gauche du bandeau, comme le
          logo de la marque sur une fiche DUSK. Meme badge que sur la carte
          (creme + mascotte), liseré blanc pour la detacher du bandeau. */
@@ -4994,15 +5057,7 @@
       }
       .sheet-etapes { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 12px; }
       .sheet-etapes li { display: flex; align-items: flex-start; gap: 12px; }
-      .sheet-etape-ico {
-        flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px;
-        display: grid; place-items: center; background: var(--s2);
-      }
-      .sheet-etape-ico svg {
-        width: 19px; height: 19px; fill: none; stroke: var(--ink);
-        stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-      }
-      .sheet-etape-txt { flex: 1; min-width: 0; padding-top: 1px; }
+      .sheet-etape-txt { flex: 1; min-width: 0; }
       .sheet-etape-txt strong {
         display: block; font-size: calc(14 * var(--u)); font-weight: 700; color: var(--ink);
       }
@@ -5830,10 +5885,17 @@
         font-size: calc(14 * var(--u)); font-weight: 600; text-decoration: underline; text-underline-offset: 3px;
       }
       .vue-story .st-carte .ps-copier { background: var(--s2); color: var(--ink); min-height: 34px; padding: 0 12px; }
-      /* « Ouvrir Instagram » : noir (Julien : « c'est plus propre »), le logo
-         Instagram nu, sans liseré ni fond autour. */
-      .vue-story #story-ouvrir-app { background: var(--ink); color: var(--bg); box-shadow: none; }
-      .vue-story #story-ouvrir-app .reseau-ico { width: 24px; height: 24px; background: none; box-shadow: none; border-radius: 0; padding: 0; }
+      /* « Ouvrir Instagram » : ROUGE (22/09/2026). Julien : « je ne sais pas
+         si en noir, dans Story, c'est vraiment une bonne idee » -- non. Le
+         noir avait ete pris pour « faire propre », mais c'est le seul
+         bouton plein de l'appli qui ne soit pas rouge, sur la seule page
+         qui n'a qu'une chose a faire. Le rouge Noctify habille depuis
+         toujours les boutons qui AGISSENT (voir .reseau-ico) : celui-ci en
+         est un.
+         Et le logo passe en trait blanc : le vrai logo Instagram, avec son
+         degrade violet-orange, jurait sur le rouge. */
+      .vue-story #story-ouvrir-app { background: var(--bouton); color: #ffffff; box-shadow: var(--ombre-2); }
+      .vue-story #story-ouvrir-app .reseau-ico { width: 24px; height: 24px; background: none; box-shadow: none; border-radius: 0; padding: 0; color: #ffffff; }
       .vue-story #story-ouvrir-app .reseau-ico svg { width: 24px; height: 24px; }
 
       /* La carte unique de la page Story : la mention en grand, le lieu dessous. */
@@ -7351,13 +7413,19 @@
               <button type="button" class="rg-lien" id="rg-nom-modifier">Modifier</button>
             </div>
             <div class="rg-ligne">
-              <span class="rg-ligne-txt"><strong>Pseudo</strong><span id="rg-pseudo">—</span></span>
-              <button type="button" class="rg-lien" id="rg-pseudo-modifier">Modifier</button>
-            </div>
-            <div class="rg-ligne">
               <span class="rg-ligne-txt"><strong>Adresse e-mail</strong><span id="rg-email">—</span></span>
               <button type="button" class="rg-lien" id="rg-email-modifier">Modifier</button>
             </div>
+            <!-- ⚠️ AUDIT DU 22/09/2026 (Julien : « regarde vraiment ce qu'il y a
+                 de vraiment utile »). Quatre lignes sont parties :
+                 · « Pseudo » : c'était la MEME donnée que « Compte Instagram »
+                   (users.handle), écrite deux fois, avec deux boutons Modifier
+                   qui enregistraient la même colonne ;
+                 · « Capture de profil » : affichait « Enregistrée » ou
+                   « Manquante » sans aucun moyen d'y changer quoi que ce soit ;
+                 · « Langue : Français » : l'appli n'existe qu'en français ;
+                 · « Membre depuis » : une date que personne ne vient chercher
+                   dans ses données personnelles. -->
             <!-- Instagram remplace le telephone et l'adresse postale
                  (demande de Julien). Ces deux-la ne servaient a rien :
                  personne ne les lit, et le club n'en a pas besoin. Le
@@ -7366,9 +7434,6 @@
             <div class="rg-ligne">
               <span class="rg-ligne-txt"><strong>Compte Instagram</strong><span class="vide" id="rg-ig-pseudo">—</span></span>
               <button type="button" class="rg-lien" id="rg-ig-modifier">Ajouter</button>
-            </div>
-            <div class="rg-ligne">
-              <span class="rg-ligne-txt"><strong>Capture de profil</strong><span class="vide" id="rg-ig-capture">—</span></span>
             </div>
           </div>
 
@@ -7388,12 +7453,6 @@
             <div class="rg-ligne">
               <span class="rg-ligne-txt"><strong>Sons</strong></span>
               <button type="button" class="rg-switch" id="rg-son" role="switch" aria-checked="true" aria-label="Activer les sons"></button>
-            </div>
-            <div class="rg-ligne">
-              <span class="rg-ligne-txt"><strong>Langue</strong><span id="rg-langue">Français</span></span>
-            </div>
-            <div class="rg-ligne">
-              <span class="rg-ligne-txt"><strong>Membre depuis</strong><span id="rg-membre-depuis">—</span></span>
             </div>
           </div>
 
@@ -7545,6 +7604,7 @@
               </div>
             </div>
             <div class="vb-corps">
+              <span class="vb-ambiance" aria-hidden="true"><i></i></span>
               <!-- ⚠️ « TON SOLDE / 50 points » RETIRE le 19/09/2026. Julien :
                    « le truc ton solde avec 50 points fait trop IA ». Il avait
                    raison sur le fond : la barre du haut affiche deja « 50 pts »
@@ -8769,6 +8829,10 @@ function ouvrirFeuille(html, focusSel) {
   // sombre au milieu d'un ecran blanc.
   var contexteClair = !!document.querySelector(".vue-profil:not([hidden]), .vue-amis:not([hidden])");
   sheet.classList.toggle("clair", contexteClair);
+  // L'ambiance est posee APRES, par la seule feuille qui en a une (la
+  // fiche d'une recompense) : sans ce retrait, la couleur du dernier club
+  // ouvert restait sur la feuille suivante.
+  sheet.classList.remove("a-ambiance");
   corps.innerHTML = html;
   sheet.classList.add("up");
   sheet.setAttribute("aria-hidden", "false");
@@ -11860,10 +11924,18 @@ function heroClub(c) {
    d'installation laisse le gerant deposer ses photos et ne les
    enregistre pas. En attendant, `photos` peut etre rempli a la main
    dans CLUBS, comme `photo` l'etait. */
-function galerieClub(c) {
+function galerieClub(c, toutes) {
   var liste = Array.isArray(c.photos) ? c.photos.filter(Boolean) : [];
   if (!liste.length && c.photo) liste = [c.photo];
   if (!liste.length) return "";
+  /* ⚠️ UNE SEULE PHOTO DEPUIS LA CARTE (22/09/2026). Julien : « quand on
+     est sur la carte et qu'on clique sur un batiment, je veux pas quatre
+     photos sur ce truc [...] je veux juste une photo, une vraie photo ».
+     La mosaique facon Maps reste la ou on vient VOIR le lieu -- la fiche
+     ouverte depuis « Adresse et photos », sur la page de l'etablissement.
+     Sur la carte, on veut savoir a quoi ressemble l'endroit, pas feuilleter
+     un album : la photo de couverture, en grand, et c'est tout. */
+  if (!toutes) liste = [c.couverture || c.photo || liste[0]];
   var credit = "";
   if (c.photosGoogle && c.googlePlaceId) {
     credit = '<p class="club-galerie-credit" data-place="' + escapeHtmlSupport(c.googlePlaceId) + '" hidden>Photos : Google</p>';
@@ -11905,7 +11977,7 @@ function galerieClub(c) {
   return html + "</div>" + credit;
 }
 
-function ouvrirClub(c, src, id) {
+function ouvrirClub(c, src, id, toutesLesPhotos) {
   rendeur = src || null;
 
   // Adresse + itineraire : une ligne plate (icone/texte/lien), pas une
@@ -12053,7 +12125,7 @@ function ouvrirClub(c, src, id) {
 
   var html =
     heroClub(c) +
-    galerieClub(c) +
+    galerieClub(c, toutesLesPhotos) +
     blocPartenaire +
     '<div class="club-actions-row">' + actions + "</div>" +
     blocAvisGoogle +
@@ -12309,11 +12381,18 @@ function ouvrirChoixReseau(nomClub) {
     "</div>";
   }
 
+  /* Le logo Instagram au trait blanc, pour le bouton rouge. Le logo de
+     marque (degrade) reste partout ailleurs : ici il tacherait. */
+  var ICONE_IG_BLANC = '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="5" fill="none" stroke="#fff" stroke-width="1.8"/>' +
+    '<circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="1.8"/>' +
+    '<circle cx="17.1" cy="6.9" r="1.15" fill="#fff"/>';
+
   function blocOuvrir(kindId) {
     var k = KINDS_STORY.filter(function (x) { return x.id === kindId; })[0] || KINDS_STORY[0];
+    var icone = k.classe === "ig" ? ICONE_IG_BLANC : k.icone;
     return '<button type="button" class="st-cta" id="story-ouvrir-app" ' +
       'data-schema="' + k.schema + '" data-secours="' + k.secours + '">' +
-      '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + k.icone + "</svg></span>" +
+      '<span class="reseau-ico ' + k.classe + '"><svg viewBox="0 0 24 24">' + icone + "</svg></span>" +
       "Ouvrir " + (kindId === "tiktok" ? "TikTok" : "Instagram") +
     "</button>";
   }
@@ -14380,14 +14459,6 @@ $("#rg-deconnexion")?.addEventListener("click", async function () {
   VUE_ACCUEIL.classList.remove("masque");
 });
 
-// "Membre depuis" : mois + annee de creation du compte (created_at de
-// la session), pas une donnee inventee.
-var MOIS_FR = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-function moisAnnee(iso) {
-  var d = new Date(iso);
-  return MOIS_FR[d.getMonth()] + " " + d.getFullYear();
-}
-
 // select("*") plutot que lister les colonnes une par une : la colonne
 // langue n'existe pas forcement en base, et la nommer ferait echouer
 // TOUTE la requete.
@@ -14396,30 +14467,19 @@ $("#pf-reglages")?.addEventListener("click", async function () {
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
   if (!session) {
     $("#rg-nom").textContent = "—";
-    $("#rg-pseudo").textContent = "—";
     $("#rg-email").textContent = "Non connecté";
-    $("#rg-membre-depuis").textContent = "—";
     return;
   }
   var profil = (await supabaseClubbeur.from("users").select("*").eq("id", session.user.id).single()).data;
-  var nomRepliReglages = String(session.user.email || "").split("@")[0];
-  $("#rg-pseudo").textContent = profil && profil.handle ? "@" + profil.handle : nomRepliReglages;
   $("#rg-email").textContent = session.user.email;
   $("#rg-nom").textContent = nomAffiche({ metadata: session.user.user_metadata, email: session.user.email }) || "—";
   var lignePhoto = $("#rg-photo");
   lignePhoto.textContent = profil && profil.avatar_url ? "Ajoutée" : "Aucune";
   lignePhoto.classList.toggle("vide", !(profil && profil.avatar_url));
-  // Le compte Instagram et sa capture, a la place du telephone et de
-  // l'adresse. La capture n'est pas une valeur affichable (c'est un
-  // chemin dans un bucket prive) : on montre si elle est enregistree,
-  // ce qui est la seule chose qui interesse le clubbeur.
+  // Le compte Instagram, a la place du telephone et de l'adresse : c'est
+  // lui qui relie une mention a une personne, la seule coordonnee qui
+  // compte ici.
   remplirLigneReglage("#rg-ig-pseudo", profil && profil.handle ? "@" + profil.handle : null, "#rg-ig-modifier");
-  var aCapture = !!(profil && profil.profile_proof_path);
-  var ligneCapture = $("#rg-ig-capture");
-  ligneCapture.textContent = aCapture ? "Enregistrée" : "Manquante";
-  ligneCapture.classList.toggle("vide", !aCapture);
-  $("#rg-langue").textContent = (profil && profil.langue) || "Français";
-  $("#rg-membre-depuis").textContent = moisAnnee(session.user.created_at);
 });
 
 // La photo : meme champ fichier et meme envoi que la photo du profil (le
@@ -14448,46 +14508,10 @@ $("#rg-nom-modifier")?.addEventListener("click", async function () {
   if (nomProfil) nomProfil.textContent = nettoye;
 });
 
-// Meme nettoyage que le repli automatique a la creation du compte
-// (assurerProfil, ecran Amis) : minuscules, chiffres, point et
-// underscore seulement.
-$("#rg-pseudo-modifier")?.addEventListener("click", async function () {
-  var session = (await supabaseClubbeur.auth.getSession()).data.session;
-  if (!session) return;
-  var actuel = (await supabaseClubbeur.from("users").select("handle").eq("id", session.user.id).single()).data;
-  var saisie = window.prompt("Nouveau pseudo :", (actuel && actuel.handle) || "");
-  if (saisie === null) return;
-  var nettoye = saisie.trim().toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 30);
-  if (!nettoye) { window.alert("Pseudo invalide."); return; }
-  var res = await supabaseClubbeur.from("users").update({ handle: nettoye }).eq("id", session.user.id);
-  if (res.error) {
-    window.alert(res.error.message.indexOf("duplicate") !== -1 ? "Ce pseudo est déjà pris." : "Ça n'a pas marché, réessaie.");
-    return;
-  }
-  $("#rg-pseudo").textContent = "@" + nettoye;
-});
-
-// telephone, adresse, langue : les colonnes n'existent pas encore
-// dans la table "users" de la base clubbeur (verifie -- ce projet
-// Supabase, gcopwgmqjiufemapamek, n'est pas celui dont ce depot suit
-// les migrations, je n'ai donc pas la main dessus pour executer la
-// requete moi-meme). A faire une fois, dans son SQL Editor :
-//
-//   alter table public.users
-//     add column if not exists telephone text,
-//     add column if not exists adresse text,
-//     add column if not exists langue text default 'Français';
-//
-// Le code ci-dessous marche des que ces colonnes existent -- avant
-// ca, l'erreur Postgres remonte telle quelle (honnete plutot que de
-// faire semblant que c'est enregistre).
 /* Une ligne de Reglages : la valeur, ou "Non renseigné" en gris ; le lien
    dit "Modifier" quand il y a quelque chose, "Ajouter" sinon.
-   ⚠️ APPELEE DEPUIS LE COMMIT f253610, JAMAIS DEFINIE. Trouve le 13/09/2026
-   en capturant Reglages : l'ouverture levait "remplirLigneReglage is not
-   defined" au milieu -- la ligne Instagram, la capture, la langue et
-   "Membre depuis" ne se remplissaient jamais, et modifier le pseudo
-   Instagram plantait apres l'enregistrement. */
+   Depuis l'audit du 22/09/2026, une seule ligne s'en sert : le compte
+   Instagram. */
 function remplirLigneReglage(selValeur, valeur, selBouton) {
   var el = $(selValeur);
   if (el) {
@@ -14522,12 +14546,9 @@ function champTexteLibre(id, colonne, libelle) {
       window.alert(/duplicate|unique/i.test(res.error.message) ? "Ce pseudo est déjà pris." : "Ça n'a pas marché, réessaie.");
       return;
     }
-    // Un seul endroit decide de l'apparence d'une ligne vide. Le pseudo
-    // Instagram s'affiche sur deux lignes (#rg-ig-pseudo et #rg-pseudo).
+    // Un seul endroit decide de l'apparence d'une ligne vide.
     if (colonne === "handle") {
-      var arobase = propre ? "@" + propre.replace(/^@/, "") : "";
-      remplirLigneReglage("#rg-ig-pseudo", arobase, "#" + id);
-      remplirLigneReglage("#rg-pseudo", arobase, null);
+      remplirLigneReglage("#rg-ig-pseudo", propre ? "@" + propre.replace(/^@/, "") : "", "#" + id);
     } else {
       remplirLigneReglage("#rg-" + colonne, propre, "#" + id);
     }
@@ -14538,10 +14559,6 @@ function champTexteLibre(id, colonne, libelle) {
    verification cote club, pas un reglage. Qui veut la changer repasse
    par le support. */
 champTexteLibre("rg-ig-modifier", "handle", "Pseudo Instagram (sans @)");
-// Plus de bouton "Modifier" sur Langue : tant que l'appli ne traduit
-// pas reellement (chantier remis a plus tard par Julien), un bouton
-// qui ne fait qu'enregistrer une preference sans effet visible n'a
-// pas sa place ici.
 
 $("#rg-email-modifier")?.addEventListener("click", async function () {
   var session = (await supabaseClubbeur.auth.getSession()).data.session;
@@ -16462,6 +16479,7 @@ function rendreBoutiqueBar(bar) {
   var suivante = autres.filter(function (r) { return r.stock > 0; })[0];
 
   poserPhotosBar(c);
+  poserAmbiance(VUE_BAR, c);
   var ou = POSITION_MOI ? formaterDistance(bar.km) : bar.quartier;
   document.getElementById("vb-lieu").innerHTML = ou
     ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>' + escapeHtmlSupport(ou)
@@ -16508,11 +16526,14 @@ function rendreBoutiqueBar(bar) {
   section(prenables.length ? "Encore quelques points" : "Récompenses", autres, false);
   if (!recos.length) sections.innerHTML = '<p class="vb-vide">Pas encore de récompense ici.</p>';
 
+  // Julien, 22/09/2026 : « etablissement de demonstration, ces recompenses
+  // ne se changent pas : tu peux retirer ca ». Un bar de demonstration n'a
+  // simplement pas de fiche -- le pied reste vide.
   document.getElementById("vb-pied").innerHTML = bar.cle
     ? '<button type="button" class="vb-fiche" id="vb-fiche">Adresse et photos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'
-    : '<p class="vb-demo">Établissement de démonstration : ses récompenses ne s’échangent pas.</p>';
+    : "";
   var fiche = document.getElementById("vb-fiche");
-  if (fiche) fiche.addEventListener("click", function () { ouvrirClub(CLUBS[bar.cle], fiche, bar.cle); });
+  if (fiche) fiche.addEventListener("click", function () { ouvrirClub(CLUBS[bar.cle], fiche, bar.cle, true); });
 }
 
 /* Les photos d'un etablissement : la facade d'abord, puis les autres. Toucher
@@ -16543,6 +16564,23 @@ function arreterDefilePhotoBar() {
   clearInterval(PHOTOS_BAR.minuteur);
   PHOTOS_BAR.minuteur = null;
 }
+/* La photo qui donne sa couleur a la page d'un etablissement : la
+   premiere vraie photo du lieu, celle que le gerant a mise en tete.
+   Rien si le club n'en a aucune -- une teinte prise ailleurs serait la
+   meme pour tout le monde, donc exactement ce qu'on cherche a eviter. */
+function photoAmbiance(c) {
+  if (!c) return null;
+  var liste = photosDuBar(c).filter(function (u) { return u.indexOf("couverture-par-defaut") === -1; });
+  return liste[0] || null;
+}
+function poserAmbiance(el, c) {
+  if (!el) return;
+  var photo = photoAmbiance(c);
+  el.classList.toggle("a-ambiance", !!photo);
+  if (photo) el.style.setProperty("--ambiance", 'url("' + photo.replace(/"/g, "") + '")');
+  else el.style.removeProperty("--ambiance");
+}
+
 function photosDuBar(c) {
   var autres = Array.isArray(c.photos) ? c.photos.filter(Boolean) : [];
   var liste = [c.couverture || c.photo || autres[0]].concat(autres);
@@ -16658,29 +16696,6 @@ function carteRecompense(r, index, bar) {
       ? '<img src="' + r.foto + '" alt="" loading="lazy">'
       : r.art();
 
-    /* ⚠️ DEUX BOUTIQUES NE DOIVENT PLUS SE RESSEMBLER (22/09/2026).
-       Julien : « j'aimerais bien que chaque boutique d'etablissement soit
-       personnelle a eux en fonction des photos de l'etablissement, je veux
-       pas deux boutiques pareilles ».
-
-       Le probleme etait reel : tant que le gerant n'a pas televerse de photo
-       pour SA recompense -- et presque aucun ne le fait -- la vignette est un
-       dessin pris dans FOTOS, le meme shot et le meme cintre pour tout le
-       monde. Quatre cartes identiques d'un bar a l'autre : un catalogue, pas
-       une boutique.
-
-       Le decor de l'etablissement passe donc derriere le dessin, une photo
-       differente par carte. Le dessin reste devant et garde sa lisibilite
-       (un voile clair par-dessus la photo) : on voit toujours qu'il s'agit
-       d'un shot, mais c'est le shot de CE bar, dans SA salle.
-
-       La photo du gerant, elle, continue de passer devant tout le reste. */
-    var decor = null;
-    if (!r.propre && bar && bar.club) {
-      var lot = photosDuBar(bar.club).filter(function (u) { return u.indexOf("couverture-par-defaut") === -1; });
-      // Decale de 1 : la premiere photo est deja la banniere, juste au-dessus.
-      if (lot.length) decor = lot[(index + 1) % lot.length];
-    }
     // Pas de "pts" ici : le badge sur la photo, juste au-dessus,
     // l'affiche deja ("1 200 PTS") — le repeter faisait passer le
     // bouton sur deux lignes des que le montant manquant depassait
@@ -16711,10 +16726,7 @@ function carteRecompense(r, index, bar) {
       // Le stock bas ("Plus que 3", "Epuise") POSE SUR L'IMAGE, en haut a
       // gauche : un element superpose de plus (Julien, 13/09), et l'etiquette
       // du bas garde la meme hauteur sur toutes les cartes.
-      '<span class="photo' + (decor ? " maison" : "") + '"' +
-        (decor ? ' style="--decor:url(&quot;' + decor.replace(/"/g, "") + '&quot;)"' : "") + ">" +
-        (decor ? '<span class="reco-decor" aria-hidden="true"></span>' : "") +
-        visuelInterieur +
+      '<span class="photo">' + visuelInterieur +
         (epuise ? '<span class="badge-epuise">Épuisé</span>' : "") +
         (rare ? '<span class="badge-rarete">Plus que ' + r.stock + "</span>" : "") +
       "</span>" +
@@ -16943,11 +16955,13 @@ function ouvrirRecompense(item, src) {
   var lieu = item.fam === "bar" ? "Au bar"
     : (item.fam === "acces" || item.fam === "vip") ? "À l'entrée"
     : "Au bar ou à l'entrée";
-  var ICONE_ECHANGE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2"/></svg>';
-  var ICONE_QR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 20h2.5M20 14v2.5"/></svg>';
+  /* Deux lignes, deux phrases courtes. Celles d'avant expliquaient le
+     bouton qu'on a sous les yeux (« touche le bouton : ils quittent ton
+     solde... ») -- du mode d'emploi, la ou il suffit de dire ce qui se
+     passe. */
   var etapes = [
-    [ICONE_ECHANGE, "Échange tes points", "Touche le bouton : ils quittent ton solde et ton bon s'affiche."],
-    [ICONE_QR, "Montre ton bon", lieu + ", présente le QR. Valable ce soir."],
+    ["Échange tes points", "Ton bon s'affiche tout de suite."],
+    ["Montre ton bon", lieu + ", ce soir."],
   ];
 
   var famille = FAMILLES[item.fam] || "";
@@ -16975,16 +16989,18 @@ function ouvrirRecompense(item, src) {
     '<h3 id="sh-titre">' + nomRecompense(item.nom) + "</h3>" +
     (item.desc ? '<p class="desc">' + item.desc + "</p>" : "") +
     '<p class="sheet-etapes-titre">Comment en profiter</p>' +
-    '<ol class="sheet-etapes">' + etapes.map(function (e) {
+    '<ol class="sheet-etapes carte">' + etapes.map(function (e, i) {
       return "<li>" +
-        '<span class="sheet-etape-ico">' + e[0] + "</span>" +
-        '<span class="sheet-etape-txt"><strong>' + e[1] + "</strong><span>" + e[2] + "</span></span>" +
+        '<span class="sheet-etape-num" aria-hidden="true">' + (i + 1) + "</span>" +
+        '<span class="sheet-etape-txt"><strong>' + e[0] + "</strong><span>" + e[1] + "</span></span>" +
       "</li>";
     }).join("") + "</ol>" +
     cta +
     (note ? '<p class="sheet-note">' + note + "</p>" : "");
 
   ouvrirFeuille(html, "#sh-cta, .sheet-cta");
+  // La couleur du lieu sur le haut de la feuille (voir .sheet.a-ambiance).
+  poserAmbiance(sheet, club);
 
   var btn = $("#sh-cta");
   if (btn) btn.addEventListener("click", function () { echanger(item); });
