@@ -2152,8 +2152,8 @@
       .pf-section { margin: 28px 0 0; }
       .pf-section-titre {
         display: flex; align-items: center; gap: 9px; margin: 0 0 10px 2px;
-        font-family: var(--titre); font-size: calc(20 * var(--u)); font-weight: 800;
-        letter-spacing: -.02em; line-height: 1.2; color: var(--ink);
+        font-family: var(--titre); font-size: calc(18 * var(--u)); font-weight: 650;
+        letter-spacing: -.015em; line-height: 1.2; color: var(--ink);
       }
       .pf-section-titre svg { flex: 0 0 auto; width: 21px; height: 21px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       .pf-liste {
@@ -2172,7 +2172,12 @@
       .pf-item:active { background: var(--s2); }
       .pf-item-ico { width: 28px; height: 28px; fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
       .pf-item-txt { min-width: 0; }
-      .pf-item-txt strong { display: block; font-size: calc(15.5 * var(--u)); font-weight: 750; letter-spacing: -.01em; line-height: 1.25; }
+      /* ⚠️ 600 ET PAS 750 (19/09/2026). Julien, sur Aide & Support : « c'est
+         tout gras, ca fait beaucoup trop IA ». Six lignes de suite en 750,
+         sans rien de plus leger entre elles, ne hierarchisent plus rien --
+         quand tout est important, plus rien ne l'est. Les reglages d'un
+         telephone ecrivent leurs libelles en graisse normale. */
+      .pf-item-txt strong { display: block; font-size: calc(15 * var(--u)); font-weight: 550; letter-spacing: -.005em; line-height: 1.3; }
       .pf-item-txt > span { display: block; margin-top: 3px; font-size: calc(13 * var(--u)); line-height: 1.4; color: var(--ink3); }
       .pf-item-chev { width: 16px; height: 16px; fill: none; stroke: var(--ink3); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
@@ -3279,7 +3284,9 @@
       .vb-hero.plusieurs { cursor: pointer; -webkit-tap-highlight-color: transparent; }
       .vb-photo.change { animation: vbPhoto .45s ease both; }
       @keyframes vbPhoto { from { opacity: .35; } to { opacity: 1; } }
-      .vb-segments { position: absolute; z-index: 2; left: 20px; right: 20px; bottom: 34px; display: flex; gap: 4px; pointer-events: none; }
+      /* Les traits remontent en haut de la photo, la ou une story les met :
+         en bas ils se battaient avec le nom, qui descend maintenant. */
+      .vb-segments { position: absolute; z-index: 2; left: 20px; right: 20px; top: calc(68px + env(safe-area-inset-top, 0px)); display: flex; gap: 4px; pointer-events: none; }
       .vb-segments:empty { display: none; }
       .vb-segments i { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.35); transition: background-color .3s ease; }
       .vb-segments i.vu { background: #ffffff; }
@@ -3290,7 +3297,13 @@
           linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0) 26%),
           linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,.35) 38%, rgba(0,0,0,0) 62%);
       }
-      .vb-hero-bas { position: absolute; left: 20px; right: 20px; bottom: 44px; color: #ffffff; }
+      /* ⚠️ LE TITRE DESCEND (19/09/2026). Julien, capture a l'appui : « le
+         texte est trop haut sur la photo et prend donc trop de place ».
+         Trois lignes empilees a 44 px du bas mangeaient le tiers inferieur
+         de la photo -- celui ou il y a justement quelque chose a voir. Le
+         type d'etablissement est retire (voir #vb-sous), le nom maigrit, et
+         ce qui reste se pose juste au-dessus de la feuille. */
+      .vb-hero-bas { position: absolute; left: 20px; right: 20px; bottom: 42px; color: #ffffff; }
       .vb-pastille {
         display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px 6px 8px; border-radius: 8px;
         background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
@@ -3298,11 +3311,12 @@
       }
       .vb-pastille svg { width: 14px; height: 14px; fill: none; stroke: #ffffff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
       .vb-nom {
-        margin: 12px 0 0; font-family: var(--titre); font-size: calc(40 * var(--u)); font-weight: 900;
-        letter-spacing: -.035em; line-height: .98; text-wrap: balance; text-shadow: 0 2px 24px rgba(0,0,0,.35);
+        margin: 10px 0 0; font-family: var(--titre); font-size: calc(33 * var(--u)); font-weight: 750;
+        letter-spacing: -.03em; line-height: 1; text-wrap: balance; text-shadow: 0 2px 24px rgba(0,0,0,.35);
       }
       .vb-sous { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 10px 0 0; font-size: calc(14.5 * var(--u)); font-weight: 600; }
       .vb-sous { color: rgba(255,255,255,.88); font-size: calc(16 * var(--u)); }
+      .vb-sous[hidden] { display: none; }
       .vb-gagne { display: inline-flex; align-items: center; gap: 6px; color: #f5c542; }
       .vb-gagne svg { width: 17px; height: 17px; fill: #f5c542; }
       .vb-etat { color: rgba(255,255,255,.78); }
@@ -3319,6 +3333,7 @@
         padding: 16px 18px; border-radius: 20px; background: var(--s1);
         box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 14px 34px -22px rgba(15,17,20,.35);
       }
+      .vue-bar .vb-solde[hidden], .vb-solde[hidden] { display: none; }
       .vb-solde-haut { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
       .vb-solde-lib { font-size: calc(13 * var(--u)); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); }
       .vb-solde-num { font-size: calc(14 * var(--u)); font-weight: 600; color: var(--ink2); }
@@ -3331,6 +3346,7 @@
       .vb-solde-txt b { color: var(--ink); }
 
       .vb-section { margin-top: 28px; }
+      .vb-solde[hidden] + #vb-sections .vb-section:first-child { margin-top: 4px; }
       .vb-titre { display: flex; align-items: center; gap: 8px; margin: 0 2px 14px; font-size: calc(20 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
       .vb-titre span {
         display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 99px;
@@ -6164,7 +6180,7 @@
       .pg-intro { text-align: center; padding: 2px 8px 6px; margin: 0 0 22px; }
       .pg-ico { display: inline-grid; place-items: center; width: 56px; height: 56px; }
       .pg-ico svg { width: 42px; height: 42px; fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-      .pg-titre { margin: 4px 0 0; font-family: var(--titre); font-size: calc(26 * var(--u)); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; color: var(--ink); }
+      .pg-titre { margin: 4px 0 0; font-family: var(--titre); font-size: calc(23 * var(--u)); font-weight: 700; letter-spacing: -.025em; line-height: 1.15; color: var(--ink); }
       .pg-sous { margin: 10px auto 0; max-width: 32ch; font-size: calc(14.5 * var(--u)); line-height: 1.5; color: var(--ink2); }
       .pg-solde { margin: -8px 0 26px; text-align: center; font-size: calc(15 * var(--u)); font-weight: 600; color: var(--ink2); }
       .pg-solde strong { display: block; font-family: var(--chiffre); font-variant-numeric: tabular-nums; font-size: calc(44 * var(--u)); font-weight: 800; letter-spacing: -.04em; line-height: 1.05; color: var(--ink); }
@@ -6182,7 +6198,9 @@
       .vue-profil-feuille .pg-intro + .rg-carte { margin-top: 0; }
       .vue-profil-feuille .rg-liste { padding: 2px 18px; border: 0; border-radius: 16px; box-shadow: inset 0 0 0 1px var(--line); margin-bottom: 14px; }
       .vue-profil-feuille .rg-ligne { padding: 17px 0; }
-      .vue-profil-feuille .rg-ligne-txt strong { font-size: calc(15 * var(--u)); font-weight: 700; }
+      /* Le libelle d'un reglage se LIT, il ne s'annonce pas : graisse normale
+         a gauche, valeur en gris a droite -- la grammaire des reglages d'iOS. */
+      .vue-profil-feuille .rg-ligne-txt strong { font-size: calc(15 * var(--u)); font-weight: 550; }
       .vue-profil-feuille .rg-ligne-txt span { font-size: calc(14.5 * var(--u)); }
       .vue-profil-feuille .rg-carte { padding: 4px 18px; border: 0; border-radius: 16px; box-shadow: inset 0 0 0 1px var(--line); }
       .vue-profil-feuille .rg-toggle-row { padding: 17px 0; }
@@ -6216,7 +6234,7 @@
 
       /* Aide & Support : l'en-tete de page, sans filet. */
       .ai-header { border-bottom: 0; padding: calc(12px + env(safe-area-inset-top)) 16px 10px; }
-      .ai-header .va-title { font-family: var(--titre); font-size: calc(22 * var(--u)); font-weight: 800; letter-spacing: -.03em; }
+      .ai-header .va-title { font-family: var(--titre); font-size: calc(21 * var(--u)); font-weight: 650; letter-spacing: -.02em; }
 
       /* La feuille de suppression : la photo un peu plus haute. */
       .sheet-sup .sup-hero { height: 250px; }
@@ -6346,7 +6364,8 @@
       .dv-merci span { display: block; margin-top: 6px; font-size: calc(14.5 * var(--u)); line-height: 1.5; color: var(--ink2); }
 
       /* Aide & Support : les sujets, puis la reponse. */
-      .ai-accueil-txt { margin: 4px 2px 12px; font-size: calc(15 * var(--u)); font-weight: 600; color: var(--ink2); }
+      /* Une phrase d'introduction en 600, c'etait du gras qui n'annonce rien. */
+      .ai-accueil-txt { margin: 4px 2px 14px; font-size: calc(15 * var(--u)); font-weight: 400; color: var(--ink2); }
       .ai-accueil[hidden], .ai-reponse[hidden], .ai-autre-sujet[hidden] { display: none; }
       .ai-reponse { margin: 4px 0 16px; padding: 16px 18px; border-radius: 16px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); }
       .ai-reponse-tete { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -7489,11 +7508,24 @@
               <div class="vb-hero-bas">
                 <span class="vb-pastille" id="vb-lieu"></span>
                 <h1 class="vb-nom" id="vb-nom"></h1>
-                <p class="vb-sous" id="vb-sous"></p>
+                <!-- ⚠️ « Boite de nuit » a ete retire le 19/09/2026 (Julien :
+                     « retire le type d'etablissement »). On vient de toucher
+                     la photo d'un bar pour voir ses recompenses : on sait
+                     deja ce que c'est. L'element reste, masque, parce que
+                     rendreBar() lui ecrit toujours. -->
+                <p class="vb-sous" id="vb-sous" hidden></p>
               </div>
             </div>
             <div class="vb-corps">
-              <div class="vb-solde" id="vb-solde"></div>
+              <!-- ⚠️ « TON SOLDE / 50 points » RETIRE le 19/09/2026. Julien :
+                   « le truc ton solde avec 50 points fait trop IA ». Il avait
+                   raison sur le fond : la barre du haut affiche deja « 50 pts »
+                   et elle ne bouge pas quand on defile. Ce bloc redisait donc
+                   le meme chiffre, dans une carte blanche, sous une etiquette
+                   en capitales espacees -- exactement les trois tics qui font
+                   « genere ». L'element reste, masque : rendreBar() lui ecrit
+                   encore, et les jauges de recompense lisent le meme solde. -->
+              <div class="vb-solde" id="vb-solde" hidden></div>
               <div id="vb-sections"></div>
               <div class="vb-pied" id="vb-pied"></div>
             </div>
@@ -14168,7 +14200,22 @@ async function desactiverNotifications() {
 
 async function synchroniserBasculeNotif() {
   if (!BOUTONS_NOTIF.length) return;
-  if (!pushDisponible() || Notification.permission !== "granted") {
+  if (!pushDisponible()) {
+    /* ⚠️ SUR IPHONE, LE PUSH N'EXISTE QUE DEPUIS L'APPLI INSTALLEE.
+       Dans Safari, `PushManager` n'est meme pas dans `window` : l'interrupteur
+       ne pouvait donc RIEN faire, et il fallait appuyer dessus pour lire
+       pourquoi. On le dit avant, pas apres -- c'est la premiere raison pour
+       laquelle « les notifications ne marchent pas » (19/09/2026 : aucun
+       abonnement en base depuis l'ouverture). */
+    peindreBasculeNotif(false);
+    direNotif(
+      plateformeTelephone() === "ios"
+        ? "Ajoute d'abord Noctify à ton écran d'accueil : sur iPhone, les notifications n'existent que depuis l'appli installée."
+        : "Ce navigateur ne gère pas les notifications."
+    );
+    return;
+  }
+  if (Notification.permission !== "granted") {
     peindreBasculeNotif(false);
     return;
   }
