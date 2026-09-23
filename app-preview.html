@@ -3293,9 +3293,12 @@
       .vue-bar.ouverte .vb-photo { transform: scale(1); }
       .vb-voile {
         position: absolute; inset: 0;
+        /* Comme la boutique (23/09/2026, DUSK) : le haut de la photo n'est plus
+           noirci -- juste assez sous la barre pour lire le retour -- et le bas
+           ne s'assombrit que sous le nom. */
         background:
-          linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0) 26%),
-          linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,.35) 38%, rgba(0,0,0,0) 62%);
+          linear-gradient(to bottom, rgba(0,0,0,.22), rgba(0,0,0,0) 14%),
+          linear-gradient(to top, rgba(0,0,0,.66), rgba(0,0,0,.2) 22%, rgba(0,0,0,0) 38%);
       }
       /* ⚠️ LE TITRE DESCEND (19/09/2026). Julien, capture a l'appui : « le
          texte est trop haut sur la photo et prend donc trop de place ».
@@ -3449,11 +3452,23 @@
          se pose en bas a gauche sur un voile qui ne noircit que le dernier tiers
          (le haut de la photo reste intact), et un blanc net separe les cartes. */
       .vue-boutique .bar-section + .bar-section { margin-top: 16px; }
-      .vue-boutique .bar-couverture { isolation: isolate; width: 100%; margin: 0; border-radius: 20px; }
+      /* 23/09/2026, Julien : « regarde comment DUSK ont rendu leurs photos plus
+         attirantes et copie ». Releve sur ses captures (IMG_5083/5085, video
+         du 14/09) : chez DUSK, RIEN n'assombrit la photo -- pas de voile, pas
+         de filtre -- et les coins sont presque droits. Ici le voile noir
+         montait jusqu'aux deux tiers de la photo : c'est lui qui l'eteignait.
+         Le texte reste sur la photo (prefere le 16/09) ; le voile ne tient
+         plus que la bande du texte. */
+      .vue-boutique .bar-couverture { isolation: isolate; width: 100%; margin: 0; border-radius: 6px; }
       .bar-voile {
         position: absolute; inset: 0; z-index: 1; pointer-events: none;
-        background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.38) 32%, rgba(0,0,0,0) 62%);
+        background: linear-gradient(to top, rgba(0,0,0,.62) 0%, rgba(0,0,0,.22) 20%, rgba(0,0,0,0) 36%);
       }
+      /* Les photos de DUSK sont claires et chaudes a la source (bars eclaires
+         en lampes). Les notres -- clubs de nuit, photos Pexels -- sont sombres :
+         on les eclaircit et on ravive leurs couleurs pour obtenir le meme
+         rendu. Pas de recadrage, pas de teinte ajoutee. */
+      .vue-boutique .bar-couverture img, .vb-photo { filter: brightness(1.32) saturate(1.35) contrast(1.02); }
       .vue-boutique .bar-pastille { z-index: 2; }
       .bar-texte {
         position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 14px;
@@ -5894,8 +5909,12 @@
          est un.
          Et le logo passe en trait blanc : le vrai logo Instagram, avec son
          degrade violet-orange, jurait sur le rouge. */
-      .vue-story #story-ouvrir-app { background: var(--bouton); color: #ffffff; box-shadow: var(--ombre-2); }
-      .vue-story #story-ouvrir-app .reseau-ico { width: 24px; height: 24px; background: none; box-shadow: none; border-radius: 0; padding: 0; color: #ffffff; }
+      /* 23/09/2026 : NOIR. Julien : « le ouvrir Instagram en rouge [...] trouve
+         une autre couleur, mais pas en rouge », puis « noir pr insta ». Pris
+         sur l'encre de l'appli : noir en clair, blanc en sombre (un bouton
+         noir sur le fond noir du mode sombre disparaitrait). */
+      .vue-story #story-ouvrir-app { background: var(--ink); color: var(--bg); box-shadow: var(--ombre-2); }
+      .vue-story #story-ouvrir-app .reseau-ico { width: 24px; height: 24px; background: none; box-shadow: none; border-radius: 0; padding: 0; color: inherit; }
       .vue-story #story-ouvrir-app .reseau-ico svg { width: 24px; height: 24px; }
 
       /* La carte unique de la page Story : la mention en grand, le lieu dessous. */
@@ -12412,9 +12431,9 @@ function ouvrirChoixReseau(nomClub) {
 
   /* Le logo Instagram au trait blanc, pour le bouton rouge. Le logo de
      marque (degrade) reste partout ailleurs : ici il tacherait. */
-  var ICONE_IG_BLANC = '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="5" fill="none" stroke="#fff" stroke-width="1.8"/>' +
-    '<circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="1.8"/>' +
-    '<circle cx="17.1" cy="6.9" r="1.15" fill="#fff"/>';
+  var ICONE_IG_BLANC = '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
+    '<circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
+    '<circle cx="17.1" cy="6.9" r="1.15" fill="currentColor"/>';
 
   function blocOuvrir(kindId) {
     var k = KINDS_STORY.filter(function (x) { return x.id === kindId; })[0] || KINDS_STORY[0];
