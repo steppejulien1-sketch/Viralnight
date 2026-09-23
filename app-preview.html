@@ -3368,8 +3368,21 @@
         100% { transform: scale(1.2) translate(5%, -3%) rotate(-6deg); }
       }
       @media (prefers-reduced-motion: reduce) { .vb-ambiance i { animation: none; } }
-      /* La couleur descend jusqu'en bas de l'ecran, meme avec peu de recompenses. */
-      .vue-bar.a-ambiance .vb-corps { min-height: 78vh; }
+      /* ⚠️ BOUTIQUE BLANCHE POUR TOUT LE MONDE (23/09/2026, Julien : « laisse la
+         blanche pour tout le monde »). L'ambiance floutee est coupee ici ; le
+         code reste pour la fiche d'une recompense. */
+      .vue-bar .vb-ambiance { display: none !important; }
+      /* Et plus courte : « trop d'espaces inutiles, et ca coupe les images
+         d'au-dessus ». L'etiquette blanche de chaque tuile ne remonte plus
+         sur le dessin, la case du dessin est moins haute, les ecarts fondent. */
+      .vue-bar .vb-corps { padding-top: 18px !important; }
+      .vue-bar .vb-section { margin-top: 20px !important; }
+      .vue-bar .vb-section:first-child { margin-top: 0 !important; }
+      .vue-bar .vb-titre { margin-bottom: 10px !important; }
+      .vue-bar .vb-grille { gap: 10px !important; }
+      .vue-bar .vb-grille .carte-reco .photo { aspect-ratio: 5 / 4; }
+      .vue-bar .vb-grille .carte-reco .photo img { padding: 9% 20% 9% !important; }
+      .vue-bar .vb-grille .carte-reco .corps { margin: 6px 0 0 !important; padding: 9px 11px 10px !important; }
       /* Le voile qui ramene le texte a un contraste lisible. Il laisse la
          couleur franche en haut (juste sous la photo, la ou l'oeil arrive)
          et la rend a peine perceptible en bas de la page. */
@@ -6069,6 +6082,26 @@
       .sheet.fiche-club .club-entete { margin: 0 0 12px; gap: 12px; }
       .sheet.fiche-club .club-entete-rond { width: 52px; height: 52px; border-radius: 15px; }
       .sheet.fiche-club .club-galerie.maps { height: 150px; margin-bottom: 12px; }
+      /* La tete photo de la fiche (voir ouvrirClub, 23/09/2026). */
+      .fc-tete { position: relative; height: 230px; margin: -10px -24px 14px; overflow: hidden; border-radius: 26px 26px 0 0; background: #111; }
+      .fc-tete img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(1.2) saturate(1.25) contrast(1.02); }
+      .fc-tete::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,0) 26%), linear-gradient(to top, rgba(0,0,0,.7), rgba(0,0,0,.18) 34%, rgba(0,0,0,0) 55%); }
+      .fc-etat { position: absolute; z-index: 2; top: 20px; left: 16px; display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 99px;
+        background: rgba(0,0,0,.38); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #fff; font-size: calc(12.5 * var(--u)); font-weight: 700; }
+      .fc-etat i { width: 7px; height: 7px; border-radius: 50%; background: #ff8a8a; }
+      .fc-etat.ouvert i { background: #3ddc84; }
+      .fc-ronds { position: absolute; z-index: 2; top: 16px; right: 14px; display: flex; gap: 8px; }
+      .sheet .fc-rond, .sheet .fc-ronds .club-fav { position: static; width: 38px; height: 38px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+        background: rgba(0,0,0,.38); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: none; }
+      .fc-rond svg { width: 19px; height: 19px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .fc-ronds .club-fav.actif svg { stroke: #ff5a5a; fill: #ff5a5a; }
+      .fc-nom { position: absolute; z-index: 2; left: 18px; right: 18px; bottom: 14px; margin: 0; color: #fff;
+        font-family: var(--titre); font-size: calc(36 * var(--u)); font-weight: 800; letter-spacing: -.03em; line-height: 1; text-shadow: 0 2px 18px rgba(0,0,0,.3); }
+      .sheet.fiche-club.a-tete .grab { position: absolute; z-index: 5; top: 6px; left: 50%; margin: 0; transform: translateX(-50%); }
+      .sheet.fiche-club.a-tete .grab::before { background: rgba(255,255,255,.85); }
+      .sheet .fc-tete .fc-nom { color: #ffffff; }
+
       /* « Tu gagnes des points ici » + « Poster ma story » : « rends-le plus
          petit, il prend trop de place » (Julien, 23/09/2026). */
       .sheet.fiche-club .club-partenaire-bloc { margin: 0 0 12px; padding: 10px 12px 11px; border-radius: 16px; }
@@ -8890,7 +8923,7 @@ function ouvrirFeuille(html, focusSel) {
   // L'ambiance est posee APRES, par la seule feuille qui en a une (la
   // fiche d'une recompense) : sans ce retrait, la couleur du dernier club
   // ouvert restait sur la feuille suivante.
-  sheet.classList.remove("a-ambiance", "fiche-club");
+  sheet.classList.remove("a-ambiance", "fiche-club", "a-tete");
   corps.innerHTML = html;
   sheet.classList.add("up");
   sheet.setAttribute("aria-hidden", "false");
@@ -12179,9 +12212,35 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
      recompenses, et un club qui s'y fait prendre voit ses avis effaces. */
   var blocAvisGoogle = "";
 
+  /* ⚠️ LA TETE PHOTO (23/09/2026). Julien, capture de la maquette a
+     l'appui : « je veux que ca soit ca sur l'app, pas le truc actuel ». La
+     photo du lieu prend toute la largeur en haut de la fiche, avec le nom
+     dessus, ouvert/ferme, le coeur et le partage. Elle remplace le petit
+     rond + nom + la photo a part. Sans vraie photo, l'ancienne entete. */
+  var photoTete = c.couverture || c.photo || (Array.isArray(c.photos) && c.photos[0]) || null;
+  var tete;
+  if (photoTete) {
+    var etatT = c.horaires && c.horaires.length ? etatOuverture(c) : null;
+    var texteT = etatT ? (etatT.ouvert ? etatT.texte : "Fermé · " + etatT.texte) : (c.statut ? c.statut + (c.horaire ? " · " + c.horaire : "") : "");
+    var ouvertT = etatT ? etatT.ouvert : !c.shut;
+    tete =
+      '<div class="fc-tete">' +
+        '<img src="' + escapeHtmlSupport(photoTete) + '" alt="" onerror="this.remove()" />' +
+        (texteT ? '<span class="fc-etat' + (ouvertT ? " ouvert" : "") + '"><i></i>' + escapeHtmlSupport(texteT) + "</span>" : "") +
+        '<span class="fc-ronds">' +
+          '<button class="club-fav fc-rond" id="sh-fav" type="button"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9A4.9 4.9 0 0 1 12 5.7a4.9 4.9 0 0 1 8.5 3.2C20.5 15 12 20.5 12 20.5z"/></svg></button>' +
+          '<button class="fc-rond" id="sh-partager" type="button" aria-label="Partager"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0 4 4m-4-4L8 7"/><path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg></button>' +
+        "</span>" +
+        '<h3 class="fc-nom">' + escapeHtmlSupport(c.nom) + "</h3>" +
+      "</div>";
+    // Le partage est sur la photo : plus besoin du rond dans la rangee.
+    actions = actions.replace(/<button type="button" class="club-action-btn" id="sh-partager">[\s\S]*?<\/button>/, "");
+  } else {
+    tete = heroClub(c) + galerieClub(c, toutesLesPhotos);
+  }
+
   var html =
-    heroClub(c) +
-    galerieClub(c, toutesLesPhotos) +
+    tete +
     blocPartenaire +
     '<div class="club-actions-row">' + actions + "</div>" +
     blocAvisGoogle +
@@ -12201,6 +12260,7 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
   // de .screen (rouge de marque), .sheet.clair ne redefinit que
   // fond/texte/gris.
   sheet.classList.add("clair", "fiche-club");
+  sheet.classList.toggle("a-tete", !!photoTete);
   cablerFavoriClub(id, c.nom);
   // Les horaires se deplient sur place, sans quitter la fiche.
   $("#sh-horaires")?.addEventListener("click", function () {
