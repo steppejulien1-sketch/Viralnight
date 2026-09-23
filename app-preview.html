@@ -6025,6 +6025,32 @@
         font-size: calc(15.5 * var(--u)); font-weight: 800; letter-spacing: -.02em; color: var(--ink); white-space: nowrap;
       }
 
+      /* ---- La fiche d'un lieu, resserree (23/09/2026) ----
+         Julien : « il y a trop de trucs a scroller avant de voir toutes les
+         infos [...] il faut que tout soit la du premier coup d'oeil ». Une
+         refonte complete (photo en tete, cases, bande de recompenses) a ete
+         jugee « trop IA » : c'est la MEME fiche, avec moins de vide. Elle
+         faisait 959 px pour 742 visibles sur un iPhone 14. */
+      .sheet.fiche-club { padding-top: 10px; padding-bottom: 18px; }
+      .sheet.fiche-club .club-entete { margin: 0 0 12px; gap: 12px; }
+      .sheet.fiche-club .club-entete-rond { width: 52px; height: 52px; border-radius: 15px; }
+      .sheet.fiche-club .club-galerie.maps { height: 150px; margin-bottom: 12px; }
+      .sheet.fiche-club .club-partenaire-bloc { margin: 0 0 14px; padding: 12px 14px 14px; }
+      .sheet.fiche-club .club-partenaire-bloc h4 { margin: 0 0 10px; }
+      .sheet.fiche-club .sheet-cta { padding: 14px; }
+      .sheet.fiche-club .club-recompenses-lien { margin: 10px 0 0 !important; font-size: calc(14 * var(--u)); }
+      .sheet.fiche-club .club-actions-row { margin: 0 0 12px; }
+      .sheet.fiche-club .club-action-btn { gap: 6px; }
+      .sheet.fiche-club .club-action-ico { width: 42px; height: 42px; }
+      .sheet.fiche-club .club-adresse { margin: 0; padding: 9px 0; border-top: 1px solid var(--line); }
+      .sheet.fiche-club .club-adresse-txt { font-size: calc(14.5 * var(--u)); }
+      .sheet.fiche-club .club-info-ligne { padding: 9px 0; }
+      .sheet.fiche-club .club-info-principal { font-size: calc(14.5 * var(--u)); }
+      /* Instagram et TikTok cote a cote : deux comptes, une ligne. */
+      .club-reseaux { display: flex; gap: 10px; border-top: 1px solid var(--line); }
+      .club-reseaux .club-info-ligne { flex: 1 1 0; min-width: 0; gap: 8px; border-top: 0; }
+      .sheet.fiche-club .club-reseaux .club-info-principal { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: calc(13 * var(--u)); }
+
       /* ---------------- FICHE ETABLISSEMENT : L'AVIS GOOGLE ---------------- */
       .club-avis {
         display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 18px;
@@ -8832,7 +8858,7 @@ function ouvrirFeuille(html, focusSel) {
   // L'ambiance est posee APRES, par la seule feuille qui en a une (la
   // fiche d'une recompense) : sans ce retrait, la couleur du dernier club
   // ouvert restait sur la feuille suivante.
-  sheet.classList.remove("a-ambiance");
+  sheet.classList.remove("a-ambiance", "fiche-club");
   corps.innerHTML = html;
   sheet.classList.add("up");
   sheet.setAttribute("aria-hidden", "false");
@@ -12021,6 +12047,14 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
   // la fiche et amene la carte Noctify sur le club.
   // « Sur la carte » retire le 15/09/2026 (Julien : « c'est bugue, retire
   // ce truc »).
+  /* L'avis Google etait une grande carte a lui seul, au milieu de la
+     fiche : il passe en rond dans la rangee (23/09/2026, Julien : « trop de
+     trucs a scroller avant de voir toutes les infos »). */
+  if (c.googlePlaceId || c.googleQuery) {
+    actions += '<button type="button" class="club-action-btn" id="sh-avis-google">' +
+      '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg></span>' +
+      "<span>Avis Google</span></button>";
+  }
   actions += '<button type="button" class="club-action-btn" id="sh-partager">' +
     '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0 4 4m-4-4L8 7"/><path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg></span>' +
     "<span>Partager</span></button>";
@@ -12111,17 +12145,12 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
      titre devient personnel quand l'historique de points prouve un passage
      (voir aVisite). Aucun point en echange : Google interdit les avis
      recompenses, et un club qui s'y fait prendre voit ses avis effaces. */
-  var blocAvisGoogle = (c.googlePlaceId || c.googleQuery)
-    ? '<button type="button" class="club-avis" id="sh-avis-google">' +
-        '<span class="club-avis-txt">' +
-          '<strong id="sh-avis-titre">Laisser un avis Google</strong>' +
-          '<span id="sh-avis-sous">Ta note sur la fiche Google ' + escapeHtmlSupport(duClub(c.nom)) + ".</span>" +
-        "</span>" +
-        '<span class="club-avis-etoiles" aria-hidden="true">' +
-          '<svg viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>'.repeat(5) +
-        "</span>" +
-      "</button>"
-    : "";
+  var blocAvisGoogle = "";
+
+  if (ligneIg && ligneTiktok) {
+    ligneIg = '<div class="club-reseaux">' + ligneIg + ligneTiktok + "</div>";
+    ligneTiktok = "";
+  }
 
   var html =
     heroClub(c) +
@@ -12144,7 +12173,7 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
   // par defaut, donc on le force ici. --bouton/--accent restent ceux
   // de .screen (rouge de marque), .sheet.clair ne redefinit que
   // fond/texte/gris.
-  sheet.classList.add("clair");
+  sheet.classList.add("clair", "fiche-club");
   cablerFavoriClub(id, c.nom);
   // Les horaires se deplient sur place, sans quitter la fiche.
   $("#sh-horaires")?.addEventListener("click", function () {
