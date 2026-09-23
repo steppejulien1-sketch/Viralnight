@@ -8288,7 +8288,7 @@
                activer, et la phrase vendait surtout ce qu'on n'aurait pas.
                Elle nomme maintenant les deux notifications qui partent. -->
           <p class="notif-invite-titre">Être prévenu quand tes points arrivent ?</p>
-          <p class="notif-invite-txt">Une alerte quand ta story est validée, et quand ton cadeau du jour t’attend.</p>
+          <p class="notif-invite-txt">Une alerte dès que ta story est validée et que tes points arrivent.</p>
           <div class="notif-invite-actions">
             <button type="button" class="notif-invite-btn" id="notif-invite-non">Plus tard</button>
             <button type="button" class="notif-invite-btn oui" id="notif-invite-oui">Activer</button>
@@ -15561,6 +15561,12 @@ $("#pf-avis")?.addEventListener("click", async function () {
    garde "un par jour" dans le localStorage se contourne en vidant son
    navigateur. */
 var CADEAU = $("#cadeau"), CADEAU_SCENE = $("#cadeau-scene"), CADEAU_BTN = $("#cadeau-btn");
+/* Coupe le 23/09/2026 (Julien : « le cadeau tous les jours, on peut
+   supprimer ce truc, c'est un peu inutile. Pour le moment »). La base
+   (daily_gift, migration 0040) n'a pas bouge : remettre true suffit a le
+   faire revenir, avec sa ligne dans « Gagner des points ». Le rappel du
+   matin, lui, a ete retire des crons de vercel.json. */
+var CADEAU_DU_JOUR = false;
 
 /* Le dessin du cadeau prend la place du pictogramme -- mais SEULEMENT
    s'il existe. Si le fichier manque, l'evenement load ne part jamais, le
@@ -15633,6 +15639,8 @@ async function verifierCadeau() {
     }, 1500);
     return;
   }
+
+  if (!CADEAU_DU_JOUR) { CADEAU.hidden = true; return; }
 
   var res = await supabaseClubbeur.rpc("daily_gift_status");
   /* La fonction n'existe pas encore ? On se tait. Les migrations 0040 et
@@ -16187,7 +16195,7 @@ var GAINS = [
   { t: "Scanner le QR sur place", s: "À ton arrivée, une fois par soirée.", v: "+15", ico: ICO_GAIN.scan, geste: "story" },
   { t: "Inviter un ami", s: "Dès qu’il s’inscrit avec ton lien.", v: '+<span class="js-montant-parrainage">100</span>', ico: ICO_GAIN.ami, geste: "ami" },
   { t: "Cadeau du jour", s: "À récupérer chaque jour dans Récompenses.", v: "", ico: ICO_GAIN.cadeau, geste: "cadeau" },
-];
+].filter(function (g) { return g.geste !== "cadeau" || CADEAU_DU_JOUR; });
 
 var OUVERTURE = 23, FERMETURE = 6;
 

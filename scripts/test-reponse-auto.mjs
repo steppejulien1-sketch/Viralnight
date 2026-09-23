@@ -317,7 +317,7 @@ check("mention : le vrai compte du club", /@mirage\.brussels/.test(rep.texte), r
 rep = repondre("comment parrainer un pote", compte, MAINTENANT);
 check("parrainage : compte ses amis", /2 amis inscrits/.test(rep.texte), rep.texte);
 rep = repondre("le cadeau du jour ?", { ...compte, cadeaux: [{ gift_date: "2026-09-16", amount: 3, jour: 2 }] }, MAINTENANT);
-check("cadeau deja pris aujourd'hui", /déjà pris/.test(rep.texte) && /jour 2 sur 7/.test(rep.texte), rep.texte);
+check("cadeau du jour : retire, on le dit", /retiré/.test(rep.texte) && /solde/.test(rep.texte), rep.texte);
 rep = repondre("j'ai pas eu mon cadeau de bienvenue", compte, MAINTENANT);
 check("bienvenue deja versee", /bien été versé/.test(rep.texte), rep.texte);
 rep = repondre("tu connais une bonne pizzeria", compte, MAINTENANT);
