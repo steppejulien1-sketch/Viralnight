@@ -5913,7 +5913,9 @@
          une autre couleur, mais pas en rouge », puis « noir pr insta ». Pris
          sur l'encre de l'appli : noir en clair, blanc en sombre (un bouton
          noir sur le fond noir du mode sombre disparaitrait). */
-      .vue-story #story-ouvrir-app { background: var(--ink); color: var(--bg); box-shadow: var(--ombre-2); }
+      /* Ecriture et logo ROUGES sur le noir (Julien, 23/09/2026 : « il faut que
+         l'ecriture soit en rouge pas en blanc »). */
+      .vue-story #story-ouvrir-app { background: var(--ink); color: var(--marque); box-shadow: var(--ombre-2); }
       .vue-story #story-ouvrir-app .reseau-ico { width: 24px; height: 24px; background: none; box-shadow: none; border-radius: 0; padding: 0; color: inherit; }
       .vue-story #story-ouvrir-app .reseau-ico svg { width: 24px; height: 24px; }
 
@@ -6054,10 +6056,12 @@
       .sheet.fiche-club .club-entete { margin: 0 0 12px; gap: 12px; }
       .sheet.fiche-club .club-entete-rond { width: 52px; height: 52px; border-radius: 15px; }
       .sheet.fiche-club .club-galerie.maps { height: 150px; margin-bottom: 12px; }
-      .sheet.fiche-club .club-partenaire-bloc { margin: 0 0 14px; padding: 12px 14px 14px; }
-      .sheet.fiche-club .club-partenaire-bloc h4 { margin: 0 0 10px; }
-      .sheet.fiche-club .sheet-cta { padding: 14px; }
-      .sheet.fiche-club .club-recompenses-lien { margin: 10px 0 0 !important; font-size: calc(14 * var(--u)); }
+      /* « Tu gagnes des points ici » + « Poster ma story » : « rends-le plus
+         petit, il prend trop de place » (Julien, 23/09/2026). */
+      .sheet.fiche-club .club-partenaire-bloc { margin: 0 0 12px; padding: 10px 12px 11px; border-radius: 16px; }
+      .sheet.fiche-club .club-partenaire-bloc h4 { margin: 0 0 8px; font-size: calc(13.5 * var(--u)); font-weight: 700; color: var(--ink2); }
+      .sheet.fiche-club .sheet-cta { padding: 10px; border-radius: 13px; font-size: calc(15 * var(--u)); box-shadow: none; }
+      .sheet.fiche-club .club-recompenses-lien { margin: 8px 0 0 !important; font-size: calc(13 * var(--u)); }
       .sheet.fiche-club .club-actions-row { margin: 0 0 12px; }
       .sheet.fiche-club .club-action-btn { gap: 6px; }
       .sheet.fiche-club .club-action-ico { width: 42px; height: 42px; }
@@ -6065,10 +6069,6 @@
       .sheet.fiche-club .club-adresse-txt { font-size: calc(14.5 * var(--u)); }
       .sheet.fiche-club .club-info-ligne { padding: 9px 0; }
       .sheet.fiche-club .club-info-principal { font-size: calc(14.5 * var(--u)); }
-      /* Instagram et TikTok cote a cote : deux comptes, une ligne. */
-      .club-reseaux { display: flex; gap: 10px; border-top: 1px solid var(--line); }
-      .club-reseaux .club-info-ligne { flex: 1 1 0; min-width: 0; gap: 8px; border-top: 0; }
-      .sheet.fiche-club .club-reseaux .club-info-principal { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: calc(13 * var(--u)); }
 
       /* ---------------- FICHE ETABLISSEMENT : L'AVIS GOOGLE ---------------- */
       .club-avis {
@@ -12166,11 +12166,6 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
      recompenses, et un club qui s'y fait prendre voit ses avis effaces. */
   var blocAvisGoogle = "";
 
-  if (ligneIg && ligneTiktok) {
-    ligneIg = '<div class="club-reseaux">' + ligneIg + ligneTiktok + "</div>";
-    ligneTiktok = "";
-  }
-
   var html =
     heroClub(c) +
     galerieClub(c, toutesLesPhotos) +
@@ -13596,6 +13591,10 @@ async function chargerHistorique() {
   var bloc = document.getElementById("pf-histo");
   var liste = document.getElementById("pf-histo-liste");
   if (!bloc || !liste || !supabaseClubbeur) return;
+  /* Retire du profil le 23/09/2026 (Julien : « retire le truc mes derniers
+     points etant donne qu'on le voit dans l'historique »). */
+  bloc.hidden = true;
+  return;
 
   var res = await supabaseClubbeur.rpc("historique_points", { p_limite: 12 });
   // Migration pas encore passee, ou rien a montrer : la section n'existe
@@ -16585,9 +16584,9 @@ function rendreBoutiqueBar(bar) {
   // Julien, 22/09/2026 : « etablissement de demonstration, ces recompenses
   // ne se changent pas : tu peux retirer ca ». Un bar de demonstration n'a
   // simplement pas de fiche -- le pied reste vide.
-  document.getElementById("vb-pied").innerHTML = bar.cle
-    ? '<button type="button" class="vb-fiche" id="vb-fiche">Adresse et photos<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'
-    : "";
+  /* Le bouton « Adresse et photos » (qui renvoyait a la fiche de la carte)
+     est retire le 23/09/2026 a la demande de Julien : le pied reste vide. */
+  document.getElementById("vb-pied").innerHTML = "";
   var fiche = document.getElementById("vb-fiche");
   if (fiche) fiche.addEventListener("click", function () { ouvrirClub(CLUBS[bar.cle], fiche, bar.cle, true); });
 }
