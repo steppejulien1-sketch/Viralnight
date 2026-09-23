@@ -3370,6 +3370,12 @@
       /* Un etablissement sans photo garde sa page blanche : pas de teinte
          inventee. */
       .vue-bar:not(.a-ambiance) .vb-ambiance { display: none; }
+      /* La couleur du lieu (voir COULEURS_LIEU) remplace l'ambiance floutee. */
+      .vue-bar.a-couleur .vb-ambiance { display: none; }
+      .vue-bar.a-couleur .vb-corps, .vue-bar.a-couleur { background: var(--lieu); }
+      .vue-bar.a-couleur .vb-corps { color: #ffffff; }
+      .vue-bar.a-couleur .vb-titre span { background: rgba(255,255,255,.2); color: #ffffff; }
+      .vue-bar.a-couleur .vb-vide, .vue-bar.a-couleur .vb-demo { color: rgba(255,255,255,.75); }
       .vb-solde {
         padding: 16px 18px; border-radius: 20px; background: var(--s1);
         box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 14px 34px -22px rgba(15,17,20,.35);
@@ -16535,6 +16541,7 @@ function rendreBoutiqueBar(bar) {
 
   poserPhotosBar(c);
   poserAmbiance(VUE_BAR, c);
+  poserCouleurLieu(VUE_BAR, bar.nom);
   var ou = POSITION_MOI ? formaterDistance(bar.km) : bar.quartier;
   document.getElementById("vb-lieu").innerHTML = ou
     ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>' + escapeHtmlSupport(ou)
@@ -16634,6 +16641,25 @@ function poserAmbiance(el, c) {
   el.classList.toggle("a-ambiance", !!photo);
   if (photo) el.style.setProperty("--ambiance", 'url("' + photo.replace(/"/g, "") + '")');
   else el.style.removeProperty("--ambiance");
+}
+
+/* ⚠️ UNE COULEUR PAR LIEU (23/09/2026). Julien : « je veux qqc de simple
+   pour differencier les clubs facilement ». Le fond de la boutique d'un
+   etablissement prend SA couleur, franche ; les tuiles restent blanches.
+   Une refonte avec police et decor par lieu a ete jugee « trop IA ».
+   A terme le gerant la choisit dans son appli ; en attendant, elle est
+   posee ici pour les lieux connus. Un lieu absent garde sa page claire. */
+var COULEURS_LIEU = {
+  "Mirano": "#5b21b6",
+  "Velours": "#8a1c2b",
+  "Minuit Douze": "#1f5a45",
+  "Néon 88": "#1d4ed8",
+};
+function poserCouleurLieu(el, nom) {
+  var couleur = COULEURS_LIEU[nom];
+  el.classList.toggle("a-couleur", !!couleur);
+  if (couleur) el.style.setProperty("--lieu", couleur);
+  else el.style.removeProperty("--lieu");
 }
 
 function photosDuBar(c) {
