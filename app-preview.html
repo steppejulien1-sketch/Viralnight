@@ -3351,31 +3351,38 @@
         position: absolute; inset: 0; z-index: -1; overflow: hidden;
         border-radius: 26px 26px 0 0; pointer-events: none;
       }
+      /* 23/09/2026 : entre le « on dirait du gris » (opacite .72 sous un voile
+         a 90 %) et les aplats « trop voyants, degueu » essayes le meme jour.
+         La lumiere de la salle est plus presente, et elle derive lentement,
+         comme le fond d'Apple Music tire de la pochette. */
       .vb-ambiance i {
         position: absolute; inset: -90px;
         background: var(--ambiance, none) center / cover no-repeat;
-        filter: blur(52px) saturate(1.6);
-        opacity: .72;
+        filter: blur(56px) saturate(1.7);
+        opacity: .95;
+        animation: ambianceDerive 22s ease-in-out infinite alternate;
       }
+      @keyframes ambianceDerive {
+        0% { transform: scale(1.15) translate(0, 0) rotate(0deg); }
+        50% { transform: scale(1.3) translate(-6%, 4%) rotate(8deg); }
+        100% { transform: scale(1.2) translate(5%, -3%) rotate(-6deg); }
+      }
+      @media (prefers-reduced-motion: reduce) { .vb-ambiance i { animation: none; } }
+      /* La couleur descend jusqu'en bas de l'ecran, meme avec peu de recompenses. */
+      .vue-bar.a-ambiance .vb-corps { min-height: 78vh; }
       /* Le voile qui ramene le texte a un contraste lisible. Il laisse la
          couleur franche en haut (juste sous la photo, la ou l'oeil arrive)
          et la rend a peine perceptible en bas de la page. */
       .vb-ambiance::after {
         content: ""; position: absolute; inset: 0;
         background: linear-gradient(to bottom,
-          color-mix(in srgb, var(--bg) 40%, transparent) 0%,
-          color-mix(in srgb, var(--bg) 72%, transparent) 34%,
-          color-mix(in srgb, var(--bg) 90%, transparent) 100%);
+          color-mix(in srgb, var(--bg) 22%, transparent) 0%,
+          color-mix(in srgb, var(--bg) 50%, transparent) 40%,
+          color-mix(in srgb, var(--bg) 66%, transparent) 100%);
       }
       /* Un etablissement sans photo garde sa page blanche : pas de teinte
          inventee. */
       .vue-bar:not(.a-ambiance) .vb-ambiance { display: none; }
-      /* La couleur du lieu (voir COULEURS_LIEU) remplace l'ambiance floutee. */
-      .vue-bar.a-couleur .vb-ambiance { display: none; }
-      .vue-bar.a-couleur .vb-corps, .vue-bar.a-couleur { background: var(--lieu); }
-      .vue-bar.a-couleur .vb-corps { color: #ffffff; }
-      .vue-bar.a-couleur .vb-titre span { background: rgba(255,255,255,.2); color: #ffffff; }
-      .vue-bar.a-couleur .vb-vide, .vue-bar.a-couleur .vb-demo { color: rgba(255,255,255,.75); }
       .vb-solde {
         padding: 16px 18px; border-radius: 20px; background: var(--s1);
         box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 14px 34px -22px rgba(15,17,20,.35);
@@ -16541,7 +16548,6 @@ function rendreBoutiqueBar(bar) {
 
   poserPhotosBar(c);
   poserAmbiance(VUE_BAR, c);
-  poserCouleurLieu(VUE_BAR, bar.nom);
   var ou = POSITION_MOI ? formaterDistance(bar.km) : bar.quartier;
   document.getElementById("vb-lieu").innerHTML = ou
     ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>' + escapeHtmlSupport(ou)
@@ -16641,25 +16647,6 @@ function poserAmbiance(el, c) {
   el.classList.toggle("a-ambiance", !!photo);
   if (photo) el.style.setProperty("--ambiance", 'url("' + photo.replace(/"/g, "") + '")');
   else el.style.removeProperty("--ambiance");
-}
-
-/* ⚠️ UNE COULEUR PAR LIEU (23/09/2026). Julien : « je veux qqc de simple
-   pour differencier les clubs facilement ». Le fond de la boutique d'un
-   etablissement prend SA couleur, franche ; les tuiles restent blanches.
-   Une refonte avec police et decor par lieu a ete jugee « trop IA ».
-   A terme le gerant la choisit dans son appli ; en attendant, elle est
-   posee ici pour les lieux connus. Un lieu absent garde sa page claire. */
-var COULEURS_LIEU = {
-  "Mirano": "#5b21b6",
-  "Velours": "#8a1c2b",
-  "Minuit Douze": "#1f5a45",
-  "Néon 88": "#1d4ed8",
-};
-function poserCouleurLieu(el, nom) {
-  var couleur = COULEURS_LIEU[nom];
-  el.classList.toggle("a-couleur", !!couleur);
-  if (couleur) el.style.setProperty("--lieu", couleur);
-  else el.style.removeProperty("--lieu");
 }
 
 function photosDuBar(c) {
