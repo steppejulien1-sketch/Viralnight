@@ -3386,7 +3386,14 @@
          (1170 x 1080) y perdait un quart de sa largeur, et la feuille blanche
          (-24 px) en mangeait encore le bas. Le cadre prend maintenant les
          proportions des photos, plus les 24 px que recouvre la feuille. */
-      .vue-bar .vb-hero { height: auto; min-height: 0; aspect-ratio: 1170 / 1104; }
+      .vue-bar .vb-hero { height: auto; min-height: 0; aspect-ratio: 390 / 254; }
+      /* ⚠️ PUIS REMISE EN BANDEAU (24/09/2026). Julien : « les photos des
+         etablissements passent de l'horizontale a la verticale, c'est ca qui
+         rend bizarre ». La liste et la fiche de la carte montrent la photo en
+         bandeau, la boutique l'ouvrait presque carree. Meme bandeau partout :
+         230 px visibles comme .fc-tete, plus les 24 px sous la feuille. La
+         photo est centree : elle perd un peu en haut et en bas, plus rien
+         sur les cotes. */
       /* Le voile qui ramene le texte a un contraste lisible. Il laisse la
          couleur franche en haut (juste sous la photo, la ou l'oeil arrive)
          et la rend a peine perceptible en bas de la page. */
@@ -12124,9 +12131,7 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
       '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg></span>' +
       "<span>Avis Google</span></button>";
   }
-  actions += '<button type="button" class="club-action-btn" id="sh-partager">' +
-    '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0 4 4m-4-4L8 7"/><path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg></span>' +
-    "<span>Partager</span></button>";
+  // Partager retire de la fiche (Julien, 24/09/2026).
 
   /* Les horaires se deplient, comme sur une fiche Google (demande de
      Julien : "je veux l'horaire comme sur Google, quand tu cliques ca
@@ -12224,21 +12229,17 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
   var photoTete = c.couverture || c.photo || (Array.isArray(c.photos) && c.photos[0]) || null;
   var tete;
   if (photoTete) {
-    var etatT = c.horaires && c.horaires.length ? etatOuverture(c) : null;
-    var texteT = etatT ? (etatT.ouvert ? etatT.texte : "Fermé · " + etatT.texte) : (c.statut ? c.statut + (c.horaire ? " · " + c.horaire : "") : "");
-    var ouvertT = etatT ? etatT.ouvert : !c.shut;
+    /* Plus de pastille « Fermé · Ouvre à 21h » ni de rond Partager sur la
+       photo (Julien, 24/09/2026 : « retire le fermé ouvre à 22h » et « le
+       truc pour partager »). Les horaires restent dans leur ligne plus bas. */
     tete =
       '<div class="fc-tete">' +
         '<img src="' + escapeHtmlSupport(photoTete) + '" alt="" onerror="this.remove()" />' +
-        (texteT ? '<span class="fc-etat' + (ouvertT ? " ouvert" : "") + '"><i></i>' + escapeHtmlSupport(texteT) + "</span>" : "") +
         '<span class="fc-ronds">' +
           '<button class="club-fav fc-rond" id="sh-fav" type="button"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9A4.9 4.9 0 0 1 12 5.7a4.9 4.9 0 0 1 8.5 3.2C20.5 15 12 20.5 12 20.5z"/></svg></button>' +
-          '<button class="fc-rond" id="sh-partager" type="button" aria-label="Partager"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0 4 4m-4-4L8 7"/><path d="M4 13v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/></svg></button>' +
         "</span>" +
         '<h3 class="fc-nom">' + escapeHtmlSupport(c.nom) + "</h3>" +
       "</div>";
-    // Le partage est sur la photo : plus besoin du rond dans la rangee.
-    actions = actions.replace(/<button type="button" class="club-action-btn" id="sh-partager">[\s\S]*?<\/button>/, "");
   } else {
     tete = heroClub(c) + galerieClub(c, toutesLesPhotos);
   }
