@@ -377,19 +377,26 @@
         transition: opacity .45s ease;
       }
       .splash.masque { opacity: 0; pointer-events: none; }
-      /* Epure (24/09/2026) : le nom seul, espace, qui apparait en un fondu,
-         et un point rouge de marque dessous. Rien d'autre ne bouge. */
-      .splash { flex-direction: column; gap: 18px; }
-      .splash-nom {
-        margin: 0; color: #ffffff; font-family: var(--titre); font-size: 30px; font-weight: 800;
-        letter-spacing: .32em; text-indent: .32em; line-height: 1;
-        opacity: 0; animation: splashFondu .7s ease .15s forwards;
+      /* Le logo au verre sur une pastille blanche (24/09/2026, voir le
+         markup) : elle arrive d'un leger rebond, le halo rouge se leve
+         derriere. Le PNG n'occupe que sa bande 22 %-72 %, d'ou le cadrage. */
+      .splash-halo {
+        position: absolute; width: 420px; height: 420px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(222,49,49,.32), rgba(222,49,49,0) 62%);
+        opacity: 0; animation: splashFondu 1s ease .1s forwards;
       }
-      .splash-point { width: 8px; height: 8px; border-radius: 50%; background: #de3131; opacity: 0; animation: splashFondu .6s ease .3s forwards; }
+      .splash-logo {
+        position: relative; width: 196px; height: 196px; border-radius: 48px; background: #ffffff; overflow: hidden;
+        display: grid; place-items: center;
+        box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);
+        opacity: 0; transform: scale(.82); animation: splashPop .7s cubic-bezier(.2, 1.4, .35, 1) .1s forwards;
+      }
+      .splash-logo img { width: 128%; height: auto; display: block; margin-top: 4%; }
+      @keyframes splashPop { to { opacity: 1; transform: none; } }
       @keyframes splashFondu { to { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) {
         .splash { transition: none; }
-        .splash-nom, .splash-point { animation: none; opacity: 1; }
+        .splash-halo, .splash-logo { animation: none; opacity: 1; transform: none; }
       }
 
       /* ============================================================
@@ -6774,10 +6781,14 @@
              une photo de soiree plein ecran qui sort du noir, puis le nom qui
              s'ecrit lettre par lettre. Puis, le meme soir : « change encore »,
              direction « plus simple, epure » -> photo et lettres retirees :
-             le noir, le nom en un seul fondu, un point rouge. -->
+             le noir, le nom en un seul fondu, un point rouge. Puis « mets le
+             logo du verre, mais pas comme avant » : le logo est dessine en
+             noir, illisible sur le noir -> il est pose sur une pastille
+             blanche facon icone d'appli, qui arrive avec un petit rebond,
+             un halo rouge derriere. -->
         <div class="splash" id="splash" aria-hidden="true">
-          <p class="splash-nom">NOCTIFY</p>
-          <span class="splash-point"></span>
+          <span class="splash-halo"></span>
+          <span class="splash-logo"><img src="/noctify-logo-verre-detoure.webp" alt="" width="640" height="640" fetchpriority="high" /></span>
         </div>
 
         <!-- Filtre qui blanchit le fond creme du logo (voir .ac-mascot
@@ -8572,8 +8583,8 @@ var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koi
 (function () {
   var splash = document.getElementById("splash");
   var cachee = false;
-  /* 1 000 ms (24/09/2026) : le temps que le nom et le point apparaissent
-     (0,15 + 0,7 s) et se lisent, sans faire attendre davantage. */
+  /* 1 000 ms (24/09/2026) : le temps que la pastille arrive (0,1 + 0,7 s)
+     et se voie, sans faire attendre davantage. */
   var MIN_AFFICHAGE_MS = 1000;
   /* L'ecran natif (blanc, capacitor.config.json) partait a la FIN : il
      aurait cache la photo et les lettres. Notre ecran est deja peint ici,
