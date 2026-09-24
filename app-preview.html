@@ -371,88 +371,27 @@
          si Supabase tarde a repondre. */
       .splash {
         /* Valeurs en dur, jamais var(--bg) : ce calque est pose sur
-           .screen, qui porte deja parfois le theme clair .boutique-pro
-           quand on arrive directement sur #boutique -- le splash doit
-           garder son apparence quel que soit l'onglet vise. */
-        position: absolute; inset: -3px; z-index: 40; background: #ffffff;
+           .screen, qui porte deja parfois le theme clair .boutique-pro. */
+        position: absolute; inset: -3px; z-index: 40; overflow: hidden; background: #0b0a0c;
         display: flex; align-items: center; justify-content: center;
-        transition: opacity .35s ease;
+        transition: opacity .45s ease;
       }
       .splash.masque { opacity: 0; pointer-events: none; }
-      /* Le bloc de marque du splash. Le N arrondi a laisse la place au
-         logo au verre (demande de Julien : "ce logo-la, partout") --
-         c'est le meme que l'ecran d'accueil, donc la marque ne change
-         plus entre le chargement et la premiere page.
-
-         Le PNG ne remplit que sa bande verticale 22%-72% : on ne montre
-         que celle-la, sinon le logo occupe deux fois la hauteur utile.
-         Le filtre blanchit son fond creme, invisible sur le blanc du
-         splash. */
-      .splash-brand {
-        display: flex; flex-direction: column; align-items: center; gap: var(--e3);
+      /* La photo sort du noir des qu'elle est chargee (.prete, voir le JS). */
+      .splash-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .7s ease; filter: brightness(1.05) saturate(1.1); }
+      .splash-photo.prete { opacity: 1; }
+      .splash-voile { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 55%, rgba(0,0,0,.08), rgba(0,0,0,.5) 75%), linear-gradient(to bottom, rgba(0,0,0,.25), rgba(0,0,0,0) 30%, rgba(0,0,0,.35)); }
+      /* Le nom s'ecrit : chaque lettre apparait a son tour, sans glisser. */
+      .splash-nom {
+        position: relative; margin: 0; display: flex; color: #ffffff;
+        font-family: var(--titre); font-size: 44px; font-weight: 900; letter-spacing: .02em; line-height: 1;
+        text-shadow: 0 2px 24px rgba(0,0,0,.45);
       }
-      .splash-mark {
-        width: 190px; aspect-ratio: 1 / .53; display: block; overflow: hidden;
-        animation: splash-pouls 2.2s ease-in-out infinite;
-      }
-      /* Le PNG est detoure : ni filtre ni mode de fusion. Voir le
-         commentaire de .ac-mascot plus bas. */
-      .splash-mark img {
-        display: block; width: 100%; height: auto; margin-top: -21%;
-      }
-      /* .splash-mot retire : le logo au verre PORTE deja le mot
-         "Noctify". Ecrit une seconde fois juste en dessous, le nom
-         apparaissait deux fois a l'ouverture (signale par Julien). */
-      /* Respiration lente du halo plutot qu'un clignotement : le logo
-         garde sa taille (pas de scale, qui faisait "sauter" le mot
-         dessous), seule l'intensite du rouge bouge. */
-      /* Respiration du halo plutot qu'un clignotement : le logo garde sa
-         taille (pas de scale, qui faisait "sauter" le mot dessous),
-         seule l'intensite du rouge bouge. */
-      /* Le halo rouge n'avait de sens que sur le N monochrome. Sur un
-         dessin en couleur il salissait le trait : une respiration
-         d'opacite, plus discrete, suffit a dire "ca charge". */
-      @keyframes splash-pouls {
-        0%, 100% { opacity: 1; }
-        50%      { opacity: .82; }
-      }
-      /* Petite barre de progression sous le logo -- fausse (on ne sait
-         pas vraiment combien de temps Supabase va prendre), mais remplie
-         par une animation CSS calee sur la duree minimale d'affichage du
-         splash (voir le JS, MIN_AFFICHAGE_MS) : elle donne un vrai
-         retour "ca charge" plutot que le seul logo qui pulse sur place.
-         Le JS la complete a 100% juste avant de faire disparaitre tout
-         l'ecran (voir cacherSplash()). */
-      .splash-piste {
-        position: absolute; left: 40px; right: 40px; bottom: 54px;
-        height: 3px; border-radius: var(--r-pill); background: rgba(15,17,20,.12); overflow: hidden;
-      }
-      .splash-barre {
-        display: block; height: 100%; width: 6%; border-radius: var(--r-pill);
-        background: linear-gradient(135deg, var(--marque), var(--marque-2));
-        box-shadow: none;
-        animation: splash-charge .6s cubic-bezier(.3,.6,.4,1) forwards;
-      }
-      @keyframes splash-charge { from { width: 6%; } to { width: 88%; } }
+      .splash-nom span { opacity: 0; animation: splashLettre .01s linear forwards; animation-delay: calc(.5s + var(--i) * .09s); }
+      @keyframes splashLettre { to { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) {
-        .splash { transition: none; }
-        .splash-mark { animation: none; filter: drop-shadow(0 6px 14px rgba(255,47,69,.28)); }
-        .splash-barre { animation: none; width: 88%; }
-      }
-
-      /* Bascule automatique : si le telephone est en mode sombre, le
-         splash reprend le noir de marque. Demande de Julien -- "mets
-         tout en blanc, et si les gens ont un telephone en mode sombre
-         ca va etre en noir". Seules les couleurs changent, aucune
-         structure n'est dupliquee. */
-      /* Le fond sombre est retire : depuis que le splash porte le logo au
-         verre et non le N vectoriel, un fond noir ferait apparaitre le
-         fond creme du PNG comme un rectangle blanc au milieu de l'ecran.
-         Le splash reste clair quel que soit le mode du telephone -- c'est
-         l'image qui commande, pas la preference systeme.
-         Seule la barre de progression garde son adaptation. */
-      @media (prefers-color-scheme: dark) {
-        .splash-piste { background: rgba(15,17,20,.12); }
+        .splash, .splash-photo { transition: none; }
+        .splash-nom span { animation: none; opacity: 1; }
       }
 
       /* ============================================================
@@ -2572,22 +2511,41 @@
       #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
       /* Les puces de la carte (voir le markup, 24/09/2026). */
       .carte-filtres { position: absolute; z-index: 24; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top)); display: flex; gap: 8px; pointer-events: none; }
+      /* 2e passe (24/09/2026, Julien : « rends les boutons plus esthetiques ») :
+         verre depoli comme les commandes d'Apple Plans, l'icone dans une
+         pastille de couleur (bleu = position, vert = ouvert), et le point
+         vert qui respire. Actif = noir, la pastille garde sa couleur. */
       .cf-puce {
-        pointer-events: auto; display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 15px; border: 0; border-radius: 99px;
-        background: #ffffff; color: #15181d; box-shadow: 0 2px 10px rgba(0,0,0,.14); cursor: pointer; -webkit-tap-highlight-color: transparent;
-        font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: -.01em;
-        transition: background-color .2s ease, color .2s ease, transform .15s ease;
+        pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px 0 6px; border-radius: 99px;
+        border: 1px solid rgba(255,255,255,.7);
+        background: rgba(255,255,255,.78); -webkit-backdrop-filter: blur(16px) saturate(1.7); backdrop-filter: blur(16px) saturate(1.7);
+        color: #15181d; box-shadow: 0 8px 24px rgba(15,17,20,.14), 0 1px 3px rgba(15,17,20,.1);
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+        font-family: var(--titre); font-size: 14.5px; font-weight: 750; letter-spacing: -.015em;
+        transition: background-color .25s ease, color .25s ease, border-color .25s ease, transform .18s cubic-bezier(.3,.7,.4,1.4), box-shadow .25s ease;
       }
-      .cf-puce:active { transform: scale(.95); }
-      .cf-puce svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; }
-      .cf-puce i { width: 8px; height: 8px; border-radius: 50%; background: #2dbd6e; }
-      .cf-puce[aria-pressed="true"] { background: #15181d; color: #ffffff; }
-      .cf-puce[aria-pressed="true"] svg { fill: currentColor; }
-      .cf-puce.attend { opacity: .6; }
+      .cf-puce:active { transform: scale(.94); }
+      .cf-ico { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto; transition: background-color .25s ease; }
+      .cf-proche .cf-ico { background: #e3efff; color: #1d7fd6; }
+      .cf-ouvert .cf-ico { background: #dff6e8; }
+      .cf-ico svg { width: 15px; height: 15px; fill: currentColor; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; transform: translate(-1px, 1px); }
+      .cf-ico i { position: relative; width: 9px; height: 9px; border-radius: 50%; background: #1fae5b; }
+      .cf-ico i::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #1fae5b; animation: cfRespire 2s ease-out infinite; }
+      @keyframes cfRespire { from { transform: scale(1); opacity: .55; } to { transform: scale(2.8); opacity: 0; } }
+      .cf-puce[aria-pressed="true"] { background: rgba(21,24,29,.92); border-color: rgba(21,24,29,.92); color: #ffffff; box-shadow: 0 10px 26px rgba(15,17,20,.28); }
+      .cf-proche[aria-pressed="true"] .cf-ico { background: #1d7fd6; color: #ffffff; }
+      .cf-ouvert[aria-pressed="true"] .cf-ico { background: rgba(31,174,91,.22); }
+      .cf-ouvert[aria-pressed="true"] .cf-ico i, .cf-ouvert[aria-pressed="true"] .cf-ico i::after { background: #3ddc84; }
+      .cf-puce.attend .cf-ico svg { animation: cfCherche 1s ease-in-out infinite; }
+      @keyframes cfCherche { 50% { opacity: .3; } }
+      @media (prefers-reduced-motion: reduce) { .cf-ico i::after, .cf-puce.attend .cf-ico svg { animation: none; } }
       .cf-msg {
-        position: absolute; z-index: 24; left: 12px; top: calc(60px + env(safe-area-inset-top)); max-width: calc(100% - 24px); margin: 0;
-        padding: 8px 13px; border-radius: 12px; background: rgba(21,24,29,.88); color: #ffffff; font-size: 13px; font-weight: 600; line-height: 1.3;
+        position: absolute; z-index: 24; left: 12px; top: calc(64px + env(safe-area-inset-top)); max-width: calc(100% - 24px); margin: 0;
+        padding: 9px 14px; border-radius: 14px; background: rgba(21,24,29,.86); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+        color: #ffffff; font-size: 13px; font-weight: 600; line-height: 1.3; box-shadow: 0 8px 22px rgba(15,17,20,.22);
+        animation: cfMsg .3s cubic-bezier(.2,.8,.3,1);
       }
+      @keyframes cfMsg { from { opacity: 0; transform: translateY(-6px); } }
       .cf-msg[hidden] { display: none; }
       /* Une epingle filtree s'efface au lieu de disparaitre d'un coup. */
       .marker-club { transition: opacity .25s ease; }
@@ -6813,13 +6771,15 @@
     <div class="phone">
       <div class="screen">
 
+        <!-- ⚠️ L'ECRAN DE CHARGEMENT, COMME DUSK (24/09/2026). Julien : « rends
+             l'ecran de chargement plus esthetique », apres la video de DUSK :
+             une photo de soiree plein ecran qui sort du noir, puis le nom qui
+             s'ecrit lettre par lettre. Les lettres sont des <span> pour etre
+             animees une a une (--i = leur rang). -->
         <div class="splash" id="splash" aria-hidden="true">
-          <div class="splash-brand">
-            <span class="splash-mark" aria-hidden="true">
-              <img src="/noctify-logo-verre-detoure.webp" alt="" width="640" height="640" />
-            </span>
-          </div>
-          <div class="splash-piste"><span class="splash-barre" id="splash-barre"></span></div>
+          <img class="splash-photo" id="splash-photo" src="/ambiance/bienvenue.webp" alt="" fetchpriority="high" />
+          <span class="splash-voile"></span>
+          <p class="splash-nom"><span style="--i:0">N</span><span style="--i:1">O</span><span style="--i:2">C</span><span style="--i:3">T</span><span style="--i:4">I</span><span style="--i:5">F</span><span style="--i:6">Y</span></p>
         </div>
 
         <!-- Filtre qui blanchit le fond creme du logo (voir .ac-mascot
@@ -8243,8 +8203,8 @@
                filtraient qu'une liste sous la carte : ici ils filtrent les
                epingles elles-memes, et la carte se recadre dessus. -->
           <div class="carte-filtres" id="carte-filtres">
-            <button type="button" class="cf-puce" id="cf-proche" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 20 4l-7 17-3-7-7-3z"/></svg>Près de moi</button>
-            <button type="button" class="cf-puce" id="cf-ouvert" aria-pressed="false"><i aria-hidden="true"></i>Ouvert maintenant</button>
+            <button type="button" class="cf-puce cf-proche" id="cf-proche" aria-pressed="false"><span class="cf-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 11.2 19.6 4.4l-6.8 16.1-2.6-6.7z"/></svg></span>Près de moi</button>
+            <button type="button" class="cf-puce cf-ouvert" id="cf-ouvert" aria-pressed="false"><span class="cf-ico" aria-hidden="true"><i></i></span>Ouvert maintenant</button>
           </div>
           <p class="cf-msg" id="cf-msg" role="status" hidden></p>
 
@@ -8613,19 +8573,25 @@ var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koi
 // d'autant, sinon elle serait coupee au milieu de sa course.
 (function () {
   var splash = document.getElementById("splash");
-  var barre = document.getElementById("splash-barre");
+  var photo = document.getElementById("splash-photo");
   var cachee = false;
-  var MIN_AFFICHAGE_MS = 600;
+  /* 1 500 ms (24/09/2026) : le temps que la photo sorte du noir et que les
+     sept lettres de NOCTIFY s'ecrivent (0,5 s + 7 x 0,09 s), plus un
+     souffle pour lire le nom en entier. */
+  var MIN_AFFICHAGE_MS = 1500;
+  /* L'ecran natif (blanc, capacitor.config.json) partait a la FIN : il
+     aurait cache la photo et les lettres. Notre ecran est deja peint ici,
+     on le retire tout de suite. */
+  natif.masquerSplash();
+  if (photo) {
+    if (photo.complete && photo.naturalWidth) photo.classList.add("prete");
+    else photo.addEventListener("load", function () { photo.classList.add("prete"); });
+  }
   function attendre(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function cacherSplash() {
     if (cachee || !splash) return;
     cachee = true;
-    if (barre) {
-      barre.style.animation = "none";
-      barre.style.transition = "width .25s ease";
-      barre.style.width = "100%";
-    }
-    setTimeout(function () { splash.classList.add("masque"); }, 220);
+    splash.classList.add("masque");
     /* Et l'ecran de lancement NATIF avec lui : sinon il reste par-dessus
        une appli deja prete, et le demarrage parait deux fois plus long
        qu'il ne l'est. Sans effet au navigateur. */
