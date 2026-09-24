@@ -371,32 +371,88 @@
          si Supabase tarde a repondre. */
       .splash {
         /* Valeurs en dur, jamais var(--bg) : ce calque est pose sur
-           .screen, qui porte deja parfois le theme clair .boutique-pro. */
-        position: absolute; inset: -3px; z-index: 40; overflow: hidden; background: #0b0a0c;
+           .screen, qui porte deja parfois le theme clair .boutique-pro
+           quand on arrive directement sur #boutique -- le splash doit
+           garder son apparence quel que soit l'onglet vise. */
+        position: absolute; inset: -3px; z-index: 40; background: #ffffff;
         display: flex; align-items: center; justify-content: center;
-        transition: opacity .45s ease;
+        transition: opacity .35s ease;
       }
       .splash.masque { opacity: 0; pointer-events: none; }
-      /* Le logo au verre sur une pastille blanche (24/09/2026, voir le
-         markup) : elle arrive d'un leger rebond, le halo rouge se leve
-         derriere. Le PNG n'occupe que sa bande 22 %-72 %, d'ou le cadrage. */
-      .splash-halo {
-        position: absolute; width: 420px; height: 420px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(222,49,49,.62), rgba(222,49,49,.18) 40%, rgba(222,49,49,0) 66%);
-        opacity: 0; animation: splashFondu .6s ease .1s forwards;
+      /* Le bloc de marque du splash. Le N arrondi a laisse la place au
+         logo au verre (demande de Julien : "ce logo-la, partout") --
+         c'est le meme que l'ecran d'accueil, donc la marque ne change
+         plus entre le chargement et la premiere page.
+
+         Le PNG ne remplit que sa bande verticale 22%-72% : on ne montre
+         que celle-la, sinon le logo occupe deux fois la hauteur utile.
+         Le filtre blanchit son fond creme, invisible sur le blanc du
+         splash. */
+      .splash-brand {
+        display: flex; flex-direction: column; align-items: center; gap: var(--e3);
       }
-      .splash-logo {
-        position: relative; width: 196px; height: 196px; border-radius: 48px; background: #ffffff; overflow: hidden;
-        display: grid; place-items: center;
-        box-shadow: 0 0 70px 12px rgba(222,49,49,.5), 0 18px 40px rgba(0,0,0,.4);
-        opacity: 0; transform: scale(.82); animation: splashPop .7s cubic-bezier(.2, 1.4, .35, 1) .1s forwards;
+      .splash-mark {
+        width: 190px; aspect-ratio: 1 / .53; display: block; overflow: hidden;
+        animation: splash-pouls 2.2s ease-in-out infinite;
       }
-      .splash-logo img { width: 128%; height: auto; display: block; margin-top: 4%; }
-      @keyframes splashPop { to { opacity: 1; transform: none; } }
-      @keyframes splashFondu { to { opacity: 1; } }
+      /* Le PNG est detoure : ni filtre ni mode de fusion. Voir le
+         commentaire de .ac-mascot plus bas. */
+      .splash-mark img {
+        display: block; width: 100%; height: auto; margin-top: -21%;
+      }
+      /* .splash-mot retire : le logo au verre PORTE deja le mot
+         "Noctify". Ecrit une seconde fois juste en dessous, le nom
+         apparaissait deux fois a l'ouverture (signale par Julien). */
+      /* Respiration lente du halo plutot qu'un clignotement : le logo
+         garde sa taille (pas de scale, qui faisait "sauter" le mot
+         dessous), seule l'intensite du rouge bouge. */
+      /* Respiration du halo plutot qu'un clignotement : le logo garde sa
+         taille (pas de scale, qui faisait "sauter" le mot dessous),
+         seule l'intensite du rouge bouge. */
+      /* Le halo rouge n'avait de sens que sur le N monochrome. Sur un
+         dessin en couleur il salissait le trait : une respiration
+         d'opacite, plus discrete, suffit a dire "ca charge". */
+      @keyframes splash-pouls {
+        0%, 100% { opacity: 1; }
+        50%      { opacity: .82; }
+      }
+      /* Petite barre de progression sous le logo -- fausse (on ne sait
+         pas vraiment combien de temps Supabase va prendre), mais remplie
+         par une animation CSS calee sur la duree minimale d'affichage du
+         splash (voir le JS, MIN_AFFICHAGE_MS) : elle donne un vrai
+         retour "ca charge" plutot que le seul logo qui pulse sur place.
+         Le JS la complete a 100% juste avant de faire disparaitre tout
+         l'ecran (voir cacherSplash()). */
+      .splash-piste {
+        position: absolute; left: 40px; right: 40px; bottom: 54px;
+        height: 3px; border-radius: var(--r-pill); background: rgba(15,17,20,.12); overflow: hidden;
+      }
+      .splash-barre {
+        display: block; height: 100%; width: 6%; border-radius: var(--r-pill);
+        background: linear-gradient(135deg, var(--marque), var(--marque-2));
+        box-shadow: none;
+        animation: splash-charge .6s cubic-bezier(.3,.6,.4,1) forwards;
+      }
+      @keyframes splash-charge { from { width: 6%; } to { width: 88%; } }
       @media (prefers-reduced-motion: reduce) {
         .splash { transition: none; }
-        .splash-halo, .splash-logo { animation: none; opacity: 1; transform: none; }
+        .splash-mark { animation: none; filter: drop-shadow(0 6px 14px rgba(255,47,69,.28)); }
+        .splash-barre { animation: none; width: 88%; }
+      }
+
+      /* Bascule automatique : si le telephone est en mode sombre, le
+         splash reprend le noir de marque. Demande de Julien -- "mets
+         tout en blanc, et si les gens ont un telephone en mode sombre
+         ca va etre en noir". Seules les couleurs changent, aucune
+         structure n'est dupliquee. */
+      /* Le fond sombre est retire : depuis que le splash porte le logo au
+         verre et non le N vectoriel, un fond noir ferait apparaitre le
+         fond creme du PNG comme un rectangle blanc au milieu de l'ecran.
+         Le splash reste clair quel que soit le mode du telephone -- c'est
+         l'image qui commande, pas la preference systeme.
+         Seule la barre de progression garde son adaptation. */
+      @media (prefers-color-scheme: dark) {
+        .splash-piste { background: rgba(15,17,20,.12); }
       }
 
       /* ============================================================
@@ -6776,19 +6832,13 @@
     <div class="phone">
       <div class="screen">
 
-        <!-- ⚠️ L'ECRAN DE CHARGEMENT, COMME DUSK (24/09/2026). Julien : « rends
-             l'ecran de chargement plus esthetique », apres la video de DUSK :
-             une photo de soiree plein ecran qui sort du noir, puis le nom qui
-             s'ecrit lettre par lettre. Puis, le meme soir : « change encore »,
-             direction « plus simple, epure » -> photo et lettres retirees :
-             le noir, le nom en un seul fondu, un point rouge. Puis « mets le
-             logo du verre, mais pas comme avant » : le logo est dessine en
-             noir, illisible sur le noir -> il est pose sur une pastille
-             blanche facon icone d'appli, qui arrive avec un petit rebond,
-             un halo rouge derriere. -->
         <div class="splash" id="splash" aria-hidden="true">
-          <span class="splash-halo"></span>
-          <span class="splash-logo"><img src="/noctify-logo-verre-detoure.webp" alt="" width="640" height="640" fetchpriority="high" /></span>
+          <div class="splash-brand">
+            <span class="splash-mark" aria-hidden="true">
+              <img src="/noctify-logo-verre-detoure.webp" alt="" width="640" height="640" />
+            </span>
+          </div>
+          <div class="splash-piste"><span class="splash-barre" id="splash-barre"></span></div>
         </div>
 
         <!-- Filtre qui blanchit le fond creme du logo (voir .ac-mascot
@@ -8582,20 +8632,19 @@ var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koi
 // d'autant, sinon elle serait coupee au milieu de sa course.
 (function () {
   var splash = document.getElementById("splash");
+  var barre = document.getElementById("splash-barre");
   var cachee = false;
-  /* 1 000 ms (24/09/2026) : le temps que la pastille arrive (0,1 + 0,7 s)
-     et se voie, sans faire attendre davantage. */
-  var MIN_AFFICHAGE_MS = 1000;
-  /* L'ecran natif (blanc, capacitor.config.json) partait a la FIN : il
-     aurait cache la photo et les lettres. Notre ecran est deja peint ici,
-     on le retire tout de suite. */
-  natif.masquerSplash();
-
+  var MIN_AFFICHAGE_MS = 600;
   function attendre(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function cacherSplash() {
     if (cachee || !splash) return;
     cachee = true;
-    splash.classList.add("masque");
+    if (barre) {
+      barre.style.animation = "none";
+      barre.style.transition = "width .25s ease";
+      barre.style.width = "100%";
+    }
+    setTimeout(function () { splash.classList.add("masque"); }, 220);
     /* Et l'ecran de lancement NATIF avec lui : sinon il reste par-dessus
        une appli deja prete, et le demarrage parait deux fois plus long
        qu'il ne l'est. Sans effet au navigateur. */
