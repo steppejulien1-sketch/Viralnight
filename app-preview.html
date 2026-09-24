@@ -347,6 +347,18 @@
         opacity: 0; visibility: hidden; transition: opacity .18s var(--sortie);
       }
       .vue.actif { opacity: 1; visibility: visible; }
+      /* ⚠️ LA LISTE RECULE SOUS LA BOUTIQUE D'UN LIEU (24/09/2026). Julien :
+         « rends aussi l'appli plus fluide dans les mouvements, comme sur
+         DUSK ». Comme une page iOS : la boutique arrive par la droite, la
+         liste glisse d'un quart vers la gauche et s'assombrit dessous ; au
+         retour, l'inverse. Le doigt peut aussi ramener la page (voir
+         activerRetourAuDoigt). */
+      .vue-boutique { transition: opacity .18s var(--sortie), transform .42s cubic-bezier(.22, .8, .2, 1); }
+      .vue-boutique::after { content: ""; position: absolute; inset: 0; z-index: 60; background: #000; opacity: 0; pointer-events: none; transition: opacity .42s ease; }
+      .screen.bar-ouvert .vue-boutique { transform: translateX(-28%); }
+      .screen.bar-ouvert .vue-boutique::after { opacity: var(--bar-voile, .2); }
+      .screen.bar-glisse .vue-boutique, .screen.bar-glisse .vue-boutique::after, .screen.bar-glisse .vue-bar { transition: none !important; }
+      @media (prefers-reduced-motion: reduce) { .screen.bar-ouvert .vue-boutique { transform: none; } }
       @media (prefers-reduced-motion: reduce) { .vue { transition: none; } }
 
       /* ============================================================
@@ -2546,6 +2558,29 @@
          les continents -- signale par Julien. */
       #map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
       #etoiles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+      /* Les puces de la carte (voir le markup, 24/09/2026). */
+      .carte-filtres { position: absolute; z-index: 24; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top)); display: flex; gap: 8px; pointer-events: none; }
+      .cf-puce {
+        pointer-events: auto; display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 15px; border: 0; border-radius: 99px;
+        background: #ffffff; color: #15181d; box-shadow: 0 2px 10px rgba(0,0,0,.14); cursor: pointer; -webkit-tap-highlight-color: transparent;
+        font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: -.01em;
+        transition: background-color .2s ease, color .2s ease, transform .15s ease;
+      }
+      .cf-puce:active { transform: scale(.95); }
+      .cf-puce svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; }
+      .cf-puce i { width: 8px; height: 8px; border-radius: 50%; background: #2dbd6e; }
+      .cf-puce[aria-pressed="true"] { background: #15181d; color: #ffffff; }
+      .cf-puce[aria-pressed="true"] svg { fill: currentColor; }
+      .cf-puce.attend { opacity: .6; }
+      .cf-msg {
+        position: absolute; z-index: 24; left: 12px; top: calc(60px + env(safe-area-inset-top)); max-width: calc(100% - 24px); margin: 0;
+        padding: 8px 13px; border-radius: 12px; background: rgba(21,24,29,.88); color: #ffffff; font-size: 13px; font-weight: 600; line-height: 1.3;
+      }
+      .cf-msg[hidden] { display: none; }
+      /* Une epingle filtree s'efface au lieu de disparaitre d'un coup. */
+      .marker-club { transition: opacity .25s ease; }
+      .marker-club.filtre { opacity: 0; pointer-events: none; }
+      .moi-point { width: 18px; height: 18px; border-radius: 50%; background: #1d7fd6; border: 3px solid #ffffff; box-shadow: 0 0 0 7px rgba(29,127,214,.22), 0 1px 4px rgba(0,0,0,.3); }
 
       /* ⚠️ L'ATTRIBUTION MONTE EN HAUT A DROITE. En bas, la capsule
          d'onglets flotte sur la carte : le bouton "i"
@@ -8189,6 +8224,18 @@
           <div id="map"></div>
           <canvas id="etoiles" aria-hidden="true"></canvas>
 
+          <!-- ⚠️ « PRES DE MOI » / « OUVERT MAINTENANT », SUR LA CARTE (24/09/2026).
+               Julien : « mets un truc sur la carte comme eux [DUSK] pour voir que
+               les clubs proches de chez moi et ceux ouverts actuellement ». Le
+               12/09, les memes filtres avaient ete retires parce qu'ils ne
+               filtraient qu'une liste sous la carte : ici ils filtrent les
+               epingles elles-memes, et la carte se recadre dessus. -->
+          <div class="carte-filtres" id="carte-filtres">
+            <button type="button" class="cf-puce" id="cf-proche" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 20 4l-7 17-3-7-7-3z"/></svg>Près de moi</button>
+            <button type="button" class="cf-puce" id="cf-ouvert" aria-pressed="false"><i aria-hidden="true"></i>Ouvert maintenant</button>
+          </div>
+          <p class="cf-msg" id="cf-msg" role="status" hidden></p>
+
           <!-- ⚠️ LA CARTE, ET RIEN D'AUTRE. Julien, 12/09/2026 : "ne coupe pas
                avec un truc en bas, mets la carte d'Apple", puis "retire les
                clubs en dessous, mets juste la carte".
@@ -13014,6 +13061,114 @@ function majTailleMarqueurs() {
   });
 }
 
+/* ==========================================================
+   PRES DE MOI / OUVERT MAINTENANT (24/09/2026, voir le markup)
+   Les deux puces se cumulent. « Pres de moi » demande la position au
+   moment ou on la touche (jamais avant, voir detecterClubProche), pose le
+   point bleu et ne garde que les lieux a moins de RAYON_PROCHE_KM ; s'il
+   n'y en a aucun, les trois plus proches, et on le dit. « Ouvert
+   maintenant » lit les horaires (etatOuverture) : un lieu sans horaires
+   connus n'est pas montre comme ouvert.
+   ========================================================== */
+var PINS_CARTE = {};
+var RAYON_PROCHE_KM = 5;
+var FILTRES_CARTE = { proche: false, ouvert: false };
+var MARQUEUR_MOI = null;
+var minuterieMsgCarte = null;
+
+function direCarte(texte) {
+  var m = document.getElementById("cf-msg");
+  if (!m) return;
+  clearTimeout(minuterieMsgCarte);
+  m.textContent = texte || "";
+  m.hidden = !texte;
+  if (texte) minuterieMsgCarte = setTimeout(function () { m.hidden = true; }, 4000);
+}
+
+function positionPourCarte() {
+  return natif.position({ timeout: 10000, maximumAge: 120000 }).then(function (p) {
+    if (p !== undefined) return p;
+    return new Promise(function (ok) {
+      if (!navigator.geolocation) return ok(null);
+      navigator.geolocation.getCurrentPosition(ok, function () { ok(null); }, { timeout: 10000, maximumAge: 120000 });
+    });
+  });
+}
+
+function clesVisiblesCarte() {
+  var cles = Object.keys(CLUBS);
+  if (FILTRES_CARTE.ouvert) cles = cles.filter(function (k) { var e = etatOuverture(CLUBS[k]); return !!(e && e.ouvert); });
+  if (FILTRES_CARTE.proche && POSITION_MOI) {
+    var tries = cles.slice().sort(function (a, b) { return distanceKm(POSITION_MOI, CLUBS[a].lngLat) - distanceKm(POSITION_MOI, CLUBS[b].lngLat); });
+    var dedans = tries.filter(function (k) { return distanceKm(POSITION_MOI, CLUBS[k].lngLat) <= RAYON_PROCHE_KM; });
+    cles = dedans.length ? dedans : tries.slice(0, 3);
+  }
+  return cles;
+}
+
+function appliquerFiltresCarte(recadrer) {
+  var cles = clesVisiblesCarte();
+  Object.keys(PINS_CARTE).forEach(function (k) {
+    var cache = cles.indexOf(k) === -1;
+    PINS_CARTE[k].classList.toggle("filtre", cache);
+    var bouton = PINS_CARTE[k].querySelector("button");
+    if (bouton) bouton.tabIndex = cache ? -1 : 0;
+  });
+  if (FILTRES_CARTE.ouvert && !cles.length) {
+    direCarte("Aucun lieu ouvert pour l'instant.");
+    return;
+  }
+  if (FILTRES_CARTE.proche && POSITION_MOI && cles.length &&
+      !cles.some(function (k) { return distanceKm(POSITION_MOI, CLUBS[k].lngLat) <= RAYON_PROCHE_KM; })) {
+    direCarte("Rien à moins de " + RAYON_PROCHE_KM + " km : voici les plus proches.");
+  }
+  if (!recadrer || !cles.length) return;
+  var points = cles.map(function (k) { return CLUBS[k].lngLat; });
+  if (FILTRES_CARTE.proche && POSITION_MOI) points.push(POSITION_MOI);
+  var b = points.reduce(function (acc, ll) { return acc.extend(ll); }, new maplibregl.LngLatBounds(points[0], points[0]));
+  map.fitBounds(b, { padding: { top: 120, left: 64, right: 64, bottom: 130 }, maxZoom: 15, duration: 900, essential: true });
+}
+
+document.getElementById("cf-ouvert")?.addEventListener("click", function () {
+  FILTRES_CARTE.ouvert = !FILTRES_CARTE.ouvert;
+  this.setAttribute("aria-pressed", String(FILTRES_CARTE.ouvert));
+  vibrer("leger");
+  direCarte("");
+  appliquerFiltresCarte(true);
+});
+
+document.getElementById("cf-proche")?.addEventListener("click", function () {
+  var bouton = this;
+  vibrer("leger");
+  direCarte("");
+  if (FILTRES_CARTE.proche) {
+    FILTRES_CARTE.proche = false;
+    bouton.setAttribute("aria-pressed", "false");
+    appliquerFiltresCarte(true);
+    return;
+  }
+  bouton.classList.add("attend");
+  positionPourCarte().then(function (pos) {
+    bouton.classList.remove("attend");
+    if (!pos) {
+      positionRefusee = true;
+      direCarte("Active la localisation de Noctify dans les réglages de ton téléphone.");
+      return;
+    }
+    appliquerPosition(pos);
+    if (!MARQUEUR_MOI) {
+      var point = document.createElement("div");
+      point.className = "moi-point";
+      point.setAttribute("aria-label", "Ta position");
+      MARQUEUR_MOI = new maplibregl.Marker({ element: point, anchor: "center" });
+    }
+    MARQUEUR_MOI.setLngLat(POSITION_MOI).addTo(map);
+    FILTRES_CARTE.proche = true;
+    bouton.setAttribute("aria-pressed", "true");
+    appliquerFiltresCarte(true);
+  });
+});
+
 map.on("load", function () {
   Object.keys(CLUBS).forEach(function (key) {
     var c = CLUBS[key];
@@ -13058,6 +13213,7 @@ map.on("load", function () {
     new maplibregl.Marker({ element: porteur, anchor: "bottom", opacityWhenCovered: 0 })
       .setLngLat(c.lngLat)
       .addTo(map);
+    PINS_CARTE[key] = porteur;
     var ecart = ecartAleatoire();
     marqueursEchelle.push({ el: el, dx: ecart.x, dy: ecart.y });
   });
@@ -16762,18 +16918,71 @@ function ouvrirBoutiqueBar(bar) {
   VUE_BAR.hidden = false;
   void VUE_BAR.offsetWidth;
   VUE_BAR.classList.add("ouverte");
+  SCREEN.classList.add("bar-ouvert");
   vibrer("leger");
 }
 
 function fermerBoutiqueBar() {
   if (!VUE_BAR || VUE_BAR.hidden) return false;
   VUE_BAR.classList.remove("ouverte");
+  SCREEN.classList.remove("bar-ouvert");
   arreterDefilePhotoBar();
   BAR_OUVERT = null;
   setTimeout(function () { if (!VUE_BAR.classList.contains("ouverte")) VUE_BAR.hidden = true; }, 380);
   return true;
 }
 window.noctifyFermerBoutiqueBar = fermerBoutiqueBar;
+
+/* Le retour au doigt, comme sur iPhone : on pousse la page d'un lieu vers
+   la droite, elle suit le doigt et la liste revient dessous. Lachee apres
+   un tiers de l'ecran (ou d'un geste vif), elle se ferme ; sinon elle
+   revient en place. Seul un geste nettement horizontal vers la droite est
+   pris : le defilement vertical reste au defilement. */
+(function activerRetourAuDoigt() {
+  if (!VUE_BAR) return;
+  var LISTE = document.getElementById("vue-boutique");
+  var x0 = 0, y0 = 0, t0 = 0, dx = 0, largeur = 0, decide = false, suit = false;
+  function poser(d) {
+    VUE_BAR.style.transform = "translateX(" + d + "px)";
+    if (LISTE) LISTE.style.transform = "translateX(" + (-0.28 * largeur + 0.28 * d) + "px)";
+    SCREEN.style.setProperty("--bar-voile", (0.2 * (1 - d / largeur)).toFixed(3));
+  }
+  function relacher() {
+    SCREEN.classList.remove("bar-glisse");
+    VUE_BAR.style.transform = "";
+    if (LISTE) LISTE.style.transform = "";
+    SCREEN.style.removeProperty("--bar-voile");
+  }
+  VUE_BAR.addEventListener("touchstart", function (e) {
+    if (!VUE_BAR.classList.contains("ouverte") || e.touches.length !== 1) return;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now();
+    dx = 0; decide = false; suit = false; largeur = VUE_BAR.offsetWidth || 390;
+  }, { passive: true });
+  VUE_BAR.addEventListener("touchmove", function (e) {
+    if (!VUE_BAR.classList.contains("ouverte") || e.touches.length !== 1) return;
+    var mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+    if (!decide) {
+      if (Math.abs(mx) < 10 && Math.abs(my) < 10) return;
+      decide = true;
+      suit = mx > 0 && Math.abs(mx) > Math.abs(my) * 1.4;
+      if (suit) SCREEN.classList.add("bar-glisse");
+    }
+    if (!suit) return;
+    e.preventDefault();
+    dx = Math.max(0, mx);
+    poser(dx);
+  }, { passive: false });
+  function fin() {
+    if (!suit) return;
+    suit = false;
+    var vif = dx / Math.max(1, Date.now() - t0) > 0.5;
+    void VUE_BAR.offsetWidth;
+    relacher();
+    if (dx > largeur / 3 || (vif && dx > 40)) fermerBoutiqueBar();
+  }
+  VUE_BAR.addEventListener("touchend", fin);
+  VUE_BAR.addEventListener("touchcancel", fin);
+})();
 
 document.getElementById("vb-retour")?.addEventListener("click", fermerBoutiqueBar);
 // En defilant, la barre du haut se remplit et reprend le nom (comme une appli native).
