@@ -11320,6 +11320,9 @@ map.on("moveend", function () {
     // de corriger quoi que ce soit, plutot que de se fier a l'etat au
     // moment ou le minuteur a ete lance.
     if (gesteZoomRecent()) return;
+    // Un recadrage anime a pu partir entre-temps (Pres de moi, Ouvert
+    // maintenant) : le corriger en plein vol le coupait net.
+    if (map.isMoving()) return;
     var latActuelle = map.getCenter().lat;
     var compensationActuelle = Math.log2(Math.cos(latActuelle * Math.PI / 180));
     var zoomVoulu = zoomCible + compensationActuelle;
