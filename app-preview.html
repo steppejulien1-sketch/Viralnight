@@ -377,21 +377,19 @@
         transition: opacity .45s ease;
       }
       .splash.masque { opacity: 0; pointer-events: none; }
-      /* La photo sort du noir des qu'elle est chargee (.prete, voir le JS). */
-      .splash-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .7s ease; filter: brightness(1.05) saturate(1.1); }
-      .splash-photo.prete { opacity: 1; }
-      .splash-voile { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 55%, rgba(0,0,0,.08), rgba(0,0,0,.5) 75%), linear-gradient(to bottom, rgba(0,0,0,.25), rgba(0,0,0,0) 30%, rgba(0,0,0,.35)); }
-      /* Le nom s'ecrit : chaque lettre apparait a son tour, sans glisser. */
+      /* Epure (24/09/2026) : le nom seul, espace, qui apparait en un fondu,
+         et un point rouge de marque dessous. Rien d'autre ne bouge. */
+      .splash { flex-direction: column; gap: 18px; }
       .splash-nom {
-        position: relative; margin: 0; display: flex; color: #ffffff;
-        font-family: var(--titre); font-size: 44px; font-weight: 900; letter-spacing: .02em; line-height: 1;
-        text-shadow: 0 2px 24px rgba(0,0,0,.45);
+        margin: 0; color: #ffffff; font-family: var(--titre); font-size: 30px; font-weight: 800;
+        letter-spacing: .32em; text-indent: .32em; line-height: 1;
+        opacity: 0; animation: splashFondu .7s ease .15s forwards;
       }
-      .splash-nom span { opacity: 0; animation: splashLettre .01s linear forwards; animation-delay: calc(.5s + var(--i) * .09s); }
-      @keyframes splashLettre { to { opacity: 1; } }
+      .splash-point { width: 6px; height: 6px; border-radius: 50%; background: #de3131; opacity: 0; animation: splashFondu .7s ease .45s forwards; }
+      @keyframes splashFondu { to { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) {
-        .splash, .splash-photo { transition: none; }
-        .splash-nom span { animation: none; opacity: 1; }
+        .splash { transition: none; }
+        .splash-nom, .splash-point { animation: none; opacity: 1; }
       }
 
       /* ============================================================
@@ -6774,12 +6772,12 @@
         <!-- ⚠️ L'ECRAN DE CHARGEMENT, COMME DUSK (24/09/2026). Julien : « rends
              l'ecran de chargement plus esthetique », apres la video de DUSK :
              une photo de soiree plein ecran qui sort du noir, puis le nom qui
-             s'ecrit lettre par lettre. Les lettres sont des <span> pour etre
-             animees une a une (--i = leur rang). -->
+             s'ecrit lettre par lettre. Puis, le meme soir : « change encore »,
+             direction « plus simple, epure » -> photo et lettres retirees :
+             le noir, le nom en un seul fondu, un point rouge. -->
         <div class="splash" id="splash" aria-hidden="true">
-          <img class="splash-photo" id="splash-photo" src="/ambiance/bienvenue.webp" alt="" fetchpriority="high" />
-          <span class="splash-voile"></span>
-          <p class="splash-nom"><span style="--i:0">N</span><span style="--i:1">O</span><span style="--i:2">C</span><span style="--i:3">T</span><span style="--i:4">I</span><span style="--i:5">F</span><span style="--i:6">Y</span></p>
+          <p class="splash-nom">NOCTIFY</p>
+          <span class="splash-point"></span>
         </div>
 
         <!-- Filtre qui blanchit le fond creme du logo (voir .ac-mascot
@@ -8573,20 +8571,15 @@ var BASE_API = typeof window.Capacitor !== "undefined" ? "https://viralnight-koi
 // d'autant, sinon elle serait coupee au milieu de sa course.
 (function () {
   var splash = document.getElementById("splash");
-  var photo = document.getElementById("splash-photo");
   var cachee = false;
-  /* 1 500 ms (24/09/2026) : le temps que la photo sorte du noir et que les
-     sept lettres de NOCTIFY s'ecrivent (0,5 s + 7 x 0,09 s), plus un
-     souffle pour lire le nom en entier. */
-  var MIN_AFFICHAGE_MS = 1500;
+  /* 1 000 ms (24/09/2026) : le temps que le nom et le point apparaissent
+     (0,15 + 0,7 s) et se lisent, sans faire attendre davantage. */
+  var MIN_AFFICHAGE_MS = 1000;
   /* L'ecran natif (blanc, capacitor.config.json) partait a la FIN : il
      aurait cache la photo et les lettres. Notre ecran est deja peint ici,
      on le retire tout de suite. */
   natif.masquerSplash();
-  if (photo) {
-    if (photo.complete && photo.naturalWidth) photo.classList.add("prete");
-    else photo.addEventListener("load", function () { photo.classList.add("prete"); });
-  }
+
   function attendre(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function cacherSplash() {
     if (cachee || !splash) return;
