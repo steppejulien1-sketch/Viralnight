@@ -1911,6 +1911,18 @@
         .pf-entete::before { background-image: url("/motifs/verres-sombre.webp"); opacity: .55; }
       }
       .pf-entete > * { position: relative; }
+      /* ⚠️ L'ENTETE S'ETIRE QUAND ON TIRE, COMME DUSK (24/09/2026). Julien,
+         video de DUSK a l'appui : « un truc que je trouve style ». Tire vers
+         le bas en haut du Profil, la page suit le doigt (avec resistance) et
+         le motif de verres grandit pour remplir le haut ; lache, tout revient.
+         --etire (px) et --etire-s (echelle) sont poses par activerEtirement.
+         Le rebond natif d'iOS est coupe ici, sinon les deux se cumuleraient. */
+      #vue-profil { overscroll-behavior-y: none; }
+      /* Transformes seulement pendant le geste (.etire) : un transform pose en
+         permanence sur #pf-contenu deplacerait les elements fixes du Profil. */
+      #vue-profil.etire #pf-contenu { transform: translateY(calc(var(--etire, 0) * 1px)); }
+      #vue-profil.etire .pf-entete::before { transform-origin: 50% 0; transform: translateY(calc(var(--etire, 0) * -1px)) scale(var(--etire-s, 1)); }
+      #vue-profil.rebond #pf-contenu, #vue-profil.rebond .pf-entete::before { transition: transform .45s cubic-bezier(.2, .9, .25, 1.1); }
 
       /* ⚠️ LA CARTE DES NOTIFICATIONS, DANS L'AUTRE COULEUR. Julien,
          13/09/2026 : chez DUSK "le truc notification [est] dans une autre
@@ -12499,6 +12511,14 @@ function ouvrirChoixReseau(nomClub) {
   // boutique (le plus proche, ou le dernier choisi a la main).
   var cleChoisie = null;
   Object.keys(CLUBS_STORY).forEach(function (k) { if (nomClub && CLUBS_STORY[k].nom === nomClub) cleChoisie = k; });
+  /* Sans fiche d'origine : le lieu le plus proche quand on connait la
+     position (24/09/2026, voir detecterClubProche), sauf si le clubbeur a
+     choisi son club a la main pendant cette ouverture de l'appli. */
+  if (!cleChoisie && POSITION_MOI && !choixManuelClub) {
+    cleChoisie = Object.keys(CLUBS_STORY).filter(function (k) { return CLUBS_STORY[k].lngLat; }).sort(function (a, b) {
+      return distanceKm(POSITION_MOI, CLUBS_STORY[a].lngLat) - distanceKm(POSITION_MOI, CLUBS_STORY[b].lngLat);
+    })[0] || null;
+  }
   if (!cleChoisie) cleChoisie = CLUBS_STORY[CLUB_BOUTIQUE] ? CLUB_BOUTIQUE : Object.keys(CLUBS_STORY)[0];
 
   // Le compte a mentionner. CLUBS_STORY[..].ig d'abord (le vrai compte, releve a
@@ -13773,6 +13793,43 @@ document.addEventListener("click", function (e) {
    d'accueil plus haut.
    ========================================================== */
 var VUE_PROFIL = $("#vue-profil");
+
+/* L'etirement de l'entete du Profil (voir .pf-entete::before, 24/09/2026).
+   Seul un geste vers le bas commence alors que la page est tout en haut ;
+   la course est freinee (jamais plus de ~170 px) pour garder la sensation
+   d'un elastique, pas d'un glisser libre. */
+(function activerEtirement() {
+  if (!VUE_PROFIL) return;
+  var y0 = 0, actif = false, tire = false;
+  function poser(d) {
+    var h = ($(".pf-entete") && $(".pf-entete").offsetHeight) || 300;
+    VUE_PROFIL.style.setProperty("--etire", d.toFixed(1));
+    VUE_PROFIL.style.setProperty("--etire-s", (1 + d / h).toFixed(4));
+  }
+  VUE_PROFIL.addEventListener("touchstart", function (e) {
+    actif = VUE_PROFIL.scrollTop <= 0 && e.touches.length === 1;
+    tire = false;
+    if (actif) { y0 = e.touches[0].clientY; VUE_PROFIL.classList.remove("rebond"); }
+  }, { passive: true });
+  VUE_PROFIL.addEventListener("touchmove", function (e) {
+    if (!actif) return;
+    var dy = e.touches[0].clientY - y0;
+    if (dy <= 0 || VUE_PROFIL.scrollTop > 0) { if (tire) poser(0); actif = tire ? actif : false; return; }
+    tire = true;
+    VUE_PROFIL.classList.add("etire");
+    e.preventDefault();
+    poser(170 * (1 - Math.exp(-dy / 260)));
+  }, { passive: false });
+  function lacher() {
+    if (!tire) { actif = false; return; }
+    actif = tire = false;
+    VUE_PROFIL.classList.add("rebond");
+    poser(0);
+    setTimeout(function () { if (!tire) VUE_PROFIL.classList.remove("etire", "rebond"); }, 480);
+  }
+  VUE_PROFIL.addEventListener("touchend", lacher);
+  VUE_PROFIL.addEventListener("touchcancel", lacher);
+})();
 var TAB_PROFIL = $("#tab-profil");
 
 function fermerProfil() {
@@ -16062,9 +16119,12 @@ CADEAU_BTN?.addEventListener("click", async function () {
    recalculer les distances et basculer sur le club le plus proche, sauf si
    le clubbeur en a choisi un a la main. Ecrit une fois pour que les deux ne
    puissent pas diverger. */
+var DERNIERE_POSITION_LUE = 0;
+
 function appliquerPosition(pos) {
   // La boutique trie ses bars par distance : elle se redessine.
   POSITION_MOI = [pos.coords.longitude, pos.coords.latitude];
+  DERNIERE_POSITION_LUE = Date.now();
   rendreListe();
   Object.keys(CLUBS).forEach(function (k) {
     DISTANCES_CLUBS[k] = distanceKm([pos.coords.longitude, pos.coords.latitude], CLUBS[k].lngLat);
@@ -16128,9 +16188,13 @@ var positionRefusee = false;
    et le bon club s'affiche tout seul. Sinon, la ligne du club propose
    "Utiliser ma position" -- le clubbeur demande, il ne subit pas. */
 function detecterClubProche() {
-  // Un seul club : rien a departager, et demander la position pour
-  // confirmer l'evidence serait une permission reclamee pour rien.
-  if (Object.keys(CLUBS).length < 2) return;
+  /* ⚠️ PLUS DE « UN SEUL CLUB, RIEN A DEPARTAGER » (24/09/2026). Julien :
+     « a chaque fois l'etablissement le plus proche de la position du
+     clubbeur, ca se reactualise des qu'il ouvre l'appli, s'il a accepte de
+     partager sa position ». Avec un seul vrai club, cette garde empechait
+     toute lecture de la position : la liste n'etait jamais triee et la
+     story ne proposait jamais le lieu le plus proche. Rien n'est DEMANDE
+     ici pour autant : on ne lit que si la permission est deja accordee. */
   if (!navigator.geolocation) return;
   if (!navigator.permissions || !navigator.permissions.query) return;
 
@@ -17475,6 +17539,17 @@ if (clubPrincipal()) CLUB_BOUTIQUE = clubPrincipal();
 rendreChoixClub();
 brancherChoixClub();
 detecterClubProche();
+/* Chaque retour dans l'appli relit la position (si elle est deja
+   autorisee) : on n'est plus au meme endroit qu'il y a une heure. Deux
+   minutes minimum entre deux lectures, pour ne pas relire a chaque aller-
+   retour vers Instagram. Un choix fait a la main ne tient que le temps
+   d'une ouverture. */
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState !== "visible") return;
+  if (Date.now() - DERNIERE_POSITION_LUE < 2 * 60 * 1000) return;
+  choixManuelClub = false;
+  detecterClubProche();
+});
 resoudreIdsClubs().then(chargerRecompenses);
 majMontantParrainage();
 rendreBons(null);
