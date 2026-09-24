@@ -13126,6 +13126,12 @@ function appliquerFiltresCarte(recadrer) {
   var points = cles.map(function (k) { return CLUBS[k].lngLat; });
   if (FILTRES_CARTE.proche && POSITION_MOI) points.push(POSITION_MOI);
   var b = points.reduce(function (acc, ll) { return acc.extend(ll); }, new maplibregl.LngLatBounds(points[0], points[0]));
+  /* Le zoom du recadrage devient la nouvelle reference : sans ca, la
+     correction de zoom (map.on("moveend") plus haut) ramenait la carte a
+     l'ancien zoom juste apres, et le point bleu sortait de l'ecran. */
+  map.once("moveend", function () {
+    zoomCible = map.getZoom() - Math.log2(Math.cos(map.getCenter().lat * Math.PI / 180));
+  });
   map.fitBounds(b, { padding: { top: 120, left: 64, right: 64, bottom: 130 }, maxZoom: 15, duration: 900, essential: true });
 }
 
