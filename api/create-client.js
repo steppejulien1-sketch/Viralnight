@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
+import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 
 const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
@@ -151,6 +152,52 @@ export default async function handler(request, response) {
   const isAdmin = caller.email?.toLowerCase() === ADMIN_EMAIL;
 
   const action = new URL(request.url, "http://localhost").searchParams.get("action");
+
+  // ---------------- ?action=supprimer-compte : le gerant part ----------------
+  //
+  // Exige par Apple (regle 5.1.1 v) : un compte cree dans l'appli doit
+  // pouvoir se supprimer depuis l'appli. L'appli clubbeur l'avait deja,
+  // l'appli des gerants non (25/09/2026).
+  //
+  // Le compte vient du jeton de session, jamais du corps. On supprime ses
+  // etablissements (tout le reste suit en cascade : recompenses, bareme,
+  // horaires, scans, contenus), puis le compte lui-meme. Cote clubbeur, le
+  // lieu disparait de l'appli mais sa ligne reste : des clients y ont des bons
+  // et des points qu'on ne doit pas effacer avec lui.
+  if (action === "supprimer-compte") {
+    if (payload.confirmation !== "SUPPRIMER") {
+      return json(response, { error: "Confirmation manquante." }, 400);
+    }
+    const { data: liens, error: erreurLiens } = await supabase
+      .from("establishment_owners")
+      .select("establishment_id")
+      .eq("id", caller.id);
+    if (erreurLiens) return json(response, { error: erreurLiens.message }, 500);
+    const ids = (liens || []).map((l) => l.establishment_id);
+
+    if (ids.length) {
+      try {
+        const clubbeur = getSupabaseClubbeurAdmin();
+        await clubbeur.from("clubs").update({ visible: false, establishment_id: null }).in("establishment_id", ids);
+      } catch (erreur) {
+        // Base clubbeur injoignable : le lieu y restera visible, mais le
+        // gerant ne doit pas etre empeche de partir pour autant.
+        console.error("[supprimer-compte] base clubbeur", erreur?.message || erreur);
+      }
+      // Les photos du gerant (un dossier par etablissement).
+      for (const id of ids) {
+        const { data: fichiers } = await supabase.storage.from("reward-photos").list(id, { limit: 1000 });
+        const chemins = (fichiers || []).map((f) => id + "/" + f.name);
+        if (chemins.length) await supabase.storage.from("reward-photos").remove(chemins);
+      }
+      const { error: erreurEtab } = await supabase.from("establishments").delete().in("id", ids);
+      if (erreurEtab) return json(response, { error: erreurEtab.message }, 500);
+    }
+
+    const { error: erreurCompte } = await supabase.auth.admin.deleteUser(caller.id);
+    if (erreurCompte) return json(response, { error: erreurCompte.message }, 500);
+    return json(response, { ok: true });
+  }
 
   // ---------------- ?action=inviter : l'admin fabrique un lien ----------------
   //

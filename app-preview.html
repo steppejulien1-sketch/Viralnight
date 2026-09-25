@@ -6732,6 +6732,32 @@
          et le telephone du parcours ne peut pas descendre jusqu'a elles. */
       html.apercu-boutique .vb-defile { padding-bottom: 45vh !important; }
       html.apercu-boutique .vb-barre { display: none !important; }
+
+      /* La question des 18 ans (voir verifierMajorite). */
+      #majorite {
+        position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: end center;
+        background: rgba(10,10,12,.55); padding: 0 12px calc(12px + env(safe-area-inset-bottom));
+      }
+      #majorite .mj-carte {
+        width: 100%; max-width: 440px; background: var(--s1, #fff); color: var(--ink, #15181d);
+        border-radius: 26px; padding: 26px 22px 20px; text-align: center;
+      }
+      #majorite .mj-titre { margin: 0 0 10px; font-size: calc(22 * var(--u, 1px)); font-weight: 800; letter-spacing: -.02em; }
+      #majorite .mj-texte, #majorite .mj-msg { margin: 0 0 20px; font-size: calc(14.5 * var(--u, 1px)); line-height: 1.45; color: var(--ink3, #5f646c); }
+      #majorite button {
+        display: block; width: 100%; padding: 16px; border-radius: 999px; border: 0; font: inherit;
+        font-size: calc(16 * var(--u, 1px)); font-weight: 700; cursor: pointer;
+      }
+      #majorite .mj-oui { background: var(--ink, #15181d); color: var(--bg, #fff); margin-bottom: 8px; }
+      #majorite .mj-non { background: transparent; color: var(--ink3, #5f646c); }
+
+      /* Signaler / bloquer, sous « Retirer cet ami ». */
+      .va-moderation { display: flex; justify-content: center; gap: 22px; margin-top: 14px; }
+      .va-moderation button { background: none; border: 0; padding: 6px; font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; color: var(--ink3); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+      .va-signal { margin-top: 14px; text-align: left; }
+      .va-signal label { display: block; margin: 0 0 6px 2px; font-size: calc(13.5 * var(--u)); font-weight: 600; }
+      .va-signal textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--s2); color: var(--ink); font: inherit; font-size: calc(14.5 * var(--u)); resize: none; margin-bottom: 10px; }
+      .va-moderation-msg { margin: 12px 0 0; font-size: calc(13.5 * var(--u)); color: var(--ink2); text-align: center; }
     </style>
     <script>
       /* ?theme=noir ou ?theme=blanc : force le theme, quel que soit celui du
@@ -9833,11 +9859,54 @@ function montrerCadeauOb(points) {
      donnent deja : l'ecran saute.
    - instagram : tant que users.profile_proof_path est vide, comme l'ancien
      #vue-ig. */
+/* ⚠️ 18 ANS OU PLUS (25/09/2026). Les recompenses sont souvent de l'alcool :
+   Apple refuse une appli qui pousse des mineurs a boire (regle 1.4.3), et
+   l'age n'etait verifie que dans les CGU. Une question, une fois par compte,
+   gardee en base (confirmer_majorite, migration clubbeur 0056) et sur le
+   telephone pour ne pas la reposer a chaque ouverture. « Non » deconnecte. */
+async function verifierMajorite(uid) {
+  var cle = "vn_majeur_" + uid;
+  try { if (localStorage.getItem(cle) === "1") return; } catch (e) {}
+  var res = await Promise.resolve(supabaseClubbeur.rpc("majorite_confirmee")).catch(function () { return {}; });
+  // Fonction absente (base sans 0056) ou lecture en panne : on ne bloque pas.
+  if (!res || res.error || res.data === true) {
+    if (res && res.data === true) { try { localStorage.setItem(cle, "1"); } catch (e) {} }
+    return;
+  }
+  if (document.getElementById("majorite")) return;
+  var voile = document.createElement("div");
+  voile.id = "majorite";
+  voile.setAttribute("role", "dialog");
+  voile.setAttribute("aria-modal", "true");
+  voile.innerHTML =
+    '<div class="mj-carte">' +
+      '<p class="mj-titre">Tu as 18 ans ou plus&nbsp;?</p>' +
+      '<p class="mj-texte">Noctify t’offre des verres et des entrées dans des bars et des boîtes. L’appli est réservée aux personnes majeures.</p>' +
+      '<button type="button" class="mj-oui">J’ai 18 ans ou plus</button>' +
+      '<button type="button" class="mj-non">Non</button>' +
+      '<p class="mj-msg" hidden>Désolé, Noctify est réservé aux 18 ans et plus. Reviens le jour de tes 18 ans&nbsp;!</p>' +
+    "</div>";
+  document.body.appendChild(voile);
+  voile.querySelector(".mj-oui").addEventListener("click", async function (ev) {
+    ev.currentTarget.disabled = true;
+    await Promise.resolve(supabaseClubbeur.rpc("confirmer_majorite")).catch(function () {});
+    try { localStorage.setItem(cle, "1"); } catch (e) {}
+    voile.remove();
+  });
+  voile.querySelector(".mj-non").addEventListener("click", async function () {
+    voile.querySelector(".mj-oui").hidden = true;
+    voile.querySelector(".mj-non").hidden = true;
+    voile.querySelector(".mj-msg").hidden = false;
+    setTimeout(function () { supabaseClubbeur.auth.signOut().finally(function () { location.reload(); }); }, 3500);
+  });
+}
+
 async function poursuivreParcours(session) {
   if (!session || !FEUILLE) return;
   var uid = session.user.id;
   if (OB.verifiePour === uid) return;
   OB.verifiePour = uid;
+  verifierMajorite(uid);
 
   var meta = session.user.user_metadata || {};
   var age = Date.now() - new Date(session.user.created_at).getTime();
@@ -10642,8 +10711,8 @@ async function crediterScanUrl(slug, session) {
   activerVue("boutique");
   await chargerSoldeReel(session.user.id);
   pasEncore(ligne.deja_recupere
-    ? "Bienvenue " + auClub(ligne.club_nom) + " ! Bonus déjà récupéré ce soir."
-    : "+" + ligne.points + " points pour ton arrivée " + auClub(ligne.club_nom) + " !");
+    ? "Bienvenue " + auClub(nomLieuAffiche(ligne.club_nom)) + " ! Bonus déjà récupéré ce soir."
+    : "+" + ligne.points + " points pour ton arrivée " + auClub(nomLieuAffiche(ligne.club_nom)) + " !");
 }
 
 creditScanUrl();
@@ -11117,6 +11186,11 @@ function pint(level, cls) {
 var CLUBS = {
   mirano: {
     nom: "Mirano", adr: "Chaussée de Louvain 38, 1210 Saint-Josse-ten-Noode", c: "#de3131",
+    // 25/09/2026 : sa ligne en base (table clubs) s'appelle « Mirage », le
+    // nom du compte gerant. On la retrouve par le code public du gerant,
+    // plus par le nom -- c'est ce qui servait le catalogue d'un vieux
+    // Mirage orphelin a la place du sien.
+    b2b: "W3SU4F3B",
     // googleQuery : adresse complete plutot que le seul nom -- il existe
     // un Mirage Club a Paris et un Mirano a Paris aussi, la fiche Google
     // tomberait sur un homonyme.
@@ -12643,10 +12717,10 @@ function ouvrirChoixReseau(nomClub) {
         '<p class="st-carte-titre">Mentionne dans ta story</p>' +
         '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
         // Le scan du QR, une ligne de la carte : on est sur place, au meme endroit.
-        '<button type="button" class="st-scan-ligne" id="story-scan-btn" aria-label="Scanner le QR sur place, +15 points">' +
+        '<button type="button" class="st-scan-ligne" id="story-scan-btn" aria-label="Scanner le QR sur place, +20 points">' +
           '<span class="st-scan-ligne-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.5"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.5"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.5"/><path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18zM18 14h2.5M14 18v2.5"/></svg></span>' +
           "<span>Scanner le QR sur place</span>" +
-          "<b>+15</b>" +
+          "<b>+20</b>" +
         "</button>" +
       "</section>" +
       '<div id="story-champ-url">' + blocChamp("story") + "</div>" +
@@ -12731,7 +12805,9 @@ function ouvrirChoixReseau(nomClub) {
   function chercherHandle() {
     var nom = CLUBS_STORY[cleChoisie] && CLUBS_STORY[cleChoisie].nom;
     if (!nom) return;
-    supabaseClubbeur.from("clubs").select("ig_handle").eq("name", nom).maybeSingle()
+    var id = IDS_CLUBS[cleChoisie];
+    (id ? supabaseClubbeur.from("clubs").select("ig_handle").eq("id", id)
+        : supabaseClubbeur.from("clubs").select("ig_handle").eq("name", nom)).maybeSingle()
       .then(function (res) { if (res.data && res.data.ig_handle) majHandle(res.data.ig_handle); })
       .catch(function () {});
   }
@@ -12871,8 +12947,8 @@ function ouvrirChoixReseau(nomClub) {
       var session = (await supabaseClubbeur.auth.getSession()).data.session;
       if (session) chargerSoldeReel(session.user.id);
       pasEncore(ligne.deja_recupere
-        ? "Bienvenue " + auClub(ligne.club_nom) + " ! Bonus déjà récupéré ce soir."
-        : "+" + ligne.points + " points pour ton arrivée " + auClub(ligne.club_nom) + " !");
+        ? "Bienvenue " + auClub(nomLieuAffiche(ligne.club_nom)) + " ! Bonus déjà récupéré ce soir."
+        : "+" + ligne.points + " points pour ton arrivée " + auClub(nomLieuAffiche(ligne.club_nom)) + " !");
     }
 
     function arreterScan() {
@@ -12929,7 +13005,12 @@ function ouvrirChoixReseau(nomClub) {
     var idClub = IDS_CLUBS[cleChoisie];
     if (!idClub) {
       var ligne = await supabaseClubbeur.from("clubs").select("id").eq("name", nom).maybeSingle();
-      idClub = (ligne.data && ligne.data.id) || CLUB_ID_DEMO;
+      idClub = ligne.data && ligne.data.id;
+    }
+    if (!idClub) {
+      bouton.disabled = false;
+      bouton.textContent = "J’ai posté";
+      return direStory("Ce lieu n'a pas encore rejoint Noctify.", true);
     }
 
     var res = await supabaseClubbeur.rpc("submit_story", {
@@ -13228,8 +13309,11 @@ document.getElementById("cf-proche")?.addEventListener("click", function () {
   });
 });
 
-map.on("load", function () {
-  Object.keys(CLUBS).forEach(function (key) {
+/* L'epingle d'un lieu. Sortie du map.on("load") le 25/09/2026 : les lieux lus
+   en base arrivent APRES le chargement de la carte, il faut pouvoir leur
+   poser une epingle a ce moment-la. */
+var CARTE_CHARGEE = false;
+function poserPin(key) {
     var c = CLUBS[key];
     var porteur = document.createElement("div");
     // marker-club : le porteur a la taille de la goutte, pour que l'ancre
@@ -13275,7 +13359,16 @@ map.on("load", function () {
     PINS_CARTE[key] = porteur;
     var ecart = ecartAleatoire();
     marqueursEchelle.push({ el: el, dx: ecart.x, dy: ecart.y });
-  });
+}
+function poserPinsManquants() {
+  if (!CARTE_CHARGEE) return;
+  Object.keys(CLUBS).forEach(function (k) { if (!PINS_CARTE[k] && CLUBS[k].lngLat) poserPin(k); });
+  majTailleMarqueurs();
+}
+
+map.on("load", function () {
+  CARTE_CHARGEE = true;
+  Object.keys(CLUBS).forEach(function (key) { poserPin(key); });
 
   // Cadre les deux clubs des le chargement (voir le commentaire sur
   // "zoom: 8" plus haut) -- sans animation, c'est la position de
@@ -13497,9 +13590,42 @@ async function ouvrirPageAmis(session) {
           '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>' +
           "Retirer cet ami" +
         "</button>" +
+        // 25/09/2026 : signaler et bloquer, exiges par Apple (regle 1.2).
+        '<div class="va-moderation">' +
+          '<button type="button" id="va-signaler">Signaler</button>' +
+          '<button type="button" id="va-bloquer">Bloquer</button>' +
+        "</div>" +
+        '<div class="va-signal" id="va-signal" hidden>' +
+          '<label for="va-signal-motif">Qu’est-ce qui ne va pas&nbsp;?</label>' +
+          '<textarea id="va-signal-motif" rows="3" maxlength="500" placeholder="Faux compte, message déplacé, photo choquante…"></textarea>' +
+          '<button type="button" class="sheet-cta" id="va-signal-envoyer">Envoyer le signalement</button>' +
+        "</div>" +
+        '<p class="va-moderation-msg" id="va-moderation-msg" hidden></p>' +
         '<button type="button" class="sheet-cta sobre" id="va-fermer-fiche" style="margin-top:10px">Fermer</button>' +
       "</div>";
     ouvrirFeuille(html, "#va-fermer-fiche");
+    var msgModeration = $("#va-moderation-msg");
+    function direModeration(t) { msgModeration.textContent = t; msgModeration.hidden = false; }
+    $("#va-signaler").addEventListener("click", function () {
+      $("#va-signal").hidden = false;
+      $("#va-signal-motif").focus();
+    });
+    $("#va-signal-envoyer").addEventListener("click", async function (ev) {
+      ev.currentTarget.disabled = true;
+      var res = await supabaseClubbeur.rpc("signaler_utilisateur", { p_handle: a.friend_handle, p_motif: $("#va-signal-motif").value });
+      ev.currentTarget.disabled = false;
+      if (res.error) { direModeration("L’envoi n’a pas marché. Réessaie dans un instant."); return; }
+      $("#va-signal").hidden = true;
+      direModeration("Merci. L’équipe Noctify regarde ça sous 24 h.");
+    });
+    $("#va-bloquer").addEventListener("click", async function () {
+      if (!window.confirm("Bloquer @" + a.friend_handle + " ? Vous ne serez plus amis et vous ne pourrez plus vous retrouver dans l’appli.")) return;
+      var res = await supabaseClubbeur.rpc("bloquer_utilisateur", { p_handle: a.friend_handle });
+      if (res.error) { direModeration("Le blocage n’a pas marché. Réessaie dans un instant."); return; }
+      fermerFeuille();
+      chargerAmis();
+      chargerSuggestions();
+    });
     $("#va-fermer-fiche").addEventListener("click", fermerFeuille);
     $("#va-retirer-ami").addEventListener("click", async function () {
       if (!window.confirm("Retirer @" + a.friend_handle + " de tes amis ?")) return;
@@ -15511,45 +15637,83 @@ function rafraichirPhotosClubs() {
   });
 }
 
+/* ⚠️ LES LIEUX VIENNENT DE LA BASE (25/09/2026). Jusqu'ici CLUBS etait la
+   seule source : un etablissement inscrit cote gerant etait recopie dans la
+   table clubs, mais l'appli ne venait jamais le chercher -- ni epingle, ni
+   page, ni boutique. On lit maintenant tous les lieux visibles :
+   · ceux deja decrits a la main dans CLUBS (Mirano) se relient a leur ligne
+     par le code public du gerant (b2b), sinon par le nom ;
+   · les autres sont AJOUTES a CLUBS s'ils ont une position (sans position,
+     pas d'epingle possible ; le gerant est prevenu dans son appli). */
+function lieuDepuisLigne(ligne) {
+  var photos = Array.isArray(ligne.photos) ? ligne.photos.filter(Boolean) : [];
+  var type = ligne.category === "bar" || ligne.category === "restaurant" ? ligne.category : "club";
+  return {
+    nom: ligne.name, adr: ligne.address || ligne.city || "", c: ligne.primary_color || "#de3131",
+    googleQuery: [ligne.name, ligne.address, ligne.city].filter(Boolean).join(", "),
+    lngLat: [ligne.lng, ligne.lat], type: type,
+    ig: ligne.ig_handle || null, photo: ligne.logo_url || photos[0] || null,
+    photos: ligne.logo_url ? [ligne.logo_url].concat(photos) : photos,
+    horaires: null, partenaire: true, dynamique: true,
+  };
+}
+
 async function resoudreIdsClubs() {
   try {
-    var noms = Object.keys(CLUBS).map(function (k) { return CLUBS[k].nom; });
-    /* logo_url en plus de l'id : c'est la photo que le gerant depose dans
-       son parcours d'installation. Elle etait enregistree cote gerant,
-       recopiee cote clubbeur par api/credit-clubbeur -- et personne ne
-       la lisait ici. Le rond du club restait vide pour toujours, meme
-       quand la photo existait. */
-    var res = await supabaseClubbeur.from("clubs").select("id, name, logo_url, photos").in("name", noms);
-    // Base sans la migration 0053 : on relit sans les photos plutot que de tout perdre.
-    if (res.error && /photos/.test(res.error.message || "")) {
-      res = await supabaseClubbeur.from("clubs").select("id, name, logo_url").in("name", noms);
+    var colonnes = "id, name, slug, city, address, category, lat, lng, logo_url, photos, ig_handle, primary_color, b2b_public_code, visible";
+    var res = await supabaseClubbeur.from("clubs").select(colonnes).eq("visible", true);
+    // Base sans la migration 0054 : l'ancienne lecture, par nom.
+    if (res.error) {
+      var noms = Object.keys(CLUBS).map(function (k) { return CLUBS[k].nom; });
+      res = await supabaseClubbeur.from("clubs").select("id, name, logo_url, photos").in("name", noms);
     }
     if (res.error) throw new Error(res.error.message);
-    var aChange = false;
+    var aChange = false, ajouts = [];
     (res.data || []).forEach(function (ligne) {
+      var cle = null;
       Object.keys(CLUBS).forEach(function (k) {
-        if (CLUBS[k].nom !== ligne.name) return;
-        IDS_CLUBS[k] = ligne.id;
-        if (ligne.logo_url && CLUBS[k].photo !== ligne.logo_url) {
-          CLUBS[k].photo = ligne.logo_url;
+        if (cle) return;
+        if ((CLUBS[k].b2b && CLUBS[k].b2b === ligne.b2b_public_code) || (!CLUBS[k].dynamique && CLUBS[k].nom === ligne.name)) cle = k;
+      });
+      if (cle) {
+        IDS_CLUBS[cle] = ligne.id;
+        CLUBS[cle].nomBase = ligne.name;
+        if (ligne.logo_url && CLUBS[cle].photo !== ligne.logo_url) {
+          CLUBS[cle].photo = ligne.logo_url;
           aChange = true;
         }
-        // Les photos deposees par le gerant, qui defilent sur la page du club.
-        if (Array.isArray(ligne.photos) && ligne.photos.length) CLUBS[k].photos = ligne.photos;
-      });
+        if (Array.isArray(ligne.photos) && ligne.photos.length) CLUBS[cle].photos = ligne.photos;
+        return;
+      }
+      if (!Number.isFinite(ligne.lat) || !Number.isFinite(ligne.lng)) return;
+      cle = "l-" + (ligne.slug || ligne.id);
+      CLUBS[cle] = lieuDepuisLigne(ligne);
+      IDS_CLUBS[cle] = ligne.id;
+      ajouts.push(cle);
     });
-    // Les badges et le rail sont deja dessines quand la reponse arrive
-    // (ils se construisent au chargement, cette requete revient apres) :
-    // sans ce rafraichissement, la photo n'apparaitrait qu'au prochain
-    // demarrage de l'appli.
     if (aChange) rafraichirPhotosClubs();
+    if (ajouts.length) {
+      poserPinsManquants();
+      if (clubPrincipal()) CLUB_BOUTIQUE = clubPrincipal();
+      rendreChoixClub();
+    }
   } catch (erreur) {
-    console.error("[boutique] ids clubs indisponibles:", erreur.message);
+    console.error("[boutique] lieux indisponibles:", erreur.message);
   }
 }
 
+/* Le nom en base peut differer du nom affiche (le compte gerant du Mirano
+   s'appelle « Mirage ») : le scan disait « au Mirage ». */
+function nomLieuAffiche(nomBase) {
+  var trouve = null;
+  Object.keys(CLUBS).forEach(function (k) { if (!trouve && CLUBS[k].nomBase === nomBase) trouve = CLUBS[k].nom; });
+  return trouve || nomBase;
+}
+
 function idClubBoutique() {
-  return (CLUB_BOUTIQUE && IDS_CLUBS[CLUB_BOUTIQUE]) || CLUB_ID_DEMO;
+  // Plus de repli sur CLUB_ID_DEMO (25/09/2026) : il servait le catalogue
+  // d'un club orphelin a tout lieu que la base ne connaissait pas.
+  return (CLUB_BOUTIQUE && IDS_CLUBS[CLUB_BOUTIQUE]) || null;
 }
 
 /* ================= STORY VALIDEE =================
@@ -16514,17 +16678,42 @@ var RECOMPENSES = [];
    "rewards read active" deja en place, pas besoin d'une route API a
    part). Si l'appel echoue, la liste reste simplement vide : pas de
    faux catalogue invente pour combler le vide. */
+/* Les catalogues de TOUS les lieux connus (25/09/2026) : la boutique montre
+   chaque etablissement avec ses recompenses, plus seulement celui du moment.
+   RECOMPENSES reste celui du lieu courant (CLUB_BOUTIQUE) : la cagnotte,
+   l'offre du soir et les jauges s'y rapportent. */
+var RECOMPENSES_PAR_CLUB = {};
+
 async function chargerRecompenses() {
   try {
-    var res = await supabaseClubbeur
-      .from("rewards")
-      .select("id, title, description, cost_points, category, stock_limit, stock_remaining, image_url")
-      .eq("club_id", idClubBoutique())
-      .eq("active", true)
-      .order("cost_points", { ascending: true });
-    if (res.error) throw new Error(res.error.message);
-    var prefixe = prefixeClub(CLUB_BOUTIQUE ? CLUBS[CLUB_BOUTIQUE].nom : "");
-    RECOMPENSES = (res.data || []).map(function (r, i) { return completerRecompense(r, i, prefixe); });
+    var cles = Object.keys(IDS_CLUBS);
+    RECOMPENSES = [];
+    RECOMPENSES_PAR_CLUB = {};
+    var gratuite = null;
+    if (cles.length) {
+      var res = await supabaseClubbeur
+        .from("rewards")
+        .select("id, club_id, title, description, cost_points, category, stock_limit, stock_remaining, image_url")
+        .in("club_id", cles.map(function (k) { return IDS_CLUBS[k]; }))
+        .eq("active", true)
+        .order("cost_points", { ascending: true });
+      if (res.error) throw new Error(res.error.message);
+      cles.forEach(function (k) {
+        var lignes = (res.data || []).filter(function (r) { return r.club_id === IDS_CLUBS[k]; });
+        var prefixe = prefixeClub(CLUBS[k] ? CLUBS[k].nom : "");
+        var liste = lignes.map(function (r, i) {
+          var reco = completerRecompense(r, i, prefixe);
+          // Le lieu de la recompense : c'est lui que la fiche du bon nomme.
+          reco.bar = CLUBS[k];
+          return reco;
+        });
+        RECOMPENSES_PAR_CLUB[k] = liste;
+        if (k === CLUB_BOUTIQUE) {
+          RECOMPENSES = liste;
+          gratuite = lignes.filter(function (r) { return Number(r.cost_points) === 0; })[0] || null;
+        }
+      });
+    }
 
     /* L'offre du soir portait un identifiant invente ("o-shot"), pas un
        UUID de la table rewards : redeem_reward ne trouvait rien et
@@ -16532,7 +16721,6 @@ async function chargerRecompenses() {
        generique. On la raccroche a la vraie recompense a 0 point du
        catalogue quand le club en a une ; sinon on l'assume comme une
        demo, et le bouton le dit au lieu de faire semblant. */
-    var gratuite = (res.data || []).filter(function (r) { return Number(r.cost_points) === 0; })[0];
     OFFRE.id = gratuite ? gratuite.id : "o-shot";
     OFFRE.reelle = !!gratuite;
   } catch (erreur) {
@@ -16581,7 +16769,7 @@ var ICO_GAIN = {
 };
 var GAINS = [
   { t: "Poster une story", s: "Mentionne l’établissement. Points crédités 24 h après.", v: BAREME_STORY.story.pts, ico: ICO_GAIN.story, geste: "story" },
-  { t: "Scanner le QR sur place", s: "À ton arrivée, une fois par soirée.", v: "+15", ico: ICO_GAIN.scan, geste: "story" },
+  { t: "Scanner le QR sur place", s: "À ton arrivée, une fois par soirée.", v: "+20", ico: ICO_GAIN.scan, geste: "story" },
   { t: "Inviter un ami", s: "Dès qu’il s’inscrit avec ton lien.", v: '+<span class="js-montant-parrainage">100</span>', ico: ICO_GAIN.ami, geste: "ami" },
   { t: "Cadeau du jour", s: "À récupérer chaque jour dans Récompenses.", v: "", ico: ICO_GAIN.cadeau, geste: "cadeau" },
 ].filter(function (g) { return g.geste !== "cadeau" || CADEAU_DU_JOUR; });
@@ -16659,7 +16847,10 @@ var vientDeDebloquer = function () { return false; };
    pas en base : leurs recompenses s'ouvrent, mais ne s'echangent pas (voir
    item.demo dans ouvrirRecompense). Ils ne sont PAS dans CLUBS : ni pin sur
    la carte, ni choix de club, ni points. Tout s'eteint avec ce booleen. */
-var MONTRER_BARS_DEMO = true;
+/* 25/09/2026 : COUPES par defaut. Apple refuse le contenu inventé (regle 2.1)
+   et un vrai client ne doit pas tomber sur un bar qui n'existe pas. Ils
+   restent visibles pour une demonstration avec ?demo=1 dans l'adresse. */
+var MONTRER_BARS_DEMO = /[?&]demo=1(&|$)/.test(location.search);
 /* Horaires INVENTES comme le reste, pour que l'en-tete de section montre
    ce qu'il montrera pour un vrai etablissement (ouvert / ouvre a...). */
 function semaineDemo(jours, de, a) {
@@ -16782,12 +16973,17 @@ function rendreListe() {
      lues en base), puis les bars de demonstration tant que
      MONTRER_BARS_DEMO le permet. Tries par distance : depuis la vraie
      position si on l'a, sinon depuis le point "moi" de la carte. */
-  var clubReel = CLUBS[CLUB_BOUTIQUE] || null;
+  // Tous les lieux reels (25/09/2026), chacun avec son catalogue.
   var bars = [];
-  if (clubReel) {
-    bars.push({ nom: clubReel.nom, type: clubReel.type, lngLat: clubReel.lngLat,
-      quartier: quartierDe(clubReel.adr), recompenses: RECOMPENSES, club: clubReel });
-  }
+  Object.keys(CLUBS).forEach(function (k) {
+    var c = CLUBS[k];
+    if (!c || !c.lngLat) return;
+    var recos = k === CLUB_BOUTIQUE ? RECOMPENSES : (RECOMPENSES_PAR_CLUB[k] || []);
+    // Un lieu sans ligne en base n'a rien a echanger : il reste sur la carte.
+    if (!IDS_CLUBS[k] && k !== CLUB_BOUTIQUE) return;
+    bars.push({ nom: c.nom, type: c.type, lngLat: c.lngLat,
+      quartier: quartierDe(c.adr) || c.adr || "", recompenses: recos, club: c });
+  });
   if (MONTRER_BARS_DEMO) bars = bars.concat(BARS_DEMO);
   var origine = POSITION_MOI || MOI;
   bars.forEach(function (bar) { bar.km = distanceKm(origine, bar.lngLat); });

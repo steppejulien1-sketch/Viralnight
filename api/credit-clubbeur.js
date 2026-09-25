@@ -29,6 +29,7 @@ import { timingSafeEqual } from "node:crypto";
 import { envoyerEmail } from "../lib/notifications/email.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
+import { geocoder } from "../lib/google/geocoder.js";
 import { doitRepondre, repondre, messageEnregistre, eviterRepetition } from "../lib/support/reponseAuto.js";
 
 const ADMIN_EMAIL = "steppejulien1@gmail.com";
@@ -74,6 +75,16 @@ function photosPropres(photos) {
   return photos.filter((u) => typeof u === "string" && /^https?:\/\//.test(u)).slice(0, 4);
 }
 
+/* Ce que l'appli clubbeur affiche du lieu, recopie a chaque synchro. */
+function ficheLieu(etab) {
+  return {
+    address: etab.address || null,
+    category: etab.category || null,
+    lat: Number.isFinite(etab.lat) ? etab.lat : null,
+    lng: Number.isFinite(etab.lng) ? etab.lng : null,
+  };
+}
+
 async function ouvrirClubClubbeur(clubbeur, supabaseGerants, etab, establishmentId) {
   const { data: compte } = await supabaseGerants
     .from("establishment_instagram_accounts")
@@ -100,6 +111,9 @@ async function ouvrirClubClubbeur(clubbeur, supabaseGerants, etab, establishment
     // Les autres photos, qui defilent quand un client touche la facade (0053 cote clubbeur).
     photos: photosPropres(etab.photos),
     b2b_public_code: etab.public_code,
+    // 25/09/2026 : l'appli clubbeur lit maintenant ses lieux ici. Sans
+    // position, pas d'epingle ; sans adresse ni type, une page vide.
+    ...ficheLieu(etab),
     // Les deux cles de jointure sont posees d'un coup. b2b_public_code
     // sert a la synchro de boutique, establishment_id au credit
     // automatique des mentions (clubbeur_pont_points_automatiques.sql).
@@ -155,11 +169,24 @@ async function actionSyncBoutique(request, response) {
 
   const { data: etab, error: erreurEtab } = await auth.supabase
     .from("establishments")
-    .select("public_code, name, city, slug, ig_handle, primary_color, logo_url, photos")
+    .select("public_code, name, city, slug, ig_handle, primary_color, logo_url, photos, address, category, lat, lng")
     .eq("id", auth.establishmentId)
     .maybeSingle();
 
   if (erreurEtab) return json(response, { error: erreurEtab.message }, 500);
+
+  /* La position a partir de l'adresse, une seule fois : tant que lat/lng
+     sont vides et qu'une adresse existe. La fiche Google importee au
+     parcours la pose deja ; ceci couvre le gerant qui tape son adresse a
+     la main. Gardee cote gerants aussi, pour ne pas regeocoder ensuite. */
+  if (etab && etab.address && !Number.isFinite(etab.lat)) {
+    const position = await geocoder(etab.address, etab.city);
+    if (position) {
+      etab.lat = position.lat;
+      etab.lng = position.lng;
+      await auth.supabase.from("establishments").update(position).eq("id", auth.establishmentId);
+    }
+  }
   if (!etab?.public_code) {
     return json(response, { error: "Ce club n'a pas encore de code public." }, 409);
   }
@@ -198,7 +225,7 @@ async function actionSyncBoutique(request, response) {
   if (!clubOuvert) {
     await clubbeur
       .from("clubs")
-      .update({ logo_url: etab.logo_url || null, photos: photosPropres(etab.photos) })
+      .update({ name: etab.name || "Club", city: etab.city || "—", logo_url: etab.logo_url || null, photos: photosPropres(etab.photos), ...ficheLieu(etab) })
       .eq("id", club.id);
   }
 
@@ -294,6 +321,8 @@ async function actionSyncBoutique(request, response) {
     // quel pseudo Instagram -- c'est lui qui decide si les mentions
     // seront reconnues.
     ouvert: clubOuvert ? { handle: clubOuvert.handle, devine: clubOuvert.handleDevine } : null,
+    // Sans position, le lieu n'a pas d'epingle : l'appli gerant le dit.
+    surLaCarte: Number.isFinite(etab.lat) && Number.isFinite(etab.lng),
   });
 }
 

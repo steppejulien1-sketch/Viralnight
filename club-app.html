@@ -4586,6 +4586,13 @@
                     <span class="pf-item-txt"><strong id="reglages-deconnexion-txt">Se déconnecter</strong><span id="reglages-deconnexion-sous" hidden></span></span>
                     <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   </button>
+                  <!-- Exige par Apple (regle 5.1.1 v), 25/09/2026. Deux touches :
+                       la premiere dit ce qui sera efface, la seconde efface. -->
+                  <button type="button" class="pf-item pf-item-sortie" id="reglages-supprimer" hidden>
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5.5 7l1 12.5A1.6 1.6 0 0 0 8.1 21h7.8a1.6 1.6 0 0 0 1.6-1.5L18.5 7M9 7V4.5h6V7"/></svg>
+                    <span class="pf-item-txt"><strong id="reglages-supprimer-txt">Supprimer mon compte</strong><span id="reglages-supprimer-sous" hidden></span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
                 </div>
               </section>
 
@@ -7556,13 +7563,14 @@
               // QUEL pseudo Instagram : c'est lui qui sert a reconnaitre
               // les mentions, et s'il est faux rien ne se creditera --
               // autant que le gerant le voie tout de suite.
-              etat.textContent = corps.ouvert.devine
-                ? "Ton club vient d'être ouvert côté clubbeurs, avec « @" + corps.ouvert.handle +
-                  " » comme compte Instagram. Connecte Instagram pour le corriger."
-                : "Ton club vient d'être ouvert côté clubbeurs ✓";
-              if (corps.ouvert.devine) etat.style.color = "var(--ambre)";
+              etat.textContent = "Ton établissement est en ligne dans l'appli des clients ✓";
             } else {
-              etat.textContent = "Visible par les clubbeurs ✓";
+              etat.textContent = "Visible dans l'appli des clients ✓";
+            }
+            // Sans position, pas d'epingle sur la carte des clients.
+            if (corps && corps.surLaCarte === false) {
+              etat.textContent = "Ajoute ton adresse (Réglages › Nom, ville et photos) pour apparaître sur la carte des clients.";
+              etat.style.color = "var(--ambre)";
             }
           }
         } catch (erreur) {
@@ -7862,6 +7870,44 @@
         ouvrirParcours(1);
       });
 
+      /* Supprimer son compte : premiere touche = on explique, seconde (dans
+         les 8 s) = on efface. Tout part : etablissement, recompenses,
+         photos, compte. */
+      var confirmerSuppression = 0;
+      $("#reglages-supprimer").addEventListener("click", async function (ev) {
+        var bouton = ev.currentTarget;
+        var sous = $("#reglages-supprimer-sous");
+        if (!ETAT.session) return;
+        if (Date.now() - confirmerSuppression > 8000) {
+          confirmerSuppression = Date.now();
+          $("#reglages-supprimer-txt").textContent = "Touche encore pour tout supprimer";
+          sous.hidden = false;
+          sous.textContent = "Ton établissement, ses récompenses, ses photos et ton compte seront effacés. C'est définitif.";
+          return;
+        }
+        bouton.disabled = true;
+        sous.textContent = "Suppression…";
+        try {
+          var reponse = await fetch("/api/create-client?action=supprimer-compte", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + ETAT.session.access_token },
+            body: JSON.stringify({ confirmation: "SUPPRIMER" }),
+          });
+          var corps = await reponse.json().catch(function () { return {}; });
+          if (!reponse.ok) throw new Error(corps.error || "Suppression impossible.");
+          await supabase.auth.signOut().catch(function () {});
+          ETAT.session = null;
+          PORTE.hidden = true;
+          await demarrer();
+        } catch (erreur) {
+          sous.textContent = "La suppression n'a pas marché. Réessaie, ou écris à noctify.support@gmail.com.";
+        } finally {
+          bouton.disabled = false;
+          confirmerSuppression = 0;
+          $("#reglages-supprimer-txt").textContent = "Supprimer mon compte";
+        }
+      });
+
       // En mode demo, "Deconnexion" n'a aucun sens : personne n'est
       // connecte. Le bouton annonce ce qu'il fait vraiment.
       $("#reglages-fiche").addEventListener("click", function () {
@@ -7882,6 +7928,7 @@
         // Le libelle interne, pas le bouton : un textContent sur le
         // bouton emporterait l'icone et le chevron avec lui.
         $("#reglages-deconnexion-txt").textContent = ETAT.session ? "Se déconnecter" : "Créer mon compte";
+        $("#reglages-supprimer").hidden = !ETAT.session;
         // Connecte, la ligne se suffit (Julien, 25/09/2026 : « c'est quoi
         // fermer la session sur ce telephone, c'est moche »).
         var sous = $("#reglages-deconnexion-sous");
@@ -8262,7 +8309,10 @@
         // La boutique part vers l'appli des clubbeurs : sans cette
         // synchro, le gerant vient de regler des recompenses que ses
         // clients ne verraient qu'a sa prochaine modification.
-        if (termine) await synchroniserBoutique();
+        // 25/09/2026 : aussi apres une modification de la fiche seule (nom,
+        // adresse, photos depuis les Reglages) -- c'est ce qui met a jour
+        // l'epingle et la page du lieu dans l'appli des clients.
+        if (termine || clubReelCharge()) await synchroniserBoutique();
       }
 
       /* Rouvrir le parcours a la demande : "Passer" marque l'installation
