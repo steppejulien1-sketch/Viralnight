@@ -3774,6 +3774,75 @@
       @keyframes prColle { 0% { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(1.6); } 60% { opacity: 1; transform: translate(-50%, -50%) rotate(-1deg) scale(.94); } 100% { transform: translate(-50%, -50%) rotate(-3deg) scale(1); } }
       #parcours .pa-etape:not([hidden]) .pr-tel-story .pr-sticker { animation: prColle .6s cubic-bezier(.3, 1.3, .5, 1) .45s both; }
       #parcours .pa-etape:not([hidden]) .pr-gains, #parcours .pa-etape:not([hidden]) .pr-story-ok { animation: prEntre .5s cubic-bezier(.2, .9, .25, 1) .8s both; }
+
+      /* ================= BOUTIQUE ET REGLAGES, 25/09/2026 =================
+         Julien : « trop de trucs inutiles », « fais comme un vrai telephone »,
+         « mets tout ce qui est carre », et pour les Reglages « prends la
+         structure de l'autre application ». */
+
+      /* Le telephone de la Boutique : un vrai iPhone -- cadre fin, ilot noir
+         en haut, deux boutons de volume a gauche, un bouton a droite. */
+      .pr-tel.vrai-tel { width: 286px; margin: 18px auto 34px; border-radius: 46px;
+        box-shadow: 0 0 0 9px #111114, 0 0 0 10.5px #3a3a40, 0 40px 70px -28px rgba(0,0,0,.55); }
+      .pr-tel.vrai-tel .pr-tel-ecran { border-radius: 38px; }
+      .pr-tel.vrai-tel::before {
+        content: ""; position: absolute; z-index: 3; top: 10px; left: 50%; transform: translateX(-50%);
+        width: 88px; height: 25px; border-radius: 20px; background: #0b0b0d; pointer-events: none;
+      }
+      .pr-tel.vrai-tel::after {
+        content: ""; position: absolute; top: 118px; left: -13.5px; width: 3.5px; height: 50px; border-radius: 3px 0 0 3px;
+        background: #2b2b30; box-shadow: 0 64px 0 #2b2b30, calc(286px + 23.5px) 26px 0 #2b2b30;
+        pointer-events: none;
+      }
+
+      /* Les recompenses : la tuile de l'appli clubbeur, carree. Le dessin
+         dans un carre clair aux coins ronds, l'etiquette blanche qui le
+         chevauche en bas, le nom, le prix. */
+      .reco-titre {
+        margin: 6px 2px 14px; font-family: var(--titre); font-size: 19px; font-weight: 750;
+        letter-spacing: -.015em; color: var(--ink);
+      }
+      #recompenses-liste { gap: 18px 12px; }
+      .recompense-carte {
+        overflow: visible; background: none; border: 0; box-shadow: none; border-radius: 0;
+      }
+      .reco-vignette {
+        aspect-ratio: 1 / 1; border-radius: 18px; border: 0;
+        background: linear-gradient(165deg, #ffffff 0%, #f1f1f3 100%);
+        box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .reco-vignette img { padding: 8% 13% 26%; }
+      .reco-vignette.photo-reelle img { padding: 0; border-radius: 18px; }
+      .reco-vignette.sans-image { border: 0; }
+      .reco-resume-txt {
+        position: relative; margin: -36px 10px 0; padding: 11px 12px 12px; border-radius: 14px;
+        background: #ffffff; box-shadow: 0 0 0 1px var(--line), 0 14px 26px -18px rgba(16,18,22,.45);
+      }
+      .reco-resume-txt strong { min-height: 0; font-size: 15px; font-weight: 750; letter-spacing: -.015em;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .reco-resume-txt span { margin-top: 2px; font-size: 13px; font-weight: 550; color: var(--ink3); }
+
+      /* L'entete des Reglages : celle du profil clubbeur (.pf-entete). */
+      .rg-entete {
+        position: relative; margin: -14px -20px 4px; padding: 176px 20px 30px; text-align: center;
+      }
+      .rg-entete::before {
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: url("/motifs/verres-clair.webp") center top / 100% auto no-repeat;
+        opacity: .55;
+        -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 88%);
+        mask-image: linear-gradient(to bottom, #000 55%, transparent 88%);
+      }
+      .rg-entete > * { position: relative; }
+      .rg-nom {
+        margin: 0 0 8px; font-family: var(--titre); font-size: 24px; font-weight: 800;
+        letter-spacing: .06em; line-height: 1.1; text-transform: uppercase; color: var(--ink);
+        overflow-wrap: anywhere;
+      }
+      #vue-reglages .rg-mail, #reglages-compte.rg-mail {
+        margin: 0; font-size: 13.5px; color: var(--ink3); font-weight: 600; overflow-wrap: anywhere;
+      }
+      #vue-reglages .pf-section:first-of-type { margin-top: 18px; }
     </style>
   </head>
   <body>
@@ -4410,52 +4479,19 @@
 
             <!-- ================= RECOMPENSES ================= -->
             <div class="vue" id="vue-recompenses">
-              <h1 class="ecran-titre">Boutique de récompenses</h1>
-              <p class="ecran-sous">Ce que tes clients peuvent échanger contre leurs points.</p>
-
-              <!-- ⚠️ CE QUE LES POINTS RAPPORTENT, ICI ET PLUS DANS UN ONGLET.
-                   Julien, 19/09/2026 : « supprime l'onglet point mais par contre
-                   indique dans l'onglet boutique combien les points rapportent ».
-                   C'est le bon endroit : on regle un prix en points juste en
-                   dessous, et on ne peut pas le regler sans savoir a quelle
-                   vitesse le client les accumule. Deux chiffres, rien a saisir --
-                   les montants sont les memes pour tous les etablissements. -->
-              <p class="pts-sec">Ce que tes clients gagnent chez toi</p>
-              <div class="pts-paire">
-                <div class="pts-mini">
-                  <span class="pts-mini-ico" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.3" cy="6.7" r="1.15"/></svg>
-                  </span>
-                  <strong class="pts-mini-n"><span id="pts-story">100</span><i>pts</i></strong>
-                  <span class="pts-mini-quoi">Une story qui te mentionne</span>
-                  <span class="pts-mini-note">Créditée 24 h après</span>
-                </div>
-                <div class="pts-mini">
-                  <span class="pts-mini-ico" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M3.5 7.5v-2A2 2 0 0 1 5.5 3.5h2M16.5 3.5h2a2 2 0 0 1 2 2v2M20.5 16.5v2a2 2 0 0 1-2 2h-2M7.5 20.5h-2a2 2 0 0 1-2-2v-2"/><rect x="7.8" y="7.8" width="3.4" height="3.4" rx=".6"/><rect x="12.8" y="7.8" width="3.4" height="3.4" rx=".6"/><rect x="7.8" y="12.8" width="3.4" height="3.4" rx=".6"/><path d="M12.8 12.8h1.2v1.2h-1.2zM15 15h1.2v1.2H15z"/></svg>
-                  </span>
-                  <strong class="pts-mini-n"><span id="pts-scan">20</span><i>pts</i></strong>
-                  <span class="pts-mini-quoi">Un scan du QR sur place</span>
-                  <span class="pts-mini-note">Une fois par soirée</span>
-                </div>
-              </div>
-              <p class="pts-pied">Tu n'as rien à régler : ces montants sont les mêmes pour tous les établissements. C'est ce que tes clients dépensent ci-dessous.</p>
+              <!-- ⚠️ BOUTIQUE ALLEGEE (25/09/2026). Julien : « il y a trop de
+                   trucs [...] trop d'explications ». Retires : le sous-titre,
+                   les deux tuiles 100 pts / 20 pts et leur phrase « tu n'as
+                   rien a regler », la legende au-dessus du telephone, les
+                   periodes et le bilan « Recompenses prises » (ces chiffres
+                   vivent dans l'onglet Activite). Restent : le titre, la vraie
+                   page dans un telephone, les recompenses en tuiles CARREES
+                   comme dans l'appli des clients, le bouton d'ajout. -->
+              <h1 class="ecran-titre">Boutique</h1>
 
               <div class="vitrine" id="reco-vitrine"></div>
 
-              <!-- ⚠️ LA MEME PERIODE QUE LE TABLEAU DE BORD, littéralement.
-                   choisirPeriode() balaie TOUS les `.periode` de la page et
-                   les synchronise : ce second jeu de boutons se cable donc
-                   tout seul, et les deux ecrans ne peuvent pas raconter
-                   deux fenetres differentes. Julien, 09/09/2026 : les
-                   recompenses "au meme niveau que le tableau de bord". -->
-              <div class="periodes" role="tablist" aria-label="Période">
-                <button type="button" class="periode" role="tab" data-jours="7">7 jours</button>
-                <button type="button" class="periode" role="tab" data-jours="30">30 jours</button>
-                <button type="button" class="periode" role="tab" data-jours="90">3 mois</button>
-              </div>
-
-              <div class="reco-bilan" id="reco-bilan"></div>
+              <h2 class="reco-titre">Tes récompenses</h2>
               <div id="recompenses-liste"></div>
               <button type="button" class="bouton pleine" id="recompense-ajouter" style="margin-top:14px">Ajouter une récompense</button>
               <p class="fiche-msg" id="recompense-msg"></p>
@@ -4476,45 +4512,44 @@
                  Les identifiants sont ceux d'avant : rendreReglages(),
                  majBoutonCompte() et les gestionnaires n'ont pas bouge. -->
             <div class="vue" id="vue-reglages">
-              <h1 class="ecran-titre">Réglages</h1>
-              <p class="ecran-sous" id="reglages-compte">—</p>
-
-              <!-- La fiche du club n'etait modifiable NULLE PART apres le
-                   parcours : le nom, la ville et la photo se figeaient a la
-                   premiere ouverture. Elle rouvre l'ecran qui les regle
-                   deja, plutot que d'en ajouter un sixieme. -->
-              <button type="button" class="fiche-club" id="reglages-fiche">
-                <span class="club-vignette" id="reglages-vignette" aria-hidden="true"></span>
-                <span class="club-tete-txt">
-                  <strong id="reglages-nom">—</strong>
-                  <span id="reglages-ville">Nom, ville et photos</span>
-                </span>
-                <svg class="reglage-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
-              </button>
+              <!-- ⚠️ L'ENTETE DE L'APPLI CLUBBEUR (25/09/2026). Julien : « prends
+                   la structure de l'autre application pour les parametres [...]
+                   il y avait un petit dessin design super beau, l'adresse mail ».
+                   Meme piece que .pf-entete d'app-preview.html : les verres
+                   dessines (public/motifs/) derriere le haut de l'ecran, le NOM
+                   en capitales espacees, l'e-mail dessous. Plus de carte photo
+                   du club en tete : « Nom, ville et photos » devient une ligne
+                   de « Mon etablissement ».
+                   La ligne Instagram est retiree de l'ecran (Julien : « Instagram,
+                   non, parce qu'ils seront obliges de se connecter a Instagram ») ;
+                   #reglages-instagram reste dans le DOM, masque, parce que
+                   rendreReglages() y ecrit. -->
+              <div class="rg-entete">
+                <h1 class="rg-nom" id="reglages-nom">—</h1>
+                <p class="rg-mail" id="reglages-compte">—</p>
+              </div>
 
               <section class="pf-section">
                 <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12v8h15v-8"/><path d="M3 10 5 4h14l2 6c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4S3 11.4 3 10z"/><path d="M10 20v-4.5h4V20"/></svg>Mon établissement</h2>
                 <div class="pf-liste">
-                  <button type="button" class="pf-item" data-va="qr">
-                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>
-                    <span class="pf-item-txt"><strong>Affiche et QR code</strong><span>À imprimer et coller à l'entrée, au bar, aux toilettes.</span></span>
+                  <button type="button" class="pf-item" id="reglages-fiche">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="m21 15-4.5-4.5L8 19"/></svg>
+                    <span class="pf-item-txt"><strong>Nom, ville et photos</strong><span id="reglages-ville">Ce que tes clients voient de ton établissement.</span></span>
                     <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   </button>
-                  <!-- La ligne Instagram est reconstruite par rendreReglages() :
-                       son etat change (absent, connecte, detection en panne). -->
-                  <div id="reglages-instagram">
-                    <div class="pf-item pf-item-inerte">
-                      <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.3" cy="6.7" r="1.15"/></svg>
-                      <span class="pf-item-txt"><strong>Instagram</strong><span>Vérification…</span></span>
-                      <span></span>
-                    </div>
-                  </div>
+                  <button type="button" class="pf-item" data-va="qr">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>
+                    <span class="pf-item-txt"><strong>Affiche et QR code</strong><span>À imprimer et coller au bar.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
                   <button type="button" class="pf-item" id="reglages-installation">
-                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.6v8.8M7.6 12h8.8"/></svg>
-                    <span class="pf-item-txt"><strong>Refaire l'installation</strong><span>Repasser les écrans de départ : fiche, photos, boutique.</span></span>
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
+                    <span class="pf-item-txt"><strong>Refaire l'installation</strong><span>Repasser les écrans de départ.</span></span>
                     <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   </button>
                 </div>
+                <div id="reglages-instagram" hidden></div>
+                <span id="reglages-vignette" hidden></span>
               </section>
 
               <section class="pf-section">
@@ -4548,14 +4583,14 @@
                        besoin. -->
                   <button type="button" class="pf-item pf-item-sortie" id="reglages-deconnexion">
                     <svg class="pf-item-ico" viewBox="0 0 24 24" id="reglages-deconnexion-ico" aria-hidden="true"><path d="M15 4H6a1.6 1.6 0 0 0-1.6 1.6v12.8A1.6 1.6 0 0 0 6 20h9"/><path d="M14.5 12H21M18 8.6 21.4 12 18 15.4"/></svg>
-                    <span class="pf-item-txt"><strong id="reglages-deconnexion-txt">Déconnexion</strong><span id="reglages-deconnexion-sous">Fermer la session sur ce téléphone.</span></span>
+                    <span class="pf-item-txt"><strong id="reglages-deconnexion-txt">Se déconnecter</strong><span id="reglages-deconnexion-sous" hidden></span></span>
                     <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   </button>
                 </div>
               </section>
 
               <p class="fiche-msg" id="reglages-msg"></p>
-              <p class="reglages-pied">Noctify · appli club</p>
+              <p class="reglages-pied">Noctify pour les établissements</p>
             </div>
 
             <!-- ================= BAREME ================= -->
@@ -6283,6 +6318,9 @@
           "Chaque publication rapporte des points à ton client.", telStory(etab));
       }
       function habillerReglages() {
+        // 25/09/2026 : la carte photo du club est devenue une ligne des
+        // Reglages, elle n'a plus de couverture a poser.
+        return;
         var fiche = $("#reglages-fiche");
         if (!fiche) return;
         // Pas de club : pas de couverture. Poser celle de l'exemple sur la
@@ -7225,7 +7263,6 @@
           var stock = Number.isFinite(plafond) && plafond > 0 && plafond <= 10
             ? "plus que " + nb.format(plafond)
             : "";
-          var prises = somme(serieDe(r.id, f));
 
           /* ⚠️ PLUS D'ACCORDEON. Julien : "quand on veut configurer une
              récompense, c'est bizarre, ce n'est même pas logique, les gens
@@ -7260,9 +7297,10 @@
                   ? '<span class="reco-vignette-cam" aria-hidden="true">' + ICONE_APPAREIL + "Ajouter une photo</span>"
                   : "") +
               "</span>" +
+              // Comme la tuile de l'appli clubbeur : le nom, le prix en
+              // points. Le nombre de prises est dans l'onglet Activite.
               '<span class="reco-resume-txt"><strong>' + escapeHtml(r.title) + "</strong>" +
-                '<span><b class="reco-prix">' + nb.format(Number(r.points_required || 0)) + "</b> pts" +
-                  " · " + nb.format(prises) + (prises > 1 ? " prises" : " prise") +
+                '<span>' + nb.format(Number(r.points_required || 0)) + " points" +
                   (stock ? " · " + stock : "") + "</span>" +
 
               "</span>" +
@@ -7697,10 +7735,11 @@
            club : il lisait le nom d'un club qui n'est pas le sien, sur un
            bouton mort. Elle dit maintenant ce qui manque, et elle ouvre
            l'ecran qui le regle. */
-        $("#reglages-nom").textContent = reel ? (etab && etab.name) || "—" : "Ton club n'est pas encore créé";
+        // L'entete porte le nom en capitales, comme le profil clubbeur.
+        $("#reglages-nom").textContent = reel ? (etab && etab.name) || "Mon établissement" : "Ton établissement";
         $("#reglages-ville").textContent = reel
-          ? ((etab && etab.city) ? etab.city + " · Nom, ville et photos" : "Nom, ville et photos")
-          : (ETAT.session ? "Son nom, sa ville, ses photos — deux minutes" : "Connecte-toi pour l'ouvrir");
+          ? ((etab && etab.city) ? etab.city : "Ce que tes clients voient de ton établissement.")
+          : (ETAT.session ? "À remplir : deux minutes." : "Connecte-toi pour l'ouvrir.");
         rendreVignetteClub($("#reglages-vignette"), reel ? etab : null);
         // Connecte sans club : la carte reste vivante, c'est le seul geste
         // qui fait sortir de l'exemple. Sans session, l'ecran du compte
@@ -7842,12 +7881,13 @@
       function majBoutonCompte() {
         // Le libelle interne, pas le bouton : un textContent sur le
         // bouton emporterait l'icone et le chevron avec lui.
-        $("#reglages-deconnexion-txt").textContent = ETAT.session ? "Déconnexion" : "Créer mon compte";
+        $("#reglages-deconnexion-txt").textContent = ETAT.session ? "Se déconnecter" : "Créer mon compte";
+        // Connecte, la ligne se suffit (Julien, 25/09/2026 : « c'est quoi
+        // fermer la session sur ce telephone, c'est moche »).
         var sous = $("#reglages-deconnexion-sous");
         if (sous) {
-          sous.textContent = ETAT.session
-            ? "Fermer la session sur ce téléphone."
-            : "Tu regardes une démo. Ouvre ton club en deux minutes.";
+          sous.hidden = !!ETAT.session;
+          sous.textContent = ETAT.session ? "" : "Ouvre ton établissement en deux minutes.";
         }
         var glyphe = $("#reglages-deconnexion-ico");
         if (glyphe) glyphe.innerHTML = ETAT.session ? FLECHE_SORTIE : FLECHE_ENTREE;
@@ -9318,8 +9358,8 @@
       /* Les deux chiffres en tete de la Boutique viennent d'ici, comme ceux
          du parcours : une seule source, sinon l'appli promet 100 a un
          endroit et 120 a l'autre. */
-      $("#pts-story").textContent = PV_POINTS.story;
-      $("#pts-scan").textContent = PV_POINTS.scan;
+      if ($("#pts-story")) $("#pts-story").textContent = PV_POINTS.story;
+      if ($("#pts-scan")) $("#pts-scan").textContent = PV_POINTS.scan;
       var PV = { bande: null };
 
       function pvPhotos() {
@@ -9646,7 +9686,7 @@
         if (!zone) return;
         if (!zone.querySelector("iframe[data-apercu-boutique]")) {
           zone.classList.add("vraie");
-          zone.innerHTML = "<p class=\"pr-legende\">Ta vraie boutique, dans l'appli de tes clients</p><div class=\"pr-tel grand\"><div class=\"pr-tel-ecran\"><iframe data-apercu-boutique=\"app\" src=\"/app-preview.html?app=1&amp;apercu=boutique\" title=\"Ta page dans l'appli de tes clients\" tabindex=\"-1\"></iframe></div></div>";
+          zone.innerHTML = "<div class=\"pr-tel grand vrai-tel\"><div class=\"pr-tel-ecran\"><iframe data-apercu-boutique=\"app\" src=\"/app-preview.html?app=1&amp;apercu=boutique\" title=\"Ta page dans l'appli de tes clients\" tabindex=\"-1\"></iframe></div></div>";
         }
         envoyerApercuBientot();
       }
