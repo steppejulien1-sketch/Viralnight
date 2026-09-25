@@ -6728,6 +6728,10 @@
       html.apercu-boutique .vue-bar { visibility: visible !important; display: block !important; transform: none !important; transition: none !important; z-index: 200; }
       html.apercu-boutique .vb-rond, html.apercu-boutique .vb-points, html.apercu-boutique .vb-solde,
       html.apercu-boutique .vb-mini-jauge, html.apercu-boutique .vb-pied { display: none !important; }
+      /* De la marge sous les recompenses : sans elle, la page ne depasse pas l'ecran
+         et le telephone du parcours ne peut pas descendre jusqu'a elles. */
+      html.apercu-boutique .vb-defile { padding-bottom: 45vh !important; }
+      html.apercu-boutique .vb-barre { display: none !important; }
     </style>
     <script>
       /* ?theme=noir ou ?theme=blanc : force le theme, quel que soit celui du
@@ -17605,6 +17609,14 @@ if (/[?&]apercu=boutique(&|$)/.test(location.search)) {
     rendreBoutiqueBar({ nom: club.nom, club: club, quartier: d.ville || "", recompenses: recos, km: 0 });
     VUE_BAR.hidden = false;
     VUE_BAR.classList.add("ouverte");
+    /* Ou regarder dans la page : le haut (photos, nom) ou les recompenses.
+       Le telephone du parcours suit l'etape en cours (25/09/2026). */
+    var defile = document.getElementById("vb-defile");
+    var corps = VUE_BAR.querySelector(".vb-corps");
+    if (defile) {
+      var cible = d.focus === "recompenses" && corps ? Math.max(0, corps.offsetTop - 230) : 0; // le bas de la photo et le nom restent visibles
+      if (Math.abs(defile.scrollTop - cible) > 4) defile.scrollTo({ top: cible, behavior: d.anime ? "smooth" : "auto" });
+    }
   });
   if (window.parent !== window) window.parent.postMessage({ type: "noctify-apercu-pret" }, location.origin);
 }
