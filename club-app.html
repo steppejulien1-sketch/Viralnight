@@ -3617,6 +3617,55 @@
       /* Le bouton du bas : noir, large, comme « Ouvrir Instagram » cote clubbeur. */
       #parcours .pa-pied { background: var(--bg); border-top: 0; padding: 10px 20px calc(16px + env(safe-area-inset-bottom)); }
       #parcours #pa-suivant { height: 56px; border-radius: 16px; background: #16171c; color: #ffffff; font-family: var(--titre); font-size: 16.5px; font-weight: 700; letter-spacing: -.01em; box-shadow: none; }
+
+      /* ================= REFONTE DES ONGLETS (25/09/2026) =================
+         Julien : « refais tout l'appli, y a rien qui va » ; style choisi :
+         « comme l'appli clubbeur ». Les jetons sont poses sur .screen (la ou
+         ils sont definis) : l'essai du 16/09 les posait sur :root et ne
+         prenait donc jamais, d'ou le beige qui restait partout. */
+      .screen {
+        --bg: #f5f5f6; --s1: #ffffff; --s2: #ececee; --s3: #e2e2e6; --papier: #ececee;
+        --line: rgba(20,20,24,.08); --line2: rgba(20,20,24,.14);
+        --ink: #16171c; --ink2: #56595f; --ink3: #6a6d73;
+      }
+      .vue { background: var(--bg); }
+      .ecran-titre { font-size: 30px; font-weight: 800; letter-spacing: -.035em; line-height: 1.05; margin: 0 0 6px; }
+      .ecran-sous { font-size: 15px; line-height: 1.45; color: var(--ink2); margin: 0 0 18px; }
+      .section-titre {
+        margin: 26px 0 10px 2px; font-family: var(--titre); font-size: 18px; font-weight: 650;
+        letter-spacing: -.015em; text-transform: none; color: var(--ink);
+      }
+      .carte, .kpi { border: 0; border-radius: 18px; box-shadow: inset 0 0 0 1px var(--line); background: #ffffff; }
+      .periodes { border-radius: 14px; background: var(--s3); }
+      .kpis { background: transparent; box-shadow: none; border: 0; overflow: visible; }
+
+      /* L'en-tete du tableau de bord : la photo du bar en grand, comme la
+         page d'un lieu cote clubbeur. */
+      /* (La version « le club en une ligne, pas une affiche », faite pour le
+         style outil pro, est annulee par le choix du style clubbeur.) */
+      .club-tete.club-couv {
+        position: relative; display: block; height: 210px; min-height: 0; margin: 0 0 16px; padding: 0;
+        border-radius: 18px; overflow: hidden; isolation: isolate; background: #16161a; box-shadow: none;
+      }
+      .club-couv .club-couv-img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; object-fit: cover; box-shadow: none; filter: brightness(1.12) saturate(1.2); }
+      .club-couv-voile { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,.15) 55%, rgba(0,0,0,0)); }
+      .club-couv .club-tete-txt { position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 14px; }
+      .club-couv .club-tete-txt strong { display: block; font-family: var(--titre); font-size: 30px; font-weight: 900; letter-spacing: -.035em; line-height: 1.05; color: #ffffff; white-space: normal; }
+      .club-couv .club-tete-txt span { display: block; margin-top: 4px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,.88); }
+      .club-couv-live { position: absolute; z-index: 2; top: 12px; right: 12px; margin: 0; }
+
+      /* L'activite recente : une liste blanche, des lignes aerees. */
+      #dash-activite { background: #ffffff; border-radius: 18px; box-shadow: inset 0 0 0 1px var(--line); padding: 2px 16px; }
+      .activite-ligne { padding: 13px 0; gap: 13px; }
+      .activite-ligne:last-child { border-bottom: 0; }
+      .act-txt strong { font-size: 15px; font-weight: 600; }
+
+      /* Les champs et les boutons secondaires : gris clair, plus jamais creme. */
+      .ac-input { background: #ffffff; box-shadow: inset 0 0 0 1px var(--line); border-color: transparent; }
+      .fiche-photo { background: #ffffff; box-shadow: inset 0 0 0 1px var(--line); border-radius: 18px; }
+      .bouton { border-radius: 16px; min-height: 52px; font-family: var(--titre); font-weight: 700; }
+      .bouton.sobre { background: #ffffff; border: 0; box-shadow: inset 0 0 0 1px var(--line2); color: var(--ink); }
+      .retour { border-radius: 99px; background: #ffffff; box-shadow: inset 0 0 0 1px var(--line); }
     </style>
   </head>
   <body>
@@ -6374,13 +6423,19 @@
         var LABEL_STATUT = LABEL_STATUT_C, LABEL_PLATEFORME = LABEL_PLATEFORME_C;
         var CLASSE_STATUT = CLASSE_STATUT_C, GLYPHE = GLYPHE_C, GLYPHE_AUTRE = GLYPHE_C_AUTRE;
 
+        /* Le pseudo du client quand la ligne le porte (25/09/2026) : dix fois
+           « Instagram » de suite ne disait rien au patron. */
+        function quiAPoste(s) {
+          var h = s.author_handle || s.handle || s.instagram_handle || s.username || "";
+          return h ? "@" + String(h).replace(/^@+/, "") : "";
+        }
         zone.innerHTML = recentes.map(function (s) {
           var gain = s.status === "validated";
           var date = s.submitted_at ? new Date(s.submitted_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }) : "—";
           return (
             '<div class="activite-ligne">' +
               '<span class="act-ico" aria-hidden="true">' + (GLYPHE[s.platform] || GLYPHE_AUTRE) + "</span>" +
-              '<span class="act-txt"><strong>' + escapeHtml(LABEL_PLATEFORME[s.platform] || s.platform || "—") + "</strong>" +
+              '<span class="act-txt"><strong>' + escapeHtml(quiAPoste(s) || ("Story " + (LABEL_PLATEFORME[s.platform] || s.platform || ""))) + "</strong>" +
               '<span><i class="act-etat ' + (CLASSE_STATUT[s.status] || "") + '" aria-hidden="true"></i>' +
               escapeHtml(LABEL_STATUT[s.status] || s.status || "—") + " · " + escapeHtml(date) + "</span></span>" +
               '<span class="act-pts' + (gain ? "" : " neutre") + '">' + (gain ? "+" + nb.format(s.points_awarded || 0) : "—") + "</span>" +
