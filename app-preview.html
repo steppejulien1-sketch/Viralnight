@@ -6717,6 +6717,17 @@
       /* La capsule remonte d'autant : sans ca, sur un iPhone a encoche, la
          barre de geste passerait PAR-DESSUS le bas de la capsule. */
       html.mode-appli .tabs::before { bottom: calc(22px + var(--geste)); }
+
+      /* ⚠️ LE MODE APERCU DE LA BOUTIQUE (25/09/2026). ?apercu=boutique :
+         l'appli des gerants affiche CETTE page dans un cadre, pour montrer
+         au patron sa vraie boutique (Julien : « que ca montre la vraie
+         boutique, pas un truc approximatif »). Rien d'autre ne se voit :
+         pas de connexion, pas d'onglets, pas de retour ; les donnees
+         arrivent par postMessage depuis club-app.html. */
+      html.apercu-boutique body { visibility: hidden; background: #ffffff; }
+      html.apercu-boutique .vue-bar { visibility: visible !important; display: block !important; transform: none !important; transition: none !important; z-index: 200; }
+      html.apercu-boutique .vb-rond, html.apercu-boutique .vb-points, html.apercu-boutique .vb-solde,
+      html.apercu-boutique .vb-mini-jauge, html.apercu-boutique .vb-pied { display: none !important; }
     </style>
     <script>
       /* ?theme=noir ou ?theme=blanc : force le theme, quel que soit celui du
@@ -17566,6 +17577,37 @@ majMontantParrainage();
 rendreBons(null);
 majRebours();
 setInterval(majRebours, 30000);
+
+
+/* Le mode apercu (voir html.apercu-boutique) : la page d'un lieu, dessinee
+   par rendreBoutiqueBar() avec les donnees que l'appli des gerants envoie.
+   Les recompenses passent par completerRecompense(), comme celles lues en
+   base : memes dessins, memes etiquettes, meme ordre. */
+if (/[?&]apercu=boutique(&|$)/.test(location.search)) {
+  document.documentElement.classList.add("apercu-boutique");
+  ETAT.solde = 0;
+  window.addEventListener("message", function (e) {
+    if (e.origin !== location.origin) return;
+    var d = e.data;
+    if (!d || d.type !== "noctify-apercu-boutique") return;
+    var photos = (d.photos || []).filter(Boolean);
+    var club = { nom: d.nom || "Ton établissement", type: d.categorie || "club", photos: photos, couverture: photos[0] || null, horaires: [] };
+    var recos = (d.recompenses || []).map(function (r, i) {
+      var reco = completerRecompense({
+        id: "apercu-" + i, title: r.titre, description: null, cost_points: Number(r.points || 0), category: r.famille || null,
+        stock_limit: r.stock === null || r.stock === undefined || r.stock === "" ? null : Number(r.stock),
+        stock_remaining: r.stock === null || r.stock === undefined || r.stock === "" ? null : Number(r.stock),
+        image_url: r.photo || null,
+      }, i, "AP");
+      reco.demo = true;
+      return reco;
+    });
+    rendreBoutiqueBar({ nom: club.nom, club: club, quartier: d.ville || "", recompenses: recos, km: 0 });
+    VUE_BAR.hidden = false;
+    VUE_BAR.classList.add("ouverte");
+  });
+  if (window.parent !== window) window.parent.postMessage({ type: "noctify-apercu-pret" }, location.origin);
+}
 
 </script>
 

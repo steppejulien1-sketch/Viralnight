@@ -3666,6 +3666,83 @@
       .bouton { border-radius: 16px; min-height: 52px; font-family: var(--titre); font-weight: 700; }
       .bouton.sobre { background: #ffffff; border: 0; box-shadow: inset 0 0 0 1px var(--line2); color: var(--ink); }
       .retour { border-radius: 99px; background: #ffffff; box-shadow: inset 0 0 0 1px var(--line); }
+
+      /* ---- La VRAIE boutique (25/09/2026) : la page de l'appli clubbeur
+         elle-meme (?apercu=boutique), dans un cadre, a la largeur d'un
+         telephone puis reduite a celle de la carte. On peut y faire defiler
+         les recompenses du doigt. */
+      /* Un ecran de telephone centre (300 px de large, soit la page de 390
+         reduite a .77) : la photo ET la premiere rangee de recompenses se
+         voient d'un coup, le reste defile du doigt dans le cadre. */
+      .pr-vraie {
+        position: relative; width: 300px; max-width: 100%; height: 600px; margin: 0 auto 24px; border-radius: 34px; overflow: hidden; background: #ffffff;
+        box-shadow: 0 0 0 7px #16171c, 0 30px 60px -28px rgba(0,0,0,.55);
+        --echelle: .7692;
+      }
+      .pr-vraie iframe {
+        position: absolute; left: 0; top: 0; width: 390px; height: calc(600px / var(--echelle)); border: 0;
+        transform: scale(var(--echelle)); transform-origin: 0 0;
+      }
+      #reco-vitrine.vraie { display: block; padding: 8px 0 0; background: none; box-shadow: none; overflow: visible; border-radius: 0; }
+      #reco-vitrine.vraie .pr-legende { margin: 4px 0 16px 2px; text-align: center; }
+
+      /* ================= UN PARCOURS VIVANT (25/09/2026) =================
+         Julien : « que l'enregistrement soit bien plus vivant, avec des
+         transitions, des beaux trucs, la c'est un peu moche et basique ».
+         - Chaque etape se compose sous les yeux : titre, texte, apercu,
+           champs arrivent l'un apres l'autre (60 ms d'ecart), en montant.
+         - La barre avance avec un rebond et une lueur.
+         - La photo de la carte se pose en dezoomant ; le nom saute quand
+           on le tape.
+         - A la fin : confettis et « Ton club est pret » (feterFinParcours). */
+      @keyframes prEntre { from { opacity: 0; transform: translateY(22px) scale(.98); } to { opacity: 1; transform: none; } }
+      #parcours .pa-etape:not([hidden]) > * { animation: prEntre .6s cubic-bezier(.2, .9, .25, 1) both; }
+      #parcours .pa-etape:not([hidden]) > :nth-child(1) { animation-delay: .03s; }
+      #parcours .pa-etape:not([hidden]) > :nth-child(2) { animation-delay: .09s; }
+      #parcours .pa-etape:not([hidden]) > :nth-child(3) { animation-delay: .15s; }
+      #parcours .pa-etape:not([hidden]) > :nth-child(4) { animation-delay: .21s; }
+      #parcours .pa-etape:not([hidden]) > :nth-child(5) { animation-delay: .27s; }
+      #parcours .pa-etape:not([hidden]) > :nth-child(6) { animation-delay: .33s; }
+      #parcours .pa-etape:not([hidden]) > :nth-child(n+7) { animation-delay: .39s; }
+      /* Les lignes de la boutique arrivent aussi une a une. */
+      #parcours .pa-tuile { animation: prEntre .5s cubic-bezier(.2, .9, .25, 1) both; }
+      #parcours .pa-tuile:nth-child(2) { animation-delay: .06s; }
+      #parcours .pa-tuile:nth-child(3) { animation-delay: .12s; }
+      #parcours .pa-tuile:nth-child(4) { animation-delay: .18s; }
+      #parcours .pa-tuile:nth-child(n+5) { animation-delay: .24s; }
+
+      #parcours .pa-jauge i { transition: transform .7s cubic-bezier(.3, 1.35, .5, 1); box-shadow: 0 0 10px rgba(222,49,49,.55); }
+
+      .pr-photos img { transform: scale(1.12); transition: opacity .5s ease, transform 1.6s cubic-bezier(.2, .8, .2, 1); }
+      .pr-photos img.on { transform: scale(1); }
+      @keyframes prSaute { 0% { transform: none; } 35% { transform: translateY(-4px) scale(1.04); } 100% { transform: none; } }
+      .pr-txt b.pr-saute { animation: prSaute .35s cubic-bezier(.3, 1.4, .5, 1); transform-origin: left bottom; }
+
+      #parcours #pa-suivant { transition: transform .16s cubic-bezier(.3, 1.4, .5, 1), background-color .2s ease; }
+      #parcours #pa-suivant:active { transform: scale(.96); }
+
+      /* La fete de fin. */
+      .pr-fete {
+        position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+        background: radial-gradient(circle at 50% 42%, #2a0d10, #0b0a0c 70%); color: #ffffff; text-align: center; padding: 0 30px;
+        animation: prFeteIn .35s ease both;
+      }
+      .pr-fete.part { animation: prFeteOut .5s ease both; }
+      @keyframes prFeteIn { from { opacity: 0; } }
+      @keyframes prFeteOut { to { opacity: 0; transform: scale(1.04); } }
+      .pr-fete canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .pr-fete-rond { position: relative; width: 104px; height: 104px; border-radius: 50%; background: #de3131; display: grid; place-items: center;
+        box-shadow: 0 0 0 12px rgba(222,49,49,.18), 0 0 70px rgba(222,49,49,.7); animation: prRond .6s cubic-bezier(.3, 1.5, .5, 1) .1s both; }
+      .pr-fete-rond svg { width: 52px; height: 52px; fill: none; stroke: #ffffff; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
+        stroke-dasharray: 40; stroke-dashoffset: 40; animation: prTrait .45s ease .45s forwards; }
+      @keyframes prRond { from { transform: scale(0); } }
+      @keyframes prTrait { to { stroke-dashoffset: 0; } }
+      .pr-fete h2 { position: relative; margin: 10px 0 0; font-family: var(--titre); font-size: 32px; font-weight: 900; letter-spacing: -.035em; animation: prEntre .6s cubic-bezier(.2, .9, .25, 1) .5s both; }
+      .pr-fete p { position: relative; margin: 0; max-width: 30ch; font-size: 15.5px; line-height: 1.45; color: rgba(255,255,255,.78); animation: prEntre .6s cubic-bezier(.2, .9, .25, 1) .62s both; }
+      @media (prefers-reduced-motion: reduce) {
+        #parcours .pa-etape:not([hidden]) > *, #parcours .pa-tuile, .pr-fete, .pr-fete-rond, .pr-fete h2, .pr-fete p { animation: none; }
+        .pr-fete-rond svg { animation: none; stroke-dashoffset: 0; }
+      }
     </style>
   </head>
   <body>
@@ -4067,6 +4144,7 @@
                     <section class="pa-etape pv" data-pas="4" data-mascotte="/mascotte/pose-2.webp" hidden>
                       <h1 class="pa-titre">Ta boutique</h1>
                       <p class="pa-sous">Active ce que tu offres, règle le prix.</p>
+                      <p class="pr-legende">Ta vraie boutique, dans l'appli de tes clients</p><div class="pr-vraie"><iframe data-apercu-boutique="parcours" src="/app-preview.html?app=1&amp;apercu=boutique" title="Ta boutique dans l'appli de tes clients" tabindex="-1"></iframe></div>
                       <p class="pv-sec pv-sec-haut">Récompenses<span id="pa-compte"></span></p>
                       <div class="pa-grille" id="pa-grille"></div>
                       <button type="button" class="pv-ajout" id="pa-sienne-ouvrir">+ Une autre récompense</button>
@@ -6164,10 +6242,8 @@
         $("#dash-ville").textContent = [TYPES_ETAB[etab.category] || "", etab.city || ""].filter(Boolean).join(" · ");
       }
       function habillerRecompenses() {
-        var etab = etablissementCourant() || (ETAT.data && ETAT.data.establishment) || {};
-        var n = nombreRecosActives();
-        vitrine($("#reco-vitrine"), "Dans l'appli de tes clients", "Ta boutique, en vrai.",
-          n ? n + " récompense" + (n > 1 ? "s" : "") + " à gagner chez toi." : "Ajoute une récompense pour ouvrir ta boutique.", telBoutique(etab));
+        // La vitrine est la vraie page de l'appli clubbeur (25/09/2026).
+        vitrineVraieBoutique();
       }
       function habillerBareme() {
         var etab = etablissementCourant() || (ETAT.data && ETAT.data.establishment) || {};
@@ -8147,7 +8223,7 @@
         if (!ok) return;
         // Une etape ouverte seule ne "termine" pas l'installation : elle
         // ne fait qu'enregistrer ce qu'elle porte.
-        if (dernier) return fermerParcours(!seule);
+        if (dernier) { if (!seule) feterFinParcours(); return fermerParcours(!seule); }
         allerAuPas(PARCOURS.pas + 1);
       });
 
@@ -9347,6 +9423,11 @@
           ? "Elles défilent quand un client touche ta photo."
           : "La salle, le bar, une soirée. Elles défilent quand un client touche ta photo.";
         pvRendreBande();
+        envoyerApercuBientot();
+        if (nom && nom !== PV.dernierNom) {
+          if (PV.dernierNom !== undefined) document.querySelectorAll(".pr-txt b").forEach(function (b) { relancerAnimation(b, "pr-saute"); });
+          PV.dernierNom = nom;
+        }
       }
 
       (function brancherParcoursVivant() {
@@ -9431,6 +9512,110 @@
         preparerPasInstagram = apres(preparerPasInstagram, pvSynchro);
       })();
 
+
+      /* ================= LA VRAIE BOUTIQUE, EN DIRECT (25/09/2026) =================
+         Chaque cadre [data-apercu-boutique] recoit ce que le patron regle :
+         pendant le parcours, les recompenses cochees et leurs prix ; dans
+         l'onglet Boutique, les recompenses actives. La photo d'une
+         recompense ne part que si c'est la SIENNE : sinon l'appli clubbeur
+         pose ses propres dessins, exactement comme chez les clients. */
+      function donneesApercuBoutique(source) {
+        var etab = etablissementCourant() || (ETAT.data && ETAT.data.establishment) || {};
+        var recompenses;
+        if (source === "parcours") {
+          recompenses = (PARCOURS.choix || []).filter(function (c) { return c.prise; }).map(function (c) {
+            return { titre: c.titre, points: c.points, famille: c.famille, photo: c.photoPerso ? c.foto : null, stock: null };
+          });
+        } else {
+          var actives = [];
+          try { actives = getActiveRewards((ETAT.data && ETAT.data.rewards) || []); } catch (e) {}
+          recompenses = actives.map(function (r) {
+            return { titre: r.title, points: r.points_required, famille: r.category, photo: r.image_url || null, stock: r.max_redemptions };
+          });
+        }
+        var nom = source === "parcours" ? ($("#pa-nom").value.trim() || etab.name) : etab.name;
+        var ville = source === "parcours" ? ($("#pa-ville").value.trim() || etab.city) : etab.city;
+        var photos = [];
+        try { photos = source === "parcours" ? pvPhotos() : photosDuClub(); } catch (e) {}
+        return {
+          type: "noctify-apercu-boutique", nom: nom || "Ton établissement", ville: ville || "",
+          categorie: (source === "parcours" && PARCOURS.type) || etab.category || "club",
+          photos: photos, recompenses: recompenses,
+        };
+      }
+      function envoyerApercuBoutique() {
+        document.querySelectorAll("iframe[data-apercu-boutique]").forEach(function (f) {
+          if (!f.contentWindow) return;
+          try { f.contentWindow.postMessage(donneesApercuBoutique(f.dataset.apercuBoutique), location.origin); } catch (e) {}
+        });
+      }
+      function ajusterCadresBoutique() {
+        document.querySelectorAll(".pr-vraie").forEach(function (c) {
+          var w = c.clientWidth;
+          if (w) c.style.setProperty("--echelle", Math.min(1, w / 390).toFixed(4));
+        });
+      }
+      window.addEventListener("message", function (e) {
+        if (e.origin !== location.origin || !e.data || e.data.type !== "noctify-apercu-pret") return;
+        envoyerApercuBoutique();
+      });
+      window.addEventListener("resize", ajusterCadresBoutique);
+      var envoiApercuMinuteur = null;
+      function envoyerApercuBientot() {
+        clearTimeout(envoiApercuMinuteur);
+        envoiApercuMinuteur = setTimeout(function () { ajusterCadresBoutique(); envoyerApercuBoutique(); }, 120);
+      }
+      // Dans l'onglet Boutique : la vitrine devient la vraie page, creee une seule fois.
+
+      /* La fete de fin de parcours (voir .pr-fete). Des confettis aux couleurs
+         de la marque, un rond rouge qui se coche, deux lignes, puis l'ecran
+         s'efface sur le tableau de bord deja pret dessous. */
+      function feterFinParcours() {
+        var nom = ($("#pa-nom") && $("#pa-nom").value.trim()) || ((etablissementCourant() || {}).name) || "Ton club";
+        var fete = document.createElement("div");
+        fete.className = "pr-fete";
+        fete.innerHTML = '<canvas></canvas><span class="pr-fete-rond"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+          "<h2>" + escapeHtml(nom) + " est en ligne</h2><p>Tes clients peuvent déjà gagner des points chez toi.</p>";
+        document.body.appendChild(fete);
+        try { vibrer && vibrer("fort"); } catch (e) {}
+        var toile = fete.querySelector("canvas");
+        var ctx = toile.getContext("2d");
+        var dpr = window.devicePixelRatio || 1;
+        toile.width = innerWidth * dpr; toile.height = innerHeight * dpr;
+        ctx.scale(dpr, dpr);
+        var couleurs = ["#de3131", "#ff6b6b", "#ffffff", "#f5c542", "#ffb3b3"];
+        var bouts = [];
+        for (var k = 0; k < 140; k++) {
+          var a = Math.random() * Math.PI * 2, v = 5 + Math.random() * 9;
+          bouts.push({ x: innerWidth / 2, y: innerHeight * .42, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 5,
+            w: 5 + Math.random() * 6, h: 8 + Math.random() * 8, r: Math.random() * 6, vr: (Math.random() - .5) * .35,
+            c: couleurs[k % couleurs.length] });
+        }
+        var t0 = performance.now();
+        (function image(t) {
+          var dt = Math.min(2, (t - t0) / 16.7); t0 = t;
+          ctx.clearRect(0, 0, innerWidth, innerHeight);
+          bouts.forEach(function (b) {
+            b.vy += .28 * dt; b.vx *= Math.pow(.985, dt); b.x += b.vx * dt; b.y += b.vy * dt; b.r += b.vr * dt;
+            ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r); ctx.fillStyle = b.c; ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); ctx.restore();
+          });
+          if (document.body.contains(fete)) requestAnimationFrame(image);
+        })(t0);
+        setTimeout(function () { fete.classList.add("part"); }, 2600);
+        setTimeout(function () { fete.remove(); }, 3100);
+      }
+      // Pour la rejouer en demonstration : noctifyFete() dans la console.
+      window.noctifyFete = feterFinParcours;
+      function vitrineVraieBoutique() {
+        var zone = $("#reco-vitrine");
+        if (!zone) return;
+        if (!zone.querySelector("iframe[data-apercu-boutique]")) {
+          zone.classList.add("vraie");
+          zone.innerHTML = '<p class="pr-legende">Ta vraie boutique, dans l\'appli de tes clients</p>' +
+            "<div class=\"pr-vraie\"><iframe data-apercu-boutique=\"app\" src=\"/app-preview.html?app=1&amp;apercu=boutique\" title=\"Ta boutique dans l'appli de tes clients\" tabindex=\"-1\"></iframe></div>";
+        }
+        envoyerApercuBientot();
+      }
       demarrer();
     </script>
   </body>
