@@ -3877,6 +3877,15 @@
       .hero-legende .hl-ligne.avant .hl-trait { border-top-color: rgba(0,0,0,.35); }
       .hero-delta.vide { display: none; }
 
+      /* « Modifier » sur la photo du club (26/09/2026) : on retouche sa facade
+         et ses photos sans passer par les Reglages. */
+      #vue-dashboard .club-couv { position: relative; }
+      .club-couv-modifier { position: absolute; z-index: 3; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 6px;
+        min-height: 34px; padding: 0 13px 0 11px; border: 0; border-radius: 999px; background: rgba(255,255,255,.94); color: #111;
+        font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 16px -8px rgba(0,0,0,.5); }
+      .club-couv-modifier[hidden] { display: none; }
+      .club-couv-modifier svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
       .pa-types-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 16px; background: #e9e9ed; }
       .pa-types-seg .pa-type { min-height: 44px; margin: 0; padding: 0 6px; border: 0; border-radius: 12px; background: transparent; box-shadow: none;
         font: inherit; font-size: 14px; font-weight: 700; color: #6b6b73; cursor: pointer; transition: background-color .18s ease, color .18s ease; }
@@ -4380,6 +4389,9 @@
 
               <div class="club-tete club-couv">
                 <img class="club-couv-img" id="dash-couv-img" alt="" />
+                <button type="button" class="club-couv-modifier" id="dash-modifier" hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>Modifier
+                </button>
                 <span class="club-couv-voile" aria-hidden="true"></span>
                 <span class="club-vignette" id="dash-vignette" aria-hidden="true"></span>
                 <span class="club-tete-txt">
@@ -4575,8 +4587,26 @@
                 <h2 class="pf-section-titre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12v8h15v-8"/><path d="M3 10 5 4h14l2 6c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4s-3-1-3-2.4c0 1.4-1.3 2.4-3 2.4S3 11.4 3 10z"/><path d="M10 20v-4.5h4V20"/></svg>Mon établissement</h2>
                 <div class="pf-liste">
                   <button type="button" class="pf-item" id="reglages-fiche">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10.5" r="2.6"/></svg>
+                    <span class="pf-item-txt"><strong>Nom, adresse et type</strong><span id="reglages-ville">Ce que tes clients voient de ton établissement.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                  <!-- 26/09/2026, Julien : « meme une fois que le parcours est fini, ce serait
+                       sympa qu'il puisse quand meme continuer a le modifier ». Chaque etape
+                       se rouvre SEULE, deja remplie, et « Enregistrer » ramene ici. -->
+                  <button type="button" class="pf-item" id="reglages-photos" data-etape="3">
                     <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="m21 15-4.5-4.5L8 19"/></svg>
-                    <span class="pf-item-txt"><strong>Nom, ville et photos</strong><span id="reglages-ville">Ce que tes clients voient de ton établissement.</span></span>
+                    <span class="pf-item-txt"><strong>Façade et photos</strong><span>La photo que tes clients voient en premier.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                  <button type="button" class="pf-item" id="reglages-recompenses" data-etape="4">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8.5" width="17" height="12" rx="2"/><path d="M3.5 12.8h17M12 8.5V20.5"/><path d="M12 8.5S9.4 3.6 7.4 5.3s4.6 3.2 4.6 3.2zM12 8.5s2.6-4.9 4.6-3.2-4.6 3.2-4.6 3.2z"/></svg>
+                    <span class="pf-item-txt"><strong>Récompenses et prix</strong><span>Ce que tu offres, et combien de points.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                  <button type="button" class="pf-item" id="reglages-handle" data-etape="6">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.3" cy="6.7" r="1.1"/></svg>
+                    <span class="pf-item-txt"><strong>Ton @ Instagram</strong><span id="reglages-handle-sous">Le compte que tes clients mentionnent.</span></span>
                     <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   </button>
                   <button type="button" class="pf-item" data-va="qr">
@@ -4586,7 +4616,7 @@
                   </button>
                   <button type="button" class="pf-item" id="reglages-installation">
                     <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
-                    <span class="pf-item-txt"><strong>Refaire l'installation</strong><span>Repasser les écrans de départ.</span></span>
+                    <span class="pf-item-txt"><strong>Revoir tout le parcours</strong><span>Les écrans du départ, avec ce que tu as déjà rempli.</span></span>
                     <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   </button>
                 </div>
@@ -6464,6 +6494,7 @@
         // chose a voir (Julien, 18/09/2026 : « mets des fausses data que je
         // puisse voir a quoi ca ressemble »).
         $("#dash-voir-exemple-haut").hidden = !sansActivite;
+        $("#dash-modifier").hidden = EXEMPLE || !clubReelCharge();
 
         /* L'ecran des contenus lit la MEME source et suit le meme cycle :
            le rendre ici, c'est la garantie qu'il ne montre jamais autre
@@ -7431,7 +7462,7 @@
         $("#fiche-photo-aide").textContent = r.image_url
           ? "C'est cette photo que tes clients voient dans leur application."
           : (visuel.vide
-            ? "Sans photo, tes clients voient un dessin de cocktail. Mets la tienne."
+            ? "Sans photo, tes clients voient une case vide. Mets la tienne, c'est elle qui donne envie."
             : "Un dessin est choisi d'après le nom. Ta photo le remplacera.");
         $("#fiche-photo-sup").hidden = !r.image_url || estDemo();
       }
@@ -7835,6 +7866,8 @@
         // Rien a installer sur un club de demonstration : le lien serait
         // un bouton qui ne fait rien.
         $("#reglages-installation").hidden = !clubReelCharge();
+        ["#reglages-photos", "#reglages-recompenses", "#reglages-handle"].forEach(function (id) { $(id).hidden = !clubReelCharge(); });
+        $("#reglages-handle-sous").textContent = reel && etab && etab.ig_handle ? "@" + etab.ig_handle : "Le compte que tes clients mentionnent.";
 
         // (La ligne "Barème de points" a quitte les Reglages le
         // 09/09/2026 : c'est un onglet maintenant.)
@@ -7992,7 +8025,7 @@
         // Club reel : on rouvre sa fiche, seule. Compte sans club : c'est
         // la CREATION qu'on ouvre, et elle enchaine sur la suite du
         // parcours. Pas de compte : l'ecran du compte d'abord.
-        if (clubReelCharge()) return ouvrirParcours(2, true);
+        if (clubReelCharge()) return ouvrirParcours(2, true, "reglages");
         if (ETAT.session) return ouvrirParcours(2);
         afficherPorte("Connecte-toi avec ton compte club.");
       });
@@ -8219,7 +8252,7 @@
 
       /* ---- Navigation ---- */
 
-      function ouvrirParcours(pasForce, seule) {
+      function ouvrirParcours(pasForce, seule, retourVue) {
         // Deux etablissements a distinguer ici : celui qu'on DESSINE dans
         // l'apercu (l'exemple, quand il n'y a pas encore de club) et celui
         // qu'on a le droit de RECOPIER dans les champs. Prefiler le
@@ -8237,7 +8270,10 @@
         // l'installation" qui rouvre juste apres une fiche modifiee.
         PARCOURS.seule = !!seule;
         // « Nom, ville et photos » depuis les Reglages : la fiche PUIS ses photos.
-        PARCOURS.finSeule = seule ? (pasForce === 2 ? 3 : pasForce) : PAS_MAX;
+        // 26/09/2026 : une etape rouverte seule s'enregistre et se referme ;
+        // on revient la d'ou l'on venait (Reglages ou tableau de bord).
+        PARCOURS.finSeule = seule ? pasForce : PAS_MAX;
+        PARCOURS.retourVue = seule ? (retourVue || "reglages") : null;
         $("#parcours").hidden = false;
         $("#parcours").classList.toggle("pa-seule", PARCOURS.seule);
         $("#pa-passer").textContent = PARCOURS.seule ? "Fermer" : "Passer";
@@ -8342,7 +8378,7 @@
         relancerAnimation(chiffre, "pa-entre");
 
         $("#pa-suivant").hidden = cible === 1;
-        $("#pa-suivant").textContent = cible === PAS_MAX ? "Terminer" : "Continuer";
+        $("#pa-suivant").textContent = PARCOURS.seule && cible >= PARCOURS.finSeule ? "Enregistrer" : (cible === PAS_MAX ? "Terminer" : "Continuer");
         // Retour impossible depuis le club : on ne revient pas sur la
         // creation d'un compte deja cree.
         $("#pa-retour").hidden = cible <= 2;
@@ -8382,7 +8418,9 @@
         PARCOURS.ouvert = false;
         PARCOURS.seule = false;
         $("#parcours").hidden = true;
-        ouvrirVue("dashboard");
+        try { rendreReglages(); rendreDashboard(); } catch (e) {}
+        ouvrirVue(PARCOURS.retourVue || "dashboard");
+        PARCOURS.retourVue = null;
 
         // La boutique part vers l'appli des clubbeurs : sans cette
         // synchro, le gerant vient de regler des recompenses que ses
@@ -8398,6 +8436,16 @@
          passe trop vite doit pouvoir y retourner. Le pas memorise est
          remis a 1 -- on le rouvre en entier, pas la ou il l'avait laisse
          il y a trois semaines. */
+      ["#reglages-photos", "#reglages-recompenses", "#reglages-handle"].forEach(function (id) {
+        $(id).addEventListener("click", function (ev) {
+          if (!clubReelCharge()) return;
+          ouvrirParcours(Number(ev.currentTarget.dataset.etape), true, "reglages");
+        });
+      });
+      $("#dash-modifier").addEventListener("click", function () {
+        if (clubReelCharge() && !EXEMPLE) ouvrirParcours(3, true, "dashboard");
+      });
+
       $("#reglages-installation").addEventListener("click", function () {
         if (!clubReelCharge()) return;
         var etab = etablissementCourant();
