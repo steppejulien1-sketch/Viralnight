@@ -10662,7 +10662,8 @@ var CLE_SCAN_EN_ATTENTE = "vn_scan_en_attente";
 
 async function creditScanUrl() {
   var params = new URLSearchParams(location.search);
-  var slug = params.get("club");
+  // ?qr= : le QR signe (0058). ?club= : les anciennes affiches, refusees avec un message.
+  var slug = params.get("qr") || params.get("club");
 
   if (slug) {
     try { sessionStorage.setItem(CLE_SCAN_EN_ATTENTE, slug); } catch (e) {}
@@ -10672,6 +10673,7 @@ async function creditScanUrl() {
     // Seul « club » part : ?app=1 doit rester, sinon un rechargement
     // retombait sur la page de demonstration.
     params.delete("club");
+    params.delete("qr");
     var reste = params.toString();
     history.replaceState(null, "", location.pathname + (reste ? "?" + reste : "") + location.hash);
   } else {
@@ -10696,15 +10698,67 @@ async function creditScanUrl() {
 
 var scanUrlEnCours = false;
 
-async function crediterScanUrl(slug, session) {
-  var res = await supabaseClubbeur.rpc("checkin_scan", { p_club_slug: String(slug).trim().toLowerCase() });
+/* ================= LE QR SIGNE (26/09/2026, migration 0058) =================
+   Julien : « qu'on ne puisse pas tricher avec ces QR ». Le QR porte un jeton
+   « slug.fenetre.signature » signe avec une cle propre au lieu. Fenetre 0 =
+   l'affiche : il faut etre a moins de 300 m du lieu, d'ou la position.
+   Fenetre > 0 = le QR en direct du bar (30 s) : pas besoin de position. */
+function jetonDuQr(texte) {
+  var t = String(texte || "").trim();
+  try {
+    var u = new URL(t);
+    t = u.searchParams.get("qr") || u.searchParams.get("club") || u.pathname.split("/").filter(Boolean).pop() || t;
+  } catch (e) {}
+  return t;
+}
+
+function positionPourScan() {
+  return natif.position({ timeout: 12000, maximumAge: 60000, precise: true }).then(function (p) {
+    if (p !== undefined) return p ? { lat: p.coords.latitude, lng: p.coords.longitude, precision: p.coords.accuracy || null } : null;
+    return new Promise(function (ok) {
+      if (!navigator.geolocation) return ok(null);
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        ok({ lat: pos.coords.latitude, lng: pos.coords.longitude, precision: pos.coords.accuracy || null });
+      }, function () { ok(null); }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+    });
+  });
+}
+
+var MESSAGES_SCAN = {
+  qr_invalide: "Ce QR n'est pas un QR Noctify valide.",
+  qr_expire: "Ce QR a expiré. Scanne celui affiché en ce moment au bar.",
+  qr_ancien: "Cette affiche n'est plus valable. Scanne la nouvelle, au bar.",
+  position_requise: "Autorise ta position : elle prouve que tu es sur place.",
+  trop_loin: "Tu dois être sur place pour gagner tes points d'arrivée.",
+};
+
+// Renvoie { ligne } ou { message }.
+async function scannerJeton(texte) {
+  var jeton = jetonDuQr(texte);
+  var morceaux = jeton.split(".");
+  if (morceaux.length !== 3) return { message: MESSAGES_SCAN.qr_ancien };
+  var args = { p_jeton: jeton };
+  if (morceaux[1] === "0") {
+    var pos = await positionPourScan();
+    if (!pos) return { message: MESSAGES_SCAN.position_requise };
+    args.p_lat = pos.lat; args.p_lng = pos.lng; args.p_precision = pos.precision;
+  }
+  var res = await supabaseClubbeur.rpc("checkin_qr", args);
   var ligne = res.data && res.data[0];
-  /* Le QR de l'affiche ouvre l'appli par l'appareil photo du telephone, pas
-     par le viseur de l'appli : c'est le chemin de presque tout le monde. Il
-     ne disait RIEN -- ni les +15 points, ni un QR inconnu. Memes messages
-     que le viseur (traiterCode). */
   if (res.error || !ligne) {
-    pasEncore("QR non reconnu. Vérifie l'établissement.");
+    var code = res.error && Object.keys(MESSAGES_SCAN).find(function (k) { return String(res.error.message || "").indexOf(k) !== -1; });
+    return { message: (code && MESSAGES_SCAN[code]) || "QR non reconnu. Vérifie l'établissement." };
+  }
+  return { ligne: ligne };
+}
+
+async function crediterScanUrl(slug, session) {
+  var r = await scannerJeton(slug);
+  var ligne = r.ligne;
+  /* Le QR de l'affiche ouvre l'appli par l'appareil photo du telephone, pas
+     par le viseur de l'appli : c'est le chemin de presque tout le monde. */
+  if (!ligne) {
+    pasEncore(r.message);
     return;
   }
 
@@ -12925,19 +12979,14 @@ function ouvrirChoixReseau(nomClub) {
     }
 
     async function traiterCode(texte) {
-      var slug = texte;
-      try {
-        var u = new URL(texte);
-        slug = u.searchParams.get("club") || u.pathname.split("/").filter(Boolean).pop() || texte;
-      } catch (e) {}
       msgScan.textContent = "Vérification…";
-      var res = await supabaseClubbeur.rpc("checkin_scan", { p_club_slug: slug.trim().toLowerCase() });
       arreterScan();
+      var r = await scannerJeton(texte);
       zone.classList.remove("trouve");
-      var ligne = res.data && res.data[0];
-      if (res.error || !ligne) {
+      var ligne = r.ligne;
+      if (!ligne) {
         zone.hidden = true;
-        direStory("QR non reconnu. Vérifie l'établissement.", true);
+        direStory(r.message, true);
         return;
       }
       zone.hidden = true;

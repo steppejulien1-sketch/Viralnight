@@ -454,6 +454,34 @@ async function actionValiderBon(request, response) {
   return json(response, { etat: "ok", titre, code });
 }
 
+/* ?action=qr-club — le QR SIGNE du lieu (26/09/2026, migration clubbeur 0058).
+   Le jeton est calcule dans la base clubbeur avec une cle propre au lieu,
+   que ni l'appli des clients ni celle des gerants ne peuvent lire.
+   Corps : { direct: true } pour le QR qui change toutes les 30 s,
+           { regenerer: true } pour changer la cle (anciennes affiches mortes). */
+async function actionQrClub(request, response) {
+  const c = await clubDuGerant(request);
+  if (c.erreur) return json(response, { error: c.erreur }, c.status);
+  if (!c.club) return json(response, { error: "Ton lieu n'est pas encore en ligne." }, 409);
+  const corps = await readBody(request).catch(() => ({}));
+  if (corps.regenerer) {
+    const r = await c.clubbeur.rpc("qr_regenerer", { p_club: c.club.id });
+    if (r.error) return json(response, { error: r.error.message }, 500);
+  }
+  const { data, error } = await c.clubbeur.rpc("qr_jeton", { p_club: c.club.id, p_direct: !!corps.direct });
+  if (error) return json(response, { error: error.message }, 500);
+  const ligne = Array.isArray(data) ? data[0] : data;
+  // Le domaine qui a servi l'appli du gerant : le QR ouvre l'appli des clients au meme endroit.
+  const hote = request.headers["x-forwarded-host"] || request.headers.host || "viralnight-koif.vercel.app";
+  const proto = request.headers["x-forwarded-proto"] || (/^(127\.|localhost)/.test(hote) ? "http" : "https");
+  const origine = proto + "://" + hote;
+  return json(response, {
+    url: origine + "/app-preview.html?qr=" + encodeURIComponent(ligne.jeton),
+    direct: !!corps.direct,
+    expireLe: ligne.expire_le,
+  });
+}
+
 /* ?action=notifier-cadeau — le rappel du matin.
    Programme dans vercel.json, protege par CRON_SECRET comme les deux
    taches Instagram : jamais appelable par un club ni un clubbeur.
@@ -1046,6 +1074,7 @@ export default async function handler(request, response) {
   if (action === "sync-boutique") return actionSyncBoutique(request, response);
   if (action === "activite-clients") return actionActiviteClients(request, response);
   if (action === "valider-bon") return actionValiderBon(request, response);
+  if (action === "qr-club") return actionQrClub(request, response);
 
   /* AVANT le controle d'administrateur qui suit : celui-ci n'est pas une
      action d'admin. C'est le clubbeur lui-meme qui efface son compte, et il

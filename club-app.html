@@ -3886,6 +3886,29 @@
       .club-couv-modifier[hidden] { display: none; }
       .club-couv-modifier svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
+      /* QR protege et QR en direct (26/09/2026) */
+      .qr-protege { display: flex; align-items: center; gap: 12px; margin: 14px 0 10px; padding: 14px 16px; border-radius: 18px; background: #eaf7ef; color: #14532d; }
+      .qr-protege[hidden], .qr-options[hidden] { display: none; }
+      .qr-protege-ico svg { width: 30px; height: 30px; fill: none; stroke: #1f9d55; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .qr-protege-txt { display: flex; flex-direction: column; gap: 2px; }
+      .qr-protege-txt strong { font-size: 15px; font-weight: 800; }
+      .qr-protege-txt span { font-size: 13px; line-height: 1.35; color: #276b44; }
+      .qr-direct { position: fixed; inset: 0; z-index: 85; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        padding: max(20px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom)); background: #0c0d10; color: #fff; text-align: center; }
+      .qr-direct[hidden] { display: none; }
+      .qr-direct-fermer { position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px; display: grid; place-items: center; width: 42px; height: 42px;
+        border: 0; border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; }
+      .qr-direct-fermer svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+      .qr-direct-marque { margin: 0; font-family: var(--titre); font-size: 13px; font-weight: 800; letter-spacing: .3em; color: #de3131; }
+      .qr-direct-nom { margin: 0; font-family: var(--titre); font-size: clamp(26px, 7vw, 44px); font-weight: 800; letter-spacing: -.02em; }
+      .qr-direct-gain { margin: 0 0 8px; font-size: 15px; color: rgba(255,255,255,.75); }
+      .qr-direct-gain b { color: #fff; }
+      .qr-direct-cadre { width: min(78vw, 62vh, 460px); aspect-ratio: 1; padding: 18px; border-radius: 28px; background: #fff; }
+      .qr-direct-cadre img { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+      .qr-direct-jauge { width: min(78vw, 62vh, 460px); height: 5px; margin-top: 6px; border-radius: 99px; background: rgba(255,255,255,.14); overflow: hidden; }
+      .qr-direct-jauge i { display: block; height: 100%; width: 100%; background: #de3131; transform-origin: left; }
+      .qr-direct-msg { margin: 0; font-size: 13px; color: rgba(255,255,255,.55); }
+
       /* Valider un bon (26/09/2026) */
       .bon-lanceur { display: flex; align-items: center; gap: 14px; width: 100%; margin: 0 0 14px; padding: 14px 16px; border: 0; border-radius: 20px;
         background: #de3131; color: #fff; font: inherit; text-align: left; cursor: pointer; box-shadow: 0 14px 30px -18px rgba(222,49,49,.9); }
@@ -4660,7 +4683,7 @@
                   </button>
                   <button type="button" class="pf-item" data-va="qr">
                     <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>
-                    <span class="pf-item-txt"><strong>Affiche et QR code</strong><span>À imprimer et coller au bar.</span></span>
+                    <span class="pf-item-txt"><strong>Affiche et QR code</strong><span>À imprimer, ou en direct sur une tablette.</span></span>
                     <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   </button>
                   <button type="button" class="pf-item" id="reglages-installation">
@@ -5178,6 +5201,27 @@
                 <p class="fiche-msg" id="qr-msg"></p>
               </div>
 
+              <!-- 26/09/2026, Julien : « qu'on ne puisse pas tricher avec ces QR ».
+                   Le QR porte un jeton signe avec une cle propre au lieu (base
+                   clubbeur, migration 0058) : il ne se devine pas, et l'affiche
+                   exige d'etre sur place (300 m). -->
+              <div class="qr-protege" id="qr-protege">
+                <span class="qr-protege-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.4-4.6"/></svg></span>
+                <span class="qr-protege-txt"><strong>QR protégé</strong><span>Signé pour ton lieu : il ne marche que dans Noctify, et seulement sur place.</span></span>
+              </div>
+              <div class="pf-liste qr-options" id="qr-options">
+                <button type="button" class="pf-item" id="qr-direct-ouvrir">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M9 9.5h2v2H9zM13 9.5h2v2h-2z"/></svg>
+                  <span class="pf-item-txt"><strong>QR en direct</strong><span>Il change toutes les 30 secondes. À afficher sur un téléphone ou une tablette au bar.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+                <button type="button" class="pf-item pf-item-sortie" id="qr-changer">
+                  <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
+                  <span class="pf-item-txt"><strong id="qr-changer-txt">Changer de QR</strong><span id="qr-changer-sous">Si ton affiche circule en photo : les anciennes ne rapporteront plus rien.</span></span>
+                  <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+
               <!-- Les deux chiffres qui etaient ici ("Scans / Personnes")
                    sont retires. Julien : "tu retires le zéro scan depuis le
                    début, personne, c'est bizarre".
@@ -5204,6 +5248,16 @@
                  rien : c'etait un onglet permanent pour deux chiffres qu'on
                  lit une fois. Les deux chiffres vivent maintenant en tete de
                  la Boutique, la ou on regle ce qu'ils achetent. -->
+            <div class="qr-direct" id="qr-direct" hidden role="dialog" aria-modal="true" aria-label="QR en direct">
+              <button type="button" class="qr-direct-fermer" id="qr-direct-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+              <p class="qr-direct-marque">NOCTIFY</p>
+              <h2 class="qr-direct-nom" id="qr-direct-nom"></h2>
+              <p class="qr-direct-gain">Scanne avec l'appli Noctify · <b>+20 points</b></p>
+              <div class="qr-direct-cadre"><img id="qr-direct-img" alt="QR du lieu, renouvelé toutes les 30 secondes" /></div>
+              <div class="qr-direct-jauge" aria-hidden="true"><i id="qr-direct-jauge"></i></div>
+              <p class="qr-direct-msg" id="qr-direct-msg">Nouveau QR toutes les 30 secondes</p>
+            </div>
+
             <div class="bon-ecran" id="bon-ecran" hidden role="dialog" aria-modal="true" aria-label="Valider un bon">
               <div class="bon-tete">
                 <h2>Valider un bon</h2>
@@ -7363,7 +7417,24 @@
           return;
         }
 
+        // Le QR SIGNE du lieu (0058) pour un vrai club ; l'exemple garde son lien de demo.
         var url = urlScanClubbeur(slug);
+        var reelQr = ETAT.session && ETAT.data.source !== "demo" && clubReelCharge();
+        $("#qr-protege").hidden = !reelQr;
+        $("#qr-options").hidden = !reelQr;
+        if (reelQr) {
+          var signe = await demanderQrSigne({});
+          if (!signe) {
+            $("#affiche-apercu").removeAttribute("src");
+            lien.hidden = true;
+            $("#affiche-telecharger").hidden = true;
+            msg.style.display = "block";
+            msg.style.color = "var(--accent-fort)";
+            msg.textContent = "Ton QR n'a pas pu être généré. Réessaie dans un instant.";
+            return;
+          }
+          url = signe.url;
+        }
         // Le pseudo vient du compte Instagram relie, pas d'un champ a
         // remplir : c'est le meme compte, en moins faillible. ig_handle
         // reste lu en secours pour les clubs qui l'avaient saisi avant.
@@ -9997,6 +10068,76 @@
         }
         envoyerApercuBientot();
       }
+      /* ================= LE QR SIGNE (26/09/2026) ================= */
+      async function demanderQrSigne(corps) {
+        if (!ETAT.session) return null;
+        try {
+          var r = await fetch("/api/credit-clubbeur?action=qr-club", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + ETAT.session.access_token },
+            body: JSON.stringify(corps || {}),
+          });
+          if (!r.ok) return null;
+          return await r.json();
+        } catch (e) { return null; }
+      }
+
+      (function () {
+        var ecran = $("#qr-direct"), minuteur = null, jaugeAnim = null, verrou = null;
+        async function rafraichir() {
+          var q = await demanderQrSigne({ direct: true });
+          if (!q) { $("#qr-direct-msg").textContent = "Connexion perdue, nouvel essai…"; minuteur = setTimeout(rafraichir, 4000); return; }
+          $("#qr-direct-img").src = await renderQrPngDataUrl(q.url, { width: 900 });
+          $("#qr-direct-msg").textContent = "Nouveau QR toutes les 30 secondes";
+          var fin = q.expireLe ? new Date(q.expireLe).getTime() : Date.now() + 30000;
+          var reste = Math.max(1000, fin - Date.now());
+          var jauge = $("#qr-direct-jauge");
+          if (jaugeAnim) jaugeAnim.cancel();
+          if (jauge.animate) jaugeAnim = jauge.animate([{ transform: "scaleX(" + Math.min(1, reste / 30000) + ")" }, { transform: "scaleX(0)" }], { duration: reste, fill: "forwards" });
+          minuteur = setTimeout(rafraichir, reste + 300);
+        }
+        async function ouvrir() {
+          if (!clubReelCharge()) return;
+          $("#qr-direct-nom").textContent = ((ETAT.data && ETAT.data.establishment) || {}).name || "";
+          ecran.hidden = false;
+          document.body.style.overflow = "hidden";
+          // L'ecran reste allume tant que le QR est affiche.
+          try { if (navigator.wakeLock) verrou = await navigator.wakeLock.request("screen"); } catch (e) {}
+          rafraichir();
+        }
+        function fermer() {
+          clearTimeout(minuteur);
+          if (jaugeAnim) jaugeAnim.cancel();
+          try { if (verrou) verrou.release(); } catch (e) {}
+          verrou = null;
+          ecran.hidden = true;
+          document.body.style.overflow = "";
+        }
+        $("#qr-direct-ouvrir").addEventListener("click", ouvrir);
+        $("#qr-direct-fermer").addEventListener("click", fermer);
+        document.addEventListener("visibilitychange", function () {
+          if (!document.hidden && !ecran.hidden) { clearTimeout(minuteur); rafraichir(); }
+        });
+
+        // Changer de QR : deux touches, la premiere dit ce que ca casse.
+        var arme = false;
+        $("#qr-changer").addEventListener("click", async function () {
+          if (!arme) {
+            arme = true;
+            $("#qr-changer-txt").textContent = "Confirmer le changement";
+            $("#qr-changer-sous").textContent = "Les affiches déjà imprimées ne marcheront plus. Il faudra imprimer la nouvelle.";
+            return;
+          }
+          arme = false;
+          $("#qr-changer").disabled = true;
+          var q = await demanderQrSigne({ regenerer: true });
+          $("#qr-changer").disabled = false;
+          $("#qr-changer-txt").textContent = q ? "QR changé ✓" : "Changer de QR";
+          $("#qr-changer-sous").textContent = q ? "Imprime la nouvelle affiche ci-dessus." : "Le changement n'a pas marché. Réessaie.";
+          if (q) rendreQr();
+        });
+      })();
+
       /* ================= VALIDER UN BON (26/09/2026) ================= */
       (function () {
         var ecran = $("#bon-ecran"), video = $("#bon-video"), flux = null, boucle = null, occupe = false;

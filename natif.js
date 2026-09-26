@@ -103,11 +103,13 @@ export async function position(options) {
   if (!m) return undefined;
   try {
     const p = await m.Geolocation.getCurrentPosition({
-      enableHighAccuracy: false, // le club le plus proche, pas la place de parking
+      // Le club le plus proche, pas la place de parking -- sauf pour le scan
+      // du QR (26/09/2026), qui doit prouver qu'on est sur place.
+      enableHighAccuracy: !!(options && options.precise),
       timeout: (options && options.timeout) || 8000,
       maximumAge: (options && options.maximumAge) || 600000,
     });
-    return { coords: { latitude: p.coords.latitude, longitude: p.coords.longitude } };
+    return { coords: { latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy } };
   } catch (e) {
     return null; // refus ou echec : l'appelant garde son club par defaut
   }
