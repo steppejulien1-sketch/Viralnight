@@ -5382,6 +5382,16 @@
         font-family: var(--chiffre); font-size: calc(15 * var(--u)); font-weight: 800;
         letter-spacing: .08em; color: var(--ink); font-variant-numeric: tabular-nums;
       }
+      /* Le bandeau vivant du bon (26/09/2026) : l'heure a la seconde et la
+         barre jusqu'au prochain QR. C'est ce que le staff regarde pour savoir
+         que ce n'est pas une capture d'ecran. */
+      .bt-vivant { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 240px; margin: 10px auto 0; }
+      .bt-point { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #1f9d55; animation: btPouls 1s ease-in-out infinite; }
+      .bt-heure { flex: 0 0 auto; font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 800; letter-spacing: .02em; color: var(--ink, #111); }
+      .bt-jauge { flex: 1; height: 4px; border-radius: 99px; background: rgba(0,0,0,.1); overflow: hidden; }
+      .bt-jauge i { display: block; height: 100%; background: #1f9d55; transform-origin: left; transition: transform 1s linear; }
+      @keyframes btPouls { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+      @media (prefers-reduced-motion: reduce) { .bt-point { animation: none; } }
       .bt-validite {
         margin: 6px 0 0;
         font-size: calc(12 * var(--u)); font-weight: 500; color: var(--ink3);
@@ -17465,11 +17475,65 @@ function carteRecompense(r, index, bar) {
        meme librairie que le QR d'entree du club. Le niveau de
        correction Q tolere les rayures et la penombre — voir
        lib/tracking/qrCode.js pour la meme logique cote gerant. --- */
-function qrBon(code) {
-  return QRCode.toString("VN-REDEEM:" + code, {
+/* ⚠️ LE QR D'UN BON EST SIGNE ET VIVANT (26/09/2026, migration 0059).
+   Julien : « les QR pour les recompenses, il faut les generer aussi » -- et
+   qu'on ne puisse pas tricher. Avant : « VN-REDEEM:<code> », fixe, fabrique
+   ici ; n'importe qui pouvait en dessiner un, une capture valait le bon.
+   Maintenant la base signe « code.fenetre.signature » avec la cle du lieu,
+   pour le proprietaire du bon seulement, et le jeton change toutes les 30 s :
+   le staff (Valider un bon, appli gerants) refuse un QR de plus de 90 s. */
+async function jetonBon(code) {
+  try {
+    var res = await supabaseClubbeur.rpc("bon_jeton", { p_code: code });
+    var ligne = res.data && res.data[0];
+    return res.error || !ligne ? null : ligne.jeton;
+  } catch (e) { return null; }
+}
+
+async function qrBon(code) {
+  var jeton = await jetonBon(code);
+  if (!jeton) {
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="8" fill="#f1f1f3"/>' +
+      '<text x="50" y="47" text-anchor="middle" font-size="9" font-family="sans-serif" fill="#6b6b73">Connexion</text>' +
+      '<text x="50" y="60" text-anchor="middle" font-size="9" font-family="sans-serif" fill="#6b6b73">nécessaire</text></svg>';
+  }
+  return QRCode.toString("VN-BON:" + jeton, {
     type: "svg", errorCorrectionLevel: "Q", margin: 0,
     color: { dark: "#0a0b0e", light: "#ffffff" }
   });
+}
+
+/* La preuve que c'est l'ecran vivant et pas une capture : l'heure qui defile
+   a la seconde, une barre qui se vide jusqu'au prochain QR, et le QR qui se
+   renouvelle tout seul. Tourne tant que le ticket est a l'ecran. */
+var BON_VIVANT = null;
+function bandeauVivant() {
+  return '<div class="bt-vivant" aria-hidden="true"><span class="bt-point"></span>' +
+    '<span class="bt-heure">--:--:--</span><span class="bt-jauge"><i></i></span></div>';
+}
+function animerBonVivant(code) {
+  if (BON_VIVANT) clearInterval(BON_VIVANT);
+  var prochain = 0;
+  async function tic() {
+    var zone = document.querySelector("#sheet .bt-souche");
+    var feuille = document.getElementById("sheet");
+    // Feuille fermee : on arrete, sinon la base serait interrogee toutes les 30 s pour rien.
+    if (!zone || (feuille && feuille.getAttribute("aria-hidden") === "true")) { clearInterval(BON_VIVANT); BON_VIVANT = null; return; }
+    var maintenant = Date.now();
+    var h = zone.querySelector(".bt-heure");
+    if (h) h.textContent = new Date(maintenant).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    var reste = 30000 - (maintenant % 30000);
+    var j = zone.querySelector(".bt-jauge i");
+    if (j) j.style.transform = "scaleX(" + (reste / 30000).toFixed(3) + ")";
+    if (maintenant >= prochain) {
+      prochain = maintenant + reste + 400;
+      var svg = await qrBon(code);
+      var cadre = zone.querySelector(".bt-qr");
+      if (cadre) cadre.innerHTML = svg;
+    }
+  }
+  BON_VIVANT = setInterval(tic, 1000);
+  tic();
 }
 
 // Vrais bons : lus depuis redemptions (used = false -- un bon
@@ -17559,6 +17623,7 @@ async function ouvrirBon(bon, src) {
         "</div>" +
         '<div class="bt-souche">' +
           '<div class="bt-qr">' + svgQr + "</div>" +
+          bandeauVivant() +
           '<p class="bt-code">' + bon.code + "</p>" +
           '<p class="bt-validite">' + compteARebours(bon.expireA) + "</p>" +
         "</div>" +
@@ -17566,6 +17631,7 @@ async function ouvrirBon(bon, src) {
       '<button class="sheet-cta sobre" id="sh-ok" type="button">Fermer</button>' +
     "</div>";
   ouvrirFeuille(html, "#sh-ok");
+  animerBonVivant(bon.code);
   $("#sh-ok").addEventListener("click", fermerFeuille);
 }
 
@@ -17791,6 +17857,7 @@ async function echanger(item) {
         "</div>" +
         '<div class="bt-souche">' +
           '<div class="bt-qr">' + svgQr + "</div>" +
+          bandeauVivant() +
           '<p class="bt-code">' + code + "</p>" +
           '<p class="bt-validite">À montrer au ' + (item.fam === "bar" ? "bar" : "staff") + ", ce soir.</p>" +
         "</div>" +
@@ -17801,6 +17868,7 @@ async function echanger(item) {
 
   $("#sh-ok").addEventListener("click", fermerFeuille);
   $("#sh-ok").focus();
+  animerBonVivant(code);
 
   majCagnotte(true);
   rendreListe();

@@ -427,8 +427,28 @@ async function actionValiderBon(request, response) {
   const c = await clubDuGerant(request);
   if (c.erreur) return json(response, { error: c.erreur }, c.status);
   const corps = await readBody(request).catch(() => ({}));
-  let code = String(corps.code || "").trim().toUpperCase().replace(/^VN-REDEEM:/, "").replace(/\s+/g, "");
-  if (code && !code.startsWith("VN-")) code = "VN-" + code;
+  const brut = String(corps.code || "").trim();
+  let code;
+  if (/^VN-BON:/i.test(brut)) {
+    /* 26/09/2026 (0059) : le QR SIGNE et vivant du bon. Verifie par la base
+       (cle du lieu, fenetre de 30 s) : un QR dessine a la main ou une capture
+       de plus de 90 s est refuse. */
+    const v = await c.clubbeur.rpc("bon_verifier", { p_jeton: brut.slice(7) });
+    if (v.error) {
+      const perime = /bon_qr_perime/.test(v.error.message || "");
+      return json(response, perime
+        ? { etat: "perime", error: "QR périmé : c'est sans doute une capture d'écran. Demande au client d'ouvrir son bon dans l'appli." }
+        : { etat: "invalide", error: "Ce QR n'est pas un bon Noctify valide." }, 409);
+    }
+    code = String(v.data || "");
+  } else if (/^VN-REDEEM:/i.test(brut)) {
+    // L'ancien QR fixe, fabrique dans le telephone : plus accepte au scan.
+    return json(response, { etat: "ancien", error: "Ancien QR : demande au client d'ouvrir son bon dans l'appli à jour." }, 409);
+  } else {
+    // Le code tape a la main, en secours (camera en panne).
+    code = brut.toUpperCase().replace(/\s+/g, "");
+    if (code && !code.startsWith("VN-")) code = "VN-" + code;
+  }
   if (!/^VN-[A-Z0-9]{4,12}$/.test(code)) return json(response, { etat: "invalide", error: "Ce code n'est pas un bon Noctify." }, 400);
   if (!c.club) return json(response, { etat: "inconnu", error: "Ton lieu n'est pas encore en ligne." }, 404);
 
