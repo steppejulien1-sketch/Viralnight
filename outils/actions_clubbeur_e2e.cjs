@@ -14,7 +14,8 @@ const puppeteer = require("puppeteer-core");
 const V = require("../../06-pwa-clubbeurs/outils/lib_vn.cjs");
 
 const SITE = process.env.VN_URL || "https://viralnight-koif.vercel.app";
-const SLUG = "mirage-brussels";
+// « mirage-brussels » est masque depuis le 25/09/2026 : le vrai lieu est « mirage ».
+const SLUG = "mirage";
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1";
 
@@ -36,7 +37,7 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
       try {
         localStorage.setItem("vn_stat_installe", "1");
         localStorage.setItem("vn_parcours_fini", id);
-        localStorage.setItem("vn_notif_report", String(Date.now() + 864e5));
+        localStorage.setItem("vn_notif_report", String(Date.now() + 864e5)); localStorage.setItem("vn_majeur_" + id, "1");
       } catch (e) {}
     }, uid);
     page.on("pageerror", (e) => bilan.erreursJs.push(e.message));
@@ -53,7 +54,14 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
     }
 
     // 1. Scan par l'appareil photo
-    await page.goto(`${SITE}/app-preview.html?app=1&club=${SLUG}&cb=${Date.now()}`, { waitUntil: "networkidle2" });
+    // 26/09/2026 (migration 0058) : le QR porte un jeton SIGNE et l'affiche
+    // exige d'etre sur place. On demande le jeton a la base (cle service) et
+    // on pose le telephone a la position du lieu.
+    const lieu = V.sql(`select id, lat, lng from public.clubs where slug='${SLUG}'`)[0];
+    const jeton = V.sql(`select jeton from public.qr_jeton('${lieu.id}', false)`)[0].jeton;
+    await navigateur.defaultBrowserContext().overridePermissions(new URL(SITE).origin, ["geolocation"]);
+    await page.setGeolocation({ latitude: Number(lieu.lat), longitude: Number(lieu.lng), accuracy: 20 });
+    await page.goto(`${SITE}/app-preview.html?app=1&qr=${encodeURIComponent(jeton)}&cb=${Date.now()}`, { waitUntil: "networkidle2" });
     await pause(6000);
     bilan.scan = {
       grant: V.sql(`select count(*)::int n from public.point_grants where user_id='${uid}' and source='scan'`)[0].n,
@@ -86,15 +94,17 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
     await pause(5000);
     await page.evaluate(() => document.getElementById("tab-boutique")?.click());
     await pause(1500);
+    // La boutique est une liste de lieux (.bar-couverture) ; un lieu ouvre sa page (#vb-sections).
+    bilan.sections = await page.evaluate(() => [...document.querySelectorAll(".bar-couverture .bar-nom")].map((x) => x.textContent.trim()));
+    await page.evaluate(() => [...document.querySelectorAll(".bar-couverture")].find((x) => /mira(ge|no)/i.test(x.textContent))?.click());
+    await pause(2500);
     const ouvert = await page.evaluate(() => {
-      const section = [...document.querySelectorAll(".bar-section")].find((x) => /mira(ge|no)/i.test(x.querySelector(".drop-titre")?.textContent || ""));
-      const cible = section && [...section.querySelectorAll(".carte-reco")].find((e) => /cocktail/i.test(e.textContent || ""));
+      const cible = [...document.querySelectorAll("#vb-sections .vb-grille > *")].find((e) => /cocktail/i.test(e.textContent || ""));
       if (!cible) return false;
       cible.click();
       return cible.textContent.trim().slice(0, 60);
     });
     await pause(1500);
-    bilan.sections = await page.evaluate(() => [...document.querySelectorAll(".bar-section")].map((x) => (x.querySelector(".drop-titre")?.textContent || "?") + " : " + [...x.querySelectorAll(".carte-reco")].map((c) => c.textContent.replace(/\s+/g, " ").trim()).join(" / ")).slice(0, 4));
     bilan.boutique = { carte: ouvert, bouton: await page.evaluate(() => document.getElementById("sh-cta")?.textContent || null) };
     await page.evaluate(() => document.getElementById("sh-cta")?.click());
     await pause(4000);

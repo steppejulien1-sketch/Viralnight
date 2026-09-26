@@ -10745,6 +10745,7 @@ async function scannerJeton(texte) {
   }
   var res = await supabaseClubbeur.rpc("checkin_qr", args);
   var ligne = res.data && res.data[0];
+  try { if (typeof CLUBS_RESOLUS !== "undefined") await CLUBS_RESOLUS; } catch (e) {}
   if (res.error || !ligne) {
     var code = res.error && Object.keys(MESSAGES_SCAN).find(function (k) { return String(res.error.message || "").indexOf(k) !== -1; });
     return { message: (code && MESSAGES_SCAN[code]) || "QR non reconnu. Vérifie l'établissement." };
@@ -17832,7 +17833,10 @@ document.addEventListener("visibilitychange", function () {
   choixManuelClub = false;
   detecterClubProche();
 });
-resoudreIdsClubs().then(chargerRecompenses);
+// Gardee : le message d'un scan attend les noms affiches (« Mirano » et non
+// « Mirage », le nom en base) avant de s'ecrire.
+var CLUBS_RESOLUS = resoudreIdsClubs();
+CLUBS_RESOLUS.then(chargerRecompenses);
 majMontantParrainage();
 rendreBons(null);
 majRebours();
