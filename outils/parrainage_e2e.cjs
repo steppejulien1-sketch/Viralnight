@@ -32,7 +32,7 @@ async function nouvellePage(navigateur, uid, erreurs) {
     try {
       localStorage.setItem("vn_stat_jour", new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Paris" }));
       localStorage.setItem("vn_stat_installe", "1");
-      localStorage.setItem("vn_parcours_fini", id);
+      localStorage.setItem("vn_parcours_fini", id); localStorage.setItem("vn_majeur_" + id, "1");
     } catch (e) {}
   }, uid);
   page.on("pageerror", (e) => erreurs.push(e.message));

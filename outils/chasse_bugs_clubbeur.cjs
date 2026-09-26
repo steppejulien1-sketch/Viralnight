@@ -29,10 +29,13 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
     // VN_CADEAU=1 : un compte « installe » -- bienvenue deja prise, un scan au
     // Mirage et 450 points -- pour voir le cadeau du jour et une boutique
     // echangeable sur les captures.
+    // Sans bienvenue deja prise, la page « +50 points offerts » recouvre tout.
+    V.sql(`insert into public.welcome_bonuses (user_id, amount) values ('${compte.uid}', 50) on conflict do nothing;
+           update public.users set majeur_confirme_at = now() where id = '${compte.uid}';`);
     if (process.env.VN_CADEAU) {
-      V.sql(`insert into public.welcome_bonuses (user_id, amount) values ('${compte.uid}', 50) on conflict do nothing;
-             insert into public.point_grants (user_id, club_id, amount, unlocks_at, released, source)
-               select '${compte.uid}', id, 450, now(), false, 'scan' from public.clubs where slug = 'mirage-brussels';
+      // « mirage-brussels » est masque depuis le 25/09/2026 : le vrai lieu est « mirage ».
+      V.sql(`insert into public.point_grants (user_id, club_id, amount, unlocks_at, released, source)
+               select '${compte.uid}', id, 450, now(), false, 'scan' from public.clubs where slug = 'mirage';
              select public.release_due_points('${compte.uid}');`);
     }
 
@@ -46,6 +49,8 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
         localStorage.setItem("vn_stat_installe", "1");
         localStorage.setItem("vn_parcours_fini", id);
         localStorage.setItem("vn_notif_report", String(Date.now() + 864e5));
+        // La question « 18 ans ou plus ? » (25/09/2026) recouvrait tous les ecrans.
+        localStorage.setItem("vn_majeur_" + id, "1");
       } catch (e) {}
     }, compte.uid);
     page.on("pageerror", (e) => bilan.erreursJs.push(`[${etape}] ${e.message}`));
@@ -106,11 +111,11 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebK
     // Le bon d'une recompense echangee (seulement avec VN_CADEAU : il faut des points).
     if (process.env.VN_CADEAU && CAPTURES) {
       etape = "echange";
-      await page.evaluate(() => {
-        const s = [...document.querySelectorAll(".bar-section")].find((x) => /mira/i.test(x.querySelector(".drop-titre")?.textContent || ""));
-        const c = s && [...s.querySelectorAll(".carte-reco")].find((e) => /cocktail/i.test(e.textContent));
-        c?.click();
-      });
+      // La boutique est une liste de lieux (.bar-couverture) ; un lieu ouvre sa page (#vb-sections).
+      await page.evaluate(() => [...document.querySelectorAll(".bar-couverture")].find((x) => /mira/i.test(x.textContent))?.click());
+      await pause(2500);
+      await page.screenshot({ path: `${CAPTURES}/01a-page-lieu.png` });
+      await page.evaluate(() => [...document.querySelectorAll("#vb-sections .vb-grille > *")].find((e) => /cocktail/i.test(e.textContent))?.click());
       await pause(1500);
       await page.screenshot({ path: `${CAPTURES}/01b-fiche-recompense.png` });
       await page.evaluate(() => document.getElementById("sh-cta")?.click());

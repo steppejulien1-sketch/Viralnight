@@ -56,7 +56,7 @@ const trace = [];
 const dire = (ok, t) => { trace.push([ok, t]); console.log((ok ? "  OK  | " : " FAIL | ") + t); };
 
 function anonPwa() {
-  const p = "C:/Users/stepp/Downloads/Noctify-ClaudeCode-FULL/06-pwa-clubbeurs/.env.local";
+  const p = require("path").resolve(__dirname, "../../06-pwa-clubbeurs/.env.local");
   for (const l of fs.readFileSync(p, "utf8").replace(/^\uFEFF/, "").split(/\r?\n/)) {
     if (l.trim().startsWith("VITE_SUPABASE_ANON_KEY=")) return l.split("=").slice(1).join("=").trim();
   }

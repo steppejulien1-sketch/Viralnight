@@ -223,9 +223,20 @@ async function actionSyncBoutique(request, response) {
      n'etait copiee qu'a l'ouverture, la carte des clubbeurs garderait
      pour toujours celle du premier jour (ou aucune). */
   if (!clubOuvert) {
+    /* Le @ Instagram suit aussi (26/09/2026) : il n'etait ecrit qu'a
+       l'ouverture du club, souvent DEVINE depuis le nom. Un gerant qui le
+       corrigeait ensuite le voyait change chez lui, et ses clients
+       continuaient de mentionner l'ancien compte -- sans etre credites.
+       On ne l'ecrase que par un @ connu (compte relie ou saisi). */
+    const { data: compteIg } = await auth.supabase
+      .from("establishment_instagram_accounts")
+      .select("ig_username")
+      .eq("establishment_id", auth.establishmentId)
+      .maybeSingle();
+    const handleConnu = String(compteIg?.ig_username || etab.ig_handle || "").replace(/^@/, "").trim();
     await clubbeur
       .from("clubs")
-      .update({ name: etab.name || "Club", city: etab.city || "—", logo_url: etab.logo_url || null, photos: photosPropres(etab.photos), ...ficheLieu(etab) })
+      .update({ name: etab.name || "Club", city: etab.city || "—", logo_url: etab.logo_url || null, photos: photosPropres(etab.photos), ...ficheLieu(etab), ...(handleConnu ? { ig_handle: handleConnu } : {}) })
       .eq("id", club.id);
   }
 
@@ -288,10 +299,18 @@ async function actionSyncBoutique(request, response) {
 
        Un plafond qu'on baisse sous le restant est ramene au plafond :
        sinon la boutique promettrait plus de pieces qu'il n'en existe. */
-    const majStock =
-      commun.stock_limit !== null && deja.stock_remaining !== null && deja.stock_remaining > commun.stock_limit
-        ? { stock_remaining: commun.stock_limit }
-        : {};
+    /* 26/09/2026 : le restant suit le plafond dans LES DEUX sens, en gardant
+       ce qui a deja ete echange. Avant, un gerant qui passait de 3 a 10
+       pintes en gardait 2 a vendre (le restant ne remontait jamais). */
+    let majStock = {};
+    if (commun.stock_limit !== null) {
+      if (deja.stock_limit === null || deja.stock_limit === undefined || deja.stock_remaining === null) {
+        majStock = { stock_remaining: commun.stock_limit };
+      } else if (commun.stock_limit !== deja.stock_limit) {
+        const echanges = Math.max(0, deja.stock_limit - deja.stock_remaining);
+        majStock = { stock_remaining: Math.max(0, commun.stock_limit - echanges) };
+      }
+    }
 
     const maj = await clubbeur
       .from("rewards")
@@ -324,6 +343,115 @@ async function actionSyncBoutique(request, response) {
     // Sans position, le lieu n'a pas d'epingle : l'appli gerant le dit.
     surLaCarte: Number.isFinite(etab.lat) && Number.isFinite(etab.lng),
   });
+}
+
+/* ============================================================
+   Le club cote clubbeurs du gerant qui appelle (26/09/2026).
+   Toujours deduit du jeton, jamais du corps de la requete.
+   ============================================================ */
+async function clubDuGerant(request) {
+  const auth = await requireEstablishment(request);
+  if (auth.error) return { erreur: auth.error, status: auth.status };
+  let clubbeur;
+  try { clubbeur = getSupabaseClubbeurAdmin(); } catch (e) { return { erreur: "Base clubbeur non configuree sur ce serveur.", status: 500 }; }
+  const { data: etab } = await auth.supabase.from("establishments").select("public_code").eq("id", auth.establishmentId).maybeSingle();
+  let club = null;
+  const parId = await clubbeur.from("clubs").select("id, name").eq("establishment_id", auth.establishmentId).limit(1);
+  if (parId.data && parId.data[0]) club = parId.data[0];
+  if (!club && etab && etab.public_code) {
+    const parCode = await clubbeur.from("clubs").select("id, name").eq("b2b_public_code", etab.public_code).limit(1);
+    if (parCode.data && parCode.data[0]) club = parCode.data[0];
+  }
+  return { auth, clubbeur, club };
+}
+
+/* ?action=activite-clients — ce que les clients font chez le gerant.
+   Les scans du QR (point_grants source 'scan') et les recompenses
+   echangees (redemptions) vivent dans la base clubbeur : le tableau de
+   bord du gerant, qui lit la base B2B, affichait donc 0 scan et 0
+   recompense prise quoi qu'il arrive. On les lui renvoie ici, sans
+   aucune donnee personnelle (un identifiant opaque par client). */
+async function actionActiviteClients(request, response) {
+  const c = await clubDuGerant(request);
+  if (c.erreur) return json(response, { error: c.erreur }, c.status);
+  if (!c.club) return json(response, { scans: [], echanges: [], stocks: [] });
+  const depuis = new Date(Date.now() - 400 * 864e5).toISOString();
+  const [scans, recos, stories] = await Promise.all([
+    c.clubbeur.from("point_grants").select("user_id, created_at").eq("club_id", c.club.id).eq("source", "scan").gte("created_at", depuis).limit(20000),
+    c.clubbeur.from("rewards").select("id, source_reward_id, stock_limit, stock_remaining").eq("club_id", c.club.id),
+    /* Les stories : depuis le 14/09/2026 elles se valident dans le pilotage,
+       directement dans story_events. L'ancien pont (push-submission ->
+       /api/track-post, route disparue le 19/08) ne remonte plus rien : sans
+       cette lecture, contenus, abonnes touches, membres et points donnes
+       restaient a 0 chez le gerant. */
+    c.clubbeur.from("story_events")
+      .select("id, user_id, kind, url, mentioned_at, review_status, awarded_points, views, verified_views, users(handle, followers_count, follower_count)")
+      .eq("club_id", c.club.id).gte("mentioned_at", depuis).order("mentioned_at", { ascending: false }).limit(5000),
+  ]);
+  if (scans.error) return json(response, { error: scans.error.message }, 500);
+  if (recos.error) return json(response, { error: recos.error.message }, 500);
+  if (stories.error) console.error("[activite-clients] stories", stories.error.message);
+  const source = new Map((recos.data || []).map((r) => [r.id, r.source_reward_id]));
+  const ids = [...source.keys()];
+  const echanges = ids.length
+    ? await c.clubbeur.from("redemptions").select("user_id, reward_id, redeemed_at, used, used_at").in("reward_id", ids).gte("redeemed_at", depuis).limit(20000)
+    : { data: [] };
+  if (echanges.error) return json(response, { error: echanges.error.message }, 500);
+  return json(response, {
+    scans: (scans.data || []).map((x) => ({ client: x.user_id, le: x.created_at })),
+    echanges: (echanges.data || []).map((x) => ({ client: x.user_id, recompense: source.get(x.reward_id) || null, le: x.redeemed_at, utilise: !!x.used, utiliseLe: x.used_at })),
+    stocks: (recos.data || []).filter((r) => r.source_reward_id).map((r) => ({ recompense: r.source_reward_id, plafond: r.stock_limit, restant: r.stock_remaining })),
+    stories: (stories.data || []).map((x) => ({
+      id: x.id,
+      client: x.user_id,
+      pseudo: (x.users && x.users.handle) || null,
+      genre: x.kind || "story",
+      lien: x.url || null,
+      le: x.mentioned_at,
+      statut: x.review_status === "validee" ? "validated" : x.review_status === "refusee" ? "rejected" : "pending",
+      points: x.awarded_points || 0,
+      // « Abonnes touches » : les vues verifiees quand on les a, sinon
+      // l'audience de celui qui a poste (une story est vue par ses abonnes).
+      vues: x.verified_views || x.views || (x.users && (x.users.followers_count || x.users.follower_count)) || 0,
+    })),
+  });
+}
+
+/* ?action=valider-bon — le staff valide le bon qu'un client lui montre.
+   Rien ne marquait jamais un bon comme utilise : le meme bon pouvait
+   resservir toute la nuit. Le code vient du QR du bon (« VN-REDEEM:VN-XXXX »)
+   ou est tape a la main. Un bon d'un autre lieu, deja utilise ou expire
+   (6 h, comme dans l'appli des clients) est refuse. */
+const DUREE_BON_MS = 6 * 60 * 60 * 1000;
+async function actionValiderBon(request, response) {
+  const c = await clubDuGerant(request);
+  if (c.erreur) return json(response, { error: c.erreur }, c.status);
+  const corps = await readBody(request).catch(() => ({}));
+  let code = String(corps.code || "").trim().toUpperCase().replace(/^VN-REDEEM:/, "").replace(/\s+/g, "");
+  if (code && !code.startsWith("VN-")) code = "VN-" + code;
+  if (!/^VN-[A-Z0-9]{4,12}$/.test(code)) return json(response, { etat: "invalide", error: "Ce code n'est pas un bon Noctify." }, 400);
+  if (!c.club) return json(response, { etat: "inconnu", error: "Ton lieu n'est pas encore en ligne." }, 404);
+
+  const { data: bon, error } = await c.clubbeur
+    .from("redemptions")
+    .select("id, used, used_at, redeemed_at, rewards!inner(title, club_id)")
+    .eq("qr_code", code)
+    .maybeSingle();
+  if (error) return json(response, { error: error.message }, 500);
+  if (!bon) return json(response, { etat: "inconnu", error: "Aucun bon avec ce code." }, 404);
+  const titre = bon.rewards && bon.rewards.title;
+  if (bon.rewards.club_id !== c.club.id) return json(response, { etat: "autre-lieu", titre, error: "Ce bon est valable dans un autre lieu." }, 409);
+  if (bon.used) return json(response, { etat: "deja", titre, le: bon.used_at, error: "Ce bon a déjà été utilisé." }, 409);
+  if (Date.now() - new Date(bon.redeemed_at).getTime() > DUREE_BON_MS) return json(response, { etat: "expire", titre, error: "Ce bon a expiré." }, 410);
+
+  // « used = false » dans le filtre : deux serveurs qui valident le meme bon
+  // en meme temps, un seul gagne.
+  const { data: maj, error: erreurMaj } = await c.clubbeur
+    .from("redemptions").update({ used: true, used_at: new Date().toISOString() })
+    .eq("id", bon.id).eq("used", false).select("id");
+  if (erreurMaj) return json(response, { error: erreurMaj.message }, 500);
+  if (!maj || !maj.length) return json(response, { etat: "deja", titre, error: "Ce bon a déjà été utilisé." }, 409);
+  return json(response, { etat: "ok", titre, code });
 }
 
 /* ?action=notifier-cadeau — le rappel du matin.
@@ -916,6 +1044,8 @@ export default async function handler(request, response) {
 
   if (request.method !== "POST") return json(response, { error: "Method not allowed" }, 405);
   if (action === "sync-boutique") return actionSyncBoutique(request, response);
+  if (action === "activite-clients") return actionActiviteClients(request, response);
+  if (action === "valider-bon") return actionValiderBon(request, response);
 
   /* AVANT le controle d'administrateur qui suit : celui-ci n'est pas une
      action d'admin. C'est le clubbeur lui-meme qui efface son compte, et il

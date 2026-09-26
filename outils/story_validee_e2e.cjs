@@ -43,7 +43,7 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
       try {
         localStorage.setItem("vn_stat_jour", new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Paris" }));
         localStorage.setItem("vn_stat_installe", "1");
-        localStorage.setItem("vn_parcours_fini", id); // cadeau deja traite : pas de page bienvenue
+        localStorage.setItem("vn_parcours_fini", id); localStorage.setItem("vn_majeur_" + id, "1"); // cadeau deja traite : pas de page bienvenue
       } catch (e) {}
     }, uid);
     const erreurs = [];
