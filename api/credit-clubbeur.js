@@ -445,9 +445,9 @@ async function actionValiderBon(request, response) {
     // L'ancien QR fixe, fabrique dans le telephone : plus accepte au scan.
     return json(response, { etat: "ancien", error: "Ancien QR : demande au client d'ouvrir son bon dans l'appli à jour." }, 409);
   } else {
-    // Le code tape a la main, en secours (camera en panne).
-    code = brut.toUpperCase().replace(/\s+/g, "");
-    if (code && !code.startsWith("VN-")) code = "VN-" + code;
+    /* Plus de code tape a la main (26/09/2026) : il ne prouve pas que le
+       ticket est vivant. Seul le QR signe de l'appli passe. */
+    return json(response, { etat: "invalide", error: "Scanne le QR du bon dans l'appli Noctify du client." }, 400);
   }
   if (!/^VN-[A-Z0-9]{4,12}$/.test(code)) return json(response, { etat: "invalide", error: "Ce code n'est pas un bon Noctify." }, 400);
   if (!c.club) return json(response, { etat: "inconnu", error: "Ton lieu n'est pas encore en ligne." }, 404);

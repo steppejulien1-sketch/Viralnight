@@ -3933,6 +3933,8 @@
       .bon-camera video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
       .bon-cadre { position: absolute; inset: 18%; border-radius: 22px; box-shadow: 0 0 0 999px rgba(0,0,0,.35), inset 0 0 0 3px #fff; }
       .bon-camera-msg { position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; text-align: center; font-size: 14px; font-weight: 650; }
+      .bon-consigne { margin: 0; font-size: 14px; line-height: 1.45; text-align: center; color: rgba(255,255,255,.7); }
+      .bon-consigne[hidden] { display: none; }
       .bon-saisie { display: grid; gap: 8px; }
       .bon-saisie[hidden] { display: none; }
       .bon-saisie label { font-size: 13.5px; font-weight: 600; color: rgba(255,255,255,.7); }
@@ -5268,13 +5270,10 @@
                 <span class="bon-cadre" aria-hidden="true"></span>
                 <p class="bon-camera-msg" id="bon-camera-msg">Vise le QR du bon</p>
               </div>
-              <form class="bon-saisie" id="bon-form" autocomplete="off">
-                <label for="bon-code">Ou tape le code écrit sous le QR</label>
-                <div class="bon-ligne">
-                  <input id="bon-code" type="text" autocapitalize="characters" spellcheck="false" placeholder="VN-2FA0BCB9" />
-                  <button type="submit" id="bon-valider">Valider</button>
-                </div>
-              </form>
+              <!-- Plus de saisie du code a la main (26/09/2026, Julien : « enleve la
+                   saisie manuelle du code ») : un code tape ne prouve pas que le
+                   ticket est vivant. Seul le QR signe de l'appli est accepte. -->
+              <p class="bon-consigne" id="bon-consigne-el">Demande au client d'ouvrir son bon dans l'appli Noctify : le QR doit bouger, l'heure défiler.</p>
               <div class="bon-resultat" id="bon-resultat" hidden>
                 <span class="bon-rond" id="bon-rond" aria-hidden="true"></span>
                 <strong id="bon-titre"></strong>
@@ -10156,7 +10155,7 @@
           try {
             flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
           } catch (e) {
-            $("#bon-camera-msg").textContent = "Caméra refusée : tape le code ci-dessous.";
+            $("#bon-camera-msg").textContent = "Autorise la caméra pour scanner les bons (Réglages du téléphone).";
             return;
           }
           video.srcObject = flux;
@@ -10177,8 +10176,7 @@
         function ouvrir() {
           if (estDemo()) return;
           $("#bon-resultat").hidden = true;
-          $("#bon-form").hidden = false;
-          $("#bon-code").value = "";
+          $("#bon-consigne-el").hidden = false;
           ecran.hidden = false;
           document.body.style.overflow = "hidden";
           camera();
@@ -10191,7 +10189,7 @@
         function montrer(ok, titre, texte) {
           couper();
           $("#bon-camera").hidden = true;
-          $("#bon-form").hidden = true;
+          $("#bon-consigne-el").hidden = true;
           var res = $("#bon-resultat");
           res.hidden = false;
           res.classList.toggle("refus", !ok);
@@ -10203,7 +10201,6 @@
         async function valider(code) {
           if (occupe || !ETAT.session) return;
           occupe = true;
-          $("#bon-valider").disabled = true;
           $("#bon-camera-msg").textContent = "Vérification…";
           try {
             var r = await fetch("/api/credit-clubbeur?action=valider-bon", {
@@ -10232,17 +10229,11 @@
             montrer(false, "Pas de connexion", "Vérifie le réseau et réessaie.");
           } finally {
             occupe = false;
-            $("#bon-valider").disabled = false;
           }
         }
         $("#bon-ouvrir").addEventListener("click", ouvrir);
         $("#bon-fermer").addEventListener("click", fermer);
         $("#bon-encore").addEventListener("click", ouvrir);
-        $("#bon-form").addEventListener("submit", function (ev) {
-          ev.preventDefault();
-          var v = $("#bon-code").value.trim();
-          if (v) valider(v);
-        });
         document.addEventListener("visibilitychange", function () { if (document.hidden && !ecran.hidden) couper(); });
       })();
 
