@@ -17486,12 +17486,19 @@ async function jetonBon(code) {
   try {
     var res = await supabaseClubbeur.rpc("bon_jeton", { p_code: code });
     var ligne = res.data && res.data[0];
+    if (res.error && /bon_utilise/.test(res.error.message || "")) return "UTILISE";
     return res.error || !ligne ? null : ligne.jeton;
   } catch (e) { return null; }
 }
 
 async function qrBon(code) {
   var jeton = await jetonBon(code);
+  // Le staff vient de le valider : le ticket le dit tout de suite.
+  if (jeton === "UTILISE") {
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="8" fill="#eaf7ef"/>' +
+      '<path d="M34 51l11 11 22-24" fill="none" stroke="#1f9d55" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<text x="50" y="84" text-anchor="middle" font-size="10" font-weight="700" font-family="sans-serif" fill="#1f9d55">Bon utilisé</text></svg>';
+  }
   if (!jeton) {
     return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="8" fill="#f1f1f3"/>' +
       '<text x="50" y="47" text-anchor="middle" font-size="9" font-family="sans-serif" fill="#6b6b73">Connexion</text>' +
