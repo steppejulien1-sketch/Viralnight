@@ -940,6 +940,8 @@
       .insta-txt strong { display: block; font-size: 13.5px; font-weight: 750; }
       .insta-txt span { display: block; font-size: 11.5px; color: var(--ink2); margin-top: 2px; }
       .insta-carte .bouton { min-height: 36px; padding: 0 14px; font-size: 12.5px; flex: 0 0 auto; }
+      .insta-couper { flex: 0 0 auto; margin-left: auto; min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font: inherit; font-size: 12.5px; font-weight: 650; color: var(--ink2); cursor: pointer; }
+      .insta-couper.arme { border-color: #de3131; color: #de3131; }
 
       /* ---- Affiche a imprimer ----
          Un QR nu ne dit rien a personne : Julien : "le QR, on ne
@@ -3768,7 +3770,9 @@
         padding: 9px 10px; border-radius: 14px; background: rgba(255,255,255,.94); color: #16171c; font-size: 12px; font-weight: 600; white-space: nowrap; }
       .pr-gains b { font-family: var(--titre); font-size: 16px; font-weight: 900; color: #de3131; }
       .pr-gains i { width: 1px; height: 16px; background: rgba(0,0,0,.15); }
-      .pr-story-ok { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); padding: 7px 12px; border-radius: 99px;
+      /* Centree SANS transform : l'animation d'entree (prEntre) ecrase le
+         transform, et la pastille partait coupee sur le bord droit. */
+      .pr-story-ok { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; bottom: 18px; padding: 7px 12px; border-radius: 99px;
         background: rgba(255,255,255,.94); color: #16171c; font-size: 12px; font-weight: 700; white-space: nowrap; }
       /* La story se colle a l'arrivee sur l'etape. */
       @keyframes prColle { 0% { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(1.6); } 60% { opacity: 1; transform: translate(-50%, -50%) rotate(-1deg) scale(.94); } 100% { transform: translate(-50%, -50%) rotate(-3deg) scale(1); } }
@@ -3802,7 +3806,10 @@
         margin: 6px 2px 14px; font-family: var(--titre); font-size: 19px; font-weight: 750;
         letter-spacing: -.015em; color: var(--ink);
       }
-      #recompenses-liste { gap: 18px 12px; }
+      /* minmax(0, 1fr) et pas 1fr : un nom long (« Vestiaire offert », en
+         nowrap) elargissait sa colonne et les tuiles n'avaient plus la
+         meme taille (26/09/2026). */
+      #recompenses-liste { gap: 18px 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .recompense-carte {
         overflow: visible; background: none; border: 0; box-shadow: none; border-radius: 0;
       }
@@ -3843,6 +3850,37 @@
         margin: 0; font-size: 13.5px; color: var(--ink3); font-weight: 600; overflow-wrap: anywhere;
       }
       #vue-reglages .pf-section:first-of-type { margin-top: 18px; }
+
+      /* ================= PASSE DU 26/09/2026 (audit) =================
+         Dernier mot sur les couches precedentes, qui se contredisaient. */
+
+      /* Etape 4 : UN bloc blanc a lignes fines, comme les champs de l'etape 2.
+         Avant : des cartes separees cerclees de noir, et les filets de
+         separation qui flottaient entre elles. La selection se lit a
+         l'interrupteur vert et au dessin en couleur. */
+      #parcours .pv .pa-grille { gap: 0; border-radius: 18px; background: #fff; box-shadow: inset 0 0 0 1px #e5e5ea; overflow: hidden; }
+      #parcours .pv .pa-tuile.pv-reco, #parcours .pv .pa-tuile.pv-reco.prise {
+        border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+      #parcours .pv .pa-tuile.pv-reco:not(.prise) { background: #fafafb; }
+
+      /* Etape 6 : le champ Instagram, meme objet que ceux de l'etape 2. */
+      #parcours .pa-etape.pv > .pv-champ { border-radius: 18px; background: #fff; box-shadow: inset 0 0 0 1px #e5e5ea; }
+      #parcours .pa-etape.pv > .pv-champ:focus-within { box-shadow: inset 0 0 0 1.5px #111; }
+      #parcours .pa-etape.pv > .pv-champ + .ac-btn { margin-top: 12px; }
+
+      /* Le type de lieu : un selecteur segmente, comme les periodes. */
+      /* La legende de la courbe ecrivait ses dates en BLANC (restes du theme
+         sombre, --encre-2) sur la carte blanche : on ne voyait qu'un trait
+         rouge et un chiffre. */
+      .hero-legende .hl-quand { color: var(--ink2); }
+      .hero-legende .hl-ligne.avant .hl-quand, .hero-legende .hl-ligne.avant .hl-val { color: var(--ink3); }
+      .hero-legende .hl-ligne.avant .hl-trait { border-top-color: rgba(0,0,0,.35); }
+      .hero-delta.vide { display: none; }
+
+      .pa-types-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 16px; background: #e9e9ed; }
+      .pa-types-seg .pa-type { min-height: 44px; margin: 0; padding: 0 6px; border: 0; border-radius: 12px; background: transparent; box-shadow: none;
+        font: inherit; font-size: 14px; font-weight: 700; color: #6b6b73; cursor: pointer; transition: background-color .18s ease, color .18s ease; }
+      .pa-types-seg .pa-type.choisi { background: #fff; color: #111; box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 14px -8px rgba(0,0,0,.25); }
     </style>
   </head>
   <body>
@@ -4216,11 +4254,15 @@
                         <div id="pa-fiche" hidden></div>
                         <button type="button" id="pa-manuel-lien"></button>
                         <div id="pa-manuel" hidden></div>
-                        <div id="pa-types">
-                          <button type="button" class="pa-type" data-type="bar">Bar</button>
-                          <button type="button" class="pa-type" data-type="club">Boîte de nuit</button>
-                          <button type="button" class="pa-type" data-type="restaurant">Restaurant</button>
-                        </div>
+                      </div>
+                      <!-- Le type, visible (26/09/2026) : il etait cache avec l'import
+                           Google, et tout nouveau lieu sortait « Boite de nuit » -- y
+                           compris les bars, sur la carte et dans la boutique des clients. -->
+                      <p class="pv-sec">Type de lieu</p>
+                      <div id="pa-types" class="pa-types-seg" role="radiogroup" aria-label="Type de lieu">
+                        <button type="button" class="pa-type" role="radio" data-type="bar">Bar</button>
+                        <button type="button" class="pa-type" role="radio" data-type="club">Boîte de nuit</button>
+                        <button type="button" class="pa-type" role="radio" data-type="restaurant">Restaurant</button>
                       </div>
                     </section>
 
@@ -4293,7 +4335,7 @@
                       </button>
                       <p class="pa-aide" id="pa-ig-aide" style="margin-top:10px">
                         Le compte Instagram doit être un compte professionnel (Entreprise ou Créateur).
-                        La connexion peut se faire plus tard, depuis les Réglages.
+                        La connexion peut se faire plus tard, depuis l'onglet Activité.
                       </p>
                     </section>
 
@@ -4849,7 +4891,7 @@
                   Si le Client relie le compte Instagram de son établissement, l'Éditeur en lit
                   les mentions reçues et le nombre d'abonnés, à l'exclusion de tout autre accès.
                   L'Éditeur ne publie jamais au nom du Client et ne lit pas ses messages. Le
-                  Client peut interrompre cette connexion à tout moment depuis les Réglages.
+                  Client peut interrompre cette connexion à tout moment depuis l'onglet Activité de l'application.
                 </p>
                 <p>
                   Cette fonctionnalité dépend entièrement des interfaces mises à disposition par
@@ -4958,8 +5000,9 @@
                   échangées.
                 </p>
                 <p>
-                  Tu vois des totaux et des tendances. Tu ne vois pas qui a publié quoi :
-                  l'application ne te donne aucun nom, aucun profil, aucune adresse.
+                  Tu vois des totaux, et les publications qui mentionnent ton club, avec
+                  le pseudo public de leur auteur, pour vérifier la mention. Tu ne vois ni
+                  l'e-mail, ni le téléphone, ni l'adresse de tes clients.
                 </p>
 
                 <h2>Instagram</h2>
@@ -4967,7 +5010,7 @@
                   Si tu connectes le compte Instagram de ton club, nous lisons les mentions
                   qui te sont faites et ton nombre d'abonnés. Rien d'autre. Nous ne publions
                   jamais à ta place et nous ne lisons pas tes messages. Tu peux couper la
-                  connexion depuis les Réglages, à tout moment.
+                  connexion à tout moment, depuis la carte Instagram de l'onglet Activité.
                 </p>
 
                 <h2>Ce que ton téléphone garde</h2>
@@ -6414,7 +6457,9 @@
            rien a apprendre d'un exemple. */
         var vraiesLignes = (ETAT.data.submissions || []).length + (ETAT.data.qrScans || []).length;
         var sansActivite = !!ETAT.session && !EXEMPLE && vraiesLignes === 0;
-        $("#dash-voir-exemple").hidden = !sansActivite;
+        // Un seul appel, en haut (26/09/2026) : le meme bouton revenait en
+        // pointilles sous les chiffres, deux fois la meme invitation.
+        $("#dash-voir-exemple").hidden = true;
         // Le meme bouton, mais EN TETE : a zero donnee, c'est la premiere
         // chose a voir (Julien, 18/09/2026 : « mets des fausses data que je
         // puisse voir a quoi ca ressemble »).
@@ -6470,6 +6515,8 @@
            ecrit toujours "nouveau" et marque le plat d'une fleche, celle
            des cases se tait quand il ne s'est rien passe. */
         var poserDeltaHero = function (el, actuel, avant) {
+          // Zero avant, zero maintenant : « → 0 % » sous un 0 est du bruit.
+          if (!actuel && !avant) { el.className = "hero-delta vide"; el.textContent = ""; return; }
           var v = variation(actuel, avant);
           if (v === null) {
             // Rien avant : afficher "+∞ %" serait faux, et "0 %" aussi.
@@ -6755,6 +6802,13 @@
         if (!ETAT.session) { carte.hidden = true; return; }
         carte.hidden = false;
 
+        // L'exemple montre un club qui tourne : son Instagram est branche.
+        if (EXEMPLE) {
+          carte.className = "insta-carte ok";
+          carte.innerHTML = ICONE + '<span class="insta-txt"><strong>@mirage.brussels</strong><span>128 mentions détectées · détection automatique active</span></span>';
+          return;
+        }
+
         if (!ETAT.instagram || ETAT.instagram.error) {
           carte.className = "insta-carte";
           carte.innerHTML = ICONE + '<span class="insta-txt"><strong>Instagram</strong><span>Statut indisponible pour le moment.</span></span>';
@@ -6782,7 +6836,29 @@
           // "detecte vraiment" : un compte relie dont l'abonnement au
           // webhook a echoue ne remontera jamais une seule mention.
           (ETAT.instagram.webhookActif ? " · détection automatique active" : " · détection automatique inactive") +
-          "</span></span>";
+          "</span></span>" +
+          // La CGU et la page Confidentialite promettent qu'on peut couper la
+          // connexion : aucun bouton ne le faisait depuis que la ligne
+          // Instagram a quitte les Reglages (26/09/2026). Deux touches.
+          '<button type="button" class="insta-couper" id="dash-insta-couper">Couper</button>';
+        var couper = $("#dash-insta-couper");
+        var arme = false;
+        couper.addEventListener("click", async function () {
+          if (!arme) { arme = true; couper.textContent = "Confirmer"; couper.classList.add("arme"); return; }
+          couper.disabled = true;
+          couper.textContent = "…";
+          try {
+            var r = await fetch("/api/instagram?action=disconnect", {
+              method: "POST",
+              headers: { Authorization: "Bearer " + ETAT.session.access_token },
+            });
+            if (!r.ok) throw new Error();
+          } catch (e) {
+            couper.disabled = false; couper.textContent = "Réessayer"; return;
+          }
+          await chargerInstagram();
+          rendreCarteInstagram();
+        });
       }
 
       /* ================= BAREME =================
@@ -6968,8 +7044,10 @@
 
         // Les deux gains, en haut, comme sur l'affiche de reference : ils
         // donnent un ordre de grandeur avant meme qu'on lise le titre.
-        pastille(215, 150, "+15 pts", CORAIL, BLANC);
-        pastille(L - 215, 150, "+50 pts", BLANC, NOIR);
+        // ⚠️ Les VRAIS montants (26/09/2026) : l'affiche imprimee disait encore
+        // +15 / +50 alors que le scan vaut 20 et la story 100 partout ailleurs.
+        pastille(215, 150, "+" + PV_POINTS.scan + " pts", CORAIL, BLANC);
+        pastille(L - 215, 150, "+" + PV_POINTS.story + " pts", BLANC, NOIR);
 
         c.fillStyle = BLANC;
         c.font = "800 96px ui-sans-serif, 'Segoe UI', Roboto, Arial, sans-serif";
@@ -7353,7 +7431,7 @@
         $("#fiche-photo-aide").textContent = r.image_url
           ? "C'est cette photo que tes clients voient dans leur application."
           : (visuel.vide
-            ? "Sans photo, la récompense s'affiche sans image chez tes clients."
+            ? "Sans photo, tes clients voient un dessin de cocktail. Mets la tienne."
             : "Un dessin est choisi d'après le nom. Ta photo le remplacera.");
         $("#fiche-photo-sup").hidden = !r.image_url || estDemo();
       }
@@ -8181,7 +8259,7 @@
           // seuls placeholders.
           ["#pa-nom", "#pa-ville", "#pa-tel", "#pa-adresse"].forEach(function (id) { $(id).value = ""; });
           montrerManuel(false);
-          choisirTypeParcours("club");
+          choisirTypeParcours("bar");
           rendrePhotoParcours(null);
         }
         if (etab) {
@@ -8690,6 +8768,10 @@
         }
 
         ETAT.data = data;
+        // Le statut Instagram avait ete demande AVANT que le club existe :
+        // l'API repondait 403 et la carte du tableau de bord restait sur
+        // « Statut indisponible » jusqu'a la fermeture de l'appli.
+        await chargerInstagram();
         $("#pa-nom").value = data.establishment.name || nom;
         $("#pa-ville").value = data.establishment.city || ville;
         rendrePhotoParcours(data.establishment.logo_url || null);
@@ -8840,7 +8922,9 @@
       }
       $("#pa-types").addEventListener("click", function (ev) {
         var b = ev.target.closest(".pa-type");
-        if (b) choisirTypeParcours(b.dataset.type);
+        if (!b) return;
+        choisirTypeParcours(b.dataset.type);
+        try { pvSynchro(); envoyerApercuBientot(); } catch (e) {}
       });
 
       function rendreApercuParcours() {
@@ -9325,7 +9409,7 @@
         var texte = statut ? MESSAGES_IG[statut] : null;
         aide.textContent = texte ||
           "Le compte Instagram doit être un compte professionnel (Entreprise ou Créateur). " +
-          "La connexion peut se faire plus tard, depuis les Réglages.";
+          "La connexion peut se faire plus tard, depuis l'onglet Activité.";
         aide.style.color = texte ? "var(--accent-fort)" : "";
         if (statut) oublierRetourInstagram();
       }
@@ -9380,7 +9464,7 @@
           $("#pa-affiche-attente").hidden = true;
           $("#pa-affiche").hidden = true;
           $("#pa-affiche-lien").hidden = true;
-          direParcours("Ce club n'a pas encore de code public : l'affiche arrivera plus tard, dans Réglages.", false);
+          direParcours("Ce club n'a pas encore de code public : l'affiche arrivera plus tard, dans Réglages › Affiche et QR code.", false);
           return;
         }
 
@@ -9517,7 +9601,14 @@
         // d'elements, ca surplombe le truc ».
         pvTexte('[data-pv="ligne"]', NOMS_TYPES[PARCOURS.type || etab.category || "club"] || "", "");
         var ig = ETAT.instagram;
-        var handle = ig && ig.connecte && ig.handle ? ig.handle : $("#pa-handle").value.trim().replace(/^@+/, "").replace(/\s+/g, "");
+        var igNom = ig && ig.connecte ? (ig.username || ig.handle) : null;
+        // La story des etapes 5 et 6 se passe CHEZ LUI : sa facade, pas une photo d'exemple.
+        var photoLieu = etab.logo_url || null;
+        document.querySelectorAll(".pr-tel-story > img").forEach(function (img) {
+          var cible = photoLieu || "/ambiance/bienvenue.webp";
+          if (img.getAttribute("src") !== cible) img.setAttribute("src", cible);
+        });
+        var handle = igNom ? igNom : $("#pa-handle").value.trim().replace(/^@+/, "").replace(/\s+/g, "");
         pvTexte('[data-pv="handle"]', handle || etab.ig_handle || "", "tonclub");
         document.querySelectorAll('[data-pv="n-story"]').forEach(function (el) { el.textContent = "+" + PV_POINTS.story; });
         document.querySelectorAll('[data-pv="n-scan"]').forEach(function (el) { el.textContent = "+" + PV_POINTS.scan; });
@@ -9658,7 +9749,10 @@
         var nom = source === "parcours" ? ($("#pa-nom").value.trim() || etab.name) : etab.name;
         var ville = source === "parcours" ? ($("#pa-ville").value.trim() || etab.city) : etab.city;
         var photos = [];
-        try { photos = source === "parcours" ? pvPhotos() : photosDuClub(); } catch (e) {}
+        // La facade (logo_url) EN TETE, partout : dans l'onglet Boutique elle
+        // manquait, et un club sans « autres photos » y voyait une foule
+        // d'exemple a la place de sa propre photo.
+        try { photos = pvPhotos(); } catch (e) {}
         return {
           type: "noctify-apercu-boutique", nom: nom || "Ton établissement", ville: ville || "",
           categorie: (source === "parcours" && PARCOURS.type) || etab.category || "club",
