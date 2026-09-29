@@ -1,13 +1,11 @@
-/* Site public Noctify pour les commerces (29/09/2026, v3).
+/* Site public Noctify pour les commerces (29/09/2026, v4).
 
-   - La carte du premier ecran se remplit une fois : quatre passages (+20),
-     puis la story (+100) qui debloque le cappuccino.
+   - La carte noire du premier ecran se tamponne une fois : quatre passages
+     (+20), puis la story (+100) qui debloque le cappuccino.
    - Le bandeau des commerces defile : le texte est double ici pour que la
      boucle ne se voie pas.
-   - Le bon d'exemple porte un vrai QR code, qui change toutes les 30 s
-     comme dans l'appli (sans l'heure dessous : Julien ne la voulait pas).
-   - « Essayez » : le visiteur ajoute une recompense et la voit apparaitre
-     dans la boutique du telephone. Rien n'est enregistre.
+   - Le bon de l'etape 3 porte un vrai QR code, qui change toutes les 30 s
+     comme dans l'appli (sans l'heure dessous).
    - Le formulaire poste sur /api/demo-request (nom, e-mail, telephone). */
 
 import QRCode from "qrcode";
@@ -21,24 +19,16 @@ const suivreDefilement = () => entete.classList.toggle("defile", window.scrollY 
 window.addEventListener("scroll", suivreDefilement, { passive: true });
 suivreDefilement();
 
-/* ---------- La carte du client qui se remplit ---------- */
-const pass = document.getElementById("pass");
-const lignes = [...pass.querySelectorAll(".pass-historique li")];
-const solde = document.getElementById("pass-solde");
-const jauge = document.getElementById("pass-jauge");
-const objectif = document.getElementById("pass-objectif");
-const reste = document.getElementById("pass-reste");
+/* ---------- La carte qui se tamponne ---------- */
+const carte = document.getElementById("carte-demo");
+const tampons = [...carte.querySelectorAll(".tampon")];
+const solde = document.getElementById("solde");
+const jauge = document.getElementById("jauge");
 const OBJECTIF = 180;
 
-function afficher(valeur) {
+function afficherSolde(valeur) {
   solde.textContent = String(valeur);
   jauge.style.width = Math.min(100, (valeur / OBJECTIF) * 100) + "%";
-  if (valeur >= OBJECTIF) {
-    pass.classList.add("pleine");
-    objectif.textContent = "Cappuccino offert : à montrer au comptoir";
-  } else {
-    reste.textContent = String(OBJECTIF - valeur);
-  }
 }
 
 function compter(de, a, duree) {
@@ -46,7 +36,7 @@ function compter(de, a, duree) {
   return new Promise((fin) => {
     const pas = (t) => {
       const k = Math.min(1, (t - debut) / duree);
-      afficher(Math.round(de + (a - de) * (1 - Math.pow(1 - k, 3))));
+      afficherSolde(Math.round(de + (a - de) * (1 - Math.pow(1 - k, 3))));
       if (k < 1) requestAnimationFrame(pas);
       else fin();
     };
@@ -54,20 +44,25 @@ function compter(de, a, duree) {
   });
 }
 
-(async function remplir() {
+(async function tamponner() {
   if (calme) {
-    lignes.forEach((l) => l.classList.add("vu"));
-    return afficher(OBJECTIF);
+    tampons.forEach((t) => t.classList.add("pose"));
+    afficherSolde(OBJECTIF);
+    carte.classList.add("pleine");
+    return;
   }
   let total = 0;
-  await attendre(600);
-  for (const ligne of lignes) {
-    const pts = Number(ligne.dataset.pts);
-    ligne.classList.add("vu");
-    await compter(total, total + pts, pts > 20 ? 800 : 300);
+  await attendre(500);
+  for (const t of tampons) {
+    const pts = Number(t.dataset.pts);
+    const story = t.classList.contains("tampon-story");
+    if (story) await attendre(450);
+    t.classList.add("pose");
+    await compter(total, total + pts, story ? 700 : 260);
     total += pts;
-    await attendre(pts > 20 ? 0 : 250);
+    await attendre(story ? 0 : 160);
   }
+  carte.classList.add("pleine");
 })();
 
 /* ---------- Le bandeau : texte double pour une boucle sans a-coup ---------- */
@@ -94,68 +89,6 @@ async function majQr() {
 }
 majQr();
 setInterval(majQr, 2000);
-
-/* ---------- Essayez : ajouter une recompense ---------- */
-const liste = document.getElementById("liste-recompenses");
-const apercu = document.getElementById("apercu-recompenses");
-const ajout = document.getElementById("ajout-recompense");
-const note = document.getElementById("editeur-note");
-const SOLDE_DEMO = 240;
-const MAX = 6;
-
-const recompenses = [...liste.querySelectorAll("li")].map((li) => ({
-  nom: li.querySelector("span").textContent,
-  points: parseInt(li.querySelector("b").textContent.replace(/\s/g, ""), 10),
-}));
-
-const format = (n) => n.toLocaleString("fr-BE");
-
-function tuile(r, nouveau) {
-  const li = document.createElement("li");
-  if (nouveau) li.className = "nouveau";
-  const nom = document.createElement("span");
-  nom.textContent = r.nom;
-  const pts = document.createElement("b");
-  pts.textContent = format(r.points) + " pts";
-  li.append(nom, pts);
-  if (r.points <= SOLDE_DEMO) {
-    const dispo = document.createElement("em");
-    dispo.textContent = "Disponible";
-    li.append(dispo);
-  }
-  return li;
-}
-
-function rendreApercu(dernier) {
-  apercu.replaceChildren(...recompenses.map((r, i) => tuile(r, i === dernier)));
-}
-rendreApercu(-1);
-
-ajout.addEventListener("submit", (ev) => {
-  ev.preventDefault();
-  const nom = ajout.elements.nom.value.trim();
-  const points = Number(ajout.elements.points.value);
-  if (!nom) {
-    ajout.elements.nom.focus();
-    return;
-  }
-  if (recompenses.length >= MAX) {
-    note.textContent = "Ça suffit pour la démonstration. Dans l'appli, vous en mettez autant que vous voulez.";
-    return;
-  }
-  recompenses.push({ nom, points });
-  const li = document.createElement("li");
-  li.className = "nouveau";
-  const s = document.createElement("span");
-  s.textContent = nom;
-  const b = document.createElement("b");
-  b.textContent = format(points) + " pts";
-  li.append(s, b);
-  liste.appendChild(li);
-  rendreApercu(recompenses.length - 1);
-  ajout.reset();
-  note.textContent = "Ajoutée. Regardez le téléphone : vos clients la voient tout de suite.";
-});
 
 /* ---------- Le formulaire ---------- */
 const formulaire = document.getElementById("formulaire");
