@@ -1,4 +1,4 @@
-/* Site public Noctify pour les commerces (29/09/2026, v4).
+/* Site public Noctify pour les commerces (30/09/2026, v5).
 
    - La carte noire du premier ecran se tamponne une fois : quatre passages
      (+20), puis la story (+100) qui debloque le cappuccino.
@@ -89,6 +89,25 @@ async function majQr() {
 }
 majQr();
 setInterval(majQr, 2000);
+
+/* ---------- Estimer : ce que couterait la meme pub ----------
+   5 a 25 $ la story pour un petit influenceur (1 000 a 10 000 abonnes),
+   Influencer Marketing Hub, « Nano Influencer Rates », 2026. En dollars,
+   comme la source : pas de taux de change invente. */
+const curseur = document.getElementById("est-stories");
+if (curseur) {
+  const nombre = document.getElementById("est-nombre");
+  const min = document.getElementById("est-min");
+  const max = document.getElementById("est-max");
+  const majEstimation = () => {
+    const n = Number(curseur.value);
+    nombre.textContent = String(n);
+    min.textContent = (n * 5).toLocaleString("fr-BE");
+    max.textContent = (n * 25).toLocaleString("fr-BE");
+  };
+  curseur.addEventListener("input", majEstimation);
+  majEstimation();
+}
 
 /* ---------- Le formulaire ---------- */
 const formulaire = document.getElementById("formulaire");
