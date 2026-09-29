@@ -256,12 +256,21 @@ p {
 /* La carte de fidelite : une carte de membre noire, tamponnee en rouge. */
 .scene-carte {
   margin: 0;
-  display: grid;
-  justify-items: center;
-  gap: 22px;
+  position: relative;
+  padding: 0 0 56px 40px;
+}
+.scene-photo {
+  width: 100%;
+  height: min(600px, 70vh);
+  object-fit: cover;
+  object-position: 50% 62%;
+  border-radius: 28px;
 }
 .carte {
-  width: min(460px, 100%);
+  position: absolute;
+  left: 0;
+  bottom: 30px;
+  width: min(420px, 88%);
   aspect-ratio: 1.586;
   background: #111;
   color: #fff;
@@ -413,35 +422,67 @@ p {
   display: inline;
 }
 .legende-carte {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 22px;
-  font-size: 14px;
-  color: var(--encre-2);
-}
-.legende-carte em {
-  flex-basis: 100%;
-  text-align: center;
-  font-style: normal;
+  position: absolute;
+  right: 0;
+  bottom: 0;
   font-size: 12.5px;
   color: var(--encre-3);
 }
 
 /* ---------- Commerces ---------- */
 .commerces {
-  border-block: 1px solid var(--trait);
-  padding: 22px 0;
+  padding: 28px 0 96px;
+  overflow: hidden;
 }
-.commerces p {
+.commerces-titre {
   text-align: center;
-  font: 700 clamp(16px, 1.7vw, 20px) / 1.6 var(--titre);
-  letter-spacing: -0.01em;
+  font: 700 15px/1.4 var(--texte);
+  color: var(--encre-3);
+  margin-bottom: 26px;
 }
-.commerces i {
-  font-style: normal;
-  color: var(--rouge);
-  padding-inline: 6px;
+.defile {
+  /* Les bords s'effacent : la piste entre et sort de la page. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.defile-piste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  animation: defiler 48s linear infinite;
+}
+.defile:hover .defile-piste {
+  animation-play-state: paused;
+}
+.defile-piste li {
+  position: relative;
+  width: 220px;
+  flex: none;
+}
+.defile-piste img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 18px;
+}
+.defile-piste span {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  background: #fff;
+  color: var(--encre);
+  font: 800 15px/1 var(--titre);
+  letter-spacing: -0.01em;
+  padding: 9px 12px;
+  border-radius: 999px;
+}
+@keyframes defiler {
+  to {
+    transform: translateX(calc(-50% - 8px));
+  }
 }
 
 /* ---------- Sections ---------- */
@@ -512,62 +553,85 @@ p {
   padding: 32px;
 }
 
-/* L'affiche du comptoir */
-.affiche {
-  width: 210px;
-  background: #fff;
-  border-radius: 10px;
-  padding: 18px 18px 14px;
-  text-align: center;
-  box-shadow: var(--ombre);
-  transform: rotate(2deg);
+/* Un chevalet sur un vrai comptoir */
+.visuel-comptoir {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
 }
-.affiche-titre {
-  font: 800 17px/1.1 var(--titre);
+.visuel-comptoir > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.chevalet {
+  position: relative;
+  width: 196px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 16px 12px;
+  text-align: center;
+  box-shadow: 0 24px 40px -14px rgba(0, 0, 0, 0.55);
+}
+.chevalet-titre {
+  font: 800 16px/1.1 var(--titre);
   letter-spacing: -0.01em;
 }
-.affiche-pied {
-  margin-top: 10px;
-  font-size: 12px;
+.chevalet-pied {
+  margin-top: 8px;
+  font-size: 11.5px;
   color: var(--encre-3);
 }
-.qr {
-  margin: 14px auto 0;
-  width: 150px;
+.qr-vrai {
+  margin: 12px auto 0;
+  width: 140px;
   aspect-ratio: 1;
-  display: grid;
-  grid-template-columns: repeat(21, 1fr);
 }
-.qr i {
-  background: var(--encre);
+.qr-vrai svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
-.qr b {
-  background: transparent;
-}
-.qr-petit {
-  width: 120px;
+.qr-bon {
+  width: 132px;
 }
 
 /* La story */
+.visuel-story {
+  background: #e9e7e3;
+}
 .story {
-  width: 190px;
+  width: 232px;
   aspect-ratio: 9 / 16;
-  border-radius: 18px;
-  background: #1c1a19;
+  border-radius: 22px;
+  background: #000;
   color: #fff;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--ombre);
-  transform: rotate(-2deg);
-  padding: 10px;
+  box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.5);
+}
+.story-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.story-haut {
+  position: absolute;
+  inset: 0 0 auto;
+  padding: 9px 10px 22px;
+  background: linear-gradient(rgba(0, 0, 0, 0.35), transparent);
 }
 .story-barres {
   display: flex;
-  gap: 4px;
+  gap: 3px;
 }
 .story-barres i {
   flex: 1;
-  height: 2.5px;
+  height: 2px;
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.45);
 }
@@ -577,50 +641,55 @@ p {
 .story-auteur {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  position: relative;
-  z-index: 2;
+  gap: 7px;
+  margin-top: 9px;
+  font-size: 12px;
 }
-.avatar {
-  width: 20px;
-  height: 20px;
+.story-auteur img {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: #d8b49b;
-  border: 1.5px solid #fff;
+  object-fit: cover;
 }
-.story-photo {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 58%, #f4e6d3 0 21%, transparent 21.5%),
-    radial-gradient(circle at 50% 58%, #6b3f24 0 16%, transparent 16.5%),
-    linear-gradient(180deg, #8b6a52 0%, #c9a887 55%, #e8d4bc 100%);
-}
-.tasse {
-  position: absolute;
-  left: 50%;
-  top: 58%;
-  width: 22%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle at 45% 40%, #f7ecdd 0 30%, #b88458 32% 100%);
+.story-auteur span {
+  opacity: 0.75;
 }
 .story-mention {
   position: absolute;
   left: 50%;
-  bottom: 22%;
-  transform: translateX(-50%) rotate(-4deg);
+  top: 22%;
+  transform: translateX(-50%) rotate(-5deg);
   background: #fff;
-  color: var(--rouge);
-  font: 800 14px/1 var(--titre);
-  padding: 8px 12px;
-  border-radius: 8px;
+  color: #c32aa3;
+  font: 800 15px/1 var(--texte);
+  letter-spacing: -0.01em;
+  padding: 9px 12px;
+  border-radius: 9px;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+.story-bas {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 12px;
+}
+.story-champ {
+  flex: 1;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 11px;
+}
+.story-bas svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
 }
 
 /* Le bon */
@@ -758,12 +827,12 @@ p {
   color: var(--encre-3);
 }
 
-/* ---------- Stories (section rouge) ---------- */
-.section-rouge {
-  background: var(--rouge);
+/* ---------- Stories ---------- */
+.section-nuit {
+  background: #161514;
   color: #fff;
 }
-.section-rouge .titre-section {
+.section-nuit .titre-section {
   max-width: 14em;
 }
 .chiffres {
@@ -773,28 +842,31 @@ p {
   gap: 48px;
 }
 .chiffre {
-  border-top: 2px solid rgba(255, 255, 255, 0.5);
-  padding-top: 22px;
+  border-top: 1px solid #3a3836;
+  padding-top: 24px;
 }
 .chiffre-valeur {
   font: 800 clamp(64px, 8vw, 104px) / 0.9 var(--titre);
   letter-spacing: -0.04em;
   margin-bottom: 16px;
+  color: #ff6b62;
 }
 .chiffre p:not(.chiffre-valeur):not(.source) {
   font-size: 19px;
   max-width: 24em;
+  color: #e9e7e3;
 }
 .source {
   margin-top: 12px;
   font-size: 13px;
-  color: #ffe1de;
+  color: #9d9a96;
 }
 .stories-texte {
   margin-top: 56px;
   font-size: 20px;
   line-height: 1.55;
   max-width: 38em;
+  color: #e9e7e3;
 }
 
 /* ---------- Offres ---------- */
@@ -818,7 +890,7 @@ p {
   letter-spacing: -0.02em;
 }
 .prix {
-  margin-top: 18px;
+  margin-top: 14px;
   color: var(--encre-3);
   font-size: 15px;
 }
@@ -828,10 +900,22 @@ p {
   color: var(--encre);
   font-variant-numeric: tabular-nums;
 }
-.offre-resume {
-  margin-top: 12px;
+.offre-pour {
+  margin-top: 8px;
   color: var(--encre-2);
   min-height: 3.2em;
+}
+.offre-inclut {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--trait);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.offre-inclut + ul {
+  border-top: 0;
+  margin-top: 12px;
+  padding-top: 0;
 }
 .offre ul {
   list-style: none;
@@ -872,20 +956,8 @@ p {
   white-space: nowrap;
 }
 .offre-phare {
-  background: var(--encre);
-  color: #fff;
-  border-color: var(--encre);
-  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.5);
-}
-.offre-phare .prix,
-.offre-phare .offre-resume {
-  color: #bdbdba;
-}
-.offre-phare .prix span {
-  color: #fff;
-}
-.offre-phare ul {
-  border-top-color: #333331;
+  border-color: var(--rouge);
+  box-shadow: 0 30px 60px -34px rgba(222, 49, 49, 0.45);
 }
 .offre-badge {
   position: absolute;
@@ -896,6 +968,68 @@ p {
   font: 700 13px/1 var(--texte);
   padding: 8px 12px;
   border-radius: 999px;
+}
+
+/* Le tableau comparatif sous les offres */
+.comparatif-cadre {
+  margin-top: 64px;
+  overflow-x: auto;
+}
+.comparatif {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.comparatif caption {
+  text-align: left;
+  font: 800 22px/1.2 var(--titre);
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+.comparatif th,
+.comparatif td {
+  padding: 15px 12px;
+  border-bottom: 1px solid var(--trait);
+}
+.comparatif thead th {
+  font: 800 15px/1.2 var(--titre);
+  text-align: center;
+  vertical-align: bottom;
+}
+.comparatif thead th:nth-child(3) {
+  color: var(--rouge-fonce);
+}
+.comparatif tbody th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--encre-2);
+}
+.comparatif td {
+  text-align: center;
+  width: 17%;
+  font-weight: 600;
+}
+.comparatif td.non {
+  color: #b3b1ad;
+  font-weight: 400;
+}
+.comparatif td.oui::before {
+  content: "";
+  display: inline-block;
+  width: 11px;
+  height: 6px;
+  margin-right: 8px;
+  border-left: 2.5px solid var(--rouge);
+  border-bottom: 2.5px solid var(--rouge);
+  transform: translateY(-3px) rotate(-45deg);
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }
 
 /* ---------- Questions ---------- */
@@ -1078,10 +1212,24 @@ p {
   .actions .bouton {
     flex: 1 1 100%;
   }
+  .scene-carte {
+    padding: 0 0 128px;
+  }
+  .scene-photo {
+    height: 340px;
+    border-radius: 22px;
+  }
   .carte {
-    padding: 20px 20px 18px;
+    left: 50%;
+    bottom: 26px;
+    width: 92%;
+    margin-left: -46%;
+    padding: 18px 18px 16px;
     border-radius: 18px;
     transform: rotate(-2deg);
+  }
+  .defile-piste li {
+    width: 168px;
   }
   .carte-commerce {
     font-size: 18px;
@@ -1120,6 +1268,12 @@ p {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .defile-piste {
+    animation: none;
+  }
+  .defile {
+    overflow-x: auto;
   }
   .tampon.pose,
   .bon-temps i {

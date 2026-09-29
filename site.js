@@ -5,9 +5,12 @@
      Sans animation (prefers-reduced-motion), elle s'affiche deja remplie.
    - Le bon d'exemple change de QR toutes les 30 s et son heure defile,
      comme dans l'appli : c'est ce qui empeche une capture d'ecran de passer.
+   - Le bandeau des commerces defile en boucle (piste doublee ici).
    - Le formulaire poste sur /api/demo-request (meme route que l'ancienne
      page ; l'offre choisie est ajoutee au nom du commerce, pour que le
      rappel sache de quoi parler sans toucher a la table). */
+
+import QRCode from "qrcode";
 
 const calme = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -68,41 +71,22 @@ async function tamponner() {
 }
 tamponner();
 
-/* ---------- Des QR d'exemple (motif, pas un vrai code) ---------- */
-function motifQr(conteneur, graine) {
-  const n = 21;
-  let x = graine >>> 0 || 1;
-  const hasard = () => {
-    x ^= x << 13;
-    x ^= x >>> 17;
-    x ^= x << 5;
-    return (x >>> 0) / 4294967296;
-  };
-  const repere = (r, c) => {
-    for (const [or, oc] of [[0, 0], [0, n - 7], [n - 7, 0]]) {
-      const i = r - or;
-      const j = c - oc;
-      if (i >= -1 && i <= 7 && j >= -1 && j <= 7) {
-        if (i < 0 || j < 0 || i > 6 || j > 6) return 0;
-        const bord = i === 0 || j === 0 || i === 6 || j === 6;
-        const centre = i >= 2 && i <= 4 && j >= 2 && j <= 4;
-        return bord || centre ? 1 : 0;
-      }
-    }
-    return null;
-  };
-  const cases = [];
-  for (let r = 0; r < n; r++) {
-    for (let c = 0; c < n; c++) {
-      const fixe = repere(r, c);
-      const plein = fixe === null ? hasard() > 0.52 : fixe === 1;
-      cases.push(plein ? "<i></i>" : "<b></b>");
-    }
-  }
-  conteneur.innerHTML = cases.join("");
+/* ---------- De vrais QR codes ----------
+   Des codes generes pour de vrai (lib qrcode, deja dans le projet), pas un
+   motif au hasard : un faux QR se voit tout de suite (Julien, 29/09). Le
+   chevalet mene au site ; le bon d'exemple change de code toutes les 30 s,
+   comme dans l'appli. */
+async function dessinerQr(conteneur, texte) {
+  const svg = await QRCode.toString(texte, {
+    type: "svg",
+    margin: 0,
+    errorCorrectionLevel: "M",
+    color: { dark: "#141414", light: "#ffffff" },
+  });
+  conteneur.innerHTML = svg;
 }
 
-motifQr(document.getElementById("qr-affiche"), 20260929);
+dessinerQr(document.getElementById("qr-chevalet"), "https://viralnight-koif.vercel.app/");
 
 const qrBon = document.getElementById("qr-bon");
 const heureBon = document.getElementById("bon-heure");
@@ -113,11 +97,24 @@ function tictac() {
   const f = Math.floor(maintenant.getTime() / 30000);
   if (f !== fenetre) {
     fenetre = f;
-    motifQr(qrBon, f);
+    dessinerQr(qrBon, "NOCTIFY-EXEMPLE-BON-" + f);
   }
 }
 tictac();
 setInterval(tictac, 1000);
+
+/* ---------- Le bandeau des commerces : une piste doublee ----------
+   L'animation fait glisser la piste de la moitie de sa largeur ; avec deux
+   copies bout a bout, la fin rejoint le debut sans a-coup. La copie est
+   cachee aux lecteurs d'ecran (on ne lit pas deux fois la liste). */
+const piste = document.querySelector(".defile-piste");
+if (piste) {
+  [...piste.children].forEach((li) => {
+    const copie = li.cloneNode(true);
+    copie.setAttribute("aria-hidden", "true");
+    piste.appendChild(copie);
+  });
+}
 
 /* ---------- Les offres pre-remplissent le formulaire ---------- */
 const choixOffre = document.getElementById("choix-offre");
