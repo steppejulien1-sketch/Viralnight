@@ -2,595 +2,439 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#040506" />
-    <!-- Force les navigateurs/proxys recalcitrants a ne jamais garder
-         cette page en cache, en plus des en-tetes HTTP de Vercel. -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <title>Noctify — Transformez vos soirées en visibilité mesurable</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Noctify — La carte de fidélité qui fait parler de votre commerce</title>
     <meta
       name="description"
-      content="Noctify transforme les stories et vidéos de vos clients en visibilité mesurable pour votre club. QR en salle, points indexés sur les vues, récompenses définies par vous."
+      content="Vos clients gagnent des points à chaque passage, et plus encore quand ils postent une story avec votre nom. Pour les restaurants, cafés, bars, boutiques et tous les commerces de quartier. Dès 29,99 € HTVA par mois."
     />
-    <meta property="og:title" content="Noctify — Visibilité organique pour clubs" />
-    <meta
-      property="og:description"
-      content="Un QR code en salle, des points indexés sur les vues, des récompenses que vous définissez. Multipliez votre visibilité, fidélisez vos clients, remplissez vos soirées."
-    />
+    <meta property="og:title" content="Noctify — La carte de fidélité qui fait parler de votre commerce" />
+    <meta property="og:description" content="Des points à chaque passage, et une story qui fait venir leurs amis. Dès 29,99 € HTVA par mois." />
+    <meta property="og:image" content="https://viralnight-koif.vercel.app/icones/partage.png" />
     <meta property="og:type" content="website" />
-
-    <!-- Le verre Noctify, identique sur toutes les pages (public/icones, outils/icones_verre.py) -->
     <link rel="icon" href="/icones/favicon-64.png?v=verre" type="image/png" />
     <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png?v=verre" />
-    <link rel="preload" href="./assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="./base.css" />
-    <link rel="stylesheet" href="./theme.css" />
-    <link rel="stylesheet" href="./landing.css" />
-
-    <script>
-      /* Pose .vn-js avant le premier rendu.
-         Les etats caches du hero (titre, fade-in, sparkline) sont
-         scopes sous cette classe dans landing.css : si le JS est
-         desactive ou casse, rien ne reste invisible. */
-      document.documentElement.classList.add("vn-js");
-    </script>
+    <!-- Polices servies depuis notre domaine, jamais depuis Google (voir
+         assets/fonts/polices.css). Archivo = la police des deux applis. -->
+    <link rel="preload" href="./assets/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./assets/fonts/polices.css" />
+    <link rel="stylesheet" href="./site.css" />
   </head>
+  <!--
+    SITE NOCTIFY POUR LES COMMERCES (29/09/2026). Remplace l'ancienne landing
+    « boites de nuit » (landing.css / landing.js, qui ne servent plus ici).
 
+    THESIS : la page est une carte de fidelite qui se remplit. Un seul tampon
+    change tout : la story. Refuse le hero SaaS (degrade + telephone flottant
+    + trois cartes d'avantages).
+    OWN-WORLD : papier blanc, encre noire, tampons rouge Noctify #de3131 ;
+    une carte noire facon carte de membre ; titres Archivo 800 serres, texte
+    Inter ; une seule section entierement rouge (les stories).
+    STORY : le commercant comprend « des points a chaque passage, plus avec
+    une story », voit ce qu'il regle lui-meme, choisit une offre, laisse son
+    numero.
+    FIRST VIEWPORT : titre a gauche, action « Etre rappele » visible ; a
+    droite la carte d'un commerce d'exemple qui se tamponne : quatre passages
+    (+20), puis la story (+100) qui debloque la recompense.
+    FORM : carte de fidelite a tampons (1re de la liste), mise en scene
+    « la carte se remplit au chargement ».
+  -->
   <body>
-    <div class="noise" aria-hidden="true"></div>
+    <a class="evitement" href="#contenu">Aller au contenu</a>
 
-    <!-- ============ NAV ============ -->
-    <header class="nav" id="nav">
-      <div class="nav-pill">
-        <a class="nav-logo" href="#top" aria-label="Noctify — retour en haut">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z"
-              fill="#ff6363"
-            />
-          </svg>
+    <header class="entete" id="haut">
+      <div class="cadre entete-in">
+        <a class="marque" href="#haut" aria-label="Noctify, accueil">
+          <img src="/icones/icone-192.png" alt="" width="36" height="36" />
           <span>Noctify</span>
         </a>
-        <nav class="nav-links" aria-label="Navigation principale">
-          <a class="nav-link" href="#fonctionnement" data-spy="fonctionnement">Fonctionnement</a>
-          <a class="nav-link" href="#points" data-spy="points">Points</a>
-          <a class="nav-link" href="#simulateur" data-spy="simulateur">Simulateur</a>
-          <a class="nav-link" href="#faq" data-spy="faq">FAQ</a>
-          <a class="nav-link" href="#contact" data-spy="contact">Contact</a>
+        <nav class="nav" aria-label="Navigation principale">
+          <a href="#fonctionnement">Comment ça marche</a>
+          <a href="#offres">Offres</a>
+          <a href="#questions">Questions</a>
         </nav>
-        <div class="nav-auth">
-          <a class="nav-signin" href="./connexion.html">Se connecter</a>
-          <a class="nav-start" href="./inscription.html">Commencer</a>
+        <div class="entete-actions">
+          <a class="lien-discret" href="/club-app.html">Espace commerçant</a>
+          <a class="bouton bouton-encre bouton-petit" href="#contact">Être rappelé</a>
         </div>
-        <button class="nav-burger" type="button" id="navBurger" aria-label="Ouvrir le menu" aria-expanded="false">
-          <span></span><span></span>
-        </button>
       </div>
     </header>
 
-    <!-- ============ MENU MOBILE ============ -->
-    <div class="m-menu" id="mobileMenu" aria-hidden="true">
-      <nav aria-label="Navigation mobile">
-        <a class="m-link" href="#fonctionnement">Fonctionnement</a>
-        <a class="m-link" href="#points">Points &amp; récompenses</a>
-        <a class="m-link" href="#simulateur">Simulateur</a>
-        <a class="m-link" href="#faq">FAQ</a>
-        <a class="m-link" href="#contact">Contact</a>
-      </nav>
-      <a class="btn btn-mist" href="#contact">Obtenir une démo <span class="arr">→</span></a>
-      <p class="m-meta">viralnight · visibilité organique pour clubs</p>
-    </div>
-
-    <main id="top">
-      <!-- ============ HERO ============ -->
-      <!-- Version "avant" retenue : clip video en fond (soiree/foule),
-           gardee telle quelle a la demande de Julien. -->
-      <section class="hero">
-        <video
-          class="hero-video"
-          src="./assets/hero-video.mp4"
-          autoplay
-          muted
-          loop
-          playsinline
-          aria-hidden="true"
-        ></video>
-        <div class="hero-video-overlay" aria-hidden="true"></div>
-        <div class="hero-text-scrim" aria-hidden="true"></div>
-
-        <div class="wrap hero-inner hero-inner-resend">
-          <!-- Eyebrow : dit CE QUE C'EST + POUR QUI en 1 seconde. -->
-          <p class="hero-eyebrow fade-in d1">Programme de récompenses · boîtes de nuit, bars &amp; clubs</p>
-
-          <!-- Titre hero : la boucle du produit en 3 temps concrets. -->
-          <h1 class="h-display h-display-serif">
-            <span class="hl"><span>Vos clients filment vos soirées.</span></span>
-            <span class="hl"><span class="dim">Vous les récompensez.</span></span>
-            <span class="hl"><span>Ils vous ramènent du monde.</span></span>
-          </h1>
-
-          <!-- Lead : mecanisme + gain, en une phrase courte. -->
-          <p class="lead fade-in d2">
-            Noctify récompense vos clients qui publient vos soirées sur Instagram et TikTok,
-            et transforme leurs vues en <strong>nouveaux clients.</strong>
-          </p>
-
-          <div class="hero-cta fade-in d3">
-            <a class="btn btn-mist" href="#contact">Obtenir une démo <span class="arr">→</span></a>
-            <a class="btn btn-ghost-resend" href="./simulateur.html">Explorer le simulateur</a>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============ BANDEAU ============ -->
-      <section class="band" aria-label="Exemples d'activité générée par Noctify">
-        <p class="band-label">Chaque soirée alimente le feed</p>
-        <div class="mq">
-          <div class="mq-track" id="mqTrack">
-            <span class="chip"><span class="tag">IG STORY</span><b>@ambre.clb</b> 2,1 k vues · <b>+168 pts</b></span>
-            <span class="chip"><span class="tag">TIKTOK</span><b>@dylan.off</b> 15,4 k vues · <b>+385 pts</b></span>
-            <span class="chip"><span class="tag warm">RÉCOMPENSE</span><b>@lea.mrt</b> Shot premium — 250 pts</span>
-            <span class="chip"><span class="tag">REEL</span><b>@jade.prz</b> 5,7 k vues · <b>+142 pts</b></span>
-            <span class="chip"><span class="tag">CHECK-IN</span><b>@hugo.vlt</b> en salle · <b>+15 pts</b></span>
-            <span class="chip"><span class="tag">IG STORY</span><b>@noa.dpt</b> 3,9 k vues · <b>+312 pts</b></span>
-            <span class="chip"><span class="tag">BONUS &gt;5K</span><b>@marco.lgc</b> 12,4 k vues · <b>+90 pts</b></span>
-            <span class="chip"><span class="tag warm">RÉCOMPENSE</span><b>@sofia.b</b> Coupe-file — 300 pts</span>
-            <span class="chip"><span class="tag">REEL</span><b>@tom.rvx</b> 8,1 k vues · <b>+202 pts</b></span>
-            <span class="chip"><span class="tag">IG STORY</span><b>@mia.san</b> 1,2 k vues · <b>+96 pts</b></span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Le bloc "manifesto" a ete retire le 20 aout : son texte
-           ("vos clients partagent vos soirees... Noctify la mesure,
-           la recompense, et la transforme en clients qui reviennent")
-           redisait mot pour mot le lead du hero, deux ecrans plus haut.
-           Julien : "trop de blabla et de repetition". -->
-
-      <!-- ============ FONCTIONNEMENT ============ -->
-      <section class="section section-atmos" id="fonctionnement" data-section>
-        <div class="section-glow section-glow-bas" aria-hidden="true"></div>
-        <div class="wrap steps-grid">
-          <div class="steps-sticky" data-reveal>
-            <span class="eyebrow">Fonctionnement</span>
-            <h2 class="h-section">Noctify <em>gère tout</em>. Votre club profite des résultats.</h2>
-          </div>
-
-          <div class="steps-rail" id="stepsRail">
-            <div class="steps-line" aria-hidden="true"><i id="stepsLineFill"></i></div>
-
-            <!-- Pastilles numerotees 01..04. Elles avaient ete remplacees
-                 par des icones, Julien les a redemandees le 20 aout : les
-                 chiffres se lisent plus vite et font plus serieux que
-                 quatre pictogrammes differents. setupSteps() dans
-                 landing.js ne lit que [data-step], le contenu de
-                 .step-num lui est indifferent. -->
-            <div class="step" data-step data-reveal>
-              <div class="step-num">01</div>
-              <div class="step-body">
-                <h3>Scan du QR en salle</h3>
-                <p>Le client scanne le QR affiché chez vous. Aucune application à installer.</p>
-              </div>
-            </div>
-
-            <div class="step" data-step data-reveal>
-              <div class="step-num">02</div>
-              <div class="step-body">
-                <h3>Publication avec mention du club</h3>
-                <p>Story, Reel ou TikTok. Chaque contenu est vérifié avant le moindre point attribué.</p>
-              </div>
-            </div>
-
-            <div class="step" data-step data-reveal>
-              <div class="step-num">03</div>
-              <div class="step-body">
-                <h3>Des récompenses que vous définissez</h3>
-                <p>Boisson, vestiaire, coupe-file, accès VIP : vous fixez la liste et le prix en points.</p>
-              </div>
-            </div>
-
-            <div class="step" data-step data-reveal>
-              <div class="step-num">04</div>
-              <div class="step-body">
-                <h3>Des performances mesurées</h3>
-                <p>Vues, coût pour 1 000 vues, clients actifs : tout est suivi au même endroit.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div class="divider-gradient" aria-hidden="true"></div>
-
-      <!-- ============ POINTS & BARÈME ============ -->
-      <section class="section section-atmos" id="points" data-section>
-        <div class="section-glow section-glow-haut" aria-hidden="true"></div>
-        <div class="wrap">
-          <div class="section-head" data-reveal>
-            <span class="eyebrow">Points &amp; récompenses</span>
-            <h2 class="h-section">Un barème qui <em>valorise les stories</em>, sans exploser votre budget.</h2>
-            <p class="lead">
-              Une story touche le cercle proche, celui qui sort vraiment. Elle est donc mieux payée qu'une
-              vidéo vue au hasard dans un feed.
+    <main id="contenu">
+      <!-- ============ PREMIER ECRAN ============ -->
+      <section class="ouverture">
+        <div class="cadre ouverture-in">
+          <div class="ouverture-texte">
+            <h1>La carte de fidélité qui fait venir de nouveaux clients.</h1>
+            <p class="chapeau">
+              Vos clients gagnent des points à chaque passage. S'ils postent une story avec le nom de votre commerce,
+              ils en gagnent cinq fois plus. Leurs amis la voient, et passent à leur tour.
             </p>
+            <div class="actions">
+              <a class="bouton bouton-rouge" href="#contact">Être rappelé</a>
+              <a class="bouton bouton-contour" href="#offres">Voir les offres</a>
+            </div>
+            <p class="ouverture-note">Dès 29,99 € HTVA par mois. Pas de matériel à acheter.</p>
           </div>
 
-          <!-- La grille de 4 cartes (+80 story / +25 video / 100 %
-               configuree / Top ambassadeurs) a ete retiree le 20 aout :
-               elle affichait les deux memes chiffres que le bareme juste
-               en dessous, et sa carte "Boutique de recompenses" redisait
-               l'etape 03. Le tableau est garde, il est plus complet
-               (check-in, bonus viral, colonne recompense). -->
-
-          <div class="bareme card-lg" data-reveal>
-            <div class="bareme-intro">
-              <span class="eyebrow">Barème exemple</span>
-              <h3>Une mécanique lisible pour les clients, contrôlable pour le club.</h3>
-              <p>Tous les seuils restent configurables, soirée par soirée.</p>
-            </div>
-
-            <div class="bareme-table-wrap">
-              <div class="bareme-table">
-                <div class="bt-head">
-                  <span>Action client</span><span>Points</span><span>Récompense possible</span>
+          <figure class="scene-carte" aria-label="Exemple : la carte de fidélité d'un client dans un café">
+            <div class="carte" id="carte-demo">
+              <div class="carte-haut">
+                <div>
+                  <p class="carte-commerce">Café des Étangs</p>
+                  <p class="carte-lieu">Ixelles</p>
                 </div>
-
-                <div class="bt-row">
-                  <span class="bt-action">1 000 vues Reel / TikTok</span>
-                  <span class="bt-pts">
-                    <b data-point-rule="videoViewsPerThousand">+25 pts</b>
-                    <span class="bt-bar"><i data-w="28"></i></span>
-                  </span>
-                  <span class="bt-reward">Points liés aux vues uniquement</span>
-                </div>
-
-                <div class="bt-row">
-                  <span class="bt-action">1 000 vues story</span>
-                  <span class="bt-pts">
-                    <b data-point-rule="storyViewsPerThousand">+80 pts</b>
-                    <span class="bt-bar"><i data-w="89"></i></span>
-                  </span>
-                  <span class="bt-reward">Boisson soft, shot ou premium</span>
-                </div>
-
-                <div class="bt-row">
-                  <span class="bt-action">Check-in QR pendant la soirée</span>
-                  <span class="bt-pts">
-                    <b data-point-rule="qrCheckin">+15 pts</b>
-                    <span class="bt-bar"><i data-w="17"></i></span>
-                  </span>
-                  <span class="bt-reward">Bonus présence</span>
-                </div>
-
-                <div class="bt-row">
-                  <span class="bt-action">Bonus publication &gt; 5 000 vues</span>
-                  <span class="bt-pts">
-                    <b data-point-rule="viralBonus">+90 pts</b>
-                    <span class="bt-bar"><i data-w="100"></i></span>
-                  </span>
-                  <span class="bt-reward">Accélérateur pour contenus forts</span>
-                </div>
+                <p class="carte-solde"><span id="solde">0</span><small> / 180 pts</small></p>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- ============ SIMULATEUR ============ -->
-      <section class="section section-atmos" id="simulateur" data-section>
-        <div class="section-glow section-glow-bas" aria-hidden="true"></div>
-        <div class="wrap">
-          <div class="section-head" data-reveal>
-            <span class="eyebrow">Impact business</span>
-            <h2 class="h-section">Estimez le <em>coût réel</em> de votre visibilité avant de lancer.</h2>
-            <p class="lead">
-              Combien de vues vous pouvez générer, combien coûtent les récompenses, et si votre coût pour
-              1 000 vues bat la pub classique — avant d'engager un euro.
-            </p>
-          </div>
+              <ol class="tampons" aria-label="Tampons de la carte">
+                <li class="tampon" data-pts="20"><span>+20</span></li>
+                <li class="tampon" data-pts="20"><span>+20</span></li>
+                <li class="tampon" data-pts="20"><span>+20</span></li>
+                <li class="tampon" data-pts="20"><span>+20</span></li>
+                <li class="tampon tampon-story" data-pts="100">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="5.5" />
+                    <circle cx="12" cy="12" r="4.2" />
+                    <circle cx="17.4" cy="6.6" r="1" class="plein" />
+                  </svg>
+                  <span>+100</span>
+                </li>
+              </ol>
 
-          <div class="sim-card" data-reveal>
-            <div class="sim-controls">
-              <div class="sim-field">
-                <label for="rP"><span class="name">Clients qui participent</span><output id="oP">45</output></label>
-                <input
-                  type="range"
-                  id="rP"
-                  min="5"
-                  max="300"
-                  step="5"
-                  value="45"
-                  aria-label="Nombre de clients qui participent"
-                />
-              </div>
-              <div class="sim-field">
-                <label for="rV"><span class="name">Vues moyennes par contenu</span><output id="oV">2 500</output></label>
-                <input
-                  type="range"
-                  id="rV"
-                  min="250"
-                  max="20000"
-                  step="250"
-                  value="2500"
-                  aria-label="Vues moyennes par contenu"
-                />
-              </div>
-              <div class="sim-field">
-                <label for="rC"><span class="name">Coût moyen d'une récompense</span><output id="oC">6,00 €</output></label>
-                <input
-                  type="range"
-                  id="rC"
-                  min="1"
-                  max="20"
-                  step="0.5"
-                  value="6"
-                  aria-label="Coût moyen d'une récompense en euros"
-                />
-              </div>
-            </div>
-
-            <div class="sim-out">
-              <div class="out-tile">
-                <span class="lbl">Visibilité potentielle<small>vues estimées</small></span>
-                <span class="val" id="outViews">112 500</span>
-              </div>
-              <div class="out-tile">
-                <span class="lbl">Budget récompenses<small>coût total sur la période</small></span>
-                <span class="val" id="outBudget">270 €</span>
-              </div>
-              <div class="out-tile warm">
-                <span class="lbl">Coût / 1 000 vues<small>votre coût réel</small></span>
-                <span class="val" id="outCpm">2,40 €</span>
-              </div>
-              <div class="sim-compare">
-                <div class="cmp-row cmp-vn">
-                  <span class="cmp-name">Noctify</span>
-                  <span class="cmp-track"><i id="cmpVn"></i></span>
-                  <span class="cmp-val" id="cmpVnVal">2,40 €</span>
-                </div>
-                <div class="cmp-row cmp-ads">
-                  <span class="cmp-name">Pub sociale</span>
-                  <span class="cmp-track"><i id="cmpAds"></i></span>
-                  <span class="cmp-val">8,00 €</span>
-                </div>
-                <p class="sim-verdict" id="simVerdict" aria-live="polite">
-                  Soit <b>≈ 3,3× moins cher</b> qu'une pub sociale moyenne à 8 € les 1 000 vues.
+              <div class="carte-bas">
+                <div class="jauge" aria-hidden="true"><i id="jauge"></i></div>
+                <p class="carte-recompense" id="recompense">
+                  <span class="r-attente">Prochaine récompense : un cappuccino offert</span>
+                  <span class="r-gagnee">Cappuccino offert, à montrer au comptoir</span>
                 </p>
               </div>
             </div>
+            <figcaption class="legende-carte">
+              <span><b>Passage en caisse</b> +20 points</span>
+              <span><b>Story qui vous mentionne</b> +100 points</span>
+              <em>Commerce et récompense d'exemple.</em>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============ POUR QUI ============ -->
+      <section class="commerces" aria-label="Pour quels commerces">
+        <div class="cadre">
+          <p>
+            Restaurants <i>·</i> Cafés <i>·</i> Bars <i>·</i> Boulangeries <i>·</i> Coiffeurs <i>·</i> Instituts de
+            beauté <i>·</i> Boutiques <i>·</i> Salles de sport <i>·</i> Glaciers <i>·</i> Food trucks
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ COMMENT CA MARCHE ============ -->
+      <section class="section" id="fonctionnement">
+        <div class="cadre">
+          <h2 class="titre-section">Trois gestes, côté client.</h2>
+
+          <div class="etapes">
+            <article class="etape">
+              <div class="etape-texte">
+                <p class="etape-pts">+20 points</p>
+                <h3>Il scanne votre QR code en caisse.</h3>
+                <p>
+                  Une affiche sur le comptoir, c'est tout. Le téléphone du client s'ouvre sur Noctify, les points
+                  tombent. Il faut être sur place : un QR photographié et partagé ne rapporte rien.
+                </p>
+              </div>
+              <div class="etape-visuel visuel-affiche" aria-hidden="true">
+                <div class="affiche">
+                  <p class="affiche-titre">Scannez, gagnez des points</p>
+                  <div class="qr" id="qr-affiche"></div>
+                  <p class="affiche-pied">Café des Étangs</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="etape">
+              <div class="etape-texte">
+                <p class="etape-pts">+100 points</p>
+                <h3>Il poste une story qui vous mentionne.</h3>
+                <p>
+                  Sur Instagram, avec votre @. La story est vérifiée avant que les points soient crédités. Ses amis
+                  la voient : ce sont souvent des gens du quartier, du même âge, qui ne vous connaissaient pas.
+                </p>
+              </div>
+              <div class="etape-visuel visuel-story" aria-hidden="true">
+                <div class="story">
+                  <div class="story-barres"><i></i><i></i></div>
+                  <p class="story-auteur"><span class="avatar"></span>lea.vdb</p>
+                  <div class="story-photo">
+                    <span class="tasse"></span>
+                  </div>
+                  <p class="story-mention">@cafedesetangs</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="etape">
+              <div class="etape-texte">
+                <p class="etape-pts">Récompense</p>
+                <h3>Il échange ses points au comptoir.</h3>
+                <p>
+                  Contre ce que vous avez choisi. Il montre un bon, vous le scannez avec votre téléphone. Le QR du bon
+                  change toutes les 30 secondes : une capture d'écran ne passe pas.
+                </p>
+              </div>
+              <div class="etape-visuel visuel-bon" aria-hidden="true">
+                <div class="bon">
+                  <p class="bon-titre">Cappuccino offert</p>
+                  <p class="bon-lieu">Café des Étangs · 180 points</p>
+                  <div class="qr qr-petit" id="qr-bon"></div>
+                  <div class="bon-temps"><i></i></div>
+                  <p class="bon-heure" id="bon-heure">--:--:--</p>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <!-- La section "Controle" (3 cartes : verification / seuils /
-           suivi) a ete retiree le 20 aout : ses trois points etaient
-           deja dits ailleurs, mot pour mot.
-           - "Verification avant points" -> etape 02 + FAQ.
-           - "Seuils & plafonds" -> carte "Boutique de recompenses" +
-             intro du bareme + FAQ "Qui paie les recompenses".
-           - "Suivi en continu" (vues, cout / 1 000 vues) -> etape 04,
-             qui liste deja exactement les memes indicateurs. -->
-
-      <!-- ============ FAQ ============ -->
-      <section class="section section-atmos" id="faq" data-section style="padding-top: 20px">
-        <div class="section-glow section-glow-haut" aria-hidden="true"></div>
-        <div class="wrap faq-wrap">
-          <div class="section-head" style="text-align: center; margin-inline: auto" data-reveal>
-            <span class="eyebrow">FAQ</span>
-            <h2 class="h-section">Les questions que <em>les clubs nous posent</em>.</h2>
+      <!-- ============ COTE COMMERCANT ============ -->
+      <section class="section section-gris" id="vous">
+        <div class="cadre deux-colonnes">
+          <div>
+            <h2 class="titre-section">Vous gardez la main sur tout.</h2>
+            <ul class="liste-traits">
+              <li>
+                <b>Vos récompenses.</b> Ce que vous offrez, combien de points ça coûte, combien il en reste en stock.
+              </li>
+              <li><b>Votre affiche.</b> Prête à imprimer depuis votre espace, avec votre QR code.</li>
+              <li><b>Votre fiche.</b> Votre commerce apparaît sur la carte de l'appli, avec vos photos et vos horaires.</li>
+              <li><b>Votre activité.</b> Qui est passé, qui a posté, quelles récompenses sont parties.</li>
+            </ul>
+            <p class="petit-texte">Tout se règle depuis votre téléphone, en quelques minutes.</p>
           </div>
 
-          <div class="faq-list" data-reveal>
-            <div class="faq-item">
-              <button class="faq-q" type="button" aria-expanded="false">
-                Comment les contenus sont-ils vérifiés ?<span class="faq-x" aria-hidden="true"></span>
-              </button>
-              <div class="faq-a">
-                <div class="faq-a-in">
-                  <p>
-                    Le client soumet son contenu depuis son espace Noctify. La mention du club et le nombre
-                    de vues sont vérifiés avant toute attribution de points — aucun point n'est distribué
-                    automatiquement sur simple déclaration.
-                  </p>
-                </div>
-              </div>
+          <div class="editeur" aria-label="Exemple : une récompense dans l'espace commerçant">
+            <p class="editeur-titre">Vos récompenses</p>
+            <div class="ligne-recompense">
+              <span class="rec-nom">Cappuccino</span>
+              <span class="rec-pts">180 pts</span>
+              <span class="rec-stock">stock 40</span>
             </div>
-
-            <div class="faq-item">
-              <button class="faq-q" type="button" aria-expanded="false">
-                Qui paie les récompenses ?<span class="faq-x" aria-hidden="true"></span>
-              </button>
-              <div class="faq-a">
-                <div class="faq-a-in">
-                  <p>
-                    Le club — mais c'est vous qui fixez leur coût, leur prix en points et les seuils. Le
-                    simulateur vous montre le budget avant de lancer, et le suivi vous montre le coût réel
-                    pendant l'activation.
-                  </p>
-                </div>
-              </div>
+            <div class="ligne-recompense">
+              <span class="rec-nom">Part de cheesecake</span>
+              <span class="rec-pts">350 pts</span>
+              <span class="rec-stock">stock 12</span>
             </div>
-
-            <div class="faq-item">
-              <button class="faq-q" type="button" aria-expanded="false">
-                Et si un client essaie de tricher ?<span class="faq-x" aria-hidden="true"></span>
-              </button>
-              <div class="faq-a">
-                <div class="faq-a-in">
-                  <p>
-                    La validation du contenu sert exactement à ça : contenu non conforme, compte suspect ou
-                    vues artificielles ne donnent aucun point. Vous gardez un droit de regard sur ce qui est
-                    récompensé.
-                  </p>
-                </div>
-              </div>
+            <div class="ligne-recompense ligne-active">
+              <span class="rec-nom">Brunch pour deux</span>
+              <span class="rec-pts">1 200 pts</span>
+              <span class="rec-stock">stock 3</span>
             </div>
-
-            <div class="faq-item">
-              <button class="faq-q" type="button" aria-expanded="false">
-                Faut-il installer une application ?<span class="faq-x" aria-hidden="true"></span>
-              </button>
-              <div class="faq-a">
-                <div class="faq-a-in">
-                  <p>
-                    Non. Le client scanne le QR en salle et tout se passe dans le navigateur. Zéro friction à
-                    l'entrée — c'est ce qui fait décoller la participation.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="faq-item">
-              <button class="faq-q" type="button" aria-expanded="false">
-                Comment se lance une première activation ?<span class="faq-x" aria-hidden="true"></span>
-              </button>
-              <div class="faq-a">
-                <div class="faq-a-in">
-                  <p>
-                    QR imprimés et affichés en salle, barème défini, boutique de récompenses configurée —
-                    l'équipe Noctify vous accompagne, et la première soirée sert de test grandeur nature.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="faq-item">
-              <button class="faq-q" type="button" aria-expanded="false">
-                Puis-je gérer plusieurs établissements ?<span class="faq-x" aria-hidden="true"></span>
-              </button>
-              <div class="faq-a">
-                <div class="faq-a-in">
-                  <p>
-                    Oui — chaque établissement garde son propre barème, sa propre boutique de récompenses et son
-                    propre suivi, tout en restant piloté depuis un seul compte Noctify.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p class="editeur-ajout">+ Ajouter une récompense</p>
+            <p class="editeur-note">Exemple</p>
           </div>
         </div>
       </section>
 
-      <div class="divider-gradient" aria-hidden="true"></div>
+      <!-- ============ STORIES ============ -->
+      <section class="section section-rouge" id="stories">
+        <div class="cadre">
+          <h2 class="titre-section">Une story d'un client vaut mieux qu'une pub.</h2>
+          <div class="chiffres">
+            <div class="chiffre">
+              <p class="chiffre-valeur">83,4 %</p>
+              <p>des 16-24 ans en Belgique vont sur Instagram tous les jours.</p>
+              <p class="source">SMI Barometer, 2025</p>
+            </div>
+            <div class="chiffre">
+              <p class="chiffre-valeur">92 %</p>
+              <p>des gens font davantage confiance à la recommandation d'un proche qu'à une publicité.</p>
+              <p class="source">Nielsen, Global Trust in Advertising, 2012</p>
+            </div>
+          </div>
+          <p class="stories-texte">
+            Une carte de fidélité classique fait revenir les clients que vous avez déjà. Avec les stories, chaque
+            client fidèle montre votre commerce à ses amis. Vous ne payez ni influenceur ni publicité : la récompense,
+            c'est vous qui la choisissez.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ OFFRES ============ -->
+      <section class="section" id="offres">
+        <div class="cadre">
+          <h2 class="titre-section">Trois offres. Un prix fixe par mois.</h2>
+          <p class="sous-titre">Prix HTVA, par mois et par établissement.</p>
+
+          <div class="offres">
+            <article class="offre">
+              <h3>Fidélité</h3>
+              <p class="prix"><span>29,99 €</span> / mois</p>
+              <p class="offre-resume">La carte de fidélité, sans papier.</p>
+              <ul>
+                <li>QR code à afficher en caisse</li>
+                <li>Des points à chaque passage</li>
+                <li>Vos récompenses, leur prix en points et leur stock</li>
+                <li>Bons anti-fraude validés au comptoir</li>
+                <li>Votre commerce sur la carte de l'appli</li>
+                <li>Appli client gratuite, sans téléchargement obligatoire</li>
+              </ul>
+              <a class="bouton bouton-contour bouton-large" href="#contact" data-offre="Fidélité">Choisir Fidélité</a>
+            </article>
+
+            <article class="offre offre-phare">
+              <p class="offre-badge">Recommandé</p>
+              <h3>Fidélité + Stories</h3>
+              <p class="prix"><span>49,99 €</span> / mois</p>
+              <p class="offre-resume">Vos clients deviennent votre publicité.</p>
+              <ul>
+                <li><b>Tout Fidélité</b></li>
+                <li>Stories Instagram récompensées</li>
+                <li>Votre compte Instagram connecté</li>
+                <li>Chaque story vérifiée avant les points</li>
+                <li>Qui a posté, et quand</li>
+              </ul>
+              <a class="bouton bouton-rouge bouton-large" href="#contact" data-offre="Fidélité + Stories">Choisir Fidélité + Stories</a>
+            </article>
+
+            <article class="offre">
+              <h3>Pro</h3>
+              <p class="prix"><span>79,99 €</span> / mois</p>
+              <p class="offre-resume">On s'occupe de tout, vous servez vos clients.</p>
+              <ul>
+                <li><b>Tout Fidélité + Stories</b></li>
+                <li>Vidéos TikTok récompensées <em class="bientot">bientôt</em></li>
+                <li>Installation faite par nous : fiche, photos, récompenses, affiche</li>
+                <li>Mise en avant sur la carte de l'appli</li>
+                <li>Support prioritaire par téléphone</li>
+              </ul>
+              <a class="bouton bouton-contour bouton-large" href="#contact" data-offre="Pro">Choisir Pro</a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ QUESTIONS ============ -->
+      <section class="section section-gris" id="questions">
+        <div class="cadre cadre-etroit">
+          <h2 class="titre-section">Questions fréquentes</h2>
+          <div class="faq">
+            <details>
+              <summary>Mes clients doivent-ils télécharger une appli ?</summary>
+              <p>
+                Non. En scannant votre QR code, Noctify s'ouvre dans le navigateur du téléphone. Ceux qui le veulent
+                peuvent l'ajouter à leur écran d'accueil.
+              </p>
+            </details>
+            <details>
+              <summary>Faut-il acheter du matériel ?</summary>
+              <p>
+                Non. Vous imprimez votre affiche depuis votre espace, et votre propre téléphone suffit pour valider les
+                bons de vos clients. Pas de terminal, pas de tablette.
+              </p>
+            </details>
+            <details>
+              <summary>Qui paie les récompenses ?</summary>
+              <p>
+                Vous, puisque c'est vous qui les offrez. Vous décidez quoi offrir, combien de points ça coûte et
+                combien vous en proposez. Un cappuccino à 180 points, c'est neuf passages en caisse, ou quatre
+                passages et une story.
+              </p>
+            </details>
+            <details>
+              <summary>Comment éviter la triche ?</summary>
+              <p>
+                Le QR de votre affiche ne rapporte des points qu'à quelqu'un qui est sur place. Les bons de vos clients
+                changent toutes les 30 secondes, donc une capture d'écran ne marche pas. Et chaque story est vérifiée
+                avant que les points soient crédités.
+              </p>
+            </details>
+            <details>
+              <summary>Il me faut quoi pour l'offre Stories ?</summary>
+              <p>
+                Un compte Instagram professionnel pour votre commerce. Le passage en compte professionnel est gratuit
+                et se fait en deux minutes dans les réglages d'Instagram.
+              </p>
+            </details>
+            <details>
+              <summary>Mon commerce est-il concerné ?</summary>
+              <p>
+                Si vos clients viennent sur place, oui : restaurant, café, bar, boulangerie, salon de coiffure,
+                institut, boutique, salle de sport. Appelez-nous si vous avez un doute.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
 
       <!-- ============ CONTACT ============ -->
-      <section class="contact" id="contact" data-section>
-        <div class="atmos" aria-hidden="true">
-          <div class="blob blob-cobalt"></div>
-          <div class="bar-coral b1"></div>
-        </div>
-        <div class="wrap">
-          <div class="contact-card card-xl" data-reveal>
-            <div class="contact-left">
-              <span class="eyebrow">Contact</span>
-              <h2 class="h-section">On vous recontacte, <em>simplement</em>.</h2>
-              <p class="lead">
-                Laissez vos coordonnées, on revient vers vous pour voir si ça colle à votre établissement.
-              </p>
-            </div>
-
-            <!-- Vrai formulaire : POST /api/demo-request, avec repli
-                 insertion Supabase directe en dev. Voir landing.js.
-                 Les 3 champs correspondent aux colonnes exigees par
-                 la policy RLS de demo_requests (club, email, phone). -->
-            <form class="contact-form" id="contactForm" novalidate>
-              <div class="f-hide">
-                <div class="f-field">
-                  <label for="fClub">Nom de l'établissement</label>
-                  <input
-                    type="text"
-                    id="fClub"
-                    name="club"
-                    placeholder="Ex. Mirage"
-                    required
-                    autocomplete="organization"
-                  />
-                </div>
-                <div class="f-field">
-                  <label for="fEmail">Email</label>
-                  <input
-                    type="email"
-                    id="fEmail"
-                    name="email"
-                    placeholder="contact@club.com"
-                    required
-                    autocomplete="email"
-                  />
-                </div>
-                <div class="f-field">
-                  <label for="fPhone">Téléphone</label>
-                  <input
-                    type="tel"
-                    id="fPhone"
-                    name="phone"
-                    placeholder="06 12 34 56 78"
-                    required
-                    autocomplete="tel"
-                  />
-                </div>
-                <button class="btn btn-mist" type="submit" id="formBtn">
-                  Être recontacté <span class="arr">→</span>
-                </button>
-                <p class="f-note">Sans engagement. Réponse sous 24h ouvrées.</p>
-                <p class="form-error" id="formError" role="alert" aria-live="assertive"></p>
-              </div>
-
-              <div class="form-success" role="status">
-                <svg viewBox="0 0 52 52" aria-hidden="true">
-                  <circle cx="26" cy="26" r="25" /><path d="M15.5 27l7 7 14-15" />
-                </svg>
-                <h3>Bien reçu.</h3>
-                <p>L'équipe Noctify vous recontacte rapidement.</p>
-              </div>
-            </form>
+      <section class="section contact" id="contact">
+        <div class="cadre deux-colonnes">
+          <div>
+            <h2 class="titre-section">On vous rappelle.</h2>
+            <p class="chapeau">
+              Laissez votre numéro, on vous explique tout en dix minutes et on regarde ensemble l'offre qui convient à
+              votre commerce.
+            </p>
+            <p class="petit-texte">
+              Ou écrivez-nous : <a href="mailto:noctify.support@gmail.com">noctify.support@gmail.com</a>
+            </p>
           </div>
+
+          <form class="formulaire" id="formulaire" novalidate>
+            <div class="champs">
+              <label class="champ">
+                <span>Nom du commerce</span>
+                <input type="text" name="club" required autocomplete="organization" placeholder="Café des Étangs" />
+              </label>
+              <label class="champ">
+                <span>E-mail</span>
+                <input type="email" name="email" required autocomplete="email" placeholder="bonjour@moncommerce.be" />
+              </label>
+              <label class="champ">
+                <span>Téléphone</span>
+                <input type="tel" name="phone" required autocomplete="tel" placeholder="0470 12 34 56" />
+              </label>
+              <label class="champ">
+                <span>Offre qui vous intéresse</span>
+                <select name="offre" id="choix-offre">
+                  <option value="">Je ne sais pas encore</option>
+                  <option>Fidélité</option>
+                  <option>Fidélité + Stories</option>
+                  <option>Pro</option>
+                </select>
+              </label>
+              <button class="bouton bouton-rouge bouton-large" type="submit" id="envoyer">Être rappelé</button>
+              <p class="erreur" id="erreur" role="alert"></p>
+            </div>
+            <div class="merci" role="status" hidden>
+              <p class="merci-titre">C'est noté.</p>
+              <p>On vous rappelle sous 24 h ouvrées.</p>
+            </div>
+          </form>
         </div>
       </section>
     </main>
 
-    <!-- ============ FOOTER ============ -->
-    <footer class="site-footer">
-      <div class="wrap">
-        <div class="foot-top">
-          <div class="foot-brand">
-            <a class="foot-logo" href="#top">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363" />
-              </svg>
-              <span>Noctify</span>
-            </a>
-            <p class="foot-tag">La plateforme des clubs qui buzzent. Visibilité organique, mesurée.</p>
-          </div>
-          <nav class="foot-links" aria-label="Navigation pied de page">
-            <span class="foot-col-title">Produit</span>
-            <a href="#fonctionnement">Fonctionnement</a>
-            <a href="#points">Points &amp; récompenses</a>
-            <a href="#simulateur">Simulateur</a>
-            <a href="#faq">FAQ</a>
-          </nav>
-          <nav class="foot-links" aria-label="Espace client">
-            <span class="foot-col-title">Espace club</span>
-            <a href="#contact">Demander une démo</a>
-            <a href="./connexion.html">Se connecter</a>
-            <a href="./inscription.html">Créer un espace</a>
-          </nav>
-        </div>
-        <div class="foot-bottom">
-          <nav class="foot-legal" aria-label="Liens légaux">
-            <a href="./mentions-legales.html">Mentions légales</a>
-            <a href="./confidentialite.html">Confidentialité</a>
-            <a href="./cgu.html">CGU</a>
-            <a href="./cookies.html">Cookies</a>
-          </nav>
-          <p class="foot-copy">© <span id="year">2026</span> Noctify</p>
-        </div>
+    <footer class="pied">
+      <div class="cadre pied-in">
+        <a class="marque" href="#haut">
+          <img src="/icones/icone-192.png" alt="" width="32" height="32" />
+          <span>Noctify</span>
+        </a>
+        <nav aria-label="Liens utiles">
+          <a href="/club-app.html">Espace commerçant</a>
+          <a href="mailto:noctify.support@gmail.com">Contact</a>
+          <a href="./mentions-legales.html">Mentions légales</a>
+          <a href="./confidentialite.html">Confidentialité</a>
+          <a href="./cgu.html">CGU</a>
+          <a href="./cookies.html">Cookies</a>
+        </nav>
+        <p class="pied-copy">© 2026 Noctify</p>
       </div>
     </footer>
 
-    <script type="module" src="./theme.js"></script>
-    <script type="module" src="./landing.js"></script>
-    <script type="module" src="./redirectionConnecte.js"></script>
+    <script type="module" src="./site.js"></script>
   </body>
 </html>

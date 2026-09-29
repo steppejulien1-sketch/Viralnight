@@ -54,7 +54,7 @@ function getPayload(body) {
   };
 
   if (!payload.club) {
-    throw new Error("Le nom du club est obligatoire.");
+    throw new Error("Le nom du commerce est obligatoire.");
   }
 
   if (!emailRegex.test(payload.email)) {
