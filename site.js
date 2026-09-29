@@ -90,66 +90,48 @@ async function majQr() {
 majQr();
 setInterval(majQr, 2000);
 
-/* ---------- Estimer : ce que couterait la meme pub ----------
-   Le commercant regle ses clients par jour et la part qui poste une story
-   dans le mois (une estimation a lui, pas un chiffre qu'on invente).
-   Stories par mois = clients par jour x 30 x part.
-   Prix influenceurs : 5 a 25 $ la story pour un compte de 1 000 a 10 000
-   abonnes (Influencer Marketing Hub, « Nano Influencer Rates », 2026).
-   En dollars comme la source : pas de taux de change invente. */
+/* ---------- Combien vous coute votre pub ----------
+   Le commercant regle ce qu'il depense deja en pub et ses clients par jour.
+   Garde par an = (pub d'aujourd'hui - Noctify Premium 49,99 €) x 12.
+   Stories : si un client sur vingt poste une story dans le mois (ecrit sous
+   le calcul) -> clients par jour x 30 / 20. */
+const reglageBudget = document.getElementById("est-budget");
 const reglageClients = document.getElementById("est-clients");
-const reglagePart = document.getElementById("est-part");
-if (reglageClients && reglagePart) {
+if (reglageBudget && reglageClients) {
+  const PREMIUM = 49.99;
   const fmt = (n) => Math.round(n).toLocaleString("fr-BE");
-  const sortie = {
-    clients: document.getElementById("est-clients-val"),
-    part: document.getElementById("est-part-val"),
-    stories: document.getElementById("est-stories"),
-    min: document.getElementById("est-min"),
-    max: document.getElementById("est-max"),
-    infl: document.getElementById("est-infl"),
-    noct: document.getElementById("est-noct"),
-  };
-  let affiche = 120;
+  const el = (id) => document.getElementById(id);
+  let affiche = 0;
   let anim = 0;
-
-  function remplir(curseur) {
-    const k = (curseur.value - curseur.min) / (curseur.max - curseur.min);
-    curseur.style.setProperty("--rempli", k * 100 + "%");
-  }
-
-  function animerNombre(cible) {
+  const remplir = (c) => c.style.setProperty("--rempli", ((c.value - c.min) / (c.max - c.min)) * 100 + "%");
+  function animer(cible) {
     cancelAnimationFrame(anim);
     const depart = affiche;
     const debut = performance.now();
     const pas = (t) => {
-      const k = calme ? 1 : Math.min(1, (t - debut) / 350);
+      const k = calme ? 1 : Math.min(1, (t - debut) / 400);
       affiche = depart + (cible - depart) * (1 - Math.pow(1 - k, 3));
-      sortie.stories.textContent = fmt(affiche);
+      el("est-garde").textContent = fmt(affiche);
       if (k < 1) anim = requestAnimationFrame(pas);
     };
     anim = requestAnimationFrame(pas);
   }
-
   function calculer() {
+    const budget = Number(reglageBudget.value);
     const clients = Number(reglageClients.value);
-    const part = Number(reglagePart.value);
-    const stories = Math.max(1, Math.round((clients * 30 * part) / 100));
-    sortie.clients.textContent = String(clients);
-    sortie.part.textContent = part + " %";
-    sortie.min.textContent = fmt(stories * 5);
-    sortie.max.textContent = fmt(stories * 25);
-    animerNombre(stories);
-    // Les barres : l'influenceur au maximum de l'echelle, la partie foncee
-    // pour le bas de la fourchette ; Noctify a l'echelle du meme axe.
-    sortie.infl.style.setProperty("--min", "20%");
-    const moyenne = stories * 15;
-    sortie.noct.style.width = Math.max(1.5, Math.min(100, (49.99 / moyenne) * 100)) + "%";
+    el("est-budget-val").textContent = fmt(budget) + " €";
+    el("est-clients-val").textContent = String(clients);
+    el("est-pub").textContent = fmt(budget);
+    el("est-stories").textContent = fmt(Math.max(1, (clients * 30) / 20));
+    animer(Math.max(0, (budget - PREMIUM) * 12));
+    const echelle = Math.max(budget, PREMIUM);
+    el("est-barre-pub").style.width = (budget / echelle) * 100 + "%";
+    el("est-barre-noct").style.width = Math.max(2, (PREMIUM / echelle) * 100) + "%";
+    remplir(reglageBudget);
     remplir(reglageClients);
-    remplir(reglagePart);
   }
+  reglageBudget.addEventListener("input", calculer);
   reglageClients.addEventListener("input", calculer);
-  reglagePart.addEventListener("input", calculer);
   calculer();
 }
 
