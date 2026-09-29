@@ -1,4 +1,5 @@
 import { envoyerEmail } from "../lib/notifications/email.js";
+import { repondrePrevol } from "../lib/http/cors.js";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function sendJson(response, statusCode, body) {
@@ -153,6 +154,8 @@ async function sendNotificationEmail(payload) {
 }
 
 export default async function handler(request, response) {
+  // Prevol et en-tetes CORS pour les applis natives (lib/http/cors.js).
+  if (repondrePrevol(request, response)) return;
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     sendJson(response, 405, { message: "Méthode non autorisée." });

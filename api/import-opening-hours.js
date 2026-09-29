@@ -3,6 +3,7 @@ import { importOpeningHoursFromGoogle } from "../lib/google/openingHours.js";
 import { LIEUX_AUTORISES, listerPhotos, lirePhoto } from "../lib/google/photosLieu.js";
 import { lireFicheGoogle } from "../lib/google/ficheLieu.js";
 import { getSupabaseAdmin } from "../lib/db/supabaseAdmin.js";
+import { repondrePrevol } from "../lib/http/cors.js";
 
 function json(response, body, status = 200) {
   response.statusCode = status;
@@ -138,6 +139,8 @@ async function actionFiche(request, response, body) {
 }
 
 export default async function handler(request, response) {
+  // Prevol et en-tetes CORS pour les applis natives (lib/http/cors.js).
+  if (repondrePrevol(request, response)) return;
   if (request.method === "GET") return servirPhotos(request, response);
   if (request.method !== "POST") {
     return json(response, { error: "Methode non supportee." }, 405);

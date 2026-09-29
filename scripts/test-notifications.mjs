@@ -138,5 +138,32 @@ check("sans endpoint -> null", versAbonnementWebPush({ p256dh: "p", auth: "a" })
 check("ligne vide -> null", versAbonnementWebPush({}) === null);
 check("ligne absente -> null", versAbonnementWebPush(null) === null);
 
+console.log("\nAppli iOS native (APNs, 29/09/2026)");
+const { jetonApns, chargeApns, jetonMort, configApns, envoyerApns } = await import("../lib/notifications/apns.js");
+const JETON = "a1b2c3d4".repeat(8);
+check("jeton iOS reconnu", jetonApns({ endpoint: "apns:" + JETON }) === JETON);
+check("abonnement web -> pas un jeton iOS", jetonApns({ endpoint: "https://fcm.googleapis.com/x" }) === null);
+check("jeton non hexadecimal refuse", jetonApns({ endpoint: "apns:../../etc" }) === null);
+check("ligne vide -> null", jetonApns(null) === null);
+const chargeIos = chargeApns(valide);
+check("titre et texte dans aps.alert", chargeIos.aps.alert.title === valide.titre && chargeIos.aps.alert.body === valide.corps);
+check("l'URL suit la notification", chargeIos.url === valide.url);
+check("son par defaut", chargeIos.aps.sound === "default");
+check("410 -> jeton mort", jetonMort(410, "Unregistered"));
+check("BadDeviceToken -> jeton mort", jetonMort(400, "BadDeviceToken"));
+check("400 autre -> on garde", !jetonMort(400, "PayloadTooLarge"));
+check("429 -> on garde", !jetonMort(429, "TooManyRequests"));
+check("sans variables -> non configure", configApns({}) === null);
+check("sans cle -> rien ne part, rien n'est efface", (await envoyerApns(JETON, valide, {})) === "non_configure");
+{
+  // Une cle .p8 collee sur UNE ligne dans Vercel (\n ecrits en toutes lettres)
+  const { generateKeyPairSync } = await import("node:crypto");
+  const { privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+  const pem = privateKey.export({ type: "pkcs8", format: "pem" });
+  const conf = configApns({ APNS_KEY: pem.replace(/\n/g, "\\n"), APNS_KEY_ID: "ABC123DEFG", APNS_TEAM_ID: "TEAM123456", APNS_TOPIC: "com.noctify.app" });
+  check("cle .p8 sur une ligne -> relue avec ses retours", conf && conf.cle === pem);
+  check("production par defaut", conf && conf.hote === "https://api.push.apple.com");
+}
+
 console.log(`\n${passed} OK, ${failed} FAIL\n`);
 process.exit(failed > 0 ? 1 : 0);

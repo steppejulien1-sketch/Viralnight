@@ -8676,6 +8676,9 @@ var CLE_SUPABASE_CLUBBEUR =
 var supabaseClubbeur = createClient(URL_SUPABASE_CLUBBEUR, CLE_SUPABASE_CLUBBEUR, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
+// Dans l'appli iOS, c'est ce client qui recoit la session au retour de
+// Google / Apple (lien com.noctify.app://auth, voir natif.js).
+natif.brancherAuth(supabaseClubbeur);
 
 // Dans la coquille Capacitor, la page n'est pas servie par un serveur mais
 // depuis le telephone : l'origine vaut capacitor://localhost, et une URL
@@ -9259,6 +9262,12 @@ TAB_BOUTIQUE.addEventListener("click", function () { fermerAmis(); fermerStory()
 // explicite par #carte. C'est l'ecran pour lequel le clubbeur ouvre
 // l'appli.
 activerVue(location.hash === "#carte" ? "carte" : "boutique");
+// Appli iOS : toucher une notification ouvre l'onglet qu'elle vise
+// (#boutique, #profil...), comme le fait le service worker au web.
+window.addEventListener("noctify-notification", function (ev) {
+  var nom = ((ev.detail && ev.detail.ancre) || "").replace(/^#/, "");
+  if (nom && VUES[nom]) activerVue(nom);
+});
 
 /* ==========================================================
    ECRAN D'ACCUEIL — connexion reelle sur supabaseClubbeur
@@ -9351,6 +9360,16 @@ function brancherConnexion(bouton, fournisseur, libelle, messageAbsent) {
     }
     var echec = "La connexion " + libelle + " n'a pas pu démarrer. Réessaie, ou utilise ton email.";
 
+    /* Dans l'appli iOS (29/09/2026) : la connexion s'ouvre dans une feuille
+       Safari par-dessus l'appli, et revient par com.noctify.app://auth.
+       La webview ne part jamais chez Google. */
+    if (natif.estNatif) {
+      natif.connexionOAuth(supabaseClubbeur, fournisseur).then(function (res) {
+        if (res && res.error) afficherMessageAccueil(echec, true);
+      });
+      return;
+    }
+
     // ⚠️ L'onglet s'ouvre MAINTENANT, pas dans le .then().
     // signInWithOAuth est asynchrone (il calcule un verrou PKCE). Une
     // fois sa promesse resolue, le navigateur ne considere plus qu'on
@@ -9363,11 +9382,8 @@ function brancherConnexion(bouton, fournisseur, libelle, messageAbsent) {
       .signInWithOAuth({
         provider: fournisseur,
         options: {
-          // Dans la coquille Capacitor, window.location.origin vaut
-          // capacitor://localhost : cette URL de retour ne marchera pas
-          // telle quelle, il faudra passer par un lien profond declare
-          // cote iOS (voir MOBILE.md). Au navigateur et en PWA installee,
-          // c'est la bonne valeur.
+          // Au navigateur et en PWA installee. L'appli native ne passe pas
+          // ici : elle revient par com.noctify.app://auth (plus haut).
           redirectTo: window.location.origin + window.location.pathname,
           // Dans un cadre, on demande l'URL au lieu de s'y rendre : c'est
           // nous qui l'ouvrirons, dans un vrai onglet.
@@ -14772,8 +14788,41 @@ var MESSAGES_NOTIF = Array.prototype.slice.call(document.querySelectorAll(".js-m
 // abonnement. La cle PRIVEE, elle, ne vit que sur Vercel.
 var CLE_VAPID = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
 
+/* L'APPLI iOS NATIVE (29/09/2026) n'a ni service worker ni Web Push : ses
+   notifications passent par Apple (APNs). Le jeton de l'appareil va dans
+   la meme table, endpoint "apns:<jeton>" (lib/notifications/apns.js).
+   Android natif n'est pas branche : il parlerait FCM, pas APNs. */
+var PUSH_NATIF = natif.estNatif && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === "ios";
+// Etat de la permission native, au format de Notification.permission.
+var etatPushNatif = "default";
+if (PUSH_NATIF) natif.etatPush().then(function (e) { etatPushNatif = e === "prompt" ? "default" : e || "default"; });
+
+function permissionNotif() {
+  if (PUSH_NATIF) return etatPushNatif;
+  return "Notification" in window ? Notification.permission : "denied";
+}
+
 function pushDisponible() {
+  if (PUSH_NATIF) return true;
   return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+}
+
+async function enregistrerJetonNatif(jeton) {
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session || !jeton) return false;
+  var res = await supabaseClubbeur.from("push_subscriptions").upsert(
+    {
+      user_id: session.user.id,
+      endpoint: "apns:" + jeton,
+      // Obligatoires pour une ligne web, sans objet pour APNs.
+      p256dh: "natif",
+      auth: "natif",
+      plateforme: "ios",
+      last_seen_at: new Date().toISOString(),
+    },
+    { onConflict: "endpoint" }
+  );
+  return !res.error;
 }
 
 function plateformeTelephone() {
@@ -14841,6 +14890,32 @@ async function enregistrerAbonnement(abonnement) {
 }
 
 async function activerNotifications() {
+  if (PUSH_NATIF) {
+    // Session d'abord : sans compte, le jeton n'aurait nulle part ou aller.
+    // La fenetre native, elle, ne depend pas du geste de l'utilisateur.
+    var sessionNatif = (await supabaseClubbeur.auth.getSession()).data.session;
+    if (!sessionNatif) {
+      direNotif("Connecte-toi d'abord pour recevoir tes notifications.");
+      return false;
+    }
+    var natifRes = await natif.activerPush();
+    if (!natifRes || natifRes.erreur) {
+      if (natifRes && natifRes.erreur === "refus") etatPushNatif = "denied";
+      direNotif(
+        natifRes && natifRes.erreur === "refus"
+          ? "Notifications bloquées. Pour les réactiver : Réglages du téléphone › Noctify › Notifications."
+          : "Impossible d'activer les notifications sur ce téléphone. Réessaie dans un instant."
+      );
+      return false;
+    }
+    etatPushNatif = "granted";
+    if (!(await enregistrerJetonNatif(natifRes.jeton))) {
+      direNotif("Impossible d'enregistrer tes notifications. Réessaie dans un instant.");
+      return false;
+    }
+    direNotif("");
+    return true;
+  }
   if (!pushDisponible()) {
     direNotif(
       plateformeTelephone() === "ios"
@@ -14916,6 +14991,13 @@ async function activerNotifications() {
 }
 
 async function desactiverNotifications() {
+  if (PUSH_NATIF) {
+    var jeton = natif.jetonPushConnu();
+    await natif.desactiverPush();
+    if (jeton) await supabaseClubbeur.from("push_subscriptions").delete().eq("endpoint", "apns:" + jeton);
+    direNotif("");
+    return;
+  }
   var abonnement = await abonnementCourant();
   if (!abonnement) return;
   var endpoint = abonnement.endpoint;
@@ -14929,6 +15011,17 @@ async function desactiverNotifications() {
 
 async function synchroniserBasculeNotif() {
   if (!BOUTONS_NOTIF.length) return;
+  if (PUSH_NATIF) {
+    var e = await natif.etatPush();
+    etatPushNatif = e === "prompt" ? "default" : e || "default";
+    var actif = e === "granted" && Boolean(natif.jetonPushConnu());
+    peindreBasculeNotif(actif);
+    /* Apple peut changer le jeton d'un appareil : on le redemande a chaque
+       ouverture (sans fenetre, la permission est deja donnee) et on le
+       reenregistre, ce qui rafraichit aussi last_seen_at. */
+    if (actif) natif.activerPush().then(function (r) { if (r && r.jeton) enregistrerJetonNatif(r.jeton); });
+    return;
+  }
   if (!pushDisponible()) {
     /* ⚠️ SUR IPHONE, LE PUSH N'EXISTE QUE DEPUIS L'APPLI INSTALLEE.
        Dans Safari, `PushManager` n'est meme pas dans `window` : l'interrupteur
@@ -14944,7 +15037,7 @@ async function synchroniserBasculeNotif() {
     );
     return;
   }
-  if (Notification.permission !== "granted") {
+  if (permissionNotif() !== "granted") {
     peindreBasculeNotif(false);
     return;
   }
@@ -14983,10 +15076,10 @@ var CLE_REPORT_NOTIF = "vn_notif_report";
 var REPORT_NOTIF_MS = 3 * 24 * 60 * 60 * 1000;
 
 function inviteNotifPossible() {
-  if (!INVITE_NOTIF || !pushDisponible() || !CLE_VAPID) return false;
+  if (!INVITE_NOTIF || !pushDisponible() || (!CLE_VAPID && !PUSH_NATIF)) return false;
   // "granted" ou "denied" : le systeme a deja tranche, la carte n'a plus
   // rien a apporter. Elle ne sert que dans l'etat "default".
-  if (Notification.permission !== "default") return false;
+  if (permissionNotif() !== "default") return false;
   var report = Number(localStorage.getItem(CLE_REPORT_NOTIF) || 0);
   return !(report && Date.now() < report);
 }
@@ -18214,7 +18307,10 @@ if (/[?&]apercu=boutique(&|$)/.test(location.search)) {
 </script>
 
 <script>
+  // Jamais dans l'appli native : Capacitor sert deja les fichiers depuis
+  // le telephone (voir natif.js, couperServiceWorker).
   if ("serviceWorker" in navigator &&
+      typeof window.Capacitor === "undefined" &&
       location.hostname !== "127.0.0.1" &&
       location.hostname !== "localhost") {
     window.addEventListener("load", function () {

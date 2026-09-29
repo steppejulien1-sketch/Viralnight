@@ -13,12 +13,10 @@
    octets pour du code jamais execute, sur des reseaux de club qui rament.
    D'ou les `import()` dynamiques, tous derriere `estNatif`.
 
-   ⚠️ CE QUI N'EST PAS ICI : les notifications push natives. Elles exigent un
-   compte Apple Developer et une cle APNs que Julien n'a pas encore, ET un
-   chemin d'envoi serveur different du Web Push actuel (lib/notifications/
-   envoyer.js parle VAPID, pas APNs). A moitie branchees, elles pourriraient.
-   Le Web Push existant continue de marcher au navigateur et en PWA Android.
-   Voir MOBILE.md.
+   ⚠️ LES DEUX APPLIS PASSENT PAR ICI (29/09/2026) : l'appli clubbeur
+   (app-preview.html) et l'appli gerants (club-app.html). Importer ce
+   fichier suffit a faire d'une page une appli dans la coquille native
+   (voir demarrerCoque plus bas) ; au navigateur, l'importer ne fait rien.
 */
 
 export const estNatif =
@@ -72,13 +70,13 @@ export async function vibrer(genre) {
    Rend le texte du QR, ou null si l'utilisateur a ferme le scanner. En web,
    rend `undefined` : c'est le signal que l'appelant doit prendre son propre
    chemin (la boucle jsQR), et il se distingue de l'annulation. */
-export async function scannerQr() {
+export async function scannerQr(consigne) {
   const m = await plugin("scanner", () => import("@capacitor/barcode-scanner"));
   if (!m) return undefined;
   try {
     const res = await m.CapacitorBarcodeScanner.scanBarcode({
       hint: m.CapacitorBarcodeScannerTypeHint.QR_CODE,
-      scanInstructions: "Vise le QR code affiché dans le club",
+      scanInstructions: consigne || "Vise le QR code affiché dans le club",
       scanOrientation: 1, // portrait : l'affiche est verticale, le telephone aussi
     });
     return res && res.ScanResult ? res.ScanResult : null;
@@ -130,18 +128,25 @@ export async function positionAutorisee() {
 }
 
 /* ================= LES LIENS EXTERNES =================
-   Un lien http ouvert par window.open sort de l'appli et n'y revient pas
-   toujours. Le navigateur in-app garde le contexte : on lit, on ferme, on
-   est encore dans Noctify.
+   Un lien vers un autre site s'ouvre HORS de l'appli (29/09/2026) : dans
+   Safari, ou directement dans l'appli concernee quand elle est installee
+   (Instagram, TikTok, Google Maps reconnaissent leurs liens https). Charge
+   dans la webview, il remplacait l'appli par un site, sans bouton retour.
 
-   Ne concerne PAS les liens `instagram://` et `tiktok://`, qui doivent bien
-   quitter l'appli pour ouvrir la leur -- ils continuent de passer par
-   location.href. */
+   Les liens `instagram://` et `tiktok://` continuent de passer par
+   location.href : la coquille les confie deja au systeme. */
 export async function ouvrirLien(url) {
+  const lanceur = await plugin("launcher", () => import("@capacitor/app-launcher"));
+  if (lanceur) {
+    try {
+      await lanceur.AppLauncher.openUrl({ url });
+      return true;
+    } catch (e) {}
+  }
   const m = await plugin("browser", () => import("@capacitor/browser"));
   if (!m) return false;
   try {
-    await m.Browser.open({ url, presentationStyle: "popover" });
+    await m.Browser.open({ url });
     return true;
   } catch (e) {
     return false;
@@ -171,7 +176,10 @@ export async function preparerCoque({ surRetour, surReprise } = {}) {
          celle du texte -- l'inverse de ce qu'on croit en le lisant.
          capacitor.config.json dit "LIGHT" pour la meme raison. */
       await barre.StatusBar.setStyle({ style: "LIGHT" });
-      await barre.StatusBar.setOverlaysWebView({ overlay: false });
+      /* La page passe SOUS la barre d'etat (contentInset "never" dans
+         capacitor.config.js) : c'est son CSS qui se decale avec
+         env(safe-area-inset-top), comme dans la PWA installee. */
+      await barre.StatusBar.setOverlaysWebView({ overlay: true });
     } catch (e) {}
   }
 
@@ -275,3 +283,377 @@ export async function proposerAvisStore() {
     try { localStorage.setItem(CLE_AVIS_AUTO, String(Date.now())); } catch (e) {}
   } catch (e) {}
 }
+
+/* ================= LA COQUILLE, POSEE A L'IMPORT (29/09/2026) =================
+   Julien : « elle doit se comporter comme une app native, pas comme un site ».
+   Tout ce qui suit se pose TOUT SEUL des que la page importe ce fichier, et
+   seulement dans l'appli installee : au navigateur, rien ne tourne.
+
+   - pas de zoom (pincement, double tape, champ qui zoome au focus) ;
+   - pas de rebond ni de « tirer pour rafraichir » de Safari ;
+   - pas de loupe ni de menu « Copier » sur un appui long, pas de flash gris
+     au toucher (le texte des champs reste selectionnable) ;
+   - `/api/...` vise la prod : la page est servie par le telephone
+     (capacitor://localhost), une URL relative ne menait nulle part ;
+   - un lien vers un autre site sort de l'appli (ouvrirLien) ;
+   - aucun service worker : Capacitor sert deja les fichiers depuis le
+     telephone, un worker par-dessus ne garderait que des versions perimees ;
+   - les liens de retour dans l'appli (connexions, Instagram) sont ecoutes. */
+
+export const URL_PROD = "https://viralnight-koif.vercel.app";
+
+function poserStyleNatif() {
+  const html = document.documentElement;
+  html.classList.add("natif");
+
+  const vue = document.querySelector('meta[name="viewport"]');
+  const contenu = "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+  if (vue) vue.setAttribute("content", contenu);
+
+  const style = document.createElement("style");
+  style.id = "style-natif";
+  style.textContent = `
+    html.natif, html.natif body {
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    html.natif input, html.natif textarea, html.natif select, html.natif [contenteditable="true"] {
+      -webkit-user-select: text;
+      user-select: text;
+      -webkit-touch-callout: default;
+    }
+    html.natif img, html.natif a { -webkit-user-drag: none; }
+  `;
+  (document.head || html).appendChild(style);
+}
+
+function rerouterApi() {
+  const fetchOrigine = window.fetch.bind(window);
+  window.fetch = function (entree, options) {
+    if (typeof entree === "string" && entree.startsWith("/api/")) entree = URL_PROD + entree;
+    return fetchOrigine(entree, options);
+  };
+}
+
+function estExterne(href) {
+  try {
+    const u = new URL(href, location.href);
+    return (u.protocol === "http:" || u.protocol === "https:") && u.origin !== location.origin;
+  } catch (e) {
+    return false;
+  }
+}
+
+function sortirLesLiens() {
+  // Phase de capture : passe avant les gestionnaires de l'appli, qui
+  // n'ont donc pas a connaitre la coquille.
+  document.addEventListener(
+    "click",
+    (ev) => {
+      if (ev.defaultPrevented) return;
+      const a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+      if (!a || a.hasAttribute("download")) return;
+      const href = a.getAttribute("href");
+      if (!href || !estExterne(href)) return;
+      ev.preventDefault();
+      ouvrirLien(new URL(href, location.href).href);
+    },
+    true,
+  );
+  const ouvrirOrigine = window.open ? window.open.bind(window) : null;
+  window.open = function (url, cible, options) {
+    if (typeof url === "string" && estExterne(url)) {
+      ouvrirLien(new URL(url, location.href).href);
+      return null;
+    }
+    return ouvrirOrigine ? ouvrirOrigine(url, cible, options) : null;
+  };
+}
+
+function couperServiceWorker() {
+  const sw = navigator.serviceWorker;
+  if (!sw) return;
+  try {
+    sw.getRegistrations().then((liste) => liste.forEach((r) => r.unregister())).catch(() => {});
+    sw.register = () => Promise.reject(new Error("service worker inutile dans l'appli native"));
+  } catch (e) {}
+}
+
+/* ================= LES LIENS DE RETOUR =================
+   Chaque appli a son lien propre, = son identifiant (Info.plist) :
+     com.noctify.app://...      l'appli clubbeur
+     com.noctify.gerant://...   l'appli gerants
+   - ://auth        fin d'une connexion Google / Apple (Supabase)
+   - ://instagram   fin de la connexion Instagram d'un gerant (api/instagram.js)
+   - ://diagnostic  controle de la coquille (voir diagnostic plus bas)
+   - tout autre chemin : l'appli se rouvre avec la meme query et la meme ancre,
+     comme l'aurait fait le lien web (ex. ?instagram=connecte). */
+
+let clientAuth = null;
+let identifiant = null;
+
+/** L'identifiant de l'appli (com.noctify.app ou com.noctify.gerant), qui
+    sert aussi de schema de retour. */
+export async function identifiantAppli() {
+  if (identifiant) return identifiant;
+  const app = await plugin("app", () => import("@capacitor/app"));
+  try {
+    identifiant = app ? (await app.App.getInfo()).id : null;
+  } catch (e) {}
+  return identifiant;
+}
+
+/** L'appli confie son client Supabase : c'est lui qui recevra la session au
+    retour d'une connexion Google / Apple. Sans effet au navigateur. */
+export function brancherAuth(client) {
+  if (estNatif && client) clientAuth = client;
+}
+
+async function fermerNavigateur() {
+  const m = await plugin("browser", () => import("@capacitor/browser"));
+  if (m) {
+    try { await m.Browser.close(); } catch (e) {}
+  }
+}
+
+async function terminerConnexion(url) {
+  const client = clientAuth;
+  const query = url.searchParams;
+  const ancre = new URLSearchParams((url.hash || "").replace(/^#/, ""));
+  const erreur = query.get("error_description") || ancre.get("error_description") || query.get("error") || ancre.get("error");
+  if (erreur || !client) {
+    console.warn("[natif] retour de connexion sans session", erreur || "client absent");
+    window.dispatchEvent(new CustomEvent("noctify-connexion", { detail: { ok: false, erreur: erreur || "client" } }));
+    return;
+  }
+  try {
+    const code = query.get("code");
+    let res;
+    if (code) res = await client.auth.exchangeCodeForSession(code);
+    else if (ancre.get("access_token") && ancre.get("refresh_token")) {
+      res = await client.auth.setSession({ access_token: ancre.get("access_token"), refresh_token: ancre.get("refresh_token") });
+    }
+    const ok = !!(res && !res.error && res.data && res.data.session);
+    window.dispatchEvent(new CustomEvent("noctify-connexion", { detail: { ok } }));
+    /* On repart de zero, session posee : c'est exactement ce que fait le web
+       au retour de Google (la page se recharge, getSession la trouve). Les
+       deux applis savent deja reprendre un compte connecte au demarrage. */
+    if (ok) location.replace("/");
+  } catch (e) {
+    console.warn("[natif] echange de session impossible", e);
+    window.dispatchEvent(new CustomEvent("noctify-connexion", { detail: { ok: false, erreur: "echange" } }));
+  }
+}
+
+async function suivreLienRetour(brut) {
+  let url;
+  try { url = new URL(brut); } catch (e) { return; }
+  const id = await identifiantAppli();
+  if (!id || url.protocol !== id.toLowerCase() + ":") return;
+  const chemin = (url.host || url.pathname.replace(/^\/+/, "")).toLowerCase();
+  await fermerNavigateur();
+  if (chemin === "auth") return terminerConnexion(url);
+  if (chemin === "diagnostic") return diagnostic(url);
+  location.replace("/" + url.search + url.hash);
+}
+
+async function ecouterLiensRetour() {
+  const app = await plugin("app", () => import("@capacitor/app"));
+  if (!app) return;
+  try {
+    app.App.addListener("appUrlOpen", (e) => suivreLienRetour(e.url));
+    // Appli fermee au moment du retour : iOS la lance AVEC le lien.
+    const depart = await app.App.getLaunchUrl();
+    if (depart && depart.url) suivreLienRetour(depart.url);
+  } catch (e) {}
+}
+
+
+/* ================= CONNEXION GOOGLE / APPLE =================
+   Au navigateur la page part chez Google et y revient. Dans l'appli elle ne
+   doit PAS partir : la webview remplacerait l'appli par la page de Google
+   (et Google refuse les connexions dans une webview embarquee). Apple exige
+   une feuille Safari (SFSafariViewController) : on y ouvre la connexion, et
+   Supabase renvoie a la fin sur com.noctify.xxx://auth, que l'appli attrape
+   ci-dessus.
+
+   ⚠️ Cote Supabase, ce lien doit figurer dans Authentication > URL
+   Configuration > Redirect URLs, sinon Supabase renvoie sur le site.
+
+   Rend { error } comme signInWithOAuth, pour que l'appelant garde son
+   message d'erreur habituel. */
+export async function connexionOAuth(client, fournisseur) {
+  brancherAuth(client);
+  const id = await identifiantAppli();
+  const navigateur = await plugin("browser", () => import("@capacitor/browser"));
+  if (!id || !navigateur) return { error: new Error("coquille native indisponible") };
+  const { data, error } = await client.auth.signInWithOAuth({
+    provider: fournisseur,
+    options: { redirectTo: id + "://auth", skipBrowserRedirect: true },
+  });
+  if (error || !data || !data.url) return { error: error || new Error("URL de connexion absente") };
+  try {
+    await navigateur.Browser.open({ url: data.url });
+    return { error: null };
+  } catch (e) {
+    return { error: e };
+  }
+}
+
+/** Ouvre la page de connexion d'un service tiers (Instagram...) dans la
+    feuille Safari. Son retour arrive par le lien de l'appli. */
+export async function ouvrirConnexionTiers(url) {
+  const navigateur = await plugin("browser", () => import("@capacitor/browser"));
+  if (!navigateur) return false;
+  try {
+    await navigateur.Browser.open({ url });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* ================= LES NOTIFICATIONS NATIVES =================
+   Le Web Push n'existe pas dans l'appli native : iOS y passe par APNs. Le
+   jeton de l'appareil est range dans push_subscriptions, comme un
+   abonnement web, avec endpoint = "apns:<jeton>" (voir
+   lib/notifications/apns.js, qui l'envoie).
+
+   ⚠️ La permission n'est demandee qu'au clic, jamais au lancement : meme
+   regle qu'au web, un refus est definitif. */
+
+const CLE_JETON_PUSH = "vn_jeton_apns";
+
+export function jetonPushConnu() {
+  try { return localStorage.getItem(CLE_JETON_PUSH) || ""; } catch (e) { return ""; }
+}
+
+/** "granted" | "denied" | "prompt" -- sans jamais ouvrir de fenetre. */
+export async function etatPush() {
+  const m = await plugin("push", () => import("@capacitor/push-notifications"));
+  if (!m) return undefined;
+  try {
+    const e = await m.PushNotifications.checkPermissions();
+    return e.receive === "granted" ? "granted" : e.receive === "denied" ? "denied" : "prompt";
+  } catch (e) {
+    return "denied";
+  }
+}
+
+/** Demande la permission et rend le jeton de l'appareil.
+    { jeton } ou { erreur: "refus" | "echec" }. undefined au navigateur. */
+export async function activerPush() {
+  const m = await plugin("push", () => import("@capacitor/push-notifications"));
+  if (!m) return undefined;
+  const P = m.PushNotifications;
+  try {
+    let e = await P.checkPermissions();
+    if (e.receive !== "granted" && e.receive !== "denied") e = await P.requestPermissions();
+    if (e.receive !== "granted") return { erreur: "refus" };
+  } catch (e) {
+    return { erreur: "echec" };
+  }
+  return new Promise((resoudre) => {
+    const ecoutes = [];
+    const fin = (r) => {
+      ecoutes.forEach((h) => Promise.resolve(h).then((x) => x && x.remove && x.remove()).catch(() => {}));
+      resoudre(r);
+    };
+    const minuterie = setTimeout(() => fin({ erreur: "echec" }), 15000);
+    ecoutes.push(P.addListener("registration", (t) => {
+      clearTimeout(minuterie);
+      try { localStorage.setItem(CLE_JETON_PUSH, t.value); } catch (e) {}
+      fin({ jeton: t.value });
+    }));
+    ecoutes.push(P.addListener("registrationError", (err) => {
+      clearTimeout(minuterie);
+      console.warn("[natif] enregistrement APNs refuse", err && err.error);
+      fin({ erreur: "echec" });
+    }));
+    P.register().catch(() => { clearTimeout(minuterie); fin({ erreur: "echec" }); });
+  });
+}
+
+export async function desactiverPush() {
+  const m = await plugin("push", () => import("@capacitor/push-notifications"));
+  try { localStorage.removeItem(CLE_JETON_PUSH); } catch (e) {}
+  if (!m) return;
+  try { await m.PushNotifications.unregister(); } catch (e) {}
+}
+
+/* Toucher une notification ouvre l'appli sur le bon ecran : la charge porte
+   l'URL web (ex. /app-preview.html#boutique), l'appli recoit son ancre par
+   l'evenement noctify-notification. */
+async function ecouterNotificationsTouchees() {
+  const m = await plugin("push", () => import("@capacitor/push-notifications"));
+  if (!m) return;
+  try {
+    m.PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+      const donnees = (action && action.notification && action.notification.data) || {};
+      const url = String(donnees.url || "");
+      const ancre = url.includes("#") ? url.slice(url.indexOf("#")) : "";
+      window.dispatchEvent(new CustomEvent("noctify-notification", { detail: { url, ancre } }));
+    });
+  } catch (e) {}
+}
+
+/* ================= LE DIAGNOSTIC =================
+   com.noctify.app://diagnostic ecrit dans la console de l'appli (celle que
+   lit Xcode, ou `xcrun simctl launch --console`) une ligne NOCTIFY-DIAG avec
+   l'etat de la coquille. C'est ce qui a servi a verifier les applis dans le
+   simulateur. Lecture seule : rien n'est ecrit en base, aucun compte touche. */
+async function diagnostic(url) {
+  const r = { appli: await identifiantAppli() };
+  const html = document.documentElement;
+  r.natif = html.classList.contains("natif");
+  r.modeAppli = html.classList.contains("mode-appli");
+  r.viewport = (document.querySelector('meta[name="viewport"]') || {}).content || "";
+  r.rebond = getComputedStyle(html).overscrollBehaviorY || getComputedStyle(html).overscrollBehavior || "";
+  r.selection = getComputedStyle(document.body).webkitUserSelect || getComputedStyle(document.body).userSelect || "";
+  const sonde = document.createElement("div");
+  sonde.style.cssText = "position:fixed;top:0;left:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)";
+  document.body.appendChild(sonde);
+  r.zoneSure = { haut: getComputedStyle(sonde).paddingTop, bas: getComputedStyle(sonde).paddingBottom };
+  sonde.remove();
+  r.serviceWorkers = navigator.serviceWorker ? (await navigator.serviceWorker.getRegistrations().catch(() => [])).length : "absent";
+  r.largeur = window.innerWidth;
+  r.origine = location.origin;
+  r.push = await etatPush();
+  const essai = async (chemin, options) => {
+    try {
+      return (await fetch(chemin, options)).status;
+    } catch (e) {
+      return "bloque:" + (e && e.message);
+    }
+  };
+  // Appel reel de l'API depuis la coquille : un statut HTTP (meme 401) prouve
+  // que le CORS laisse passer la reponse ; "bloque" prouve le contraire.
+  r.apiClubbeur = await essai("/api/credit-clubbeur?action=parrainage", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+  r.apiGerant = await essai("/api/instagram?action=status", { headers: { Authorization: "Bearer diagnostic" } });
+  r.clientAuth = !!clientAuth;
+  const fournisseur = url && url.searchParams.get("oauth");
+  if (fournisseur && clientAuth) r.oauth = (await connexionOAuth(clientAuth, fournisseur)).error ? "echec" : "feuille-ouverte";
+  if (url && url.searchParams.get("push") === "1") r.pushActive = await activerPush();
+  console.log("NOCTIFY-DIAG " + JSON.stringify(r));
+  return r;
+}
+
+async function demarrerCoque() {
+  poserStyleNatif();
+  rerouterApi();
+  sortirLesLiens();
+  couperServiceWorker();
+  ecouterLiensRetour();
+  ecouterNotificationsTouchees();
+  const clavier = await plugin("keyboard", () => import("@capacitor/keyboard"));
+  if (clavier) {
+    try { await clavier.Keyboard.setAccessoryBarVisible({ isVisible: false }); } catch (e) {}
+  }
+}
+
+if (estNatif) demarrerCoque();

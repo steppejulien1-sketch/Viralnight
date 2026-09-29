@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
+import { repondrePrevol } from "../lib/http/cors.js";
 
 const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
@@ -150,6 +151,8 @@ async function provisionnerEtablissement(supabase, { name, city, phone, category
 }
 
 export default async function handler(request, response) {
+  // Prevol et en-tetes CORS pour les applis natives (lib/http/cors.js).
+  if (repondrePrevol(request, response)) return;
   if (request.method !== "POST") {
     return json(response, { error: "Method not allowed" }, 405);
   }

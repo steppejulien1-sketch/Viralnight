@@ -33,6 +33,7 @@ import { lireOffre, choisirDestinataires, heuresAvantProchainEnvoi, jetonDesabon
 import { lireReglages, contenuEmail, codeCoupon, jourBruxelles, TYPES as TYPES_EMAILS } from "../lib/offres/automatiques.js";
 import { geocoder } from "../lib/google/geocoder.js";
 import { doitRepondre, repondre, messageEnregistre, eviterRepetition } from "../lib/support/reponseAuto.js";
+import { poserCors, repondrePrevol } from "../lib/http/cors.js";
 
 const ADMIN_EMAIL = "steppejulien1@gmail.com";
 
@@ -607,23 +608,8 @@ async function actionAutoValider(request, response) {
    Liste blanche plutot que "*" : cette route efface des comptes. Ce n'est
    pas le CORS qui autorise l'appel — c'est le jeton de session, verifie
    plus bas — mais autant ne pas l'offrir a n'importe quelle page web. */
-const ORIGINES_APPLI = new Set([
-  "capacitor://localhost",
-  "ionic://localhost",
-  "http://localhost",
-  "https://localhost",
-  "https://viralnight-koif.vercel.app",
-]);
-
-function poserCors(request, response) {
-  const origine = request.headers.origin;
-  if (!origine || !ORIGINES_APPLI.has(origine)) return;
-  response.setHeader("Access-Control-Allow-Origin", origine);
-  response.setHeader("Vary", "Origin");
-  response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
-  response.setHeader("Access-Control-Max-Age", "86400");
-}
+/* ORIGINES_APPLI et poserCors vivent dans lib/http/cors.js depuis le
+   29/09/2026 : toutes les routes appelees par les applis s'en servent. */
 
 /* ================= LE SUPPORT PREVIENT (13/09/2026) =================
    Julien : "creer un vrai systeme, que je recoive quelque chose quand
@@ -1316,11 +1302,10 @@ export default async function handler(request, response) {
 
   /* Le prevol arrive en OPTIONS : il doit passer avant le controle de
      methode, sinon le navigateur recoit un 405 et abandonne l'appel reel. */
-  if ((action === "supprimer-compte" || action === "support-nouveau" || action === "support-reponse" || action === "parrainage") && request.method === "OPTIONS") {
-    poserCors(request, response);
-    response.statusCode = 204;
-    return response.end();
-  }
+  /* Toutes les actions, plus seulement les quatre de l'appli clubbeur :
+     l'appli gerants (29/09/2026) appelle sync-boutique, activite-clients,
+     valider-bon et qr-club depuis capacitor://localhost. */
+  if (repondrePrevol(request, response)) return;
 
   if (request.method !== "POST") return json(response, { error: "Method not allowed" }, 405);
   if (action === "sync-boutique") return actionSyncBoutique(request, response);

@@ -9,8 +9,11 @@
 
 import { getSupabaseAdmin } from "../lib/db/supabaseAdmin.js";
 import { isValidPublicCode, isRateLimited, resolveEstablishment, json } from "../lib/tracking/publicEndpoint.js";
+import { repondrePrevol } from "../lib/http/cors.js";
 
 export default async function handler(request, response) {
+  // Prevol et en-tetes CORS pour les applis natives (lib/http/cors.js).
+  if (repondrePrevol(request, response)) return;
   if (request.method !== "GET") return json(response, { error: "Methode non supportee." }, 405);
 
   if (isRateLimited(request)) {

@@ -37,6 +37,7 @@ import { normaliserHandle } from "../lib/points/mentionAutomatique.js";
 import { deciderStory } from "../lib/admin/deciderContenu.js";
 import { deciderSortStory, SORTS } from "../lib/points/verificationStory.js";
 import { envoyerEmailsAuto } from "../lib/offres/envoyerRappels.js";
+import { repondrePrevol } from "../lib/http/cors.js";
 
 function json(response, body, status = 200) {
   response.statusCode = status;
@@ -140,19 +141,43 @@ async function actionConnect(request, response) {
  * revenait sur une autre page, l'appli club continuant d'afficher
  * "non connecte". C'est ce qui donnait l'impression que rien ne marchait.
  */
+/* "appli-gerant" (29/09/2026) : la connexion lancee depuis l'appli iOS des
+ * gerants se fait dans une feuille Safari par-dessus l'appli. Pour la
+ * refermer et revenir dans l'appli, la fin doit viser le lien propre a
+ * l'appli (declare dans ios-gerant/App/App/Info.plist), pas une page web :
+ * sinon le gerant finit sur le site, dans la feuille Safari.
+ */
 const PAGES_RETOUR = {
   dashboard: "/app.html#instagram",
   club: "/club-app.html#reglages",
+  "appli-gerant": "com.noctify.gerant://instagram",
 };
 const RETOUR_DEFAUT = "dashboard";
 
+// Object.hasOwn : une cle comme "constructor" ne doit pas remonter le
+// prototype et devenir une "page".
+function retourConnu(cle) {
+  return typeof cle === "string" && Object.hasOwn(PAGES_RETOUR, cle);
+}
+
 function cheminRetour(cle) {
-  return PAGES_RETOUR[cle] || PAGES_RETOUR[RETOUR_DEFAUT];
+  return retourConnu(cle) ? PAGES_RETOUR[cle] : PAGES_RETOUR[RETOUR_DEFAUT];
+}
+
+/* Le statut va dans la QUERY, avant l'ancre : club-app le lit avec
+ * searchParams. Colle apres "#reglages" il tombait dans l'ancre et
+ * n'etait jamais lu (29/09/2026). Seul app.js (dashboard) le cherche dans
+ * l'ancre (#instagram?instagram=...) : sa forme historique est gardee. */
+function urlRetour(cle, statut) {
+  const chemin = cheminRetour(cle);
+  if (!retourConnu(cle) || cle === "dashboard") return `${chemin}?instagram=${statut}`;
+  const [base, ancre] = chemin.split("#");
+  return `${base}?instagram=${statut}${ancre ? "#" + ancre : ""}`;
 }
 
 function redirigerCallback(response, statut, retour) {
   response.statusCode = 302;
-  response.setHeader("Location", `${cheminRetour(retour)}?instagram=${statut}`);
+  response.setHeader("Location", urlRetour(retour, statut));
   response.end();
 }
 
@@ -740,6 +765,8 @@ const ACTIONS = {
 };
 
 export default async function handler(request, response) {
+  // Prevol et en-tetes CORS pour les applis natives (lib/http/cors.js).
+  if (repondrePrevol(request, response)) return;
   const url = new URL(request.url, "http://localhost");
   const action = url.searchParams.get("action");
   const fn = ACTIONS[action];

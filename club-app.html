@@ -5988,6 +5988,9 @@
     </div>
 
     <script type="module">
+      /* L'appli iOS des gerants (29/09/2026) : importer le pont suffit a
+         poser la coquille native (natif.js). Au navigateur il ne fait rien. */
+      import * as natif from "./natif.js";
       import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
       import { fetchDashboardData, fallbackDashboardData } from "./dashboardData.js";
       import { getDashboardStats, getActiveRewards } from "./lib/dashboardStats.js";
@@ -6185,10 +6188,16 @@
               return;
             }
           } catch (e) {}
-          var { error } = await supabase.auth.signInWithOAuth({
-            provider: fournisseur,
-            options: { redirectTo: urlDeRetour() },
-          });
+          /* Appli iOS : feuille Safari, retour par com.noctify.gerant://auth.
+             Le bouton se rearme tout de suite, la feuille peut etre fermee
+             sans se connecter. */
+          var { error } = natif.estNatif
+            ? await natif.connexionOAuth(supabase, fournisseur)
+            : await supabase.auth.signInWithOAuth({
+                provider: fournisseur,
+                options: { redirectTo: urlDeRetour() },
+              });
+          if (natif.estNatif) b.disabled = false;
           if (error) {
             b.disabled = false;
             msg.style.display = "block";
@@ -6205,10 +6214,13 @@
         var bouton = ev.currentTarget;
         var msg = $("#accueil-msg");
         bouton.disabled = true;
-        var { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: urlDeRetour() },
-        });
+        var { error } = natif.estNatif
+          ? await natif.connexionOAuth(supabase, "google")
+          : await supabase.auth.signInWithOAuth({
+              provider: "google",
+              options: { redirectTo: urlDeRetour() },
+            });
+        if (natif.estNatif) bouton.disabled = false;
         if (error) {
           // Sans ce retour, le bouton restait desactive et rien
           // n'expliquait pourquoi il ne se passait rien.
@@ -6312,10 +6324,18 @@
           // Facebook depuis l'appli et on revenait sur une autre page,
           // l'appli continuant d'afficher "non connecte". C'est ce qui
           // donnait l'impression que la connexion ne marchait pas.
-          var r = await fetch("/api/instagram?action=connect&retour=club", {
+          // Appli iOS : la fin de la connexion vise le lien de l'appli
+          // (appli-gerant, table figee de api/instagram.js), pas une page web.
+          var r = await fetch("/api/instagram?action=connect&retour=" + (natif.estNatif ? "appli-gerant" : "club"), {
             headers: { Authorization: "Bearer " + ETAT.session.access_token },
           });
           var corps = await r.json();
+          if (corps && corps.url && natif.estNatif) {
+            if (!(await natif.ouvrirConnexionTiers(corps.url))) throw new Error("");
+            bouton.disabled = false;
+            bouton.innerHTML = contenu;
+            return;
+          }
           if (corps && corps.url) { window.location.href = corps.url; return; }
           throw new Error(corps && corps.error);
         } catch (erreur) {
@@ -6546,7 +6566,10 @@
          appli qui ne sait plus de quelle invitation il vient. */
       function urlDeRetour() {
         try {
-          var retour = new URL(window.location.href);
+          /* Dans l'appli iOS l'adresse de la page est capacitor://localhost,
+             qui ne veut rien dire dans un e-mail. Le code a 6 chiffres reste
+             la porte de l'appli ; le lien de secours ouvre la version web. */
+          var retour = new URL(natif.estNatif ? natif.URL_PROD + "/club-app.html" : window.location.href);
           var jeton = invitationCourante();
           if (jeton) retour.searchParams.set("invitation", jeton);
           return retour.toString();
@@ -11295,6 +11318,14 @@
         async function camera() {
           $("#bon-camera").hidden = false;
           $("#bon-camera-msg").textContent = "Vise le QR du bon";
+          /* Appli iOS : la camera du systeme (mise au point, lumiere d'un bar
+             sombre, decodage materiel) plutot que jsQR sur une <video>. */
+          if (natif.estNatif) {
+            var lu = await natif.scannerQr("Vise le QR du bon sur le téléphone du client");
+            if (lu) valider(lu);
+            else if (lu === null) fermer();
+            if (lu !== undefined) return;
+          }
           try {
             flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
           } catch (e) {
@@ -11486,7 +11517,21 @@
         setTimeout(function () { if (ETAT.session && !estDemo()) appeler({ mode: "compter" }).then(function (j) { infos = j; peindre(); }).catch(function () {}); }, 1500);
       })();
 
-      demarrer();
+      /* Appli iOS : la session revient de Google / Apple par ce client, la
+         barre d'etat se regle, et l'ecran de lancement part quand le premier
+         rendu est fait -- pas sur une minuterie. Au reveil apres plus de
+         5 min, les chiffres sont relus (une story a pu arriver entre-temps). */
+      natif.brancherAuth(supabase);
+      natif.preparerCoque({
+        surReprise: (function () {
+          var depuis = Date.now();
+          return function () {
+            if (Date.now() - depuis > 5 * 60 * 1000 && ETAT.session) demarrer();
+            depuis = Date.now();
+          };
+        })(),
+      });
+      demarrer().finally(function () { natif.masquerSplash(); });
     </script>
   </body>
 </html>
