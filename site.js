@@ -1,14 +1,14 @@
-/* Site public Noctify pour les commerces (29/09/2026).
+/* Site public Noctify pour les commerces (29/09/2026, v3).
 
-   - La carte du premier ecran se tamponne une fois au chargement : quatre
-     passages (+20), puis la story (+100) qui debloque la recompense.
-     Sans animation (prefers-reduced-motion), elle s'affiche deja remplie.
-   - Le bon d'exemple change de QR toutes les 30 s et son heure defile,
-     comme dans l'appli : c'est ce qui empeche une capture d'ecran de passer.
-   - Le bandeau des commerces defile en boucle (piste doublee ici).
-   - Le formulaire poste sur /api/demo-request (meme route que l'ancienne
-     page ; l'offre choisie est ajoutee au nom du commerce, pour que le
-     rappel sache de quoi parler sans toucher a la table). */
+   - La carte du premier ecran se remplit une fois : quatre passages (+20),
+     puis la story (+100) qui debloque le cappuccino.
+   - Le bandeau des commerces defile : le texte est double ici pour que la
+     boucle ne se voie pas.
+   - Le bon d'exemple porte un vrai QR code, qui change toutes les 30 s
+     comme dans l'appli (sans l'heure dessous : Julien ne la voulait pas).
+   - « Essayez » : le visiteur ajoute une recompense et la voit apparaitre
+     dans la boutique du telephone. Rien n'est enregistre.
+   - Le formulaire poste sur /api/demo-request (nom, e-mail, telephone). */
 
 import QRCode from "qrcode";
 
@@ -21,26 +21,32 @@ const suivreDefilement = () => entete.classList.toggle("defile", window.scrollY 
 window.addEventListener("scroll", suivreDefilement, { passive: true });
 suivreDefilement();
 
-/* ---------- La carte qui se tamponne ---------- */
-const carte = document.getElementById("carte-demo");
-const tampons = [...carte.querySelectorAll(".tampon")];
-const solde = document.getElementById("solde");
-const jauge = document.getElementById("jauge");
+/* ---------- La carte du client qui se remplit ---------- */
+const pass = document.getElementById("pass");
+const lignes = [...pass.querySelectorAll(".pass-historique li")];
+const solde = document.getElementById("pass-solde");
+const jauge = document.getElementById("pass-jauge");
+const objectif = document.getElementById("pass-objectif");
+const reste = document.getElementById("pass-reste");
 const OBJECTIF = 180;
 
-function afficherSolde(valeur) {
+function afficher(valeur) {
   solde.textContent = String(valeur);
   jauge.style.width = Math.min(100, (valeur / OBJECTIF) * 100) + "%";
+  if (valeur >= OBJECTIF) {
+    pass.classList.add("pleine");
+    objectif.textContent = "Cappuccino offert : à montrer au comptoir";
+  } else {
+    reste.textContent = String(OBJECTIF - valeur);
+  }
 }
 
 function compter(de, a, duree) {
-  if (calme) return afficherSolde(a);
   const debut = performance.now();
   return new Promise((fin) => {
     const pas = (t) => {
       const k = Math.min(1, (t - debut) / duree);
-      const e = 1 - Math.pow(1 - k, 3);
-      afficherSolde(Math.round(de + (a - de) * e));
+      afficher(Math.round(de + (a - de) * (1 - Math.pow(1 - k, 3))));
       if (k < 1) requestAnimationFrame(pas);
       else fin();
     };
@@ -48,80 +54,107 @@ function compter(de, a, duree) {
   });
 }
 
-async function tamponner() {
-  let total = 0;
+(async function remplir() {
   if (calme) {
-    tampons.forEach((t) => t.classList.add("pose"));
-    total = tampons.reduce((s, t) => s + Number(t.dataset.pts), 0);
-    afficherSolde(total);
-    carte.classList.add("pleine");
-    return;
+    lignes.forEach((l) => l.classList.add("vu"));
+    return afficher(OBJECTIF);
   }
-  await attendre(500);
-  for (const t of tampons) {
-    const avant = total;
-    total += Number(t.dataset.pts);
-    const story = t.classList.contains("tampon-story");
-    if (story) await attendre(450);
-    t.classList.add("pose");
-    await compter(avant, total, story ? 700 : 260);
-    await attendre(story ? 0 : 160);
+  let total = 0;
+  await attendre(600);
+  for (const ligne of lignes) {
+    const pts = Number(ligne.dataset.pts);
+    ligne.classList.add("vu");
+    await compter(total, total + pts, pts > 20 ? 800 : 300);
+    total += pts;
+    await attendre(pts > 20 ? 0 : 250);
   }
-  carte.classList.add("pleine");
-}
-tamponner();
+})();
 
-/* ---------- De vrais QR codes ----------
-   Des codes generes pour de vrai (lib qrcode, deja dans le projet), pas un
-   motif au hasard : un faux QR se voit tout de suite (Julien, 29/09). Le
-   chevalet mene au site ; le bon d'exemple change de code toutes les 30 s,
-   comme dans l'appli. */
-async function dessinerQr(conteneur, texte) {
-  const svg = await QRCode.toString(texte, {
+/* ---------- Le bandeau : texte double pour une boucle sans a-coup ---------- */
+const piste = document.querySelector(".bandeau-piste");
+if (piste) {
+  const copie = piste.firstElementChild.cloneNode(true);
+  copie.setAttribute("aria-hidden", "true");
+  piste.appendChild(copie);
+}
+
+/* ---------- Le vrai QR code du bon ---------- */
+const qrBon = document.getElementById("qr-bon");
+let fenetre = -1;
+async function majQr() {
+  const f = Math.floor(Date.now() / 30000);
+  if (f === fenetre) return;
+  fenetre = f;
+  qrBon.innerHTML = await QRCode.toString("NOCTIFY-EXEMPLE-BON-" + f, {
     type: "svg",
     margin: 0,
     errorCorrectionLevel: "M",
     color: { dark: "#141414", light: "#ffffff" },
   });
-  conteneur.innerHTML = svg;
 }
+majQr();
+setInterval(majQr, 2000);
 
-dessinerQr(document.getElementById("qr-chevalet"), "https://viralnight-koif.vercel.app/");
+/* ---------- Essayez : ajouter une recompense ---------- */
+const liste = document.getElementById("liste-recompenses");
+const apercu = document.getElementById("apercu-recompenses");
+const ajout = document.getElementById("ajout-recompense");
+const note = document.getElementById("editeur-note");
+const SOLDE_DEMO = 240;
+const MAX = 6;
 
-const qrBon = document.getElementById("qr-bon");
-const heureBon = document.getElementById("bon-heure");
-let fenetre = -1;
-function tictac() {
-  const maintenant = new Date();
-  heureBon.textContent = maintenant.toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const f = Math.floor(maintenant.getTime() / 30000);
-  if (f !== fenetre) {
-    fenetre = f;
-    dessinerQr(qrBon, "NOCTIFY-EXEMPLE-BON-" + f);
+const recompenses = [...liste.querySelectorAll("li")].map((li) => ({
+  nom: li.querySelector("span").textContent,
+  points: parseInt(li.querySelector("b").textContent.replace(/\s/g, ""), 10),
+}));
+
+const format = (n) => n.toLocaleString("fr-BE");
+
+function tuile(r, nouveau) {
+  const li = document.createElement("li");
+  if (nouveau) li.className = "nouveau";
+  const nom = document.createElement("span");
+  nom.textContent = r.nom;
+  const pts = document.createElement("b");
+  pts.textContent = format(r.points) + " pts";
+  li.append(nom, pts);
+  if (r.points <= SOLDE_DEMO) {
+    const dispo = document.createElement("em");
+    dispo.textContent = "Disponible";
+    li.append(dispo);
   }
-}
-tictac();
-setInterval(tictac, 1000);
-
-/* ---------- Le bandeau des commerces : une piste doublee ----------
-   L'animation fait glisser la piste de la moitie de sa largeur ; avec deux
-   copies bout a bout, la fin rejoint le debut sans a-coup. La copie est
-   cachee aux lecteurs d'ecran (on ne lit pas deux fois la liste). */
-const piste = document.querySelector(".defile-piste");
-if (piste) {
-  [...piste.children].forEach((li) => {
-    const copie = li.cloneNode(true);
-    copie.setAttribute("aria-hidden", "true");
-    piste.appendChild(copie);
-  });
+  return li;
 }
 
-/* ---------- Les offres pre-remplissent le formulaire ---------- */
-const choixOffre = document.getElementById("choix-offre");
-document.querySelectorAll("[data-offre]").forEach((lien) => {
-  lien.addEventListener("click", () => {
-    choixOffre.value = lien.dataset.offre;
-  });
+function rendreApercu(dernier) {
+  apercu.replaceChildren(...recompenses.map((r, i) => tuile(r, i === dernier)));
+}
+rendreApercu(-1);
+
+ajout.addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const nom = ajout.elements.nom.value.trim();
+  const points = Number(ajout.elements.points.value);
+  if (!nom) {
+    ajout.elements.nom.focus();
+    return;
+  }
+  if (recompenses.length >= MAX) {
+    note.textContent = "Ça suffit pour la démonstration. Dans l'appli, vous en mettez autant que vous voulez.";
+    return;
+  }
+  recompenses.push({ nom, points });
+  const li = document.createElement("li");
+  li.className = "nouveau";
+  const s = document.createElement("span");
+  s.textContent = nom;
+  const b = document.createElement("b");
+  b.textContent = format(points) + " pts";
+  li.append(s, b);
+  liste.appendChild(li);
+  rendreApercu(recompenses.length - 1);
+  ajout.reset();
+  note.textContent = "Ajoutée. Regardez le téléphone : vos clients la voient tout de suite.";
 });
 
 /* ---------- Le formulaire ---------- */
@@ -138,24 +171,25 @@ function verifier(champ) {
 formulaire.addEventListener("submit", async (ev) => {
   ev.preventDefault();
   erreur.textContent = "";
-  const { club, email, phone, offre } = formulaire.elements;
-  const valides = [club, email, phone].map(verifier);
+  const { club, email, phone } = formulaire.elements;
+  const champs = [club, email, phone];
+  const valides = champs.map(verifier);
   if (valides.includes(false)) {
-    erreur.textContent = !valides[1] && email.value.trim()
-      ? "Cette adresse e-mail ne semble pas complète."
-      : "Remplissez le nom du commerce, l'e-mail et le téléphone.";
-    [club, email, phone][valides.indexOf(false)].focus();
+    erreur.textContent =
+      !valides[1] && email.value.trim()
+        ? "Cette adresse e-mail ne semble pas complète."
+        : "Remplissez le nom du commerce, l'e-mail et le téléphone.";
+    champs[valides.indexOf(false)].focus();
     return;
   }
 
   bouton.disabled = true;
   bouton.textContent = "Envoi…";
   try {
-    const nom = club.value.trim() + (offre.value ? " — offre " + offre.value : "");
     const reponse = await fetch("/api/demo-request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ club: nom, email: email.value.trim(), phone: phone.value.trim() }),
+      body: JSON.stringify({ club: club.value.trim(), email: email.value.trim(), phone: phone.value.trim() }),
     });
     const corps = await reponse.json().catch(() => ({}));
     if (!reponse.ok) throw new Error(corps.message || corps.error || "");

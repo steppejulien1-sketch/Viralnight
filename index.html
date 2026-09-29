@@ -22,25 +22,20 @@
     <link rel="stylesheet" href="./site.css" />
   </head>
   <!--
-    SITE NOCTIFY POUR LES COMMERCES (29/09/2026). Remplace l'ancienne landing
-    « boites de nuit » (landing.css / landing.js, qui ne servent plus ici).
+    SITE NOCTIFY POUR LES COMMERCES (29/09/2026, v3 apres les retours de Julien).
 
-    THESIS : la page est une carte de fidelite qui se remplit. Un seul tampon
-    change tout : la story. Refuse le hero SaaS (degrade + telephone flottant
-    + trois cartes d'avantages).
-    OWN-WORLD : papier blanc, encre noire, tampons rouge Noctify #de3131 ;
-    une carte noire facon carte de membre posee sur une vraie photo ; vraies
-    photos de commerces (Unsplash, licence libre, servies depuis public/site) ;
-    titres Archivo 800 serres, texte Inter ; section stories en noir (le
-    rouge plein « piquait les yeux », Julien 29/09).
-    STORY : le commercant comprend « des points a chaque passage, plus avec
-    une story », voit ce qu'il regle lui-meme, choisit une offre, laisse son
-    numero.
-    FIRST VIEWPORT : titre a gauche, action « Etre rappele » visible ; a
-    droite la carte d'un commerce d'exemple qui se tamponne : quatre passages
-    (+20), puis la story (+100) qui debloque la recompense.
-    FORM : carte de fidelite a tampons (1re de la liste), mise en scene
-    « la carte se remplit au chargement ».
+    THESIS : montrer le vrai produit dans de vrais telephones (les memes que
+    dans l'appli clubbeur), pas des maquettes decoratives. Tout sur fond blanc,
+    une seule couleur d'accent : le rouge Noctify.
+    OWN-WORLD : blanc partout (plus de sections grises ou noires), encre noire,
+    rouge #de3131 pour les points ; telephones a cadre noir 9/19.5 ; titres
+    Archivo 800, texte Inter ; vraies photos (story de l'appli clubbeur,
+    Unsplash).
+    STORY : le commercant voit sa carte, reconnait ses soucis (Joyn), comprend
+    les trois gestes du client (Zerosix), essaie lui-meme d'ajouter une
+    recompense, choisit une offre, laisse nom / e-mail / telephone.
+    FIRST VIEWPORT : titre et « Etre rappele » a gauche ; a droite une vraie
+    photo de cafe et, posee dessus, la carte du client qui se remplit.
   -->
   <body>
     <a class="evitement" href="#contenu">Aller au contenu</a>
@@ -53,6 +48,7 @@
         </a>
         <nav class="nav" aria-label="Navigation principale">
           <a href="#fonctionnement">Comment ça marche</a>
+          <a href="#essayer">Essayer</a>
           <a href="#offres">Offres</a>
           <a href="#questions">Questions</a>
         </nav>
@@ -79,199 +75,206 @@
             </div>
           </div>
 
-          <figure class="scene-carte" aria-label="Exemple : la carte de fidélité d'un client dans un café">
+          <figure class="scene-carte">
             <img class="scene-photo" src="/site/ouverture-cafe.webp" alt="" width="1100" height="1300" fetchpriority="high" />
-            <div class="carte" id="carte-demo">
-              <div class="carte-haut">
+            <div class="pass" id="pass" aria-label="La carte de fidélité d'un client dans l'appli Noctify">
+              <div class="pass-tete">
+                <span class="pass-logo" aria-hidden="true">CÉ</span>
                 <div>
-                  <p class="carte-commerce">Café des Étangs</p>
-                  <p class="carte-lieu">Ixelles</p>
+                  <p class="pass-nom">Café des Étangs</p>
+                  <p class="pass-sous">Carte de fidélité</p>
                 </div>
-                <p class="carte-solde"><span id="solde">0</span><small> / 180 pts</small></p>
               </div>
-
-              <ol class="tampons" aria-label="Tampons de la carte">
-                <li class="tampon" data-pts="20"><span>+20</span></li>
-                <li class="tampon" data-pts="20"><span>+20</span></li>
-                <li class="tampon" data-pts="20"><span>+20</span></li>
-                <li class="tampon" data-pts="20"><span>+20</span></li>
-                <li class="tampon tampon-story" data-pts="100">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="5.5" />
-                    <circle cx="12" cy="12" r="4.2" />
-                    <circle cx="17.4" cy="6.6" r="1" class="plein" />
-                  </svg>
-                  <span>+100</span>
-                </li>
+              <p class="pass-points"><span id="pass-solde">0</span> <small>points</small></p>
+              <div class="pass-jauge" aria-hidden="true"><i id="pass-jauge"></i></div>
+              <p class="pass-objectif" id="pass-objectif">Encore <b id="pass-reste">180</b> points pour un cappuccino offert</p>
+              <ol class="pass-historique" id="pass-historique">
+                <li data-pts="20"><span>Passage en caisse</span><b>+20</b></li>
+                <li data-pts="20"><span>Passage en caisse</span><b>+20</b></li>
+                <li data-pts="20"><span>Passage en caisse</span><b>+20</b></li>
+                <li data-pts="20"><span>Passage en caisse</span><b>+20</b></li>
+                <li data-pts="100" class="pass-story"><span>Story Instagram</span><b>+100</b></li>
               </ol>
-
-              <div class="carte-bas">
-                <div class="jauge" aria-hidden="true"><i id="jauge"></i></div>
-                <p class="carte-recompense">
-                  <span class="r-attente">Prochaine récompense : un cappuccino offert</span>
-                  <span class="r-gagnee">Cappuccino offert, à montrer au comptoir</span>
-                </p>
-              </div>
             </div>
-            <figcaption class="legende-carte">Commerce et récompense d'exemple.</figcaption>
           </figure>
         </div>
       </section>
 
-      <!-- ============ POUR QUI : BANDEAU QUI DEFILE ============ -->
-      <section class="commerces" aria-labelledby="titre-commerces">
-        <p class="commerces-titre" id="titre-commerces">Pour tous les commerces qui reçoivent du monde</p>
-        <div class="defile">
-          <ul class="defile-piste">
-            <li><img src="/site/commerce-restaurant.webp" alt="" width="560" height="700" loading="lazy" /><span>Restaurants</span></li>
-            <li><img src="/site/commerce-bar.webp" alt="" width="560" height="700" loading="lazy" /><span>Bars</span></li>
-            <li><img src="/site/commerce-cafe.webp" alt="" width="560" height="700" loading="lazy" /><span>Cafés</span></li>
-            <li><img src="/site/commerce-boulangerie.webp" alt="" width="560" height="700" loading="lazy" /><span>Boulangeries</span></li>
-            <li><img src="/site/commerce-coiffeur.webp" alt="" width="560" height="700" loading="lazy" /><span>Coiffeurs</span></li>
-            <li><img src="/site/commerce-institut.webp" alt="" width="560" height="700" loading="lazy" /><span>Instituts de beauté</span></li>
-            <li><img src="/site/commerce-boutique.webp" alt="" width="560" height="700" loading="lazy" /><span>Boutiques</span></li>
-            <li><img src="/site/commerce-salon.webp" alt="" width="560" height="700" loading="lazy" /><span>Salons</span></li>
-          </ul>
+      <!-- ============ LE BANDEAU DES COMMERCES (texte qui defile) ============ -->
+      <section class="bandeau" aria-label="Pour quels commerces">
+        <div class="bandeau-piste">
+          <p>
+            Restaurants <i></i> Cafés <i></i> Bars <i></i> Boulangeries <i></i> Coiffeurs <i></i> Instituts de beauté
+            <i></i> Boutiques <i></i> Salons <i></i> Salles de sport <i></i> Glaciers <i></i> Pâtisseries <i></i>
+            Barbiers <i></i> Food trucks <i></i>
+          </p>
         </div>
       </section>
 
-      <!-- ============ COMMENT CA MARCHE ============ -->
+      <!-- ============ CA VOUS PARLE ? ============ -->
+      <section class="section" id="soucis">
+        <div class="cadre">
+          <h2 class="titre-section">Ça vous parle ?</h2>
+          <div class="soucis">
+            <div class="souci">
+              <p class="souci-avant">« Mes cartes en carton finissent au fond d'un portefeuille. »</p>
+              <p class="souci-apres">Avec Noctify, la carte est dans le téléphone de vos clients. Ils ne l'oublient plus.</p>
+            </div>
+            <div class="souci">
+              <p class="souci-avant">« Je n'ai pas de budget pour la pub. »</p>
+              <p class="souci-apres">Vos clients postent pour vous. Vous les remerciez avec une récompense que vous choisissez.</p>
+            </div>
+            <div class="souci">
+              <p class="souci-avant">« Je ne sais pas qui revient. »</p>
+              <p class="souci-apres">Vous voyez qui passe, qui poste, et quelles récompenses partent.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ COMMENT CA MARCHE : TROIS TELEPHONES ============ -->
       <section class="section" id="fonctionnement">
         <div class="cadre">
-          <h2 class="titre-section">Trois gestes, côté client.</h2>
+          <h2 class="titre-section">Comment ça marche pour vos clients.</h2>
 
-          <div class="etapes">
-            <article class="etape">
-              <div class="etape-texte">
-                <p class="etape-pts">+20 points</p>
-                <h3>Il scanne votre QR code en caisse.</h3>
-                <p>
-                  Un chevalet sur le comptoir, c'est tout. Le téléphone du client s'ouvre sur Noctify, les points
-                  tombent. Il faut être sur place : un QR photographié et partagé ne rapporte rien.
-                </p>
-              </div>
-              <div class="etape-visuel visuel-comptoir" aria-hidden="true">
-                <img src="/site/comptoir.webp" alt="" width="900" height="700" loading="lazy" />
-                <div class="chevalet">
-                  <p class="chevalet-titre">Scannez,<br />gagnez des points</p>
-                  <div class="qr-vrai" id="qr-chevalet"></div>
-                  <p class="chevalet-pied">Café des Étangs · Noctify</p>
+          <div class="gestes">
+            <article class="geste">
+              <div class="tel" aria-hidden="true">
+                <div class="tel-ecran ecran-clair">
+                  <p class="ec-lieu">Café des Étangs</p>
+                  <p class="ec-gain">+20</p>
+                  <p class="ec-legende">points ajoutés</p>
+                  <div class="ec-total">
+                    <p><span>Ton total</span><b>100 points</b></p>
+                    <div class="ec-jauge"><i style="width: 55%"></i></div>
+                    <p class="ec-reste">Encore 80 points pour un cappuccino offert</p>
+                  </div>
+                  <p class="ec-bouton">Continuer</p>
                 </div>
               </div>
+              <p class="geste-pts">+20 points</p>
+              <h3>Il scanne votre QR code en payant.</h3>
+              <p>
+                Vous posez votre QR code près de la caisse. Le client le scanne avec son téléphone et gagne ses points.
+                Ça ne marche que sur place.
+              </p>
             </article>
 
-            <article class="etape">
-              <div class="etape-texte">
-                <p class="etape-pts">+100 points</p>
-                <h3>Il poste une story qui vous mentionne.</h3>
-                <p>
-                  Sur Instagram, avec votre @. La story est vérifiée avant que les points soient crédités. Ses amis
-                  la voient : souvent des gens du quartier, qui ne vous connaissaient pas encore.
-                </p>
-              </div>
-              <div class="etape-visuel visuel-story" aria-hidden="true">
-                <div class="story">
-                  <img class="story-photo" src="/site/story-cafe.webp" alt="" width="720" height="1280" loading="lazy" />
-                  <div class="story-haut">
-                    <div class="story-barres"><i></i><i></i><i></i></div>
-                    <p class="story-auteur">
-                      <img src="/ambiance/profil/avatar.webp" alt="" width="28" height="28" />
-                      <b>lea.vdb</b><span>2 h</span>
-                    </p>
-                  </div>
-                  <p class="story-mention">@cafedesetangs</p>
-                  <div class="story-bas">
-                    <span class="story-champ">Envoyer un message</span>
-                    <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.3-9.2C1.5 8.6 3.6 5 7.1 5c2 0 3.6 1.1 4.9 2.9C13.3 6.1 14.9 5 16.9 5c3.5 0 5.6 3.6 4.4 6.8C19.5 16.4 12 21 12 21Z" /></svg>
-                    <svg viewBox="0 0 24 24"><path d="M21.5 3.5 10.8 14.2M21.5 3.5l-6.8 17.8-3.9-7.1-7.1-3.9 17.8-6.8Z" /></svg>
-                  </div>
+            <article class="geste">
+              <div class="tel tel-story" aria-hidden="true">
+                <div class="tel-ecran">
+                  <img class="story-photo" src="/ambiance/bienvenue.webp" alt="" width="1080" height="1920" loading="lazy" />
+                  <span class="story-voile"></span>
+                  <span class="story-haut">
+                    <svg class="story-fermer" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                    <span class="story-outils">
+                      <b>Aa</b>
+                      <svg viewBox="0 0 24 24"><path d="M15.5 3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6.5l7-7V7A3.5 3.5 0 0 0 17 3.5z" /><path d="M13.5 20.5v-3.5a3.5 3.5 0 0 1 3.5-3.5h3.5" /><circle cx="9" cy="10" r=".9" /><circle cx="14" cy="10" r=".9" /></svg>
+                      <svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5" /><circle cx="6.5" cy="17.5" r="2.5" /><circle cx="16.5" cy="15.5" r="2.5" /></svg>
+                      <svg viewBox="0 0 24 24"><path d="M12 3.5l1.6 4.4L18 9.5l-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6z" /></svg>
+                    </span>
+                  </span>
+                  <span class="story-mention"><span>@cafedesetangs</span></span>
+                  <img class="story-onglets" src="/ambiance/profil/story-onglets.png" alt="" width="585" height="104" loading="lazy" />
                 </div>
               </div>
+              <p class="geste-pts">+100 points</p>
+              <h3>Il poste une story qui vous mentionne.</h3>
+              <p>
+                Sur Instagram, avec votre @. On vérifie la story avant de donner les points. Ses amis la voient, des
+                gens qui ne vous connaissent peut-être pas encore.
+              </p>
             </article>
 
-            <article class="etape">
-              <div class="etape-texte">
-                <p class="etape-pts">Récompense</p>
-                <h3>Il échange ses points au comptoir.</h3>
-                <p>
-                  Contre ce que vous avez choisi. Il montre son bon, vous le scannez avec votre téléphone. Le QR du bon
-                  change toutes les 30 secondes : une capture d'écran ne passe pas.
-                </p>
-              </div>
-              <div class="etape-visuel visuel-bon" aria-hidden="true">
-                <div class="bon">
-                  <p class="bon-titre">Cappuccino offert</p>
-                  <p class="bon-lieu">Café des Étangs · 180 points</p>
-                  <div class="qr-vrai qr-bon" id="qr-bon"></div>
-                  <div class="bon-temps"><i></i></div>
-                  <p class="bon-heure" id="bon-heure">--:--:--</p>
+            <article class="geste">
+              <div class="tel" aria-hidden="true">
+                <div class="tel-ecran ecran-clair">
+                  <p class="ec-lieu">Ton bon</p>
+                  <p class="ec-titre">Cappuccino offert</p>
+                  <p class="ec-legende">Café des Étangs · 180 points</p>
+                  <div class="ec-qr" id="qr-bon"></div>
+                  <p class="ec-consigne">Montre ce code au comptoir</p>
                 </div>
               </div>
+              <p class="geste-pts">Récompense</p>
+              <h3>Il utilise ses points pour une récompense.</h3>
+              <p>
+                Un café, un dessert, une remise : c'est vous qui choisissez. Il vous montre son bon, vous le scannez
+                avec votre téléphone, c'est fait. Le code change tout seul, une capture d'écran ne marche pas.
+              </p>
             </article>
           </div>
         </div>
       </section>
 
-      <!-- ============ COTE COMMERCANT ============ -->
-      <section class="section section-gris" id="vous">
-        <div class="cadre deux-colonnes">
-          <div>
-            <h2 class="titre-section">Vous gardez la main sur tout.</h2>
-            <ul class="liste-traits">
-              <li>
-                <b>Vos récompenses.</b> Ce que vous offrez, combien de points ça coûte, combien il en reste en stock.
-              </li>
-              <li><b>Votre chevalet.</b> Votre QR code prêt à imprimer depuis votre espace.</li>
-              <li><b>Votre fiche.</b> Votre commerce apparaît sur la carte de l'appli, avec vos photos et vos horaires.</li>
-              <li><b>Votre activité.</b> Qui est passé, qui a posté, quelles récompenses sont parties.</li>
-            </ul>
-            <p class="petit-texte">Tout se règle depuis votre téléphone, en quelques minutes.</p>
+      <!-- ============ ESSAYER : AJOUTER UNE RECOMPENSE ============ -->
+      <section class="section" id="essayer">
+        <div class="cadre essai">
+          <div class="essai-texte">
+            <h2 class="titre-section">Essayez : ajoutez une récompense.</h2>
+            <p class="chapeau">
+              C'est vous qui décidez ce que vous offrez et combien de points ça coûte. Ajoutez-en une ici, vous voyez
+              tout de suite ce que vos clients verront dans l'appli.
+            </p>
+
+            <div class="editeur">
+              <ul class="editeur-liste" id="liste-recompenses">
+                <li><span>Cappuccino</span><b>180 pts</b></li>
+                <li><span>Part de cheesecake</span><b>350 pts</b></li>
+              </ul>
+              <form class="editeur-ajout" id="ajout-recompense" autocomplete="off">
+                <label>
+                  <span class="sr">Nom de la récompense</span>
+                  <input type="text" name="nom" maxlength="32" placeholder="Ex. Brunch pour deux" required />
+                </label>
+                <label>
+                  <span class="sr">Prix en points</span>
+                  <select name="points">
+                    <option value="100">100 pts</option>
+                    <option value="180">180 pts</option>
+                    <option value="300" selected>300 pts</option>
+                    <option value="500">500 pts</option>
+                    <option value="1000">1 000 pts</option>
+                  </select>
+                </label>
+                <button class="bouton bouton-encre" type="submit">Ajouter</button>
+              </form>
+              <p class="editeur-note" id="editeur-note">Rien n'est enregistré : c'est une démonstration.</p>
+            </div>
           </div>
 
-          <div class="editeur" aria-label="Exemple : les récompenses dans l'espace commerçant">
-            <p class="editeur-titre">Vos récompenses</p>
-            <div class="ligne-recompense">
-              <span class="rec-nom">Cappuccino</span>
-              <span class="rec-pts">180 pts</span>
-              <span class="rec-stock">stock 40</span>
+          <div class="tel tel-grand" aria-label="Aperçu : la boutique du commerce dans l'appli">
+            <div class="tel-ecran ecran-clair ecran-boutique">
+              <p class="eb-titre">Café des Étangs</p>
+              <p class="eb-solde">Ton solde <b>240 points</b></p>
+              <ul class="eb-grille" id="apercu-recompenses"></ul>
             </div>
-            <div class="ligne-recompense">
-              <span class="rec-nom">Part de cheesecake</span>
-              <span class="rec-pts">350 pts</span>
-              <span class="rec-stock">stock 12</span>
-            </div>
-            <div class="ligne-recompense ligne-active">
-              <span class="rec-nom">Brunch pour deux</span>
-              <span class="rec-pts">1 200 pts</span>
-              <span class="rec-stock">stock 3</span>
-            </div>
-            <p class="editeur-ajout">+ Ajouter une récompense</p>
-            <p class="editeur-note">Exemple</p>
           </div>
         </div>
       </section>
 
-      <!-- ============ STORIES ============ -->
-      <section class="section section-nuit" id="stories">
+      <!-- ============ LES STORIES ============ -->
+      <section class="section" id="stories">
         <div class="cadre">
-          <h2 class="titre-section">Une story d'un client vaut mieux qu'une pub.</h2>
-          <div class="chiffres">
-            <div class="chiffre">
-              <p class="chiffre-valeur">83,4 %</p>
-              <p>des 16-24 ans en Belgique vont sur Instagram tous les jours.</p>
-              <p class="source">SMI Barometer, 2025</p>
-            </div>
-            <div class="chiffre">
-              <p class="chiffre-valeur">92 %</p>
-              <p>des gens font davantage confiance à la recommandation d'un proche qu'à une publicité.</p>
-              <p class="source">Nielsen, Global Trust in Advertising, 2012</p>
-            </div>
+          <div class="stories-tete">
+            <h2 class="titre-section">Chaque story montre votre commerce à tous leurs amis.</h2>
+            <p class="chapeau">
+              Une carte de fidélité classique fait revenir les clients que vous avez déjà. Les stories vous en amènent
+              de nouveaux, sans payer de pub.
+            </p>
           </div>
-          <p class="stories-texte">
-            Une carte de fidélité classique fait revenir les clients que vous avez déjà. Avec les stories, chaque
-            client fidèle montre votre commerce à ses amis. Vous ne payez ni influenceur ni publicité : la récompense,
-            c'est vous qui la choisissez.
-          </p>
+
+          <div class="stories-rangee" aria-hidden="true">
+            <div class="tel tel-petit"><div class="tel-ecran"><img class="story-photo" src="/site/commerce-restaurant.webp" alt="" loading="lazy" /><span class="story-voile"></span><span class="story-mention"><span>@chezmarcel</span></span></div></div>
+            <div class="tel tel-petit"><div class="tel-ecran"><img class="story-photo" src="/site/commerce-coiffeur.webp" alt="" loading="lazy" /><span class="story-voile"></span><span class="story-mention"><span>@barberdelaplace</span></span></div></div>
+            <div class="tel tel-petit"><div class="tel-ecran"><img class="story-photo" src="/site/commerce-boulangerie.webp" alt="" loading="lazy" /><span class="story-voile"></span><span class="story-mention"><span>@maisonlemaire</span></span></div></div>
+            <div class="tel tel-petit"><div class="tel-ecran"><img class="story-photo" src="/site/commerce-bar.webp" alt="" loading="lazy" /><span class="story-voile"></span><span class="story-mention"><span>@lecomptoir</span></span></div></div>
+          </div>
+
+          <div class="chiffres">
+            <p><b>83,4 %</b> des 16-24 ans en Belgique vont sur Instagram tous les jours. <small>SMI Barometer, 2025</small></p>
+            <p><b>92 %</b> des gens font plus confiance à la recommandation d'un proche qu'à une publicité. <small>Nielsen, 2012</small></p>
+          </div>
         </div>
       </section>
 
@@ -293,7 +296,7 @@
                 <li>Bons anti-fraude, validés avec votre téléphone</li>
                 <li>Votre commerce sur la carte de l'appli</li>
               </ul>
-              <a class="bouton bouton-contour bouton-large" href="#contact" data-offre="Fidélité">Choisir Fidélité</a>
+              <a class="bouton bouton-contour bouton-large" href="#contact">Choisir Fidélité</a>
             </article>
 
             <article class="offre offre-phare">
@@ -308,7 +311,7 @@
                 <li>Chaque story vérifiée avant de donner les points</li>
                 <li>La liste de qui a posté, et quand</li>
               </ul>
-              <a class="bouton bouton-rouge bouton-large" href="#contact" data-offre="Fidélité + Stories">Choisir Fidélité + Stories</a>
+              <a class="bouton bouton-rouge bouton-large" href="#contact">Choisir Fidélité + Stories</a>
             </article>
 
             <article class="offre">
@@ -318,11 +321,11 @@
               <p class="offre-inclut">Tout ce qu'il y a dans Fidélité + Stories, et en plus :</p>
               <ul>
                 <li>Vidéos TikTok récompensées <em class="bientot">bientôt</em></li>
-                <li>Installation faite par nous : fiche, photos, récompenses, chevalet</li>
+                <li>Installation faite par nous : fiche, photos, récompenses, QR code</li>
                 <li>Mise en avant sur la carte de l'appli</li>
                 <li>Support prioritaire par téléphone</li>
               </ul>
-              <a class="bouton bouton-contour bouton-large" href="#contact" data-offre="Pro">Choisir Pro</a>
+              <a class="bouton bouton-contour bouton-large" href="#contact">Choisir Pro</a>
             </article>
           </div>
 
@@ -355,52 +358,45 @@
       </section>
 
       <!-- ============ QUESTIONS ============ -->
-      <section class="section section-gris" id="questions">
-        <div class="cadre cadre-etroit">
-          <h2 class="titre-section">Questions fréquentes</h2>
+      <section class="section" id="questions">
+        <div class="cadre questions">
+          <h2 class="titre-section">Vos questions.</h2>
           <div class="faq">
             <details>
-              <summary>Mes clients doivent-ils télécharger une appli ?</summary>
+              <summary>Combien de temps pour démarrer ?</summary>
               <p>
-                Non. En scannant votre QR code, Noctify s'ouvre dans le navigateur du téléphone. Ceux qui le veulent
-                peuvent l'ajouter à leur écran d'accueil.
+                Le jour même. Vous créez votre compte, vous ajoutez vos récompenses, vous imprimez votre QR code et
+                vous le posez près de la caisse. Avec l'offre Pro, on le fait pour vous.
               </p>
             </details>
             <details>
-              <summary>Faut-il acheter du matériel ?</summary>
+              <summary>Mes clients doivent-ils télécharger une appli ?</summary>
               <p>
-                Non. Vous imprimez votre QR code depuis votre espace, et votre propre téléphone suffit pour valider les
-                bons de vos clients. Pas de terminal, pas de tablette.
+                Non. En scannant votre QR code, Noctify s'ouvre dans le navigateur de leur téléphone. Ceux qui le
+                veulent peuvent l'ajouter à leur écran d'accueil.
               </p>
             </details>
             <details>
               <summary>Qui paie les récompenses ?</summary>
               <p>
-                Vous, puisque c'est vous qui les offrez. Vous décidez quoi offrir, combien de points ça coûte et
+                Vous, puisque c'est vous qui les offrez. Vous choisissez quoi offrir, combien de points ça coûte et
                 combien vous en proposez. Un cappuccino à 180 points, c'est neuf passages en caisse, ou quatre
                 passages et une story.
               </p>
             </details>
             <details>
-              <summary>Comment éviter la triche ?</summary>
+              <summary>Et si quelqu'un essaie de tricher ?</summary>
               <p>
-                Le QR de votre affiche ne rapporte des points qu'à quelqu'un qui est sur place. Les bons de vos clients
-                changent toutes les 30 secondes, donc une capture d'écran ne marche pas. Et chaque story est vérifiée
-                avant que les points soient crédités.
+                Le QR code de votre caisse ne donne des points qu'à quelqu'un qui est sur place. Le bon d'un client
+                change de code toutes les 30 secondes : une capture d'écran ne passe pas. Et chaque story est vérifiée
+                avant que les points soient donnés.
               </p>
             </details>
             <details>
-              <summary>Il me faut quoi pour l'offre Stories ?</summary>
+              <summary>Il me faut quoi pour les stories ?</summary>
               <p>
                 Un compte Instagram professionnel pour votre commerce. Le passage en compte professionnel est gratuit
                 et se fait en deux minutes dans les réglages d'Instagram.
-              </p>
-            </details>
-            <details>
-              <summary>Mon commerce est-il concerné ?</summary>
-              <p>
-                Si vos clients viennent sur place, oui : restaurant, café, bar, boulangerie, salon de coiffure,
-                institut, boutique, salle de sport. Appelez-nous si vous avez un doute.
               </p>
             </details>
           </div>
@@ -409,49 +405,35 @@
 
       <!-- ============ CONTACT ============ -->
       <section class="section contact" id="contact">
-        <div class="cadre deux-colonnes">
-          <div>
-            <h2 class="titre-section">On vous rappelle.</h2>
-            <p class="chapeau">
-              Laissez votre numéro, on vous explique tout en dix minutes et on regarde ensemble l'offre qui convient à
-              votre commerce.
-            </p>
-            <p class="petit-texte">
-              Ou écrivez-nous : <a href="mailto:noctify.support@gmail.com">noctify.support@gmail.com</a>
-            </p>
-          </div>
-
-          <form class="formulaire" id="formulaire" novalidate>
-            <div class="champs">
-              <label class="champ">
-                <span>Nom du commerce</span>
-                <input type="text" name="club" required autocomplete="organization" placeholder="Café des Étangs" />
-              </label>
-              <label class="champ">
-                <span>E-mail</span>
-                <input type="email" name="email" required autocomplete="email" placeholder="bonjour@moncommerce.be" />
-              </label>
-              <label class="champ">
-                <span>Téléphone</span>
-                <input type="tel" name="phone" required autocomplete="tel" placeholder="0470 12 34 56" />
-              </label>
-              <label class="champ">
-                <span>Offre qui vous intéresse</span>
-                <select name="offre" id="choix-offre">
-                  <option value="">Je ne sais pas encore</option>
-                  <option>Fidélité</option>
-                  <option>Fidélité + Stories</option>
-                  <option>Pro</option>
-                </select>
-              </label>
-              <button class="bouton bouton-rouge bouton-large" type="submit" id="envoyer">Être rappelé</button>
+        <div class="cadre">
+          <div class="contact-boite">
+            <div class="contact-texte">
+              <h2 class="titre-section">On vous rappelle.</h2>
+              <p class="chapeau">Laissez vos coordonnées, on vous explique tout en dix minutes.</p>
+            </div>
+            <form class="formulaire" id="formulaire" novalidate>
+              <div class="champs">
+                <label class="champ">
+                  <span>Nom du commerce</span>
+                  <input type="text" name="club" required autocomplete="organization" placeholder="Café des Étangs" />
+                </label>
+                <label class="champ">
+                  <span>E-mail</span>
+                  <input type="email" name="email" required autocomplete="email" placeholder="bonjour@moncommerce.be" />
+                </label>
+                <label class="champ">
+                  <span>Téléphone</span>
+                  <input type="tel" name="phone" required autocomplete="tel" placeholder="0470 12 34 56" />
+                </label>
+                <button class="bouton bouton-rouge" type="submit" id="envoyer">Être rappelé</button>
+              </div>
               <p class="erreur" id="erreur" role="alert"></p>
-            </div>
-            <div class="merci" role="status" hidden>
-              <p class="merci-titre">C'est noté.</p>
-              <p>On vous rappelle sous 24 h ouvrées.</p>
-            </div>
-          </form>
+              <div class="merci" role="status" hidden>
+                <p class="merci-titre">C'est noté.</p>
+                <p>On vous rappelle très vite.</p>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
     </main>
