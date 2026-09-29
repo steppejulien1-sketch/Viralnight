@@ -13,8 +13,9 @@
     <meta property="og:description" content="Des points à chaque passage, et une story qui fait venir leurs amis. Dès 19,99 € HTVA par mois." />
     <meta property="og:image" content="https://viralnight-koif.vercel.app/icones/partage.png" />
     <meta property="og:type" content="website" />
-    <link rel="icon" href="/icones/favicon-64.png?v=verre2" type="image/png" />
-    <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png?v=verre2" />
+    <link rel="icon" href="/icones/favicon-64.png?v=verre3" type="image/png" />
+    <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png?v=verre3" />
+    <link rel="shortcut icon" href="/favicon.ico?v=verre3" />
     <!-- Polices servies depuis notre domaine, jamais depuis Google (voir
          assets/fonts/polices.css). Archivo = la police des deux applis. -->
     <link rel="preload" href="./assets/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin />
@@ -44,7 +45,7 @@
       <div class="cadre entete-in">
         <a class="marque" href="#haut" aria-label="Noctify, accueil">
           <img src="/site/logo-verre.webp" alt="" width="46" height="38" />
-          <span>Noctify</span>
+          <img class="marque-mot" src="/site/logo-mot.webp" alt="Noctify" width="102" height="27" />
         </a>
         <nav class="nav" aria-label="Navigation principale">
           <a href="#fonctionnement">Comment ça marche</a>
@@ -172,7 +173,7 @@
               <div class="etape-visuel visuel-photo" aria-hidden="true">
                 <img src="/site/etape-qr.webp" alt="" width="1000" height="760" loading="lazy" />
                 <div class="notif">
-                  <img src="/icones/icone-192.png" alt="" width="38" height="38" />
+                  <img src="/site/logo-verre.webp" alt="" width="38" height="32" />
                   <div>
                     <p class="notif-haut"><b>Noctify</b><span>maintenant</span></p>
                     <p class="notif-titre">+20 points au Café des Étangs</p>
@@ -241,26 +242,39 @@
             <div class="est-texte">
               <h2 class="titre-section">Combien vous coûterait la même pub ?</h2>
               <p class="chapeau">
-                Payer quelqu'un pour parler de vous sur Instagram coûte cher. Avec Noctify, ce sont vos clients qui le
-                font, pour une récompense que vous choisissez.
+                Réglez selon votre commerce. On calcule combien de stories vos clients pourraient poster, et ce que
+                vous paieriez pour les mêmes stories chez des influenceurs.
               </p>
+              <div class="est-reglage">
+                <label for="est-clients">Clients par jour <b id="est-clients-val">80</b></label>
+                <input type="range" id="est-clients" min="10" max="400" step="10" value="80" />
+              </div>
+              <div class="est-reglage">
+                <label for="est-part">Part de clients qui postent une story dans le mois <b id="est-part-val">5 %</b></label>
+                <input type="range" id="est-part" min="1" max="20" step="1" value="5" />
+              </div>
             </div>
-            <div class="est-calcul">
-              <label class="est-label" for="est-stories">Stories de vos clients par mois : <b id="est-nombre">30</b></label>
-              <input type="range" id="est-stories" min="5" max="150" step="5" value="30" />
-              <div class="est-resultats">
-                <div class="est-bloc">
-                  <p class="est-titre">Payées à de petits influenceurs</p>
-                  <p class="est-montant"><span id="est-min">150</span> à <span id="est-max">750</span> $</p>
-                  <p class="est-note">5 à 25 $ la story pour un compte de 1 000 à 10 000 abonnés. Source : Influencer Marketing Hub, 2026.</p>
+
+            <div class="est-resultat" aria-live="polite">
+              <p class="est-petit">Chaque mois, vos clients pourraient poster</p>
+              <p class="est-grand"><span id="est-stories">120</span> stories</p>
+              <p class="est-petit">qui montrent votre commerce à leurs amis.</p>
+
+              <div class="est-barres">
+                <div class="est-barre">
+                  <p><span>Payées à des influenceurs</span><b><span id="est-min">600</span> à <span id="est-max">3 000</span> $</b></p>
+                  <div class="est-piste"><i class="est-infl" id="est-infl"></i></div>
                 </div>
-                <div class="est-bloc est-noctify">
-                  <p class="est-titre">Avec Noctify</p>
-                  <p class="est-montant">49,99 €<small> / mois</small></p>
-                  <p class="est-note">Autant de stories que vos clients en postent, plus les récompenses que vous offrez.</p>
+                <div class="est-barre est-barre-noctify">
+                  <p><span>Avec Noctify</span><b>49,99 € / mois</b></p>
+                  <div class="est-piste"><i class="est-noct" id="est-noct"></i></div>
                 </div>
               </div>
-              <a class="bouton bouton-rouge" href="#contact">Être rappelé</a>
+              <p class="est-note">
+                Influenceurs : 5 à 25 $ la story pour un compte de 1 000 à 10 000 abonnés (Influencer Marketing Hub,
+                2026). Avec Noctify, vous offrez en plus les récompenses que vous avez choisies.
+              </p>
+              <a class="bouton bouton-rouge bouton-large" href="#contact">Être rappelé</a>
             </div>
           </div>
         </div>
@@ -352,10 +366,30 @@
             </article>
           </div>
 
-          <div class="chiffres">
-            <p><b>83,4 %</b> des 16-24 ans en Belgique vont sur Instagram tous les jours. <small>SMI Barometer, 2025</small></p>
-            <p><b>92 %</b> des gens font plus confiance à la recommandation d'un proche qu'à une publicité. <small>Nielsen, 2012</small></p>
-          </div>
+        </div>
+      </section>
+
+      <!-- ============ COMMENT ON DEMARRE ============ -->
+      <section class="section" id="demarrer">
+        <div class="cadre">
+          <h2 class="titre-section">Vous démarrez en une journée.</h2>
+          <ol class="demarrage">
+            <li>
+              <span class="dem-num">1</span>
+              <h3>On vous appelle</h3>
+              <p>Dix minutes pour comprendre votre commerce et choisir l'offre qui vous va.</p>
+            </li>
+            <li>
+              <span class="dem-num">2</span>
+              <h3>Vous choisissez vos récompenses</h3>
+              <p>Depuis votre téléphone : quoi offrir, combien de points, combien en stock.</p>
+            </li>
+            <li>
+              <span class="dem-num">3</span>
+              <h3>Vous posez vos QR codes</h3>
+              <p>Vous les imprimez et les posez sur les tables, au comptoir, à la caisse. C'est parti.</p>
+            </li>
+          </ol>
         </div>
       </section>
 
@@ -392,6 +426,7 @@
                 <li>Chaque story vérifiée avant de donner les points</li>
                 <li>La liste de qui a posté, et quand</li>
               </ul>
+              <p class="offre-condition">Il vous faut un compte Instagram professionnel pour votre commerce. C'est gratuit et ça s'active en deux minutes dans Instagram.</p>
               <a class="bouton bouton-rouge bouton-large" href="#contact">Choisir Fidélité + Stories</a>
             </article>
 
@@ -401,8 +436,8 @@
               <p class="prix"><span>99 €</span> / mois</p>
               <p class="offre-inclut">Tout ce qu'il y a dans Fidélité + Stories, et en plus :</p>
               <ul>
-                <li>Vos offres envoyées par e-mail à vos clients (« −20 % ce mardi ») <em class="bientot">bientôt</em></li>
-                <li>Des offres pour ceux qui ne sont pas revenus depuis un mois <em class="bientot">bientôt</em></li>
+                <li>Vos offres envoyées par e-mail à vos clients (« −20 % ce mardi »)</li>
+                <li>Des offres pour ceux qui ne sont pas revenus depuis un mois</li>
                 <li>Vidéos TikTok récompensées <em class="bientot">bientôt</em></li>
                 <li>Installation faite par nous : fiche, photos, récompenses, QR code</li>
                 <li>Mise en avant sur la carte de l'appli</li>
@@ -430,8 +465,8 @@
                 <tr><th scope="row">Votre commerce sur la carte de l'appli</th><td class="oui">Inclus</td><td class="oui">Inclus</td><td class="oui">Inclus</td></tr>
                 <tr><th scope="row">Stories Instagram récompensées (+100 points)</th><td class="non">Non</td><td class="oui">Inclus</td><td class="oui">Inclus</td></tr>
                 <tr><th scope="row">Qui a posté, et quand</th><td class="non">Non</td><td class="oui">Inclus</td><td class="oui">Inclus</td></tr>
-                <tr><th scope="row">Offres envoyées par e-mail à vos clients</th><td class="non">Non</td><td class="non">Non</td><td class="oui">Bientôt</td></tr>
-                <tr><th scope="row">Offres pour les clients qui ne reviennent plus</th><td class="non">Non</td><td class="non">Non</td><td class="oui">Bientôt</td></tr>
+                <tr><th scope="row">Offres envoyées par e-mail à vos clients</th><td class="non">Non</td><td class="non">Non</td><td class="oui">Inclus</td></tr>
+                <tr><th scope="row">Offres pour les clients qui ne reviennent plus</th><td class="non">Non</td><td class="non">Non</td><td class="oui">Inclus</td></tr>
                 <tr><th scope="row">Vidéos TikTok récompensées</th><td class="non">Non</td><td class="non">Non</td><td class="oui">Bientôt</td></tr>
                 <tr><th scope="row">Installation faite par nous</th><td class="non">Non</td><td class="non">Non</td><td class="oui">Inclus</td></tr>
                 <tr><th scope="row">Mise en avant sur la carte</th><td class="non">Non</td><td class="non">Non</td><td class="oui">Inclus</td></tr>
@@ -472,16 +507,13 @@
             <details>
               <summary>Et si quelqu'un essaie de tricher ?</summary>
               <p>
-                Le QR code de votre caisse ne donne des points qu'à quelqu'un qui est sur place. Le bon d'un client
-                change de code toutes les 30 secondes : une capture d'écran ne passe pas. Et chaque story est vérifiée
-                avant que les points soient donnés.
+                Les points ne tombent que si le client est vraiment chez vous : son téléphone doit être sur place au
+                moment où il scanne. Photographier votre QR code pour le scanner depuis chez soi ne donne rien.
               </p>
-            </details>
-            <details>
-              <summary>Il me faut quoi pour les stories ?</summary>
               <p>
-                Un compte Instagram professionnel pour votre commerce. Le passage en compte professionnel est gratuit
-                et se fait en deux minutes dans les réglages d'Instagram.
+                Un bon ne sert qu'une fois, et son code change toutes les 30 secondes : une capture d'écran envoyée à
+                un ami ne passe pas. Et chaque story est vérifiée avant de donner les 100 points : pas de story
+                visible, pas de points.
               </p>
             </details>
           </div>
@@ -527,9 +559,9 @@
       <div class="cadre">
         <div class="pied-colonnes">
           <div class="pied-marque">
-            <a class="marque" href="#haut">
+            <a class="marque" href="#haut" aria-label="Noctify">
               <img src="/site/logo-verre.webp" alt="" width="40" height="33" />
-              <span>Noctify</span>
+              <img class="marque-mot" src="/site/logo-mot.webp" alt="Noctify" width="94" height="25" />
             </a>
             <p>La carte de fidélité qui fait venir de nouveaux clients.</p>
           </div>

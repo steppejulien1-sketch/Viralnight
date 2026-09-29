@@ -91,22 +91,66 @@ majQr();
 setInterval(majQr, 2000);
 
 /* ---------- Estimer : ce que couterait la meme pub ----------
-   5 a 25 $ la story pour un petit influenceur (1 000 a 10 000 abonnes),
-   Influencer Marketing Hub, « Nano Influencer Rates », 2026. En dollars,
-   comme la source : pas de taux de change invente. */
-const curseur = document.getElementById("est-stories");
-if (curseur) {
-  const nombre = document.getElementById("est-nombre");
-  const min = document.getElementById("est-min");
-  const max = document.getElementById("est-max");
-  const majEstimation = () => {
-    const n = Number(curseur.value);
-    nombre.textContent = String(n);
-    min.textContent = (n * 5).toLocaleString("fr-BE");
-    max.textContent = (n * 25).toLocaleString("fr-BE");
+   Le commercant regle ses clients par jour et la part qui poste une story
+   dans le mois (une estimation a lui, pas un chiffre qu'on invente).
+   Stories par mois = clients par jour x 30 x part.
+   Prix influenceurs : 5 a 25 $ la story pour un compte de 1 000 a 10 000
+   abonnes (Influencer Marketing Hub, « Nano Influencer Rates », 2026).
+   En dollars comme la source : pas de taux de change invente. */
+const reglageClients = document.getElementById("est-clients");
+const reglagePart = document.getElementById("est-part");
+if (reglageClients && reglagePart) {
+  const fmt = (n) => Math.round(n).toLocaleString("fr-BE");
+  const sortie = {
+    clients: document.getElementById("est-clients-val"),
+    part: document.getElementById("est-part-val"),
+    stories: document.getElementById("est-stories"),
+    min: document.getElementById("est-min"),
+    max: document.getElementById("est-max"),
+    infl: document.getElementById("est-infl"),
+    noct: document.getElementById("est-noct"),
   };
-  curseur.addEventListener("input", majEstimation);
-  majEstimation();
+  let affiche = 120;
+  let anim = 0;
+
+  function remplir(curseur) {
+    const k = (curseur.value - curseur.min) / (curseur.max - curseur.min);
+    curseur.style.setProperty("--rempli", k * 100 + "%");
+  }
+
+  function animerNombre(cible) {
+    cancelAnimationFrame(anim);
+    const depart = affiche;
+    const debut = performance.now();
+    const pas = (t) => {
+      const k = calme ? 1 : Math.min(1, (t - debut) / 350);
+      affiche = depart + (cible - depart) * (1 - Math.pow(1 - k, 3));
+      sortie.stories.textContent = fmt(affiche);
+      if (k < 1) anim = requestAnimationFrame(pas);
+    };
+    anim = requestAnimationFrame(pas);
+  }
+
+  function calculer() {
+    const clients = Number(reglageClients.value);
+    const part = Number(reglagePart.value);
+    const stories = Math.max(1, Math.round((clients * 30 * part) / 100));
+    sortie.clients.textContent = String(clients);
+    sortie.part.textContent = part + " %";
+    sortie.min.textContent = fmt(stories * 5);
+    sortie.max.textContent = fmt(stories * 25);
+    animerNombre(stories);
+    // Les barres : l'influenceur au maximum de l'echelle, la partie foncee
+    // pour le bas de la fourchette ; Noctify a l'echelle du meme axe.
+    sortie.infl.style.setProperty("--min", "20%");
+    const moyenne = stories * 15;
+    sortie.noct.style.width = Math.max(1.5, Math.min(100, (49.99 / moyenne) * 100)) + "%";
+    remplir(reglageClients);
+    remplir(reglagePart);
+  }
+  reglageClients.addEventListener("input", calculer);
+  reglagePart.addEventListener("input", calculer);
+  calculer();
 }
 
 /* ---------- Le formulaire ---------- */
