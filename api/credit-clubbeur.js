@@ -29,6 +29,7 @@ import { timingSafeEqual } from "node:crypto";
 import { envoyerEmail } from "../lib/notifications/email.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
+import { lireOffre, choisirDestinataires, heuresAvantProchainEnvoi, jetonDesabonnement, lireJetonDesabonnement, construireEmail } from "../lib/offres/email.js";
 import { geocoder } from "../lib/google/geocoder.js";
 import { doitRepondre, repondre, messageEnregistre, eviterRepetition } from "../lib/support/reponseAuto.js";
 
@@ -1057,6 +1058,158 @@ async function mailDepart(p) {
   });
 }
 
+/* ================= LES OFFRES PAR E-MAIL (offre Pro, 30/09/2026) =================
+   ?action=offres-email (POST, le gerant, jeton de session) :
+     { mode: "compter" }  -> combien de clients ont accepte, combien seraient
+                             touches, l'historique, l'attente avant le prochain envoi ;
+     { mode: "envoyer", sujet, message, cible: "tous" | "absents" } -> envoie.
+   ?action=desabonner&t=<jeton> (GET ou POST, SANS session) : le lien en bas
+     de chaque e-mail. Un clic suffit, c'est la loi (et Gmail / Outlook
+     l'exigent via List-Unsubscribe).
+
+   ⚠️ SEULS LES CLIENTS QUI ONT DIT OUI POUR CE LIEU (consentements_offres,
+   migration clubbeur 0060). Aucune adresse n'est jamais renvoyee au gerant :
+   il voit des nombres, pas un fichier de contacts.
+
+   ⚠️ L'EXPEDITEUR. Resend n'envoie a n'importe quelle adresse que depuis un
+   nom de domaine verifie. OFFRES_FROM (ex. « Noctify <offres@noctify.be> »)
+   doit porter ce domaine ; sans lui on retombe sur NOTIFICATION_FROM. */
+const SITE = process.env.SITE_URL || "https://viralnight-koif.vercel.app";
+
+function secretDesabonnement() {
+  return process.env.OFFRES_EMAIL_SECRET || process.env.SUPABASE_CLUBBEUR_SERVICE_ROLE_KEY || "";
+}
+
+async function donneesOffres(c) {
+  const [consent, visites, histo] = await Promise.all([
+    c.clubbeur.from("consentements_offres").select("user_id").eq("club_id", c.club.id).eq("accepte", true).limit(20000),
+    c.clubbeur.from("point_grants").select("user_id, created_at").eq("club_id", c.club.id).order("created_at", { ascending: false }).limit(20000),
+    c.clubbeur.from("offres_email").select("sujet, cible, destinataires, envoyes, erreur, cree_le").eq("club_id", c.club.id).order("cree_le", { ascending: false }).limit(10),
+  ]);
+  if (consent.error) throw new Error(consent.error.message);
+  const derniere = new Map();
+  for (const v of visites.data || []) if (!derniere.has(v.user_id)) derniere.set(v.user_id, v.created_at);
+  return {
+    consentis: (consent.data || []).map((x) => x.user_id),
+    derniere,
+    historique: histo.data || [],
+  };
+}
+
+async function actionOffresEmail(request, response) {
+  const c = await clubDuGerant(request);
+  if (c.erreur) return json(response, { error: c.erreur }, c.status);
+  if (!c.club) return json(response, { error: "Ton établissement n'est pas encore relié à l'appli des clients." }, 409);
+  const corps = await readBody(request).catch(() => ({}));
+
+  let d;
+  try {
+    d = await donneesOffres(c);
+  } catch (e) {
+    return json(response, { error: "Lecture impossible : " + e.message }, 500);
+  }
+  const dernierEnvoi = d.historique[0]?.cree_le || null;
+  const attente = heuresAvantProchainEnvoi(dernierEnvoi);
+  const resume = {
+    consentis: new Set(d.consentis).size,
+    tous: choisirDestinataires(d.consentis, d.derniere, "tous").length,
+    absents: choisirDestinataires(d.consentis, d.derniere, "absents").length,
+    attenteHeures: attente,
+    historique: d.historique,
+  };
+  if (corps.mode !== "envoyer") return json(response, resume);
+
+  const offre = lireOffre(corps);
+  if (offre.erreur) return json(response, { error: offre.erreur }, 400);
+  if (attente > 0) return json(response, { error: `Un envoi par jour maximum. Tu pourras renvoyer dans ${attente} h.` }, 429);
+  const ids = choisirDestinataires(d.consentis, d.derniere, offre.cible);
+  if (!ids.length) return json(response, { error: "Aucun client ne recevrait cette offre pour le moment." }, 400);
+
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.OFFRES_FROM || process.env.NOTIFICATION_FROM;
+  const secret = secretDesabonnement();
+  if (!apiKey || !from || !secret) {
+    return json(response, { error: "L'envoi d'e-mails n'est pas encore configuré sur le serveur." }, 500);
+  }
+
+  const { data: lignes, error } = await c.clubbeur.from("users").select("id, email").in("id", ids);
+  if (error) return json(response, { error: error.message }, 500);
+  const lieu = nomLieuPublic(c.club.name);
+  const messages = (lignes || [])
+    .filter((u) => u.email && /.+@.+\..+/.test(u.email))
+    .map((u) => {
+      const lien = `${SITE}/api/credit-clubbeur?action=desabonner&t=${encodeURIComponent(jetonDesabonnement(u.id, c.club.id, secret))}`;
+      const e = construireEmail({ lieu, sujet: offre.sujet, message: offre.message, lienDesabonnement: lien });
+      return {
+        from,
+        to: [u.email],
+        subject: e.sujet,
+        html: e.html,
+        text: e.texte,
+        headers: { "List-Unsubscribe": `<${lien}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
+      };
+    });
+
+  // Resend accepte 100 e-mails par appel « batch ».
+  let envoyes = 0;
+  let erreurEnvoi = null;
+  for (let i = 0; i < messages.length; i += 100) {
+    try {
+      const r = await fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(messages.slice(i, i + 100)),
+      });
+      if (r.ok) envoyes += messages.slice(i, i + 100).length;
+      else erreurEnvoi = `Resend a refusé (${r.status}) : ${(await r.text()).slice(0, 300)}`;
+    } catch (e) {
+      erreurEnvoi = `Resend injoignable : ${String(e?.message || e).slice(0, 300)}`;
+    }
+  }
+
+  await c.clubbeur.from("offres_email").insert({
+    club_id: c.club.id, sujet: offre.sujet, message: offre.message, cible: offre.cible,
+    destinataires: messages.length, envoyes, erreur: erreurEnvoi,
+  });
+  if (!envoyes) return json(response, { error: erreurEnvoi || "Aucun e-mail n'est parti." }, 502);
+  return json(response, { ok: true, envoyes, destinataires: messages.length, erreur: erreurEnvoi });
+}
+
+/* Le nom que les clients connaissent : le compte gerant du Mirano s'appelle
+   « Mirage » en base (voir nomLieuAffiche cote appli). */
+function nomLieuPublic(nom) {
+  return nom === "Mirage" ? "Mirano" : nom || "Ton établissement";
+}
+
+async function actionDesabonner(request, response) {
+  const url = new URL(request.url, "http://localhost");
+  const lu = lireJetonDesabonnement(url.searchParams.get("t") || "", secretDesabonnement());
+  let ok = false;
+  let lieu = "";
+  if (lu) {
+    try {
+      const clubbeur = getSupabaseClubbeurAdmin();
+      const { error } = await clubbeur
+        .from("consentements_offres")
+        .upsert({ user_id: lu.userId, club_id: lu.clubId, accepte: false, maj_le: new Date().toISOString() }, { onConflict: "user_id,club_id" });
+      ok = !error;
+      const { data } = await clubbeur.from("clubs").select("name").eq("id", lu.clubId).maybeSingle();
+      lieu = nomLieuPublic(data?.name);
+    } catch {}
+  }
+  if (request.method === "POST") return json(response, { ok }, ok ? 200 : 400);
+  const titre = ok ? "C'est fait." : "Lien invalide.";
+  const texte = ok
+    ? `Tu ne recevras plus les offres de ${lieu} par e-mail. Tu peux les réactiver quand tu veux depuis sa page dans l'appli Noctify.`
+    : "Ce lien de désabonnement n'est pas valable. Écris-nous à noctify.support@gmail.com, on s'en occupe.";
+  const echap = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+  response.statusCode = ok ? 200 : 400;
+  response.setHeader("Content-Type", "text/html; charset=utf-8");
+  response.end(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Noctify</title></head>
+<body style="margin:0;font-family:Inter,Arial,sans-serif;background:#fff;color:#141414;display:grid;place-items:center;min-height:100vh">
+<main style="max-width:420px;padding:24px;text-align:center"><h1 style="font-size:28px;margin:0 0 12px">${titre}</h1><p style="color:#4a4a48;line-height:1.55">${echap(texte)}</p></main></body></html>`);
+}
+
 function json(response, body, status = 200) {
   response.statusCode = status;
   response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -1081,6 +1234,8 @@ export default async function handler(request, response) {
      -- une treizieme ferait echouer tous les deploiements. */
   if (action === "notifier-cadeau") return actionNotifierCadeau(request, response);
   if (action === "auto-valider") return actionAutoValider(request, response);
+  // Le lien en bas des e-mails d'offres : GET (clic) ou POST (desabonnement en un clic de Gmail), sans session.
+  if (action === "desabonner") return actionDesabonner(request, response);
 
   /* Le prevol arrive en OPTIONS : il doit passer avant le controle de
      methode, sinon le navigateur recoit un 405 et abandonne l'appel reel. */
@@ -1095,6 +1250,7 @@ export default async function handler(request, response) {
   if (action === "activite-clients") return actionActiviteClients(request, response);
   if (action === "valider-bon") return actionValiderBon(request, response);
   if (action === "qr-club") return actionQrClub(request, response);
+  if (action === "offres-email") return actionOffresEmail(request, response);
 
   /* AVANT le controle d'administrateur qui suit : celui-ci n'est pas une
      action d'admin. C'est le clubbeur lui-meme qui efface son compte, et il

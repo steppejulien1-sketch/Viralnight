@@ -3953,6 +3953,37 @@
       .bon-resultat p { margin: 0 0 12px; font-size: 16px; color: rgba(255,255,255,.78); }
       .bon-resultat .bouton { width: 100%; background: #fff; color: #111; }
 
+      /* Les offres par e-mail (offre Pro, 30/09/2026) */
+      .bon-lanceur.offre-lanceur { background: #141414; box-shadow: 0 14px 30px -18px rgba(0,0,0,.6); }
+      .offre-ecran { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; gap: 14px;
+        padding: max(16px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+        background: #fff; color: #141414; overflow-y: auto; }
+      .offre-ecran[hidden] { display: none; }
+      .offre-ecran .bon-fermer { background: #f1f0ee; color: #141414; }
+      .offre-compte { margin: 0; padding: 14px 16px; border-radius: 16px; background: #f6f5f3; font-size: 14px; line-height: 1.45; color: #4a4a48; }
+      .offre-compte b { color: #141414; }
+      .offre-champ { display: grid; gap: 6px; }
+      .offre-champ span { font-size: 13.5px; font-weight: 700; }
+      .offre-champ input, .offre-champ textarea { width: 100%; padding: 14px 16px; border: 1.5px solid #dcdad6; border-radius: 14px; background: #fff;
+        font: inherit; font-size: 16px; color: #141414; resize: vertical; }
+      .offre-champ textarea { min-height: 130px; line-height: 1.5; }
+      .offre-champ input:focus, .offre-champ textarea:focus { outline: none; border-color: #141414; }
+      .offre-cibles { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 16px; background: #efeeeb; }
+      .offre-cible { min-height: 54px; padding: 6px 8px; border: 0; border-radius: 12px; background: transparent; font: inherit; font-size: 13.5px; font-weight: 700;
+        color: #6b6b68; cursor: pointer; line-height: 1.25; }
+      .offre-cible small { display: block; font-weight: 600; font-size: 12px; }
+      .offre-cible.choisi { background: #fff; color: #141414; box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 14px -8px rgba(0,0,0,.25); }
+      .offre-envoyer { min-height: 54px; border: 0; border-radius: 999px; background: #de3131; color: #fff; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; }
+      .offre-envoyer:disabled { opacity: .5; cursor: default; }
+      .offre-msg { margin: 0; min-height: 1.3em; font-size: 14px; font-weight: 650; text-align: center; }
+      .offre-msg.ok { color: #1f7a3f; }
+      .offre-msg.err { color: #b8211f; }
+      .offre-note { margin: 0; font-size: 12.5px; line-height: 1.45; color: #6b6b68; }
+      .offre-histo { margin: 6px 0 0; padding: 0; list-style: none; }
+      .offre-histo li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #ecebe8; font-size: 14px; }
+      .offre-histo li span:last-child { color: #6b6b68; white-space: nowrap; }
+      .offre-histo-titre { margin: 8px 0 0; font-family: var(--titre); font-size: 17px; font-weight: 800; }
+
       .pa-types-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 16px; background: #e9e9ed; }
       .pa-types-seg .pa-type { min-height: 44px; margin: 0; padding: 0 6px; border: 0; border-radius: 12px; background: transparent; box-shadow: none;
         font: inherit; font-size: 14px; font-weight: 700; color: #6b6b73; cursor: pointer; transition: background-color .18s ease, color .18s ease; }
@@ -4708,6 +4739,12 @@
               <button type="button" class="bon-lanceur" id="bon-ouvrir">
                 <span class="bon-lanceur-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 7.5v-2A2 2 0 0 1 5.5 3.5h2M16.5 3.5h2a2 2 0 0 1 2 2v2M20.5 16.5v2a2 2 0 0 1-2 2h-2M7.5 20.5h-2a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg></span>
                 <span class="bon-lanceur-txt"><strong>Valider un bon</strong><span>Scanne le bon qu&#39;un client te montre</span></span>
+                <svg class="bon-lanceur-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+              <!-- 30/09/2026 : les offres par e-mail (offre Pro). -->
+              <button type="button" class="bon-lanceur offre-lanceur" id="offre-ouvrir">
+                <span class="bon-lanceur-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></span>
+                <span class="bon-lanceur-txt"><strong>Offre par e-mail</strong><span id="offre-lanceur-sous">À tes clients qui l&#39;ont accepté</span></span>
                 <svg class="bon-lanceur-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
               </button>
               <div class="periodes" role="tablist" aria-label="Période">
@@ -5511,6 +5548,31 @@
                 <p id="bon-texte"></p>
                 <button type="button" class="bouton pleine" id="bon-encore">Valider un autre bon</button>
               </div>
+            </div>
+
+            <div class="offre-ecran" id="offre-ecran" hidden role="dialog" aria-modal="true" aria-label="Envoyer une offre par e-mail">
+              <div class="bon-tete">
+                <h2>Envoyer une offre</h2>
+                <button type="button" class="bon-fermer" id="offre-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+              </div>
+              <p class="offre-compte" id="offre-compte">Chargement…</p>
+              <label class="offre-champ">
+                <span>Objet</span>
+                <input type="text" id="offre-sujet" maxlength="120" placeholder="−20 % sur les desserts ce mardi" />
+              </label>
+              <label class="offre-champ">
+                <span>Message</span>
+                <textarea id="offre-message" maxlength="2000" placeholder="Ce mardi, tous les desserts sont à −20 %. Montre cet e-mail en caisse."></textarea>
+              </label>
+              <div class="offre-cibles" role="radiogroup" aria-label="À qui">
+                <button type="button" class="offre-cible choisi" data-cible="tous" role="radio" aria-checked="true">Tous<small id="offre-n-tous">–</small></button>
+                <button type="button" class="offre-cible" data-cible="absents" role="radio" aria-checked="false">Pas revenus depuis 30 jours<small id="offre-n-absents">–</small></button>
+              </div>
+              <button type="button" class="offre-envoyer" id="offre-envoyer">Envoyer</button>
+              <p class="offre-msg" id="offre-msg" role="status"></p>
+              <p class="offre-note">Seuls les clients qui ont accepté tes offres dans l'appli les reçoivent. Chaque e-mail a un lien pour se désabonner. Un envoi par jour au maximum.</p>
+              <p class="offre-histo-titre" id="offre-histo-titre" hidden>Déjà envoyées</p>
+              <ul class="offre-histo" id="offre-histo"></ul>
             </div>
 
             <nav class="tabs">
@@ -10564,6 +10626,112 @@
         $("#bon-fermer").addEventListener("click", fermer);
         $("#bon-encore").addEventListener("click", ouvrir);
         document.addEventListener("visibilitychange", function () { if (document.hidden && !ecran.hidden) couper(); });
+      })();
+
+      /* ================= LES OFFRES PAR E-MAIL (offre Pro, 30/09/2026) =================
+         Le gerant ecrit une offre, choisit a qui (tous / pas revenus depuis
+         30 jours), l'envoie. Le serveur (?action=offres-email) n'envoie
+         qu'aux clients qui ont accepte les offres de CE lieu, un envoi par
+         jour ; il ne renvoie jamais d'adresse, seulement des nombres. */
+      (function () {
+        var ecran = $("#offre-ecran");
+        var cible = "tous";
+        var infos = null;
+        var DATE = new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "short" });
+
+        function dire(texte, genre) {
+          var m = $("#offre-msg");
+          m.textContent = texte || "";
+          m.className = "offre-msg" + (genre ? " " + genre : "");
+        }
+        async function appeler(corps) {
+          var r = await fetch("/api/credit-clubbeur?action=offres-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + ETAT.session.access_token },
+            body: JSON.stringify(corps),
+          });
+          var j = await r.json().catch(function () { return {}; });
+          if (!r.ok) throw new Error(j.error || "Erreur " + r.status);
+          return j;
+        }
+        function peindre() {
+          var n = infos ? infos.consentis : 0;
+          $("#offre-compte").innerHTML = infos
+            ? "<b>" + n + " client" + (n > 1 ? "s" : "") + "</b> " + (n > 1 ? "ont accepté" : "a accepté") + " de recevoir tes offres par e-mail."
+            : "";
+          $("#offre-n-tous").textContent = infos ? infos.tous + " client" + (infos.tous > 1 ? "s" : "") : "–";
+          $("#offre-n-absents").textContent = infos ? infos.absents + " client" + (infos.absents > 1 ? "s" : "") : "–";
+          var histo = (infos && infos.historique) || [];
+          $("#offre-histo-titre").hidden = !histo.length;
+          $("#offre-histo").replaceChildren.apply($("#offre-histo"), histo.map(function (h) {
+            var li = document.createElement("li");
+            var a = document.createElement("span"); a.textContent = h.sujet;
+            var b = document.createElement("span"); b.textContent = DATE.format(new Date(h.cree_le)) + " · " + h.envoyes + " envoyé" + (h.envoyes > 1 ? "s" : "");
+            li.append(a, b);
+            return li;
+          }));
+          var sous = $("#offre-lanceur-sous");
+          if (sous && infos) sous.textContent = n ? n + " client" + (n > 1 ? "s acceptent" : " accepte") + " tes offres" : "Tes clients l'acceptent dans l'appli";
+        }
+        async function charger() {
+          if (estDemo()) {
+            infos = { consentis: 12, tous: 12, absents: 5, attenteHeures: 0, historique: [] };
+            peindre();
+            dire("Exemple : l'envoi est désactivé sans compte.", "");
+            return;
+          }
+          try {
+            infos = await appeler({ mode: "compter" });
+            peindre();
+            if (infos.attenteHeures > 0) dire("Prochain envoi possible dans " + infos.attenteHeures + " h.", "");
+          } catch (e) {
+            $("#offre-compte").textContent = e.message;
+          }
+        }
+        $("#offre-ouvrir").addEventListener("click", function () {
+          dire("");
+          ecran.hidden = false;
+          document.body.style.overflow = "hidden";
+          charger();
+        });
+        $("#offre-fermer").addEventListener("click", function () {
+          ecran.hidden = true;
+          document.body.style.overflow = "";
+        });
+        document.querySelectorAll(".offre-cible").forEach(function (b) {
+          b.addEventListener("click", function () {
+            cible = b.dataset.cible;
+            document.querySelectorAll(".offre-cible").forEach(function (x) {
+              x.classList.toggle("choisi", x === b);
+              x.setAttribute("aria-checked", String(x === b));
+            });
+          });
+        });
+        $("#offre-envoyer").addEventListener("click", async function () {
+          var sujet = $("#offre-sujet").value.trim();
+          var message = $("#offre-message").value.trim();
+          if (!sujet || !message) return dire("Écris un objet et un message.", "err");
+          if (estDemo()) return dire("Exemple : crée ton compte pour envoyer tes offres.", "err");
+          var n = infos ? infos[cible] : 0;
+          if (!n) return dire("Aucun client ne recevrait cette offre pour le moment.", "err");
+          if (!confirm("Envoyer « " + sujet + " » à " + n + " client" + (n > 1 ? "s" : "") + " ?")) return;
+          var bouton = $("#offre-envoyer");
+          bouton.disabled = true;
+          dire("Envoi…", "");
+          try {
+            var r = await appeler({ mode: "envoyer", sujet: sujet, message: message, cible: cible });
+            dire("Envoyée à " + r.envoyes + " client" + (r.envoyes > 1 ? "s" : "") + ".", "ok");
+            $("#offre-sujet").value = "";
+            $("#offre-message").value = "";
+            charger();
+          } catch (e) {
+            dire(e.message, "err");
+          } finally {
+            bouton.disabled = false;
+          }
+        });
+        // Le nombre de clients qui acceptent, sous le bouton, des le demarrage.
+        setTimeout(function () { if (ETAT.session && !estDemo()) appeler({ mode: "compter" }).then(function (j) { infos = j; peindre(); }).catch(function () {}); }, 1500);
       })();
 
       demarrer();

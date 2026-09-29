@@ -2252,6 +2252,12 @@
         transition: transform .15s ease;
       }
       .rg-switch.on { background: var(--accent); }
+      /* 30/09/2026 : l'accord pour les offres par e-mail d'un lieu, en bas de sa page. */
+      .vb-offres { display: flex; align-items: center; gap: 14px; margin: 26px 0 8px; padding: 16px 0; border-top: 1px solid var(--line, rgba(0,0,0,.08)); }
+      .vb-offres-txt { flex: 1; min-width: 0; }
+      .vb-offres-txt b { display: block; font-size: calc(15 * var(--u)); font-weight: 700; color: var(--ink); }
+      .vb-offres-txt small { display: block; margin-top: 3px; font-size: calc(12.5 * var(--u)); line-height: 1.4; color: var(--ink2); }
+      .vb-offres .rg-switch { flex: none; }
       .rg-switch.on::after { transform: translateX(20px); }
       @media (prefers-reduced-motion: reduce) { .rg-switch, .rg-switch::after { transition: none; } }
 
@@ -17196,8 +17202,63 @@ function rendreBoutiqueBar(bar) {
   /* Le bouton « Adresse et photos » (qui renvoyait a la fiche de la carte)
      est retire le 23/09/2026 a la demande de Julien : le pied reste vide. */
   document.getElementById("vb-pied").innerHTML = "";
+  // Les offres par e-mail du lieu (offre Pro, 30/09/2026) : seulement un
+  // vrai lieu (pas une demonstration) et un client connecte.
+  if (IDS_CLUBS[bar.cle]) brancherOffresEmail(IDS_CLUBS[bar.cle], bar.nom);
   var fiche = document.getElementById("vb-fiche");
   if (fiche) fiche.addEventListener("click", function () { ouvrirClub(CLUBS[bar.cle], fiche, bar.cle, true); });
+}
+
+/* ================= LES OFFRES PAR E-MAIL D'UN LIEU (30/09/2026) =================
+   Un commerce (offre Pro) peut envoyer ses offres par e-mail, mais SEULEMENT a
+   ceux qui ont dit oui, pour CE lieu : consentements_offres (migration
+   clubbeur 0060). Non par defaut -- c'est la loi, et c'est ce qui evite le
+   spam. Chaque e-mail porte un lien pour se desabonner en un clic
+   (?action=desabonner). */
+var OFFRES_LIEU_EN_COURS = null;
+async function brancherOffresEmail(idLieu, nomLieu) {
+  OFFRES_LIEU_EN_COURS = idLieu;
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session || OFFRES_LIEU_EN_COURS !== idLieu) return;
+  var res = await supabaseClubbeur.from("consentements_offres").select("accepte").eq("club_id", idLieu).maybeSingle();
+  // Table absente (base sans la 0060) ou reseau coupe : on ne montre rien.
+  if (res.error || OFFRES_LIEU_EN_COURS !== idLieu) return;
+  var actif = !!(res.data && res.data.accepte);
+
+  var ligne = document.createElement("div");
+  ligne.className = "vb-offres";
+  var txt = document.createElement("span");
+  txt.className = "vb-offres-txt";
+  var titre = document.createElement("b");
+  titre.textContent = "Recevoir ses offres par e-mail";
+  var sous = document.createElement("small");
+  sous.textContent = nomLieu + " t'envoie ses offres, un e-mail par jour au maximum. Tu arrêtes quand tu veux.";
+  txt.append(titre, sous);
+  var bascule = document.createElement("button");
+  bascule.type = "button";
+  bascule.className = "rg-switch" + (actif ? " on" : "");
+  bascule.setAttribute("role", "switch");
+  bascule.setAttribute("aria-checked", String(actif));
+  bascule.setAttribute("aria-label", "Recevoir les offres de " + nomLieu + " par e-mail");
+  bascule.addEventListener("click", async function () {
+    var voulu = !bascule.classList.contains("on");
+    bascule.classList.toggle("on", voulu);
+    bascule.setAttribute("aria-checked", String(voulu));
+    bascule.disabled = true;
+    var r = await supabaseClubbeur.from("consentements_offres").upsert(
+      { user_id: session.user.id, club_id: idLieu, accepte: voulu, maj_le: new Date().toISOString() },
+      { onConflict: "user_id,club_id" }
+    );
+    bascule.disabled = false;
+    if (r.error) {
+      // L'etat affiche reste l'etat reel.
+      bascule.classList.toggle("on", !voulu);
+      bascule.setAttribute("aria-checked", String(!voulu));
+    }
+  });
+  ligne.append(txt, bascule);
+  var pied = document.getElementById("vb-pied");
+  if (pied && OFFRES_LIEU_EN_COURS === idLieu) pied.replaceChildren(ligne);
 }
 
 /* Les photos d'un etablissement : la facade d'abord, puis les autres. Toucher
