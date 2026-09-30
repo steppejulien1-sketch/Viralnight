@@ -19,16 +19,24 @@ const suivreDefilement = () => entete.classList.toggle("defile", window.scrollY 
 window.addEventListener("scroll", suivreDefilement, { passive: true });
 suivreDefilement();
 
-/* ---------- La carte qui se tamponne ---------- */
-const carte = document.getElementById("carte-demo");
-const tampons = [...carte.querySelectorAll(".tampon")];
-const solde = document.getElementById("solde");
-const jauge = document.getElementById("jauge");
+/* ---------- La carte du client qui se remplit ---------- */
+const pass = document.getElementById("pass");
+const lignes = [...pass.querySelectorAll(".pass-historique li")];
+const solde = document.getElementById("pass-solde");
+const jauge = document.getElementById("pass-jauge");
+const objectif = document.getElementById("pass-objectif");
+const reste = document.getElementById("pass-reste");
 const OBJECTIF = 180;
 
-function afficherSolde(valeur) {
+function afficher(valeur) {
   solde.textContent = String(valeur);
   jauge.style.width = Math.min(100, (valeur / OBJECTIF) * 100) + "%";
+  if (valeur >= OBJECTIF) {
+    pass.classList.add("pleine");
+    objectif.textContent = "Cappuccino offert : à montrer au comptoir";
+  } else {
+    reste.textContent = String(OBJECTIF - valeur);
+  }
 }
 
 function compter(de, a, duree) {
@@ -36,7 +44,7 @@ function compter(de, a, duree) {
   return new Promise((fin) => {
     const pas = (t) => {
       const k = Math.min(1, (t - debut) / duree);
-      afficherSolde(Math.round(de + (a - de) * (1 - Math.pow(1 - k, 3))));
+      afficher(Math.round(de + (a - de) * (1 - Math.pow(1 - k, 3))));
       if (k < 1) requestAnimationFrame(pas);
       else fin();
     };
@@ -44,25 +52,20 @@ function compter(de, a, duree) {
   });
 }
 
-(async function tamponner() {
+(async function remplir() {
   if (calme) {
-    tampons.forEach((t) => t.classList.add("pose"));
-    afficherSolde(OBJECTIF);
-    carte.classList.add("pleine");
-    return;
+    lignes.forEach((l) => l.classList.add("vu"));
+    return afficher(OBJECTIF);
   }
   let total = 0;
-  await attendre(500);
-  for (const t of tampons) {
-    const pts = Number(t.dataset.pts);
-    const story = t.classList.contains("tampon-story");
-    if (story) await attendre(450);
-    t.classList.add("pose");
-    await compter(total, total + pts, story ? 700 : 260);
+  await attendre(600);
+  for (const ligne of lignes) {
+    const pts = Number(ligne.dataset.pts);
+    ligne.classList.add("vu");
+    await compter(total, total + pts, pts > 20 ? 800 : 300);
     total += pts;
-    await attendre(story ? 0 : 160);
+    await attendre(pts > 20 ? 0 : 250);
   }
-  carte.classList.add("pleine");
 })();
 
 /* ---------- Le bandeau : texte double pour une boucle sans a-coup ---------- */
