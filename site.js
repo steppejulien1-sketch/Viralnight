@@ -21,7 +21,7 @@ suivreDefilement();
 
 /* ---------- La carte du client qui se remplit ---------- */
 const pass = document.getElementById("pass");
-const lignes = [...pass.querySelectorAll(".pass-historique li")];
+const lignes = [...document.querySelectorAll("#pass-historique li")];
 const solde = document.getElementById("pass-solde");
 const jauge = document.getElementById("pass-jauge");
 const objectif = document.getElementById("pass-objectif");
