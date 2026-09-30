@@ -100,7 +100,7 @@ async function printPoster() {
 </style></head>
 <body>
   <div class="brand">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4c.5 3.8 1.4 6.4 2.9 7.9 1.5 1.5 4.1 2.4 7.9 2.9-3.8.5-6.4 1.4-7.9 2.9-1.5 1.5-2.4 4.1-2.9 7.9-.5-3.8-1.4-6.4-2.9-7.9-1.5-1.5-4.1-2.4-7.9-2.9 3.8-.5 6.4-1.4 7.9-2.9 1.5-1.5 2.4-4.1 2.9-7.9Z" fill="#ff6363"/></svg>
+    <img src="${location.origin}/site/logo-verre.webp" alt="" style="width:40px;height:34px;object-fit:contain" />
     <span>Noctify</span>
   </div>
   <p class="club">${escapeHtml(state.establishmentName)}</p>
