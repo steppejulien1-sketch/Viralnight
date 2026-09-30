@@ -20,13 +20,15 @@ window.addEventListener("scroll", suivreDefilement, { passive: true });
 suivreDefilement();
 
 /* ---------- La carte membre ----------
-   Les points montent a mesure que les lignes du fil arrivent (un passage,
-   une story, un autre commerce : les points sont communs a tous). La carte
-   s'incline doucement sous la souris, comme un objet qu'on tient. */
+   Les tampons se posent un par un (trois passages, puis une story) et le
+   solde monte avec eux ; la ligne du bas dit d'ou viennent les points. Les
+   points sont communs a tous les commerces. La carte s'incline sous la
+   souris. */
 const membre = document.getElementById("membre");
 const soldeMembre = document.getElementById("membre-solde");
-const fil = [...document.querySelectorAll("#membre-fil li")];
-const DEPART = 200;
+const tamponsMembre = [...document.querySelectorAll("#membre-tampons li[data-pts]")];
+const dernier = document.getElementById("membre-dernier");
+const ORIGINES = ["Café des Étangs", "Maison Lemaire", "Barber de la Place", "Story Instagram"];
 
 function compter(de, a, duree) {
   const debut = performance.now();
@@ -42,21 +44,22 @@ function compter(de, a, duree) {
 }
 
 (async function remplir() {
-  let total = DEPART;
-  soldeMembre.textContent = String(total);
+  let total = 180;
   if (calme) {
-    fil.forEach((l) => l.classList.add("vu"));
-    soldeMembre.textContent = String(total + fil.reduce((s, l) => s + Number(l.dataset.pts), 0));
+    tamponsMembre.forEach((t) => t.classList.add("pose"));
+    soldeMembre.textContent = "340";
     return;
   }
-  await attendre(700);
-  for (const ligne of fil) {
-    ligne.classList.add("vu");
-    const pts = Number(ligne.dataset.pts);
-    await compter(total, total + pts, pts > 20 ? 900 : 450);
+  await attendre(800);
+  for (const [i, t] of tamponsMembre.entries()) {
+    const pts = Number(t.dataset.pts);
+    t.classList.add("pose");
+    dernier.textContent = "+" + pts + " · " + ORIGINES[i];
+    await compter(total, total + pts, pts > 20 ? 900 : 400);
     total += pts;
-    await attendre(500);
+    await attendre(pts > 20 ? 900 : 450);
   }
+  dernier.textContent = "Valables dans tous les commerces Noctify";
 })();
 
 if (membre && !calme && window.matchMedia("(hover: hover)").matches) {
