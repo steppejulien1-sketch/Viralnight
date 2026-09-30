@@ -149,6 +149,48 @@ if (reglageBudget && reglageClients) {
   calculer();
 }
 
+/* ---------- Etape 3 : boutique -> recompense -> bon ----------
+   Le telephone rejoue le parcours du client (comme chez Joyn) : la
+   boutique, un toucher sur une recompense, la fiche, un toucher sur
+   « Echanger », puis le bon a montrer au comptoir. En boucle, seulement
+   quand la section est a l'ecran. */
+const telParcours = document.getElementById("tel-parcours");
+if (telParcours) {
+  const ecrans = [...telParcours.querySelectorAll(".ecran")];
+  const pastilles = [...document.querySelectorAll(".parcours-etapes li")];
+  const doigt = telParcours.querySelector(".doigt");
+  // Ou le doigt touche, en % de l'ecran : la carte « Shot maison », puis le bouton.
+  const touches = [{ x: 27, y: 33 }, { x: 50, y: 93 }, null];
+  let i = 0;
+  let minuteur = null;
+  const montrer = (n) => {
+    ecrans.forEach((e, k) => e.classList.toggle("actif", k === n));
+    pastilles.forEach((e, k) => e.classList.toggle("actif", k === n));
+  };
+  const suivant = () => {
+    const t = touches[i];
+    if (t && !calme) {
+      doigt.style.left = t.x + "%";
+      doigt.style.top = t.y + "%";
+      doigt.classList.remove("tape");
+      void doigt.offsetWidth;
+      doigt.classList.add("tape");
+    }
+    setTimeout(() => {
+      doigt.classList.remove("tape");
+      i = (i + 1) % ecrans.length;
+      montrer(i);
+    }, t ? 700 : 0);
+  };
+  montrer(0);
+  if (!calme && "IntersectionObserver" in window) {
+    new IntersectionObserver(([e]) => {
+      clearInterval(minuteur);
+      if (e.isIntersecting) minuteur = setInterval(suivant, 2600);
+    }, { threshold: 0.4 }).observe(telParcours);
+  }
+}
+
 /* ---------- Le formulaire ---------- */
 const formulaire = document.getElementById("formulaire");
 const bouton = document.getElementById("envoyer");

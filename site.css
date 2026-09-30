@@ -1333,7 +1333,17 @@ p {
   margin-bottom: 22px;
 }
 
-/* ---------- Comment on demarre ---------- */
+/* ---------- Vous demarrez en une journee ---------- */
+.dem-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.dem-tete .chapeau {
+  margin: 0;
+}
 .demarrage {
   list-style: none;
   margin: 48px 0 0;
@@ -1341,28 +1351,58 @@ p {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  counter-reset: none;
+  position: relative;
+}
+.demarrage::before {
+  /* le fil de la journee, du matin au soir */
+  content: "";
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  top: 88px;
+  border-top: 2px dashed #dcdad6;
+  z-index: 0;
 }
 .demarrage li {
-  border-top: 2px solid var(--encre);
-  padding-top: 22px;
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  border: 1px solid var(--trait);
+  border-radius: 24px;
+  padding: 28px 26px 30px;
+  box-shadow: 0 24px 50px -40px rgba(0, 0, 0, 0.35);
 }
-.dem-num {
-  display: inline-grid;
+.dem-quand {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rouge-fonce);
+}
+.dem-ico {
+  display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--rouge);
-  color: #fff;
-  font: 800 16px/1 var(--titre);
+  width: 56px;
+  height: 56px;
+  margin-top: 16px;
+  border-radius: 16px;
+  background: var(--encre);
+}
+.dem-ico svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .demarrage h3 {
-  margin-top: 16px;
+  margin-top: 20px;
   font-size: 22px;
   letter-spacing: -0.02em;
 }
-.demarrage p {
+.demarrage li > p:last-child {
   margin-top: 8px;
   color: var(--encre-2);
 }
@@ -1868,7 +1908,7 @@ p {
   height: min(600px, calc(100vh - 190px));
   min-height: 420px;
   object-fit: cover;
-  object-position: 50% 62%;
+  object-position: 50% 45%;
   border-radius: 28px;
 }
 .scene-membre .membre {
@@ -2355,6 +2395,97 @@ html.style-carte .membre-tampons li span {
 }
 .form-rgpd a {
   color: inherit;
+}
+
+/* ---------- Etape 3 : le telephone qui va de la boutique au bon ---------- */
+.etape:nth-child(3) .etape-visuel {
+  height: auto;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+.tel-parcours {
+  width: 240px;
+}
+.tel-parcours .ecran {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity 0.45s ease, transform 0.55s var(--sortie);
+}
+.tel-parcours .ecran.actif {
+  opacity: 1;
+  transform: none;
+}
+.tel-parcours .ecran-3 {
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 18px;
+  text-align: center;
+}
+.tel-parcours .ecran-3 .qr-vrai {
+  width: 150px;
+}
+.doigt {
+  position: absolute;
+  z-index: 5;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  background: rgba(20, 20, 20, 0.25);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  opacity: 0;
+  transition: left 0.6s var(--sortie), top 0.6s var(--sortie), opacity 0.2s;
+}
+.doigt.tape {
+  opacity: 1;
+  animation: taper 0.5s ease-out;
+}
+@keyframes taper {
+  0% { transform: scale(1.4); }
+  60% { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+.parcours-etapes {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  border-radius: 999px;
+  background: var(--doux);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--encre-3);
+}
+.parcours-etapes li {
+  padding: 8px 14px;
+  border-radius: 999px;
+  transition: background-color 0.3s, color 0.3s;
+}
+.parcours-etapes li.actif {
+  background: #fff;
+  color: var(--encre);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 1020px) {
+  .demarrage {
+    grid-template-columns: 1fr;
+  }
+  .demarrage::before {
+    display: none;
+  }
 }
 
 [hidden] {
