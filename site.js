@@ -19,32 +19,21 @@ const suivreDefilement = () => entete.classList.toggle("defile", window.scrollY 
 window.addEventListener("scroll", suivreDefilement, { passive: true });
 suivreDefilement();
 
-/* ---------- La carte du client qui se remplit ---------- */
-const pass = document.getElementById("pass");
-const lignes = [...pass.querySelectorAll(".pass-historique li")];
-const solde = document.getElementById("pass-solde");
-const jauge = document.getElementById("pass-jauge");
-const objectif = document.getElementById("pass-objectif");
-const reste = document.getElementById("pass-reste");
-const OBJECTIF = 180;
-
-function afficher(valeur) {
-  solde.textContent = String(valeur);
-  jauge.style.width = Math.min(100, (valeur / OBJECTIF) * 100) + "%";
-  if (valeur >= OBJECTIF) {
-    pass.classList.add("pleine");
-    objectif.textContent = "Cappuccino offert : à montrer au comptoir";
-  } else {
-    reste.textContent = String(OBJECTIF - valeur);
-  }
-}
+/* ---------- La carte membre ----------
+   Les points montent a mesure que les lignes du fil arrivent (un passage,
+   une story, un autre commerce : les points sont communs a tous). La carte
+   s'incline doucement sous la souris, comme un objet qu'on tient. */
+const membre = document.getElementById("membre");
+const soldeMembre = document.getElementById("membre-solde");
+const fil = [...document.querySelectorAll("#membre-fil li")];
+const DEPART = 200;
 
 function compter(de, a, duree) {
   const debut = performance.now();
   return new Promise((fin) => {
     const pas = (t) => {
-      const k = Math.min(1, (t - debut) / duree);
-      afficher(Math.round(de + (a - de) * (1 - Math.pow(1 - k, 3))));
+      const k = calme ? 1 : Math.min(1, (t - debut) / duree);
+      soldeMembre.textContent = String(Math.round(de + (a - de) * (1 - Math.pow(1 - k, 3))));
       if (k < 1) requestAnimationFrame(pas);
       else fin();
     };
@@ -53,20 +42,39 @@ function compter(de, a, duree) {
 }
 
 (async function remplir() {
+  let total = DEPART;
+  soldeMembre.textContent = String(total);
   if (calme) {
-    lignes.forEach((l) => l.classList.add("vu"));
-    return afficher(OBJECTIF);
+    fil.forEach((l) => l.classList.add("vu"));
+    soldeMembre.textContent = String(total + fil.reduce((s, l) => s + Number(l.dataset.pts), 0));
+    return;
   }
-  let total = 0;
-  await attendre(600);
-  for (const ligne of lignes) {
-    const pts = Number(ligne.dataset.pts);
+  await attendre(700);
+  for (const ligne of fil) {
     ligne.classList.add("vu");
-    await compter(total, total + pts, pts > 20 ? 800 : 300);
+    const pts = Number(ligne.dataset.pts);
+    await compter(total, total + pts, pts > 20 ? 900 : 450);
     total += pts;
-    await attendre(pts > 20 ? 0 : 250);
+    await attendre(500);
   }
 })();
+
+if (membre && !calme && window.matchMedia("(hover: hover)").matches) {
+  const scene = membre.parentElement;
+  scene.addEventListener("pointermove", (e) => {
+    const r = membre.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    membre.style.setProperty("--rx", (-y * 10).toFixed(2) + "deg");
+    membre.style.setProperty("--ry", (x * 14).toFixed(2) + "deg");
+    membre.style.setProperty("--lx", ((x + 0.5) * 100).toFixed(1) + "%");
+  });
+  scene.addEventListener("pointerleave", () => {
+    membre.style.setProperty("--rx", "0deg");
+    membre.style.setProperty("--ry", "0deg");
+    membre.style.setProperty("--lx", "30%");
+  });
+}
 
 /* ---------- Le bandeau : texte double pour une boucle sans a-coup ---------- */
 const piste = document.querySelector(".bandeau-piste");
