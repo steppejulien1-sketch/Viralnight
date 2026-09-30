@@ -94,16 +94,19 @@ majQr();
 setInterval(majQr, 2000);
 
 /* ---------- Combien vous coute votre pub ----------
-   Le commercant indique ce qu'il depense deja en pub chaque mois.
-   Garde par an = (pub d'aujourd'hui - Noctify Premium 49,99 €) x 12. */
+   Le commercant regle ce qu'il depense deja en pub et ses clients par jour.
+   Garde par an = (pub d'aujourd'hui - Noctify Premium 49,99 €) x 12.
+   Stories : si un client sur vingt poste une story dans le mois (ecrit sous
+   le calcul) -> clients par jour x 30 / 20. */
 const reglageBudget = document.getElementById("est-budget");
-if (reglageBudget) {
+const reglageClients = document.getElementById("est-clients");
+if (reglageBudget && reglageClients) {
   const PREMIUM = 49.99;
   const fmt = (n) => Math.round(n).toLocaleString("fr-BE");
   const el = (id) => document.getElementById(id);
   let affiche = 0;
   let anim = 0;
-  const remplir = (r) => r.style.setProperty("--rempli", ((r.value - r.min) / (r.max - r.min)) * 100 + "%");
+  const remplir = (c) => c.style.setProperty("--rempli", ((c.value - c.min) / (c.max - c.min)) * 100 + "%");
   function animer(cible) {
     cancelAnimationFrame(anim);
     const depart = affiche;
@@ -118,15 +121,20 @@ if (reglageBudget) {
   }
   function calculer() {
     const budget = Number(reglageBudget.value);
+    const clients = Number(reglageClients.value);
     el("est-budget-val").textContent = fmt(budget) + " €";
+    el("est-clients-val").textContent = String(clients);
     el("est-pub").textContent = fmt(budget);
+    el("est-stories").textContent = fmt(Math.max(1, (clients * 30) / 20));
     animer(Math.max(0, (budget - PREMIUM) * 12));
     const echelle = Math.max(budget, PREMIUM);
     el("est-barre-pub").style.width = (budget / echelle) * 100 + "%";
     el("est-barre-noct").style.width = Math.max(2, (PREMIUM / echelle) * 100) + "%";
     remplir(reglageBudget);
+    remplir(reglageClients);
   }
   reglageBudget.addEventListener("input", calculer);
+  reglageClients.addEventListener("input", calculer);
   calculer();
 }
 

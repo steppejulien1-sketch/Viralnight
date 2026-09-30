@@ -114,7 +114,7 @@ p {
 }
 
 .cadre {
-  width: min(1160px, 100% - 40px);
+  width: min(1240px, 100% - 40px);
   margin-inline: auto;
 }
 
@@ -273,16 +273,19 @@ p {
 
 /* ---------- Premier ecran ---------- */
 .ouverture {
-  padding: 88px 0 128px;
+  min-height: calc(100vh - 80px);
+  display: grid;
+  align-items: center;
+  padding: 64px 0 96px;
 }
 .ouverture-in {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr 1fr;
   align-items: center;
-  gap: 88px;
+  gap: 96px;
 }
 .ouverture h1 {
-  font-size: clamp(40px, 5.6vw, 76px);
+  font-size: clamp(44px, 6.4vw, 92px);
   line-height: 0.98;
   letter-spacing: -0.035em;
 }
@@ -299,7 +302,7 @@ p {
 }
 .scene-photo {
   width: 100%;
-  height: min(680px, 78vh);
+  height: min(720px, 80vh);
   object-fit: cover;
   object-position: 50% 62%;
   border-radius: 28px;
@@ -1684,6 +1687,141 @@ p {
 }
 .est-petit b {
   color: #fff;
+}
+
+/* ---------- Une carte pour chaque commerce : l'eventail ---------- */
+.cartes-tete {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 48px;
+  align-items: end;
+}
+.cartes-tete .chapeau {
+  margin-top: 0;
+}
+.eventail {
+  position: relative;
+  height: 360px;
+  margin-top: 64px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.mini-carte {
+  position: absolute;
+  width: 300px;
+  aspect-ratio: 1.586;
+  border-radius: 20px;
+  padding: 20px 22px;
+  background: var(--fond);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 50px -24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: transform 0.5s var(--sortie);
+  overflow: hidden;
+}
+.mini-carte::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 18px solid rgba(255, 255, 255, 0.08);
+}
+.mini-carte:nth-child(1) { transform: translateX(-440px) rotate(-12deg) translateY(30px); }
+.mini-carte:nth-child(2) { transform: translateX(-220px) rotate(-6deg) translateY(8px); z-index: 1; }
+.mini-carte:nth-child(3) { transform: translateY(-10px); z-index: 3; }
+.mini-carte:nth-child(4) { transform: translateX(220px) rotate(6deg) translateY(8px); z-index: 1; }
+.mini-carte:nth-child(5) { transform: translateX(440px) rotate(12deg) translateY(30px); }
+.eventail:hover .mini-carte:nth-child(1) { transform: translateX(-470px) rotate(-14deg) translateY(24px); }
+.eventail:hover .mini-carte:nth-child(2) { transform: translateX(-240px) rotate(-7deg) translateY(2px); }
+.eventail:hover .mini-carte:nth-child(4) { transform: translateX(240px) rotate(7deg) translateY(2px); }
+.eventail:hover .mini-carte:nth-child(5) { transform: translateX(470px) rotate(14deg) translateY(24px); }
+.mc-nom {
+  font: 800 19px/1.1 var(--titre);
+  letter-spacing: -0.02em;
+}
+.mc-type {
+  margin-top: 2px;
+  font-size: 12.5px;
+  opacity: 0.75;
+}
+.mc-pts {
+  margin-top: auto;
+  font: 800 30px/1 var(--titre);
+  letter-spacing: -0.03em;
+}
+.mc-pts small {
+  font: 600 13px var(--texte);
+  opacity: 0.75;
+  letter-spacing: 0;
+}
+.mc-jauge {
+  margin-top: 10px;
+  height: 5px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+}
+.mc-jauge i {
+  display: block;
+  height: 100%;
+  background: #fff;
+  border-radius: inherit;
+}
+.mc-reco {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.cartes-note {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--encre-3);
+}
+@media (max-width: 1020px) {
+  .cartes-tete {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .eventail {
+    height: 300px;
+  }
+  .mini-carte {
+    width: 250px;
+  }
+  .mini-carte:nth-child(1) { transform: translateX(-300px) rotate(-12deg) translateY(30px); }
+  .mini-carte:nth-child(2) { transform: translateX(-150px) rotate(-6deg) translateY(8px); }
+  .mini-carte:nth-child(4) { transform: translateX(150px) rotate(6deg) translateY(8px); }
+  .mini-carte:nth-child(5) { transform: translateX(300px) rotate(12deg) translateY(30px); }
+}
+@media (max-width: 560px) {
+  .ouverture {
+    min-height: 0;
+    padding: 40px 0 72px;
+  }
+  .eventail {
+    height: 250px;
+    overflow: hidden;
+    margin-inline: -20px;
+  }
+  .mini-carte {
+    width: 210px;
+    padding: 16px 18px;
+  }
+  .mc-pts {
+    font-size: 24px;
+  }
+  .mini-carte:nth-child(1),
+  .mini-carte:nth-child(5) {
+    display: none;
+  }
+  .mini-carte:nth-child(2) { transform: translateX(-95px) rotate(-8deg) translateY(12px); }
+  .mini-carte:nth-child(4) { transform: translateX(95px) rotate(8deg) translateY(12px); }
 }
 
 [hidden] {
