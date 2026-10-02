@@ -8,8 +8,6 @@
      comme dans l'appli (sans l'heure dessous).
    - Le formulaire poste sur /api/demo-request (nom, e-mail, telephone). */
 
-import QRCode from "qrcode";
-
 const calme = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -87,23 +85,6 @@ if (piste) {
   piste.appendChild(copie);
 }
 
-/* ---------- Le vrai QR code du bon ---------- */
-const qrBon = document.getElementById("qr-bon");
-let fenetre = -1;
-async function majQr() {
-  const f = Math.floor(Date.now() / 30000);
-  if (f === fenetre) return;
-  fenetre = f;
-  qrBon.innerHTML = await QRCode.toString("NOCTIFY-EXEMPLE-BON-" + f, {
-    type: "svg",
-    margin: 0,
-    errorCorrectionLevel: "M",
-    color: { dark: "#141414", light: "#ffffff" },
-  });
-}
-majQr();
-setInterval(majQr, 2000);
-
 /* ---------- Combien vous coute votre pub ----------
    Le commercant regle ce qu'il depense deja en pub et ses clients par jour.
    Garde par an = (pub d'aujourd'hui - Noctify Premium 49,99 €) x 12.
@@ -159,8 +140,8 @@ if (telParcours) {
   const ecrans = [...telParcours.querySelectorAll(".ecran")];
   const pastilles = [...document.querySelectorAll(".parcours-etapes li")];
   const doigt = telParcours.querySelector(".doigt");
-  // Ou le doigt touche, en % de l'ecran : la carte « Cappuccino » dans la boutique.
-  const touches = [null, { x: 72, y: 30 }, null];
+  // Ou le doigt touche, en % de l'ecran : la carte « Cappuccino », puis « Echanger ».
+  const touches = [{ x: 72, y: 30 }, { x: 50, y: 89 }, null];
   let i = 0;
   let minuteur = null;
   const montrer = (n) => {

@@ -17703,6 +17703,40 @@ async function ouvrirBon(bon, src) {
   $("#sh-ok").addEventListener("click", fermerFeuille);
 }
 
+/* Captures pour le site (02/10/2026) : la vraie fiche d'une recompense et
+   le vrai bon, avec un QR d'exemple (le vrai QR exige une session). Meme
+   usage que window.noctifyParcours / noctifyCadeau : aucun droit en plus,
+   rien n'est ecrit en base. */
+window.noctifyFicheApercu = function (nom, points, photo, lieu, photoLieu) {
+  ETAT.solde = Math.max(ETAT.solde || 0, Number(points) + 160);
+  var bar = lieu ? { nom: lieu, photo: photoLieu || null, photos: photoLieu ? [photoLieu] : [] } : undefined;
+  ouvrirRecompense({ id: "apercu", nom: nom, cout: Number(points), fam: "bar", stock: 40, art: function () { return ""; }, foto: photo, propre: true, code: "", demo: false, bar: bar });
+};
+window.noctifyBonApercu = async function (nom, photo) {
+  var svgQr = await QRCode.toString("NOCTIFY-EXEMPLE-BON", {
+    type: "svg", errorCorrectionLevel: "Q", margin: 0, color: { dark: "#0a0b0e", light: "#ffffff" },
+  });
+  var html =
+    '<div class="sheet-ok">' +
+      '<div class="bon-ticket">' +
+        '<div class="bt-haut">' +
+          '<span class="bt-visuel"><img src="' + photo + '" alt=""></span>' +
+          '<strong class="bt-nom" id="sh-titre">' + nom + "</strong>" +
+        "</div>" +
+        '<div class="bt-souche">' +
+          '<div class="bt-qr">' + svgQr + "</div>" +
+          bandeauVivant() +
+          '<p class="bt-code">VN-7K4Q</p>' +
+          '<p class="bt-validite">' + compteARebours(Date.now() + 6 * 3600 * 1000) + "</p>" +
+        "</div>" +
+      "</div>" +
+      '<button class="sheet-cta sobre" id="sh-ok" type="button">Fermer</button>' +
+    "</div>";
+  ouvrirFeuille(html, "#sh-ok");
+  var h = document.querySelector("#sheet .bt-heure");
+  if (h) h.textContent = new Date().toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+};
+
 (function rendreGains() {
   // Les pages du profil ouvertes passeraient sinon par-dessus l'ecran vise.
   function fermerPages() {
