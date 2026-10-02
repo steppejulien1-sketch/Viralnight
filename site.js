@@ -159,8 +159,8 @@ if (telParcours) {
   const ecrans = [...telParcours.querySelectorAll(".ecran")];
   const pastilles = [...document.querySelectorAll(".parcours-etapes li")];
   const doigt = telParcours.querySelector(".doigt");
-  // Ou le doigt touche, en % de l'ecran : la carte « Shot maison », puis le bouton.
-  const touches = [{ x: 27, y: 33 }, { x: 50, y: 93 }, null];
+  // Ou le doigt touche, en % de l'ecran : la carte « Cappuccino » dans la boutique.
+  const touches = [null, { x: 72, y: 30 }, null];
   let i = 0;
   let minuteur = null;
   const montrer = (n) => {
