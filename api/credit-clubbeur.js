@@ -81,6 +81,7 @@ function ficheLieu(etab) {
   return {
     address: etab.address || null,
     category: etab.category || null,
+    category_label: etab.category_label || null,
     lat: Number.isFinite(etab.lat) ? etab.lat : null,
     lng: Number.isFinite(etab.lng) ? etab.lng : null,
   };
@@ -170,7 +171,7 @@ async function actionSyncBoutique(request, response) {
 
   const { data: etab, error: erreurEtab } = await auth.supabase
     .from("establishments")
-    .select("public_code, name, city, slug, ig_handle, primary_color, logo_url, photos, address, category, lat, lng")
+    .select("public_code, name, city, slug, ig_handle, primary_color, logo_url, photos, address, category, category_label, lat, lng")
     .eq("id", auth.establishmentId)
     .maybeSingle();
 

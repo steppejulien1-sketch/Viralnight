@@ -12212,7 +12212,7 @@ function heroClub(c) {
             '<strong>' + c.note.toFixed(1).replace(".", ",") + "</strong>" +
             (c.avis != null ? " (" + c.avis + ")" : "") + " · "
           : "") +
-        libelleType(c.type) +
+        (c.libelle || libelleType(c.type)) +
       "</p>" +
     "</span>";
 
@@ -13404,7 +13404,7 @@ function poserPin(key) {
        que tu ecrives le nom de l'etablissement sur la terre en dessous de la
        position". Le nom reste dit au lecteur d'ecran (aria-label) et dans la
        fiche qui s'ouvre au toucher. */
-    el.setAttribute("aria-label", c.nom + " " + libelleType(c.type).toLowerCase());
+    el.setAttribute("aria-label", c.nom + " " + (c.libelle || libelleType(c.type)).toLowerCase());
     // Retour a notre propre fiche (pas l'iframe Google directement) :
     // Julien voulait "tomber direct sur la fiche" mais pas sur "Google
     // Maps" -- l'iframe embed EST Google Maps (juste sans cle API), ca
@@ -15720,7 +15720,7 @@ function lieuDepuisLigne(ligne) {
   return {
     nom: ligne.name, adr: ligne.address || ligne.city || "", c: ligne.primary_color || "#de3131",
     googleQuery: [ligne.name, ligne.address, ligne.city].filter(Boolean).join(", "),
-    lngLat: [ligne.lng, ligne.lat], type: type,
+    lngLat: [ligne.lng, ligne.lat], type: type, libelle: ligne.category_label || null,
     ig: ligne.ig_handle || null, photo: ligne.logo_url || photos[0] || null,
     photos: ligne.logo_url ? [ligne.logo_url].concat(photos) : photos,
     horaires: null, partenaire: true, dynamique: true,
@@ -15729,7 +15729,7 @@ function lieuDepuisLigne(ligne) {
 
 async function resoudreIdsClubs() {
   try {
-    var colonnes = "id, name, slug, city, address, category, lat, lng, logo_url, photos, ig_handle, primary_color, b2b_public_code, visible";
+    var colonnes = "id, name, slug, city, address, category, category_label, lat, lng, logo_url, photos, ig_handle, primary_color, b2b_public_code, visible";
     var res = await supabaseClubbeur.from("clubs").select(colonnes).eq("visible", true);
     // Base sans la migration 0054 : l'ancienne lecture, par nom.
     if (res.error) {
@@ -17042,7 +17042,7 @@ function formaterDistance(km) {
 var POSITION_MOI = null;
 
 function typeEtablissement(c) {
-  return (c && NOMS_TYPES_LIEU[c.type]) || "";
+  return (c && (c.libelle || NOMS_TYPES_LIEU[c.type])) || "";
 }
 
 function rendreListe() {

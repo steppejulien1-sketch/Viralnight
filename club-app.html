@@ -4748,18 +4748,48 @@
                     <section class="pa-etape pv nk-p2" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
                       <div class="nk-a">
                         <h1 class="pa-titre">Quel type d'établissement ?</h1>
-                        <!-- 03/10/2026, Julien : « mets bar et autre commerce en gros », sans
-                             sous-titres, et que la personne tape son commerce. Le texte tape
-                             est rapproche d'un type connu par devinerType(). -->
-                        <div id="pa-types" class="nk-grands" role="radiogroup" aria-label="Type d'établissement">
-                          <button type="button" class="pa-type nk-grand" role="radio" data-type="bar">
-                            <img src="/site/commerce-bar.webp" alt="" /><b>Bar</b>
+                        <!-- 03/10/2026, Julien : les neuf choix, et sous « Autre commerce » un
+                             champ pour taper son activite -- « sinon les gens se sentent pas
+                             reconnus ». Le texte va dans establishments.category_label. -->
+                        <div id="pa-types" class="nk-options" role="radiogroup" aria-label="Type d'établissement">
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="bar">
+                            <img src="/site/commerce-bar.webp" alt="" />
+                            <span><b>Bar</b><small>Cocktails, bières, apéro</small></span><i class="nk-radio"></i>
                           </button>
-                          <button type="button" class="pa-type nk-grand" role="radio" data-type="autre">
-                            <img src="/site/secteur-boutique.webp" alt="" /><b>Autre commerce</b>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="club">
+                            <img src="/ambiance/hero-nightclub.webp" alt="" />
+                            <span><b>Boîte de nuit</b><small>Soirées, DJ, vestiaire</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="restaurant">
+                            <img src="/site/commerce-restaurant.webp" alt="" />
+                            <span><b>Restaurant</b><small>Service à table</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="cafe">
+                            <img src="/site/ouverture-cafe.webp" alt="" />
+                            <span><b>Café</b><small>Coffee shop, salon de thé</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="boulangerie">
+                            <img src="/site/commerce-boulangerie.webp" alt="" />
+                            <span><b>Boulangerie</b><small>Pain, viennoiseries, pâtisserie</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="coiffeur">
+                            <img src="/site/commerce-coiffeur.webp" alt="" />
+                            <span><b>Coiffeur</b><small>Salon, barbier</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="institut">
+                            <img src="/site/secteur-institut.webp" alt="" />
+                            <span><b>Institut de beauté</b><small>Soins, ongles, esthétique</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="boutique">
+                            <img src="/site/secteur-boutique.webp" alt="" />
+                            <span><b>Boutique</b><small>Vêtements, déco, cadeaux</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="other">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 5.5 5h13L20 10.5M4 10.5h16M4 10.5V19h16v-8.5M9.5 19v-5h5v5"/></svg>
+                            <span><b>Autre commerce</b><small>Tout le reste</small></span><i class="nk-radio"></i>
                           </button>
                         </div>
-                        <label class="nk-champ nk-commerce" id="nk-commerce" hidden><span>Ton commerce</span><input id="pa-commerce" type="text" autocomplete="off" placeholder="Boulangerie, coiffeur, restaurant…" /></label>
+                        <label class="nk-champ nk-commerce" id="nk-commerce" hidden><span>Ton commerce</span><input id="pa-commerce" type="text" autocomplete="off" placeholder="Fleuriste, caviste, salle de sport…" /></label>
                       </div>
                       <div class="nk-b">
                         <h1 class="pa-titre">Comment s'appelle ton établissement ?</h1>
@@ -7007,7 +7037,7 @@
         var rewards = [];
         try { rewards = getActiveRewards((ETAT.data && ETAT.data.rewards) || []).slice(0, 2); } catch (e) {}
         var n = nombreRecosActives();
-        var ligne = [TYPES_ETAB[etab.category] || "Boîte de nuit", n ? n + " récompense" + (n > 1 ? "s" : "") : ""].filter(Boolean).join(" • ");
+        var ligne = [etab.category_label || TYPES_ETAB[etab.category] || "Boîte de nuit", n ? n + " récompense" + (n > 1 ? "s" : "") : ""].filter(Boolean).join(" • ");
         return '<div class="tel" aria-hidden="true"><div class="tel-ecran">' +
                     '<div class="tel-tete"><b>NOCTIFY</b><span>450 pts</span></div>' +
           '<div class="tel-carte"><img src="' + escapeHtml(couvertureEtab(etab)) + '" alt="" />' +
@@ -7041,7 +7071,7 @@
           if (img.getAttribute("src") !== src) img.src = src;
           img.onerror = function () { img.onerror = null; img.src = "/clubs/couverture-par-defaut.webp"; };
         }
-        $("#dash-ville").textContent = [TYPES_ETAB[etab.category] || "", etab.city || ""].filter(Boolean).join(" · ");
+        $("#dash-ville").textContent = [etab.category_label || TYPES_ETAB[etab.category] || "", etab.city || ""].filter(Boolean).join(" · ");
       }
       function habillerRecompenses() {
         // La vitrine est la vraie page de l'appli clubbeur (25/09/2026).
@@ -9084,6 +9114,7 @@
           $("#pa-tel").value = sien.phone || "";
           $("#pa-adresse").value = sien.address || "";
           montrerManuel(!!(sien.address || PARCOURS.seule));
+          $("#pa-commerce").value = sien.category_label || "";
           choisirTypeParcours(NOMS_TYPES[sien.category] ? sien.category : "club");
           rendrePhotoParcours(sien.logo_url || null);
         } else {
@@ -9573,7 +9604,7 @@
           return cree;
         }
 
-        var payload = { name: nom, city: ville, phone: telephone, address: adresse || null, category: PARCOURS.type || "club" };
+        var payload = { name: nom, city: ville, phone: telephone, address: adresse || null, category: PARCOURS.type || "club", category_label: typeTape() };
 
         var { error } = await supabase.from("establishments").update(payload).eq("id", etab.id);
         if (error) {
@@ -9658,7 +9689,7 @@
 
         // Le type et l'adresse ne passent pas par /api/create-client : on les
         // ecrit juste apres, la ligne appartient deja au gerant (RLS).
-        var ajout = { category: PARCOURS.type || "club", address: adresse || null };
+        var ajout = { category: PARCOURS.type || "club", category_label: typeTape(), address: adresse || null };
         var maj = await supabase.from("establishments").update(ajout).eq("id", data.establishment.id);
         if (!maj.error) Object.assign(data.establishment, ajout);
         // Les photos ont leur propre ecran, juste apres : le dossier existe maintenant.
@@ -9783,41 +9814,21 @@
 
       /* Le type choisi, et l'apercu de la carte telle que la boutique clubbeur la dessine. */
       var NOMS_TYPES = { bar: "Bar", club: "Boîte de nuit", restaurant: "Restaurant", cafe: "Café", boulangerie: "Boulangerie", coiffeur: "Coiffeur", institut: "Institut de beauté", boutique: "Boutique", other: "Commerce" };
-      /* Le texte tape sous « Autre commerce », rapproche d'un type connu : c'est
-         lui qui choisit le catalogue de recompenses. Rien de reconnu = "other". */
-      function devinerType(texte) {
-        var t = String(texte || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        if (!t.trim()) return "other";
-        var regles = [
-          ["club", /boite|disco|night|club|dancing/],
-          ["cafe", /cafe|coffee|salon de the|tea|cafeteria/],
-          ["boulangerie", /boulang|patiss|viennois|pain/],
-          ["restaurant", /resto|restau|pizz|brasserie|traiteur|snack|friterie|sushi|burger|kebab|bistro|cantine/],
-          ["coiffeur", /coif|barbi|barber/],
-          ["institut", /institut|beaute|esthet|ongle|nail|spa|massage|soin/],
-          ["boutique", /boutique|magasin|vetement|shop|fleur|cadeau|deco|librairie|bijou|chaussure/],
-          ["bar", /\bbar\b|pub|taverne|cocktail|biere/],
-        ];
-        for (var i = 0; i < regles.length; i++) if (regles[i][1].test(t)) return regles[i][0];
-        return "other";
+      /* Le nom tape sous « Autre commerce » (« Fleuriste »...) : affiche a la
+         place de « Commerce », dans la fiche ici et dans l'appli clubbeur. */
+      function typeTape() {
+        var t = PARCOURS.type === "other" ? ($("#pa-commerce").value || "").trim().slice(0, 40) : "";
+        return t ? t.charAt(0).toUpperCase() + t.slice(1) : null;
       }
-      function libelleTypeParcours() {
-        var tape = ($("#pa-commerce").value || "").trim();
-        if (PARCOURS.type !== "bar" && tape) return tape.charAt(0).toUpperCase() + tape.slice(1);
-        return NOMS_TYPES[PARCOURS.type] || "Bar";
-      }
+      function libelleTypeParcours() { return typeTape() || NOMS_TYPES[PARCOURS.type] || "Bar"; }
       function choisirTypeParcours(type) {
         PARCOURS.type = type;
-        var carte = type === "bar" ? "bar" : "autre";
         document.querySelectorAll("#pa-types .pa-type").forEach(function (b) {
-          var oui = b.dataset.type === carte;
+          var oui = b.dataset.type === type;
           b.classList.toggle("choisi", oui);
           b.setAttribute("aria-checked", String(oui));
         });
-        $("#nk-commerce").hidden = carte !== "autre";
-        // A la reouverture (type deja en base), le champ reprend le nom du type.
-        var champ = $("#pa-commerce");
-        if (carte === "autre" && !champ.value.trim() && type !== "other") champ.value = NOMS_TYPES[type] || "";
+        $("#nk-commerce").hidden = type !== "other";
       }
       function appliquerTypeParcours(type) {
         var change = type !== typeDuParcours();
@@ -9834,14 +9845,10 @@
       $("#pa-types").addEventListener("click", function (ev) {
         var b = ev.target.closest(".pa-type");
         if (!b) return;
-        if (b.dataset.type === "bar") return appliquerTypeParcours("bar");
-        appliquerTypeParcours(devinerType($("#pa-commerce").value));
-        $("#pa-commerce").focus();
+        appliquerTypeParcours(b.dataset.type);
+        if (b.dataset.type === "other") $("#pa-commerce").focus();
       });
-      $("#pa-commerce").addEventListener("input", function () {
-        appliquerTypeParcours(devinerType(this.value));
-        nkFiche();
-      });
+      $("#pa-commerce").addEventListener("input", function () { nkFiche(); });
 
       function rendreApercuParcours() {
         var etab = etablissementCourant() || {};
