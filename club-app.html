@@ -4213,220 +4213,156 @@
       #contenus-liste .contenu-txt strong { font-size: 15.5px; font-weight: 700; }
       #contenus-liste .contenu-pts { font-family: var(--titre); font-size: 16px; font-weight: 800; }
       #contenus-liste > .vide { padding: 22px 0; }
-      /* ================= PARCOURS 03/10/2026 =================
-         Quatrieme version, validee sur maquette par Julien (« OUI PARFAIT »).
-         Couche posee en dernier : elle gagne sur les finitions precedentes
-         par l'ordre ET par #parcours. Le lieu se construit a chaque reponse. */
-      #parcours { --nk-fond: #f4f4f6; --nk-carte: #ffffff; --nk-ink: #111114; --nk-sub: #6c6d77; --nk-ligne: #e5e5eb; --nk-doux: #ececf1; --nk-rouge: #de3131; --nk-ok: #1f9d55;
-        --nk-ombre: 0 1px 2px rgba(17,17,20,.05), 0 8px 24px -14px rgba(17,17,20,.2); background: var(--nk-fond); }
-      #parcours.pa-arrivee { background: #ffffff; }
-      #parcours .pa-tete { padding-top: 12px; }
-      #parcours .pa-fleche { width: 38px; height: 38px; border-radius: 50%; background: var(--nk-carte); box-shadow: var(--nk-ombre); }
-      #parcours .pa-jauge { height: 8px; background: var(--nk-doux); }
-      #parcours .pa-jauge i { box-shadow: none; }
-      #parcours .pa-passer { font-size: 14px; font-weight: 700; color: var(--nk-sub); }
-      #parcours .pa-pied { background: linear-gradient(180deg, rgba(244,244,246,0), var(--nk-fond) 30%); padding-top: 14px; }
-      #parcours #pa-suivant { background: var(--nk-ink); height: 58px; border-radius: 18px; font-weight: 800; }
-      #parcours .pa-texte { padding-top: 6px; }
-      #parcours .pa-bandeau, #parcours .pa-compteur { display: none; }
-      #parcours .pa-etape.pv .pa-titre { font-family: var(--titre); font-stretch: 112%; font-size: 30px; font-weight: 850; letter-spacing: -.025em; line-height: 1.04; margin: 4px 0 8px; text-wrap: balance; }
-      #parcours .pa-etape.pv .pa-sous { color: var(--nk-sub); font-size: 15px; line-height: 1.45; margin: 0 0 18px; max-width: none; }
-      #parcours .pa-etape.pv { animation: nkEntre .45s cubic-bezier(.2,.9,.25,1) both; }
-      @keyframes nkEntre { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+      /* ================= PARCOURS 03/10/2026 (cinquieme version) =================
+         Modele Airbnb hote : blanc, une question par ecran, « Question 2 sur 5 »,
+         barre fine en cinq traits, listes a choix unique, boutons noirs. Couche
+         posee en dernier : elle gagne par l'ordre ET par #parcours. */
+      #parcours { --nk-ink: #111114; --nk-sub: #6b6c75; --nk-ligne: #e2e2e8; --nk-doux: #f6f6f8; background: #ffffff; color: var(--nk-ink); }
+      #parcours .pa-bandeau, #parcours .pa-compteur, #parcours .pa-jauge, #parcours .pa-avancer { display: none; }
+      #parcours .pa-tete { position: relative; display: grid; grid-template-columns: 44px 1fr 64px; align-items: center; gap: 8px; padding: 12px 16px 6px; }
+      #parcours .pa-fleche { width: 36px; height: 36px; border-radius: 50%; background: none; box-shadow: none; }
+      #parcours .pa-fleche:active { background: var(--nk-doux); }
+      #parcours .pa-passer { justify-self: end; font-size: 14px; font-weight: 600; color: var(--nk-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #c9c9d1; }
+      #parcours.pa-arrivee .pa-tete { display: none; }
+      .nk-tete-c { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+      .nk-q { font-size: 13px; font-weight: 600; color: var(--nk-sub, #6b6c75); font-variant-numeric: tabular-nums; }
+      .nk-barre { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; max-width: 220px; }
+      .nk-barre i { height: 3px; border-radius: 2px; background: #e6e6eb; overflow: hidden; position: relative; }
+      .nk-barre i::after { content: ""; position: absolute; inset: 0; background: #111114; transform: scaleX(0); transform-origin: left; transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
+      .nk-barre i.faite::after { transform: scaleX(1); }
+      .pa-seule .nk-tete-c { visibility: hidden; }
+      #parcours .pa-texte { padding: 22px 24px 28px; }
+      #parcours .pa-etape.pv .pa-titre { font-family: var(--titre); font-size: 28px; font-weight: 700; letter-spacing: -.022em; line-height: 1.12; margin: 0 0 10px; text-wrap: balance; max-width: none; }
+      #parcours .pa-etape.pv .pa-sous { color: var(--nk-sub); font-size: 15.5px; line-height: 1.5; margin: 0 0 26px; max-width: 34ch; }
+      #parcours .pa-etape.pv .pa-titre + :not(.pa-sous) { margin-top: 22px; }
+      #parcours .pa-etape.pv:not([hidden]) > *, #parcours .nk-p2:not([hidden]) .nk-a > *, #parcours .nk-p2.nk-en-b .nk-b > * { animation: nkMonte .5s cubic-bezier(.16, 1, .3, 1) both; }
+      #parcours .pa-etape.pv:not([hidden]) > :nth-child(2), #parcours .nk-p2 .nk-a > :nth-child(2), #parcours .nk-p2 .nk-b > :nth-child(2) { animation-delay: .05s; }
+      #parcours .pa-etape.pv:not([hidden]) > :nth-child(n+3), #parcours .nk-p2 .nk-b > :nth-child(n+3) { animation-delay: .1s; }
       @keyframes nkMonte { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-      @keyframes nkPop { 0% { transform: scale(.8); opacity: 0; } 60% { transform: scale(1.05); opacity: 1; } 100% { transform: none; } }
+      #parcours .pa-pied { background: #ffffff; border-top: 1px solid var(--nk-ligne); padding: 14px 24px calc(16px + env(safe-area-inset-bottom)); }
+      #parcours #pa-suivant { height: 54px; border-radius: 12px; background: var(--nk-ink); color: #fff; font-family: var(--titre); font-size: 16px; font-weight: 700; letter-spacing: -.005em; box-shadow: none; }
+      #parcours #pa-suivant:disabled { background: #dcdce2; color: #fff; }
 
-      /* -- Le ticket : le lieu qui se remplit -- */
-      .nk-ticket { flex: 0 0 auto; margin: 2px 16px 10px; height: 62px; border-radius: 18px; background: #fff; box-shadow: 0 1px 2px rgba(17,17,20,.05), 0 8px 24px -14px rgba(17,17,20,.2);
-        display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 8px; color: #111114; }
-      .nk-ticket[hidden] { display: none; }
-      .nk-ticket .tk-img { width: 46px; height: 46px; flex: none; border-radius: 12px; overflow: hidden; background: #ececf1; display: grid; place-items: center; color: #6c6d77; }
-      .nk-ticket .tk-img img { width: 100%; height: 100%; object-fit: cover; animation: nkPop .5s both; }
-      .nk-ticket .tk-img svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-      .nk-ticket .tk-txt { flex: 1; min-width: 0; }
-      .nk-ticket b { display: block; font-size: 15.5px; font-weight: 850; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .nk-ticket b.tk-vide { color: #6c6d77; font-weight: 700; }
-      .nk-ticket .tk-txt span { display: block; font-size: 12px; color: #6c6d77; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .nk-ticket .tk-anneau { width: 44px; height: 44px; flex: none; position: relative; }
-      .nk-ticket .tk-anneau svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-      .nk-ticket .tk-anneau circle { fill: none; stroke-width: 4.5; }
-      .nk-ticket .tk-anneau .fond { stroke: #ececf1; }
-      .nk-ticket .tk-anneau .plein { stroke: #1f9d55; stroke-linecap: round; transition: stroke-dashoffset .7s cubic-bezier(.2,.9,.25,1); }
-      .nk-ticket .tk-anneau em { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-size: 11.5px; font-weight: 850; }
-      .nk-ticket.flash { animation: nkFlash .6s; }
-      @keyframes nkFlash { 0% { box-shadow: 0 0 0 0 rgba(31,157,85,.55); } 100% { box-shadow: 0 0 0 14px rgba(31,157,85,0); } }
+      /* -- Arrivee : une photo, une phrase, les portes d'entree -- */
+      .nk-hero { position: relative; height: 300px; margin: -22px -24px 28px; overflow: hidden; background: #1a1714; }
+      .nk-hero img { width: 100%; height: 100%; object-fit: cover; display: block; animation: nkHero 1.6s cubic-bezier(.16, 1, .3, 1) both; }
+      .nk-hero::after { content: ""; position: absolute; inset: auto 0 0; height: 90px; background: linear-gradient(180deg, rgba(255,255,255,0), #ffffff); }
+      .nk-hero .nk-marque { position: absolute; left: 22px; top: calc(18px + env(safe-area-inset-top)); z-index: 1; display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+      .nk-hero .nk-marque img { width: 28px; height: 28px; animation: none; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
+      @keyframes nkHero { from { transform: scale(1.08); opacity: .4; } to { transform: none; opacity: 1; } }
+      .pa-etape.en-code > .nk-hero { display: none; }
+      #parcours .pa-etape[data-pas="1"] .nk-titre-arrivee { font-family: var(--titre); font-size: 30px; font-weight: 700; letter-spacing: -.025em; line-height: 1.1; text-wrap: balance; margin: 0 0 10px; text-align: left; }
+      #parcours .pa-etape[data-pas="1"] .nk-sous-arrivee { margin: 0 0 26px; color: #6b6c75; font-size: 15.5px; line-height: 1.5; text-align: left; }
 
-      /* -- Etape 1 : on montre d'abord ce que ca rapporte -- */
-      .nk-boucle { position: relative; height: 262px; margin: -6px -22px 4px; overflow: hidden;
-        background: radial-gradient(120% 80% at 50% 30%, #f6d4d4, #ffffff 70%); }
-      .pa-etape.en-code > .nk-boucle, .pa-etape.en-code > .nk-duree { display: none; }
-      .nk-boucle .nk-story { position: absolute; left: 50%; top: 18px; width: 128px; margin-left: -64px; transform: rotate(-5deg); animation: nkFlotte 6s ease-in-out infinite; }
-      @keyframes nkFlotte { 0%,100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(-3deg) translateY(-7px); } }
-      .nk-story { position: relative; aspect-ratio: 9/16; border-radius: 18px; overflow: hidden; box-shadow: 0 26px 50px -20px rgba(0,0,0,.5); background: #111; }
-      .nk-story img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .nk-st-barre { position: absolute; top: 7px; left: 7px; right: 7px; height: 2.5px; border-radius: 2px; background: rgba(255,255,255,.4); overflow: hidden; }
-      .nk-st-barre i { display: block; height: 100%; background: #fff; animation: nkBarre 5s linear infinite; }
-      @keyframes nkBarre { from { width: 0; } to { width: 100%; } }
-      .nk-sticker { position: absolute; left: 50%; top: 58%; transform: translate(-50%,-50%) rotate(-4deg); background: #fff; color: #111; font-weight: 850; font-size: 13px; padding: 7px 10px; border-radius: 9px;
-        box-shadow: 0 6px 18px rgba(0,0,0,.3); white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; animation: nkColle .6s .4s both; }
-      .nk-sticker span { background: linear-gradient(90deg, #ee2a7b, #6228d7); -webkit-background-clip: text; background-clip: text; color: transparent; }
-      @keyframes nkColle { from { transform: translate(-50%,-50%) rotate(-4deg) scale(1.6); opacity: 0; } to { transform: translate(-50%,-50%) rotate(-4deg) scale(1); opacity: 1; } }
-      .nk-bulle { position: absolute; background: #fff; color: #111114; border-radius: 15px; box-shadow: 0 14px 30px -12px rgba(0,0,0,.35); display: flex; align-items: center; gap: 9px;
-        padding: 8px 12px 8px 8px; font-size: 12.5px; font-weight: 750; text-align: left; opacity: 0; animation: nkBulle 6s infinite; }
-      .nk-bulle img { width: 32px; height: 32px; border-radius: 9px; object-fit: contain; background: #ececf1; }
-      .nk-bulle img.rond { border-radius: 50%; object-fit: cover; }
-      .nk-bulle small { display: block; color: #6c6d77; font-weight: 600; font-size: 11px; }
-      .nk-b1 { left: 14px; top: 46px; animation-delay: .8s; }
-      .nk-b2 { right: 12px; top: 170px; animation-delay: 2.2s; }
-      .nk-pts { position: absolute; right: 54px; top: 40px; background: #de3131; color: #fff; font-family: var(--titre); font-weight: 900; font-size: 20px; padding: 7px 12px; border-radius: 13px;
-        transform: rotate(8deg); opacity: 0; animation: nkPoints 6s 1.5s infinite; }
-      @keyframes nkBulle { 0%,4% { opacity: 0; transform: translateY(12px) scale(.9); } 10%,80% { opacity: 1; transform: none; } 90%,100% { opacity: 0; transform: translateY(-8px); } }
-      @keyframes nkPoints { 0% { opacity: 0; transform: rotate(8deg) scale(.4); } 8% { opacity: 1; transform: rotate(8deg) scale(1.15); } 14%,70% { opacity: 1; transform: rotate(8deg) scale(1); } 80%,100% { opacity: 0; transform: rotate(8deg); } }
-      #parcours .pa-etape[data-pas="1"] .nk-titre-arrivee { font-family: var(--titre); font-stretch: 112%; font-size: 29px; font-weight: 850; letter-spacing: -.025em; line-height: 1.05; text-wrap: balance; margin: 6px 0 0; }
-      .nk-duree { display: flex; justify-content: center; gap: 7px; margin: 12px 0 18px; }
-      .nk-duree span { background: #f0f0f4; border-radius: 99px; padding: 6px 11px; font-size: 12.5px; font-weight: 750; color: #111114; }
-
-      /* -- Etape 2a : le type, en grandes photos -- */
+      /* -- Question 1 : liste a choix unique -- */
       .nk-p2 .nk-b { display: none; }
       .nk-p2.nk-en-b .nk-a { display: none; }
-      .nk-p2.nk-en-b .nk-b { display: block; animation: nkEntre .45s cubic-bezier(.2,.9,.25,1) both; }
-      .nk-tuiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
-      #parcours .nk-tuile { position: relative; border: 0; padding: 0; border-radius: 22px; overflow: hidden; aspect-ratio: 3/4; background: #222; cursor: pointer;
-        transition: transform .25s, opacity .25s, filter .25s, box-shadow .25s; animation: nkMonte .45s both; }
-      #parcours .nk-tuile:nth-child(2) { animation-delay: .06s; }
-      #parcours .nk-tuile:nth-child(3) { grid-column: span 2; aspect-ratio: 2/1; animation-delay: .12s; }
-      .nk-tuile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
-      .nk-tuile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.75)); }
-      .nk-tuile b { position: absolute; left: 14px; bottom: 12px; z-index: 1; color: #fff; font-size: 18px; font-weight: 850; }
-      .nk-tk { position: absolute; top: 10px; right: 10px; z-index: 1; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.3); border: 2px solid #fff; display: grid; place-items: center; color: #fff; }
-      .nk-tk svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
-      #parcours .nk-tuile.choisi { transform: scale(1.03); box-shadow: 0 0 0 3px var(--nk-fond), 0 0 0 6px #de3131; }
-      .nk-tuile.choisi .nk-tk { background: #de3131; border-color: #de3131; }
-      .nk-tuile.choisi .nk-tk svg { opacity: 1; }
-      .nk-tuile.choisi img { transform: scale(1.08); }
-      .nk-tuiles.nk-fait .nk-tuile:not(.choisi) { opacity: .4; filter: grayscale(.6); }
+      .nk-p2.nk-en-b .nk-b { display: block; }
+      .nk-options { display: grid; gap: 12px; }
+      .nk-type-lien { display: none; }
+      #parcours.pa-seule .nk-type-lien { display: inline-block; margin: 0 0 18px; padding: 0; border: 0; background: none; color: #111114; font-size: 14.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #c9c9d1; cursor: pointer; }
+      #parcours .nk-option { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px 18px; border: 1px solid var(--nk-ligne); border-radius: 14px; background: #fff; text-align: left; cursor: pointer;
+        color: var(--nk-ink); font: inherit; transition: border-color .2s, background-color .2s, box-shadow .2s; }
+      #parcours .nk-option { flex-direction: row; justify-content: flex-start; height: auto; min-height: 0; aspect-ratio: auto; }
+      #parcours .nk-option > span { align-items: flex-start; text-align: left; }
+      #parcours .nk-option:active { transform: scale(.99); }
+      #parcours .nk-option > svg { width: 28px; height: 28px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+      #parcours .nk-option > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+      #parcours .nk-option b { font-size: 16.5px; font-weight: 650; }
+      #parcours .nk-option small { font-size: 13.5px; color: var(--nk-sub); }
+      .nk-radio { width: 22px; height: 22px; flex: none; border-radius: 50%; border: 1.5px solid #c4c4cc; position: relative; transition: border-color .2s; }
+      .nk-radio::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: #111114; transform: scale(0); transition: transform .25s cubic-bezier(.16, 1, .3, 1); }
+      #parcours .nk-option.choisi { border-color: var(--nk-ink); box-shadow: inset 0 0 0 1px var(--nk-ink); background: var(--nk-doux); }
+      .nk-option.choisi .nk-radio { border-color: #111114; }
+      .nk-option.choisi .nk-radio::after { transform: scale(1); }
 
-      /* -- Etape 2b : la devanture prend le nom -- */
-      .nk-devanture { position: relative; height: 196px; margin-top: 14px; border-radius: 24px; overflow: hidden; background: linear-gradient(180deg, #26232b, #18161c); }
-      .nk-mur { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 22px, rgba(255,255,255,.035) 22px 24px), repeating-linear-gradient(90deg, transparent 0 46px, rgba(255,255,255,.03) 46px 48px); }
-      .nk-enseigne { position: absolute; left: 22px; right: 22px; top: 22px; height: 60px; border-radius: 12px; background: #0d0c10; border: 2px solid #3a3640; display: grid; place-items: center; padding: 0 10px; overflow: hidden; }
-      .nk-enseigne span { font-family: var(--titre); font-stretch: 120%; font-weight: 900; font-size: 28px; letter-spacing: .02em; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-        text-shadow: 0 0 6px #ff4a4a, 0 0 18px #de3131, 0 0 34px #de3131; }
-      .nk-enseigne span.nk-vide { color: #55505c; text-shadow: none; }
-      .nk-store { position: absolute; left: 12px; right: 12px; top: 92px; height: 32px; background: repeating-linear-gradient(90deg, #de3131 0 26px, #fff 26px 52px);
-        -webkit-mask: radial-gradient(13px at 13px 100%, #0000 98%, #000) 0 0/26px 100%; mask: radial-gradient(13px at 13px 100%, #0000 98%, #000) 0 0/26px 100%; }
-      .nk-vitres { position: absolute; left: 22px; right: 22px; bottom: 0; height: 58px; display: grid; grid-template-columns: 1fr 64px 1fr; gap: 10px; }
-      .nk-vitres i { background: linear-gradient(180deg, #f8c773, #c9762c); border-radius: 8px 8px 0 0; opacity: .85; box-shadow: 0 0 30px rgba(248,199,115,.35); }
-      .nk-vitres i.nk-porte { background: linear-gradient(180deg, #1c1a20, #0f0e12); box-shadow: inset 0 0 0 3px #3a3640; opacity: 1; }
-      .nk-type-puce { position: absolute; right: 10px; bottom: 10px; z-index: 2; border: 0; border-radius: 99px; background: rgba(255,255,255,.92); color: #111; font: 800 12px var(--sans, inherit); padding: 6px 10px; cursor: pointer; }
-      .nk-type-puce::after { content: " · Changer"; color: #6c6d77; font-weight: 700; }
-      #parcours .nk-grand { width: 100%; margin-top: 16px; border: 0; border-bottom: 2.5px solid var(--nk-ligne); background: none; border-radius: 0; padding: 8px 0;
-        font-family: var(--titre); font-stretch: 110%; font-size: 28px; font-weight: 850; color: var(--nk-ink); outline: none; }
-      #parcours .nk-grand:focus { border-color: #de3131; }
-      #parcours .nk-grand::placeholder { color: #d5d5dc; }
-      .nk-champs { margin-top: 16px; border: 1.5px solid #e5e5eb; border-radius: 16px; overflow: hidden; background: #fff; }
-      .nk-champ { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; }
-      .nk-champ + .nk-champ { border-top: 1.5px solid #e5e5eb; }
-      .nk-champ:focus-within { background: #fafafb; }
-      .nk-champ > span { font-size: 12px; font-weight: 700; color: #6c6d77; }
-      .nk-champ em { font-style: normal; font-weight: 600; opacity: .75; }
-      #parcours .nk-champ input { border: 0; background: none; outline: none; padding: 2px 0; font-size: 16.5px; font-weight: 650; color: #111114; width: 100%; box-shadow: none; }
+      /* -- Question 2 : champs groupes, apercu de la fiche -- */
+      .nk-champs { border: 1px solid #c9c9d1; border-radius: 14px; overflow: hidden; background: #fff; }
+      .nk-champ { display: flex; flex-direction: column; gap: 3px; padding: 11px 16px 12px; position: relative; cursor: text; }
+      .nk-champ + .nk-champ { border-top: 1px solid #c9c9d1; }
+      .nk-champ:focus-within { box-shadow: inset 0 0 0 2px #111114; border-radius: 14px; z-index: 1; }
+      .nk-champ > span { font-size: 12.5px; font-weight: 500; color: #6b6c75; }
+      #parcours .nk-champ input { border: 0; background: none; outline: none; box-shadow: none; padding: 0; margin: 0; width: 100%; font-size: 16.5px; font-weight: 500; color: #111114; height: auto; border-radius: 0; }
+      #parcours .nk-champ input::placeholder { color: #b4b4bd; }
+      .nk-legende { margin: 30px 0 10px; font-size: 13px; font-weight: 600; color: #6b6c75; }
+      .nk-fiche { display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 16px; background: #fff; box-shadow: 0 1px 2px rgba(17,17,20,.06), 0 10px 30px -16px rgba(17,17,20,.28); }
+      .nk-fiche-img { width: 64px; height: 64px; flex: none; border-radius: 12px; overflow: hidden; background: #ececf1 center/cover no-repeat; display: grid; place-items: center; color: #9a9aa4; }
+      .nk-fiche-img svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+      .nk-fiche-txt { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+      .nk-fiche-txt b { font-size: 16px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .nk-fiche-txt span { font-size: 13.5px; color: #6b6c75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-      /* -- Etape 3 : la photo revelee -- */
-      #parcours .nk-depot { position: relative; width: 100%; aspect-ratio: 16/12; border-radius: 24px; border: 2.5px dashed #d9d9e0; background: #fff; overflow: hidden; cursor: pointer;
-        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 0; color: #6c6d77; }
+      /* -- Question 3 : la photo -- */
+      #parcours .nk-depot { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; width: 100%; aspect-ratio: 4/3; padding: 0;
+        border: 1px dashed #b9b9c2; border-radius: 16px; background: #fafafb; color: #111114; cursor: pointer; overflow: hidden; }
       #parcours .nk-depot-img { display: grid; place-items: center; }
-      #parcours .nk-depot-img svg { width: 44px; height: 44px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-      .nk-depot-txt { display: flex; flex-direction: column; gap: 3px; align-items: center; font-size: 13.5px; }
-      .nk-depot-txt b { color: #111114; font-size: 16px; font-weight: 800; }
-      #parcours .nk-depot.remplie { border-color: transparent; }
+      #parcours .nk-depot-img svg { width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+      #parcours .nk-depot-txt { display: inline-flex; align-items: center; height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid #111114; background: #fff; }
+      #parcours .nk-depot-txt b { font-size: 14.5px; font-weight: 600; }
+      #parcours .nk-depot.remplie { border: 0; background: #111; }
       #parcours .nk-depot.remplie .nk-depot-img { position: absolute; inset: 0; }
-      #parcours .nk-depot.remplie .nk-depot-img img { width: 100%; height: 100%; object-fit: cover; animation: nkRevele .9s cubic-bezier(.2,.9,.25,1) both; }
-      @keyframes nkRevele { from { clip-path: circle(0% at 50% 50%); transform: scale(1.15); } to { clip-path: circle(75% at 50% 50%); transform: none; } }
-      #parcours .nk-depot.remplie .nk-depot-txt { position: absolute; left: 12px; bottom: 12px; z-index: 1; background: #fff; border-radius: 99px; padding: 7px 12px; animation: nkMonte .4s .6s both; }
-      #parcours .nk-depot.remplie .nk-depot-txt b { font-size: 12.5px; }
-      #parcours .nk-depot.remplie .nk-depot-txt span { display: none; }
+      #parcours .nk-depot.remplie .nk-depot-img img { width: 100%; height: 100%; object-fit: cover; animation: nkFondu .6s cubic-bezier(.16, 1, .3, 1) both; }
+      @keyframes nkFondu { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
+      #parcours .nk-depot.remplie .nk-depot-txt { position: absolute; right: 12px; top: 12px; height: 34px; padding: 0 13px; border: 0; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+      #parcours .nk-depot.remplie .nk-depot-txt b { font-size: 13px; }
+      #parcours .pa-etape[data-pas="3"] .pv-sec { margin: 28px 0 12px; font-size: 15px; font-weight: 650; color: #111114; display: flex; justify-content: space-between; align-items: baseline; }
+      #parcours .pa-etape[data-pas="3"] .pv-sec span { font-size: 13px; font-weight: 500; color: #6b6c75; }
 
-      /* -- Etape 4 : garder ou passer -- */
-      .nk-tri[hidden], .nk-grille-zone[hidden] { display: none; }
-      .nk-paquet { position: relative; height: 330px; margin-top: 4px; }
-      .nk-carte { position: absolute; inset: 0 12px; background: #fff; border-radius: 26px; box-shadow: 0 18px 40px -18px rgba(0,0,0,.35); display: flex; flex-direction: column; overflow: hidden;
-        touch-action: none; user-select: none; -webkit-user-select: none; transition: transform .35s cubic-bezier(.2,.9,.25,1), opacity .35s; cursor: grab; }
-      .nk-carte .nk-c-img { flex: 1; display: grid; place-items: center; background: radial-gradient(circle at 50% 45%, #fff, #ececf1); overflow: hidden; }
-      .nk-carte .nk-c-img img { width: 52%; max-height: 80%; object-fit: contain; filter: drop-shadow(0 12px 14px rgba(0,0,0,.18)); pointer-events: none; }
-      .nk-carte .nk-c-img img.photo { width: 100%; height: 100%; max-height: none; object-fit: cover; filter: none; }
-      .nk-carte .nk-c-img em { font-style: normal; font-size: 64px; font-weight: 900; color: #c9c9d1; }
-      .nk-carte .nk-c-txt { padding: 14px 18px 18px; }
-      .nk-carte b { font-size: 21px; font-weight: 850; }
-      .nk-carte .nk-c-txt span { display: block; color: #6c6d77; font-size: 13.5px; margin-top: 2px; }
-      .nk-tampon { position: absolute; top: 20px; z-index: 2; font-weight: 900; font-size: 21px; letter-spacing: .06em; padding: 4px 10px; border: 3.5px solid; border-radius: 10px; opacity: 0; background: rgba(255,255,255,.85); }
-      .nk-tampon.oui { left: 18px; color: #1f9d55; transform: rotate(-14deg); }
-      .nk-tampon.non { right: 18px; color: #de3131; transform: rotate(14deg); }
-      .nk-choix-btn { display: flex; justify-content: center; gap: 26px; margin-top: 16px; }
-      .nk-choix-btn button { width: 64px; height: 64px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 1px 2px rgba(17,17,20,.05), 0 8px 24px -14px rgba(17,17,20,.3); display: grid; place-items: center; cursor: pointer; padding: 0; }
-      .nk-choix-btn button:active { transform: scale(.92); }
-      .nk-choix-btn svg { width: 28px; height: 28px; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-      .nk-non svg { stroke: #de3131; }
-      #parcours .nk-oui { background: #1f9d55; }
-      .nk-oui svg { stroke: #fff; }
-      .nk-gardees { display: flex; gap: 6px; justify-content: center; align-items: center; margin-top: 14px; min-height: 40px; }
-      .nk-gardees img, .nk-gardees i { width: 38px; height: 38px; border-radius: 11px; background: #fff; box-shadow: 0 2px 8px -3px rgba(0,0,0,.2); object-fit: contain; padding: 4px; animation: nkPop .5s both; }
-      .nk-gardees span { font-size: 13px; color: #6c6d77; font-weight: 700; }
-      .nk-grille-zone { animation: nkMonte .45s both; }
+      /* -- Question 4 : une liste, pas une grille de cartes -- */
+      #parcours #pa-grille { display: block; border: 1px solid var(--nk-ligne); border-radius: 16px; overflow: hidden; background: #fff; }
+      #parcours #pa-grille .pa-tuile { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 14px; padding: 14px 16px; margin: 0; border: 0; border-radius: 0; background: #fff; box-shadow: none; min-height: 0; transform: none; }
+      #parcours #pa-grille .pa-tuile + .pa-tuile { border-top: 1px solid var(--nk-ligne); }
+      #parcours #pa-grille .pv-reco-img { position: relative; width: 52px; height: 52px; border-radius: 12px; background: #f3f3f6; overflow: hidden; display: grid; place-items: center; margin: 0; }
+      #parcours #pa-grille .pv-reco-img img { width: 76%; height: 76%; object-fit: contain; }
+      #parcours #pa-grille .pv-reco-photo { position: absolute; right: 2px; bottom: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); padding: 3px; opacity: .9; }
+      #parcours #pa-grille .pv-reco-txt { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+      #parcours #pa-grille .pv-reco-txt b { font-size: 15.5px; font-weight: 600; color: #111114; }
+      #parcours #pa-grille .pv-prix { display: inline-flex; align-items: center; gap: 6px; padding: 0; background: none; border: 0; width: auto; }
+      #parcours #pa-grille .pv-prix button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #c9c9d1; background: #fff; color: #111114; font-size: 15px; line-height: 1; display: grid; place-items: center; padding: 0; }
+      #parcours #pa-grille .pv-prix input { width: 46px; border: 0; background: none; text-align: center; font-size: 14.5px; font-weight: 600; color: #111114; padding: 0; height: auto; box-shadow: none; font-variant-numeric: tabular-nums; }
+      #parcours #pa-grille .pv-prix span { font-size: 13px; color: #6b6c75; }
+      #parcours #pa-grille .pa-tuile:not(.prise) .pv-reco-txt b, #parcours #pa-grille .pa-tuile:not(.prise) .pv-prix { opacity: .45; }
+      #parcours #pa-grille .pv-switch { width: 44px; height: 26px; border-radius: 99px; background: #dcdce2; position: relative; transition: background-color .2s; }
+      #parcours #pa-grille .pv-switch i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .25s cubic-bezier(.16, 1, .3, 1); }
+      #parcours #pa-grille .pa-tuile.prise .pv-switch { background: #111114; }
+      #parcours #pa-grille .pa-tuile.prise .pv-switch i { transform: translateX(18px); }
+      #parcours .pa-etape[data-pas="4"] .pv-ajout { display: block; margin: 16px 0 0; padding: 6px 0; border: 0; background: none; color: #111114; font-size: 15px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #c9c9d1; }
 
-      /* -- Etape 6 : la story qui prend le @ -- */
-      .nk-story-ig { width: 168px; margin: 4px auto 18px; }
-      .nk-story-ig .nk-sticker { font-size: 14px; }
+      /* -- Question 5 : Instagram -- */
+      #parcours .nk-ig-champ { display: block; margin: 0 0 14px; padding: 11px 16px 12px; border: 1px solid #c9c9d1; border-radius: 14px; background: #fff; }
+      #parcours .nk-ig-champ:focus-within { box-shadow: inset 0 0 0 1px #111114; border-color: #111114; }
+      #parcours .nk-ig-champ .pv-lib { font-size: 12.5px; font-weight: 500; color: #6b6c75; }
+      #parcours .nk-ig-champ input { display: block; width: 100%; border: 0; outline: none; background: none; padding: 3px 0 0; font-size: 16.5px; font-weight: 500; color: #111114; box-shadow: none; height: auto; }
+      #parcours #pa-ig-connecter { height: 50px; border-radius: 12px; border: 1px solid #111114; background: #fff; color: #111114; font-weight: 600; box-shadow: none; }
+      #parcours #pa-ig-aide { margin-top: 14px; font-size: 13.5px; line-height: 1.5; color: #6b6c75; }
 
-      /* -- La fin : on prepare, puis on revele -- */
-      .nk-fete { position: fixed; inset: 0; z-index: 120; background: #f4f4f6; color: #111114; display: flex; flex-direction: column; overflow: hidden; font-family: var(--sans, inherit); }
-      .nk-fete canvas { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
-      .nk-fete.part { opacity: 0; transition: opacity .4s ease; }
-      .nk-prepare { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 30px; text-align: center; transition: opacity .35s; }
-      .nk-prepare.fini { opacity: 0; pointer-events: none; }
-      .nk-anneau { width: 140px; height: 140px; position: relative; }
-      .nk-anneau svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-      .nk-anneau circle { fill: none; stroke-width: 10; }
-      .nk-anneau .fond { stroke: #ececf1; }
-      .nk-anneau .plein { stroke: #de3131; stroke-linecap: round; }
-      .nk-anneau b { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--titre); font-size: 34px; font-weight: 850; }
-      .nk-prepare h2 { margin: 24px 0 16px; font-family: var(--titre); font-stretch: 112%; font-size: 25px; font-weight: 850; letter-spacing: -.02em; }
-      .nk-liste { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; text-align: left; }
-      .nk-liste li { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 15px; opacity: .3; transition: opacity .3s; }
-      .nk-liste li.on { opacity: 1; }
-      .nk-liste li i { width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid #e5e5eb; display: grid; place-items: center; flex: none; }
-      .nk-liste li.on i { background: #1f9d55; border-color: #1f9d55; color: #fff; animation: nkPop .4s both; }
-      .nk-liste li i svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
-      .nk-liste li.on i svg { opacity: 1; }
-      .nk-revele { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 0 22px calc(28px + env(safe-area-inset-bottom)); opacity: 0; pointer-events: none; }
-      .nk-revele.on { opacity: 1; pointer-events: auto; }
-      .nk-scene { position: relative; flex: 1 1 auto; min-height: 360px; }
-      .nk-tel { position: absolute; left: 50%; top: calc(30px + env(safe-area-inset-top)); width: 206px; height: 400px; margin-left: -103px; border-radius: 34px; background: #050507; padding: 7px; box-shadow: 0 30px 60px -20px rgba(0,0,0,.5); transform: rotate(-4deg); }
-      .nk-revele.on .nk-tel { animation: nkTel .8s cubic-bezier(.2,.9,.25,1) both; }
-      @keyframes nkTel { from { opacity: 0; transform: translateY(80px) rotate(-4deg); } to { opacity: 1; transform: rotate(-4deg); } }
-      .nk-tel-ecran { width: 100%; height: 100%; border-radius: 28px; overflow: hidden; background: #fff; }
-      .nk-tel-photo { height: 150px; position: relative; background: #222; }
-      .nk-tel-photo img { width: 100%; height: 100%; object-fit: cover; }
-      .nk-tel-photo b { position: absolute; left: 12px; right: 12px; bottom: 8px; color: #fff; font-family: var(--titre); font-size: 20px; font-weight: 850; text-shadow: 0 2px 10px rgba(0,0,0,.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .nk-tel-g { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; padding: 10px; }
-      .nk-tel-g div { background: #f4f4f6; border-radius: 12px; overflow: hidden; }
-      .nk-tel-g span { display: grid; place-items: center; aspect-ratio: 1/.8; overflow: hidden; }
-      .nk-tel-g img { width: 52%; height: 62%; object-fit: contain; }
-      .nk-tel-g img.photo { width: 100%; height: 100%; object-fit: cover; }
-      .nk-tel-g p { margin: 0; padding: 4px 7px 7px; font-size: 10.5px; font-weight: 800; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .nk-tel-g p small { display: block; color: #777; font-weight: 600; }
-      .nk-revele h1 { margin: 0; font-family: var(--titre); font-stretch: 112%; font-size: 32px; font-weight: 850; letter-spacing: -.025em; line-height: 1.05; text-wrap: balance; }
-      .nk-revele p { margin: 8px 0 18px; color: #6c6d77; font-size: 15px; line-height: 1.45; }
-      .nk-revele.on h1 { animation: nkMonte .4s .5s both; }
-      .nk-revele.on p { animation: nkMonte .4s .6s both; }
-      .nk-revele button { height: 58px; border: 0; border-radius: 18px; background: #de3131; color: #fff; font-family: var(--titre); font-size: 16.5px; font-weight: 800; cursor: pointer; }
-      .nk-revele.on button { animation: nkMonte .4s .7s both; }
+      /* -- La fin : sobre, la fiche et ce qui est pret -- */
+      .nk-fin { position: fixed; inset: 0; z-index: 120; background: #ffffff; color: #111114; display: flex; flex-direction: column; padding: calc(56px + env(safe-area-inset-top)) 24px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; }
+      .nk-fin.part { opacity: 0; transition: opacity .35s ease; }
+      .nk-fin > * { animation: nkMonte .6s cubic-bezier(.16, 1, .3, 1) both; }
+      .nk-fin > :nth-child(2) { animation-delay: .08s; }
+      .nk-fin > :nth-child(3) { animation-delay: .16s; }
+      .nk-fin > :nth-child(4) { animation-delay: .24s; }
+      .nk-fin > :nth-child(5) { animation-delay: .32s; }
+      .nk-fin h1 { margin: 0 0 10px; font-family: var(--titre); font-size: 30px; font-weight: 700; letter-spacing: -.025em; line-height: 1.1; text-wrap: balance; }
+      .nk-fin > p { margin: 0 0 28px; color: #6b6c75; font-size: 15.5px; line-height: 1.5; }
+      .nk-fin-carte { border-radius: 18px; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(17,17,20,.06), 0 18px 40px -22px rgba(17,17,20,.4); }
+      .nk-fin-carte img { display: block; width: 100%; aspect-ratio: 16/10; object-fit: cover; background: #ececf1; }
+      .nk-fin-carte div { padding: 14px 16px 16px; }
+      .nk-fin-carte b { display: block; font-size: 18px; font-weight: 650; }
+      .nk-fin-carte span { font-size: 14px; color: #6b6c75; }
+      .nk-pret { list-style: none; margin: 26px 0 0; padding: 0; }
+      .nk-pret li { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #ececf0; font-size: 15px; }
+      .nk-pret li:last-child { border-bottom: 0; }
+      .nk-pret svg { width: 20px; height: 20px; flex: none; fill: none; stroke: #111114; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .nk-pret li.attente svg { stroke: #b4b4bd; }
+      .nk-pret li span { flex: 1; }
+      .nk-pret li small { color: #6b6c75; font-size: 13px; }
+      .nk-fin button { margin-top: auto; height: 54px; flex: none; border: 0; border-radius: 12px; background: #111114; color: #fff; font-family: var(--titre); font-size: 16px; font-weight: 700; cursor: pointer; }
+      .nk-fin .nk-fin-espace { flex: 1 0 24px; }
       @media (prefers-reduced-motion: reduce) {
-        #parcours *, .nk-fete * { animation: none !important; transition: none !important; }
-        .nk-bulle, .nk-pts { opacity: 1; }
+        #parcours *, .nk-fin, .nk-fin * { animation: none !important; transition: none !important; }
       }
-      .nk-sticker.nk-recolle { animation: nkRecolle .4s both; }
-      @keyframes nkRecolle { from { transform: translate(-50%,-50%) rotate(-4deg) scale(1.25); } to { transform: translate(-50%,-50%) rotate(-4deg) scale(1); } }
     </style>
   </head>
   <body>
@@ -4627,6 +4563,7 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
                 </button>
                 <div class="pa-jauge" id="pa-jauge" aria-hidden="true"></div>
+                <div class="nk-tete-c"><span class="nk-q" id="nk-q">Question 1 sur 5</span><div class="nk-barre" id="nk-barre" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></div>
                 <!-- 17/09/2026, Julien : « un bouton pour skip d'une image a une image, pour voir
                      tout le parcours ». Avance d'un ecran SANS rien enregistrer ni verifier. -->
                 <button type="button" class="pa-avancer" id="pa-avancer" aria-label="Écran suivant, sans enregistrer">
@@ -4635,8 +4572,6 @@
                 <button type="button" class="pa-passer" id="pa-passer">Passer</button>
               </div>
 
-              <!-- Le lieu qui se remplit a chaque reponse (03/10/2026). -->
-              <div class="nk-ticket" id="nk-ticket" hidden></div>
               <div class="pa-corps" id="pa-corps">
                 <!-- Ce bloc-ci est ce qui glisse d'une etape a l'autre. -->
                 <div class="pa-scene" id="pa-scene">
@@ -4667,14 +4602,8 @@
                          cette etape, mais reste : rendreMascotte() le lit
                          pour toutes. -->
                     <section class="pa-etape" data-pas="1" data-mascotte="/noctify-logo-verre-detoure.webp" hidden>
-                      <!-- 03/10/2026 : on montre d'abord ce que ca rapporte (une story, +100, un cocktail
-                           echange), comme Duolingo avant de demander quoi que ce soit. -->
-                      <div class="nk-boucle" aria-hidden="true">
-                        <div class="nk-story"><img src="/ambiance/bienvenue.webp" alt="" /><span class="nk-st-barre"><i></i></span><span class="nk-sticker">@<span>tonlieu</span></span></div>
-                        <span class="nk-pts">+100</span>
-                        <div class="nk-bulle nk-b1"><img class="rond" src="/ambiance/profil/1.webp" alt="" /><span>@lea.dnt<small>a posté une story chez toi</small></span></div>
-                        <div class="nk-bulle nk-b2"><img src="/recompenses/art-cocktail.webp" alt="" /><span>Cocktail offert<small>échangé contre 130 pts</small></span></div>
-                      </div>
+                      <!-- 03/10/2026 (soir) : une photo, une phrase, les portes d'entree. -->
+                      <div class="nk-hero" aria-hidden="true"><img src="/site/commerce-bar.webp" alt="" /><span class="nk-marque"><img src="/noctify-logo-verre-detoure.webp" alt="" />Noctify</span></div>
                       <h1 class="pa-titre nk-titre-arrivee">Tes clients parlent de toi. Tu les récompenses.</h1>
 
                       <!-- ⚠️ ECRIT POUR UN PATRON DE BOITE, PAS POUR UN
@@ -4689,7 +4618,7 @@
                            de l'exploitant : ce que SES clients font, ce
                            que LUI donne, ce qu'il recupere. Pas de verbe a
                            l'imperatif, pas de promesse chiffree. -->
-                      <div class="nk-duree"><span>5 questions</span><span>1 minute</span><span>Gratuit</span></div>
+                      <p class="nk-sous-arrivee">Configure ton établissement en 5 questions.</p>
 
                       <div class="accueil-actions pa-arrive">
                         <!-- Apple AVANT Google, comme cote clubbeur.
@@ -4788,40 +4717,48 @@
                          Points : imposes a tous (Julien), l'etape les annonce, elle ne demande rien.
                          Les id des champs sont ceux d'avant : les enregistrements ne changent pas. -->
 
-                    <!-- ============ LE PARCOURS, QUATRIEME VERSION (03/10/2026) ============
-                         Julien : « inspire-toi d'un vrai parcours [...] un truc interactif ou les
-                         gens ont envie de finir », puis « rends-le moins long ». Valide sur maquette
-                         (artifact AxuY7U2B7LeRgQr4sgySgA, version 3).
-                         Le lieu se construit a chaque reponse : le ticket en haut (#nk-ticket) se
-                         remplit, le nom s'allume sur une devanture, les recompenses se trient au
-                         doigt. Cinq questions : type, nom + adresse, photo, recompenses, Instagram.
-                         L'ecran des points (pas 5) n'est plus montre : allerAuPas() le saute.
+                    <!-- ============ LE PARCOURS, CINQUIEME VERSION (03/10/2026, soir) ============
+                         Julien, sur la version « le lieu se construit » : « ca fait gamin [...] le
+                         17 %, 50 % c'est moche, plutot question 1 sur 6 ». Modele : l'installation
+                         d'un hote Airbnb. Fond blanc, une question par ecran, « Question 2 sur 5 »
+                         et une barre fine, des listes a choix unique, un apercu sobre de la fiche
+                         telle que les clients la verront. Ni pourcentage, ni neon, ni confettis.
+                         Cinq questions : type, nom et adresse, photo, recompenses, Instagram.
+                         L'ecran des points (pas 5) n'est pas montre : allerAuPas() le saute.
                          ⚠️ Les id des champs sont ceux d'avant : enregistrerPas() ne change pas. -->
 
-                    <!-- 2 · Le type, puis le nom et l'adresse (deux ecrans dans la meme etape) -->
+                    <!-- 2 · Le type (question 1), puis le nom et l'adresse (question 2) -->
                     <section class="pa-etape pv nk-p2" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
                       <div class="nk-a">
-                        <h1 class="pa-titre">C'est quel genre de lieu ?</h1>
-                        <div id="pa-types" class="nk-tuiles" role="radiogroup" aria-label="Type de lieu">
-                          <button type="button" class="pa-type nk-tuile" role="radio" data-type="bar"><img src="/site/commerce-bar.webp" alt="" /><b>Bar</b><span class="nk-tk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>
-                          <button type="button" class="pa-type nk-tuile" role="radio" data-type="club"><img src="/ambiance/hero-nightclub.webp" alt="" /><b>Boîte de nuit</b><span class="nk-tk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>
-                          <button type="button" class="pa-type nk-tuile" role="radio" data-type="restaurant"><img src="/site/commerce-restaurant.webp" alt="" /><b>Restaurant</b><span class="nk-tk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>
+                        <h1 class="pa-titre">Quel type d'établissement ?</h1>
+                        <div id="pa-types" class="nk-options" role="radiogroup" aria-label="Type d'établissement">
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="bar">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14l-7 8.5zM12 12.5V20M8 20h8M7.6 7h8.8"/></svg>
+                            <span><b>Bar</b><small>Cocktails, bières, apéro</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="club">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.5v2.6M12 17.9v2.6M3.5 12h2.6M17.9 12h2.6"/></svg>
+                            <span><b>Boîte de nuit</b><small>Soirées, DJ, vestiaire</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="restaurant">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M5 3v5M9 3v5M17 3c-2 0-3 2-3 5s1 4 3 4v9"/></svg>
+                            <span><b>Restaurant</b><small>Service à table</small></span><i class="nk-radio"></i>
+                          </button>
                         </div>
                       </div>
                       <div class="nk-b">
-                        <h1 class="pa-titre">Ton lieu s'appelle comment ?</h1>
-                        <div class="nk-devanture" aria-hidden="true">
-                          <span class="nk-mur"></span>
-                          <div class="nk-enseigne"><span id="nk-ens" class="nk-vide">TON LIEU</span></div>
-                          <span class="nk-store"></span>
-                          <div class="nk-vitres"><i></i><i class="nk-porte"></i><i></i></div>
-                          <button type="button" class="nk-type-puce" id="nk-type-puce" tabindex="0">Bar</button>
-                        </div>
-                        <input id="pa-nom" class="nk-grand" type="text" autocomplete="organization" placeholder="Mirage" aria-label="Nom de ton établissement" />
+                        <h1 class="pa-titre">Comment s'appelle ton établissement ?</h1>
+                        <button type="button" class="nk-type-lien" id="nk-type-lien">Changer le type d'établissement</button>
                         <div class="nk-champs">
+                          <label class="nk-champ"><span>Nom</span><input id="pa-nom" type="text" autocomplete="organization" placeholder="Mirage" /></label>
                           <label class="nk-champ"><span>Adresse</span><input id="pa-adresse" type="text" autocomplete="street-address" placeholder="Avenue Louise 120" /></label>
                           <label class="nk-champ"><span>Ville</span><input id="pa-ville" type="text" autocomplete="address-level2" placeholder="Bruxelles" /></label>
-                          <label class="nk-champ"><span>Téléphone <em>privé, pour nous joindre</em></span><input id="pa-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0470 12 34 56" /></label>
+                          <label class="nk-champ"><span>Téléphone, visible par Noctify seulement</span><input id="pa-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="0470 12 34 56" /></label>
+                        </div>
+                        <p class="nk-legende">Dans l'appli de tes clients</p>
+                        <div class="nk-fiche" aria-hidden="true">
+                          <span class="nk-fiche-img" id="nk-fiche-img"></span>
+                          <span class="nk-fiche-txt"><b id="nk-fiche-nom">Ton établissement</b><span id="nk-fiche-ligne">Bar</span></span>
                         </div>
                         <div hidden>
                           <input id="pa-google" type="url" /><button type="button" id="pa-google-btn">Récupérer</button>
@@ -4833,13 +4770,13 @@
                       </div>
                     </section>
 
-                    <!-- 3 · La photo principale, puis les autres -->
+                    <!-- 3 · La photo (question 3) -->
                     <section class="pa-etape pv" data-pas="3" data-mascotte="/mascotte/pose-1.webp" hidden>
-                      <h1 class="pa-titre">Ta plus belle photo</h1>
-                      <p class="pa-sous">La façade, ou la salle quand elle est pleine. C'est elle que tes clients voient sur la carte.</p>
+                      <h1 class="pa-titre">Ajoute une photo de ton établissement</h1>
+                      <p class="pa-sous">La façade ou la salle. C'est la première chose que tes clients voient sur la carte.</p>
                       <button type="button" class="nk-depot" id="pa-photo-btn">
                         <span class="nk-depot-img" id="pa-photo-vue"></span>
-                        <span class="nk-depot-txt"><b id="pa-photo-titre">Ajouter une photo</b><span>Une vraie photo de ton lieu</span></span>
+                        <span class="nk-depot-txt"><b id="pa-photo-titre">Ajouter une photo</b></span>
                       </button>
                       <p class="pv-sec">Autres photos<span>Facultatif</span></p>
                       <div class="pa-galerie" id="pa-galerie"></div>
@@ -4847,55 +4784,44 @@
                       <span hidden><span id="pa-apercu-nom"></span><span id="pa-apercu-ligne"></span><span id="pa-apercu-lieu"></span></span>
                     </section>
 
-                    <!-- 4 · Les recompenses, triees au doigt -->
+                    <!-- 4 · Les recompenses (question 4) -->
                     <section class="pa-etape pv" data-pas="4" data-mascotte="/mascotte/pose-2.webp" hidden>
-                      <h1 class="pa-titre">Qu'est-ce que tu offres ?</h1>
-                      <p class="pa-sous" id="nk-p4-sous">Glisse à droite pour garder, à gauche pour passer. Les prix se changent juste après.</p>
-                      <div class="nk-tri" id="nk-tri">
-                        <div class="nk-paquet" id="nk-paquet"></div>
-                        <div class="nk-choix-btn">
-                          <button type="button" class="nk-non" id="nk-non" aria-label="Passer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-                          <button type="button" class="nk-oui" id="nk-oui" aria-label="Garder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+                      <h1 class="pa-titre">Que proposes-tu à tes clients ?</h1>
+                      <p class="pa-sous">Ils les échangent contre leurs points. Tu changes les prix quand tu veux.</p>
+                      <p class="pv-sec pv-sec-haut" hidden><span id="pa-compte"></span></p>
+                      <div class="pa-grille" id="pa-grille"></div>
+                      <button type="button" class="pv-ajout" id="pa-sienne-ouvrir">Ajouter une autre récompense</button>
+                      <div class="pv-sienne" id="pa-sienne" hidden>
+                        <div class="pa-sienne-lignes">
+                          <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Ex. Bouteille offerte" />
+                          <input class="ac-input pa-sienne-pts" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" />
                         </div>
-                        <div class="nk-gardees" id="nk-gardees"></div>
-                      </div>
-                      <div class="nk-grille-zone" id="nk-grille-zone">
-                        <p class="pv-sec pv-sec-haut">Ta boutique<span id="pa-compte"></span></p>
-                        <div class="pa-grille" id="pa-grille"></div>
-                        <button type="button" class="pv-ajout" id="pa-sienne-ouvrir">+ Une autre récompense</button>
-                        <div class="pv-sienne" id="pa-sienne" hidden>
-                          <div class="pa-sienne-lignes">
-                            <input class="ac-input" id="pa-sienne-nom" type="text" placeholder="Ex. Bouteille offerte" />
-                            <input class="ac-input pa-sienne-pts" id="pa-sienne-pts" type="number" min="0" step="10" placeholder="pts" />
-                          </div>
-                          <button type="button" class="ajouter-recompense" id="pa-sienne-ajouter">Ajouter</button>
-                        </div>
+                        <button type="button" class="ajouter-recompense" id="pa-sienne-ajouter">Ajouter</button>
                       </div>
                     </section>
 
-                    <!-- 5 · Les points : plus montre (03/10/2026), garde pour les donnees qu'il porte -->
+                    <!-- 5 · Les points : plus montre, garde pour les donnees qu'il porte -->
                     <section class="pa-etape pv" data-pas="5" data-mascotte="/mascotte/pose-3.webp" hidden>
                       <span hidden><b data-pv="n-story"></b><b data-pv="n-scan"></b><strong data-pv="pts-story"></strong><strong data-pv="pts-scan"></strong></span>
                       <div hidden><div id="pa-profils" hidden></div><div id="pa-bareme"></div></div>
                     </section>
 
-                    <!-- 6 · Instagram, avec la story qui prend le @ en direct -->
+                    <!-- 6 · Instagram (question 5) -->
                     <section class="pa-etape pv" data-pas="6" data-mascotte="/mascotte/pose-4.webp" hidden>
-                      <h1 class="pa-titre">Ton compte Instagram</h1>
-                      <p class="pa-sous">Tes clients le mentionnent dans leur story pour gagner leurs 100 points.</p>
-                      <div class="nk-story nk-story-ig" aria-hidden="true"><img id="nk-ig-photo" src="/ambiance/bienvenue.webp" alt="" /><span class="nk-st-barre"><i></i></span><span class="nk-sticker" id="nk-sticker">@<span id="nk-ig-h">toncompte</span></span></div>
-                      <label class="pv-champ pa-champ"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.4"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.3" cy="6.7" r="1.1"/></svg><span class="pv-champ-txt"><span class="pv-lib">Compte Instagram</span><input id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@tonlieu" /></span></label>
+                      <h1 class="pa-titre">Quel est ton compte Instagram ?</h1>
+                      <p class="pa-sous">Tes clients le mentionnent dans leur story. Chaque story leur rapporte 100 points.</p>
+                      <label class="pv-champ pa-champ nk-ig-champ"><span class="pv-champ-txt"><span class="pv-lib">Compte Instagram</span><input id="pa-handle" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="@tonetablissement" /></span></label>
                       <button type="button" class="ac-btn ac-btn-google pv-ig" id="pa-ig-connecter">
                         <svg viewBox="0 0 24 24" class="ig-glyphe" aria-hidden="true">
                           <rect x="3" y="3" width="18" height="18" rx="5.4"/>
                           <circle cx="12" cy="12" r="4.1"/>
-                          <circle cx="17.3" cy="6.7" r="1.15" fill="#e1306c" stroke="none"/>
+                          <circle cx="17.3" cy="6.7" r="1.15" fill="currentColor" stroke="none"/>
                         </svg>
                         Connecter Instagram
                       </button>
-                      <p class="pa-aide" id="pa-ig-aide" style="margin-top:10px">
-                        Le compte Instagram doit être un compte professionnel (Entreprise ou Créateur).
-                        Tu peux aussi le faire plus tard, depuis les Réglages.
+                      <p class="pa-aide" id="pa-ig-aide">
+                        Le compte doit être professionnel (Entreprise ou Créateur).
+                        Tu peux aussi le connecter plus tard, depuis les Réglages.
                       </p>
                     </section>
 
@@ -9269,6 +9195,8 @@
       $("#pa-passer").addEventListener("click", function () { fermerParcours(true); });
 
       $("#pa-suivant").addEventListener("click", async function (ev) {
+        // Etape 2 : le type d'abord, puis le nom -- rien ne s'enregistre entre les deux.
+        if (PARCOURS.pas === 2 && !nkEnB()) return nkPas2(true);
         var bouton = ev.currentTarget;
         var seule = PARCOURS.seule;
         var dernier = seule ? PARCOURS.pas >= PARCOURS.finSeule : PARCOURS.pas === PAS_MAX;
@@ -10646,13 +10574,14 @@
       }
       // Dans l'onglet Boutique : la vitrine devient la vraie page, creee une seule fois.
 
-      /* ================= PARCOURS 03/10/2026 : LE LIEU SE CONSTRUIT =================
-         Julien : « un parcours vraiment interactif ou les gens ont envie de
-         finir », valide sur maquette puis raccourci a cinq questions. Tout ce
-         bloc ne fait qu'HABILLER : les enregistrements restent ceux de
-         enregistrerPas(), sur les memes champs. */
+      /* ================= PARCOURS 03/10/2026 (cinquieme version) =================
+         Habillage seulement : les enregistrements restent ceux de enregistrerPas(),
+         sur les memes champs. Ce bloc tient le compteur « Question X sur 5 », les
+         deux temps de l'etape 2 (type puis nom), l'apercu de la fiche et la fin. */
       var NK_COCHE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-      var NK_LIEU = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5 5 4h14l1.5 5.5M5 12v8h14v-8M10 20v-5h4v5"/></svg>';
+      var NK_ATTENTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>';
+      var NK_LIEU = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></svg>';
+      var NK_TOTAL = 5;
 
       function nkPhotoLieu() {
         var img = document.querySelector("#pa-photo-vue img");
@@ -10660,294 +10589,88 @@
       }
       function nkHandle() { return ($("#pa-handle").value || "").trim().replace(/^@+/, "").replace(/\s+/g, ""); }
       function nkGardees() { return (PARCOURS.choix || []).filter(function (c) { return c.prise; }); }
+      function nkEnB() { return $(".nk-p2").classList.contains("nk-en-b"); }
 
-      /* Le ticket est construit une fois puis mis a jour : le reconstruire
-         a chaque frappe couperait la transition de l'anneau. */
-      function nkTicket(flash) {
-        var t = $("#nk-ticket");
-        if (!t) return;
-        if (!t.firstElementChild) {
-          t.innerHTML = '<span class="tk-img"></span><span class="tk-txt"><b></b><span></span></span>' +
-            '<span class="tk-anneau"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="fond" cx="22" cy="22" r="18"/>' +
-            '<circle class="plein" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1"/></svg><em>0%</em></span>';
-        }
+      /* Le numero de la question, tel que le gerant le compte : l'etape 2 en
+         porte deux (le type, puis le nom), l'etape 5 n'est jamais montree. */
+      function nkQuestion() {
+        var pas = PARCOURS.pas;
+        if (pas === 2) return nkEnB() ? 2 : 1;
+        if (pas === 3) return 3;
+        if (pas === 4) return 4;
+        return 5;
+      }
+      function nkCompteur() {
+        var q = nkQuestion();
+        $("#nk-q").textContent = "Question " + q + " sur " + NK_TOTAL;
+        [].forEach.call($("#nk-barre").children, function (trait, i) { trait.classList.toggle("faite", i < q); });
+      }
+
+      function nkFiche() {
         var nom = $("#pa-nom").value.trim();
         var ville = $("#pa-ville").value.trim();
-        var photo = nkPhotoLieu();
-        var n = nkGardees().length;
-        var trie = PARCOURS.pas >= 4 && n > 0;
-        var ig = !!(ETAT.instagram && ETAT.instagram.connecte) || nkHandle().length > 1;
-        var faits = [!!PARCOURS.type, nom.length > 1, $("#pa-adresse").value.trim().length > 3, !!photo, trie, ig]
-          .filter(Boolean).length;
-        var pct = Math.round(faits / 6 * 100);
-
-        var vignette = t.querySelector(".tk-img");
-        var dejaLa = vignette.querySelector("img");
-        if (photo && (!dejaLa || dejaLa.getAttribute("src") !== photo)) vignette.innerHTML = '<img src="' + escapeHtml(photo) + '" alt="" />';
-        else if (!photo && !vignette.querySelector("svg")) vignette.innerHTML = NK_LIEU;
-
-        var titre = t.querySelector(".tk-txt b");
-        titre.textContent = nom || "Ton lieu";
-        titre.classList.toggle("tk-vide", !nom);
-        var sous = [NOMS_TYPES[PARCOURS.type], ville, trie ? n + (n > 1 ? " récompenses" : " récompense") : ""].filter(Boolean).join(" · ");
-        t.querySelector(".tk-txt span").textContent = sous || "Se remplit à chaque réponse";
-        t.querySelector(".plein").setAttribute("stroke-dashoffset", (113.1 * (1 - pct / 100)).toFixed(1));
-        t.querySelector("em").textContent = pct + "%";
-        if (flash) relancerAnimation(t, "flash");
+        $("#nk-fiche-nom").textContent = nom || "Ton établissement";
+        $("#nk-fiche-ligne").textContent = [NOMS_TYPES[PARCOURS.type] || "Bar", ville].filter(Boolean).join(" · ");
+        var photo = nkPhotoLieu() || ((etablissementCourant() || {}).logo_url) || null;
+        var vignette = $("#nk-fiche-img");
+        if (photo) { vignette.style.backgroundImage = "url(\"" + String(photo).replace(/"/g, "") + "\")"; vignette.innerHTML = ""; }
+        else { vignette.style.backgroundImage = ""; vignette.innerHTML = NK_LIEU; }
       }
 
-      /* ---- Etape 2 : deux ecrans dans la meme etape ---- */
-      function nkEnB() { return $(".nk-p2").classList.contains("nk-en-b"); }
       function nkPas2(enB) {
         $(".nk-p2").classList.toggle("nk-en-b", !!enB);
-        $("#pa-suivant").hidden = !enB;
-        // Depuis le nom, le retour ramene aux photos du type ; depuis le type, il n'y a rien avant.
+        // Depuis le nom, le retour ramene au type ; avant le type, il n'y a rien.
         $("#pa-retour").hidden = !enB || PARCOURS.seule;
+        $("#pa-suivant").textContent = enB && PARCOURS.seule ? "Enregistrer" : "Continuer";
         $("#pa-corps").scrollTop = 0;
-        if (!enB) $("#pa-types").classList.remove("nk-fait");
-        else setTimeout(function () { if (!$("#pa-nom").value) $("#pa-nom").focus({ preventScroll: true }); }, 350);
+        nkFiche();
+        nkCompteur();
+        // Rejoue l'entree des elements de l'ecran qui arrive.
+        var bloc = $(enB ? ".nk-p2 .nk-b" : ".nk-p2 .nk-a");
+        [].forEach.call(bloc.children, function (el) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
       }
-      function nkEnseigne() {
-        var nom = $("#pa-nom").value.trim();
-        var e = $("#nk-ens");
-        e.textContent = (nom || "Ton lieu").toUpperCase();
-        e.classList.toggle("nk-vide", !nom);
-        e.style.fontSize = (nom.length > 14 ? 18 : nom.length > 9 ? 23 : 28) + "px";
-      }
-      $("#pa-types").addEventListener("click", function (ev) {
-        if (!ev.target.closest(".pa-type")) return;
-        $("#pa-types").classList.add("nk-fait");
-        $("#nk-type-puce").textContent = NOMS_TYPES[PARCOURS.type] || "Bar";
-        nkTicket(true);
-        setTimeout(function () { if (PARCOURS.pas === 2) nkPas2(true); }, 600);
-      });
-      $("#nk-type-puce").addEventListener("click", function () { nkPas2(false); });
-      ["#pa-nom", "#pa-adresse", "#pa-ville"].forEach(function (id) {
-        $(id).addEventListener("input", function () { nkEnseigne(); nkTicket(false); });
-      });
-
-      /* ---- Etape 3 : la photo revelee remplit le ticket ---- */
-      new MutationObserver(function () { nkTicket(true); }).observe($("#pa-photo-vue"), { childList: true });
-
-      /* ---- Etape 4 : garder ou passer, au doigt ----
-         Chaque carte est une entree de PARCOURS.choix : glisser a droite la
-         met dans la boutique (prise = true), a gauche l'en retire. Rien
-         d'autre ne change -- enregistrerRecompensesParcours() lit choix. */
-      function nkPaquet() {
-        var seule = PARCOURS.seule;
-        $("#nk-tri").hidden = seule;
-        $("#nk-grille-zone").hidden = !seule;
-        $("#nk-p4-sous").textContent = seule
-          ? "Active ce que tu offres, règle le prix."
-          : "Glisse à droite pour garder, à gauche pour passer. Les prix se changent juste après.";
-        if (seule) return rendreChoixRecompenses();
-
-        PARCOURS.nkOui = [];
-        var zone = $("#nk-paquet");
-        zone.innerHTML = "";
-        for (var k = PARCOURS.choix.length - 1; k >= 0; k--) {
-          var c = PARCOURS.choix[k];
-          var carte = document.createElement("div");
-          carte.className = "nk-carte";
-          carte.dataset.i = String(k);
-          var visuel = c.foto
-            ? '<img src="' + escapeHtml(c.foto) + '" alt=""' + (c.photoPerso ? ' class="photo"' : "") + " />"
-            : "<em>" + escapeHtml((c.titre || "?").trim().charAt(0).toUpperCase()) + "</em>";
-          carte.innerHTML = '<span class="nk-tampon oui">GARDER</span><span class="nk-tampon non">PASSER</span>' +
-            '<div class="nk-c-img">' + visuel + '</div>' +
-            '<div class="nk-c-txt"><b>' + escapeHtml(c.titre || "") + "</b><span>" +
-            (c.rewardId ? "Déjà dans ta boutique · " : "Prix conseillé · ") + Number(c.points || 0) + " points</span></div>";
-          zone.appendChild(carte);
-        }
-        nkEmpiler();
-        nkGardeesRendu();
-      }
-      function nkEmpiler() {
-        var cartes = [].slice.call($("#nk-paquet").children).reverse();
-        cartes.forEach(function (c, i) { c.style.transform = "translateY(" + (i * -7) + "px) scale(" + (1 - i * .035) + ")"; });
-      }
-      function nkGardeesRendu() {
-        var oui = PARCOURS.nkOui || [];
-        $("#nk-gardees").innerHTML = oui.length
-          ? oui.map(function (c) { return c.foto ? '<img src="' + escapeHtml(c.foto) + '" alt="" />' : "<i></i>"; }).join("")
-          : "<span>Rien gardé pour l'instant</span>";
-      }
-      function nkTriFini() {
-        $("#nk-tri").hidden = true;
-        $("#nk-grille-zone").hidden = false;
-        $("#nk-p4-sous").textContent = "Règle tes prix si tu veux, puis continue.";
-        rendreChoixRecompenses();
-        nkTicket(true);
-      }
-      function nkJeter(oui) {
-        var carte = $("#nk-paquet").lastElementChild;
-        if (!carte || carte.dataset.part) return;
-        carte.dataset.part = "1";
-        var c = PARCOURS.choix[Number(carte.dataset.i)];
-        carte.style.transition = "transform .45s cubic-bezier(.2,.9,.25,1), opacity .45s";
-        carte.style.transform = "translateX(" + (oui ? 440 : -440) + "px) rotate(" + (oui ? 24 : -24) + "deg)";
-        carte.style.opacity = "0";
-        if (c) {
-          c.prise = oui;
-          if (oui) PARCOURS.nkOui.push(c);
-        }
-        try { vibrer && vibrer("leger"); } catch (e) {}
-        nkGardeesRendu();
-        nkTicket(oui);
-        setTimeout(function () {
-          carte.remove();
-          nkEmpiler();
-          if (!$("#nk-paquet").lastElementChild) setTimeout(nkTriFini, 250);
-        }, 380);
-      }
-      $("#nk-oui").addEventListener("click", function () { nkJeter(true); });
-      $("#nk-non").addEventListener("click", function () { nkJeter(false); });
-      (function brancherGlisse() {
-        var zone = $("#nk-paquet");
-        var x0 = null, carte = null, dx = 0;
-        zone.addEventListener("pointerdown", function (ev) {
-          carte = ev.target.closest(".nk-carte");
-          if (!carte || carte !== zone.lastElementChild) { carte = null; return; }
-          x0 = ev.clientX; dx = 0;
-          carte.setPointerCapture(ev.pointerId);
-          carte.style.transition = "none";
-        });
-        zone.addEventListener("pointermove", function (ev) {
-          if (x0 === null || !carte) return;
-          dx = ev.clientX - x0;
-          carte.style.transform = "translateX(" + dx + "px) rotate(" + (dx / 14) + "deg)";
-          carte.querySelector(".oui").style.opacity = Math.max(0, dx / 90);
-          carte.querySelector(".non").style.opacity = Math.max(0, -dx / 90);
-        });
-        function lacher() {
-          if (x0 === null || !carte) return;
-          x0 = null;
-          if (Math.abs(dx) > 90) nkJeter(dx > 0);
-          else {
-            carte.style.transition = "";
-            nkEmpiler();
-            carte.querySelectorAll(".nk-tampon").forEach(function (t) { t.style.opacity = 0; });
-          }
-          carte = null;
-        }
-        zone.addEventListener("pointerup", lacher);
-        zone.addEventListener("pointercancel", lacher);
-      })();
-
-      /* ---- Etape 6 : le @ se colle sur une story ---- */
-      function nkIg() {
-        var etab = etablissementCourant() || {};
-        var ig = ETAT.instagram;
-        var h = nkHandle() || (ig && ig.connecte && ig.handle) || etab.ig_handle || "";
-        $("#nk-ig-h").textContent = h || "toncompte";
-        var photo = nkPhotoLieu();
-        if (photo) $("#nk-ig-photo").src = photo;
-      }
-      $("#pa-handle").addEventListener("input", function () {
-        $("#nk-ig-h").textContent = nkHandle() || "toncompte";
-        relancerAnimation($("#nk-sticker"), "nk-recolle");
-        nkTicket(false);
-      });
+      ["#pa-nom", "#pa-ville"].forEach(function (id) { $(id).addEventListener("input", nkFiche); });
+      $("#pa-types").addEventListener("click", function (ev) { if (ev.target.closest(".pa-type")) nkFiche(); });
+      $("#nk-type-lien").addEventListener("click", function () { nkPas2(false); });
 
       function nkPoser(cible) {
-        $("#nk-ticket").hidden = cible === 1;
-        nkTicket(false);
-        if (cible === 2) {
-          nkEnseigne();
-          $("#nk-type-puce").textContent = NOMS_TYPES[PARCOURS.type] || "Bar";
-          nkPas2(PARCOURS.seule || $("#pa-nom").value.trim().length > 0);
-        }
-        if (cible === 4) nkPaquet();
-        if (cible === 6) nkIg();
+        if (cible === 2) nkPas2(PARCOURS.seule && PARCOURS.finSeule === 2 ? true : $("#pa-nom").value.trim().length > 0);
+        if (cible > 1) nkCompteur();
       }
 
-      /* La fin du parcours (03/10/2026) : « On prepare ton lieu », un anneau
-         qui se remplit en coche, puis la revelation -- la page du lieu sur un
-         telephone, avec les recompenses gardees -- et des confettis. Le
-         tableau de bord est deja pret dessous : le bouton ne fait qu'ouvrir. */
+      /* La fin : la fiche telle que les clients la voient, ce qui est pret,
+         et un bouton. Le tableau de bord est deja pret dessous. */
       function feterFinParcours() {
         var etab = etablissementCourant() || {};
-        var nom = ($("#pa-nom") && $("#pa-nom").value.trim()) || etab.name || "Ton lieu";
+        var nom = ($("#pa-nom") && $("#pa-nom").value.trim()) || etab.name || "Ton établissement";
+        var ville = ($("#pa-ville") && $("#pa-ville").value.trim()) || etab.city || "";
         var photo = nkPhotoLieu() || etab.logo_url || "/ambiance/hero-nightclub.webp";
-        var gardees = nkGardees();
+        var n = nkGardees().length;
         var ig = ETAT.instagram;
         var handle = nkHandle() || (ig && ig.connecte && ig.handle) || etab.ig_handle || "";
-        var etapes = [
-          "Ta fiche sur la carte",
-          "Ta boutique · " + gardees.length + (gardees.length > 1 ? " récompenses" : " récompense"),
-          "Ton affiche avec ton QR",
-          handle ? "Les stories qui mentionnent @" + handle : "Les points de tes clients",
+        var lignes = [
+          [true, "Ta fiche est sur la carte", ville],
+          [n > 0, n + (n > 1 ? " récompenses en boutique" : " récompense en boutique"), n > 0 ? "" : "À ajouter dans Boutique"],
+          [!!handle, handle ? "@" + handle : "Instagram à renseigner", handle ? "" : "Dans les Réglages"],
+          [true, "Ton affiche avec le QR", "Dans les Réglages"],
         ];
-        var tuiles = gardees.slice(0, 4).map(function (c) {
-          var visuel = c.foto
-            ? '<img src="' + escapeHtml(c.foto) + '" alt=""' + (c.photoPerso ? ' class="photo"' : "") + " />"
-            : "";
-          return "<div><span>" + visuel + "</span><p>" + escapeHtml(c.titre || "") + "<small>" + Number(c.points || 0) + " points</small></p></div>";
-        }).join("");
-
-        var fete = document.createElement("div");
-        fete.className = "nk-fete";
-        fete.innerHTML =
-          '<div class="nk-prepare"><div class="nk-anneau"><svg viewBox="0 0 140 140" aria-hidden="true"><circle class="fond" cx="70" cy="70" r="60"/>' +
-            '<circle class="plein" cx="70" cy="70" r="60" stroke-dasharray="377" stroke-dashoffset="377"/></svg><b>0%</b></div>' +
-            "<h2>On prépare " + escapeHtml(nom) + "…</h2>" +
-            '<ul class="nk-liste">' + etapes.map(function (t) { return "<li><i>" + NK_COCHE + "</i>" + escapeHtml(t) + "</li>"; }).join("") + "</ul></div>" +
-          '<div class="nk-revele"><div class="nk-scene"><div class="nk-tel"><div class="nk-tel-ecran">' +
-            '<div class="nk-tel-photo"><img src="' + escapeHtml(photo) + '" alt="" /><b>' + escapeHtml(nom) + "</b></div>" +
-            '<div class="nk-tel-g">' + tuiles + "</div></div></div></div>" +
-            "<h1>" + escapeHtml(nom) + " est en ligne</h1>" +
-            "<p>Tes clients te voient déjà dans l'appli. Ton affiche avec le QR est dans les Réglages : pose-la au comptoir.</p>" +
-            '<button type="button">Ouvrir mon appli</button></div>' +
-          "<canvas></canvas>";
-        document.body.appendChild(fete);
-
-        var anneau = fete.querySelector(".plein");
-        var chiffre = fete.querySelector(".nk-anneau b");
-        var lignes = [].slice.call(fete.querySelectorAll(".nk-liste li"));
-        var debut = performance.now();
-        (function remplir(t) {
-          var p = Math.min(1, (t - debut) / 1700);
-          anneau.setAttribute("stroke-dashoffset", (377 * (1 - p)).toFixed(1));
-          chiffre.textContent = Math.round(p * 100) + "%";
-          lignes.forEach(function (l, i) { l.classList.toggle("on", p > (i + 1) / 5); });
-          if (p < 1) return requestAnimationFrame(remplir);
-          setTimeout(function () {
-            fete.querySelector(".nk-prepare").classList.add("fini");
-            fete.querySelector(".nk-revele").classList.add("on");
-            try { vibrer && vibrer("fort"); } catch (e) {}
-            nkConfettis(fete.querySelector("canvas"));
-          }, 350);
-        })(debut);
-
-        fete.querySelector(".nk-revele button").addEventListener("click", function () {
-          fete.classList.add("part");
-          setTimeout(function () { fete.remove(); }, 420);
+        var fin = document.createElement("div");
+        fin.className = "nk-fin";
+        fin.innerHTML =
+          "<h1>" + escapeHtml(nom) + " est sur Noctify</h1>" +
+          "<p>Tes clients peuvent déjà te trouver et gagner des points chez toi.</p>" +
+          '<div class="nk-fin-carte"><img src="' + escapeHtml(photo) + '" alt="" /><div><b>' + escapeHtml(nom) + "</b><span>" +
+            escapeHtml([NOMS_TYPES[PARCOURS.type] || "Bar", ville].filter(Boolean).join(" · ")) + "</span></div></div>" +
+          '<ul class="nk-pret">' + lignes.map(function (l) {
+            return '<li class="' + (l[0] ? "" : "attente") + '">' + (l[0] ? NK_COCHE : NK_ATTENTE) + "<span>" + escapeHtml(l[1]) + "</span>" +
+              (l[2] ? "<small>" + escapeHtml(l[2]) + "</small>" : "") + "</li>";
+          }).join("") + "</ul>" +
+          '<span class="nk-fin-espace"></span><button type="button">Ouvrir mon tableau de bord</button>';
+        document.body.appendChild(fin);
+        fin.querySelector("button").addEventListener("click", function () {
+          fin.classList.add("part");
+          setTimeout(function () { fin.remove(); }, 380);
         });
-      }
-      function nkConfettis(toile) {
-        var ctx = toile.getContext("2d");
-        var dpr = window.devicePixelRatio || 1;
-        toile.width = innerWidth * dpr; toile.height = innerHeight * dpr;
-        ctx.scale(dpr, dpr);
-        var couleurs = ["#de3131", "#111114", "#f5c542", "#ee2a7b", "#3a7bff"];
-        var bouts = [];
-        for (var k = 0; k < 140; k++) {
-          var a = Math.random() * Math.PI * 2, v = 5 + Math.random() * 9;
-          bouts.push({ x: innerWidth / 2, y: innerHeight * .35, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 5,
-            w: 5 + Math.random() * 6, h: 8 + Math.random() * 8, r: Math.random() * 6, vr: (Math.random() - .5) * .35,
-            c: couleurs[k % couleurs.length] });
-        }
-        var t0 = performance.now(), fin = t0 + 3200;
-        (function image(t) {
-          var dt = Math.min(2, (t - t0) / 16.7); t0 = t;
-          ctx.clearRect(0, 0, innerWidth, innerHeight);
-          bouts.forEach(function (b) {
-            b.vy += .28 * dt; b.vx *= Math.pow(.985, dt); b.x += b.vx * dt; b.y += b.vy * dt; b.r += b.vr * dt;
-            ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r); ctx.fillStyle = b.c; ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); ctx.restore();
-          });
-          if (t < fin && document.body.contains(toile)) requestAnimationFrame(image);
-          else ctx.clearRect(0, 0, innerWidth, innerHeight);
-        })(t0);
       }
       // Pour la rejouer en demonstration : noctifyFete() dans la console.
       window.noctifyFete = feterFinParcours;
