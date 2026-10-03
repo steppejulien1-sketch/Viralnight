@@ -4226,6 +4226,16 @@
       #parcours.pa-arrivee .pa-tete { display: none; }
       .nk-tete-c { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
       .nk-q { font-size: 13px; font-weight: 600; color: var(--nk-sub, #6b6c75); font-variant-numeric: tabular-nums; }
+      /* Les cinq traits sous « Question X sur 5 » : retires a la demande de Julien (03/10/2026). */
+      #parcours .nk-barre { display: none !important; }
+      .nk-grands { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      #parcours .nk-grand { display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: 100%; height: auto; min-height: 0; margin: 0; padding: 8px 8px 14px; border: 1px solid var(--nk-ligne, #e6e6eb); border-radius: 18px; background: #fff; box-shadow: none; cursor: pointer; text-align: center; }
+      #parcours .nk-grand img { width: 100%; aspect-ratio: 1 / 1.15; object-fit: cover; border-radius: 12px; display: block; }
+      #parcours .nk-grand b { font-size: 18px; font-weight: 650; color: #111114; }
+      #parcours .nk-grand:active { transform: scale(.99); }
+      #parcours .nk-grand.choisi { border-color: #111114; box-shadow: inset 0 0 0 1px #111114; }
+      #parcours .nk-commerce { display: block; margin-top: 16px; }
+      #parcours .nk-commerce[hidden] { display: none; }
       .nk-barre { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; max-width: 220px; }
       .nk-barre i { height: 3px; border-radius: 2px; background: #e6e6eb; overflow: hidden; position: relative; }
       .nk-barre i::after { content: ""; position: absolute; inset: 0; background: #111114; transform: scaleX(0); transform-origin: left; transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
@@ -4738,44 +4748,18 @@
                     <section class="pa-etape pv nk-p2" data-pas="2" data-mascotte="/mascotte/pose-1.webp" hidden>
                       <div class="nk-a">
                         <h1 class="pa-titre">Quel type d'établissement ?</h1>
-                        <div id="pa-types" class="nk-options" role="radiogroup" aria-label="Type d'établissement">
-                          <button type="button" class="pa-type nk-option" role="radio" data-type="bar">
-                            <img src="/site/commerce-bar.webp" alt="" />
-                            <span><b>Bar</b><small>Cocktails, bières, apéro</small></span><i class="nk-radio"></i>
+                        <!-- 03/10/2026, Julien : « mets bar et autre commerce en gros », sans
+                             sous-titres, et que la personne tape son commerce. Le texte tape
+                             est rapproche d'un type connu par devinerType(). -->
+                        <div id="pa-types" class="nk-grands" role="radiogroup" aria-label="Type d'établissement">
+                          <button type="button" class="pa-type nk-grand" role="radio" data-type="bar">
+                            <img src="/site/commerce-bar.webp" alt="" /><b>Bar</b>
                           </button>
-                          <button type="button" class="pa-type nk-option" role="radio" data-type="club">
-                            <img src="/ambiance/hero-nightclub.webp" alt="" />
-                            <span><b>Boîte de nuit</b><small>Soirées, DJ, vestiaire</small></span><i class="nk-radio"></i>
-                          </button>
-                          <button type="button" class="pa-type nk-option" role="radio" data-type="restaurant">
-                            <img src="/site/commerce-restaurant.webp" alt="" />
-                            <span><b>Restaurant</b><small>Service à table</small></span><i class="nk-radio"></i>
-                          </button>
-                          <button type="button" class="pa-type nk-option" role="radio" data-type="cafe">
-                            <img src="/site/ouverture-cafe.webp" alt="" />
-                            <span><b>Café</b><small>Coffee shop, salon de thé</small></span><i class="nk-radio"></i>
-                          </button>
-                          <button type="button" class="pa-type nk-option" role="radio" data-type="boulangerie">
-                            <img src="/site/commerce-boulangerie.webp" alt="" />
-                            <span><b>Boulangerie</b><small>Pain, viennoiseries, pâtisserie</small></span><i class="nk-radio"></i>
-                          </button>
-                          <button type="button" class="pa-type nk-option" role="radio" data-type="coiffeur">
-                            <img src="/site/commerce-coiffeur.webp" alt="" />
-                            <span><b>Coiffeur</b><small>Salon, barbier</small></span><i class="nk-radio"></i>
-                          </button>
-                          <button type="button" class="pa-type nk-option" role="radio" data-type="institut">
-                            <img src="/site/secteur-institut.webp" alt="" />
-                            <span><b>Institut de beauté</b><small>Soins, ongles, esthétique</small></span><i class="nk-radio"></i>
-                          </button>
-                          <button type="button" class="pa-type nk-option" role="radio" data-type="boutique">
-                            <img src="/site/secteur-boutique.webp" alt="" />
-                            <span><b>Boutique</b><small>Vêtements, déco, cadeaux</small></span><i class="nk-radio"></i>
-                          </button>
-                          <button type="button" class="pa-type nk-option" role="radio" data-type="other">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 5.5 5h13L20 10.5M4 10.5h16M4 10.5V19h16v-8.5M9.5 19v-5h5v5"/></svg>
-                            <span><b>Autre commerce</b><small>Tout le reste</small></span><i class="nk-radio"></i>
+                          <button type="button" class="pa-type nk-grand" role="radio" data-type="autre">
+                            <img src="/site/secteur-boutique.webp" alt="" /><b>Autre commerce</b>
                           </button>
                         </div>
+                        <label class="nk-champ nk-commerce" id="nk-commerce" hidden><span>Ton commerce</span><input id="pa-commerce" type="text" autocomplete="off" placeholder="Boulangerie, coiffeur, restaurant…" /></label>
                       </div>
                       <div class="nk-b">
                         <h1 class="pa-titre">Comment s'appelle ton établissement ?</h1>
@@ -9467,7 +9451,16 @@
          supplementaire pour ranger deux images au meme endroit. */
       $("#pa-photo-btn").addEventListener("click", async function () {
         var etab = clubAEcrire();
-        if (!etab) return;
+        if (!etab) {
+          // Avant : un clic muet, et le parcours bloque a « Ajoute une photo ».
+          if (!PARCOURS.apercu) {
+            direParcours("Ton établissement n'est pas encore créé. Reviens à la question précédente et touche Continuer.", true);
+            return;
+          }
+          var essai = await demanderUneImage();
+          if (essai) rendrePhotoParcours(URL.createObjectURL(essai));
+          return;
+        }
 
         var fichier = await demanderUneImage();
         if (!fichier) return;
@@ -9790,19 +9783,45 @@
 
       /* Le type choisi, et l'apercu de la carte telle que la boutique clubbeur la dessine. */
       var NOMS_TYPES = { bar: "Bar", club: "Boîte de nuit", restaurant: "Restaurant", cafe: "Café", boulangerie: "Boulangerie", coiffeur: "Coiffeur", institut: "Institut de beauté", boutique: "Boutique", other: "Commerce" };
+      /* Le texte tape sous « Autre commerce », rapproche d'un type connu : c'est
+         lui qui choisit le catalogue de recompenses. Rien de reconnu = "other". */
+      function devinerType(texte) {
+        var t = String(texte || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        if (!t.trim()) return "other";
+        var regles = [
+          ["club", /boite|disco|night|club|dancing/],
+          ["cafe", /cafe|coffee|salon de the|tea|cafeteria/],
+          ["boulangerie", /boulang|patiss|viennois|pain/],
+          ["restaurant", /resto|restau|pizz|brasserie|traiteur|snack|friterie|sushi|burger|kebab|bistro|cantine/],
+          ["coiffeur", /coif|barbi|barber/],
+          ["institut", /institut|beaute|esthet|ongle|nail|spa|massage|soin/],
+          ["boutique", /boutique|magasin|vetement|shop|fleur|cadeau|deco|librairie|bijou|chaussure/],
+          ["bar", /\bbar\b|pub|taverne|cocktail|biere/],
+        ];
+        for (var i = 0; i < regles.length; i++) if (regles[i][1].test(t)) return regles[i][0];
+        return "other";
+      }
+      function libelleTypeParcours() {
+        var tape = ($("#pa-commerce").value || "").trim();
+        if (PARCOURS.type !== "bar" && tape) return tape.charAt(0).toUpperCase() + tape.slice(1);
+        return NOMS_TYPES[PARCOURS.type] || "Bar";
+      }
       function choisirTypeParcours(type) {
         PARCOURS.type = type;
+        var carte = type === "bar" ? "bar" : "autre";
         document.querySelectorAll("#pa-types .pa-type").forEach(function (b) {
-          var oui = b.dataset.type === type;
+          var oui = b.dataset.type === carte;
           b.classList.toggle("choisi", oui);
           b.setAttribute("aria-checked", String(oui));
         });
+        $("#nk-commerce").hidden = carte !== "autre";
+        // A la reouverture (type deja en base), le champ reprend le nom du type.
+        var champ = $("#pa-commerce");
+        if (carte === "autre" && !champ.value.trim() && type !== "other") champ.value = NOMS_TYPES[type] || "";
       }
-      $("#pa-types").addEventListener("click", function (ev) {
-        var b = ev.target.closest(".pa-type");
-        if (!b) return;
-        var change = b.dataset.type !== typeDuParcours();
-        choisirTypeParcours(b.dataset.type);
+      function appliquerTypeParcours(type) {
+        var change = type !== typeDuParcours();
+        choisirTypeParcours(type);
         // Le catalogue suit le type (etape 4, donc rien n'est encore regle).
         if (change) {
           PARCOURS.typeChange = true;
@@ -9811,6 +9830,17 @@
           try { rendreChoixRecompenses(); } catch (e) {}
         }
         try { pvSynchro(); envoyerApercuBientot(); } catch (e) {}
+      }
+      $("#pa-types").addEventListener("click", function (ev) {
+        var b = ev.target.closest(".pa-type");
+        if (!b) return;
+        if (b.dataset.type === "bar") return appliquerTypeParcours("bar");
+        appliquerTypeParcours(devinerType($("#pa-commerce").value));
+        $("#pa-commerce").focus();
+      });
+      $("#pa-commerce").addEventListener("input", function () {
+        appliquerTypeParcours(devinerType(this.value));
+        nkFiche();
       });
 
       function rendreApercuParcours() {
@@ -10717,7 +10747,7 @@
         var nom = $("#pa-nom").value.trim();
         var ville = $("#pa-ville").value.trim();
         $("#nk-fiche-nom").textContent = nom || "Ton établissement";
-        $("#nk-fiche-ligne").textContent = [NOMS_TYPES[PARCOURS.type] || "Bar", ville].filter(Boolean).join(" · ");
+        $("#nk-fiche-ligne").textContent = [libelleTypeParcours(), ville].filter(Boolean).join(" · ");
         var photo = nkPhotoLieu() || ((etablissementCourant() || {}).logo_url) || null;
         var vignette = $("#nk-fiche-img");
         if (photo) { vignette.style.backgroundImage = "url(\"" + String(photo).replace(/"/g, "") + "\")"; vignette.innerHTML = ""; }

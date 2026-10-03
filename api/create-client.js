@@ -290,7 +290,9 @@ export default async function handler(request, response) {
   // LUI-MEME : ownerId/ownerEmail viennent du jeton verifie ci-dessus,
   // jamais du corps de la requete, pour qu'on ne puisse pas s'attribuer le
   // club de quelqu'un d'autre en passant un autre id.
-  if (!isAdmin) {
+  // ⚠️ Plus reserve aux non-admins (03/10/2026) : Julien teste le parcours
+  // avec son propre compte, qui tombait sur « Passe par une invitation ».
+  if (!action) {
     const dejaProprietaire = await supabase
       .from("establishment_owners")
       .select("establishment_id")
@@ -438,5 +440,5 @@ export default async function handler(request, response) {
   // lui-meme -- et deux portes, c'est une de trop a surveiller. Pour
   // ouvrir un club a quelqu'un : ?action=inviter, puis il cree son
   // compte lui-meme avec le lien.
-  return json(response, { error: "Passe par une invitation : ?action=inviter." }, 400);
+  return json(response, { error: "Action inconnue." }, 400);
 }
