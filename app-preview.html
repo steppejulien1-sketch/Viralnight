@@ -11377,8 +11377,11 @@ if (/[?&]apercu_photo=1(&|$)/.test(location.search)) {
 }
 // "club" -> "Boîte de nuit", "bar" -> "Bar" : juste en texte lisible
 // pour la ligne meta de la fiche.
+/* 03/10/2026 : tous les commerces, plus seulement bar / club / resto.
+   Memes cles que establishments.category cote gerants. */
+var NOMS_TYPES_LIEU = { club: "Boîte de nuit", bar: "Bar", restaurant: "Restaurant", cafe: "Café", boulangerie: "Boulangerie", coiffeur: "Coiffeur", institut: "Institut de beauté", boutique: "Boutique", other: "Commerce" };
 function libelleType(type) {
-  return type === "bar" ? "Bar" : "Boîte de nuit";
+  return NOMS_TYPES_LIEU[type] || "Boîte de nuit";
 }
 
 var BRUXELLES = [4.3517, 50.8503];
@@ -13401,7 +13404,7 @@ function poserPin(key) {
        que tu ecrives le nom de l'etablissement sur la terre en dessous de la
        position". Le nom reste dit au lecteur d'ecran (aria-label) et dans la
        fiche qui s'ouvre au toucher. */
-    el.setAttribute("aria-label", c.nom + " " + (c.type === "bar" ? "bar" : "boîte de nuit"));
+    el.setAttribute("aria-label", c.nom + " " + libelleType(c.type).toLowerCase());
     // Retour a notre propre fiche (pas l'iframe Google directement) :
     // Julien voulait "tomber direct sur la fiche" mais pas sur "Google
     // Maps" -- l'iframe embed EST Google Maps (juste sans cle API), ca
@@ -15713,7 +15716,7 @@ function rafraichirPhotosClubs() {
      pas d'epingle possible ; le gerant est prevenu dans son appli). */
 function lieuDepuisLigne(ligne) {
   var photos = Array.isArray(ligne.photos) ? ligne.photos.filter(Boolean) : [];
-  var type = ligne.category === "bar" || ligne.category === "restaurant" ? ligne.category : "club";
+  var type = NOMS_TYPES_LIEU[ligne.category] ? ligne.category : "club";
   return {
     nom: ligne.name, adr: ligne.address || ligne.city || "", c: ligne.primary_color || "#de3131",
     googleQuery: [ligne.name, ligne.address, ligne.city].filter(Boolean).join(", "),
@@ -17024,7 +17027,7 @@ function formaterDistance(km) {
 var POSITION_MOI = null;
 
 function typeEtablissement(c) {
-  return ({ club: "Boîte de nuit", bar: "Bar", restaurant: "Restaurant" })[c && c.type] || "";
+  return (c && NOMS_TYPES_LIEU[c.type]) || "";
 }
 
 function rendreListe() {

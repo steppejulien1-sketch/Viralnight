@@ -4751,6 +4751,30 @@
                             <img src="/site/commerce-restaurant.webp" alt="" />
                             <span><b>Restaurant</b><small>Service à table</small></span><i class="nk-radio"></i>
                           </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="cafe">
+                            <img src="/site/ouverture-cafe.webp" alt="" />
+                            <span><b>Café</b><small>Coffee shop, salon de thé</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="boulangerie">
+                            <img src="/site/commerce-boulangerie.webp" alt="" />
+                            <span><b>Boulangerie</b><small>Pain, viennoiseries, pâtisserie</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="coiffeur">
+                            <img src="/site/commerce-coiffeur.webp" alt="" />
+                            <span><b>Coiffeur</b><small>Salon, barbier</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="institut">
+                            <img src="/site/secteur-institut.webp" alt="" />
+                            <span><b>Institut de beauté</b><small>Soins, ongles, esthétique</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="boutique">
+                            <img src="/site/secteur-boutique.webp" alt="" />
+                            <span><b>Boutique</b><small>Vêtements, déco, cadeaux</small></span><i class="nk-radio"></i>
+                          </button>
+                          <button type="button" class="pa-type nk-option" role="radio" data-type="other">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 5.5 5h13L20 10.5M4 10.5h16M4 10.5V19h16v-8.5M9.5 19v-5h5v5"/></svg>
+                            <span><b>Autre commerce</b><small>Tout le reste</small></span><i class="nk-radio"></i>
+                          </button>
                         </div>
                       </div>
                       <div class="nk-b">
@@ -6986,7 +7010,7 @@
          d'animations, d'images, des trucs comme le telephone ». Les donnees et
          la logique ne bougent pas : ces fonctions posent la photo du club, et
          des telephones dessines qui montrent ce que voient les clubbeurs. */
-      var TYPES_ETAB = { bar: "Bar", club: "Boîte de nuit", restaurant: "Restaurant" };
+      var TYPES_ETAB = { bar: "Bar", club: "Boîte de nuit", restaurant: "Restaurant", cafe: "Café", boulangerie: "Boulangerie", coiffeur: "Coiffeur", institut: "Institut de beauté", boutique: "Boutique", other: "Commerce" };
       function couvertureEtab(etab) {
         var photos = etab && Array.isArray(etab.photos) ? etab.photos.filter(Boolean) : [];
         return (etab && etab.logo_url) || photos[0] || "/clubs/couverture-par-defaut.webp";
@@ -8838,6 +8862,57 @@
         { titre: "Cocktail offert",  points: 130, famille: "bar",   foto: "/recompenses/art-cocktail.webp" },
       ];
 
+      /* 03/10/2026 : Noctify s'ouvre a tous les commerces. Un coiffeur ne
+         donne pas de shot : chaque type a son catalogue. Seuls les quatre
+         du club ont un dessin cote clubbeur (choisi par le titre) ; pour
+         les autres, `ecrire` fait passer la photo en base (image_url),
+         sinon la boutique clubbeur retomberait sur un verre a cocktail. */
+      var CADEAU = "/recompenses/art-cadeau.webp";
+      var CATALOGUES = {
+        club: CATALOGUE,
+        bar: CATALOGUE.slice(1),
+        restaurant: [
+          { titre: "Café offert",       points: 50,  famille: "bar", foto: "/site/recompenses/cappuccino.webp", ecrire: true },
+          { titre: "Apéritif offert",   points: 100, famille: "bar", foto: "/site/recompenses/cocktail.webp",   ecrire: true },
+          { titre: "Dessert offert",    points: 120, famille: "bar", foto: "/site/recompenses/tiramisu.webp",   ecrire: true },
+        ],
+        cafe: [
+          { titre: "Croissant offert",        points: 40, famille: "bar", foto: "/site/recompenses/croissant.webp",  ecrire: true },
+          { titre: "Cappuccino offert",       points: 60, famille: "bar", foto: "/site/recompenses/cappuccino.webp", ecrire: true },
+          { titre: "Part de gâteau offerte",  points: 90, famille: "bar", foto: "/site/recompenses/cheesecake.webp", ecrire: true },
+        ],
+        boulangerie: [
+          { titre: "Croissant offert",     points: 40, famille: "bar", foto: "/site/recompenses/croissant.webp",   ecrire: true },
+          { titre: "Café offert",          points: 50, famille: "bar", foto: "/site/recompenses/cappuccino2.webp", ecrire: true },
+          { titre: "Pâtisserie offerte",   points: 90, famille: "bar", foto: "/site/recompenses/cheesecake.webp",  ecrire: true },
+        ],
+        coiffeur: [
+          { titre: "Soin offert",                   points: 100, famille: "acces", foto: CADEAU, ecrire: true },
+          { titre: "-10 % sur la prochaine coupe",  points: 150, famille: "acces", foto: CADEAU, ecrire: true },
+        ],
+        institut: [
+          { titre: "Soin offert",                  points: 120, famille: "acces", foto: CADEAU, ecrire: true },
+          { titre: "-10 % sur le prochain soin",   points: 150, famille: "acces", foto: CADEAU, ecrire: true },
+        ],
+        boutique: [
+          { titre: "Petit cadeau offert",           points: 100, famille: "acces", foto: CADEAU, ecrire: true },
+          { titre: "-10 % sur le prochain achat",   points: 150, famille: "acces", foto: CADEAU, ecrire: true },
+        ],
+        other: [
+          { titre: "Petit cadeau offert",            points: 100, famille: "acces", foto: CADEAU, ecrire: true },
+          { titre: "-10 % sur la prochaine visite",  points: 150, famille: "acces", foto: CADEAU, ecrire: true },
+        ],
+      };
+      function catalogueDuType(type) { return CATALOGUES[type] || CATALOGUE; }
+      function typeDuParcours() { return PARCOURS.type || (etablissementCourant() || {}).category || "club"; }
+      // image_url doit etre une adresse complete : l'appli clubbeur la lit telle quelle.
+      function fotoCatalogue(item) { return item.ecrire ? new URL(item.foto, location.href).href : item.foto; }
+      function choixDuCatalogue() {
+        return catalogueDuType(typeDuParcours()).map(function (c) {
+          return { titre: c.titre, famille: c.famille, foto: fotoCatalogue(c), photoPerso: !!c.ecrire, points: c.points, rewardId: null, prise: true };
+        });
+      }
+
       /* Rapproche un titre du catalogue d'un titre deja en base :
          "Acces VIP" et "Accès VIP" sont la meme recompense, et le club
          ne doit pas se retrouver avec les deux. */
@@ -9025,7 +9100,7 @@
           $("#pa-tel").value = sien.phone || "";
           $("#pa-adresse").value = sien.address || "";
           montrerManuel(!!(sien.address || PARCOURS.seule));
-          choisirTypeParcours(sien.category === "bar" || sien.category === "restaurant" ? sien.category : "club");
+          choisirTypeParcours(NOMS_TYPES[sien.category] ? sien.category : "club");
           rendrePhotoParcours(sien.logo_url || null);
         } else {
           // Compte sans club : les champs partent VIDES, avec leurs
@@ -9714,7 +9789,7 @@
       }
 
       /* Le type choisi, et l'apercu de la carte telle que la boutique clubbeur la dessine. */
-      var NOMS_TYPES = { bar: "Bar", club: "Boîte de nuit", restaurant: "Restaurant" };
+      var NOMS_TYPES = { bar: "Bar", club: "Boîte de nuit", restaurant: "Restaurant", cafe: "Café", boulangerie: "Boulangerie", coiffeur: "Coiffeur", institut: "Institut de beauté", boutique: "Boutique", other: "Commerce" };
       function choisirTypeParcours(type) {
         PARCOURS.type = type;
         document.querySelectorAll("#pa-types .pa-type").forEach(function (b) {
@@ -9726,7 +9801,15 @@
       $("#pa-types").addEventListener("click", function (ev) {
         var b = ev.target.closest(".pa-type");
         if (!b) return;
+        var change = b.dataset.type !== typeDuParcours();
         choisirTypeParcours(b.dataset.type);
+        // Le catalogue suit le type (etape 4, donc rien n'est encore regle).
+        if (change) {
+          PARCOURS.typeChange = true;
+          if (ETAT.data && ETAT.data.rewards) construireChoixRecompenses();
+          else PARCOURS.choix = choixDuCatalogue();
+          try { rendreChoixRecompenses(); } catch (e) {}
+        }
         try { pvSynchro(); envoyerApercuBientot(); } catch (e) {}
       });
 
@@ -9754,8 +9837,17 @@
         var existantes = getActiveRewards(ETAT.data.rewards || []);
         var choix = [];
         var reprises = {};
+        var catalogue = catalogueDuType(typeDuParcours());
+        // Les titres des AUTRES catalogues : quand le gerant vient de changer
+        // de type, les recompenses posees d'office a l'inscription (shot,
+        // pinte...) partent decochees au lieu de rester dans sa boutique.
+        var etrangers = {};
+        if (PARCOURS.typeChange) Object.keys(CATALOGUES).forEach(function (t) {
+          CATALOGUES[t].forEach(function (i) { etrangers[normaliserTitre(i.titre)] = true; });
+        });
+        catalogue.forEach(function (i) { delete etrangers[normaliserTitre(i.titre)]; });
 
-        CATALOGUE.forEach(function (item) {
+        catalogue.forEach(function (item) {
           var deja = existantes.find(function (r) {
             return normaliserTitre(r.title) === normaliserTitre(item.titre);
           });
@@ -9764,14 +9856,14 @@
           choix.push({
             titre: item.titre,
             famille: item.famille,
-            foto: (deja && deja.image_url) || item.foto,
+            foto: (deja && deja.image_url) || fotoCatalogue(item),
             // Une photo televersee ici sera ecrite en base ; le dessin par
             // defaut du catalogue, non -- il est deja choisi cote clubbeur
             // a partir du titre.
-            photoPerso: !!(deja && deja.image_url),
+            photoPerso: !!((deja && deja.image_url) || item.ecrire),
             points: deja ? Number(deja.points_required || 0) : item.points,
             rewardId: deja ? deja.id : null,
-            prise: !!deja,
+            prise: !!deja || !!PARCOURS.typeChange,
           });
         });
 
@@ -9787,7 +9879,7 @@
             photoPerso: !!r.image_url,
             points: Number(r.points_required || 0),
             rewardId: r.id,
-            prise: true,
+            prise: !etrangers[normaliserTitre(r.title)],
           });
         });
 
@@ -10658,9 +10750,7 @@
         $("#parcours").hidden = false;
         $("#parcours").classList.remove("pa-seule");
         if (ETAT.data && ETAT.data.rewards) construireChoixRecompenses();
-        else PARCOURS.choix = CATALOGUE.map(function (c) {
-          return { titre: c.titre, famille: c.famille, foto: c.foto, photoPerso: false, points: c.points, rewardId: null, prise: true };
-        });
+        else PARCOURS.choix = choixDuCatalogue();
         rendreChoixRecompenses();
         if (!PARCOURS.type) choisirTypeParcours("bar");
         PARCOURS.pas = 2;
