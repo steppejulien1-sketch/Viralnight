@@ -4232,7 +4232,7 @@
       .nk-barre i.faite::after { transform: scaleX(1); }
       .pa-seule .nk-tete-c { visibility: hidden; }
       #parcours .pa-texte { padding: 22px 24px 28px; }
-      #parcours .pa-etape.pv .pa-titre { font-family: var(--titre); font-size: 28px; font-weight: 700; letter-spacing: -.022em; line-height: 1.12; margin: 0 0 10px; text-wrap: balance; max-width: none; }
+      #parcours .pa-etape.pv .pa-titre { font-family: var(--titre); font-size: 30px; font-weight: 700; letter-spacing: -.022em; line-height: 1.12; margin: 0 0 10px; text-wrap: balance; max-width: none; }
       #parcours .pa-etape.pv .pa-sous { color: var(--nk-sub); font-size: 15.5px; line-height: 1.5; margin: 0 0 26px; max-width: 34ch; }
       #parcours .pa-etape.pv .pa-titre + :not(.pa-sous) { margin-top: 22px; }
       #parcours .pa-etape.pv:not([hidden]) > *, #parcours .nk-p2:not([hidden]) .nk-a > *, #parcours .nk-p2.nk-en-b .nk-b > * { animation: nkMonte .5s cubic-bezier(.16, 1, .3, 1) both; }
@@ -4261,11 +4261,12 @@
       .nk-options { display: grid; gap: 12px; }
       .nk-type-lien { display: none; }
       #parcours.pa-seule .nk-type-lien { display: inline-block; margin: 0 0 18px; padding: 0; border: 0; background: none; color: #111114; font-size: 14.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #c9c9d1; cursor: pointer; }
-      #parcours .nk-option { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px 18px; border: 1px solid var(--nk-ligne); border-radius: 14px; background: #fff; text-align: left; cursor: pointer;
+      #parcours .nk-option { display: flex; align-items: center; gap: 16px; width: 100%; padding: 12px 18px 12px 12px; border: 1px solid var(--nk-ligne); border-radius: 14px; background: #fff; text-align: left; cursor: pointer;
         color: var(--nk-ink); font: inherit; transition: border-color .2s, background-color .2s, box-shadow .2s; }
       #parcours .nk-option { flex-direction: row; justify-content: flex-start; height: auto; min-height: 0; aspect-ratio: auto; }
       #parcours .nk-option > span { align-items: flex-start; text-align: left; }
       #parcours .nk-option:active { transform: scale(.99); }
+      #parcours .nk-option > img { width: 56px; height: 56px; flex: none; border-radius: 12px; object-fit: cover; }
       #parcours .nk-option > svg { width: 28px; height: 28px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
       #parcours .nk-option > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
       #parcours .nk-option b { font-size: 16.5px; font-weight: 650; }
@@ -4344,8 +4345,12 @@
       .nk-fin > :nth-child(3) { animation-delay: .16s; }
       .nk-fin > :nth-child(4) { animation-delay: .24s; }
       .nk-fin > :nth-child(5) { animation-delay: .32s; }
+      .nk-fin > .nk-fin-photo { animation: none; }
       .nk-fin h1 { margin: 0 0 10px; font-family: var(--titre); font-size: 30px; font-weight: 700; letter-spacing: -.025em; line-height: 1.1; text-wrap: balance; }
       .nk-fin > p { margin: 0 0 28px; color: #6b6c75; font-size: 15.5px; line-height: 1.5; }
+      .nk-fin-photo { margin: calc(-56px - env(safe-area-inset-top)) -24px 24px; height: 38vh; min-height: 220px; position: relative; overflow: hidden; }
+      .nk-fin-photo img { width: 100%; height: 100%; object-fit: cover; display: block; animation: nkFondu .9s cubic-bezier(.16, 1, .3, 1) both; }
+      .nk-fin-photo::after { content: ""; position: absolute; inset: auto 0 0; height: 70px; background: linear-gradient(180deg, rgba(255,255,255,0), #fff); }
       .nk-fin-carte { border-radius: 18px; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(17,17,20,.06), 0 18px 40px -22px rgba(17,17,20,.4); }
       .nk-fin-carte img { display: block; width: 100%; aspect-ratio: 16/10; object-fit: cover; background: #ececf1; }
       .nk-fin-carte div { padding: 14px 16px 16px; }
@@ -4674,6 +4679,8 @@
                              gerant qui n'avait pas recu son e-mail restait enferme
                              sur ce seul ecran, sans onglets, sans retour. -->
                         <button type="button" class="ac-bascule" id="accueil-demo">Voir l'appli avec des chiffres d'exemple</button>
+                        <!-- 03/10/2026, Julien : « laisse-moi voir tout le parcours, flemme de remplir ». -->
+                        <button type="button" class="ac-bascule" id="accueil-parcours">Voir le parcours sans rien remplir</button>
                       </div>
 
                       <!-- ⚠️ LE CODE A SIX CHIFFRES, COMME CHEZ LES CLUBBEURS
@@ -4733,15 +4740,15 @@
                         <h1 class="pa-titre">Quel type d'établissement ?</h1>
                         <div id="pa-types" class="nk-options" role="radiogroup" aria-label="Type d'établissement">
                           <button type="button" class="pa-type nk-option" role="radio" data-type="bar">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14l-7 8.5zM12 12.5V20M8 20h8M7.6 7h8.8"/></svg>
+                            <img src="/site/commerce-bar.webp" alt="" />
                             <span><b>Bar</b><small>Cocktails, bières, apéro</small></span><i class="nk-radio"></i>
                           </button>
                           <button type="button" class="pa-type nk-option" role="radio" data-type="club">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.5v2.6M12 17.9v2.6M3.5 12h2.6M17.9 12h2.6"/></svg>
+                            <img src="/ambiance/hero-nightclub.webp" alt="" />
                             <span><b>Boîte de nuit</b><small>Soirées, DJ, vestiaire</small></span><i class="nk-radio"></i>
                           </button>
                           <button type="button" class="pa-type nk-option" role="radio" data-type="restaurant">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M5 3v5M9 3v5M17 3c-2 0-3 2-3 5s1 4 3 4v9"/></svg>
+                            <img src="/site/commerce-restaurant.webp" alt="" />
                             <span><b>Restaurant</b><small>Service à table</small></span><i class="nk-radio"></i>
                           </button>
                         </div>
@@ -9192,11 +9199,19 @@
         allerAuPas(PARCOURS.pas - 1);
       });
 
-      $("#pa-passer").addEventListener("click", function () { fermerParcours(true); });
+      $("#pa-passer").addEventListener("click", function () {
+        if (PARCOURS.apercu) return nkQuitterApercu();
+        fermerParcours(true);
+      });
 
       $("#pa-suivant").addEventListener("click", async function (ev) {
         // Etape 2 : le type d'abord, puis le nom -- rien ne s'enregistre entre les deux.
         if (PARCOURS.pas === 2 && !nkEnB()) return nkPas2(true);
+        // Visite sans compte : on avance sans rien enregistrer, et la fin ramene a l'accueil.
+        if (PARCOURS.apercu) {
+          if (PARCOURS.pas >= PAS_MAX) { feterFinParcours(); return nkQuitterApercu(); }
+          return allerAuPas(PARCOURS.pas + 1);
+        }
         var bouton = ev.currentTarget;
         var seule = PARCOURS.seule;
         var dernier = seule ? PARCOURS.pas >= PARCOURS.finSeule : PARCOURS.pas === PAS_MAX;
@@ -10633,15 +10648,51 @@
       $("#pa-types").addEventListener("click", function (ev) { if (ev.target.closest(".pa-type")) nkFiche(); });
       $("#nk-type-lien").addEventListener("click", function () { nkPas2(false); });
 
+      /* ---- La visite du parcours sans compte (03/10/2026) ----
+         Julien veut tout voir sans remplir : chaque ecran s'affiche avec ses
+         vrais champs, « Continuer » avance sans rien ecrire en base. */
+      function nkApercu() {
+        PARCOURS.apercu = true;
+        PARCOURS.seule = false;
+        PARCOURS.ouvert = true;
+        $("#parcours").hidden = false;
+        $("#parcours").classList.remove("pa-seule");
+        if (ETAT.data && ETAT.data.rewards) construireChoixRecompenses();
+        else PARCOURS.choix = CATALOGUE.map(function (c) {
+          return { titre: c.titre, famille: c.famille, foto: c.foto, photoPerso: false, points: c.points, rewardId: null, prise: true };
+        });
+        rendreChoixRecompenses();
+        if (!PARCOURS.type) choisirTypeParcours("bar");
+        PARCOURS.pas = 2;
+        poserPas(2);
+        $("#pa-passer").hidden = false;
+        $("#pa-passer").textContent = "Quitter";
+      }
+      function nkQuitterApercu() {
+        PARCOURS.apercu = false;
+        PARCOURS.pas = 1;
+        poserPas(1);
+      }
+      $("#accueil-parcours").addEventListener("click", nkApercu);
+      // Lien direct : club-app.html?parcours=apercu
+      if (/[?&]parcours=apercu/.test(location.search)) {
+        (function attendreAccueil(essais) {
+          if (PARCOURS.pas === 1 && !$("#parcours").hidden) return nkApercu();
+          if (essais > 0) setTimeout(function () { attendreAccueil(essais - 1); }, 250);
+        })(40);
+      }
+
       function nkPoser(cible) {
         if (cible === 2) nkPas2(PARCOURS.seule && PARCOURS.finSeule === 2 ? true : $("#pa-nom").value.trim().length > 0);
         if (cible > 1) nkCompteur();
+        if (PARCOURS.apercu && cible > 1) { $("#pa-passer").hidden = false; $("#pa-passer").textContent = "Quitter"; }
       }
 
       /* La fin : la fiche telle que les clients la voient, ce qui est pret,
          et un bouton. Le tableau de bord est deja pret dessous. */
       function feterFinParcours() {
-        var etab = etablissementCourant() || {};
+        // En visite sans compte, pas de club d'exemple sur la fin : ce que la personne a tape, ou rien.
+        var etab = (!PARCOURS.apercu && etablissementCourant()) || {};
         var nom = ($("#pa-nom") && $("#pa-nom").value.trim()) || etab.name || "Ton établissement";
         var ville = ($("#pa-ville") && $("#pa-ville").value.trim()) || etab.city || "";
         var photo = nkPhotoLieu() || etab.logo_url || "/ambiance/hero-nightclub.webp";
@@ -10657,10 +10708,10 @@
         var fin = document.createElement("div");
         fin.className = "nk-fin";
         fin.innerHTML =
+          '<div class="nk-fin-photo"><img src="' + escapeHtml(photo) + '" alt="" /></div>' +
           "<h1>" + escapeHtml(nom) + " est sur Noctify</h1>" +
           "<p>Tes clients peuvent déjà te trouver et gagner des points chez toi.</p>" +
-          '<div class="nk-fin-carte"><img src="' + escapeHtml(photo) + '" alt="" /><div><b>' + escapeHtml(nom) + "</b><span>" +
-            escapeHtml([NOMS_TYPES[PARCOURS.type] || "Bar", ville].filter(Boolean).join(" · ")) + "</span></div></div>" +
+
           '<ul class="nk-pret">' + lignes.map(function (l) {
             return '<li class="' + (l[0] ? "" : "attente") + '">' + (l[0] ? NK_COCHE : NK_ATTENTE) + "<span>" + escapeHtml(l[1]) + "</span>" +
               (l[2] ? "<small>" + escapeHtml(l[2]) + "</small>" : "") + "</li>";
