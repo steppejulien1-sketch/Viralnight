@@ -1090,8 +1090,12 @@ async function donneesOffres(c) {
   if (consent.error) throw new Error(consent.error.message);
   const derniere = new Map();
   for (const v of visites.data || []) if (!derniere.has(v.user_id)) derniere.set(v.user_id, v.created_at);
+  // 03/10/2026 : accord donne a la creation du compte. Recoivent : les clients
+  // venus ici (et ceux qui avaient coche la case), sauf ceux qui ont dit non.
+  const { data: refusLignes } = await c.clubbeur.from("consentements_offres").select("user_id").eq("club_id", c.club.id).eq("accepte", false).limit(20000);
+  const refus = new Set((refusLignes || []).map((x) => x.user_id));
   return {
-    consentis: (consent.data || []).map((x) => x.user_id),
+    consentis: [...new Set([...(consent.data || []).map((x) => x.user_id), ...derniere.keys()])].filter((id) => !refus.has(id)),
     derniere,
     historique: histo.data || [],
   };

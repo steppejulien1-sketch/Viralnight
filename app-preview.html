@@ -2252,6 +2252,7 @@
         transition: transform .15s ease;
       }
       .rg-switch.on { background: var(--accent); }
+      .ac-cgu { margin: 14px 4px 0; font-size: calc(12 * var(--u)); line-height: 1.45; color: var(--ink3, #8a8a90); text-align: center; }
       /* 30/09/2026 : l'accord pour les offres par e-mail d'un lieu, en bas de sa page. */
       .vb-offres { display: flex; align-items: center; gap: 14px; margin: 26px 0 8px; padding: 16px 0; border-top: 1px solid var(--line, rgba(0,0,0,.08)); }
       .vb-offres-txt { flex: 1; min-width: 0; }
@@ -6969,6 +6970,8 @@
             <input type="email" class="ac-input" id="ac-email" name="email" placeholder="ton@email.com" autocomplete="username" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" />
             <button type="button" class="ac-btn ac-btn-marque" id="ac-email-submit">Continuer avec l’email</button>
             <p class="ac-msg" id="ac-msg" role="alert" hidden></p>
+            <!-- 03/10/2026 : l'acceptation passe par la creation du compte (Julien). -->
+            <p class="ac-cgu">En continuant, tu acceptes les conditions d'utilisation et de recevoir par e-mail les offres des lieux où tu vas. Tu te désabonnes en un clic.</p>
           </div>
         </div>
 
@@ -8179,6 +8182,13 @@
               Le traitement des données personnelles est décrit dans la politique de
               confidentialité, accessible depuis les Réglages, qui fait partie intégrante des
               présentes conditions.
+            </p>
+            <p>
+              En créant un compte, l'Utilisateur accepte de recevoir par e-mail les offres et
+              rappels de points des établissements où il a scanné un QR code, envoyés par
+              Noctify. Chaque e-mail contient un lien pour se désabonner en un clic ;
+              l'Utilisateur peut aussi les arrêter depuis la page de l'établissement.
+              L'établissement ne voit jamais son adresse e-mail.
             </p>
 
             <h2>Article 13 — Modification des conditions</h2>
@@ -17241,7 +17251,9 @@ async function brancherOffresEmail(idLieu, nomLieu) {
   var res = await supabaseClubbeur.from("consentements_offres").select("accepte").eq("club_id", idLieu).maybeSingle();
   // Table absente (base sans la 0060) ou reseau coupe : on ne montre rien.
   if (res.error || OFFRES_LIEU_EN_COURS !== idLieu) return;
-  var actif = !!(res.data && res.data.accepte);
+  // 03/10/2026 : inscrit d'office (accepte a la creation du compte) ; seul un
+  // « non » explicite, ici ou par le lien de l'e-mail, l'arrete.
+  var actif = res.data ? !!res.data.accepte : true;
 
   var ligne = document.createElement("div");
   ligne.className = "vb-offres";
@@ -17250,7 +17262,7 @@ async function brancherOffresEmail(idLieu, nomLieu) {
   var titre = document.createElement("b");
   titre.textContent = "Recevoir ses offres par e-mail";
   var sous = document.createElement("small");
-  sous.textContent = nomLieu + " t'envoie ses offres, un e-mail par jour au maximum. Tu arrêtes quand tu veux.";
+  sous.textContent = nomLieu + " t'envoie ses offres et où tu en es de tes points. Tu arrêtes quand tu veux.";
   txt.append(titre, sous);
   var bascule = document.createElement("button");
   bascule.type = "button";
