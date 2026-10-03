@@ -36,6 +36,7 @@ import { verifierChallengeWebhook, extraireMentionsStory, signatureValide } from
 import { normaliserHandle } from "../lib/points/mentionAutomatique.js";
 import { deciderStory } from "../lib/admin/deciderContenu.js";
 import { deciderSortStory, SORTS } from "../lib/points/verificationStory.js";
+import { envoyerRappelsAuto } from "../lib/offres/envoyerRappels.js";
 
 function json(response, body, status = 200) {
   response.statusCode = status;
@@ -633,6 +634,30 @@ async function actionCollecterAbonnes(request, response) {
  * La decision vit dans lib/points/verificationStory.js, testee en Node ; ici
  * on ne fait que la rassembler et l'appliquer.
  */
+/* Le cron de 18 h porte aussi les e-mails automatiques des commerces
+   (03/10/2026, lib/offres/rappels.js) : un cron de plus aurait depasse ce
+   que le plan Hobby autorise. Un echec des e-mails ne bloque jamais la
+   verification des stories. */
+async function actionCronDuSoir(request, response) {
+  if (request.method === "GET" && verifierAppelCron(request).ok) {
+    try {
+      const nomLieu = (n) => (n === "Mirage" ? "Mirano" : n || "Ton établissement");
+      const r = await envoyerRappelsAuto({
+        clubbeur: getSupabaseClubbeurAdmin(),
+        apiKey: process.env.RESEND_API_KEY,
+        from: process.env.OFFRES_FROM || process.env.NOTIFICATION_FROM,
+        secret: process.env.OFFRES_EMAIL_SECRET || process.env.SUPABASE_CLUBBEUR_SERVICE_ROLE_KEY || "",
+        site: process.env.SITE_URL || "https://viralnight-koif.vercel.app",
+        nomLieu,
+      });
+      console.log("[rappels-auto]", JSON.stringify(r));
+    } catch (e) {
+      console.error("[rappels-auto] echec:", e?.message || e);
+    }
+  }
+  return actionVerifierStories(request, response);
+}
+
 async function actionVerifierStories(request, response) {
   if (request.method !== "GET") return json(response, { error: "Methode non supportee." }, 405);
   const cron = verifierAppelCron(request);
@@ -711,7 +736,7 @@ const ACTIONS = {
   status: actionStatus,
   webhook: actionWebhook,
   "collecter-abonnes": actionCollecterAbonnes,
-  "verifier-stories": actionVerifierStories,
+  "verifier-stories": actionCronDuSoir,
 };
 
 export default async function handler(request, response) {

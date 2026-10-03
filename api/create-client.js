@@ -23,42 +23,38 @@ const defaultRewards = [
    connait pas. Un coiffeur ne doit pas demarrer avec un shot offert.
    `photo` part en image_url (adresse complete) : seuls les titres du club
    ont un dessin cote clubbeur, les autres retomberaient sur un verre. */
-const CADEAU = "/recompenses/art-cadeau.webp";
-const recompense = (title, points_required, category, photo) => ({ title, points_required, max_redemptions: 50, category, photo });
+// 03/10/2026 (soir) : des recompenses concretes de restauration, plus de
+// « -10 % » ni de « petit cadeau ». Les types hors restauration prennent
+// le catalogue du restaurant (Julien se concentre sur restos et bars).
+const recompense = (title, points_required, max_redemptions, photo) => ({ title, points_required, max_redemptions, category: "bar", photo });
+const RESTO = [
+  recompense("Café offert", 50, 50, "/site/recompenses/cappuccino.webp"),
+  recompense("Bière offerte", 70, 50, "/site/recompenses/biere.webp"),
+  recompense("Dessert offert", 120, 30, "/site/recompenses/tiramisu.webp"),
+  recompense("Menu offert", 400, 10, "/site/recompenses/pizza.webp"),
+];
 const RECOMPENSES_PAR_TYPE = {
   club: defaultRewards,
-  bar: defaultRewards.slice(1),
-  restaurant: [
-    recompense("Café offert", 50, "bar", "/site/recompenses/cappuccino.webp"),
-    recompense("Apéritif offert", 100, "bar", "/site/recompenses/cocktail.webp"),
-    recompense("Dessert offert", 120, "bar", "/site/recompenses/tiramisu.webp"),
+  bar: [
+    recompense("Bière offerte", 70, 50, "/site/recompenses/biere.webp"),
+    { title: "Shot offert", points_required: 60, max_redemptions: 50, category: "bar" },
+    { title: "Cocktail offert", points_required: 130, max_redemptions: 25, category: "bar" },
   ],
+  restaurant: RESTO,
   cafe: [
-    recompense("Croissant offert", 40, "bar", "/site/recompenses/croissant.webp"),
-    recompense("Cappuccino offert", 60, "bar", "/site/recompenses/cappuccino.webp"),
-    recompense("Part de gâteau offerte", 90, "bar", "/site/recompenses/cheesecake.webp"),
+    recompense("Croissant offert", 40, 50, "/site/recompenses/croissant.webp"),
+    recompense("Cappuccino offert", 60, 50, "/site/recompenses/cappuccino.webp"),
+    recompense("Part de gâteau offerte", 90, 30, "/site/recompenses/cheesecake.webp"),
   ],
   boulangerie: [
-    recompense("Croissant offert", 40, "bar", "/site/recompenses/croissant.webp"),
-    recompense("Café offert", 50, "bar", "/site/recompenses/cappuccino2.webp"),
-    recompense("Pâtisserie offerte", 90, "bar", "/site/recompenses/cheesecake.webp"),
+    recompense("Croissant offert", 40, 50, "/site/recompenses/croissant.webp"),
+    recompense("Café offert", 50, 50, "/site/recompenses/cappuccino2.webp"),
+    recompense("Pâtisserie offerte", 90, 30, "/site/recompenses/cheesecake.webp"),
   ],
-  coiffeur: [
-    recompense("Soin offert", 100, "acces", CADEAU),
-    recompense("-10 % sur la prochaine coupe", 150, "acces", CADEAU),
-  ],
-  institut: [
-    recompense("Soin offert", 120, "acces", CADEAU),
-    recompense("-10 % sur le prochain soin", 150, "acces", CADEAU),
-  ],
-  boutique: [
-    recompense("Petit cadeau offert", 100, "acces", CADEAU),
-    recompense("-10 % sur le prochain achat", 150, "acces", CADEAU),
-  ],
-  other: [
-    recompense("Petit cadeau offert", 100, "acces", CADEAU),
-    recompense("-10 % sur la prochaine visite", 150, "acces", CADEAU),
-  ],
+  coiffeur: RESTO,
+  institut: RESTO,
+  boutique: RESTO,
+  other: RESTO,
 };
 
 function json(response, body, status = 200) {
