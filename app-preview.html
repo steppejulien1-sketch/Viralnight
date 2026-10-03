@@ -16715,6 +16715,20 @@ function ouMontrer(famille) {
   return "Montre ce bon au bar ou à l'entrée";
 }
 
+/* 03/10/2026 : tous les commerces. « Valable ce soir », « montre ce bon
+   au bar » : juste pour un bar ou une boite, faux chez un coiffeur ou une
+   boulangerie. Le type du lieu (item.bar.type, voir lieuDepuisLigne)
+   decide ; sans type connu, on garde les phrases de la nuit. */
+var OU_MONTRER_JOUR = { restaurant: "Au serveur", cafe: "Au comptoir", boulangerie: "Au comptoir", coiffeur: "À l'accueil", institut: "À l'accueil", boutique: "En caisse", other: "En caisse" };
+function bonDeJour(item) { return !!(item && item.bar && OU_MONTRER_JOUR[item.bar.type]); }
+function quandBon(item) { return bonDeJour(item) ? "aujourd'hui" : "ce soir"; }
+function lieuBon(item) {
+  if (bonDeJour(item)) return OU_MONTRER_JOUR[item.bar.type];
+  return item.fam === "bar" ? "Au bar"
+    : (item.fam === "acces" || item.fam === "vip") ? "À l'entrée"
+    : "Au bar ou à l'entrée";
+}
+
 function completerRecompense(r, index, prefixe) {
   var remplace = REMPLACEMENTS[r.title];
   if (remplace) {
@@ -16785,6 +16799,7 @@ async function chargerRecompenses() {
           var reco = completerRecompense(r, i, prefixe);
           // Le lieu de la recompense : c'est lui que la fiche du bon nomme.
           reco.bar = CLUBS[k];
+          if (bonDeJour(reco)) reco.regles = ["Valable aujourd'hui", "Montre ce bon " + lieuBon(reco).toLowerCase()];
           return reco;
         });
         RECOMPENSES_PAR_CLUB[k] = liste;
@@ -17791,8 +17806,8 @@ function ouvrirRecompense(item, src) {
 
   var cta, note;
   if (epuise) {
-    cta = '<button class="sheet-cta" type="button" disabled>Épuisé pour ce soir</button>';
-    note = "Le club recharge ses stocks chaque soirée.";
+    cta = '<button class="sheet-cta" type="button" disabled>Épuisé pour ' + quandBon(item) + "</button>";
+    note = bonDeJour(item) ? "" : "Le club recharge ses stocks chaque soirée.";
   } else if (loin) {
     cta = '<button class="sheet-cta" type="button" disabled>Encore ' + nb(item.cout - ETAT.solde) + " pts</button>";
     /* ⚠️ PAS DE NOTE ICI. Julien, 11/09/2026 : "retire le une story
@@ -17812,10 +17827,10 @@ function ouvrirRecompense(item, src) {
     note = "Ce club n'a pas encore activé son offre du soir.";
   } else if (item.cout === 0) {
     cta = '<button class="sheet-cta" id="sh-cta" type="button">Récupérer mon bon</button>';
-    note = "Offert ce soir, ton solde ne bouge pas.";
+    note = "Offert " + quandBon(item) + ", ton solde ne bouge pas.";
   } else {
     cta = '<button class="sheet-cta" id="sh-cta" type="button">Échanger · ' + nb(item.cout) + " pts</button>";
-    note = "Il te restera <em>" + nb(ETAT.solde - item.cout) + " pts</em> ce soir.";
+    note = "Il te restera <em>" + nb(ETAT.solde - item.cout) + " pts</em> " + quandBon(item) + ".";
   }
 
   /* ⚠️ LA FICHE DUSK : "UNLOCKING THIS REWARD". Julien avait trouve
@@ -17827,16 +17842,14 @@ function ouvrirRecompense(item, src) {
      Les deux coches d'avant ("Valable ce soir", "Montre ce bon au bar")
      disaient la meme chose sans l'ordonner : dans quel ordre, a quel
      moment, avec quoi dans la main. */
-  var lieu = item.fam === "bar" ? "Au bar"
-    : (item.fam === "acces" || item.fam === "vip") ? "À l'entrée"
-    : "Au bar ou à l'entrée";
+  var lieu = lieuBon(item);
   /* Deux lignes, deux phrases courtes. Celles d'avant expliquaient le
      bouton qu'on a sous les yeux (« touche le bouton : ils quittent ton
      solde... ») -- du mode d'emploi, la ou il suffit de dire ce qui se
      passe. */
   var etapes = [
     ["Échange tes points", "Ton bon s'affiche tout de suite."],
-    ["Montre ton bon", lieu + ", ce soir."],
+    ["Montre ton bon", lieu + ", " + quandBon(item) + "."],
   ];
 
   var famille = FAMILLES[item.fam] || "";
@@ -17961,7 +17974,7 @@ async function echanger(item) {
           '<div class="bt-qr">' + svgQr + "</div>" +
           bandeauVivant() +
           '<p class="bt-code">' + code + "</p>" +
-          '<p class="bt-validite">À montrer au ' + (item.fam === "bar" ? "bar" : "staff") + ", ce soir.</p>" +
+          '<p class="bt-validite">' + (bonDeJour(item) ? "À montrer " + lieuBon(item).toLowerCase() : "À montrer au " + (item.fam === "bar" ? "bar" : "staff")) + ", " + quandBon(item) + ".</p>" +
         "</div>" +
       "</div>" +
       '<button class="sheet-cta sobre" id="sh-ok" type="button">Retour aux récompenses</button>' +

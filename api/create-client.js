@@ -17,6 +17,50 @@ const defaultRewards = [
   { title: "Cocktail offert", points_required: 130, max_redemptions: 25, category: "bar" },
 ];
 
+/* 03/10/2026 : tous les commerces. Le meme catalogue par type que le
+   parcours de club-app.html (CATALOGUES) -- les garder alignes, sinon le
+   gerant retrouve dans sa boutique des recompenses que le parcours ne
+   connait pas. Un coiffeur ne doit pas demarrer avec un shot offert.
+   `photo` part en image_url (adresse complete) : seuls les titres du club
+   ont un dessin cote clubbeur, les autres retomberaient sur un verre. */
+const CADEAU = "/recompenses/art-cadeau.webp";
+const recompense = (title, points_required, category, photo) => ({ title, points_required, max_redemptions: 50, category, photo });
+const RECOMPENSES_PAR_TYPE = {
+  club: defaultRewards,
+  bar: defaultRewards.slice(1),
+  restaurant: [
+    recompense("Café offert", 50, "bar", "/site/recompenses/cappuccino.webp"),
+    recompense("Apéritif offert", 100, "bar", "/site/recompenses/cocktail.webp"),
+    recompense("Dessert offert", 120, "bar", "/site/recompenses/tiramisu.webp"),
+  ],
+  cafe: [
+    recompense("Croissant offert", 40, "bar", "/site/recompenses/croissant.webp"),
+    recompense("Cappuccino offert", 60, "bar", "/site/recompenses/cappuccino.webp"),
+    recompense("Part de gâteau offerte", 90, "bar", "/site/recompenses/cheesecake.webp"),
+  ],
+  boulangerie: [
+    recompense("Croissant offert", 40, "bar", "/site/recompenses/croissant.webp"),
+    recompense("Café offert", 50, "bar", "/site/recompenses/cappuccino2.webp"),
+    recompense("Pâtisserie offerte", 90, "bar", "/site/recompenses/cheesecake.webp"),
+  ],
+  coiffeur: [
+    recompense("Soin offert", 100, "acces", CADEAU),
+    recompense("-10 % sur la prochaine coupe", 150, "acces", CADEAU),
+  ],
+  institut: [
+    recompense("Soin offert", 120, "acces", CADEAU),
+    recompense("-10 % sur le prochain soin", 150, "acces", CADEAU),
+  ],
+  boutique: [
+    recompense("Petit cadeau offert", 100, "acces", CADEAU),
+    recompense("-10 % sur le prochain achat", 150, "acces", CADEAU),
+  ],
+  other: [
+    recompense("Petit cadeau offert", 100, "acces", CADEAU),
+    recompense("-10 % sur la prochaine visite", 150, "acces", CADEAU),
+  ],
+};
+
 function json(response, body, status = 200) {
   response.statusCode = status;
   response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -44,7 +88,7 @@ function nettoyerTelephone(valeur) {
   return brut.replace(/\D/g, "").length >= 8 ? brut : "";
 }
 
-async function provisionnerEtablissement(supabase, { name, city, phone, category, subscriptionStatus, ownerId, ownerEmail }) {
+async function provisionnerEtablissement(supabase, { name, city, phone, category, subscriptionStatus, ownerId, ownerEmail, siteUrl }) {
   const establishmentResult = await supabase
     .from("establishments")
     .insert({
@@ -94,8 +138,9 @@ async function provisionnerEtablissement(supabase, { name, city, phone, category
   // Mirage. Un `await` sans lecture de l'erreur, c'est un echec qu'on
   // s'interdit de voir.
   const { error: erreurRecompenses } = await supabase.from("rewards").insert(
-    defaultRewards.map((reward) => ({
+    (RECOMPENSES_PAR_TYPE[category] || defaultRewards).map(({ photo, ...reward }) => ({
       ...reward,
+      ...(photo ? { image_url: `${siteUrl}${photo}` } : {}),
       establishment_id: establishmentId,
       active: true,
     })),
@@ -353,7 +398,10 @@ export default async function handler(request, response) {
       name: establishmentName,
       city,
       phone: nettoyerTelephone(payload.phone),
-      category: "club",
+      // Le type vient du parcours (question 1) ; une valeur inconnue, ou
+      // une porte qui ne l'envoie pas (inscription.html), reste "club".
+      category: Object.hasOwn(RECOMPENSES_PAR_TYPE, payload.category) ? payload.category : "club",
+      siteUrl: getSiteUrl(request),
       subscriptionStatus: "essai",
       ownerId: caller.id,
       ownerEmail: caller.email.toLowerCase(),
