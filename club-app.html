@@ -3,6 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script>
+      /* 04/10/2026, Julien : « une vraie application, pas un site ». Dans la
+         coquille native (Capacitor), html.natif coupe ce qui trahit une page
+         web : selection du texte au doigt, menu d'appui long, zoom des champs,
+         rebond de toute la page. Voir le bloc « APPLI NATIVE » en fin de style. */
+      (function () {
+        var C = window.Capacitor;
+        if (C && typeof C.isNativePlatform === "function" && C.isNativePlatform()) {
+          document.documentElement.classList.add("natif");
+          if (C.getPlatform && C.getPlatform() === "ios") document.documentElement.classList.add("natif-ios");
+          var v = document.querySelector('meta[name="viewport"]');
+          if (v) v.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover");
+        }
+      })();
+    </script>
     <meta name="theme-color" content="#120d0d" />
     <meta name="color-scheme" content="dark" />
     <meta name="robots" content="noindex" />
@@ -4519,6 +4534,17 @@
       @media (prefers-reduced-motion: reduce) {
         #parcours *, .nk-fin, .nk-fin * { animation: none !important; transition: none !important; }
       }
+    
+      /* ================= APPLI NATIVE (04/10/2026) =================
+         Seulement dans l'appli iPhone (html.natif, voir le script du <head>). */
+      html.natif, html.natif body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+      html.natif body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+      html.natif input, html.natif textarea, html.natif [contenteditable] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+      /* Sous 16 px, iOS zoome sur le champ qu'on touche : une page web le fait, une appli non. */
+      html.natif input, html.natif textarea, html.natif select { font-size: max(16px, 1em); }
+      html.natif img { -webkit-user-drag: none; }
+      .hors-ligne { position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top)); z-index: 99; transform: translate(-50%, -140%); padding: 9px 16px; border-radius: 999px; background: #141414; color: #fff; font-size: 13.5px; font-weight: 600; box-shadow: 0 10px 30px -12px rgba(0,0,0,.5); transition: transform .35s cubic-bezier(.16, 1, .3, 1); pointer-events: none; white-space: nowrap; }
+      .hors-ligne.visible { transform: translate(-50%, 0); }
     </style>
   </head>
   <body>
@@ -11532,6 +11558,19 @@
         })(),
       });
       demarrer().finally(function () { natif.masquerSplash(); });
+    
+      /* Hors ligne : une appli le dit, une page reste blanche (04/10/2026). */
+      (function () {
+        var bandeau = document.createElement("div");
+        bandeau.className = "hors-ligne";
+        bandeau.setAttribute("role", "status");
+        bandeau.textContent = "Pas de connexion. On réessaie dès qu'elle revient.";
+        document.body.appendChild(bandeau);
+        function maj() { bandeau.classList.toggle("visible", navigator.onLine === false); }
+        window.addEventListener("online", maj);
+        window.addEventListener("offline", maj);
+        maj();
+      })();
     </script>
   </body>
 </html>
