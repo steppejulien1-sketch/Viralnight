@@ -776,6 +776,16 @@
       .ob-bv-points[hidden] { display: block; visibility: hidden; height: 0; margin: 0 0 22px; }
       .ob-bv-points { margin: 8px 0 22px; font-size: calc(16 * var(--u)); font-weight: 600; color: rgba(255,255,255,.86); }
       .ob-bv-points strong { font-family: var(--chiffre); font-variant-numeric: tabular-nums; font-weight: 800; color: #ffffff; }
+      .ob-ami { margin-top: calc(14 * var(--u)); text-align: center; }
+      .ob-ami-lien { padding: calc(6 * var(--u)) 0; border: 0; background: none; color: #fff; font: inherit; font-size: calc(14 * var(--u)); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,.5); cursor: pointer; }
+      .ob-ami-form { display: flex; gap: calc(8 * var(--u)); margin-top: calc(8 * var(--u)); }
+      .ob-ami-form[hidden] { display: none; }
+      .ob-ami-form input { flex: 1; min-width: 0; height: calc(46 * var(--u)); padding: 0 calc(14 * var(--u)); border: 0; border-radius: calc(14 * var(--u)); background: rgba(255,255,255,.95); color: #111; font: inherit; font-size: max(16px, calc(15 * var(--u))); }
+      .ob-ami-form button { height: calc(46 * var(--u)); padding: 0 calc(16 * var(--u)); border: 0; border-radius: calc(14 * var(--u)); background: #fff; color: #111; font: inherit; font-weight: 700; cursor: pointer; }
+      .ob-ami-msg { margin: calc(8 * var(--u)) 0 0; color: #fff; font-size: calc(13.5 * var(--u)); }
+      .iv-code { margin: calc(4 * var(--u)) 0 calc(12 * var(--u)); text-align: center; }
+      .iv-code small { display: block; font-size: calc(12.5 * var(--u)); color: var(--ink3, #8a8a90); }
+      .iv-code b { display: inline-block; margin-top: calc(4 * var(--u)); padding: calc(6 * var(--u)) calc(14 * var(--u)); border-radius: calc(12 * var(--u)); background: var(--s2, #f2f2f4); font-family: ui-monospace, Menlo, monospace; font-size: calc(22 * var(--u)); letter-spacing: .12em; }
       .ob-bv-btn {
         position: relative; min-height: 58px; border-radius: 16px;
         background: #ffffff; color: #0b0b0c; font-size: calc(16.5 * var(--u)); font-weight: 750;
@@ -7158,6 +7168,17 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M2.5 9h19v3.5h-19zM12 9v11.5"/><path d="M12 9c-1.6-3.6-5.6-4.3-5.6-2 0 1.7 3 2 5.6 2zm0 0c1.6-3.6 5.6-4.3 5.6-2 0 1.7-3 2-5.6 2z"/></svg>
                 <span id="ob-bv-libelle">Récupérer mon cadeau</span>
               </button>
+              <!-- 04/10/2026 : le code d'un ami, tape a la main. Le lien ?parrain=
+                   s'ouvre dans Safari, pas dans l'appli de l'App Store : le code, lui,
+                   marche partout. Seulement ici, ou le compte a moins de 3 jours. -->
+              <div class="ob-ami">
+                <button type="button" class="ob-ami-lien" id="ob-ami-ouvrir">Un ami t'a invité ? Entre son code</button>
+                <form class="ob-ami-form" id="ob-ami-form" hidden>
+                  <input type="text" id="ob-ami-code" maxlength="30" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Son code, ex. h7dnsgr" aria-label="Code de ton ami" />
+                  <button type="submit">Valider</button>
+                </form>
+                <p class="ob-ami-msg" id="ob-ami-msg" role="status" hidden></p>
+              </div>
             </div>
 
           </div>
@@ -7399,7 +7420,8 @@
                    "dis qu'ils gagnent des points, pousse-les a inviter des amis"). -->
               <h2 class="va-invite-titre">Invite tes amis</h2>
               <p class="iv-gain">+<span class="js-montant-parrainage">100</span> points</p>
-              <p class="iv-sous">pour toi, à chaque ami qui s’inscrit avec ton lien. Plus tu en invites, plus tu gagnes.</p>
+              <p class="iv-sous">pour toi, à chaque ami qui s’inscrit avec ton code. Plus tu en invites, plus tu gagnes.</p>
+              <p class="iv-code"><small>Ton code, à entrer dans l'appli à son inscription</small><b id="va-mon-code">…</b></p>
               <div class="va-code">
                 <div class="va-qr-cadre">
                   <div class="va-qr" id="va-qr" aria-hidden="true"></div>
@@ -10816,12 +10838,16 @@ async function crediterScanUrl(slug, session) {
   /* Le QR de l'affiche ouvre l'appli par l'appareil photo du telephone, pas
      par le viseur de l'appli : c'est le chemin de presque tout le monde. */
   if (!ligne) {
+    for (var attente = 0; attente < 600 && FEUILLE && !FEUILLE.hidden; attente++) await new Promise(function (ok) { setTimeout(ok, 500); });
     pasEncore(r.message);
     return;
   }
 
   activerVue("boutique");
   await chargerSoldeReel(session.user.id);
+  /* 04/10/2026 : pour un compte neuf, la page de bienvenue recouvre tout et
+     le « +20 points » passait dessous, invisible. On attend qu'elle se ferme. */
+  for (var attente = 0; attente < 600 && FEUILLE && !FEUILLE.hidden; attente++) await new Promise(function (ok) { setTimeout(ok, 500); });
   pasEncore(ligne.deja_recupere
     ? "Bienvenue " + auClub(nomLieuAffiche(ligne.club_nom)) + " ! Bonus déjà récupéré ce soir."
     : "+" + ligne.points + " points pour ton arrivée " + auClub(nomLieuAffiche(ligne.club_nom)) + " !");
@@ -10857,6 +10883,38 @@ function assurerProfil(user) {
    - la trace locale n'est effacee que sur une reponse definitive : une
      coupure reseau ne fait plus perdre le parrainage. */
 var parrainageEnCours = false;
+/* Le code tape sur la page de bienvenue (04/10/2026). */
+(function () {
+  var ouvrir = document.getElementById("ob-ami-ouvrir"), form = document.getElementById("ob-ami-form");
+  if (!ouvrir || !form) return;
+  var msg = document.getElementById("ob-ami-msg"), champ = document.getElementById("ob-ami-code");
+  ouvrir.addEventListener("click", function () { ouvrir.hidden = true; form.hidden = false; champ.focus(); });
+  form.addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    var code = champ.value.trim().toLowerCase();
+    if (!/^[a-z0-9._]{2,30}$/.test(code)) { msg.hidden = false; msg.textContent = "Ce code n'a pas le bon format."; return; }
+    var session = (await supabaseClubbeur.auth.getSession()).data.session;
+    if (!session) return;
+    form.querySelector("button").disabled = true;
+    var res = await Promise.resolve(supabaseClubbeur.rpc("claim_referral", { p_code: code })).catch(function (e) { return { error: e }; });
+    form.querySelector("button").disabled = false;
+    msg.hidden = false;
+    if (!res.error) {
+      try { localStorage.removeItem("vn.parrain"); } catch (e) {}
+      form.hidden = true;
+      var ligne = Array.isArray(res.data) ? res.data[0] : res.data;
+      msg.textContent = "C'est noté : tu es maintenant ami avec " + (ligne && ligne.referrer_handle ? "@" + ligne.referrer_handle : "lui") + ".";
+      return;
+    }
+    var t = String(res.error.message || "");
+    msg.textContent = /introuvable/.test(t) ? "Ce code n'existe pas. Vérifie-le avec ton ami."
+      : /deja_parraine/.test(t) ? "Un code a déjà été utilisé pour ton compte."
+      : /soi_meme/.test(t) ? "C'est ton propre code."
+      : /compte_ancien/.test(t) ? "Le code d'un ami s'entre dans les 3 jours qui suivent l'inscription."
+      : "Pas pu valider le code, réessaie.";
+  });
+})();
+
 async function reclamerParrainage() {
   var code;
   try { code = localStorage.getItem("vn.parrain"); } catch { code = null; }
@@ -13834,6 +13892,8 @@ async function ouvrirPageAmis(session) {
   // Le debut du lien est toujours le meme ; ce qui le distingue, c'est la
   // fin. On garde le domaine et le code, et on coupe le milieu.
   if (lienEl) lienEl.textContent = lien ? window.location.host + "/…?parrain=" + monCode : "Profil en cours de création…";
+  var codeEl = document.getElementById("va-mon-code");
+  if (codeEl) codeEl.textContent = monCode || "…";
   if (monHandle) {
     handleEl.textContent = monHandle;
     afficherAvatar(profil.avatar_url, monHandle);
@@ -13924,7 +13984,7 @@ async function ouvrirPageAmis(session) {
   boutonPartager.onclick = async function () {
     if (!lien) return;
     if (navigator.share) {
-      navigator.share({ title: "Noctify", text: "Rejoins-moi sur Noctify !", url: lien }).catch(function () {});
+      navigator.share({ title: "Noctify", text: "Rejoins-moi sur Noctify ! À l'inscription, entre mon code " + monCode + " : on gagne tous les deux.", url: lien }).catch(function () {});
       return;
     }
     // Pas de feuille de partage (ordinateur) : on copie, et on le dit SUR le
