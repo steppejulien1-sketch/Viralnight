@@ -217,3 +217,18 @@ formulaire.addEventListener("submit", async (ev) => {
     bouton.textContent = "Être rappelé";
   }
 });
+
+/* Tarifs : annuel (-15 %) par defaut, mensuel au choix (04/10/2026). */
+document.querySelectorAll("[data-periode]").forEach((bouton) => {
+  bouton.addEventListener("click", () => {
+    const periode = bouton.dataset.periode;
+    document.querySelectorAll("[data-periode]").forEach((b) => {
+      const on = b === bouton;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-checked", String(on));
+    });
+    document.querySelectorAll("#offres [data-annuel]").forEach((el) => {
+      el.textContent = el.dataset[periode];
+    });
+  });
+});
