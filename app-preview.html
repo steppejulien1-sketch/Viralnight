@@ -11353,127 +11353,18 @@ function pint(level, cls) {
 // Club recupere depuis la meme fiche Google (embed public, verifie
 // par curl) et heures.be. A rafraichir si Julien renvoie une capture
 // plus recente -- ce ne sont pas des valeurs live.
-var CLUBS = {
-  mirano: {
-    nom: "Mirano", adr: "Chaussée de Louvain 38, 1210 Saint-Josse-ten-Noode", c: "#de3131",
-    // 25/09/2026 : sa ligne en base (table clubs) s'appelle « Mirage », le
-    // nom du compte gerant. On la retrouve par le code public du gerant,
-    // plus par le nom -- c'est ce qui servait le catalogue d'un vieux
-    // Mirage orphelin a la place du sien.
-    b2b: "W3SU4F3B",
-    // googleQuery : adresse complete plutot que le seul nom -- il existe
-    // un Mirage Club a Paris et un Mirano a Paris aussi, la fiche Google
-    // tomberait sur un homonyme.
-    googleQuery: "Mirano Brussels, Chaussée de Louvain 38, 1210 Saint-Josse-ten-Noode, Belgique",
-    // Identifiant de la fiche Google ("Mirano Brussels, Chau. de Louvain
-    // 38"), releve le 12/09/2026 dans la page d'embed Google Maps de
-    // googleQuery. Sert au lien "ecrire un avis" du profil.
-    googlePlaceId: "ChIJpwov02LDw0cRA9JgUbYb7jc",
-    // Coordonnees geocodees sur l'adresse (Nominatim/OpenStreetMap), pas
-    // estimees a l'oeil sur la carte.
-    lngLat: [4.37139, 50.84937], hot: true, type: "club",
-    // Pas de note ni de nombre d'avis : Google en a, mais aucune source
-    // fiable ne donne le chiffre exact, et un chiffre invente sur une
-    // fiche de club est exactement ce qu'on ne fait pas ici. A remplir
-    // quand la fiche Google sera reliee (api/import-opening-hours.js sait
-    // deja le faire pour les horaires).
-    note: null, avis: null, prix: null,
-    tel: "+32 456 68 88 52", site: "miranobrussels.com",
-    ig: "miranobrussels",
-    // Compte TikTok officiel, verifie le 15/09/2026 (tiktok.com/@miranobrussels).
-    tiktok: "miranobrussels",
-    /* Les vraies photos du club. Tant qu'elles sont nulles, l'entete
-       retombe sur une image d'ambiance generique (fotoClub) et sur un
-       monogramme -- volontairement, plutot qu'une photo prise ailleurs :
-       une image trouvee sur Google appartient a quelqu'un.
-
-       photo  : banniere, format paysage (au moins 1200x600).
-       avatar : photo de profil, carree, elle est rognee en rond.
-       Deposer les fichiers dans public/clubs/ et mettre le chemin ici.
-       api/import-opening-hours.js sait deja parler a Google Places, qui
-       fournit des photos utilisables avec attribution si on prefere
-       les tirer de la fiche du club plutot que de les deposer a la main. */
-    /* 15/09/2026 : les photos de la FICHE GOOGLE du club, relayees par
-       /api/import-opening-hours?action=photo (lib/google/photosLieu.js,
-       liste blanche). Leurs auteurs s'affichent sous la galerie. */
-    /* 22/09/2026 : les trois photos de Mirano sont BRANCHEES. Elles
-       dormaient dans public/clubs/ depuis le 16/09 sans que rien ne les
-       lise -- on y reconnait la salle et ses bandeaux au "M". Mirano etait
-       du coup le seul etablissement dont la boutique restait generique
-       (voir le decor dans carteRecompense) : quatre dessins sur fond gris,
-       exactement ce que Julien ne veut plus.
-       La galerie facon Maps et le badge se remplissent seuls avec. */
-    photo: "/clubs/mirano-2.webp",
-    photos: ["/clubs/mirano-2.webp", "/clubs/mirano-3.webp", "/clubs/mirano-4.webp"],
-    avatar: null,
-    /* Du jeudi au samedi : l'exploitant (artblanc.be) annonce le Cafe
-       Afro le jeudi des 21h, en plus des vendredis et samedis a 23h.
-       D'autres sources ne citent que le week-end -- on suit celle qui
-       exploite le lieu. Le detail par soir vit dans `soirees` ci-dessous ;
-       cette ligne ne donne que l'amplitude, sinon les deux se
-       contrediraient. */
-    statut: "Fermé", horaire: "Ouvre jeudi à 21h00", shut: true,
-    jours: "Du jeudi au samedi", heures: "21h00 – 06h00",
-    partenaire: true,
-
-    /* Tout ce qui suit est verifie, jamais devine. Sources : le site du
-       club, artblanc.be (l'exploitant depuis 2019), la fiche patrimoine
-       et Wikipedia. Les chiffres viennent de l'exploitant lui-meme --
-       une autre source annonce "jusqu'a 1000", non confirmee ailleurs,
-       donc ecartee. */
-    capacite: "Plus de 620 personnes en configuration club",
-
-    ambiance: ["Hip-hop & R&B", "Piste de danse tournante", "Ancien cinéma", "Bâtiment classé"],
-
-    /* Un vrai calendrier par jour, les sept jours declares -- c'est ce qui
-       permet de deplier les horaires comme le fait Google (demande de
-       Julien : "je veux l'horaire comme sur Google, quand tu cliques ca
-       ouvre les jours et tu peux voir tout").
-
-       La programmation du soir vit sur la meme ligne que l'horaire au lieu
-       d'une section a part : c'est la meme information (ce jour-la, le club
-       ouvre a telle heure pour telle soiree), et la separer obligeait a
-       lire deux blocs pour repondre a une seule question.
-
-       Memes sources que le reste de la fiche : l'exploitant (artblanc.be)
-       annonce le Cafe Afro le jeudi des 21h, les vendredis et samedis a
-       23h. Rien d'invente pour remplir les jours fermes. */
-    horaires: [
-      { jour: "Lundi",    ferme: true },
-      { jour: "Mardi",    ferme: true },
-      { jour: "Mercredi", ferme: true },
-      { jour: "Jeudi",    de: "21:00", a: "06:00", soiree: "Café Afro" },
-      { jour: "Vendredi", de: "23:00", a: "06:00", soiree: "Hip-hop & R&B" },
-      { jour: "Samedi",   de: "23:00", a: "06:00", soiree: "Hip-hop & R&B" },
-      { jour: "Dimanche", ferme: true },
-    ],
-
-    // Ce qui distingue physiquement le lieu. Aucun club de Bruxelles n'a
-    // ca, et c'est ce qui donne envie d'y aller.
-    lieu: [
-      "Piste de danse tournante, motorisée",
-      "Anciens gradins de cinéma conservés",
-      "Écran LED géant et balcons",
-      "Deux scènes : Main room et Café Mirano",
-    ],
-
-    // Quatre dates, pas douze : une frise qui se lit en cinq secondes.
-    histoire: [
-      ["1912", "Grand Casino de Saint-Josse, café-concert"],
-      ["1934", "Devient le cinéma Mirano, 600 places"],
-      ["1981", "Dernier film passé en 1978, le lieu devient le Mirano Continental"],
-      ["2019", "Réouverture après deux ans de travaux"],
-    ]
-  }
-};
+/* 04/10/2026, Julien : « retire, je n'ai pas de client pour le moment ».
+   La fiche du Mirano, ecrite ici a la main (adresse, telephone, Instagram et
+   histoire du vrai lieu), est retiree : elle presentait comme partenaire un
+   etablissement qui ne l'est pas, et le scan du « Mirage » de test affichait
+   « au Mirano ». Tous les lieux viennent maintenant de la base (table clubs,
+   voir resoudreIdsClubs) : un commerce qui s'inscrit apparait tout seul. */
+var CLUBS = {};
 
 /* APERCU (15/09/2026) : ?apercu_photo=1 montre la fiche du Mirano avec UNE
    photo d'exemple, pour voir ou iront les photos que les clubs deposeront.
    Rien ne change sans ce parametre. */
-if (/[?&]apercu_photo=1(&|$)/.test(location.search)) {
-  CLUBS.mirano.photo = "/ambiance/bienvenue.webp";
-  CLUBS.mirano.photos = ["/ambiance/bienvenue.webp"];
-}
+/* (?apercu_photo=1 montrait la fiche du Mirano avec une photo d'exemple : retire avec elle.) */
 // "club" -> "Boîte de nuit", "bar" -> "Bar" : juste en texte lisible
 // pour la ligne meta de la fiche.
 /* 03/10/2026 : tous les commerces, plus seulement bar / club / resto.
@@ -13545,10 +13436,11 @@ map.on("load", function () {
   // dessus, un pitch incline aurait laisse un des deux clubs hors
   // cadre malgre des bounds corrects.
   var lngLats = Object.keys(CLUBS).map(function (k) { return CLUBS[k].lngLat; });
-  var bounds = lngLats.reduce(function (b, ll) { return b.extend(ll); }, new maplibregl.LngLatBounds(lngLats[0], lngLats[0]));
+  var bounds = lngLats.length ? lngLats.reduce(function (b, ll) { return b.extend(ll); }, new maplibregl.LngLatBounds(lngLats[0], lngLats[0])) : null;
   /* Marge du BAS : la capsule d'onglets flotte sur le bas de la carte.
      Sans ca, le club pouvait se cadrer juste dessous. */
-  map.fitBounds(bounds, { padding: { top: 80, left: 64, right: 64, bottom: 120 }, pitch: 0, bearing: 0, maxZoom: 15, duration: 0 });
+  // Aucun lieu encore (04/10/2026) : la carte reste sur Bruxelles.
+  if (lngLats.length) map.fitBounds(bounds, { padding: { top: 80, left: 64, right: 64, bottom: 120 }, pitch: 0, bearing: 0, maxZoom: 15, duration: 0 });
 
   /* ⚠️ PLUS DE VERRE "TOI". Julien, 13/09/2026 : "on peut retirer la biere
      avec Toi et juste mettre les etablissements". Le verre etait pose sur
@@ -16044,7 +15936,7 @@ document.addEventListener("visibilitychange", function () {
 });
 /* Apercu : ?apercu_validee=1 montre la page avec 100 points, sans rien lire. */
 if (/[?&]apercu_validee=1(&|$)/.test(location.search)) {
-  setTimeout(function () { montrerStoryValidee(100, "Mirano", 1); }, 1800);
+  setTimeout(function () { montrerStoryValidee(100, "Chez Paul", 1); }, 1800);
 }
 window.noctifyStoryValidee = function (points, club, combien) { montrerStoryValidee(points || 100, club || "", combien || 1); };
 window.noctifyAmiInscrit = function (points, pseudo, combien) { montrerAmiInscrit(points || 100, pseudo || "", combien || 1); };
@@ -16601,6 +16493,13 @@ function rendreChoixClub() {
   var liste = document.getElementById("bq-liste");
   if (!titre || !liste) return;
 
+  // Aucun lieu partenaire pour l'instant : un titre honnete, pas de liste.
+  if (!CLUB_BOUTIQUE || !CLUBS[CLUB_BOUTIQUE]) {
+    titre.textContent = "Bientôt près de chez toi";
+    titre.classList.remove("selectionnable");
+    liste.hidden = true;
+    return;
+  }
   titre.textContent = "Ce soir " + auClub(CLUBS[CLUB_BOUTIQUE].nom);
 
   /* Un seul club : le titre redevient un titre. Le chevron et la liste
@@ -16946,7 +16845,7 @@ var OFFRE = {
   fam: "bar",
   // Cle du club concerne dans CLUBS : c'est ce qui allume la pastille
   // "ce soir" sur le bon badge, sous la carte.
-  club: "mirano",
+  club: null,
   // Le cocktail et non le shot (demande de Julien). Meme dessin que la
   // recompense "Cocktail offert" du catalogue : c'est le meme produit,
   // il ne peut pas etre illustre de deux facons.
@@ -17199,7 +17098,10 @@ function rendreListe() {
   // « Ouvert maintenant » : seulement ceux qui le sont, a l'heure qu'il est.
   if (FILTRE_OUVERT) bars = bars.filter(function (bar) { var e = etatOuverture(bar.club); return e && e.ouvert; });
   if (!bars.length) {
-    z.innerHTML = '<p class="bar-aucun">Aucun établissement ouvert pour l’instant.</p>';
+    // 04/10/2026 : sans aucun lieu partenaire (pas encore de client), un message plutot qu'une page blanche.
+    z.innerHTML = FILTRE_OUVERT
+      ? '<p class="bar-aucun">Aucun établissement ouvert pour l’instant.</p>'
+      : '<p class="bar-aucun">Les premiers bars et restos partenaires arrivent bientôt. Tes points t’attendent : tu les utiliseras dès leur arrivée.</p>';
     return;
   }
 
