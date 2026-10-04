@@ -30,7 +30,7 @@ assert.equal(choisirEmail({ maintenant: now, reglages: r, premiereVisite: now - 
 assert.equal(codeCoupon("Chez Paul", "u", "c", "absents", "2026-10-10"), codeCoupon("Chez Paul", "u", "c", "absents", "2026-10-10"));
 assert.match(codeCoupon("Chez Paul", "u", "c", "absents", "2026-10-10"), /^CHE-[A-Z2-9]{4}$/);
 const e = contenuEmail("absents", { lieu: "Chez Paul", prenom: "", solde: 80, recompenses: [], reglages: r, userId: "u", clubId: "c", maintenant: now });
-assert.match(e.message, /Un café offert/);
+assert.match(e.message, /Pour ton retour : un café offert./);
 assert.ok(e.coupon && e.coupon.code);
 
 console.log("e-mails automatiques : ok");
