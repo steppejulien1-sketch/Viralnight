@@ -2253,6 +2253,10 @@
       }
       .rg-switch.on { background: var(--accent); }
       .rg-date { flex: none; height: calc(36 * var(--u)); padding: 0 calc(10 * var(--u)); border: 1px solid var(--line2, rgba(0,0,0,.15)); border-radius: calc(10 * var(--u)); background: transparent; color: inherit; font: inherit; font-size: calc(14 * var(--u)); }
+      /* Dans l'appli iPhone : connexion par e-mail seule. Apple impose sa propre
+         connexion des qu'on propose Google (regle 4.8). */
+      html.natif-ios #ac-apple, html.natif-ios #ac-google, html.natif-ios #vue-accueil .ac-sep { display: none !important; }
+      #ac-mdp { margin-top: calc(8 * var(--u)); }
       .ac-cgu { margin: 14px 4px 0; font-size: calc(12 * var(--u)); line-height: 1.45; color: var(--ink3, #8a8a90); text-align: center; }
       /* 30/09/2026 : l'accord pour les offres par e-mail d'un lieu, en bas de sa page. */
       .vb-offres { display: flex; align-items: center; gap: 14px; margin: 26px 0 8px; padding: 16px 0; border-top: 1px solid var(--line, rgba(0,0,0,.08)); }
@@ -6969,6 +6973,9 @@
 
             <p class="ac-sep">ou par email</p>
             <input type="email" class="ac-input" id="ac-email" name="email" placeholder="ton@email.com" autocomplete="username" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" />
+            <!-- 04/10/2026 : le compte du testeur Apple seul (voir COMPTE_REVUE). Il
+                 ne peut pas recevoir le code par e-mail : il se connecte par mot de passe. -->
+            <input type="password" class="ac-input" id="ac-mdp" name="password" placeholder="Mot de passe" autocomplete="current-password" hidden />
             <button type="button" class="ac-btn ac-btn-marque" id="ac-email-submit">Continuer avec l’email</button>
             <p class="ac-msg" id="ac-msg" role="alert" hidden></p>
             <!-- 03/10/2026 : l'acceptation passe par la creation du compte (Julien). -->
@@ -10080,14 +10087,28 @@ function demarrerReboursOb() {
 /* ---- L'email, depuis l'accueil ----
    Julien : « si le mec met email, ca envoie un code ; si le mec met Google,
    ca le connecte directement ». Le code arrive dans la feuille. */
+var COMPTE_REVUE = "revue.apple@noctify-app.be";
 function cablerEmailAccueil() {
   var champ = $("#ac-email");
   var bouton = $("#ac-email-submit");
   if (!champ || !bouton) return;
+  try {
+    if (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === "ios") document.documentElement.classList.add("natif-ios");
+  } catch (e) {}
+  var mdp = $("#ac-mdp");
 
   async function envoyer() {
     if (bouton.disabled) return;
     var adresse = champ.value.trim().toLowerCase();
+    // Le testeur d'Apple : mot de passe, pas de code (il ne recoit pas nos e-mails).
+    if (adresse === COMPTE_REVUE && mdp) {
+      if (mdp.hidden) { mdp.hidden = false; bouton.textContent = "Se connecter"; mdp.focus(); return; }
+      bouton.disabled = true;
+      var co = await supabaseClubbeur.auth.signInWithPassword({ email: adresse, password: mdp.value });
+      bouton.disabled = false;
+      if (co.error) return afficherMessageAccueil("Mot de passe incorrect.", true);
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(adresse)) {
       afficherMessageAccueil(adresse ? "Cette adresse email n’est pas complète." : "Écris ton adresse email.", true);
       champ.focus();
@@ -10112,6 +10133,9 @@ function cablerEmailAccueil() {
     if (ev.key === "Enter" && !ev.isComposing) { ev.preventDefault(); envoyer(); }
   });
   champ.addEventListener("input", function () { MESSAGE_ACCUEIL.hidden = true; });
+  if (mdp) mdp.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" && !ev.isComposing) { ev.preventDefault(); envoyer(); }
+  });
 
   document.querySelectorAll(".js-ob-renvoyer").forEach(function (b) {
     b.addEventListener("click", async function () {
