@@ -30,6 +30,7 @@ import { envoyerEmail } from "../lib/notifications/email.js";
 import { getSupabaseClubbeurAdmin } from "../lib/db/supabaseClubbeurAdmin.js";
 import { requireEstablishment } from "../lib/auth/requireEstablishment.js";
 import { lireOffre, choisirDestinataires, heuresAvantProchainEnvoi, jetonDesabonnement, lireJetonDesabonnement, construireEmail } from "../lib/offres/email.js";
+import { lireReglages, contenuEmail, codeCoupon, jourBruxelles, TYPES as TYPES_EMAILS } from "../lib/offres/automatiques.js";
 import { geocoder } from "../lib/google/geocoder.js";
 import { doitRepondre, repondre, messageEnregistre, eviterRepetition } from "../lib/support/reponseAuto.js";
 
@@ -1144,7 +1145,9 @@ async function actionOffresEmail(request, response) {
     .filter((u) => u.email && /.+@.+\..+/.test(u.email))
     .map((u) => {
       const lien = `${SITE}/api/credit-clubbeur?action=desabonner&t=${encodeURIComponent(jetonDesabonnement(u.id, c.club.id, secret))}`;
-      const e = construireEmail({ lieu, sujet: offre.sujet, message: offre.message, lienDesabonnement: lien });
+      const couponTexte = String(corps.coupon || "").replace(/\s+/g, " ").trim().slice(0, 80);
+      const coupon = couponTexte ? { texte: couponTexte, code: codeCoupon(lieu, u.id, c.club.id, "offre", jourBruxelles(Date.now())) } : null;
+      const e = construireEmail({ lieu, sujet: offre.sujet, message: offre.message, coupon, lienAppli: `${SITE}/app-preview.html?app=1`, lienDesabonnement: lien });
       return {
         from,
         to: [u.email],
@@ -1172,12 +1175,81 @@ async function actionOffresEmail(request, response) {
     }
   }
 
+  if (envoyes) {
+    const ids = (lignes || []).filter((u) => u.email && /.+@.+\..+/.test(u.email)).map((u) => u.id);
+    await c.clubbeur.from("emails_log").insert(ids.map((id) => ({ user_id: id, club_id: c.club.id, type: "offre" })));
+  }
   await c.clubbeur.from("offres_email").insert({
     club_id: c.club.id, sujet: offre.sujet, message: offre.message, cible: offre.cible,
     destinataires: messages.length, envoyes, erreur: erreurEnvoi,
   });
   if (!envoyes) return json(response, { error: erreurEnvoi || "Aucun e-mail n'est parti." }, 502);
   return json(response, { ok: true, envoyes, destinataires: messages.length, erreur: erreurEnvoi });
+}
+
+/* ================= LES E-MAILS AUTOMATIQUES, COTE GERANT (04/10/2026) =================
+   ?action=emails-auto (POST, le gerant, jeton de session) :
+     { mode: "lire" }       -> reglages, statistiques des 30 derniers jours, fichier clients ;
+     { mode: "enregistrer", reglages } -> clubs.emails_auto ;
+     { mode: "apercu", type, reglages } -> le HTML de l'e-mail, avec des valeurs d'exemple.
+   ⚠️ Le fichier clients ne contient AUCUNE adresse e-mail : le pseudo
+   Instagram, les visites, la derniere venue, les points gagnes ici. */
+async function actionEmailsAuto(request, response) {
+  const c = await clubDuGerant(request);
+  if (c.erreur) return json(response, { error: c.erreur }, c.status);
+  if (!c.club) return json(response, { error: "Ton établissement n'est pas encore relié à l'appli des clients." }, 409);
+  const corps = await readBody(request).catch(() => ({}));
+  const lieu = nomLieuPublic(c.club.name);
+
+  if (corps.mode === "enregistrer") {
+    const reglages = lireReglages(corps.reglages);
+    const { error } = await c.clubbeur.from("clubs").update({ emails_auto: reglages }).eq("id", c.club.id);
+    if (error) return json(response, { error: error.message }, 500);
+    return json(response, { ok: true, reglages });
+  }
+
+  if (corps.mode === "apercu") {
+    const type = TYPES_EMAILS.includes(corps.type) ? corps.type : "bienvenue";
+    const reglages = lireReglages(corps.reglages);
+    const contenu = contenuEmail(type, {
+      lieu, prenom: "", solde: 140, recompenses: [{ titre: "Café offert", cout: 50 }, { titre: "Dessert offert", cout: 200 }],
+      ig: null, reglages, userId: "apercu", clubId: c.club.id, maintenant: Date.now(),
+    }) || { sujet: "Tes points t'attendent", message: "Salut,\n\nTu as 140 points.", coupon: null };
+    const e = construireEmail({ lieu, sujet: contenu.sujet, message: contenu.message, coupon: contenu.coupon, lienAppli: `${SITE}/app-preview.html?app=1`, lienDesabonnement: `${SITE}/` });
+    return json(response, { sujet: e.sujet, html: e.html });
+  }
+
+  const depuis30 = new Date(Date.now() - 30 * 864e5).toISOString();
+  const depuis400 = new Date(Date.now() - 400 * 864e5).toISOString();
+  const [club, journal, visites, refus] = await Promise.all([
+    c.clubbeur.from("clubs").select("emails_auto").eq("id", c.club.id).maybeSingle(),
+    c.clubbeur.from("emails_log").select("type").eq("club_id", c.club.id).gte("envoye_le", depuis30).limit(20000),
+    c.clubbeur.from("point_grants").select("user_id, amount, created_at").eq("club_id", c.club.id).gte("created_at", depuis400).limit(20000),
+    c.clubbeur.from("consentements_offres").select("user_id").eq("club_id", c.club.id).eq("accepte", false).limit(20000),
+  ]);
+  const stats = {};
+  for (const e of journal.data || []) stats[e.type] = (stats[e.type] || 0) + 1;
+
+  const parClient = new Map();
+  for (const v of visites.data || []) {
+    const p = parClient.get(v.user_id) || { jours: new Set(), points: 0, derniere: 0 };
+    p.jours.add(String(v.created_at).slice(0, 10));
+    p.points += Number(v.amount) || 0;
+    p.derniere = Math.max(p.derniere, Date.parse(v.created_at));
+    parClient.set(v.user_id, p);
+  }
+  const ids = [...parClient.keys()].slice(0, 500);
+  const { data: profils } = ids.length
+    ? await c.clubbeur.from("users").select("id, handle").in("id", ids)
+    : { data: [] };
+  const pseudo = new Map((profils || []).map((u) => [u.id, u.handle]));
+  const sansEmails = new Set((refus.data || []).map((x) => x.user_id));
+  const clients = ids.map((id) => {
+    const p = parClient.get(id);
+    return { pseudo: pseudo.get(id) || null, visites: p.jours.size, derniere: new Date(p.derniere).toISOString(), points: p.points, emails: !sansEmails.has(id) };
+  }).sort((a, b) => b.derniere.localeCompare(a.derniere));
+
+  return json(response, { reglages: lireReglages(club.data?.emails_auto), stats, clients });
 }
 
 /* Le nom que les clients connaissent : le compte gerant du Mirano s'appelle
@@ -1256,6 +1328,7 @@ export default async function handler(request, response) {
   if (action === "valider-bon") return actionValiderBon(request, response);
   if (action === "qr-club") return actionQrClub(request, response);
   if (action === "offres-email") return actionOffresEmail(request, response);
+  if (action === "emails-auto") return actionEmailsAuto(request, response);
 
   /* AVANT le controle d'administrateur qui suit : celui-ci n'est pas une
      action d'admin. C'est le clubbeur lui-meme qui efface son compte, et il

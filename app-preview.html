@@ -2252,6 +2252,7 @@
         transition: transform .15s ease;
       }
       .rg-switch.on { background: var(--accent); }
+      .rg-date { flex: none; height: calc(36 * var(--u)); padding: 0 calc(10 * var(--u)); border: 1px solid var(--line2, rgba(0,0,0,.15)); border-radius: calc(10 * var(--u)); background: transparent; color: inherit; font: inherit; font-size: calc(14 * var(--u)); }
       .ac-cgu { margin: 14px 4px 0; font-size: calc(12 * var(--u)); line-height: 1.45; color: var(--ink3, #8a8a90); text-align: center; }
       /* 30/09/2026 : l'accord pour les offres par e-mail d'un lieu, en bas de sa page. */
       .vb-offres { display: flex; align-items: center; gap: 14px; margin: 26px 0 8px; padding: 16px 0; border-top: 1px solid var(--line, rgba(0,0,0,.08)); }
@@ -7640,6 +7641,12 @@
             <div class="rg-ligne">
               <span class="rg-ligne-txt"><strong>Adresse e-mail</strong><span id="rg-email">—</span></span>
               <button type="button" class="rg-lien" id="rg-email-modifier">Modifier</button>
+            </div>
+            <!-- 04/10/2026 : facultative. Les lieux ou tu vas t'envoient un petit
+                 cadeau le jour J (e-mails automatiques des commerces). -->
+            <div class="rg-ligne">
+              <span class="rg-ligne-txt"><strong>Anniversaire</strong><span id="rg-naissance-aide">Un cadeau des lieux où tu vas, le jour J</span></span>
+              <input type="date" class="rg-date" id="rg-naissance" aria-label="Ta date de naissance" min="1930-01-01" />
             </div>
             <!-- ⚠️ AUDIT DU 22/09/2026 (Julien : « regarde vraiment ce qu'il y a
                  de vraiment utile »). Quatre lignes sont parties :
@@ -15067,6 +15074,17 @@ $("#pf-reglages")?.addEventListener("click", async function () {
   // lui qui relie une mention a une personne, la seule coordonnee qui
   // compte ici.
   remplirLigneReglage("#rg-ig-pseudo", profil && profil.handle ? "@" + profil.handle : null, "#rg-ig-modifier");
+  var naissance = $("#rg-naissance");
+  if (naissance) { naissance.value = (profil && profil.date_naissance) || ""; naissance.max = new Date().toISOString().slice(0, 10); }
+});
+
+// L'anniversaire : enregistre des qu'il change (colonne users.date_naissance, migration clubbeur 0064).
+$("#rg-naissance")?.addEventListener("change", async function () {
+  var champ = this, aide = $("#rg-naissance-aide");
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return;
+  var r = await supabaseClubbeur.from("users").update({ date_naissance: champ.value || null }).eq("id", session.user.id);
+  aide.textContent = r.error ? "Pas enregistré, réessaie" : (champ.value ? "Enregistré ✓" : "Un cadeau des lieux où tu vas, le jour J");
 });
 
 // La photo : meme champ fichier et meme envoi que la photo du profil (le

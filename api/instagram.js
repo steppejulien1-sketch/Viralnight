@@ -36,7 +36,7 @@ import { verifierChallengeWebhook, extraireMentionsStory, signatureValide } from
 import { normaliserHandle } from "../lib/points/mentionAutomatique.js";
 import { deciderStory } from "../lib/admin/deciderContenu.js";
 import { deciderSortStory, SORTS } from "../lib/points/verificationStory.js";
-import { envoyerRappelsAuto } from "../lib/offres/envoyerRappels.js";
+import { envoyerEmailsAuto } from "../lib/offres/envoyerRappels.js";
 
 function json(response, body, status = 200) {
   response.statusCode = status;
@@ -642,7 +642,7 @@ async function actionCronDuSoir(request, response) {
   if (request.method === "GET" && verifierAppelCron(request).ok) {
     try {
       const nomLieu = (n) => (n === "Mirage" ? "Mirano" : n || "Ton établissement");
-      const r = await envoyerRappelsAuto({
+      const r = await envoyerEmailsAuto({
         clubbeur: getSupabaseClubbeurAdmin(),
         apiKey: process.env.RESEND_API_KEY,
         from: process.env.OFFRES_FROM || process.env.NOTIFICATION_FROM,
@@ -650,7 +650,7 @@ async function actionCronDuSoir(request, response) {
         site: process.env.SITE_URL || "https://viralnight-koif.vercel.app",
         nomLieu,
       });
-      console.log("[rappels-auto]", JSON.stringify(r));
+      console.log("[emails-auto]", JSON.stringify(r));
     } catch (e) {
       console.error("[rappels-auto] echec:", e?.message || e);
     }
