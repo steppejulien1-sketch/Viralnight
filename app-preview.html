@@ -12814,6 +12814,16 @@ function ouvrirChoixReseau(nomClub) {
   // Theme clair de la boutique, repose apres masquerCarteEtBoutique().
   SCREEN.classList.add("boutique-pro");
   $("#story-page-corps").innerHTML = html;
+  // 04/10/2026 : aucun lieu partenaire encore (pas de client) -- un message, pas un ecran casse.
+  if (!CLUBS_STORY[cleChoisie]) {
+    $("#st-club").innerHTML = "";
+    $("#story-page-corps").innerHTML = '<p class="bar-aucun">Dès qu’un bar ou un resto rejoint Noctify, ta story qui le mentionne te rapporte ' + String(BAREME_STORY.story.pts).replace("+", "") + ' points. Ça arrive bientôt.</p>';
+    TAB_STORY.classList.add("on");
+    TAB_STORY.setAttribute("aria-current", "page");
+    VUE_STORY.hidden = false;
+    history.replaceState(null, "", "#story");
+    return;
+  }
   /* 16/09/2026, Julien : « ce truc pour choisir son club fait trop vibe codé,
      un truc bien plus qualitatif avec la photo de profil du club ». La carte
      montre le club comme un compte Instagram -- photo ronde cerclee, nom, son
