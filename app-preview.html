@@ -2624,7 +2624,8 @@
       .cf-msg[hidden] { display: none; }
       /* Une epingle filtree s'efface au lieu de disparaitre d'un coup. */
       .marker-club { transition: opacity .25s ease; }
-      .marker-club.filtre { opacity: 0; pointer-events: none; }
+      /* visibility et !important : MapLibre ecrit l opacite du marqueur en style direct. */
+      .marker-club.filtre { opacity: 0 !important; visibility: hidden !important; pointer-events: none; }
       .moi-point { width: 18px; height: 18px; border-radius: 50%; background: #1d7fd6; border: 3px solid #ffffff; box-shadow: 0 0 0 7px rgba(29,127,214,.22), 0 1px 4px rgba(0,0,0,.3); }
 
       /* ⚠️ L'ATTRIBUTION MONTE EN HAUT A DROITE. En bas, la capsule
@@ -6080,6 +6081,9 @@
         border-radius: 18px;
       }
       .vue-story .st-cta, .vue-story .st-cta-second { border-radius: 16px; min-height: 56px; }
+      /* 05/10/2026 nuit, Julien : « le Ouvrir Insta en noir, je trouve ca bizarre ».
+         Le rouge de la marque, comme « Poster ma story » sur la fiche d'un lieu. */
+      .vue-story .st-cta { background: var(--marque, #de3131); color: #ffffff; }
       .vue-story .st-bloc { margin-top: 26px; }
       .st-inviter-btn {
         flex: 0 0 auto; padding: 9px 16px; border-radius: var(--r-pill);
@@ -6844,7 +6848,7 @@
       .vue-story .st-tete { margin-bottom: 14px; }
       .vue-story .st-scene { padding: 10px 0 0; }
       .vue-story .st-tel { width: 142px; border-radius: 24px; }
-      .vue-story .st-gain { margin-top: -18px; }
+      .vue-story .st-gain { margin-top: 14px; }
       .vue-story .st-scene { margin-bottom: 12px; }
 
       /* Inviter : le QR, une phrase, un bouton. */
@@ -6885,6 +6889,22 @@
       .sheet.fiche-club .fc-nom { font-size: calc(30 * var(--u)); }
       .sheet.fiche-club .fc-type { font-size: calc(15 * var(--u)); }
       .sheet.fiche-club .club-partenaire-bloc { margin-bottom: 14px; padding: 14px 16px 15px; }
+      .fc-reperes { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); margin: 2px 0 18px; }
+      .fc-reperes > div { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 6px; text-align: center; }
+      .fc-reperes > div + div { border-left: 1px solid var(--line); }
+      .fc-reperes b { display: inline-flex; align-items: center; gap: 6px; font-size: calc(16 * var(--u)); font-weight: 750; color: var(--ink); white-space: nowrap; }
+      .fc-reperes b i { width: 8px; height: 8px; border-radius: 50%; background: #c2410c; }
+      .fc-reperes b i.ouvert { background: #16a34a; }
+      .fc-reperes span { font-size: calc(12.5 * var(--u)); color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+      .fc-recos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 18px; }
+      .fc-reco { display: flex; flex-direction: column; gap: 2px; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+      .fc-reco-ph { display: block; aspect-ratio: 1 / 1; margin-bottom: 6px; border-radius: 14px; overflow: hidden; background: #ebecef; }
+      .fc-reco-ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .fc-reco-ph img.dessin { object-fit: contain; padding: 14%; box-sizing: border-box; }
+      .fc-reco strong { font-size: calc(14 * var(--u)); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .fc-reco small { font-size: calc(12.5 * var(--u)); color: var(--ink2); }
+      .fc-reco:active .fc-reco-ph { transform: scale(.97); }
+      .sheet.fiche-club .fc-cta { margin: 0 0 16px; min-height: 52px; border-radius: 16px; font-size: calc(16.5 * var(--u)); }
       .sheet.fiche-club .club-partenaire-bloc h4 { margin-bottom: 10px; font-size: calc(16 * var(--u)); color: var(--ink); }
       .sheet.fiche-club .club-partenaire-bloc .sheet-cta { min-height: 52px; font-size: calc(16.5 * var(--u)); }
       .sheet.fiche-club .club-recompenses-lien { font-size: calc(15 * var(--u)); }
@@ -6892,7 +6912,7 @@
       .sheet.fiche-club .club-adresse-txt, .sheet.fiche-club .club-info-principal { font-size: calc(16.5 * var(--u)); }
       .sheet.fiche-club .club-info-ligne { padding: 13px 0; }
       /* Julien : « le +100 points, il vaut mieux qu'il n'apparaisse pas sur le téléphone ». */
-      .vue-story .st-scene .st-gain { display: none; }
+      .vue-story .st-scene.joue .st-gain { animation-delay: 1.4s; }
       .vue-story .st-carte .st-sticker.ps-copier { height: auto; min-height: 0; padding: 0; border-radius: 0; background: none; box-shadow: none; }
       .st-scan-carte { display: flex; align-items: center; gap: 14px; width: 100%; margin: 12px 0 0; padding: 14px 16px 14px 14px; border: 0; border-radius: 20px;
         background: var(--s1); box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 10px 24px -18px rgba(15,17,20,.3); font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
@@ -6905,12 +6925,14 @@
       .st-scan-carte-gain { flex: none; padding: 6px 11px; border-radius: 99px; background: var(--s2); font-family: var(--chiffre); font-size: calc(14 * var(--u)); font-weight: 800; color: var(--ink); }
       /* 05/10/2026 nuit, Julien : « garde le truc a mentionner mais change la dispo
          et rends-le plus petit ». Le titre a gauche, l'autocollant a droite. */
-      .st-mention-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-      .st-mention-ligne .st-carte-titre { margin: 0; line-height: 1.3; }
-      .st-mention-ligne .st-sticker { width: auto; align-items: flex-end; gap: 4px; margin: 0; }
-      .st-mention-ligne .st-sticker b { padding: 7px 12px; border-radius: 10px; }
-      .st-mention-ligne .st-sticker b i { font-size: calc(15 * var(--u)); }
-      .st-mention-ligne .st-sticker span { font-size: calc(11.5 * var(--u)); padding-right: 4px; }
+      /* 05/10/2026 nuit, 2e retour : le titre AU-DESSUS du @, « Touche pour copier »
+         dessous, et plus de degrade arc-en-ciel sur le @. */
+      .st-mention-ligne { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+      .st-mention-ligne .st-carte-titre { margin: 0; }
+      .st-mention-ligne .st-sticker { width: auto; align-items: center; gap: 5px; margin: 0; }
+      .st-mention-ligne .st-sticker b { padding: 8px 14px; border-radius: 10px; }
+      .st-mention-ligne .st-sticker b i { font-size: calc(16 * var(--u)); background: none; color: var(--ink); -webkit-text-fill-color: currentColor; }
+      .st-mention-ligne .st-sticker span { font-size: calc(12 * var(--u)); }
       .st-historique { margin-top: 28px; }
       .st-historique-titre { margin: 0 2px 6px; font-size: calc(17 * var(--u)); font-weight: 750; letter-spacing: -.015em; color: var(--ink); }
       .st-histo-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 2px; border-bottom: 1px solid var(--line); }
@@ -12465,6 +12487,14 @@ function galerieClub(c, toutes) {
   return html + "</div>" + credit;
 }
 
+/* Les recompenses d'un lieu, pour sa fiche sur la carte. */
+function recompensesDuLieu(c, cle) {
+  var demo = typeof BARS_DEMO !== "undefined" ? BARS_DEMO.filter(function (b) { return b.club === c; })[0] : null;
+  if (demo) return demo.recompenses || [];
+  if (cle && cle === CLUB_BOUTIQUE) return RECOMPENSES || [];
+  return (typeof RECOMPENSES_PAR_CLUB !== "undefined" && RECOMPENSES_PAR_CLUB[cle]) || [];
+}
+
 function ouvrirClub(c, src, id, toutesLesPhotos) {
   rendeur = src || null;
 
@@ -12565,6 +12595,29 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
   // Le bloc partenaire remonte AVANT les infos pratiques : c'est le
   // seul contenu qu'on ne trouve pas sur Maps, donc la raison d'ouvrir
   // cette fiche ici. Il portait avant deux liens perdus tout en bas.
+  /* 05/10/2026 nuit, Julien : la fiche « pas esthetique ». Sous la photo : trois
+     reperes sur une ligne (ouvert, ou, recompenses), les recompenses du lieu en
+     vignettes qu'on touche pour ouvrir sa boutique, puis UN bouton. Plus de
+     boite blanche dans la feuille. */
+  var recosLieu = recompensesDuLieu(c, id);
+  var etatFiche = etatOuverture(c);
+  var ouFiche = POSITION_MOI && c.lngLat ? formaterDistance(distanceKm(POSITION_MOI, c.lngLat)) : (quartierDe(c.adr) || c.adr || "");
+  var reperes = [
+    etatFiche ? ['<i class="' + (etatFiche.ouvert ? "ouvert" : "ferme") + '"></i>' + (etatFiche.ouvert ? "Ouvert" : "Fermé"), etatFiche.texte.replace(/^Ouvert /, "")] : null,
+    ouFiche ? [escapeHtmlSupport(ouFiche), POSITION_MOI ? "de toi" : "Quartier"] : null,
+    recosLieu.length ? [String(recosLieu.length), "récompense" + (recosLieu.length > 1 ? "s" : "")] : null,
+  ].filter(Boolean);
+  var blocFiche = c.partenaire
+    ? '<div class="fc-reperes">' + reperes.map(function (x) { return "<div><b>" + x[0] + "</b><span>" + x[1] + "</span></div>"; }).join("") + "</div>" +
+      (recosLieu.length
+        ? '<div class="fc-recos">' + recosLieu.slice().sort(function (a, b) { return a.cout - b.cout; }).slice(0, 3).map(function (rc) {
+            var img = rc.foto ? '<img src="' + rc.foto + '" alt="" loading="lazy"' + (estVraiePhoto(rc.foto) ? "" : ' class="dessin"') + ">" : "";
+            return '<button type="button" class="fc-reco">' + '<span class="fc-reco-ph">' + img + "</span>" +
+              "<strong>" + escapeHtmlSupport(nomRecompense(rc.nom)) + "</strong><small>" + nb(rc.cout) + " points</small></button>";
+          }).join("") + "</div>"
+        : "") +
+      '<button class="sheet-cta fc-cta" id="sh-poster-story" type="button">Poster ma story</button>'
+    : "";
   var blocPartenaire = c.partenaire
     ? '<div class="club-partenaire-bloc">' +
         // La phrase "Poste ta story avec le tag du club, cumule des
@@ -12634,7 +12687,7 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
 
   var html =
     tete +
-    blocPartenaire +
+    blocFiche +
     '<div class="club-actions-row">' + actions + "</div>" +
     blocAvisGoogle +
     '<div class="club-adresse">' +
@@ -12669,6 +12722,14 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
     activerVue("boutique");
   });
   $("#sh-poster-story")?.addEventListener("click", function () { ouvrirChoixReseau(c.nom); });
+  // Une vignette ouvre la boutique du lieu.
+  document.querySelectorAll(".sheet .fc-reco").forEach(function (b) {
+    b.addEventListener("click", function () {
+      fermerFeuille();
+      activerVue("boutique");
+      ouvrirBoutiqueBar({ nom: c.nom, type: c.type, lngLat: c.lngLat, quartier: quartierDe(c.adr) || c.adr || "", recompenses: recosLieu, club: c, cle: id, km: 0 });
+    });
+  });
   $("#sh-avis-google")?.addEventListener("click", function () { ouvrirAvisGoogle(c); });
   aVisite(id).then(function (oui) {
     var titre = $("#sh-avis-titre"), sous = $("#sh-avis-sous");
@@ -12927,7 +12988,7 @@ function ouvrirChoixReseau(nomClub) {
     if (!aCopier) return '<div class="st-sticker"><b>' + escapeHtmlSupport(cible) + "</b></div>";
     return '<button type="button" class="st-sticker ps-copier" data-copie="' + escapeHtmlSupport(aCopier) + '">' +
       "<b><i>" + escapeHtmlSupport(cible).toUpperCase() + "</i></b>" +
-      "<span>Copier</span>" +
+      "<span>Touche pour copier</span>" +
     "</button>";
   }
 
@@ -12969,7 +13030,7 @@ function ouvrirChoixReseau(nomClub) {
     '<form id="story-form" class="st-form" novalidate>' +
       '<section class="st-carte">' +
         '<div class="st-mention-ligne">' +
-          '<p class="st-carte-titre">À mentionner<br>dans ta story</p>' +
+          '<p class="st-carte-titre">À mentionner dans ta story</p>' +
           '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
         "</div>" +
       "</section>" +
