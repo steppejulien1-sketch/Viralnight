@@ -6087,7 +6087,6 @@
       .vue-story .st-form .st-cta, #story-ouvrir-app.st-cta { background: #de3131 !important; color: #ffffff !important; }
       /* « Le carre autour de A mentionner dans ta story, je trouve pas ca beau » :
          plus de carte, le bloc pose directement sur la page. */
-      .vue-story .st-form .st-carte { background: none; box-shadow: none; border: 0; padding: 6px 0 0; }
       /* 05/10/2026 nuit : « mets juste les 100 points en rouge et les 20 points en rouge ». */
       .vue-story .st-scene .st-gain { background: #de3131; box-shadow: 0 12px 24px -12px rgba(222,49,49,.55); }
       .vue-story .st-scan-carte-gain { color: #de3131; }
@@ -12992,17 +12991,17 @@ function ouvrirChoixReseau(nomClub) {
   }
 
   // Le tag a ecrire, et de quoi le copier d'un tap.
-  /* 05/10/2026 : le @ en grand, comme l'autocollant « Mention » d'Instagram.
-     On le touche pour le copier. */
+  // Le tag a ecrire, et de quoi le copier d'un tap.
   function blocTag(handle) {
     var c = CLUBS_STORY[cleChoisie];
     var cible = handle ? "@" + handle : (c ? c.nom : "l'établissement");
     var aCopier = handle ? "@" + handle : "";
-    if (!aCopier) return '<div class="st-sticker"><b>' + escapeHtmlSupport(cible) + "</b></div>";
-    return '<button type="button" class="st-sticker ps-copier" data-copie="' + escapeHtmlSupport(aCopier) + '">' +
-      "<b><i>" + escapeHtmlSupport(cible).toUpperCase() + "</i></b>" +
-      "<span>Touche pour copier</span>" +
-    "</button>";
+    return '<div class="st-tag">' +
+      '<span class="st-tag-txt"><b>' + escapeHtmlSupport(cible) + "</b></span>" +
+      (aCopier
+        ? '<button type="button" class="ps-copier" data-copie="' + escapeHtmlSupport(aCopier) + '">' + ICONE_COPIER + "<span>Copier</span></button>"
+        : "") +
+    "</div>";
   }
 
   /* Le logo Instagram au trait blanc, pour le bouton rouge. Le logo de
@@ -13042,10 +13041,8 @@ function ouvrirChoixReseau(nomClub) {
   var html =
     '<form id="story-form" class="st-form" novalidate>' +
       '<section class="st-carte">' +
-        '<div class="st-mention-ligne">' +
-          '<p class="st-carte-titre">À mentionner dans ta story</p>' +
-          '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
-        "</div>" +
+        '<p class="st-carte-titre">Mentionne dans ta story</p>' +
+        '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
       "</section>" +
       /* 05/10/2026, Julien : « le design de scanner le QR code sur place, change ».
          Une carte a part, sous la mention : l'icone dans un rond noir, deux
