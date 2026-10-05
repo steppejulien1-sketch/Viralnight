@@ -6790,6 +6790,22 @@
       .va-signal label { display: block; margin: 0 0 6px 2px; font-size: calc(13.5 * var(--u)); font-weight: 600; }
       .va-signal textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--s2); color: var(--ink); font: inherit; font-size: calc(14.5 * var(--u)); resize: none; margin-bottom: 10px; }
       .va-moderation-msg { margin: 12px 0 0; font-size: calc(13.5 * var(--u)); color: var(--ink2); text-align: center; }
+
+      /* ---- DETAILS DU 05/10/2026 (audit design de l'appli clubbeur) ---- */
+      /* Une vraie photo de recompense remplit sa case, bord a bord. */
+      .carte-reco.vraie-photo .photo img,
+      .vue-bar .vb-grille .carte-reco.vraie-photo .photo img { object-fit: cover; padding: 0; }
+      .vue-bar .vb-grille .carte-reco.vraie-photo .photo { background: #1c1c1f; }
+      .sheet-visuel.foto.vraie-photo { width: 100%; height: 220px; margin: 0; border-radius: 16px; overflow: hidden; }
+      .sheet-visuel.foto.vraie-photo img { object-fit: cover; }
+      .sheet-hero:has(.vraie-photo), .sheet.a-ambiance .sheet-hero:has(.vraie-photo) { padding: 0; overflow: hidden; }
+      /* La jauge reste au pied de l'etiquette, au meme niveau d'une carte a l'autre. */
+      .vue-bar .vb-grille .carte-reco .vb-mini-jauge { margin-top: auto; }
+      /* Le nom du lieu restait illisible sur une photo claire (Minuit Douze) :
+         le voile tient la bande du texte, le haut de la photo reste intact. */
+      .bar-voile { background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.38) 26%, rgba(0,0,0,0) 48%); }
+      /* Une photo qui charge laisse un gris, plus un trou blanc. */
+      .vue-boutique .bar-couverture, .vb-hero { background: #2a2a2e; }
     </style>
     <script>
       /* ?theme=noir ou ?theme=blanc : force le theme, quel que soit celui du
@@ -9018,10 +9034,17 @@ function artCordon() {
    --socle, la meme surface pour toutes les recompenses (voir le jeton).
    `taille` choisit entre le petit format des listes et le disque de la
    feuille — meme dessin, meme socle. */
+/* 05/10/2026 : une vraie photo (deposee par le gerant, pas un de nos dessins
+   detoures) remplit sa case, bord a bord. Posee en `contain` avec la marge
+   prevue pour les dessins, elle flottait en petit au milieu d'un cadre gris. */
+function estVraiePhoto(url) {
+  return !!url && url.indexOf("/recompenses/art-") === -1;
+}
+
 function visuel(item, taille) {
   var cls = taille === "grand" ? "sheet-visuel" : "visuel";
   if (item.foto) {
-    return '<span class="' + cls + ' foto"><img src="' + item.foto + '" alt="" loading="lazy"></span>';
+    return '<span class="' + cls + ' foto' + (estVraiePhoto(item.foto) ? " vraie-photo" : "") + '"><img src="' + item.foto + '" alt="" loading="lazy"></span>';
   }
   return '<span class="' + cls + '">' + item.art() + "</span>";
 }
@@ -12420,7 +12443,7 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
         "<h4>Tu gagnes des points ici</h4>" +
         '<button class="sheet-cta" id="sh-poster-story" type="button">Poster ma story</button>' +
         '<a class="club-recompenses-lien" id="sh-voir-recompenses" href="#boutique" style="margin:12px 0 0">' +
-          (RECOMPENSES.length || 4) + " récompenses à échanger ici →" +
+          (c.nbRecompenses || RECOMPENSES.length || 4) + " récompenses à échanger ici →" +
         "</a>" +
       "</div>"
     : "";
@@ -12662,7 +12685,7 @@ function ouvrirChoixReseau(nomClub) {
   var CLUBS_STORY = {};
   Object.keys(CLUBS).forEach(function (k) { CLUBS_STORY[k] = CLUBS[k]; });
   if (MONTRER_BARS_DEMO) {
-    var MENTIONS_DEMO = ["velours.bxl", "minuitdouze.bxl", "neon88.club"];
+    var MENTIONS_DEMO = ["velours.bxl", "minuitdouze.bxl", "neon88.club", "cafelumen.bxl", "septlunes.bxl", "lamiedoree.bxl"];
     BARS_DEMO.forEach(function (bar, i) {
       CLUBS_STORY["demo-" + i] = {
         nom: bar.nom, adr: bar.quartier, lngLat: bar.lngLat, horaires: bar.horaires,
@@ -13294,12 +13317,15 @@ function positionPourCarte() {
   });
 }
 
+// Tout ce qui a une epingle : les lieux reels et ceux du mode demonstration.
+var LIEUX_CARTE = {};
 function clesVisiblesCarte() {
-  var cles = Object.keys(CLUBS);
-  if (FILTRES_CARTE.ouvert) cles = cles.filter(function (k) { var e = etatOuverture(CLUBS[k]); return !!(e && e.ouvert); });
+  var L = LIEUX_CARTE;
+  var cles = Object.keys(L);
+  if (FILTRES_CARTE.ouvert) cles = cles.filter(function (k) { var e = etatOuverture(L[k]); return !!(e && e.ouvert); });
   if (FILTRES_CARTE.proche && POSITION_MOI) {
-    var tries = cles.slice().sort(function (a, b) { return distanceKm(POSITION_MOI, CLUBS[a].lngLat) - distanceKm(POSITION_MOI, CLUBS[b].lngLat); });
-    var dedans = tries.filter(function (k) { return distanceKm(POSITION_MOI, CLUBS[k].lngLat) <= RAYON_PROCHE_KM; });
+    var tries = cles.slice().sort(function (a, b) { return distanceKm(POSITION_MOI, L[a].lngLat) - distanceKm(POSITION_MOI, L[b].lngLat); });
+    var dedans = tries.filter(function (k) { return distanceKm(POSITION_MOI, L[k].lngLat) <= RAYON_PROCHE_KM; });
     cles = dedans.length ? dedans : tries.slice(0, 3);
   }
   return cles;
@@ -13318,11 +13344,11 @@ function appliquerFiltresCarte(recadrer) {
     return;
   }
   if (FILTRES_CARTE.proche && POSITION_MOI && cles.length &&
-      !cles.some(function (k) { return distanceKm(POSITION_MOI, CLUBS[k].lngLat) <= RAYON_PROCHE_KM; })) {
+      !cles.some(function (k) { return distanceKm(POSITION_MOI, LIEUX_CARTE[k].lngLat) <= RAYON_PROCHE_KM; })) {
     direCarte("Rien à moins de " + RAYON_PROCHE_KM + " km : voici les plus proches.");
   }
   if (!recadrer || !cles.length) return;
-  var points = cles.map(function (k) { return CLUBS[k].lngLat; });
+  var points = cles.map(function (k) { return LIEUX_CARTE[k].lngLat; });
   if (FILTRES_CARTE.proche && POSITION_MOI) points.push(POSITION_MOI);
   var b = points.reduce(function (acc, ll) { return acc.extend(ll); }, new maplibregl.LngLatBounds(points[0], points[0]));
   /* Le zoom du recadrage devient la nouvelle reference : sans ca, la
@@ -13382,8 +13408,8 @@ document.getElementById("cf-proche")?.addEventListener("click", function () {
    en base arrivent APRES le chargement de la carte, il faut pouvoir leur
    poser une epingle a ce moment-la. */
 var CARTE_CHARGEE = false;
-function poserPin(key) {
-    var c = CLUBS[key];
+function poserPin(key, lieu) {
+    var c = lieu || CLUBS[key];
     var porteur = document.createElement("div");
     // marker-club : le porteur a la taille de la goutte, pour que l'ancre
     // "bottom" pose la pointe sur le lieu. `.marker-porteur` sert aussi au
@@ -13426,6 +13452,7 @@ function poserPin(key) {
       .setLngLat(c.lngLat)
       .addTo(map);
     PINS_CARTE[key] = porteur;
+    LIEUX_CARTE[key] = c;
     var ecart = ecartAleatoire();
     marqueursEchelle.push({ el: el, dx: ecart.x, dy: ecart.y });
 }
@@ -13438,6 +13465,8 @@ function poserPinsManquants() {
 map.on("load", function () {
   CARTE_CHARGEE = true;
   Object.keys(CLUBS).forEach(function (key) { poserPin(key); });
+  // Les commerces factices du mode demonstration (?demo=1) ont leur epingle.
+  if (MONTRER_BARS_DEMO) BARS_DEMO.forEach(function (bar, i) { poserPin("demo-" + i, bar.club); });
 
   // Cadre les deux clubs des le chargement (voir le commentaire sur
   // "zoom: 8" plus haut) -- sans animation, c'est la position de
@@ -13446,11 +13475,19 @@ map.on("load", function () {
   // dessus, un pitch incline aurait laisse un des deux clubs hors
   // cadre malgre des bounds corrects.
   var lngLats = Object.keys(CLUBS).map(function (k) { return CLUBS[k].lngLat; });
+  if (MONTRER_BARS_DEMO) lngLats = lngLats.concat(BARS_DEMO.map(function (bar) { return bar.lngLat; }));
   var bounds = lngLats.length ? lngLats.reduce(function (b, ll) { return b.extend(ll); }, new maplibregl.LngLatBounds(lngLats[0], lngLats[0])) : null;
   /* Marge du BAS : la capsule d'onglets flotte sur le bas de la carte.
      Sans ca, le club pouvait se cadrer juste dessous. */
   // Aucun lieu encore (04/10/2026) : la carte reste sur Bruxelles.
+  /* ⚠️ 05/10/2026 : le premier jumpTo (zoom 16) avait deja fixe zoomCible,
+     et la correction du "moveend" ramenait la carte au zoom d'une rue juste
+     apres ce cadrage. On repart de zero : c'est CE cadrage qui fait foi. */
+  zoomCible = null;
+  clearTimeout(minuteurCorrectionZoom);
   if (lngLats.length) map.fitBounds(bounds, { padding: { top: 80, left: 64, right: 64, bottom: 120 }, pitch: 0, bearing: 0, maxZoom: 15, duration: 0 });
+  // 05/10/2026 : sans lieu, la carte s'ouvrait au zoom d'une rue, vide. On montre la ville.
+  else map.jumpTo({ center: BRUXELLES, zoom: 12.4 });
 
   /* ⚠️ PLUS DE VERRE "TOI". Julien, 13/09/2026 : "on peut retirer la biere
      avec Toi et juste mettre les etablissements". Le verre etait pose sur
@@ -16966,7 +17003,17 @@ var vientDeDebloquer = function () { return false; };
 /* 25/09/2026 : COUPES par defaut. Apple refuse le contenu inventé (regle 2.1)
    et un vrai client ne doit pas tomber sur un bar qui n'existe pas. Ils
    restent visibles pour une demonstration avec ?demo=1 dans l'adresse. */
-var MONTRER_BARS_DEMO = /[?&]demo=1(&|$)/.test(location.search);
+/* 05/10/2026, Julien : « remets des commerces factices pour qu'on voie la
+   structure de l'appli ». ?demo=1 s'en souvient sur ce telephone (l'appli
+   installee perd l'adresse au premier lancement) ; ?demo=0 les retire. Un
+   vrai client, qui n'a jamais ouvert ce lien, ne les voit pas. */
+var MONTRER_BARS_DEMO = (function () {
+  var q = location.search.match(/[?&]demo=([01])(&|$)/);
+  try {
+    if (q) { if (q[1] === "1") localStorage.setItem("vn_demo", "1"); else localStorage.removeItem("vn_demo"); }
+    return q ? q[1] === "1" : localStorage.getItem("vn_demo") === "1";
+  } catch (e) { return !!q && q[1] === "1"; }
+})();
 /* Horaires INVENTES comme le reste, pour que l'en-tete de section montre
    ce qu'il montrera pour un vrai etablissement (ouvert / ouvre a...). */
 function semaineDemo(jours, de, a) {
@@ -16978,6 +17025,10 @@ var BARS_DEMO = [
   { nom: "Velours", type: "bar", lngLat: [4.3503, 50.8468], quartier: "Bruxelles-Centre", horaires: semaineDemo([1, 2, 3, 4, 5, 6], "18:00", "02:00") },
   { nom: "Minuit Douze", type: "restaurant", lngLat: [4.3452, 50.8331], quartier: "Saint-Gilles", horaires: semaineDemo([3, 4, 5], "21:00", "04:00") },
   { nom: "Néon 88", type: "club", lngLat: [4.3688, 50.8322], quartier: "Ixelles", horaires: semaineDemo([4, 5], "23:00", "06:00") },
+  // 05/10/2026 : un lieu par type de commerce, pour voir la structure entiere.
+  { nom: "Café Lumen", type: "cafe", lngLat: [4.3720, 50.8282], quartier: "Flagey", horaires: semaineDemo([0, 1, 2, 3, 4, 5, 6], "08:00", "18:00") },
+  { nom: "Brasserie Sept Lunes", type: "bar", lngLat: [4.3466, 50.8481], quartier: "Saint-Géry", horaires: semaineDemo([0, 1, 2, 3, 4, 5, 6], "11:00", "01:00") },
+  { nom: "La Mie Dorée", type: "boulangerie", lngLat: [4.3818, 50.8358], quartier: "Etterbeek", horaires: semaineDemo([1, 2, 3, 4, 5, 6], "07:00", "19:00") },
 ];
 BARS_DEMO.forEach(function (bar, i) {
   // Les MEMES dessins peints que le catalogue du vrai club (FOTOS) : les
@@ -16986,23 +17037,33 @@ BARS_DEMO.forEach(function (bar, i) {
     [["Shot maison", "bar", 120, artShot, "artShot"], ["Cocktail", "bar", 250, artCocktail, "artCocktail"], ["Vestiaire", "acces", 300, artShot, "artCintre"]],
     [["Pinte", "bar", 200, artPinte, "artPinte"], ["Cocktail signature", "bar", 350, artCocktail, "artCocktail"], ["Bouteille pour la table", "vip", 2200, artBouteille, "artBouteille"]],
     [["Vestiaire", "acces", 250, artShot, "artCintre"], ["Shot maison", "bar", 150, artShot, "artShot"], ["Table + bouteille", "vip", 3000, artBouteille, "artBouteille"]],
+    // Les commerces de jour : de vraies photos, comme celles qu'un gerant depose.
+    [["Croissant", "bar", 60, artShot, "/site/recompenses/croissant.webp"], ["Cappuccino", "bar", 80, artShot, "/site/recompenses/cappuccino.webp"], ["Cheesecake", "bar", 150, artShot, "/site/recompenses/cheesecake.webp"]],
+    [["Pinte", "bar", 150, artPinte, "/site/recompenses/biere.webp"], ["Cocktail", "bar", 280, artCocktail, "/site/recompenses/cocktail.webp"], ["Pizza", "bar", 450, artShot, "/site/recompenses/pizza.webp"]],
+    [["Croissant", "bar", 50, artShot, "/site/recompenses/croissant.webp"], ["Café", "bar", 70, artShot, "/site/recompenses/cappuccino2.webp"], ["Tiramisu", "bar", 140, artShot, "/site/recompenses/tiramisu.webp"]],
   ][i];
   bar.club = {
-    nom: bar.nom, type: bar.type, adr: bar.quartier, horaires: bar.horaires,
+    nom: bar.nom, type: bar.type, adr: bar.quartier, horaires: bar.horaires, lngLat: bar.lngLat,
+    partenaire: true, demo: true, c: "#de3131",
     // Bars INVENTES : une photo de bar libre de droits (Pexels), plus le logo.
-    photo: ["/ambiance/profil/3.webp", "/ambiance/profil/1.webp", "/ambiance/hero-nightclub.webp"][i],
+    photo: ["/ambiance/profil/3.webp", "/ambiance/profil/1.webp", "/ambiance/hero-nightclub.webp", "/site/ouverture-cafe.webp", "/site/hero-terrasse.webp", "/site/commerce-boulangerie.webp"][i],
     // Grande photo de la boutique facon DUSK (recadrages 1170 x 640, libres de droits).
-    couverture: ["/clubs/demo-velours.webp", "/clubs/demo-minuit-douze.webp", "/clubs/demo-neon-88.webp"][i],
+    couverture: ["/clubs/demo-velours.webp", "/clubs/minuit-douze-1.webp", "/clubs/demo-neon-88.webp", "/site/ouverture-cafe.webp", "/site/hero-terrasse.webp", "/site/commerce-boulangerie.webp"][i],
     // Les photos qui defilent au toucher sur la page du bar.
     photos: [
       ["/clubs/velours-2.webp", "/clubs/velours-3.webp", "/clubs/velours-4.webp"],
-      ["/clubs/minuit-douze-1.webp", "/clubs/minuit-douze-2.webp", "/clubs/minuit-douze-3.webp"],
+      ["/clubs/demo-minuit-douze.webp", "/clubs/minuit-douze-2.webp", "/clubs/minuit-douze-3.webp"],
       ["/clubs/neon-88-2.webp", "/clubs/neon-88-3.webp", "/clubs/neon-88-4.webp"],
+      ["/site/recompenses/cappuccino.webp"],
+      ["/site/commerce-bar.webp"],
+      ["/site/recompenses/croissant.webp"],
     ][i],
   };
   bar.recompenses = catalogues.map(function (c, j) {
-    return { id: "demo-" + i + "-" + j, nom: c[0], fam: c[1], cout: c[2], art: c[3], foto: FOTOS[c[4]], propre: false, stock: 20, code: "", demo: true, bar: bar.club };
+    var foto = c[4].charAt(0) === "/" ? c[4] : FOTOS[c[4]];
+    return { id: "demo-" + i + "-" + j, nom: c[0], fam: c[1], cout: c[2], art: c[3], foto: foto, propre: c[4].charAt(0) === "/", stock: 20, code: "", demo: true, bar: bar.club };
   });
+  bar.club.nbRecompenses = bar.recompenses.length;
 });
 
 /* ⚠️ "OFFERT" NE S'ECRIT PLUS DANS LE NOM. Julien, 13/09/2026 : "arrete de
@@ -17225,7 +17286,8 @@ function rendreBoutiqueBar(bar) {
       index++;
       // La jauge de la recompense : combien on en est, en un coup d'oeil.
       if (r.cout > solde && r.stock > 0) {
-        var pct = Math.max(4, Math.min(100, Math.round(solde / r.cout * 100)));
+        // A 0 point, plus de point noir de 4 % : il se lisait comme un defaut.
+        var pct = solde > 0 ? Math.max(4, Math.min(100, Math.round(solde / r.cout * 100))) : 0;
         carte.querySelector(".corps")?.insertAdjacentHTML("beforeend",
           '<span class="vb-mini-jauge" aria-label="' + pct + ' % des points"><i style="width:' + pct + '%"></i></span>');
       }
@@ -17507,7 +17569,7 @@ function carteRecompense(r, index, bar) {
     var epuise = r.stock <= 0;
 
     var b = document.createElement("button");
-    b.className = "carte-reco" + (loin ? " loin" : " dispo") + (epuise ? " epuise" : "");
+    b.className = "carte-reco" + (loin ? " loin" : " dispo") + (epuise ? " epuise" : "") + (estVraiePhoto(r.foto) ? " vraie-photo" : "");
     b.type = "button";
     b.setAttribute("aria-label", nomRecompense(r.nom) + ", " + r.cout + " points" + (epuise ? ", épuisé" : ""));
 
