@@ -6857,6 +6857,39 @@
          grands ». 8 px de marge au lieu de 20, et moins hautes qu'avant. */
       .vue-boutique .bar-section { margin-left: -12px; margin-right: -12px; }
       .vue-boutique .bar-couverture { aspect-ratio: 374 / 184; }
+
+      /* ---- Onglet Story, 05/10/2026 soir (« fais tout ») ---- */
+      .st-gain-tete { flex: none; margin: 0; padding: 7px 12px; border-radius: 99px; background: var(--ink); color: var(--bg); font-size: calc(13 * var(--u)); font-weight: 600; }
+      .st-gain-tete b { font-family: var(--chiffre); font-size: calc(16 * var(--u)); font-weight: 800; }
+      .vue-story #st-club { display: none; }
+      .st-ronds-zone:empty { display: none; }
+      .st-ronds { display: flex; gap: 14px; margin: 0 -20px 6px; padding: 2px 20px 6px; overflow-x: auto; scrollbar-width: none; }
+      .st-ronds::-webkit-scrollbar { display: none; }
+      .st-rond { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 70px; padding: 0; border: 0; background: none; font: inherit; color: var(--ink2); cursor: pointer; }
+      .st-rond-photo { display: block; width: 66px; height: 66px; padding: 3px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--line); }
+      .st-rond.choisi .st-rond-photo { box-shadow: inset 0 0 0 2.5px var(--ink); }
+      .st-rond-photo img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+      .st-rond-nom { max-width: 70px; font-size: calc(11.5 * var(--u)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .st-rond.choisi .st-rond-nom { color: var(--ink); font-weight: 750; }
+      .st-rond:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 12px; }
+      .st-sticker { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; margin: 4px 0 2px; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; }
+      .st-sticker b { display: inline-block; padding: 10px 18px; border-radius: 12px; background: #ffffff; box-shadow: 0 1px 2px rgba(15,17,20,.08), 0 8px 20px -10px rgba(15,17,20,.35); transition: transform .12s ease; }
+      .st-sticker b i { font-style: normal; font-family: var(--titre); font-size: calc(21 * var(--u)); font-weight: 800; letter-spacing: -.01em;
+        background: linear-gradient(90deg, #f58529, #dd2a7b 45%, #8134af 75%, #515bd4); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+      .st-sticker span { font-size: calc(12.5 * var(--u)); font-weight: 600; color: var(--ink3); }
+      .st-sticker.copie span { color: #138a45; }
+      .st-sticker:active b { transform: scale(.97); }
+      /* Julien : « le +100 points, il vaut mieux qu'il n'apparaisse pas sur le téléphone ». */
+      .vue-story .st-scene .st-gain { display: none; }
+      .st-historique { margin-top: 28px; }
+      .st-historique-titre { margin: 0 2px 6px; font-size: calc(17 * var(--u)); font-weight: 750; letter-spacing: -.015em; color: var(--ink); }
+      .st-histo-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 2px; border-bottom: 1px solid var(--line); }
+      .st-histo-ligne:last-child { border-bottom: 0; }
+      .st-histo-ligne strong { display: block; font-size: calc(15 * var(--u)); font-weight: 650; color: var(--ink); }
+      .st-histo-ligne small { font-size: calc(12.5 * var(--u)); color: var(--ink3); }
+      .st-etat { flex: none; padding: 5px 10px; border-radius: 99px; background: var(--s2); color: var(--ink2); font-size: calc(12.5 * var(--u)); font-weight: 700; }
+      .st-etat.ok { background: #e6f5ec; color: #138a45; }
+      .st-etat.non { color: #b42318; }
       .vue-boutique .bar-section + .bar-section { margin-top: 11px; }
     </style>
     <script>
@@ -7290,7 +7323,9 @@
                Un seul bouton plein a la fois (voir .st-cta). -->
           <header class="st-tete">
             <h1 class="st-titre">Poste une story</h1>
-            <p class="solde-chiffre"><strong class="carte-solde-num js-solde">0</strong><span>points</span></p>
+            <!-- 05/10/2026 : ce que la story rapporte, a la place du solde (deja dans Recompenses). -->
+            <p class="st-gain-tete"><b id="st-gain-tete">+100</b> points</p>
+            <p class="solde-chiffre" hidden><strong class="carte-solde-num js-solde">0</strong><span>points</span></p>
           </header>
           <!-- Une phrase qui dit tout (Julien, 15/09/2026 : « un petit texte
                simple, efficace, que les gens comprennent »). Le nom du club et
@@ -9302,6 +9337,7 @@ $("#story-page-corps")?.addEventListener("click", async function (e) {
   var bouton = e.target.closest(".ps-copier");
   if (!bouton) return;
   var libelle = bouton.querySelector("span");
+  var avant = libelle.dataset.avant || (libelle.dataset.avant = libelle.textContent);
   try {
     await navigator.clipboard.writeText(bouton.dataset.copie);
     bouton.classList.add("copie");
@@ -9312,7 +9348,7 @@ $("#story-page-corps")?.addEventListener("click", async function (e) {
   }
   setTimeout(function () {
     bouton.classList.remove("copie");
-    libelle.textContent = "Copier";
+    libelle.textContent = avant;
   }, 1600);
 });
 
@@ -12726,6 +12762,38 @@ var KINDS_STORY = [
 // sur la vraie PWA clubbeur (06-pwa-clubbeurs/src/pages/post-story.js)
 // -- meme raisonnement affiche, meme marche a suivre numerotee,
 // adaptes au HTML/JS de ce fichier (pas de composants a importer).
+/* Les dernieres stories du clubbeur, en bas de l'onglet Story (05/10/2026) :
+   le lieu, le jour, et si elle a compte. review_status vaut null tant que
+   personne n'a tranche, 'validee' ou 'refusee' ensuite. */
+async function chargerHistoriqueStories() {
+  var zone = document.getElementById("st-historique");
+  if (!zone || !supabaseClubbeur) return;
+  var session = (await supabaseClubbeur.auth.getSession()).data.session;
+  if (!session) return;
+  var res = await supabaseClubbeur
+    .from("story_events")
+    .select("id, mentioned_at, review_status, awarded_points, clubs(name)")
+    .eq("user_id", session.user.id)
+    .order("mentioned_at", { ascending: false })
+    .limit(5);
+  if (res.error || !res.data || !res.data.length || !document.contains(zone)) return;
+  function jour(d) {
+    var date = new Date(d), auj = new Date();
+    var ecart = Math.round((new Date(auj.toDateString()) - new Date(date.toDateString())) / 86400000);
+    if (ecart === 0) return "Aujourd’hui";
+    if (ecart === 1) return "Hier";
+    return date.toLocaleDateString("fr-BE", { day: "numeric", month: "long" });
+  }
+  zone.innerHTML = '<h2 class="st-historique-titre">Tes dernières stories</h2>' + res.data.map(function (st) {
+    var etat = st.review_status === "validee"
+      ? '<b class="st-etat ok">+' + nb(st.awarded_points || 0) + "</b>"
+      : st.review_status === "refusee" ? '<b class="st-etat non">Refusée</b>' : '<b class="st-etat">En attente</b>';
+    var lieu = st.clubs && st.clubs.name ? nomLieuAffiche(st.clubs.name) : "Story";
+    return '<div class="st-histo-ligne"><span><strong>' + escapeHtmlSupport(lieu) + "</strong><small>" + jour(st.mentioned_at) + "</small></span>" + etat + "</div>";
+  }).join("");
+  zone.hidden = false;
+}
+
 function ouvrirChoixReseau(nomClub) {
   /* ⚠️ REFAIT LE 13/09/2026 (voir #vue-story). Ce qui a disparu, et
      pourquoi :
@@ -12759,7 +12827,7 @@ function ouvrirChoixReseau(nomClub) {
     BARS_DEMO.forEach(function (bar, i) {
       CLUBS_STORY["demo-" + i] = {
         nom: bar.nom, adr: bar.quartier, lngLat: bar.lngLat, horaires: bar.horaires,
-        photo: bar.club && bar.club.photo, ig: MENTIONS_DEMO[i], demo: true,
+        photo: bar.club && bar.club.photo, couverture: bar.club && bar.club.couverture, ig: MENTIONS_DEMO[i], demo: true,
       };
     });
   }
@@ -12822,16 +12890,17 @@ function ouvrirChoixReseau(nomClub) {
   }
 
   // Le tag a ecrire, et de quoi le copier d'un tap.
+  /* 05/10/2026 : le @ en grand, comme l'autocollant « Mention » d'Instagram.
+     On le touche pour le copier. */
   function blocTag(handle) {
     var c = CLUBS_STORY[cleChoisie];
     var cible = handle ? "@" + handle : (c ? c.nom : "l'établissement");
     var aCopier = handle ? "@" + handle : "";
-    return '<div class="st-tag">' +
-      '<span class="st-tag-txt"><b>' + escapeHtmlSupport(cible) + "</b></span>" +
-      (aCopier
-        ? '<button type="button" class="ps-copier" data-copie="' + escapeHtmlSupport(aCopier) + '">' + ICONE_COPIER + "<span>Copier</span></button>"
-        : "") +
-    "</div>";
+    if (!aCopier) return '<div class="st-sticker"><b>' + escapeHtmlSupport(cible) + "</b></div>";
+    return '<button type="button" class="st-sticker ps-copier" data-copie="' + escapeHtmlSupport(aCopier) + '">' +
+      "<b><i>" + escapeHtmlSupport(cible).toUpperCase() + "</i></b>" +
+      "<span>Touche pour copier</span>" +
+    "</button>";
   }
 
   /* Le logo Instagram au trait blanc, pour le bouton rouge. Le logo de
@@ -12871,7 +12940,7 @@ function ouvrirChoixReseau(nomClub) {
   var html =
     '<form id="story-form" class="st-form" novalidate>' +
       '<section class="st-carte">' +
-        '<p class="st-carte-titre">Mentionne dans ta story</p>' +
+        '<p class="st-carte-titre">À mentionner dans ta story</p>' +
         '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
         // Le scan du QR, une ligne de la carte : on est sur place, au meme endroit.
         '<button type="button" class="st-scan-ligne" id="story-scan-btn" aria-label="Scanner le QR sur place, +20 points">' +
@@ -12890,6 +12959,8 @@ function ouvrirChoixReseau(nomClub) {
         // Instagram (api/instagram.js, migration 0048) et valide la story.
         '<p class="st-msg" id="story-msg" hidden></p>' +
       "</div>" +
+      // 05/10/2026 : tes dernieres stories, et si elles ont compte.
+      '<section class="st-historique" id="st-historique" hidden></section>' +
     "</form>";
 
   // Ouvre la vraie page Story plutot que la feuille du bas : depuis une
@@ -12910,6 +12981,7 @@ function ouvrirChoixReseau(nomClub) {
   // 04/10/2026 : aucun lieu partenaire encore (pas de client) -- un message, pas un ecran casse.
   if (!CLUBS_STORY[cleChoisie]) {
     $("#st-club").innerHTML = "";
+    if ($("#st-ronds-zone")) $("#st-ronds-zone").innerHTML = "";
     $("#story-page-corps").innerHTML = '<p class="bar-aucun">Dès qu’un bar ou un resto rejoint Noctify, ta story qui le mentionne te rapporte ' + String(BAREME_STORY.story.pts).replace("+", "") + ' points. Ça arrive bientôt.</p>';
     TAB_STORY.classList.add("on");
     TAB_STORY.setAttribute("aria-current", "page");
@@ -12932,6 +13004,40 @@ function ouvrirChoixReseau(nomClub) {
      place du mot « Changer ». Un choix, ou un tap ailleurs, la replie. */
   // Un seul etablissement : rien a choisir, donc ni fleche ni depliage.
   $("#st-club").classList.toggle("unique", Object.keys(CLUBS_STORY).length < 2);
+  /* 05/10/2026, Julien : « fais tout ». Les lieux en ronds, comme les stories
+     en haut d'Instagram : le plus proche d'abord, on touche pour changer.
+     L'ancienne carte depliable reste dessous, masquee (ses fonctions y ecrivent). */
+  function rondsLieux() {
+    var origine = POSITION_MOI || MOI;
+    var cles = Object.keys(CLUBS_STORY).sort(function (a, b) {
+      return distanceKm(origine, CLUBS_STORY[a].lngLat || origine) - distanceKm(origine, CLUBS_STORY[b].lngLat || origine);
+    });
+    return '<div class="st-ronds" role="listbox" aria-label="Choisir l’établissement">' + cles.map(function (k) {
+      var c = CLUBS_STORY[k], choisi = k === cleChoisie;
+      var src = c.avatar || c.photo || c.couverture || PHOTO_CLUB_PAR_DEFAUT;
+      return '<button type="button" class="st-rond' + (choisi ? " choisi" : "") + '" role="option" aria-selected="' + choisi + '" data-cle="' + k + '">' +
+        '<span class="st-rond-photo"><img src="' + escapeHtmlSupport(src) + '" alt="" loading="lazy" onerror="this.src=\'' + PHOTO_CLUB_PAR_DEFAUT + '\'" /></span>' +
+        '<span class="st-rond-nom">' + escapeHtmlSupport(c.nom) + "</span>" +
+      "</button>";
+    }).join("") + "</div>";
+  }
+  function poserRonds() {
+    var zone = $("#st-ronds-zone");
+    if (!zone) return;
+    zone.innerHTML = rondsLieux();
+    zone.querySelectorAll(".st-rond").forEach(function (b) {
+      b.addEventListener("click", function () { if (b.dataset.cle !== cleChoisie) changerClubStory(b.dataset.cle); });
+    });
+  }
+  // La grande photo du lieu choisi dans le telephone (avant : la meme pour tous).
+  function majPhotoScene() {
+    var c = CLUBS_STORY[cleChoisie], img = document.querySelector("#st-scene .st-tel-photo");
+    if (!c || !img) return;
+    var photos = Array.isArray(c.photos) ? c.photos.filter(Boolean) : [];
+    var src = c.couverture || photos[0] || c.photo;
+    if (src) { img.onerror = function () { img.onerror = null; img.src = "/ambiance/bienvenue.webp"; }; img.src = src; }
+  }
+  if (!$("#st-ronds-zone")) $("#st-club").insertAdjacentHTML("beforebegin", '<div class="st-ronds-zone" id="st-ronds-zone"></div>');
   $("#st-club").innerHTML =
     '<button type="button" class="st-club-tete" id="story-club" aria-expanded="false" aria-controls="st-club-liste">' +
       '<span class="st-club-corps" id="st-lieu">' + blocLieu(cleChoisie) + "</span>" +
@@ -12943,9 +13049,14 @@ function ouvrirChoixReseau(nomClub) {
   VUE_STORY.hidden = false;
   VUE_STORY.scrollTop = 0;
   history.replaceState(null, "", "#story");
+  poserRonds();
+  majPhotoScene();
+  chargerHistoriqueStories();
 
   var hero = $("#st-hero-montant");
   if (hero) hero.textContent = BAREME_STORY.story.pts;
+  var gainTete = $("#st-gain-tete");
+  if (gainTete) gainTete.textContent = BAREME_STORY.story.pts;
   // La scene du telephone se rejoue a chaque ouverture de la page.
   function majIntro() {
     var intro = $("#st-intro");
@@ -12986,6 +13097,8 @@ function ouvrirChoixReseau(nomClub) {
     $("#st-lieu").innerHTML = blocLieu(cle);
     var liste = document.querySelector("#st-club .st-club-liste");
     if (liste) { liste.innerHTML = lignesClubsStory(); brancherOptionsClub(); }
+    poserRonds();
+    majPhotoScene();
     majIntro();
     majHandle(handleActuel);
     chercherHandle();
