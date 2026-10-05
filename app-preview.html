@@ -6092,6 +6092,24 @@
       .vue-story .st-scene .st-gain strong { color: #de3131; }
       .vue-story .st-scan-carte-gain { background: #ffffff; color: #de3131; box-shadow: inset 0 0 0 1px var(--line); }
       .vue-story .st-scan-carte-gain span { color: #de3131; }
+      /* 05/10/2026 nuit, Julien : « le truc pour choisir son etablissement, rends-le
+         plus beau ». Meme carte qui se deplie ; photo plus grande aux coins
+         arrondis, type + quartier dessous, liste plus aeree. */
+      .vue-story .st-club { border-radius: 22px; box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 12px 28px -20px rgba(15,17,20,.35); }
+      .vue-story .st-club-tete { padding: 12px 14px 12px 12px; }
+      .vue-story .st-club .st-club-corps { gap: 14px; }
+      .vue-story .st-club .st-lieu-tuile { width: 54px; height: 54px; border-radius: 16px; overflow: hidden; box-shadow: 0 0 0 1px rgba(15,17,20,.06); }
+      .vue-story .st-club .st-lieu-tuile img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+      .vue-story .st-club .st-lieu-txt strong { font-size: calc(18 * var(--u)); font-weight: 800; letter-spacing: -.02em; }
+      .vue-story .st-club .st-lieu-txt span { margin-top: 3px; font-size: calc(13.5 * var(--u)); color: var(--ink2); }
+      .vue-story .st-club-fleche { width: 34px; height: 34px; background: var(--s2); color: var(--ink); }
+      .vue-story .st-club.ouvert .st-club-liste { padding: 4px 0 8px; }
+      .vue-story .st-club-option { gap: 14px; padding: 11px 6px; border-radius: 14px; }
+      .vue-story .st-club-option + .st-club-option { border-top: 1px solid var(--line); border-radius: 0; }
+      .vue-story .st-club-option-photo { width: 46px; height: 46px; border-radius: 14px; box-shadow: 0 0 0 1px rgba(15,17,20,.06); }
+      .vue-story .st-club-option-photo img { border-radius: inherit; }
+      .vue-story .st-club-option-txt strong { font-size: calc(16 * var(--u)); font-weight: 750; }
+      .vue-story .st-club-option-txt span { margin-top: 2px; font-size: calc(13 * var(--u)); color: var(--ink2); }
       .st-regle-mention { margin: 8px 0 0; font-size: calc(10.5 * var(--u)); line-height: 1.35; color: var(--ink3); }
       .vue-story .st-bloc { margin-top: 26px; }
       .st-inviter-btn {
@@ -12951,7 +12969,7 @@ function ouvrirChoixReseau(nomClub) {
     var MENTIONS_DEMO = ["velours.bxl", "minuitdouze.bxl", "neon88.club", "cafelumen.bxl", "septlunes.bxl", "lamiedoree.bxl"];
     BARS_DEMO.forEach(function (bar, i) {
       CLUBS_STORY["demo-" + i] = {
-        nom: bar.nom, adr: bar.quartier, lngLat: bar.lngLat, horaires: bar.horaires,
+        nom: bar.nom, adr: bar.quartier, lngLat: bar.lngLat, horaires: bar.horaires, type: bar.type,
         photo: bar.club && bar.club.photo, couverture: bar.club && bar.club.couverture, ig: MENTIONS_DEMO[i], demo: true,
       };
     });
@@ -12993,6 +13011,8 @@ function ouvrirChoixReseau(nomClub) {
       var choisi = k === cleChoisie;
       var src = c.avatar || c.photo || PHOTO_CLUB_PAR_DEFAUT;
       var lieu = POSITION_MOI ? formaterDistance(distanceKm(POSITION_MOI, c.lngLat)) : (c.demo ? c.adr : quartierDe(c.adr));
+      // 05/10/2026 : le type devant le quartier (« Bar · Saint-Géry »).
+      lieu = [c.libelle || (c.type ? libelleType(c.type) : ""), lieu].filter(Boolean).join(" · ");
       return '<button type="button" class="st-club-option' + (choisi ? " choisi" : "") + '" role="option" aria-selected="' + choisi + '" data-cle="' + k + '">' +
         '<span class="st-club-option-photo"><img src="' + escapeHtmlSupport(src) + '" alt="" loading="lazy" onerror="this.src=\'' + PHOTO_CLUB_PAR_DEFAUT + '\'" /></span>' +
         '<span class="st-club-option-txt"><strong>' + escapeHtmlSupport(c.nom) + "</strong>" + (lieu ? "<span>" + escapeHtmlSupport(lieu) + "</span>" : "") + "</span>" +
@@ -13006,7 +13026,7 @@ function ouvrirChoixReseau(nomClub) {
     if (!c) return "";
     // Le quartier seul : "Boite de nuit" en sous-titre, Julien l'a deja
     // trouve bizarre sur la boutique (13/09/2026).
-    var sous = c.demo ? c.adr : quartierDe(c.adr);
+    var sous = [c.libelle || (c.type ? libelleType(c.type) : ""), c.demo ? c.adr : quartierDe(c.adr)].filter(Boolean).join(" · ");
     var src = c.avatar || c.photo || PHOTO_CLUB_PAR_DEFAUT;
     return '<span class="st-lieu-tuile" aria-hidden="true"><img src="' + escapeHtmlSupport(src) + '" alt="" onerror="this.src=\'' + PHOTO_CLUB_PAR_DEFAUT + '\'" /></span>' +
       '<span class="st-lieu-txt"><strong>' + escapeHtmlSupport(c.nom) + "</strong>" +
