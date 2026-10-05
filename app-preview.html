@@ -6861,7 +6861,6 @@
       /* ---- Onglet Story, 05/10/2026 soir (« fais tout ») ---- */
       .st-gain-tete { flex: none; margin: 0; padding: 7px 12px; border-radius: 99px; background: var(--ink); color: var(--bg); font-size: calc(13 * var(--u)); font-weight: 600; }
       .st-gain-tete b { font-family: var(--chiffre); font-size: calc(16 * var(--u)); font-weight: 800; }
-      .vue-story #st-club { display: none; }
       .st-ronds-zone:empty { display: none; }
       .st-ronds { display: flex; gap: 14px; margin: 0 -20px 6px; padding: 2px 20px 6px; overflow-x: auto; scrollbar-width: none; }
       .st-ronds::-webkit-scrollbar { display: none; }
@@ -6881,7 +6880,6 @@
       .st-sticker:active b { transform: scale(.97); }
       /* Julien : « le +100 points, il vaut mieux qu'il n'apparaisse pas sur le téléphone ». */
       .vue-story .st-scene .st-gain { display: none; }
-      .vue-story .st-tete .solde-chiffre { display: none; }
       .vue-story .st-carte .st-sticker.ps-copier { height: auto; min-height: 0; padding: 0; border-radius: 0; background: none; box-shadow: none; }
       .st-scan-carte { display: flex; align-items: center; gap: 14px; width: 100%; margin: 12px 0 0; padding: 14px 16px 14px 14px; border: 0; border-radius: 20px;
         background: var(--s1); box-shadow: 0 1px 2px rgba(15,17,20,.05), 0 10px 24px -18px rgba(15,17,20,.3); font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
@@ -6892,6 +6890,14 @@
       .st-scan-carte-txt strong { display: block; font-size: calc(16 * var(--u)); font-weight: 750; letter-spacing: -.015em; }
       .st-scan-carte-txt small { display: block; margin-top: 2px; font-size: calc(13.5 * var(--u)); color: var(--ink2); }
       .st-scan-carte-gain { flex: none; padding: 6px 11px; border-radius: 99px; background: var(--s2); font-family: var(--chiffre); font-size: calc(14 * var(--u)); font-weight: 800; color: var(--ink); }
+      /* 05/10/2026 nuit, Julien : « garde le truc a mentionner mais change la dispo
+         et rends-le plus petit ». Le titre a gauche, l'autocollant a droite. */
+      .st-mention-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .st-mention-ligne .st-carte-titre { margin: 0; line-height: 1.3; }
+      .st-mention-ligne .st-sticker { width: auto; align-items: flex-end; gap: 4px; margin: 0; }
+      .st-mention-ligne .st-sticker b { padding: 7px 12px; border-radius: 10px; }
+      .st-mention-ligne .st-sticker b i { font-size: calc(15 * var(--u)); }
+      .st-mention-ligne .st-sticker span { font-size: calc(11.5 * var(--u)); padding-right: 4px; }
       .st-historique { margin-top: 28px; }
       .st-historique-titre { margin: 0 2px 6px; font-size: calc(17 * var(--u)); font-weight: 750; letter-spacing: -.015em; color: var(--ink); }
       .st-histo-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 2px; border-bottom: 1px solid var(--line); }
@@ -7334,9 +7340,7 @@
                Un seul bouton plein a la fois (voir .st-cta). -->
           <header class="st-tete">
             <h1 class="st-titre">Poste une story</h1>
-            <!-- 05/10/2026 : ce que la story rapporte, a la place du solde (deja dans Recompenses). -->
-            <p class="st-gain-tete"><b id="st-gain-tete">+100</b> points</p>
-            <p class="solde-chiffre" hidden><strong class="carte-solde-num js-solde">0</strong><span>points</span></p>
+            <p class="solde-chiffre"><strong class="carte-solde-num js-solde">0</strong><span>points</span></p>
           </header>
           <!-- Une phrase qui dit tout (Julien, 15/09/2026 : « un petit texte
                simple, efficace, que les gens comprennent »). Le nom du club et
@@ -12910,7 +12914,7 @@ function ouvrirChoixReseau(nomClub) {
     if (!aCopier) return '<div class="st-sticker"><b>' + escapeHtmlSupport(cible) + "</b></div>";
     return '<button type="button" class="st-sticker ps-copier" data-copie="' + escapeHtmlSupport(aCopier) + '">' +
       "<b><i>" + escapeHtmlSupport(cible).toUpperCase() + "</i></b>" +
-      "<span>Touche pour copier</span>" +
+      "<span>Copier</span>" +
     "</button>";
   }
 
@@ -12951,8 +12955,10 @@ function ouvrirChoixReseau(nomClub) {
   var html =
     '<form id="story-form" class="st-form" novalidate>' +
       '<section class="st-carte">' +
-        '<p class="st-carte-titre">À mentionner dans ta story</p>' +
-        '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
+        '<div class="st-mention-ligne">' +
+          '<p class="st-carte-titre">À mentionner<br>dans ta story</p>' +
+          '<div id="story-handle-chip">' + blocTag(handleActuel) + "</div>" +
+        "</div>" +
       "</section>" +
       /* 05/10/2026, Julien : « le design de scanner le QR code sur place, change ».
          Une carte a part, sous la mention : l'icone dans un rond noir, deux
@@ -12972,8 +12978,6 @@ function ouvrirChoixReseau(nomClub) {
         // Instagram (api/instagram.js, migration 0048) et valide la story.
         '<p class="st-msg" id="story-msg" hidden></p>' +
       "</div>" +
-      // 05/10/2026 : tes dernieres stories, et si elles ont compte.
-      '<section class="st-historique" id="st-historique" hidden></section>' +
     "</form>";
 
   // Ouvre la vraie page Story plutot que la feuille du bas : depuis une
@@ -13050,7 +13054,6 @@ function ouvrirChoixReseau(nomClub) {
     var src = c.couverture || photos[0] || c.photo;
     if (src) { img.onerror = function () { img.onerror = null; img.src = "/ambiance/bienvenue.webp"; }; img.src = src; }
   }
-  if (!$("#st-ronds-zone")) $("#st-club").insertAdjacentHTML("beforebegin", '<div class="st-ronds-zone" id="st-ronds-zone"></div>');
   $("#st-club").innerHTML =
     '<button type="button" class="st-club-tete" id="story-club" aria-expanded="false" aria-controls="st-club-liste">' +
       '<span class="st-club-corps" id="st-lieu">' + blocLieu(cleChoisie) + "</span>" +
@@ -13062,14 +13065,9 @@ function ouvrirChoixReseau(nomClub) {
   VUE_STORY.hidden = false;
   VUE_STORY.scrollTop = 0;
   history.replaceState(null, "", "#story");
-  poserRonds();
-  majPhotoScene();
-  chargerHistoriqueStories();
 
   var hero = $("#st-hero-montant");
   if (hero) hero.textContent = BAREME_STORY.story.pts;
-  var gainTete = $("#st-gain-tete");
-  if (gainTete) gainTete.textContent = BAREME_STORY.story.pts;
   // La scene du telephone se rejoue a chaque ouverture de la page.
   function majIntro() {
     var intro = $("#st-intro");
@@ -13110,8 +13108,6 @@ function ouvrirChoixReseau(nomClub) {
     $("#st-lieu").innerHTML = blocLieu(cle);
     var liste = document.querySelector("#st-club .st-club-liste");
     if (liste) { liste.innerHTML = lignesClubsStory(); brancherOptionsClub(); }
-    poserRonds();
-    majPhotoScene();
     majIntro();
     majHandle(handleActuel);
     chercherHandle();
