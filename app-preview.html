@@ -7595,7 +7595,7 @@
                 <div class="va-qr-cadre">
                   <div class="va-qr" id="va-qr" aria-hidden="true"></div>
                 </div>
-                <p class="iv-phrase">Ton ami scanne, installe Noctify&nbsp;: <b>+<span class="js-montant-parrainage">100</span> points</b> pour toi.</p>
+                <p class="iv-phrase">Ton ami installe Noctify et scanne ton QR&nbsp;: <b>+<span class="js-montant-parrainage">100</span> points</b> pour toi.</p>
                 <p class="iv-code" hidden><b id="va-mon-code">…</b></p>
                 <div class="va-code-ligne" hidden>
                   <span class="iv-lien" id="va-lien">…</span>
@@ -10998,12 +10998,13 @@ async function scannerJeton(texte) {
   try {
     var parrainQr = new URL(String(texte || "").trim()).searchParams.get("parrain");
     if (parrainQr) {
-      var rq = await Promise.resolve(supabaseClubbeur.rpc("claim_referral", { p_code: parrainQr.toLowerCase() })).catch(function (e) { return { error: e }; });
+      var rq = await reclamerCodeAmi(parrainQr.toLowerCase());
       if (!rq.error) return { message: "C'est noté : ton ami gagne ses points, et vous êtes amis." };
       var tq = String(rq.error.message || "");
       return { message: /deja_parraine/.test(tq) ? "Tu as déjà été invité par un ami."
         : /compte_ancien/.test(tq) ? "Le QR d'un ami se scanne dans les 3 jours qui suivent ton inscription."
-        : /soi_meme/.test(tq) ? "C'est ton propre QR." : "Ce QR d'invitation n'est pas valable." };
+        : /soi_meme/.test(tq) ? "C'est ton propre QR."
+        : /appareil_deja_utilise/.test(tq) ? "Ce téléphone a déjà scanné une invitation." : "Ce QR d'invitation n'est pas valable." };
     }
   } catch (e) { /* pas une adresse : un QR de lieu */ }
   var jeton = jetonDuQr(texte);
@@ -11076,6 +11077,24 @@ function assurerProfil(user) {
    - la trace locale n'est effacee que sur une reponse definitive : une
      coupure reseau ne fait plus perdre le parrainage. */
 var parrainageEnCours = false;
+/* 05/10/2026, Julien : « un QR code [d'invitation] par telephone, pour eviter
+   les fraudes ». Un identifiant tire au hasard a la premiere ouverture, garde
+   sur le telephone ; la base refuse un 2e parrainage avec le meme
+   (migration clubbeur 0065, appareil_deja_utilise). */
+function idTelephone() {
+  try {
+    var id = localStorage.getItem("vn_tel_id");
+    if (!id) {
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "t" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+      localStorage.setItem("vn_tel_id", id);
+    }
+    return id;
+  } catch (e) { return null; }
+}
+idTelephone();
+function reclamerCodeAmi(code) {
+  return Promise.resolve(supabaseClubbeur.rpc("claim_referral", { p_code: code, p_appareil: idTelephone() })).catch(function (e) { return { error: e }; });
+}
 /* Le code tape sur la page de bienvenue (04/10/2026). */
 (function () {
   var ouvrir = document.getElementById("ob-ami-ouvrir"), form = document.getElementById("ob-ami-form");
@@ -11089,7 +11108,7 @@ var parrainageEnCours = false;
     var session = (await supabaseClubbeur.auth.getSession()).data.session;
     if (!session) return;
     form.querySelector("button").disabled = true;
-    var res = await Promise.resolve(supabaseClubbeur.rpc("claim_referral", { p_code: code })).catch(function (e) { return { error: e }; });
+    var res = await reclamerCodeAmi(code);
     form.querySelector("button").disabled = false;
     msg.hidden = false;
     if (!res.error) {
@@ -11103,6 +11122,7 @@ var parrainageEnCours = false;
     msg.textContent = /introuvable/.test(t) ? "Ce code n'existe pas. Vérifie-le avec ton ami."
       : /deja_parraine/.test(t) ? "Un code a déjà été utilisé pour ton compte."
       : /soi_meme/.test(t) ? "C'est ton propre code."
+      : /appareil_deja_utilise/.test(t) ? "Ce téléphone a déjà servi pour une invitation."
       : /compte_ancien/.test(t) ? "Le code d'un ami s'entre dans les 3 jours qui suivent l'inscription."
       : "Pas pu valider le code, réessaie.";
   });
@@ -11122,7 +11142,7 @@ async function reclamerParrainage() {
       var r = await fetch(BASE_API + "/api/credit-clubbeur?action=parrainage", {
         method: "POST",
         headers: { Authorization: "Bearer " + session.access_token, "Content-Type": "application/json" },
-        body: JSON.stringify({ code: code }),
+        body: JSON.stringify({ code: code, appareil: idTelephone() }),
       });
       if (r.ok) reponse = await r.json();
     } catch (e) { /* serveur injoignable : repli */ }
@@ -11131,10 +11151,10 @@ async function reclamerParrainage() {
       console.info("[parrainage]", reponse.ok ? "parrain credite : " + reponse.parrain : reponse.raison);
       return;
     }
-    var res = await Promise.resolve(supabaseClubbeur.rpc("claim_referral", { p_code: code })).catch(function (e) { return { error: e }; });
+    var res = await reclamerCodeAmi(code);
     if (!res.error) { oublier(); console.info("[parrainage] parrain credite (repli)"); return; }
-    // Refus normal (deja parraine, compte ancien, code inconnu, soi-meme) : on oublie.
-    if (/deja_parraine|compte_ancien|introuvable|soi_meme|code_manquant/.test(res.error.message || "")) oublier();
+    // Refus normal (deja parraine, compte ancien, code inconnu, soi-meme, telephone deja utilise) : on oublie.
+    if (/deja_parraine|compte_ancien|introuvable|soi_meme|code_manquant|appareil_deja_utilise/.test(res.error.message || "")) oublier();
     console.info("[parrainage]", res.error.message);
   } finally {
     parrainageEnCours = false;

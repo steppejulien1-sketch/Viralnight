@@ -853,11 +853,14 @@ async function actionParrainage(request, response) {
   } catch {}
   const code = String(corps?.code || "").trim().toLowerCase().slice(0, 40);
   if (!code) return json(response, { ok: false, raison: "code_manquant" });
+  // L'identifiant du telephone (migration clubbeur 0065) : un telephone ne
+  // parraine qu'une fois, quel que soit le compte.
+  const appareil = String(corps?.appareil || "").trim().slice(0, 80) || null;
 
-  const { data, error } = await clubbeur.rpc("claim_referral_pour", { p_filleul: filleul, p_code: code });
+  const { data, error } = await clubbeur.rpc("claim_referral_pour", { p_filleul: filleul, p_code: code, p_appareil: appareil });
   if (error) {
-    // deja_parraine, compte_ancien, introuvable, soi_meme : des refus normaux.
-    const raison = /deja_parraine|compte_ancien|introuvable|soi_meme|code_manquant/.exec(error.message || "");
+    // deja_parraine, compte_ancien, introuvable, soi_meme, appareil_deja_utilise : des refus normaux.
+    const raison = /deja_parraine|compte_ancien|introuvable|soi_meme|code_manquant|appareil_deja_utilise/.exec(error.message || "");
     if (raison) return json(response, { ok: false, raison: raison[0] });
     console.error("[parrainage]", error.message);
     return json(response, { error: "Parrainage impossible" }, 500);
