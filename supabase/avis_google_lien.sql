@@ -1,0 +1,5 @@
+-- 07/10/2026, applique sur les DEUX bases.
+-- Base gerants :   alter table public.establishments add column if not exists google_review_url text;
+-- Base clubbeur :  alter table public.clubs add column if not exists google_review_url text;
+-- Le lien qui ouvre directement le formulaire d'avis Google du lieu, colle
+-- par le gerant (Reglages > Avis Google) et copie par sync-boutique.

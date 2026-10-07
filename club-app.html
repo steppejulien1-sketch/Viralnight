@@ -3458,6 +3458,13 @@
         margin: 0; border-radius: 18px; overflow: hidden;
         background: #fff; box-shadow: inset 0 0 0 1px #e8e8ee;
       }
+      .ra-zone { padding: 4px 18px 18px; }
+      .ra-zone[hidden] { display: none; }
+      .ra-aide { margin: 0 0 10px; font-size: 13.5px; line-height: 1.45; color: var(--ink2); }
+      .ra-champ { display: block; width: 100%; box-sizing: border-box; height: 48px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--s1, #fff); color: var(--ink); font: inherit; font-size: 16px; }
+      .ra-msg { margin: 8px 0 0; font-size: 13px; font-weight: 600; }
+      .ra-msg[hidden] { display: none; }
+      .ra-ok { width: 100%; height: 46px; margin-top: 10px; border: 0; border-radius: 12px; background: #111114; color: #fff; font: inherit; font-size: 15px; font-weight: 650; cursor: pointer; }
       .pf-item {
         position: relative; width: 100%;
         /* La troisieme colonne fait 16px pour un chevron, et s'elargit
@@ -5342,6 +5349,20 @@
                     <span class="pf-item-txt"><strong>Ton @ Instagram</strong><span id="reglages-handle-sous">Le compte que tes clients mentionnent.</span></span>
                     <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                   </button>
+                  <!-- 07/10/2026, Julien : les etoiles de la fiche doivent ouvrir
+                       DIRECTEMENT le formulaire d'avis Google, pas Google Maps. Il faut
+                       pour ca le lien d'avis du lieu, que Google donne au gerant. -->
+                  <button type="button" class="pf-item" id="reglages-avis">
+                    <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>
+                    <span class="pf-item-txt"><strong>Avis Google</strong><span id="reglages-avis-sous">Ton lien d'avis : tes clients notent ton établissement en un geste.</span></span>
+                    <svg class="pf-item-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                  <div class="ra-zone" id="reglages-avis-zone" hidden>
+                    <p class="ra-aide">Sur ta fiche Google (Google Maps ou ton profil d'établissement), touche <b>Demander des avis</b>, copie le lien et colle-le ici.</p>
+                    <input class="ra-champ" id="reglages-avis-lien" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://g.page/r/…/review" />
+                    <p class="ra-msg" id="reglages-avis-msg" hidden></p>
+                    <button type="button" class="ra-ok" id="reglages-avis-ok">Enregistrer</button>
+                  </div>
                   <button type="button" class="pf-item" data-va="qr">
                     <svg class="pf-item-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3h-3M14 21h7"/></svg>
                     <span class="pf-item-txt"><strong>Affiche et QR code</strong><span>À imprimer, ou en direct sur une tablette.</span></span>
@@ -8824,7 +8845,7 @@
         // Rien a installer sur un club de demonstration : le lien serait
         // un bouton qui ne fait rien.
         $("#reglages-installation").hidden = !clubReelCharge();
-        ["#reglages-photos", "#reglages-recompenses", "#reglages-handle"].forEach(function (id) { $(id).hidden = !clubReelCharge(); });
+        ["#reglages-photos", "#reglages-recompenses", "#reglages-handle", "#reglages-avis"].forEach(function (id) { $(id).hidden = !clubReelCharge(); });
         $("#reglages-handle-sous").textContent = reel && etab && etab.ig_handle ? "@" + etab.ig_handle : "Le compte que tes clients mentionnent.";
 
         // (La ligne "Barème de points" a quitte les Reglages le
@@ -9479,6 +9500,51 @@
       });
       $("#dash-modifier").addEventListener("click", function () {
         if (clubReelCharge() && !EXEMPLE) ouvrirParcours(3, true, "dashboard");
+      });
+
+      /* L'avis Google (07/10/2026). On accepte le lien que Google donne
+         (g.page/r/.../review, search.google.com/local/writereview?placeid=...)
+         ou un identifiant de lieu brut (ChIJ...), qu'on transforme en lien. */
+      function lienAvisNormalise(brut) {
+        var v = String(brut || "").trim();
+        if (!v) return "";
+        if (/^ChIJ[\w-]{10,}$/.test(v)) return "https://search.google.com/local/writereview?placeid=" + v;
+        if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+        try {
+          var u = new URL(v);
+          if (!/(^|\.)(google\.[a-z.]+|g\.page|goo\.gl)$/i.test(u.hostname)) return null;
+          u.protocol = "https:";
+          return u.toString();
+        } catch (e) { return null; }
+      }
+      function peindreAvisReglages() {
+        var etab = etablissementCourant();
+        var lien = etab && etab.google_review_url;
+        $("#reglages-avis-sous").textContent = lien ? "Lien enregistré ✓ Les étoiles de ta fiche ouvrent ton avis Google." : "Ton lien d'avis : tes clients notent ton établissement en un geste.";
+        $("#reglages-avis-lien").value = lien || "";
+      }
+      $("#reglages-avis").addEventListener("click", function () {
+        if (!clubReelCharge()) return;
+        var zone = $("#reglages-avis-zone");
+        zone.hidden = !zone.hidden;
+        if (!zone.hidden) { peindreAvisReglages(); $("#reglages-avis-lien").focus(); }
+      });
+      $("#reglages-avis-ok").addEventListener("click", async function () {
+        var etab = clubAEcrire();
+        var msg = $("#reglages-avis-msg");
+        if (!etab) return;
+        var lien = lienAvisNormalise($("#reglages-avis-lien").value);
+        msg.hidden = false;
+        if (lien === null) { msg.style.color = "var(--danger, #c42020)"; msg.textContent = "Ce lien ne vient pas de Google. Copie celui de « Demander des avis »."; return; }
+        this.disabled = true;
+        var r = await supabase.from("establishments").update({ google_review_url: lien || null }).eq("id", etab.id);
+        this.disabled = false;
+        if (r.error) { msg.style.color = "var(--danger, #c42020)"; msg.textContent = "Enregistrement impossible : " + r.error.message; return; }
+        etab.google_review_url = lien || null;
+        msg.style.color = "var(--succes, #138a45)";
+        msg.textContent = lien ? "Enregistré. Tes clients arrivent directement sur ton avis Google." : "Lien retiré.";
+        peindreAvisReglages();
+        try { synchroniserBoutique(); } catch (e) {}
       });
 
       $("#reglages-installation").addEventListener("click", function () {

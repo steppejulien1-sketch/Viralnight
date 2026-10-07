@@ -85,6 +85,8 @@ function ficheLieu(etab) {
     category_label: etab.category_label || null,
     lat: Number.isFinite(etab.lat) ? etab.lat : null,
     lng: Number.isFinite(etab.lng) ? etab.lng : null,
+    // Le lien d'avis Google colle par le gerant (07/10/2026).
+    google_review_url: etab.google_review_url || null,
   };
 }
 
@@ -172,7 +174,7 @@ async function actionSyncBoutique(request, response) {
 
   const { data: etab, error: erreurEtab } = await auth.supabase
     .from("establishments")
-    .select("public_code, name, city, slug, ig_handle, primary_color, logo_url, photos, address, category, category_label, lat, lng")
+    .select("public_code, name, city, slug, ig_handle, primary_color, logo_url, photos, address, category, category_label, lat, lng, google_review_url")
     .eq("id", auth.establishmentId)
     .maybeSingle();
 

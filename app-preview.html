@@ -14917,6 +14917,9 @@ function majMontantParrainage() {
    web, un nouvel onglet OUVERT DANS LE GESTE (un window.open apres un await
    se fait bloquer comme popup). */
 function lienAvisGoogle(c) {
+  // 07/10/2026 : d'abord le lien d'avis direct (colle par le gerant, ou pose
+  // par nous), qui ouvre le formulaire « Donner un avis » et pas Google Maps.
+  if (c && /^https:\/\//.test(c.avisUrl || "")) return c.avisUrl;
   return c && c.googlePlaceId
     ? "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(c.googlePlaceId)
     : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((c && (c.googleQuery || [c.nom, c.adr].filter(Boolean).join(", "))) || "");
@@ -16231,12 +16234,14 @@ function lieuDepuisLigne(ligne) {
     ig: ligne.ig_handle || null, photo: ligne.logo_url || photos[0] || null,
     photos: ligne.logo_url ? [ligne.logo_url].concat(photos) : photos,
     horaires: null, partenaire: true, dynamique: true,
+    // Le lien qui ouvre directement le formulaire d'avis Google (07/10/2026).
+    avisUrl: ligne.google_review_url || null,
   };
 }
 
 async function resoudreIdsClubs() {
   try {
-    var colonnes = "id, name, slug, city, address, category, category_label, lat, lng, logo_url, photos, ig_handle, primary_color, b2b_public_code, visible";
+    var colonnes = "id, name, slug, city, address, category, category_label, lat, lng, logo_url, photos, ig_handle, primary_color, b2b_public_code, visible, google_review_url";
     var res = await supabaseClubbeur.from("clubs").select(colonnes).eq("visible", true);
     // Base sans la migration 0054 : l'ancienne lecture, par nom.
     if (res.error) {
