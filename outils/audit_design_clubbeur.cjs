@@ -44,6 +44,8 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
     await snap("03-fiche");
     console.log("carte avis Google :", await page.evaluate(() => { const b = document.querySelector(".club-avis2"); if (b) b.scrollIntoView({ block: "center" }); return b ? b.textContent.trim() : "ABSENTE"; }));
     await snap("03b-fiche-bas");
+    await page.evaluate(() => { const sh = document.querySelector(".sheet.up, .sheet.fiche-club"); if (sh) sh.scrollTop = sh.scrollHeight; });
+    await snap("03c-fiche-tout-en-bas");
     await page.evaluate(() => window.noctifyFermerFeuille?.());
     await clic("#tab-story"); await pause(2500); await snap("07-story");
     await page.evaluate(() => { const v = document.querySelector("#vue-story"); if (v) v.scrollTop = v.scrollHeight; });
