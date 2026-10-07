@@ -6975,6 +6975,20 @@
          rien d'autre ; la carte etoilee de l'avis Google sous les boutons. */
       .sheet.fiche-club .fc-carte-cta { padding: 12px; }
       .sheet.fiche-club .club-avis { margin: 16px 0 0; }
+      .club-avis2 { margin: 16px 0 0; padding: 18px 16px 16px; border-radius: 16px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); text-align: center; }
+      .club-avis2-titre { margin: 0 0 10px; font-family: var(--titre); font-size: calc(17 * var(--u)); font-weight: 700; letter-spacing: -.015em; color: var(--ink); }
+      .club-avis2-etoiles { display: flex; justify-content: center; gap: 6px; }
+      .club-avis2-etoile { width: 52px; height: 52px; padding: 5px; border: 0; background: none; cursor: pointer; border-radius: 12px; transition: transform .15s ease; }
+      .club-avis2-etoile svg { width: 100%; height: 100%; fill: none; stroke: var(--ink3); stroke-width: 1.5; stroke-linejoin: round; transition: fill .15s ease, stroke .15s ease; }
+      .club-avis2-etoile.on svg { fill: #f5b301; stroke: #f5b301; }
+      .club-avis2-etoile:active { transform: scale(.88); }
+      .club-avis2-google {
+        display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 48px; margin: 10px 0 0;
+        border: 0; border-radius: 14px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line);
+        font-family: inherit; font-size: calc(15 * var(--u)); font-weight: 650; color: var(--ink); cursor: pointer;
+      }
+      .club-avis2-google svg { width: 18px; height: 18px; }
+      .club-avis2-google:active { background: var(--s2); }
       .fc-reperes { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); margin: 2px 0 18px; }
       .fc-reperes > div { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 6px; text-align: center; }
       .fc-reperes > div + div { border-left: 1px solid var(--line); }
@@ -12775,15 +12789,23 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
      rond « Avis Google » de la rangee est retire (doublon). */
   // Sur TOUTES les fiches (07/10/2026) : sans fiche Google connue, la recherche
   // Google Maps du nom et de l'adresse (voir lienAvisGoogle).
+  /* 07/10/2026 (2e retour), Julien : « avant c'etait mieux, juste 5 grandes
+     etoiles et Laisser un avis, et un bouton qui envoie sur la page Google du
+     resto, en dessous ». Toucher une etoile ouvre l'avis Google ; le bouton
+     ouvre la fiche Google du lieu. */
   var blocAvisGoogle = c.nom
-    ? '<button type="button" class="club-avis" id="sh-avis-google">' +
-        '<span class="club-avis-txt">' +
-          '<strong id="sh-avis-titre">Laisser un avis Google</strong>' +
-          '<span id="sh-avis-sous">Ta note sur la fiche Google ' + escapeHtmlSupport(duClub(c.nom)) + ".</span>" +
-        "</span>" +
-        '<span class="club-avis-etoiles" aria-hidden="true">' +
-          '<svg viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>'.repeat(5) +
-        "</span>" +
+    ? '<div class="club-avis2">' +
+        '<p class="club-avis2-titre">Laisser un avis</p>' +
+        '<div class="club-avis2-etoiles">' +
+          [1, 2, 3, 4, 5].map(function (n) {
+            return '<button type="button" class="club-avis2-etoile" data-n="' + n + '" aria-label="' + n + " étoile" + (n > 1 ? "s" : "") + '">' +
+              '<svg viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>' + "</button>";
+          }).join("") +
+        "</div>" +
+      "</div>" +
+      '<button type="button" class="club-avis2-google" id="sh-page-google">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8l4-3.1z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9z"/></svg>' +
+        "Voir la page Google" +
       "</button>"
     : "";
 
@@ -12861,7 +12883,18 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
       ouvrirBoutiqueBar({ nom: c.nom, type: c.type, lngLat: c.lngLat, quartier: quartierDe(c.adr) || c.adr || "", recompenses: recosLieu, club: c, cle: id, km: 0 });
     });
   });
-  $("#sh-avis-google")?.addEventListener("click", function () { ouvrirAvisGoogle(c); });
+  document.querySelectorAll(".sheet .club-avis2-etoile").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var n = Number(b.dataset.n);
+      document.querySelectorAll(".sheet .club-avis2-etoile").forEach(function (e) { e.classList.toggle("on", Number(e.dataset.n) <= n); });
+      ouvrirAvisGoogle(c);
+    });
+  });
+  $("#sh-page-google")?.addEventListener("click", function () {
+    var url = lienPageGoogle(c);
+    if (natif.estNatif) { natif.ouvrirLien(url); return; }
+    window.open(url, "_blank", "noopener");
+  });
   aVisite(id).then(function (oui) {
     var titre = $("#sh-avis-titre"), sous = $("#sh-avis-sous");
     if (!oui || !titre || !sous) return;
@@ -14868,6 +14901,12 @@ function majMontantParrainage() {
 function lienAvisGoogle(c) {
   return c && c.googlePlaceId
     ? "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(c.googlePlaceId)
+    : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((c && (c.googleQuery || [c.nom, c.adr].filter(Boolean).join(", "))) || "");
+}
+// La fiche Google du lieu elle-meme (bouton « Voir la page Google »).
+function lienPageGoogle(c) {
+  return c && c.googlePlaceId
+    ? "https://www.google.com/maps/place/?q=place_id:" + encodeURIComponent(c.googlePlaceId)
     : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((c && (c.googleQuery || [c.nom, c.adr].filter(Boolean).join(", "))) || "");
 }
 // Appele depuis la fiche d'un etablissement (voir blocAvisGoogle), dans
