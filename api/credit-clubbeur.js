@@ -20,7 +20,7 @@
 //             SUPABASE_CLUBBEUR_URL, SUPABASE_CLUBBEUR_SERVICE_ROLE_KEY
 
 import { createClient } from "@supabase/supabase-js";
-import { notifierStory, notifierCadeauDuJour, pousserA } from "../lib/notifications/envoyer.js";
+import { notifierStory, notifierCadeauDuJour, notifierAvisGoogle, pousserA } from "../lib/notifications/envoyer.js";
 import { libelleMotifDepart, MOTIFS_DEPART } from "../lib/notifications/push.js";
 import { joursEntre, seuilAutoValidation } from "../lib/admin/pilotage.js";
 import { deciderStory } from "../lib/admin/deciderContenu.js";
@@ -596,6 +596,8 @@ async function actionAutoValider(request, response) {
       }
     }
   }
+  // Meme passage horaire : l'avis Google demande le lendemain d'une visite.
+  bilan.avisGoogle = await notifierAvisGoogle();
   return json(response, { ok: true, ...bilan });
 }
 

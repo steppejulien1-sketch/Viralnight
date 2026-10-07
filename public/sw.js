@@ -164,6 +164,13 @@ self.addEventListener("notificationclick", function (evenement) {
   evenement.notification.close();
   var cible = (evenement.notification.data && evenement.notification.data.url) || "/app-preview.html";
 
+  // Un lien vers un autre site (l'avis Google du lendemain) s'ouvre a part :
+  // le suivre dans la fenetre de l'appli ferait sortir de l'appli.
+  if (/^https?:\/\//.test(cible) && cible.indexOf(self.location.origin) !== 0) {
+    evenement.waitUntil(self.clients.openWindow ? self.clients.openWindow(cible) : Promise.resolve());
+    return;
+  }
+
   evenement.waitUntil(
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })

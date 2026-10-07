@@ -6965,6 +6965,10 @@
       .sheet.fiche-club .fc-ligne:active, .sheet.fiche-club .fc-carte .club-info-ligne.lien:active { background: var(--s2); }
       .sheet.fiche-club .club-actions-row:empty { display: none; }
       .sheet.fiche-club .club-actions-row { margin: 18px 0 0; }
+      /* 07/10/2026 : « Tu gagnes des points ici » = le titre et le bouton,
+         rien d'autre ; la carte etoilee de l'avis Google sous les boutons. */
+      .sheet.fiche-club .fc-carte-cta { padding: 12px; }
+      .sheet.fiche-club .club-avis { margin: 16px 0 0; }
       .fc-reperes { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); margin: 2px 0 18px; }
       .fc-reperes > div { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 6px; text-align: center; }
       .fc-reperes > div + div { border-left: 1px solid var(--line); }
@@ -12632,11 +12636,6 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
   /* L'avis Google etait une grande carte a lui seul, au milieu de la
      fiche : il passe en rond dans la rangee (23/09/2026, Julien : « trop de
      trucs a scroller avant de voir toutes les infos »). */
-  if (c.googlePlaceId || c.googleQuery) {
-    actions += '<button type="button" class="club-action-btn" id="sh-avis-google">' +
-      '<span class="club-action-ico"><svg viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg></span>' +
-      "<span>Avis Google</span></button>";
-  }
   // Partager retire de la fiche (Julien, 24/09/2026).
 
   /* Les horaires se deplient, comme sur une fiche Google (demande de
@@ -12718,11 +12717,6 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
         "<h4>Tu gagnes des points ici</h4>" +
         '<div class="fc-carte">' +
           '<div class="fc-carte-cta"><button class="sheet-cta" id="sh-poster-story" type="button">Poster ma story</button></div>' +
-          '<a class="fc-ligne" id="sh-voir-recompenses" href="#boutique">' +
-            '<span class="club-info-ico"><svg viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="12.5" rx="2"/><path d="M2.5 8h19M12 8v12.5M12 8S10.5 3.5 7.8 4.2C5.6 4.8 6.6 8 12 8zM12 8s1.5-4.5 4.2-3.8C18.4 4.8 17.4 8 12 8z"/></svg></span>' +
-            '<span class="club-info-principal">' + (c.nbRecompenses || recosLieu.length || RECOMPENSES.length || 4) + " récompenses à échanger ici</span>" +
-            '<svg class="fc-ligne-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>' +
-          "</a>" +
         "</div>" +
       "</div>"
     : "";
@@ -12752,7 +12746,21 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
      titre devient personnel quand l'historique de points prouve un passage
      (voir aVisite). Aucun point en echange : Google interdit les avis
      recompenses, et un club qui s'y fait prendre voit ses avis effaces. */
-  var blocAvisGoogle = "";
+  /* 07/10/2026, Julien : « tu avais un truc avec des etoiles ou tu pouvais
+     mettre ton avis Google [...] on remet ca et que ca envoie directement
+     sur Google ». La carte revient a sa place sous les boutons ; le petit
+     rond « Avis Google » de la rangee est retire (doublon). */
+  var blocAvisGoogle = (c.googlePlaceId || c.googleQuery)
+    ? '<button type="button" class="club-avis" id="sh-avis-google">' +
+        '<span class="club-avis-txt">' +
+          '<strong id="sh-avis-titre">Laisser un avis Google</strong>' +
+          '<span id="sh-avis-sous">Ta note sur la fiche Google ' + escapeHtmlSupport(duClub(c.nom)) + ".</span>" +
+        "</span>" +
+        '<span class="club-avis-etoiles" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>'.repeat(5) +
+        "</span>" +
+      "</button>"
+    : "";
 
   /* ⚠️ LA TETE PHOTO (23/09/2026). Julien, capture de la maquette a
      l'appui : « je veux que ca soit ca sur l'app, pas le truc actuel ». La
