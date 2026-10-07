@@ -42,7 +42,7 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
     // Fiche d'un lieu de demo
     { const ms = await page.$$(".maplibregl-marker"); if (ms[1]) await ms[1].click(); else console.log("pas de marqueur"); }
     await snap("03-fiche");
-    await page.evaluate(() => { const s = document.querySelector(".sheet.up"); if (s) s.scrollTop = s.scrollHeight; });
+    console.log("carte avis Google :", await page.evaluate(() => { const b = document.querySelector("#sh-avis-google"); if (b) b.scrollIntoView({ block: "center" }); return b ? b.textContent.trim() : "ABSENTE"; }));
     await snap("03b-fiche-bas");
     await page.evaluate(() => window.noctifyFermerFeuille?.());
     await clic("#tab-story"); await pause(2500); await snap("07-story");

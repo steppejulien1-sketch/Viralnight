@@ -12773,7 +12773,9 @@ function ouvrirClub(c, src, id, toutesLesPhotos) {
      mettre ton avis Google [...] on remet ca et que ca envoie directement
      sur Google ». La carte revient a sa place sous les boutons ; le petit
      rond « Avis Google » de la rangee est retire (doublon). */
-  var blocAvisGoogle = (c.googlePlaceId || c.googleQuery)
+  // Sur TOUTES les fiches (07/10/2026) : sans fiche Google connue, la recherche
+  // Google Maps du nom et de l'adresse (voir lienAvisGoogle).
+  var blocAvisGoogle = c.nom
     ? '<button type="button" class="club-avis" id="sh-avis-google">' +
         '<span class="club-avis-txt">' +
           '<strong id="sh-avis-titre">Laisser un avis Google</strong>' +
@@ -14866,7 +14868,7 @@ function majMontantParrainage() {
 function lienAvisGoogle(c) {
   return c && c.googlePlaceId
     ? "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(c.googlePlaceId)
-    : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((c && (c.googleQuery || c.nom)) || "");
+    : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((c && (c.googleQuery || [c.nom, c.adr].filter(Boolean).join(", "))) || "");
 }
 // Appele depuis la fiche d'un etablissement (voir blocAvisGoogle), dans
 // le geste du tap : un window.open apres un await serait bloque.
