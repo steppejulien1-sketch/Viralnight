@@ -4478,6 +4478,19 @@
       #parcours .nk-suppr { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: #f3f3f6; color: #6b6c75; cursor: pointer; }
       #parcours .nk-suppr svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
       #parcours .nk-suppr:active { background: #ffe5e5; color: #c42020; }
+      /* 07/10/2026 : la ligne d'une recompense sur deux etages -- photo, nom,
+         poubelle ; puis Prix et En stock dans deux cases cote a cote. */
+      #parcours #pa-grille .nk-reco { grid-template-columns: 56px 1fr auto; align-items: center; row-gap: 12px; padding: 16px; }
+      #parcours #pa-grille .nk-reco .pv-reco-img { width: 56px; height: 56px; }
+      #parcours #pa-grille .nk-reco .pv-reco-txt b { font-size: 16px; font-weight: 650; }
+      #parcours .nk-reglages { grid-column: 1 / -1; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      #parcours .nk-boite { min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 12px; background: #f5f5f7; }
+      #parcours .nk-boite small { font-size: 12px; font-weight: 600; color: #6b6c75; }
+      #parcours #pa-grille .nk-boite .pv-prix { display: flex; justify-content: space-between; width: 100%; gap: 4px; }
+      #parcours #pa-grille .nk-boite .pv-prix button { width: 32px; height: 32px; border: 0; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.12); font-size: 18px; }
+      #parcours #pa-grille .nk-boite .pv-prix input { flex: 1; min-width: 0; width: 40px; font-size: 17px; font-weight: 700; }
+      #parcours #pa-grille .nk-boite .pv-prix > span { min-width: 0; font-size: 13px; }
+      #parcours #pa-grille .nk-boite .pv-prix > span:empty { display: none; }
       #parcours .pa-etape[data-pas="4"] .pv-ajout { display: block; margin: 16px 0 0; padding: 6px 0; border: 0; background: none; color: #111114; font-size: 15px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #c9c9d1; }
 
       /* -- Question 5 : Instagram -- */
@@ -10148,11 +10161,14 @@
             '<button type="button" class="pv-reco-img" data-photo="' + i + '" aria-label="Changer la photo de ' + titre + '">' + vignette +
               '<span class="pv-reco-photo">' + ICO_PHOTO + "</span>" +
             "</button>" +
-            '<span class="pv-reco-txt"><b>' + titre + "</b>" +
-              reglage(i, "prix", Number(c.points || 0), 10, "pts", "Prix en points") +
-              reglage(i, "stock", stock, 5, "dispo", "Quantité disponible") +
-            "</span>" +
+            '<span class="pv-reco-txt"><b>' + titre + "</b></span>" +
             '<button type="button" class="nk-suppr" data-suppr="' + i + '" aria-label="Supprimer ' + titre + '">' + ICO_SUPPR + "</button>" +
+            // 07/10/2026 : le prix et le stock cote a cote, chacun avec son
+            // libelle, sous la ligne (deux compteurs empiles se lisaient mal).
+            '<div class="nk-reglages">' +
+              '<div class="nk-boite"><small>Prix</small>' + reglage(i, "prix", Number(c.points || 0), 10, "pts", "Prix en points") + "</div>" +
+              '<div class="nk-boite"><small>En stock</small>' + reglage(i, "stock", stock, 5, "", "Quantité disponible") + "</div>" +
+            "</div>" +
           "</div>";
         }).join("");
 
